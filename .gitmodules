@@ -1,0 +1,3 @@
+[submodule "servant/protocol"]
+	path = servant/protocol
+	url = https://github.com/TarsCloud/TarsProtocol.git
