@@ -3,7 +3,7 @@
 ## Overview
 The TARS service framework only supports TARS's own tars protocol by default. However, in actual application scenarios, other protocols, such as HTTP, need to be supported in the TARS service framework. In this case, the communicator cannot be used to send data. The business itself need to implement this part of the code. For custom protocols, the processing is similar.
 
-For specific program examples, see cpp/examples/httpDemo/.
+For specific program examples, see examples/httpDemo/.
 
 To develop a third-party protocol server end: you need to implement the protocol parser and load it into the service, and establish a non-TAF framework service object meanwhile, this class inherits from the Servant class and establishes the protocol processor by reloading the doRequest method in the Servant class. 
 To access the service, the client needs to call the rpc function of proxy, before calling, set the request packet encoding function and the response packet decoding function for the proxy.

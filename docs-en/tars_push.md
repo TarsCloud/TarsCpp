@@ -13,7 +13,7 @@
 
 In the actual application scenario, server-to-client push modes need to be supported in the TARS service framework.
 
-For example, see cpp/examples/pushDemo/.
+For example, see examples/pushDemo/.
 
 ## Flow chart of the push mode
 Here's a flow chart of the push mode

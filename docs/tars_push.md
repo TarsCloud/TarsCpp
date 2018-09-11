@@ -12,7 +12,7 @@
 
 但是在实际的应用场景中，需要在TARS服务框架中支持其他服务端到客户端的push模式
 
-具体程序示例，参见cpp/examples/pushDemo/.
+具体程序示例，参见examples/pushDemo/.
 
 ## push模式的流程图
 下面是push模式的示意图

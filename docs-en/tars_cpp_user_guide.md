@@ -729,7 +729,7 @@ Normally, B needs to return a response to A after B receives the request and fin
 Therefore, it is not can be implemented if B initiates an asynchronous request to C in the interface.
 
 Therefore, it is necessary to implemente the asynchronous calls across services by using the following methods.
-You can see the cpp/examples/QuickStartDemo/ProxyServer example for details.
+You can see the examples/QuickStartDemo/ProxyServer example for details.
 
 The following still uses the helloworld program to explain. Firstly, the client initiates a request to the proxy, and the proxy initiates
 testHello to the HelloServer asynchronously after receiving the request. Then the proxy returns the result by the HelloServer to the client

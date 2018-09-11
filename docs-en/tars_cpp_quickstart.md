@@ -1,10 +1,10 @@
 # Contents
-> * [1.Environment construction] (#main-chapter-1)
-> * [2.Service naming] (#main-chapter-2)
-> * [3.Tars management system] (#main-chapter-3)
-> * [4.Service deployment] (#main-chapter-4)
-> * [5.Service development] (#main-chapter-5)
-> * [6.Service release] (#main-chapter-6)
+> * [1.Environment construction](#main-chapter-1)
+> * [2.Service naming](#main-chapter-2)
+> * [3.Tars management system](#main-chapter-3)
+> * [4.Service deployment](#main-chapter-4)
+> * [5.Service development](#main-chapter-5)
+> * [6.Service release](#main-chapter-6)
 
 # 1. Environment construction  <a id="main-chapter-1"></a>
 

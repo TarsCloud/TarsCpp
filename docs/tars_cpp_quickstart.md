@@ -1,10 +1,10 @@
 # 目录
-> * [1.环境搭建] (#main-chapter-1)
-> * [2.服务命名] (#main-chapter-2)
-> * [3.Tars管理系统] (#main-chapter-3)
-> * [4.服务部署] (#main-chapter-4)
-> * [5.服务开发] (#main-chapter-5)
-> * [6.服务发布] (#main-chapter-6)
+> * [1.环境搭建](#main-chapter-1)
+> * [2.服务命名](#main-chapter-2)
+> * [3.Tars管理系统](#main-chapter-3)
+> * [4.服务部署](#main-chapter-4)
+> * [5.服务开发](#main-chapter-5)
+> * [6.服务发布](#main-chapter-6)
 
 # 1. 环境搭建  <a id="main-chapter-1"></a>
 

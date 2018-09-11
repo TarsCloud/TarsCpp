@@ -729,7 +729,7 @@ QQInfo qi = pPrx->tars_hash(uin)->query(uin);
 
 通常情况下面，B接收到请求后，在接口处理完毕以后就需要返回应答给A，因此如果B在接口中又发起异步请求到C，则无法实现。
 
-因此需要采用下面方法实现跨服务的异步调用，具体可以参考cpp/examples/QuickStartDemo/ProxyServer示例。
+因此需要采用下面方法实现跨服务的异步调用，具体可以参考examples/QuickStartDemo/ProxyServer示例。
 
 还是采用hello world的例子，client发起请求给Proxy，Proxy接收到请求后，异步发起testHello给HelloServer，请求返回后，Proxy再将HelloServer返回的结果给client。
 

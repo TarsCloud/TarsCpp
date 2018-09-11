@@ -3,7 +3,7 @@
 > * 参考tars_install.md
 
 2. Tars C++如何快速上手？
-> * 文档参考tars_cpp_quickstart.md，相关示例代码参考cpp/examples目录
+> * 文档参考tars_cpp_quickstart.md，相关示例代码参考examples目录
 
 3. tars/tup协议是什么？
 > * 具体参考tars_tup.md

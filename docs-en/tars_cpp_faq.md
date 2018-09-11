@@ -3,7 +3,7 @@
 > * Please reference tars_install.md
 
 2. How to quickly implement an example of a Tars C++?
-> * For documentation, please refer to tars_cpp_quickstart.md, the relevant sample code, and the cpp/examples directory.
+> * For documentation, please refer to tars_cpp_quickstart.md, the relevant sample code, and the examples directory.
 
 3. What is the tars/tup protocol?
 > * For specific information, please refer to tars_tup.md.
