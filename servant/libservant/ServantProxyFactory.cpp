@@ -27,6 +27,14 @@ ServantProxyFactory::ServantProxyFactory(Communicator* cm)
 
 ServantProxyFactory::~ServantProxyFactory()
 {
+    for(size_t i = 0; i < _vppObjectProxys.size(); ++i)
+    {
+        if(_vppObjectProxys[i])
+        {
+            delete [] _vppObjectProxys[i];
+            _vppObjectProxys[i] = NULL;
+        }
+    }
 }
 
 ServantPrx::element_type* ServantProxyFactory::getServantProxy(const string& name,const string& setName)
@@ -43,6 +51,7 @@ ServantPrx::element_type* ServantProxyFactory::getServantProxy(const string& nam
 
     ObjectProxy ** ppObjectProxy = new ObjectProxy * [_comm->getClientThreadNum()];
     assert(ppObjectProxy != NULL);
+    _vppObjectProxys.push_back(ppObjectProxy);
 
     for(size_t i = 0; i < _comm->getClientThreadNum(); ++i)
     {

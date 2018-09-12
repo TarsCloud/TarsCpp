@@ -59,6 +59,7 @@ private:
      * 已创建的对象
      */
     map<string, ServantPrx> _servantProxy;
+    vector<ObjectProxy **>  _vppObjectProxys;
 };
 //////////////////////////////////////////////////////
 }

@@ -50,6 +50,14 @@ StatReport::~StatReport()
 
         getThreadControl().join();
     }
+    for(size_t i = 0; i < _statMsg.size(); ++i)
+    {
+        if(_statMsg[i])
+        {
+            delete _statMsg[i];
+            _statMsg[i] = NULL;
+        }
+    }
 }
 
 void StatReport::terminate()

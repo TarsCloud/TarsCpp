@@ -326,8 +326,8 @@ void Communicator::terminate()
         {
             _communicatorEpoll[i]->terminate();
             _communicatorEpoll[i]->getThreadControl().join();
-            //delete _communicatorEpoll[i];
-            //_communicatorEpoll[i] = NULL;
+            delete _communicatorEpoll[i];
+            _communicatorEpoll[i] = NULL;
         }
 
         if(_statReport)

@@ -52,8 +52,20 @@ public:
     }
     ~TC_LoopQueue()
     {
-        free(_p);
-        //delete _p;
+        if (_p)
+        {
+            uint32_t len = size();
+            for (uint32_t i = 0; i < len; ++i)
+            {
+                if (_p[i])
+                {
+                    delete _p[i];
+                    _p[i] = NULL;
+                }
+            }
+            free(_p);
+            _p = NULL;
+        }
     }
 
     bool push_back(const T &t,bool & bEmpty,uint32_t & iBegin,uint32_t & iEnd)
