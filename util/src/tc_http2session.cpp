@@ -428,6 +428,10 @@ int TC_Http2Session::doRequest(const vector<char> &request, vector<char>& respon
                 if (ret != 0) 
                     ;//TLOGERROR("Fatal error: %s", nghttp2_strerror(ret));
             }
+            response.clear();
+            response.insert(response.end(), responseBuf_.begin(), responseBuf_.end());
+
+            responseBuf_.clear();
         }
 
         delete [] hdrs;
@@ -435,14 +439,6 @@ int TC_Http2Session::doRequest(const vector<char> &request, vector<char>& respon
             TC_ThreadLock::Lock lock(reqLock_);
             mReq_.erase(ptr->streamId); 
         }
-
-    }
-    {
-        TC_ThreadLock::Lock lock(responseBufLock_);
-        response.clear();
-        response.insert(response.end(), responseBuf_.begin(), responseBuf_.end());
-
-        responseBuf_.clear();
 
     }
 

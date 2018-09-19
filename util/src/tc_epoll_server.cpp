@@ -805,7 +805,15 @@ int TC_EpollServer::NetThread::Connection::parseProtocol(recv_queue::queue_type 
 
             string ro;
 
-            int b = _pBindAdapter->getProtocol()(*rbuf, ro);
+            int b = TC_EpollServer::PACKET_LESS;
+            if (_pBindAdapter->getConnProtocol())
+            {
+                b = _pBindAdapter->getConnProtocol()(*rbuf, ro, this);
+            }
+            else
+            {
+                b = _pBindAdapter->getProtocol()(*rbuf, ro);
+            }
 
             if(b == TC_EpollServer::PACKET_LESS)
             {
