@@ -485,7 +485,7 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
         if (vPtr)
         {
             BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
-            if (!bPtr ||  (bPtr && bPtr->kind() == Builtin::KindString)) //非内建类型或者string 类型不能memset
+            if (!bPtr ||  bPtr->kind() == Builtin::KindString) //非内建类型或者string 类型不能memset
             {
                 continue;
             }
