@@ -4,7 +4,7 @@ set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin")
     
 aux_source_directory(. DIR_SRCS)
         
-link_libraries(protobuf;protoc)
+link_libraries(protobuf;protoc;pthread)
           
 add_executable("pb2tarscpp"  ${DIR_SRCS})
 

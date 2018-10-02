@@ -199,6 +199,14 @@ help:
 
 #----------------------------------------------------------------------------------
 
+.%.d: %.cc
+	@echo "update $@ ..."; \
+	echo -n $< | sed s/\.cc/\.o:/ > $@; \
+	$(CXX) $(CFLAGS) $(INCLUDE) -MM $< | sed '1s/.*.://' >> $@;
+
+%.o: %.cc
+	$(CXX) $(CFLAGS) $(INCLUDE) -o $@ -c $<
+
 .%.d: %.cpp
 	@echo "update $@ ..."; \
 	echo -n $< | sed s/\.cpp/\.o:/ > $@; \
