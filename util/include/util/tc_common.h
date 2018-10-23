@@ -241,6 +241,7 @@ public:
     template<typename T>
     static T strto(const string &sStr, const string &sDefault);
 
+    typedef bool (*depthJudge)(const string& str1, const string& str2);
     /**
     * @brief  解析字符串,用分隔符号分隔,保存在vector里
     *
@@ -255,10 +256,11 @@ public:
     * @param sStr      输入字符串
     * @param sSep      分隔字符串(每个字符都算为分隔符)
     * @param withEmpty true代表空的也算一个元素, false时空的过滤
+    * @param depthJudge 对分割后的字符再次进行判断
     * @return          解析后的字符vector
     */
     template<typename T>
-    static vector<T> sepstr(const string &sStr, const string &sSep, bool withEmpty = false);
+    static vector<T> sepstr(const string &sStr, const string &sSep, bool withEmpty = false, depthJudge judge = nullptr);
 
     /**
     * @brief T型转换成字符串，只要T能够使用ostream对象用<<重载,即可以被该函数支持
@@ -639,45 +641,56 @@ T TC_Common::strto(const string &sStr, const string &sDefault)
 
 
 template<typename T>
-vector<T> TC_Common::sepstr(const string &sStr, const string &sSep, bool withEmpty)
+vector<T> TC_Common::sepstr(const string &sStr, const string &sSep, bool withEmpty, TC_Common::depthJudge judge)
 {
     vector<T> vt;
 
     string::size_type pos = 0;
     string::size_type pos1 = 0;
+    int pos_tmp = -1;
 
     while(true)
     {
         string s;
+        string s1;
         pos1 = sStr.find_first_of(sSep, pos);
         if(pos1 == string::npos)
         {
             if(pos + 1 <= sStr.length())
             {
-                s = sStr.substr(pos);
+                s = sStr.substr(-1 != pos_tmp ? pos_tmp : pos);
+                s1 = "";
             }
         }
-        else if(pos1 == pos)
+        else if(pos1 == pos && (pos1 + 1 == sStr.length()))
         {
             s = "";
+            s1 = "";
         }
         else
         {
-            s = sStr.substr(pos, pos1 - pos);
+            s = sStr.substr(-1 != pos_tmp ? pos_tmp : pos, pos1 - (-1 != pos_tmp ? pos_tmp : pos));
+            s1 = sStr.substr(pos1 + 1);
+            if (-1 == pos_tmp)
+                pos_tmp = pos;
             pos = pos1;
         }
 
-        if(withEmpty)
+        if (nullptr == judge || judge(s, s1))
         {
-            vt.push_back(strto<T>(s));
-        }
-        else
-        {
-            if(!s.empty())
+            if(withEmpty)
             {
-                T tmp = strto<T>(s);
-                vt.push_back(tmp);
+                vt.push_back(strto<T>(s));
             }
+            else
+            {
+                if(!s.empty())
+                {
+                    T tmp = strto<T>(s);
+                    vt.push_back(tmp);
+                }
+            }
+            pos_tmp = -1;
         }
 
         if(pos1 == string::npos)

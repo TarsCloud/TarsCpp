@@ -630,7 +630,7 @@ TC_EpollServer::NetThread::Connection::Connection(TC_EpollServer::BindAdapter *p
 
     _iLastRefreshTime = TNOW;
 
-    _sock.init(fd, true, AF_INET);
+    _sock.init(fd, true, pBindAdapter->_ep.isIPv6() ? AF_INET6 : AF_INET);
 }
 
 TC_EpollServer::NetThread::Connection::Connection(BindAdapter *pBindAdapter, int fd)
@@ -651,7 +651,7 @@ TC_EpollServer::NetThread::Connection::Connection(BindAdapter *pBindAdapter, int
 {
     _iLastRefreshTime = TNOW;
 
-    _sock.init(fd, false, AF_INET);
+    _sock.init(fd, false, pBindAdapter->_ep.isIPv6() ? AF_INET6 : AF_INET);
 }
 
 TC_EpollServer::NetThread::Connection::Connection(BindAdapter *pBindAdapter)
@@ -1583,7 +1583,7 @@ TC_EpollServer::BindAdapterPtr TC_EpollServer::NetThread::getBindAdapter(const s
 
 void TC_EpollServer::NetThread::bind(const TC_Endpoint &ep, TC_Socket &s)
 {
-    int type = ep.isUnixLocal()?AF_LOCAL:AF_INET;
+    int type = ep.isUnixLocal() ? AF_LOCAL : ep.isIPv6() ? AF_INET6 : AF_INET;
 
     if(ep.isTcp())
     {
@@ -1698,11 +1698,13 @@ void TC_EpollServer::NetThread::terminate()
     _epoller.mod(_shutdown.getfd(), H64(ET_CLOSE), EPOLLOUT);
 }
 
-bool TC_EpollServer::NetThread::accept(int fd)
+bool TC_EpollServer::NetThread::accept(int fd, int domain)
 {
-    struct sockaddr_in stSockAddr;
+    struct sockaddr_in stSockAddr4;
+    struct sockaddr_in6 stSockAddr6;
 
-    socklen_t iSockAddrSize = sizeof(sockaddr_in);
+    socklen_t iSockAddrSize = (AF_INET6 == domain) ? sizeof(sockaddr_in6) : sizeof(sockaddr_in);
+    struct sockaddr *stSockAddr = (AF_INET6 == domain) ? (struct sockaddr *)&stSockAddr6 : (struct sockaddr *)&stSockAddr4;
 
     TC_Socket cs;
 
@@ -1711,9 +1713,9 @@ bool TC_EpollServer::NetThread::accept(int fd)
     //接收连接
     TC_Socket s;
 
-    s.init(fd, false, AF_INET);
+    s.init(fd, false, domain);
 
-    int iRetCode = s.accept(cs, (struct sockaddr *) &stSockAddr, iSockAddrSize);
+    int iRetCode = s.accept(cs, stSockAddr, iSockAddrSize);
 
     if (iRetCode > 0)
     {
@@ -1721,14 +1723,12 @@ bool TC_EpollServer::NetThread::accept(int fd)
 
         uint16_t port;
 
-        char sAddr[INET_ADDRSTRLEN] = "\0";
+        char sAddr[INET6_ADDRSTRLEN] = "\0";
 
-        struct sockaddr_in *p = (struct sockaddr_in *)&stSockAddr;
-
-        inet_ntop(AF_INET, &p->sin_addr, sAddr, sizeof(sAddr));
+        inet_ntop(domain, (AF_INET6 == domain) ? (const void *)&stSockAddr6.sin6_addr : (const void *)&stSockAddr4.sin_addr, sAddr, sizeof(sAddr));
 
         ip      = sAddr;
-        port    = ntohs(p->sin_port);
+        port    = (AF_INET6 == domain) ? ntohs(stSockAddr6.sin6_port) : ntohs(stSockAddr4.sin_port);
 
         debug("accept [" + ip + ":" + TC_Common::tostr(port) + "] [" + TC_Common::tostr(cs.getfd()) + "] incomming");
 
@@ -2085,7 +2085,7 @@ void TC_EpollServer::NetThread::run()
                                 bool ret;
                                 do
                                 {
-                                    ret = accept(ev.data.u32);
+                                    ret = accept(ev.data.u32, it->second->_ep.isIPv6() ? AF_INET6 : AF_INET);
                                 }while(ret);
                             }
                         }

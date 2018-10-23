@@ -216,6 +216,21 @@ void QueryEpBase::setObjName(const string & sObjName)
     } 
 }
 
+bool isRealEndpoint(const string & s, const string & s1)
+{
+    if (s1.empty())
+        return true;
+
+    const string delim = " \t\n\r";
+    string::size_type beg;
+    string::size_type end = 0;
+
+    beg = s1.find_first_not_of(delim, end);
+    if (s1[beg] != 't' && s1[beg] != 'u' && s1[beg] != 's')
+        return false;
+    return true;
+}
+
 void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & setEndpoints)
 {
     if(sEndpoints == "")
@@ -227,7 +242,7 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
     bool         bFirstWeightType = true;
     unsigned int iWeightType      = 0;
 
-    vector<string>  vEndpoints    = TC_Common::sepstr<string>(sEndpoints, ":", false);
+    vector<string>  vEndpoints    = TC_Common::sepstr<string>(sEndpoints, ":", false, isRealEndpoint);
 
     for (size_t i = 0; i < vEndpoints.size(); ++i)
     {

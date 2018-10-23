@@ -16,6 +16,8 @@
 
 #include "servant/EndpointInfo.h"
 #include "servant/TarsLogger.h"
+#include "servant/NetworkUtil.h"
+#include "util/tc_socket.h"
 
 namespace tars
 {
@@ -27,9 +29,10 @@ EndpointInfo::EndpointInfo()
 , _weight(-1)
 , _weighttype(0)
 , _authType(0)
+, _isIPv6(false)
 {
     _setDivision.clear();
-    memset(&_addr,0,sizeof(struct sockaddr_in));
+    memset(&_addr,0,sizeof(_addr));
 }
 
 EndpointInfo::EndpointInfo(const string& host, uint16_t port, EndpointInfo::EType type, int32_t grid, const string & setDivision, int qos, int weight, unsigned int weighttype, int authType)
@@ -43,6 +46,7 @@ EndpointInfo::EndpointInfo(const string& host, uint16_t port, EndpointInfo::ETyp
 , _weighttype(weighttype)
 , _authType(authType)
 {
+    _isIPv6 = TC_Socket::addressIsIPv6(host);
     try
     {
         if(_weighttype == 0)
@@ -59,7 +63,14 @@ EndpointInfo::EndpointInfo(const string& host, uint16_t port, EndpointInfo::ETyp
             _weight = (_weight > 100 ? 100 : _weight);
         }
 
-        NetworkUtil::getAddress(_host, _port, _addr);
+        if (_isIPv6)
+        {
+            NetworkUtil::getAddress(_host, _port, _addr.in6);
+        }
+        else
+        {
+            NetworkUtil::getAddress(_host, _port, _addr.in);
+        }
 
         _cmpDesc = createCompareDesc();
 
@@ -139,7 +150,12 @@ uint16_t EndpointInfo::port() const
 
 const struct sockaddr_in& EndpointInfo::addr() const
 {
-    return _addr;
+    return _addr.in;
+}
+
+const struct sockaddr * EndpointInfo::addrPtr() const
+{
+    return _isIPv6 ? (struct sockaddr *)&_addr.in6 : (struct sockaddr *)&_addr.in;
 }
 
 EndpointInfo::EType EndpointInfo::type() const

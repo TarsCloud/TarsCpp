@@ -1474,7 +1474,7 @@ public:
          * 新连接建立
          * @param fd
          */
-        bool accept(int fd);
+        bool accept(int fd, int domain = AF_INET);
 
         /**
          * 绑定端口

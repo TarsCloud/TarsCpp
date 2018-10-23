@@ -76,7 +76,7 @@ public:
     typedef  TC_LoopQueue<MapStatMicMsg*>                 stat_queue;
 
     const static int MAX_MASTER_NAME_LEN   = 127;
-    const static int MAX_MASTER_IP_LEN     = 20;
+    const static int MAX_MASTER_IP_LEN     = 50;
     const static int MAX_REPORT_SIZE       = 1400;    //上报的最大大小限制
     const static int MIN_REPORT_SIZE       = 500;     //上报的最小大小限制
     const static int STAT_PROTOCOL_LEN     = 100;     //一次stat mic上报纯协议部分占用大小，用来控制udp大小防止超MTU

@@ -19,6 +19,7 @@
 #include "util/tc_clientsocket.h"
 #include "util/tc_epoller.h"
 #include "util/tc_common.h"
+#include "util/tc_socket.h"
 
 namespace tars
 {
@@ -33,6 +34,7 @@ TC_Endpoint::TC_Endpoint()
     _weight = -1;
     _weighttype = 0;
     _authType = 0;
+    _isIPv6 = false;
 }
 
 void TC_Endpoint::init(const string& host, int port, int timeout, int type, int grid, int qos, int weight, unsigned int weighttype, int authType)
@@ -59,6 +61,8 @@ void TC_Endpoint::init(const string& host, int port, int timeout, int type, int 
     }
 
     _authType = authType;
+
+    _isIPv6 = TC_Socket::addressIsIPv6(_host);
 }
 
 void TC_Endpoint::parse(const string &str)
@@ -239,6 +243,7 @@ void TC_Endpoint::parse(const string &str)
     {
         const_cast<string&>(_host) = "0.0.0.0";
     }
+    _isIPv6 = TC_Socket::addressIsIPv6(_host);
 
     if (_authType < 0)
         _authType = 0;
@@ -256,15 +261,7 @@ int TC_TCPClient::checkSocket()
     {
         try
         {
-            if(_port == 0)
-            {
-                _socket.createSocket(SOCK_STREAM, AF_LOCAL);
-            }
-            else
-            {
-                _socket.createSocket(SOCK_STREAM, AF_INET);
-
-            }
+            _socket.createSocket(SOCK_STREAM, _port ? (_isIPv6 ? AF_INET6 : AF_INET) : AF_LOCAL);
 
             //设置非阻塞模式
             _socket.setblock(false);
@@ -631,14 +628,7 @@ int TC_UDPClient::checkSocket()
     {
         try
         {
-            if(_port == 0)
-            {
-                _socket.createSocket(SOCK_DGRAM, AF_LOCAL);
-            }
-            else
-            {
-                _socket.createSocket(SOCK_DGRAM, AF_INET);
-            }
+            _socket.createSocket(SOCK_DGRAM, _port ? (_isIPv6 ? AF_INET6 : AF_INET) : AF_LOCAL);
         }
         catch(TC_Socket_Exception &ex)
         {

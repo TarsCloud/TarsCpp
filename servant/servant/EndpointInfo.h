@@ -18,7 +18,7 @@
 #define __TARS_ENDPOINT_INFO_H_
 
 #include "servant/Global.h"
-#include "servant/NetworkUtil.h"
+#include "util/tc_socket.h"
 
 using namespace std;
 
@@ -123,6 +123,13 @@ public:
     const struct sockaddr_in& addr() const;
 
     /**
+     * Get ipv4 or ipv6 struct sockaddr
+     *
+     * @return const struct sockaddr *
+     */
+    const struct sockaddr * addrPtr() const;
+
+    /**
      * 返回端口类型
      *
      * @return EndpointInfo::EType
@@ -147,6 +154,12 @@ public:
      * 获取认证类型
      */
     int authType() const  { return _authType; }
+
+    /**
+     * @brief is ipv6 socket or not
+     * @return true if is ipv6
+     */
+    bool isIPv6() const  { return _isIPv6; }
 
     /**
      * 等于
@@ -233,7 +246,11 @@ private:
     /**
      * 地址
      */
-    struct sockaddr_in     _addr;
+    union
+    {
+        struct sockaddr_in     in;
+        struct sockaddr_in6    in6;
+    } _addr;
 
     /**
      * 比较的地址字符串描述
@@ -249,6 +266,11 @@ private:
      *  认证类型
      */
     int                    _authType;
+
+    /**
+     * _host is IPv6 or not
+     */
+    bool                   _isIPv6;
 };
 /////////////////////////////////////////////////////////////////////////////
 }

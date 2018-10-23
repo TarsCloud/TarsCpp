@@ -98,6 +98,7 @@ public:
         _weight = l._weight;
         _weighttype = l._weighttype;
         _authType = l._authType;
+        _isIPv6 = l._isIPv6;
     }
 
     /**
@@ -119,6 +120,7 @@ public:
             _weight = l._weight;
             _weighttype = l._weighttype;
             _authType = l._authType;
+            _isIPv6 = l._isIPv6;
         }
 
         return *this;
@@ -132,7 +134,9 @@ public:
      */
     bool operator == (const TC_Endpoint& l)
     {
-        return (_host == l._host && _port == l._port && _timeout == l._timeout && _type == l._type && _grid == l._grid && _qos == l._qos && _weight == l._weight && _weighttype == l._weighttype && _authType == l._authType);
+        return (_host == l._host && _port == l._port && _timeout == l._timeout && _type == l._type &&
+            _grid == l._grid && _qos == l._qos && _weight == l._weight && _weighttype == l._weighttype &&
+            _authType == l._authType && _isIPv6 == l._isIPv6);
     }
 
     /**
@@ -255,6 +259,12 @@ public:
      */
     bool isUnixLocal() const            { return _port == 0; }
 
+    /**
+     * @brief is ipv6 socket or not
+     * @return true if is ipv6
+     */
+    bool isIPv6() const                 { return _isIPv6; }
+
 	/**
      * @brief 获取认证类型
      */
@@ -356,6 +366,11 @@ protected:
      *  鉴权类型
      */
     int         _authType;
+
+    /**
+     * _host is ipv6 or not
+     */
+    bool        _isIPv6;
 };
 
 /*************************************TC_ClientSocket**************************************/
@@ -397,6 +412,7 @@ public:
         _ip         = sIp;
         _port       = iPort;
         _timeout    = iTimeout;
+        _isIPv6 = TC_Socket::addressIsIPv6(sIp);
     }
 
     /**
@@ -450,6 +466,11 @@ protected:
      * 超时时间, 毫秒
      */
     int            _timeout;
+
+    /**
+     * _ip is ipv6 or not
+     */
+    int        _isIPv6;
 };
 
 /**

@@ -89,16 +89,17 @@ void Transceiver::connect()
 
     if (_ep.type() == EndpointInfo::UDP)
     {
-        fd = NetworkUtil::createSocket(true);
+        fd = NetworkUtil::createSocket(true, false, _ep.isIPv6());
         NetworkUtil::setBlock(fd, false);
         _connStatus = eConnected;
     }
     else
     {
-        fd = NetworkUtil::createSocket(false);
+        fd = NetworkUtil::createSocket(false, false, _ep.isIPv6());
         NetworkUtil::setBlock(fd, false);
 
-        bool bConnected = NetworkUtil::doConnect(fd, _ep.addr());
+        socklen_t len = _ep.isIPv6() ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in);
+        bool bConnected = NetworkUtil::doConnect(fd, _ep.addrPtr(), len);
         if(bConnected)
         {
             setConnected();

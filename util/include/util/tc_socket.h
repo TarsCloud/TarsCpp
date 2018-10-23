@@ -433,7 +433,7 @@ public:
      * @throws TC_Socket_Exception
      * @return 本地所有ip
      */
-    static vector<string> getLocalHosts();
+    static vector<string> getLocalHosts(int domain = AF_INET);
 
     /**
     * @brief 设置socket方式. 
@@ -463,6 +463,30 @@ public:
     * @return
     */
     static void parseAddr(const string &sAddr, struct in_addr &stAddr);
+
+    /**
+    * @brief 解析地址, 从字符串(ipv6或域名), 解析到in6_addr结构. 
+    *  
+    * @param sAddr   字符串
+    * @param stAddr  地址
+    * @throws        TC_Socket_Exception
+    * @return
+    */
+    static void parseAddr(const string &sAddr, struct in6_addr &stAddr);
+
+    /**
+     * @brief: Determine whether an address is ipv6 by including the character ':'
+     *         if address is a domain name, return default(not use now)
+     * @param addr: ip address or domain name
+     * @param def_value: if address is a domain name, return default(not use now)
+     * @return: return true if addr is ipv6, false by ipv4, and default by domain name
+     */
+    static bool addressIsIPv6(const string& addr, bool def_value = false)
+    {
+    #define IPv6_ADDRESS_CHAR ':'
+        return (addr.find(IPv6_ADDRESS_CHAR) != string::npos) ? true : false;
+    #undef IPv6_ADDRESS_CHAR
+    }
 
     /**
     * @brief 绑定. 

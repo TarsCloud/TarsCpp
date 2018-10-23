@@ -41,7 +41,7 @@ struct NetworkUtil
     static const int INVALID_SOCKET = -1;
     static const int SOCKET_ERROR = -1;
 
-    static int createSocket(bool, bool isLocal = false);
+    static int createSocket(bool, bool isLocal = false, bool isIpv6 = false);
 
     static void closeSocketNoThrow(int);
 
@@ -53,9 +53,15 @@ struct NetworkUtil
 
     static void doBind(int, struct sockaddr_in&);
 
+    static void doBind(int, const struct sockaddr *, socklen_t);
+
     static bool doConnect(int, const struct sockaddr_in&);
 
+    static bool doConnect(int, const struct sockaddr *, socklen_t);
+
     static void getAddress(const std::string&, int, struct sockaddr_in&);
+
+    static void getAddress(const std::string&, int, struct sockaddr_in6&);
 
     static std::string errorToString(int);
 };

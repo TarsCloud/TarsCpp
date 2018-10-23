@@ -75,21 +75,19 @@ void TC_Socket::createSocket(int iSocketType, int iDomain)
 
 void TC_Socket::getPeerName(string &sPeerAddress, uint16_t &iPeerPort)
 {
-    assert(_iDomain == AF_INET);
+    assert(_iDomain == AF_INET && _iDomain == AF_INET6);
 
-    struct sockaddr stPeer;
-    bzero(&stPeer, sizeof(struct sockaddr));
-    socklen_t iPeerLen = sizeof(sockaddr);
+    char sAddr[INET6_ADDRSTRLEN] = "\0";
+    struct sockaddr_in stPeer4;
+    struct sockaddr_in6 stPeer6;
+    struct sockaddr *stPeer = (AF_INET6 == _iDomain) ? (struct sockaddr *)&stPeer6 : (struct sockaddr *)&stPeer4;
+    socklen_t iPeerLen = (AF_INET6 == _iDomain) ? sizeof(stPeer6) : sizeof(stPeer4);
 
-    getPeerName(&stPeer, iPeerLen);
-
-    char sAddr[INET_ADDRSTRLEN] = "\0";
-    struct sockaddr_in *p = (struct sockaddr_in *)&stPeer;
-
-    inet_ntop(_iDomain, &p->sin_addr, sAddr, sizeof(sAddr));
-
-    sPeerAddress= sAddr;
-    iPeerPort   = ntohs(p->sin_port);
+    bzero(stPeer, iPeerLen);
+    getPeerName(stPeer, iPeerLen);
+    inet_ntop(_iDomain, (AF_INET6 == _iDomain) ? (const void*)&stPeer6.sin6_addr : (const void *)&stPeer4.sin_addr, sAddr, sizeof(sAddr));
+    sPeerAddress = sAddr;
+    iPeerPort = (AF_INET6 == _iDomain) ? ntohs(stPeer6.sin6_port) : ntohs(stPeer4.sin_port);
 }
 
 void TC_Socket::getPeerName(string &sPathName)
@@ -114,21 +112,19 @@ void TC_Socket::getPeerName(struct sockaddr *pstPeerAddr, socklen_t &iPeerLen)
 
 void TC_Socket::getSockName(string &sSockAddress, uint16_t &iSockPort)
 {
-    assert(_iDomain == AF_INET);
+    assert(_iDomain == AF_INET || _iDomain == AF_INET6);
 
-    struct sockaddr stSock;
-    bzero(&stSock, sizeof(struct sockaddr));
-    socklen_t iSockLen = sizeof(sockaddr);
+    char sAddr[INET6_ADDRSTRLEN] = "\0";
+    struct sockaddr_in6 in6;
+    struct sockaddr_in in4;
+    struct sockaddr *in = (AF_INET6 == _iDomain) ? (struct sockaddr *)&in6 : (struct sockaddr *)&in4;
+    socklen_t len = (AF_INET6 == _iDomain) ? sizeof(in6) : sizeof(in4);
 
-    getSockName(&stSock, iSockLen);
-
-    char sAddr[INET_ADDRSTRLEN] = "\0";
-    struct sockaddr_in *p = (struct sockaddr_in *)&stSock;
-
-    inet_ntop(_iDomain, &p->sin_addr, sAddr, sizeof(sAddr));
-
+    bzero(in, len);
+    getSockName(in, len);
+    inet_ntop(_iDomain, (AF_INET6 == _iDomain) ? (const void *)&in6.sin6_addr : (const void *)&in4.sin_addr, sAddr, sizeof(sAddr));
     sSockAddress = sAddr;
-    iSockPort = ntohs(p->sin_port);
+    iSockPort = (AF_INET6 == _iDomain) ? ntohs(in6.sin6_port) : ntohs(in4.sin_port);
 }
 
 void TC_Socket::getSockName(string &sPathName)
@@ -192,29 +188,80 @@ void TC_Socket::parseAddr(const string &sAddr, struct in_addr &stSinAddr)
     }
 }
 
+void TC_Socket::parseAddr(const string &sAddr, struct in6_addr &stSinAddr)
+{
+    int iRet = inet_pton(AF_INET6, sAddr.c_str(), &stSinAddr);
+    if(iRet < 0)
+    {
+        throw TC_Socket_Exception("[TC_Socket::parseAddr6] inet_pton error", errno);
+    }
+    else if(iRet == 0)
+    {
+        struct hostent stHostent;
+        struct hostent *pstHostent;
+        char buf[2048] = "\0";
+        int iError;
+
+        gethostbyname2_r(sAddr.c_str(), AF_INET6, &stHostent, buf, sizeof(buf), &pstHostent, &iError);
+
+        if (pstHostent == NULL)
+        {
+            throw TC_Socket_Exception("[TC_Socket::parseAddr6] gethostbyname2_r error! :" + string(hstrerror(iError)));
+        }
+        else
+        {
+            if (pstHostent->h_addrtype != AF_INET6)
+            {
+                throw TC_Socket_Exception("[TC_Socket::parseAddr6] gethostbyname2_r return addrtype is not AF_INET6");
+            }
+            stSinAddr = *(struct in6_addr *) pstHostent->h_addr;
+        }
+    }
+}
+
 void TC_Socket::bind(const string &sServerAddr, int port)
 {
-    assert(_iDomain == AF_INET);
+    assert(_iDomain == AF_INET || _iDomain == AF_INET6);
 
-    struct sockaddr_in bindAddr;
+    struct sockaddr_in6 bindAddr6;
+    struct sockaddr_in bindAddr4;
+    struct sockaddr *bindAddr = (AF_INET6 == _iDomain) ? (struct sockaddr *)&bindAddr6 : (struct sockaddr *)&bindAddr4;
+    socklen_t len = (AF_INET6 == _iDomain) ? sizeof(bindAddr6) : sizeof(bindAddr4);
 
-    bzero(&bindAddr, sizeof(bindAddr));
+    bzero(bindAddr, len);
 
-    bindAddr.sin_family   = _iDomain;
-    bindAddr.sin_port     = htons(port);
-
-    if (sServerAddr == "")
+    if (AF_INET6 == _iDomain)
     {
-        bindAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+        bindAddr6.sin6_family   = _iDomain;
+        bindAddr6.sin6_port     = htons(port);
+
+        if (sServerAddr == "")
+        {
+            bindAddr6.sin6_addr = in6addr_any;
+        }
+        else
+        {
+            parseAddr(sServerAddr, bindAddr6.sin6_addr);
+        }
     }
     else
     {
-        parseAddr(sServerAddr, bindAddr.sin_addr);
+        bindAddr4.sin_family   = _iDomain;
+        bindAddr4.sin_port     = htons(port);
+
+        if (sServerAddr == "")
+        {
+            bindAddr4.sin_addr.s_addr = htonl(INADDR_ANY);
+        }
+        else
+        {
+            parseAddr(sServerAddr, bindAddr4.sin_addr);
+        }
     }
 
     try
     {
-        bind((struct sockaddr *)(&bindAddr), sizeof(bindAddr));
+        bind(bindAddr, len);
     }
     catch(...)
     {
@@ -268,28 +315,41 @@ void TC_Socket::close()
 
 int TC_Socket::connectNoThrow(const string &sServerAddr, uint16_t port)
 {
-    assert(_iDomain == AF_INET);
+    assert(_iDomain == AF_INET || _iDomain == AF_INET6);
 
     if (sServerAddr == "")
     {
         throw TC_Socket_Exception("[TC_Socket::connect] server address is empty error!");
     }
 
-    struct sockaddr_in serverAddr;
-    bzero(&serverAddr, sizeof(serverAddr));
+    struct sockaddr_in6 serverAddr6;
+    struct sockaddr_in serverAddr4;
+    struct sockaddr *serverAddr = (AF_INET6 == _iDomain) ? (struct sockaddr *)&serverAddr6 : (struct sockaddr *)&serverAddr4;
+    socklen_t len = (AF_INET6 == _iDomain) ? sizeof(serverAddr6) : sizeof(serverAddr4);
 
-    serverAddr.sin_family = _iDomain;
-    parseAddr(sServerAddr, serverAddr.sin_addr);
-    serverAddr.sin_port = htons(port);
+    bzero(serverAddr, len);
 
-    return connect((struct sockaddr *)(&serverAddr), sizeof(serverAddr));
+    if (AF_INET6 == _iDomain)
+    {
+        serverAddr6.sin6_family = _iDomain;
+        parseAddr(sServerAddr, serverAddr6.sin6_addr);
+        serverAddr6.sin6_port = htons(port);
+    }
+    else
+    {
+        serverAddr4.sin_family = _iDomain;
+        parseAddr(sServerAddr, serverAddr4.sin_addr);
+        serverAddr4.sin_port = htons(port);
+    }
+
+    return connect(serverAddr, len);
 }
 
 int TC_Socket::connectNoThrow(struct sockaddr* addr)
 {
-    assert(_iDomain == AF_INET);
+    assert(_iDomain == AF_INET || _iDomain == AF_INET6);
 
-    return connect(addr, sizeof(struct sockaddr));
+    return connect(addr, (AF_INET6 == _iDomain) ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in));
 }
 
 void TC_Socket::connect(const string &sServerAddr, uint16_t port)
@@ -349,23 +409,21 @@ int TC_Socket::send(const void *pvBuf, size_t iLen, int iFlag)
 
 int TC_Socket::recvfrom(void *pvBuf, size_t iLen, string &sFromAddr, uint16_t &iFromPort, int iFlags)
 {
-    struct sockaddr stFromAddr;
-    socklen_t iFromLen = sizeof(struct sockaddr);
-    struct sockaddr_in *p = (struct sockaddr_in *)&stFromAddr;
+    int iBytes;
+    struct sockaddr_in6 stFromAddr6;
+    struct sockaddr_in stFromAddr4;
+    struct sockaddr *stFromAddr = (AF_INET6 == _iDomain) ? (struct sockaddr *)&stFromAddr6 : (struct sockaddr *)&stFromAddr4;
+    socklen_t iFromLen = (AF_INET6 == _iDomain) ? sizeof(stFromAddr6) : sizeof(stFromAddr4);
 
-    bzero(&stFromAddr, sizeof(struct sockaddr));
-
-    int iBytes = recvfrom(pvBuf, iLen, &stFromAddr, iFromLen, iFlags);
+    bzero(stFromAddr, iFromLen);
+    iBytes = recvfrom(pvBuf, iLen, stFromAddr, iFromLen, iFlags);
     if (iBytes >= 0)
     {
-        char sAddr[INET_ADDRSTRLEN] = "\0";
-
-        inet_ntop(_iDomain, &p->sin_addr, sAddr, sizeof(sAddr));
-
+        char sAddr[INET6_ADDRSTRLEN] = "\0";
+        inet_ntop(_iDomain, (AF_INET6 == _iDomain) ? (const void *)&stFromAddr6.sin6_addr : (const void *)&stFromAddr4.sin_addr, sAddr, sizeof(sAddr));
         sFromAddr = sAddr;
-        iFromPort = ntohs(p->sin_port);
+        iFromPort = (AF_INET6 == _iDomain) ? ntohs(stFromAddr6.sin6_port) : ntohs(stFromAddr4.sin_port);
     }
-
     return iBytes;
 }
 
@@ -376,24 +434,43 @@ int TC_Socket::recvfrom(void *pvBuf, size_t iLen, struct sockaddr *pstFromAddr, 
 
 int TC_Socket::sendto(const void *pvBuf, size_t iLen, const string &sToAddr, uint16_t port, int iFlags)
 {
-    struct sockaddr_in toAddr;
+    struct sockaddr_in6 toAddr6;
+    struct sockaddr_in toAddr4;
+    struct sockaddr *toAddr = (AF_INET6 == _iDomain) ? (struct sockaddr *)&toAddr6 : (struct sockaddr *)&toAddr4;
+    socklen_t len = (AF_INET6 == _iDomain) ? sizeof(toAddr6) : sizeof(toAddr4);
 
-    bzero(&toAddr, sizeof(struct sockaddr_in));
-
-    toAddr.sin_family = _iDomain;
-
-    if (sToAddr == "")
+    bzero(toAddr, len);
+    if (AF_INET6 == _iDomain)
     {
-        toAddr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+        toAddr6.sin6_family = _iDomain;
+
+        if (sToAddr == "")
+        {
+            //toAddr.sin6_addr = in6addr_linklocal_allrouters;
+        }
+        else
+        {
+            parseAddr(sToAddr, toAddr6.sin6_addr);
+        }
+        toAddr6.sin6_port = htons(port);
     }
     else
     {
-        parseAddr(sToAddr, toAddr.sin_addr);
+        toAddr4.sin_family = _iDomain;
+
+        if (sToAddr == "")
+        {
+            toAddr4.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+        }
+        else
+        {
+            parseAddr(sToAddr, toAddr4.sin_addr);
+        }
+
+        toAddr4.sin_port = htons(port);
     }
 
-    toAddr.sin_port = htons(port);
-
-    return sendto(pvBuf, iLen, (struct sockaddr *)(&toAddr), sizeof(toAddr), iFlags);
+    return sendto(pvBuf, iLen, toAddr, len, iFlags);
 }
 
 int TC_Socket::sendto(const void *pvBuf, size_t iLen, struct sockaddr *pstToAddr, socklen_t iToLen, int iFlags)
@@ -565,12 +642,12 @@ void TC_Socket::createPipe(int fds[2], bool bBlock)
     }
 }
 
-vector<string> TC_Socket::getLocalHosts()
+vector<string> TC_Socket::getLocalHosts(int domain)
 {
     vector<string> result;
 
     TC_Socket ts;
-    ts.createSocket(SOCK_STREAM, AF_INET);
+    ts.createSocket(SOCK_STREAM, domain);
 
     int cmd = SIOCGIFCONF;
 
@@ -619,11 +696,28 @@ vector<string> TC_Socket::getLocalHosts()
                 result.push_back(sAddr);
             }
         }
+        else if (ifr[i].ifr_addr.sa_family == AF_INET6)
+        {
+            struct sockaddr_in6* addr = reinterpret_cast<struct sockaddr_in6*>(&ifr[i].ifr_addr);
+            if(!memcmp(&addr->sin6_addr, &in6addr_any, sizeof(addr->sin6_addr)))
+            {
+                char sAddr[INET6_ADDRSTRLEN] = "\0";
+                inet_ntop(AF_INET6, &(*addr).sin6_addr, sAddr, sizeof(sAddr));
+                result.push_back(sAddr);
+            }
+        }
     }
 
     free(ifc.ifc_buf);
 
     return result;
+}
+
+bool addressIsIPv6(const string& addr, bool def_value)
+{
+#define IPv6_ADDRESS_CHAR ':'
+    return (addr.find(IPv6_ADDRESS_CHAR) != string::npos) ? true : false;
+#undef IPv6_ADDRESS_CHAR
 }
 
 
