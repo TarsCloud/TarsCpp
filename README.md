@@ -25,9 +25,11 @@ mysql:          |	4.1.17 and above
 
 Compile and install
 ```
+git clone https://github.com/TarsCloud/TarsCpp.git --recursive
+cd TarsCpp
 cmake .
 make
 make install
 ```
 
-Detailed installation reference Install.md
+Detailed installation reference Install.md under https://github.com/TarsCloud/Tars.git
