@@ -198,7 +198,7 @@ namespace detail
             return true;
         }
         
-        virtual bool hasException() const { return m_exception_ptr; }
+        virtual bool hasException() const { return !!m_exception_ptr; }
 
         virtual void setValue(rvalue_source_type /*v*/) {}
         virtual void setException(const ExceptionPtr& /*e*/) {}
