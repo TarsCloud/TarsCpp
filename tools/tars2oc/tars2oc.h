@@ -204,6 +204,8 @@ protected:
 	 *
 	 */
 	bool IsRetainType(const TypePtr &pPtr) const;
+
+    bool isNumberType(const TypePtr &pPtr) const;
 	/**
 	 * 获取结构体中依赖其它类型的标识符名称和类型，目前是结构体和枚举两种类型
 	 *

@@ -166,12 +166,18 @@ string Tars2OC::tostr(const TypePtr &pPtr) const
         }
         else
         {
-            return "NSArray*";
+            ostringstream s;
+            s << "NSArray<" << (isNumberType(vPtr->getTypePtr()) ? "NSNumber*" : tostr(vPtr->getTypePtr())) << ">*";
+            return s.str();
         }
     }
 
     MapPtr mPtr = MapPtr::dynamicCast(pPtr);
-    if (mPtr) return "NSDictionary*";
+    if (mPtr) {
+        ostringstream s;
+        s << "NSDictionary<" << (isNumberType(mPtr->getLeftTypePtr()) ? "NSNumber*" : tostr(mPtr->getLeftTypePtr())) << ", " << (isNumberType(mPtr->getRightTypePtr()) ? "NSNumber*" : tostr(mPtr->getRightTypePtr())) << ">*";
+        return s.str();
+    }
 
     StructPtr sPtr = StructPtr::dynamicCast(pPtr);
     if (sPtr) return tostrStruct(sPtr)+ "*";
@@ -183,6 +189,39 @@ string Tars2OC::tostr(const TypePtr &pPtr) const
 
     assert(false);
     return "";
+}
+
+bool Tars2OC::isNumberType(const TypePtr &pPtr) const
+{
+    BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
+    bool ret = false;
+    if (bPtr)
+    {
+        switch (bPtr->kind())
+        {
+            case Builtin::KindBool:
+            case Builtin::KindByte:
+            case Builtin::KindShort:
+            case Builtin::KindInt:
+            case Builtin::KindLong:
+            case Builtin::KindFloat:
+            case Builtin::KindDouble:
+            {
+                ret = true;
+                break;
+            }
+            default:
+                ret = false;
+                break;
+        }
+    }
+    
+    EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
+    if (ePtr)
+    {
+        ret = true;
+    }
+    return ret;
 }
 
 string Tars2OC::tostrBuiltin(const BuiltinPtr &pPtr) const
@@ -407,7 +446,7 @@ map<string,int> Tars2OC::getReferences(const StructPtr &pPtr, const string& name
 		MapPtr mPtr = MapPtr::dynamicCast(vMember[j]->getTypePtr());
 		if (mPtr)
 		{
-			toIncludeName(vPtr,mTemp);
+			toIncludeName(mPtr,mTemp);
 		}
 
 		StructPtr sPtr = StructPtr::dynamicCast(vMember[j]->getTypePtr());
