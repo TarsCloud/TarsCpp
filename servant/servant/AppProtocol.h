@@ -182,7 +182,7 @@ public:
     }
 
     /**
-     * 普通二禁止包普tars请求包
+     * 普通二进制 tars 请求包
      * @param request
      * @param buff
      */
