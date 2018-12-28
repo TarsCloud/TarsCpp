@@ -199,7 +199,7 @@ void TC_Cgi::parseNormal(multimap<string, string> &mmpParams, const string& sBuf
 
         if(iFlag == 0)
         {
-            while ( (sBuffer[pos] != '=') && (pos < len) )
+            while ( (pos < len) && (sBuffer[pos] != '=') )
             {
                 sTmp += (sBuffer[pos] == '+') ? ' ' : sBuffer[pos];
 
@@ -208,7 +208,7 @@ void TC_Cgi::parseNormal(multimap<string, string> &mmpParams, const string& sBuf
         }
         else
         {
-            while ( (sBuffer[pos] != '&') && (pos < len) )
+            while ( (pos < len) && (sBuffer[pos] != '&') )
             {
                 sTmp += (sBuffer[pos] == '+') ? ' ' : sBuffer[pos];
 

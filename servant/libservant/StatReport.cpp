@@ -115,7 +115,7 @@ void StatReport::setReportInfo(const StatFPrx& statPrx,
         _maxReportSize = iMaxReportSize;
     }
     vector<string> vtSetInfo = TC_Common::sepstr<string>(strSetDivision,".");
-    if (vtSetInfo.size()!=3 ||(vtSetInfo.size()==3&&(vtSetInfo[0]=="*"||vtSetInfo[1]=="*")))
+    if (vtSetInfo.size()!=3 ||(vtSetInfo[0]=="*"||vtSetInfo[1]=="*"))
     {
         _setArea= "";
         _setID  = "";
@@ -210,7 +210,7 @@ bool StatReport::divison2SetInfo(const string& str, vector<string>& vtSetInfo)
 {
     vtSetInfo = TC_Common::sepstr<string>(str,".");
 
-    if (vtSetInfo.size() != 3 ||(vtSetInfo.size()==3&&(vtSetInfo[0]=="*"||vtSetInfo[1]=="*")))
+    if (vtSetInfo.size() != 3 ||(vtSetInfo[0]=="*"||vtSetInfo[1]=="*"))
     {
         TLOGERROR(__FUNCTION__ << ":" << __LINE__ << "|bad set name [" << str << endl);
         return false;

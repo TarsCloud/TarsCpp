@@ -319,7 +319,6 @@ string TC_ConfigDomain::reverse_parse(const string &s)
         case '\t':
             param += "\\t";
             break;
-            break;
         case '=':
             param += "\\=";
             break;
