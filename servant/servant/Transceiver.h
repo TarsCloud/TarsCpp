@@ -22,6 +22,7 @@
 #include "servant/CommunicatorEpoll.h"
 #include "util/tc_buffer.h"
 #include <list>
+#include <sys/uio.h>
 
 using namespace std;
 
