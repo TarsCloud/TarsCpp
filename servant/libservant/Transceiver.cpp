@@ -14,6 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
+#include <sys/uio.h>
 #include "servant/Transceiver.h"
 #include "servant/AdapterProxy.h"
 #include "servant/Application.h"
