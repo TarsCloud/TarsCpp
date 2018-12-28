@@ -539,7 +539,7 @@ public:
         void decreaseNowConnection();
 
         /**
-         * 减少当前连接数
+         * 增加当前连接数
          */
         void increaseNowConnection();
 
