@@ -231,36 +231,31 @@ string TC_File::simplifyDirectory(const string& path)
 
 string TC_File::load2str(const string &sFullFileName)
 {
-    FILE* fp = fopen(sFullFileName.data(), "rb");
-    if (!fp)
+    int fd = open(sFullFileName.data(), O_RDONLY);
+    if (fd < 0)
         return "";
 
-    fseek(fp, 0L, SEEK_END);
-    long size = ftell(fp);
-    fseek(fp, 0L, SEEK_SET);
-
-    string s(size, '\0');
-    fread((void*)s.data(), size, 1, fp);
-    fclose(fp);
-
+    string s = "";
+    int nread = -1;
+    do {
+        char buf[1024] = {'\0'};
+        nread = read(fd, buf, sizeof(buf));
+        if (nread > 0)
+            s += buf;
+    } while (nread > 0);
+    close(fd);
     return s;
 }
 
 void TC_File::load2str(const string &sFullFileName, vector<char> &buffer)
 {
     buffer.clear();
-
-    FILE* fp = fopen(sFullFileName.data(), "rb");
-    if (!fp)
+    string s = load2str(sFullFileName);
+    if (0 == s.size())
         return;
 
-    fseek(fp, 0L, SEEK_END);
-    long size = ftell(fp);
-    fseek(fp, 0L, SEEK_SET);
-
-    buffer.resize(size);
-    fread((void*)&buffer[0], size, 1, fp);
-    fclose(fp);
+    buffer.resize(s.size());
+    memcpy((void*)&buffer[0], (void *)s.data(), s.size());
 }
 
 void TC_File::save2file(const string &sFullFileName, const string &sFileData)
