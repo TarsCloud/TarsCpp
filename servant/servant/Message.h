@@ -286,8 +286,10 @@ struct ReqMessage : public TC_HandleBase
     CoroutineScheduler*            sched;          //协程调度器
     uint32_t                    iCoroId;        //协程的id
 
-    SampleKey                   sampleKey;      //采样信息
 
+#ifdef _USE_OPENTRACKING
+    std::unordered_map<std::string, std::string> trackInfoMap; //调用链信息
+#endif
 };
 
 typedef TC_AutoPtr<ReqMessage>          ReqMessagePtr;

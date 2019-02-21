@@ -26,7 +26,9 @@
 #include "servant/StatReport.h"
 #include "util/tc_nghttp2.h"
 #include "util/tc_http2clientmgr.h"
-
+#ifdef _USE_OPENTRACKING
+#include "servant/text_map_carrier.h"
+#endif
 
 namespace tars
 {
@@ -163,6 +165,10 @@ int AdapterProxy::invoke(ReqMessage * msg)
     }
 #endif
 
+#ifdef _USE_OPENTRACKING
+    startTrack(msg);
+#endif
+
     _objectProxy->getProxyProtocol().requestFunc(msg->request, msg->sReqData);
 
     //交给连接发送数据,连接连上,buffer不为空,直接发送数据成功
@@ -173,6 +179,10 @@ int AdapterProxy::invoke(ReqMessage * msg)
         //请求发送成功了，单向调用直接返回
         if(msg->eType == ReqMessage::ONE_WAY)
         {
+        #ifdef _USE_OPENTRACKING
+            finishTrack(msg);
+        #endif
+
             delete msg;
             msg = NULL;
 
@@ -186,6 +196,8 @@ int AdapterProxy::invoke(ReqMessage * msg)
             msg->eStatus = ReqMessage::REQ_EXC;
 
             finishInvoke(msg);
+            return 0;
+
         }
     }
     else
@@ -201,9 +213,16 @@ int AdapterProxy::invoke(ReqMessage * msg)
             msg->eStatus = ReqMessage::REQ_EXC;
 
             finishInvoke(msg);
+            return 0;
         }
     }
 
+#ifdef _USE_OPENTRACKING
+    if(msg->eType == ReqMessage::ONE_WAY)
+    {
+        finishTrack(msg);
+    }
+#endif
     return 0;
 }
 
@@ -530,6 +549,9 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
     //单向调用
     if(msg->eType == ReqMessage::ONE_WAY)
     {
+    #ifdef _USE_OPENTRACKING
+        finishTrack(msg);
+    #endif
         delete msg;
         msg = NULL;
         return ;
@@ -537,7 +559,9 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
 
     //stat 上报调用统计
     stat(msg);
-
+#ifdef _USE_OPENTRACKING
+    finishTrack(msg);
+#endif
     //超时屏蔽统计,异常不算超时统计
     if(msg->eStatus != ReqMessage::REQ_EXC && !msg->bPush)
     {
@@ -650,35 +674,72 @@ void AdapterProxy::doTimeout()
     }
 }
 
-void AdapterProxy::sample(ReqMessage * msg)
+
+#ifdef _USE_OPENTRACKING
+void AdapterProxy::startTrack(ReqMessage * msg)
 {
-    auto iter = _sample.find(msg->request.sFuncName);
-    if(iter == _sample.end())
+    if(!_communicator->_traceManager)
     {
-        vector<StatSampleMsg> vBuf;
-        auto result = _sample.insert(make_pair(msg->request.sFuncName,vBuf));
-        assert(result.second);
-        iter = result.first;
-    }
-    else
-    {
-        if(iter->second.size() > _maxSampleCount)
-            return;
+        TLOGINFO("[TARS]tracer info is null, just return" << endl);
+        return;
     }
 
-    StatSampleMsg  sample;
-    sample.unid             = msg->sampleKey._unid;
-    sample.depth            = msg->sampleKey._depth;
-    sample.width            = msg->sampleKey._width;
-    sample.parentWidth      = msg->sampleKey._parentWidth;
-    sample.masterName       = ClientConfig::ModuleName;
-    sample.slaveName        = StatReport::trimAndLimitStr(_objectProxy->name(), StatReport::MAX_MASTER_NAME_LEN);
-    sample.interfaceName    = msg->request.sFuncName;
-    sample.masterIp         = "";
-    sample.slaveIp          = _endpoint.host();
+    string functionName = msg->request.sFuncName;
+    std::unique_ptr<opentracing::Span> span;
+    
+    if(msg->trackInfoMap.empty())  //start a new track
+    {
+        //std::chrono::time_point<std::chrono::system_clock> t1 = std::chrono::system_clock::now();
+        // _communicator->_traceManager->_tracer->StartSpan(functionName, {opentracing::StartTimestamp(t1)});
+        span = _communicator->_traceManager->_tracer->StartSpan(functionName);
+       
+    }else{
+        TextMapCarrier carrier1(msg->trackInfoMap);
+        auto span_context_maybe = _communicator->_traceManager->_tracer->Extract(carrier1);
+        assert(span_context_maybe);
 
-    iter->second.push_back(sample);
+        //std::chrono::time_point<std::chrono::system_clock> t1 = std::chrono::system_clock::now();
+        //_communicator->_traceManager->_tracer->StartSpan(functionName, {opentracing::ChildOf(span_context_maybe->get()), opentracing::StartTimestamp(t1)});
+        span = _communicator->_traceManager->_tracer->StartSpan(functionName, {opentracing::ChildOf(span_context_maybe->get())});
+    }
+    //将调用链信息注入到request的status中
+    std::unordered_map<std::string, std::string> text_map;
+    TextMapCarrier carrier(text_map);
+    auto err = _communicator->_traceManager->_tracer->Inject(span->context(), carrier);
+    assert(err);
+    std::string contxt = read_span_context(text_map);
+    
+    _spanMap[msg->request.iRequestId].reset(span.release());
+    //_spanMap.insert(std::move(make_pair(msg->request.iRequestId, std::move(span))));
+
+    msg->request.status[ServantProxy::STATUS_TRACK_KEY] = contxt;
+    SET_MSG_TYPE(msg->request.iMessageType, tars::TARSMESSAGETYPETRACK);
+
+
+    
 }
+
+void AdapterProxy::finishTrack(ReqMessage * msg)
+{
+    map<int,std::unique_ptr<opentracing::Span>>::iterator spanIter = _spanMap.find(msg->request.iRequestId);
+
+    //report span info to zipkin collector 
+    if(spanIter != _spanMap.end())
+    {
+        if(msg->eType == ReqMessage::ONE_WAY)
+        {
+            spanIter->second->SetTag("Retcode", 0);
+        }
+        else
+        {
+            spanIter->second->SetTag("Retcode",msg->response.iRet);
+        }
+        
+        spanIter->second->Finish();
+        _spanMap.erase(msg->response.iRequestId);
+    }
+}
+#endif
 
 void AdapterProxy::stat(ReqMessage * msg)
 {

@@ -42,8 +42,20 @@ DEP_FILE    := $(foreach obj, $(LOCAL_OBJ), $(dir $(obj)).$(basename $(notdir $(
 MYSQL_INC       += -I/usr/local/mysql/include/mysql -I/usr/local/mysql/include -I/usr/include/mysql
 MYSQL_LIB_DIR   += -L/usr/local/mysql/lib/mysql -L/usr/local/mysql/lib -L/usr/lib/mysql
 LIB_DIR         += ${MYSQL_LIB_DIR}
+INC_DIR         += ${MYSQL_INC}
 
-INCLUDE         += -I${TARS_PATH}/include -I./ ${MYSQL_INC}
+ifneq ($(_USE_OPENTRACKING), 0)
+ifneq ($(_USE_OPENTRACKING), )
+	OPENTRACKING_INC     += -I/usr/local/include
+	OPENTRACKING_LIB_DIR += -L/usr/local/lib 
+	LIB_DIR += ${OPENTRACKING_LIB_DIR}
+	INC_DIR += ${OPENTRACKING_INC}
+endif
+endif
+
+
+
+INCLUDE         += -I${TARS_PATH}/include -I./ ${INC_DIR}
 LIB             += -L${TARS_PATH}/lib -ltarsservant -ltarsparse -ltarsutil -lpthread ${LIB_DIR}
 
 ifneq ($(TARS_SSL), 0)
@@ -59,6 +71,14 @@ ifneq ($(TARS_HTTP2), )
 	#业务编译
 	CFLAGS += -DTARS_HTTP2=1
 	LIB += -lnghttp2
+endif
+endif
+
+ifneq ($(_USE_OPENTRACKING), 0)
+ifneq ($(_USE_OPENTRACKING), )
+	#业务编译
+	CFLAGS += -D_USE_OPENTRACKING=1
+	LIB += -lopentracing -lzipkin_opentracing -lzipkin -lcurl 
 endif
 endif
 

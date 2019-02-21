@@ -22,6 +22,9 @@
 #include "servant/AppProtocol.h"
 #include "servant/BaseF.h"
 #include "servant/TarsNodeF.h"
+#ifdef _USE_OPENTRACKING
+#include "servant/text_map_carrier.h"
+#endif
 
 namespace tars
 {
@@ -615,11 +618,15 @@ void ServantHandle::handle(const TC_EpollServer::tagRecvData &stRecvData)
     }
 }
 
-//处理采样信息
-void ServantHandle::processSample(const TarsCurrentPtr &current)
-{
-    ServantProxyThreadData * sptd = ServantProxyThreadData::getData();
 
+#ifdef _USE_OPENTRACKING
+void ServantHandle::processTracking(const TarsCurrentPtr &current)
+{
+    if(!(Application::getCommunicator()->_traceManager))
+    {
+        return;
+    }
+    ServantProxyThreadData * sptd = ServantProxyThreadData::getData();
     assert(sptd);
 
     if(!sptd)
@@ -627,37 +634,69 @@ void ServantHandle::processSample(const TarsCurrentPtr &current)
         return;
     }
 
-    sptd->_sampleKey.init();
-
-    //自服务框架TarsCurrent初始化 父节点广度设置为-1
-    sptd->_sampleKey._parentWidth = -1;
-
-    //已经是tars调用了, 则非根节点
-    sptd->_sampleKey._root = false;
-
-    if(IS_MSG_TYPE(current->getMessageType(), tars::TARSMESSAGETYPESAMPLE))
+    //提取packet中的span信息，更新为被调的span信息后设置到sptd->_trackInfoMap;
+    sptd->_trackInfoMap.clear();
+    
+    if (IS_MSG_TYPE(current->getMessageType(), tars::TARSMESSAGETYPETRACK))
     {
-        map<string, string>::const_iterator iter;
-        const map<string, string> & requestStatus = current->getRequestStatus();
-        iter = requestStatus.find(ServantProxy::STATUS_SAMPLE_KEY);
-        if(iter != requestStatus.end())
+        map<string, string>::const_iterator trackinfoIter = current->getRequestStatus().find(ServantProxy::STATUS_TRACK_KEY);
+        TLOGINFO("[TARS] servant got a tracking request, message_type set" << current->getMessageType() << endl);
+        if (trackinfoIter != current->getRequestStatus().end())
         {
-            //statu 里面的内容为 "id|depth|width"形式.合在一起以便节省编解码
-            vector<string> v = TC_Common::sepstr<string>(iter->second,"|");
+            TLOGINFO("[TARS] servant got a tracking request, tracking key:" << trackinfoIter->second << endl);
+            string context = trackinfoIter->second;
+            char szBuffer[context.size() + 1] = {0};
+            memcpy(szBuffer, context.c_str(), context.size());
+            
+            std::unordered_map<std::string, std::string> text_map;
+            write_span_context(text_map, szBuffer);
 
-            if(v.size() > 2)
+            TextMapCarrier carrier(text_map);
+            auto tracer = Application::getCommunicator()->_traceManager->_tracer;
+            auto span_context_maybe = tracer->Extract(carrier);
+            if(!span_context_maybe)
             {
-                sptd->_sampleKey._unid      = v[0];
-
-                //深度+1
-                sptd->_sampleKey._depth     = TC_Common::strto<int>(v[1])+1;
-
-                sptd->_sampleKey._parentWidth = TC_Common::strto<int>(v[2]);
-
+                //error
+                TLOGERROR("[TARS] servant got a tracking request, but extract the span context fail");
+                return ;
             }
+
+            string funcName = current->getFuncName();
+            auto child_span = tracer->StartSpan(funcName, {opentracing::ChildOf(span_context_maybe->get())});
+            
+            //text_map.clear();
+            auto err = tracer->Inject(child_span->context(), carrier);
+            assert(err);
+
+            sptd->_trackInfoMap = text_map;
+
+            _spanMap[current->getRequestId()].reset(child_span.release());
+
+            return ;
+
         }
     }
+
+    return ;
+
 }
+
+
+void ServantHandle::finishTracking(int ret, const TarsCurrentPtr &current)
+{
+    int requestId = current->getRequestId();
+    
+    if(_spanMap.find(requestId) != _spanMap.end())
+    {
+        auto spanIter = _spanMap.find(requestId);
+        spanIter->second->SetTag("Retcode", ret);
+        spanIter->second->Finish();
+
+        _spanMap.erase(requestId);
+    }
+}
+
+#endif
 
 bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
 {
@@ -809,16 +848,18 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     {
         dyeSwitch.enableDyeing(dyeingKey);
     }
-
-    //处理采样信息
-    processSample(current);
-
+#ifdef _USE_OPENTRACKING
+    //处理tracking信息
+    processTracking(current);
+#endif
     map<string, ServantPtr>::iterator sit = _servants.find(current->getServantName());
 
     if (sit == _servants.end())
     {
         current->sendResponse(TARSSERVERNOSERVANTERR);
-
+#ifdef _USE_OPENTRACKING
+        finishTracking(TARSSERVERNOSERVANTERR, current);
+#endif
         return;
     }
 
@@ -871,6 +912,9 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     {
         current->sendResponse(ret, buffer, TarsCurrent::TARS_STATUS(), sResultDesc);
     }
+#ifdef _USE_OPENTRACKING
+    finishTracking(ret, current);
+#endif
 }
 
 void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)

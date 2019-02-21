@@ -256,6 +256,7 @@ string ServantProxy::STATUS_SETNAME_VALUE = "STATUS_SETNAME_VALUE";
 
 string ServantProxy::TARS_MASTER_KEY       = "TARS_MASTER_KEY";
 
+string ServantProxy::STATUS_TRACK_KEY       = "STATUS_TRACK_KEY";
 
 ServantProxy::ServantProxy(Communicator * pCommunicator, ObjectProxy ** ppObjectProxy, size_t iClientThreadNum)
 : _communicator(pCommunicator)
@@ -530,10 +531,10 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         TLOGINFO("[TARS][ServantProxy::invoke, set dyeing, key=" << pSptd->_dyeingKey << endl);
     }
 
-    //采样信息需要透传
-    msg->sampleKey     = pSptd->_sampleKey;
-    //调用广度要+1
-    pSptd->_sampleKey._width ++;
+
+#ifdef _USE_OPENTRACKING
+    msg->trackInfoMap = pSptd->_trackInfoMap;
+#endif
 
     //设置超时时间
     msg->request.iTimeout     = (ReqMessage::SYNC_CALL == msg->eType)?_syncTimeout:_asyncTimeout;

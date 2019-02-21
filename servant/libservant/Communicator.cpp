@@ -45,6 +45,9 @@ Communicator::Communicator()
 , _statReport(NULL)
 , _timeoutLogFlag(true)
 , _minTimeout(100)
+#ifdef _USE_OPENTRACKING
+, _traceManager(NULL)
+#endif
 {
     memset(_communicatorEpoll,0,sizeof(_communicatorEpoll));
 }
@@ -53,6 +56,9 @@ Communicator::Communicator(TC_Config& conf, const string& domain/* = CONFIG_ROOT
 : _initialized(false)
 , _terminating(false)
 , _timeoutLogFlag(true)
+#ifdef _USE_OPENTRACKING
+, _traceManager(NULL)
+#endif
 {
     setProperty(conf, domain);
 }
@@ -136,6 +142,23 @@ void Communicator::initClientConfig()
     }
 
     ClientConfig::ModuleName = getProperty("modulename", exe);
+#if _USE_OPENTRACKING
+    string collector_host = getProperty("collector_host", "");
+    string collector_port = getProperty("collector_port", "");
+    if(!collector_host.empty() && !collector_port.empty())
+    {
+        //init zipkin config
+        zipkin::ZipkinOtTracerOptions options;
+        options.service_name = ClientConfig::ModuleName;
+        options.service_address = {zipkin::IpVersion::v4, ClientConfig::LocalIp};
+        
+        options.sample_rate = strtod(getProperty("sample_rate", "1.0").c_str(), NULL);
+        options.collector_host = collector_host;
+        options.collector_port = atoi(collector_port.c_str());
+        _traceManager = new TraceManager(options);
+        assert(_traceManager != NULL);
+    }
+#endif
 }
 
 void Communicator::setProperty(const map<string, string>& properties)

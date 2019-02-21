@@ -2,7 +2,12 @@ cmake_minimum_required(VERSION 2.8)
 
 project(servant)
 
+
+if(_USE_OPENTRACKING)
+include_directories(${util_SOURCE_DIR}/include ${OPENTRACKING_INC})
+else()
 include_directories(${util_SOURCE_DIR}/include)
+endif()
 
 link_libraries(pthread)
 

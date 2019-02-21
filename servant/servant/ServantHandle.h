@@ -27,6 +27,9 @@
 #include "servant/StatReport.h"
 #include <ucontext.h>
 #include "servant/CoroutineScheduler.h"
+#ifdef _USE_OPENTRACKING
+#include "opentracing/span.h"
+#endif
 
 namespace tars
 {
@@ -164,6 +167,17 @@ protected:
      */
     void processSample(const TarsCurrentPtr &current);
 
+#ifdef _USE_OPENTRACKING
+    /**
+     * 处理TARS下的调用链逻辑
+     *
+     * @param current
+     */
+    void processTracking(const TarsCurrentPtr &current);
+
+
+    void finishTracking(int ret, const TarsCurrentPtr &current);
+#endif
     /**
      * 处理TARS下的染色逻辑
      *
@@ -194,6 +208,10 @@ protected:
      * 协程调度器
      */
     CoroutineScheduler     *_coroSched;
+
+#ifdef _USE_OPENTRACKING
+    map<int,std::unique_ptr<opentracing::Span>> _spanMap;
+#endif
 };
 
 typedef TC_AutoPtr<ServantHandle> ServantHandlePtr;
