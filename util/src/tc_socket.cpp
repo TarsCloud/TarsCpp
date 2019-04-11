@@ -75,7 +75,7 @@ void TC_Socket::createSocket(int iSocketType, int iDomain)
 
 void TC_Socket::getPeerName(string &sPeerAddress, uint16_t &iPeerPort)
 {
-    assert(_iDomain == AF_INET && _iDomain == AF_INET6);
+    assert(_iDomain == AF_INET || _iDomain == AF_INET6);
 
     char sAddr[INET6_ADDRSTRLEN] = "\0";
     struct sockaddr_in stPeer4;
