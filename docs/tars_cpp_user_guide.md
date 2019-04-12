@@ -945,7 +945,7 @@ tars.setdyeing dyeingKey dyeingServant [dyeingInterface]
 假设以上接口的远程对象为 TestApp.HelloServer.HelloObj testHello
 可以通过管理平台发布命令：tars.setdyeing 123456 TestApp.HelloServer.HelloObj testHello
 
-当有sInput为123456的请求发到该服务，出了正常的日志输出外，还将集中打印到本地系统日志：
+当有sInput为123456的请求发到该服务，除了正常的日志输出外，还将集中打印到本地系统日志：
 
 /usr/local/app/tars/app_log/tars_dyeing/dyeing_20161227.log 
 TestApp.HelloServer|2016-12-27 15:38:49|11454|DEBUG|HelloImp::testHello sReq:123456
