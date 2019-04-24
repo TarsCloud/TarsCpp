@@ -1354,7 +1354,7 @@ Tars调用链使用了opentracking和zipkin-opentracking库，由于zipkin-opent
 使用说明：  
 1)  编译及安装  
 tars调用链功能通过编译选项_USE_OPENTRACKING进行控制，默认情况下为关闭。  
-打开方式：在shell中执行export _USE_OPENTRACKING=1，然后进行编译。  
+打开方式：在shell中执行export _USE_OPENTRACKING=1，然后进行编译(编译前请使用git submodule foreach git pull origin master更新项目下的子仓库)。  
 框架编译完后，修改servant/makefile/makefile.tars文件，在前面增加一行：  
 `_USE_OPENTRACKING=1`  
 表示框架打开了调用链开关。另外，opentraking, curl, zipkin_opentracing需要手动修改到正确的路径上来（目前默认路径为/usr/local/lib）。  
