@@ -1372,7 +1372,7 @@ Download link:
 **Instructions for use:**  
 1) Compile and install  
 The feature of tars call chain is controlled by the compile option _USE_OPENTRACKING, which is off by default.  
-Open mode: Execute export _USE_OPENTRACKING=1 in the shell before compile tars(Use \'git submodule foreach git pull origin master\' to update the sub-repository under the project before compiling).  
+Open mode: Execute export _USE_OPENTRACKING=1 in the shell before compile tars.
 After the framework is compiled, modify the \'servant/makefile/makefile.tars\' file and add a line to the front before install tars:   
 `_USE_OPENTRACKING=1`  
 to indicates that the framework has opened the call chain switch. In addition, opentraking, curl, zipkin_opentracing install path need to be manually modified to the correct path (The default path is /usr/local/lib).   
