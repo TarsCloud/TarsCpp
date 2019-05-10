@@ -31,4 +31,4 @@ make
 make install
 ```
 
-详细安装参见https://github.com/TarsCloud/Tars.git下的Install.md
+详细安装参见https://github.com/TarsCloud/Tars/blob/master/Install.zh.md
