@@ -2107,6 +2107,8 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     s << TAB << "}" << endl;
     s << endl;
 
+    s << TAB << "static const char* tars_prxname() { return \"" << pPtr->getId() << "Proxy\"; }" << endl;
+
     DEL_TAB;
     s << TAB << "};" << endl;
 
