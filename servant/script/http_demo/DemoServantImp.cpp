@@ -38,7 +38,7 @@ int DemoServantImp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 int DemoServantImp::doRequest(const TC_HttpRequest &req, TC_HttpResponse &rsp)
 {
 	string msg = "Hello Tars!";
-    rsp.setContentType("html/text");
+    rsp.setContentType("text/html");
     rsp.setResponse(msg.c_str(), msg.size());
     return 0;   
 }
