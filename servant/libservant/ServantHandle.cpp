@@ -645,7 +645,8 @@ void ServantHandle::processTracking(const TarsCurrentPtr &current)
         {
             TLOGINFO("[TARS] servant got a tracking request, tracking key:" << trackinfoIter->second << endl);
             string context = trackinfoIter->second;
-            char szBuffer[context.size() + 1] = {0};
+            char szBuffer[context.size() + 1];
+            memset(szBuffer, 0x00, context.size() + 1);
             memcpy(szBuffer, context.c_str(), context.size());
             
             std::unordered_map<std::string, std::string> text_map;
