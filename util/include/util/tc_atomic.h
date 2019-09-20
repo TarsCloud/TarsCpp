@@ -137,10 +137,7 @@ public:
      */
     void inc_fast()
     {
-        __asm__ __volatile__(
-            TARS_LOCK "incl %0"
-            :"=m" (_value.counter)
-            :"m" (_value.counter));
+	__sync_add_and_fetch(&_value.counter,1);
     }
 
     /**
@@ -150,14 +147,7 @@ public:
      */
     bool dec_and_test()
     {
-        unsigned char c;
-
-        __asm__ __volatile__(
-            TARS_LOCK "decl %0; sete %1"
-            :"=m" (_value.counter), "=qm" (c)
-            :"m" (_value.counter) : "memory");
-
-        return c != 0;
+	return (0 == __sync_sub_and_fetch(&_value.counter,1));
     }
 
     /**
@@ -177,13 +167,7 @@ protected:
      */
     int add_and_return(int i)
     {
-        /* Modern 486+ processor */
-        int __i = i;
-        __asm__ __volatile__(
-            TARS_LOCK "xaddl %0, %1;"
-            :"=r"(i)
-            :"m"(_value.counter), "0"(i));
-        return i + __i;
+	return (__sync_add_and_fetch(&_value.counter,i));
     }
 
 protected:
