@@ -100,10 +100,7 @@ float TC_TimeProvider::cpuMHz()
 
 void TC_TimeProvider::setTsc(timeval& tt)
 {
-    uint32_t low    = 0;
-    uint32_t high   = 0;
-    rdtsc(low,high);
-    uint64_t current_tsc    = ((uint64_t)high << 32) | low;
+    uint64_t current_tsc    = rdtsc();
 
     uint64_t& last_tsc      = _tsc[!_buf_idx];
     timeval& last_tt        = _t[_buf_idx];
@@ -123,10 +120,7 @@ void TC_TimeProvider::setTsc(timeval& tt)
 
 void TC_TimeProvider::addTimeOffset(timeval& tt,const int &idx)
 {
-    uint32_t low    = 0;
-    uint32_t high   = 0;
-    rdtsc(low,high);
-    uint64_t current_tsc = ((uint64_t)high << 32) | low;
+    uint64_t current_tsc = rdtsc();
     int64_t t =  (int64_t)(current_tsc - _tsc[idx]);
     time_t offset =  (time_t)(t*_cpu_cycle);
     if(t < -1000 || offset > 1000000)//毫秒级别

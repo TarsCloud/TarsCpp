@@ -23,8 +23,24 @@
 #include "util/tc_thread.h"
 #include "util/tc_autoptr.h"
 
-#define rdtsc(low,high) \
-     __asm__ __volatile__("rdtsc" : "=a" (low), "=d" (high))
+__inline __attribute__((always_inline)) uint64_t rdtsc() {
+#if defined(__i386__)
+    int64_t ret;
+    __asm__ volatile ("rdtsc" : "=A" (ret) );
+    return ret;
+#elif defined(__x86_64__) || defined(__amd64__)
+    uint32_t lo, hi;
+    __asm__ __volatile__("rdtsc" : "=a" (lo), "=d" (hi));
+    return (((uint64_t)hi << 32) | lo);
+#elif defined(__aarch64__)
+uint64_t cntvct;
+    asm volatile ("isb; mrs %0, cntvct_el0; isb; " : "=r" (cntvct) :: "memory");
+    return cntvct;
+#else
+#warning No high-precision counter available for your OS/arch
+    return 0;
+#endif
+}
 
 #define TNOW     tars::TC_TimeProvider::getInstance()->getNow()
 #define TNOWMS   tars::TC_TimeProvider::getInstance()->getNowMs()
