@@ -146,10 +146,10 @@ public:
      */
     CoroutineScheduler*        _sched;                   //协程调度器
 
-    /**
-     * 采样
-     */
-    SampleKey               _sampleKey;               //采样信息
+
+#ifdef _USE_OPENTRACKING
+    std::unordered_map<std::string, std::string> _trackInfoMap;
+#endif
 };
 
 
@@ -373,6 +373,8 @@ public:
     static string STATUS_SETNAME_VALUE; //set调用
 
     static string TARS_MASTER_KEY; //透传主调名称信息
+
+    static string STATUS_TRACK_KEY; //track信息
 
     /**
      * 缺省的同步调用超时时间

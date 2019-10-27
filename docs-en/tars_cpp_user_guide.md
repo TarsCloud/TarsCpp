@@ -11,6 +11,7 @@
 > * Statistical report
 > * Abnormally Report
 > * Attribute statistics
+> * Tars call chain
 
 # Guide to use of frame
 
@@ -1357,3 +1358,40 @@ Description:
 > * Create a PropertyReportPtr function: The parameter createPropertyReport can be any collection of statistical methods, the example uses six statistical methods, usually only need to use one or two;
 > * Note that when you call createPropertyReport, you must create and save the created object after the service is enabled, and then just take the object to report, do not create it each time you use.
 
+# 13. Tars call chain
+Tars supports reporting rpc call path information to zipkin to help locate network call problems.  
+About zipkin instructions can be found at [https://zipkin.io/] (https://zipkin.io/).  
+
+**Compile and Running dependencies:**  
+The Tars call chain uses opentracking and zipkin-opentracking libraries. Since the zipkin-opentracking library depend on the libcurl library, you need to install libcurl. In addition, the compiler needs to support c++11.    
+Download link:  
+[opentracing-cpp](https://github.com/opentracing/opentracing-cpp)  
+[zipkin-cpp-opentracing](https://github.com/rnburn/zipkin-cpp-opentracing)  
+
+
+**Instructions for use:**  
+1) Compile and install  
+The feature of tars call chain is controlled by the compile option _USE_OPENTRACKING, which is off by default.  
+Open mode: Execute export _USE_OPENTRACKING=1 in the shell before compile tars.
+After the framework is compiled, modify the \'servant/makefile/makefile.tars\' file and add a line to the front before install tars:   
+`_USE_OPENTRACKING=1`  
+to indicates that the framework has opened the call chain switch. In addition, opentraking, curl, zipkin_opentracing install path need to be manually modified to the correct path (The default path is /usr/local/lib).   
+
+2) Configuration  
+When using the tars call chain function, you need to specify the address of the zipkin in the program configuration file. Sample configuration is as follows:  
+
+```
+<tars>
+    <application>
+        …
+        <client>
+            …
+            collector_host=127.0.0.1
+            collector_port=9411
+            sample_rate=1.0
+        </client>
+    </application>
+</tars>
+```
+
+The collector_host and collector_port are mandatory (if the configuration is not configured, the call chain function will not be available), sample_rate is optional (the default value is 1.0, the interval is 0.0~1.0, which is used to specify the rate of call chain information that reported to the zipkin collector)  

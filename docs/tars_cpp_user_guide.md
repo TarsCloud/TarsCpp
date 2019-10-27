@@ -11,6 +11,7 @@
 > * 统计上报
 > * 异常上报
 > * 属性统计
+> * tars调用链
 
 # 框架使用指南
 
@@ -1338,4 +1339,43 @@ for ( int i = 0; i < 10000000; i++ )
 > * 上报数据是定时上报的，可以在通信器的配置中设置，目前是1分钟一次;
 > * 创建PropertyReportPtr的函数：createPropertyReport的参数可以是任何统计方式的集合，例子中是用到6六种统计方式，通常情况下可能只需要用到一种或两种;
 > * 注意调用createPropertyReport时，必须在服务启动以后创建并保存好创建的对象，后续拿这个对象report即可，不要每次使用的时候create;
+
+# 13. tars调用链
+功能介绍：
+Tars支持将rpc调用路径信息上报zipkin, 以协助定位网络调用问题。  
+关于zipkin使用可以在[https://zipkin.io/](https://zipkin.io/) 上找到zipkin的介绍及使用说明。  
+
+编译及运行依赖：  
+Tars调用链使用了opentracking和zipkin-opentracking库，由于zipkin-opentracking库使用了libcurl库的功能，需要额外安装libcurl, 另外，编译器需要支持c++11；  
+下载链接：  
+[opentracing-cpp](https://github.com/opentracing/opentracing-cpp)  
+[zipkin-cpp-opentracing](https://github.com/rnburn/zipkin-cpp-opentracing)  
+
+使用说明：  
+1)  编译及安装  
+tars调用链功能通过编译选项_USE_OPENTRACKING进行控制，默认情况下为关闭。  
+打开方式：在shell中执行export _USE_OPENTRACKING=1，然后进行编译。  
+框架编译完后，修改servant/makefile/makefile.tars文件，在前面增加一行：  
+`_USE_OPENTRACKING=1`  
+表示框架打开了调用链开关。另外，opentraking, curl, zipkin_opentracing需要手动修改到正确的路径上来（目前默认路径为/usr/local/lib）。  
+然后使用make install安装tars框架。  
+
+2)  配置  
+使用tars调用链功能时需要在程序配置文件中指定zipkin的地址，示例配置如下：  
+
+```
+<tars>
+    <application>
+        …
+        <client>
+            …
+            collector_host=127.0.0.1
+            collector_port=9411
+            sample_rate=1.0
+        </client>
+    </application>
+</tars>
+```
+
+其中collector_host和collector_port为必选(如果没有配置的话，调用链功能将无法使用)，sample_rate可选(默认为1.0,区间为0.0~1.0,用于指定调用链信息上报zipkin collector的rate)  
 

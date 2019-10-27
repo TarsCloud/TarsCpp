@@ -26,6 +26,11 @@
 #include "servant/ObjectProxyFactory.h"
 #include "servant/AsyncProcThread.h"
 #include "servant/CommunicatorEpoll.h"
+#ifdef _USE_OPENTRACKING
+#include "zipkin/opentracing.h"
+#include "zipkin/tracer.h"
+#include "zipkin/ip_address.h"
+#endif
 
 #define CONFIG_ROOT_PATH "/tars/application/client"
 
@@ -302,6 +307,21 @@ protected:
      * 最小的超时时间
      */
     int64_t                _minTimeout;
+
+#ifdef _USE_OPENTRACKING
+public:
+    struct TraceManager:public TC_HandleBase{
+        zipkin::ZipkinOtTracerOptions _zipkin_options;
+        std::shared_ptr<opentracing::Tracer> _tracer;
+        TraceManager(): _tracer(nullptr){}
+        TraceManager(zipkin::ZipkinOtTracerOptions& options):_zipkin_options(options){
+            _tracer = zipkin::makeZipkinOtTracer(options);
+        }
+        ~TraceManager(){if(_tracer != nullptr){_tracer->Close();}}
+    };
+
+    TC_AutoPtr<TraceManager> _traceManager;
+#endif
 
 };
 ////////////////////////////////////////////////////////////////////////

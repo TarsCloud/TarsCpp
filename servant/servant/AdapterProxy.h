@@ -26,7 +26,9 @@
 #include "servant/Message.h"
 #include "servant/StatReport.h"
 #include <queue>
-
+#ifdef _USE_OPENTRACKING
+#include <opentracing/span.h>
+#endif
 namespace tars
 {
 ////////////////////////////////////////////////////////////////////////
@@ -91,6 +93,15 @@ public:
      */
     void sample(ReqMessage * msg);
 
+#ifdef _USE_OPENTRACKING
+	/** 
+	 * Zipkin调用链
+	 */
+    void startTrack(ReqMessage * msg);
+
+    void finishTrack(ReqMessage * msg);
+#endif	
+	
     /**
      * 获取ObjectProxy
      */
@@ -315,10 +326,11 @@ private:
     int                                    _sampleRate;
 
     /*
-     * 采样信息
+     * 调用链信息
      */
-    map<string,vector<StatSampleMsg> >     _sample;
-
+#ifdef _USE_OPENTRACKING
+    map<int,std::unique_ptr<opentracing::Span>> _spanMap;
+#endif
     int                                    _id;
     static  TC_Atomic                      _idGen;
 };
