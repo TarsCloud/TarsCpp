@@ -84,8 +84,16 @@ std::string GenServant(const ::google::protobuf::ServiceDescriptor* desc, int in
     out += "virtual ~" + servant + "() {}";
     out += LineFeed(indent);
 
-    for (int i = 0; i < desc->method_count(); ++i) {
-        out += GenMethods(desc->method(i), pkg, indent);
+    //sort by method name
+    std::map<std::string, const ::google::protobuf::MethodDescriptor*> m_method;
+    for (int i = 0; i < desc->method_count(); ++i)
+    {
+    	m_method[desc->method(i)->name()] = desc->method(i);
+    }
+
+    for(auto it = m_method.begin(); it != m_method.end(); ++it)
+    {
+    	out += GenMethods(it->second, pkg, indent);
     }
 
     // gen onDispatch
@@ -97,10 +105,11 @@ std::string GenServant(const ::google::protobuf::ServiceDescriptor* desc, int in
     out += "static ::std::string __all[] = ";
     out += "{";
     out += LineFeed(++indent);
-    for (int i = 0; i < desc->method_count(); ++i) {
-        auto method = desc->method(i);
-        out += "\"" + method->name() + "\",";
-        out += LineFeed(indent);
+    for(auto it = m_method.begin(); it != m_method.end(); ++it)
+    {
+    	auto method = it->second;
+    	out += "\"" + method->name() + "\",";
+		out += LineFeed(indent);
     }
     out += LineFeed(--indent);
     out += "};";
@@ -113,14 +122,18 @@ std::string GenServant(const ::google::protobuf::ServiceDescriptor* desc, int in
     out += LineFeed(indent);
     out += "{";
     out += LineFeed(++indent);
-    for (int i = 0; i < desc->method_count(); ++i) {
-        auto method = desc->method(i);
-        out += LineFeed(indent);
-        out += "case " + std::to_string((long long)i) + ":";
-        out += LineFeed(indent);
+    int i = 0;
+    for(auto it = m_method.begin(); it != m_method.end(); ++it)
+	{
+    	auto method = it->second;
+    	out += LineFeed(indent);
+		out += "case " + std::to_string((long long)i) + ":";
+		out += LineFeed(indent);
 
-        out += GenDispatchCase(method, pkg, indent);
-    }
+		out += GenDispatchCase(method, pkg, indent);
+
+		++i;
+	}
 
     // end switch
     out += LineFeed(--indent);

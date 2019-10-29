@@ -66,10 +66,18 @@ std::string GenPrxCallback(const ::google::protobuf::ServiceDescriptor* desc, in
     out += LineFeed(indent);
     out += LineFeed(indent);
 
-    for (int i = 0; i < desc->method_count(); ++i) {
-        auto method = desc->method(i);
-        out += GenCallbackMethod(method, pkg, indent);
-    }
+    //sort by method name
+	std::map<std::string, const ::google::protobuf::MethodDescriptor*> m_method;
+	for (int i = 0; i < desc->method_count(); ++i)
+	{
+		m_method[desc->method(i)->name()] = desc->method(i);
+	}
+
+	for(auto it = m_method.begin(); it != m_method.end(); ++it)
+	{
+		auto method = it->second;
+		out += GenCallbackMethod(method, pkg, indent);
+	}
 
     out += LineFeed(indent);
     out += LineFeed(indent);
@@ -86,8 +94,9 @@ std::string GenPrxCallback(const ::google::protobuf::ServiceDescriptor* desc, in
     out += "static ::std::string __all[] = ";
     out += "{";
     out += LineFeed(++indent);
-    for (int i = 0; i < desc->method_count(); ++i) {
-        auto method = desc->method(i);
+    for(auto it = m_method.begin(); it != m_method.end(); ++it)
+	{
+    	auto method = it->second;
         out += "\"" + method->name() + "\",";
         out += LineFeed(indent);
     }
@@ -99,8 +108,10 @@ std::string GenPrxCallback(const ::google::protobuf::ServiceDescriptor* desc, in
     out += "switch(r.first - __all)" + LineFeed(indent);
     out += "{";
     out += LineFeed(++indent);
-    for (int i = 0; i < desc->method_count(); ++i) {
-        auto method = desc->method(i);
+    int i = 0;
+    for(auto it = m_method.begin(); it != m_method.end(); ++it)
+	{
+    	auto method = it->second;
         out += LineFeed(indent);
         out += "case " + std::to_string((long long)i) + ":" + LineFeed(indent);
         out += "{" + LineFeed(++indent);
@@ -123,6 +134,8 @@ std::string GenPrxCallback(const ::google::protobuf::ServiceDescriptor* desc, in
 
         out += LineFeed(--indent);
         out += "}";
+
+        ++i;
     }
 
     // end switch
