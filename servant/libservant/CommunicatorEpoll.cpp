@@ -446,7 +446,7 @@ void CommunicatorEpoll::pushAsyncThreadQueue(ReqMessage * msg)
 
 void CommunicatorEpoll::run()
 {
-    TLOGDEBUG("CommunicatorEpoll::run id:"<<syscall(SYS_gettid)<<endl);
+    // TLOGDEBUG("CommunicatorEpoll::run id:"<<syscall(SYS_gettid)<<endl);
 
     ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);

@@ -120,14 +120,14 @@ public:
      *
      * @return const struct sockaddr_in&
      */
-    const struct sockaddr_in& addr() const;
+    const struct sockaddr_in& addr() ;
 
     /**
      * Get ipv4 or ipv6 struct sockaddr
      *
      * @return const struct sockaddr *
      */
-    const struct sockaddr * addrPtr() const;
+    const struct sockaddr * addrPtr();
 
     /**
      * 返回端口类型
@@ -201,6 +201,10 @@ protected:
      */
     string createCompareDesc();
 
+    /**
+     * 解析域名 
+     */
+    void parseAddress();
 private:
     /**
      * 地址IP
@@ -271,6 +275,11 @@ private:
      * _host is IPv6 or not
      */
     bool                   _isIPv6;
+
+    /**
+     * 解析域名成功
+     */ 
+    bool                   _addressSucc;
 };
 /////////////////////////////////////////////////////////////////////////////
 }
