@@ -116,18 +116,23 @@ public:
     unsigned int getWeightType() const { return _weighttype; }
 
     /**
+     * 解析域名 
+     */
+    void parseAddress();
+
+    /**
      * 获取主机地址
      *
      * @return const struct sockaddr_in&
      */
-    const struct sockaddr_in& addr() ;
+    const struct sockaddr_in& addr() const;
 
     /**
      * Get ipv4 or ipv6 struct sockaddr
      *
      * @return const struct sockaddr *
      */
-    const struct sockaddr * addrPtr();
+    const struct sockaddr * addrPtr() const;
 
     /**
      * 返回端口类型
@@ -201,10 +206,6 @@ protected:
      */
     string createCompareDesc();
 
-    /**
-     * 解析域名 
-     */
-    void parseAddress();
 private:
     /**
      * 地址IP

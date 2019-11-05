@@ -66,17 +66,12 @@ EndpointInfo::EndpointInfo(const string& host, uint16_t port, EndpointInfo::ETyp
     _cmpDesc = createCompareDesc();
 
     _desc = createDesc();
-
-    parseAddress();
 }
 
 void EndpointInfo::parseAddress()
 {
-    if(_addressSucc)
-        return;
-
-    try
-    {
+    // try
+    // {
         if (_isIPv6)
         {
             NetworkUtil::getAddress(_host, _port, _addr.in6);
@@ -85,13 +80,11 @@ void EndpointInfo::parseAddress()
         {
             NetworkUtil::getAddress(_host, _port, _addr.in);
         }
-
-        _addressSucc = true;
-    }
-    catch (...)
-    {
-        TLOGERROR("EndpointInfo::parseAddress fail:" << _host << ":" << _port << "]" << endl);
-    }
+    // }
+    // catch (...)
+    // {
+    //     TLOGERROR("EndpointInfo::parseAddress fail:" << _host << ":" << _port << "]" << endl);
+    // }
 }
 
 string EndpointInfo::createCompareDesc()
@@ -160,16 +153,13 @@ uint16_t EndpointInfo::port() const
     return _port;
 }
 
-const struct sockaddr_in& EndpointInfo::addr() 
+const struct sockaddr_in& EndpointInfo::addr() const
 {
-    parseAddress();
     return _addr.in;
 }
 
-const struct sockaddr * EndpointInfo::addrPtr() 
+const struct sockaddr * EndpointInfo::addrPtr() const
 {
-    parseAddress();
-
     return _isIPv6 ? (struct sockaddr *)&_addr.in6 : (struct sockaddr *)&_addr.in;
 }
 

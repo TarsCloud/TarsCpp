@@ -88,6 +88,9 @@ void Transceiver::connect()
 
     int fd = -1;
 
+    //每次连接前都重新解析一下地址, 避免dns变了!
+    _ep.parseAddress();
+
     if (_ep.type() == EndpointInfo::UDP)
     {
         fd = NetworkUtil::createSocket(true, false, _ep.isIPv6());
