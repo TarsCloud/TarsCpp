@@ -30,6 +30,7 @@ EndpointInfo::EndpointInfo()
 , _weighttype(0)
 , _authType(0)
 , _isIPv6(false)
+, _addressSucc(false)
 {
     _setDivision.clear();
     memset(&_addr,0,sizeof(_addr));
@@ -45,24 +46,32 @@ EndpointInfo::EndpointInfo(const string& host, uint16_t port, EndpointInfo::ETyp
 , _weight(weight)
 , _weighttype(weighttype)
 , _authType(authType)
+, _addressSucc(false)
 {
     _isIPv6 = TC_Socket::addressIsIPv6(host);
-    try
+    if(_weighttype == 0)
     {
-        if(_weighttype == 0)
-        {
-            _weight = -1;
-        }
-        else
-        {
-            if(_weight == -1)
-            {    
-                _weight = 100;
-            }
-
-            _weight = (_weight > 100 ? 100 : _weight);
+        _weight = -1;
+    }
+    else
+    {
+        if(_weight == -1)
+        {    
+            _weight = 100;
         }
 
+        _weight = (_weight > 100 ? 100 : _weight);
+    }
+
+    _cmpDesc = createCompareDesc();
+
+    _desc = createDesc();
+}
+
+void EndpointInfo::parseAddress()
+{
+    // try
+    // {
         if (_isIPv6)
         {
             NetworkUtil::getAddress(_host, _port, _addr.in6);
@@ -71,15 +80,11 @@ EndpointInfo::EndpointInfo(const string& host, uint16_t port, EndpointInfo::ETyp
         {
             NetworkUtil::getAddress(_host, _port, _addr.in);
         }
-
-        _cmpDesc = createCompareDesc();
-
-        _desc = createDesc();
-    }
-    catch (...)
-    {
-        TLOGERROR("[ERROR:getAddress fail:" << _host << ":" << _port << "]" << endl);
-    }
+    // }
+    // catch (...)
+    // {
+    //     TLOGERROR("EndpointInfo::parseAddress fail:" << _host << ":" << _port << "]" << endl);
+    // }
 }
 
 string EndpointInfo::createCompareDesc()

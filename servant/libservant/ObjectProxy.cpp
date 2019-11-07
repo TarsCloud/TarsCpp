@@ -219,7 +219,7 @@ const vector<AdapterProxy*> & ObjectProxy::getAdapters() const
 
 void ObjectProxy::doInvokeException(ReqMessage * msg)
 {
-    TLOGINFO("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
+    // TLOGINFO("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
 
     //单向调用出现异常直接删除请求
     if(msg->eType == ReqMessage::ONE_WAY)
@@ -300,7 +300,7 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 
 void ObjectProxy::doTimeout()
 {
-    TLOGINFO("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
+//    TLOGINFO("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
 
     ReqMessage * reqInfo = NULL;
     while(_reqTimeoutQueue.timeout(reqInfo))

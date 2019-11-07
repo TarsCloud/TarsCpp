@@ -116,6 +116,11 @@ public:
     unsigned int getWeightType() const { return _weighttype; }
 
     /**
+     * 解析域名 
+     */
+    void parseAddress();
+
+    /**
      * 获取主机地址
      *
      * @return const struct sockaddr_in&
@@ -271,6 +276,11 @@ private:
      * _host is IPv6 or not
      */
     bool                   _isIPv6;
+
+    /**
+     * 解析域名成功
+     */ 
+    bool                   _addressSucc;
 };
 /////////////////////////////////////////////////////////////////////////////
 }
