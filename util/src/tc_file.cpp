@@ -231,20 +231,29 @@ string TC_File::simplifyDirectory(const string& path)
 
 string TC_File::load2str(const string &sFullFileName)
 {
-    int fd = open(sFullFileName.data(), O_RDONLY);
-    if (fd < 0)
-        return "";
+    // int fd = open(sFullFileName.data(), O_RDONLY);
+    // if (fd < 0)
+    //     return "";
 
-    string s = "";
-    int nread = -1;
-    do {
-        char buf[1024] = {'\0'};
-        nread = read(fd, buf, sizeof(buf));
-        if (nread > 0)
-            s += buf;
-    } while (nread > 0);
-    close(fd);
-    return s;
+    // string s = "";
+    // int nread = -1;
+    // do {
+    //     char buf[1024] = {'\0'};
+    //     nread = read(fd, buf, sizeof(buf));
+    //     if (nread > 0)
+    //         s += buf;
+    // } while (nread > 0);
+    // close(fd);
+    // return s;
+
+    string data;
+    ifstream ifs(sFullFileName.c_str());
+    if(ifs.is_open())
+    {
+        data.assign(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
+        return data;
+    }
+    return data;
 }
 
 void TC_File::load2str(const string &sFullFileName, vector<char> &buffer)
