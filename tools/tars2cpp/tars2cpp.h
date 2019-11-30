@@ -38,7 +38,7 @@ public:
      * 生成
      * @param file
      */
-    void createFile(const string &file, const vector<string> &vsCoder);
+    void createFile(const string &file);//, const vector<string> &vsCoder);
 
     /**
      * 设置生成文件的目录
@@ -50,6 +50,11 @@ public:
      * 设置是否需要打包默认值
      */
     void setCheckDefault(bool bCheck) { _checkDefault = bCheck; }
+
+    /**
+     * 根据命令选项设置是否需要生成json支持
+     */
+    void setJsonSupport(bool bJsonSupport) { _bJsonSupport = bJsonSupport; }
 
     /**
      * 设置是否只生成struct
@@ -69,6 +74,22 @@ public:
 
     //下面是编解码的源码生成
 protected:
+
+    /**
+     * 生成json
+     * @param pPtr
+     *
+     * @return string
+     */
+    string writeToJson(const TypeIdPtr& pPtr) const;
+
+    /**
+     * 生成json
+     * @param pPtr
+     *
+     * @return string
+     */
+    string readFromJson(const TypeIdPtr& pPtr, bool bIsRequire = true) const;
 
     /**
      * 生成某类型的解码源码
@@ -403,19 +424,19 @@ protected:
      */
     StructPtr findStruct(const ContextPtr &pPtr,const string &id);
 
-    /**
-     *
-     * 生成接口编解码代码
-     * @param pPtr
-     * @param interface
-     */
-    void generateCoder(const ContextPtr &pPtr,const string &interface) const;
+    // /**
+    //  *
+    //  * 生成接口编解码代码
+    //  * @param pPtr
+    //  * @param interface
+    //  */
+    // void generateCoder(const ContextPtr &pPtr,const string &interface) const;
 
-    string generateCoder(const NamespacePtr &pPtr,const string & sInterface) const;
+    // string generateCoder(const NamespacePtr &pPtr,const string & sInterface) const;
 
-    string generateCoder(const InterfacePtr &pPtr) const;
+    // string generateCoder(const InterfacePtr &pPtr) const;
 
-    string generateCoder(const OperationPtr &pPtr) const;
+    // string generateCoder(const OperationPtr &pPtr) const;
 
     string generateInitValue(const TypeIdPtr &pPtr) const;
 
@@ -427,6 +448,8 @@ private:
     bool _checkDefault;
 
     bool _onlyStruct;
+
+    bool _bJsonSupport;
 
     std::string _namespace ;
 

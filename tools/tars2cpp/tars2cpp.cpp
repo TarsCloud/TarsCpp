@@ -29,11 +29,111 @@
 Tars2Cpp::Tars2Cpp()
 : _checkDefault(false)
 , _onlyStruct(false)
+, _bJsonSupport(true)
 , _namespace("tars")
 , _unknownField(false)
 , _tarsMaster(false)
 {
 
+}
+
+string Tars2Cpp::writeToJson(const TypeIdPtr& pPtr) const
+{
+    ostringstream s;
+    if (EnumPtr::dynamicCast(pPtr->getTypePtr()))
+    {
+        s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::JsonOutput::writeJson((" + _namespace + "::Int32)"
+            << pPtr->getId() << ");" << endl;
+    }
+    else if (pPtr->getTypePtr()->isArray())
+    {
+        s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::JsonOutput::writeJson((const "
+            << tostr(pPtr->getTypePtr()) << " *)" << pPtr->getId() << "Len"  << ");" << endl;
+    }
+    else if (pPtr->getTypePtr()->isPointer())
+    {
+        s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::JsonOutput::writeJson((const "
+            << tostr(pPtr->getTypePtr()) << " )" << pPtr->getId() << "Len"  << ");" << endl;
+    }
+    else
+    {
+        MapPtr mPtr = MapPtr::dynamicCast(pPtr->getTypePtr());
+        VectorPtr vPtr = VectorPtr::dynamicCast(pPtr->getTypePtr());
+
+		// 对于json， 不检测默认值
+        if (true || !_checkDefault || pPtr->isRequire() || (!pPtr->hasDefault() && !mPtr && !vPtr))
+        {
+            s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::JsonOutput::writeJson("
+                << pPtr->getId() << ");" << endl;
+        }
+        else
+        {
+            string sDefault = pPtr->def();
+
+            BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
+            if (bPtr && bPtr->kind() == Builtin::KindString)
+            {
+                sDefault = "\"" + tars::TC_Common::replace(pPtr->def(), "\"", "\\\"") + "\"";
+            }
+
+            if (mPtr || vPtr)
+            {
+                s << TAB << "if (" << pPtr->getId() << ".size() > 0)" << endl;
+            }
+            else if (bPtr && (bPtr->kind() == Builtin::KindFloat || bPtr->kind() == Builtin::KindDouble))
+            {
+                s << TAB << "if (!tars::TC_Common::equal(" << pPtr->getId() << "," << sDefault << "))" << endl;
+            }
+            else
+            {
+                s << TAB << "if (" << pPtr->getId() << " != " << sDefault << ")" << endl;
+            }
+
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::JsonOutput::writeJson("
+                << pPtr->getId() << ");" << endl;
+            DEL_TAB;
+            s << TAB << "}" << endl;
+        }
+    }
+
+    return s.str();
+}
+
+string Tars2Cpp::readFromJson(const TypeIdPtr& pPtr, bool bIsRequire) const
+{
+    ostringstream s;
+    // if (EnumPtr::dynamicCast(pPtr->getTypePtr()))
+    // {
+    //     s << TAB << _namespace + "::JsonInput::readJson((" + _namespace + "::Int32&)" << pPtr->getId() << ",pObj->value[\"" << pPtr->getId() << "\"]";
+    // }
+    // else
+    
+    if (pPtr->getTypePtr()->isArray())
+    {
+        s << TAB << _namespace + "::JsonInput::readJson(" << pPtr->getId() << "Len" << ",pObj->value[\"" << pPtr->getId() << "\"]" << getSuffix(pPtr);
+    }
+    else if (pPtr->getTypePtr()->isPointer())
+    {
+#if 0
+        s << TAB << pPtr->getId() <<" = ("<<tostr(pPtr->getTypePtr())<<")_is.cur();"<<endl;
+        s << TAB << "_is.read("<< pPtr->getId()<<", _is.left(), "<< pPtr->getId() << "Len";
+#endif
+        s << TAB << "not support";
+    }
+    else
+    {
+        s << TAB << _namespace + "::JsonInput::readJson(" << pPtr->getId() << ",pObj->value[\"" << pPtr->getId() << "\"]";
+    }
+    s << ", " << ((pPtr->isRequire() && bIsRequire) ? "true" : "false") << ");" << endl;
+
+#if 0
+    if(pPtr->getTypePtr()->isPointer())
+    s << TAB <<"_is.mapBufferSkip("<<pPtr->getId() << "Len);"<<endl;
+#endif
+
+    return s.str();
 }
 
 string Tars2Cpp::writeTo(const TypeIdPtr& pPtr) const
@@ -581,6 +681,55 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
     DEL_TAB;
     s << TAB << "}" << endl;
 
+    if (_bJsonSupport)
+    {
+        s << TAB << "tars::JsonValueObjPtr writeToJson() const" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "tars::JsonValueObjPtr p = new tars::JsonValueObj();" << endl;
+        for (size_t j = 0; j < member.size(); j++)
+        {
+            s << writeToJson(member[j]);
+        }
+        s << TAB << "return p;" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+
+        s << TAB << "string writeToJsonString() const" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "return tars::TC_Json::writeValue(writeToJson());" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+
+        s << TAB << "void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "resetDefautlt();" << endl;
+        s << TAB << "if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "char s[128];" << endl;
+        s << TAB << "snprintf(s, sizeof(s), \"read 'struct' type mismatch, get type: %d.\", (p.get() ? p->getType() : 0));" << endl;
+        s << TAB << "throw tars::TC_Json_Exception(s);" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << TAB << "tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);" << endl;
+        for (size_t j = 0; j < member.size(); j++)
+        {
+            s << readFromJson(member[j]);
+        }
+        DEL_TAB;
+        s << TAB << "}" << endl;
+
+        s << TAB << "void readFromJsonString(const string & str)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "readFromJson(tars::TC_Json::getValue(str));" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+    }
+
     s << TAB << "ostream& display(ostream& _os, int _level=0) const" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
@@ -624,7 +773,7 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
     }
     if  (_unknownField)
     {
-	    s << TAB << "std::string sUnknownField; //¹¤¾ß´ø--unknown²ÎÊý×Ô¶¯Éú³É×Ö¶Î,´æ·ÅÎ´ÖªtagÊý¾Ý." << endl;
+	    s << TAB << "std::string sUnknownField;" << endl;
     }
     DEL_TAB;
     s << TAB << "};" << endl;
@@ -660,6 +809,32 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
     s << TAB << "return !(l == r);" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
+
+
+    //定义 << >>
+    if (_bJsonSupport)
+    {
+        //重载 <<
+        s << TAB << "inline ostream& operator<<(ostream & os,const " << pPtr->getId() << "&r)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "os << r.writeToJsonString();" << endl;
+        s << TAB << "return os;" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+
+        //重载 >>
+        s << TAB << "inline istream& operator>>(istream& is," << pPtr->getId() << "&l)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "std::istreambuf_iterator<char> eos;" << endl;
+        s << TAB << "std::string s(std::istreambuf_iterator<char>(is), eos);" << endl;
+        s << TAB << "l.readFromJsonString(s);" << endl;
+        s << TAB << "return is;" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+
+    }
 
     vector<string> key = pPtr->getKey();
     //定义<
@@ -2344,6 +2519,7 @@ void Tars2Cpp::generateH(const ContextPtr &pPtr) const
     s << "#include <string>" << endl;
     s << "#include <vector>" << endl;
     s << "#include \"tup/Tars.h\"" << endl;
+    if (_bJsonSupport) s << "#include \"tup/TarsJson.h\"" << endl;
 
     s << "using namespace std;" << endl;
 
@@ -2381,24 +2557,24 @@ void Tars2Cpp::generateH(const ContextPtr &pPtr) const
     tars::TC_File::save2file(fileH, s.str());
 }
 
-void Tars2Cpp::createFile(const string& file, const vector<string>& vsCoder)
+void Tars2Cpp::createFile(const string& file)//, const vector<string>& vsCoder)
 {
     std::vector<ContextPtr> contexts = g_parse->getContexts();
     for (size_t i = 0; i < contexts.size(); i++)
     {
         if (file == contexts[i]->getFileName())
         {
-            if (vsCoder.size() == 0)
-            {
+            // if (vsCoder.size() == 0)
+            // {
                 generateH(contexts[i]);
-            }
-            else
-            {
-                for (size_t j = 0; j < vsCoder.size(); j++)
-                {
-                    generateCoder(contexts[i], vsCoder[j]);
-                }
-            }
+            // }
+            // else
+            // {
+            //     for (size_t j = 0; j < vsCoder.size(); j++)
+            //     {
+            //         generateCoder(contexts[i], vsCoder[j]);
+            //     }
+            // }
         }
     }
 }
@@ -2426,332 +2602,332 @@ StructPtr Tars2Cpp::findStruct(const ContextPtr& pPtr, const string& id)
     return NULL;
 }
 
-////////////////////////////////
-//for coder generating
-////////////////////////////////
-
-string Tars2Cpp::generateCoder(const NamespacePtr& pPtr, const string& sInterface) const
-{
-    ostringstream s;
-    vector<InterfacePtr>& is    = pPtr->getAllInterfacePtr();
-    vector<StructPtr>& ss    = pPtr->getAllStructPtr();
-    vector<EnumPtr>& es    = pPtr->getAllEnumPtr();
-    vector<ConstPtr>& cs    = pPtr->getAllConstPtr();
-
-    s << endl;
-    s << TAB << "namespace " << pPtr->getId() << endl;
-    s << TAB << "{" << endl;
-    INC_TAB;
-
-    for (size_t i = 0; i < cs.size(); i++)
-    {
-        s << generateH(cs[i]) << endl;
-    }
-
-    for (size_t i = 0; i < es.size(); i++)
-    {
-        s << generateH(es[i]) << endl;
-    }
-
-    for (size_t i = 0; i < ss.size(); i++)
-    {
-        s << generateH(ss[i], pPtr->getId()) << endl;
-    }
-
-    s << endl;
-
-    for (size_t i = 0; i < is.size(); i++)
-    {
-        if (pPtr->getId() + "::" + is[i]->getId() == sInterface)
-        {
-            s << generateCoder(is[i]) << endl;
-            s << endl;
-        }
-    }
-
-    DEL_TAB;
-    s << "}";
-
-    s << endl << endl;
-
-    return s.str();
-}
-
-string Tars2Cpp::generateCoder(const InterfacePtr& pPtr) const
-{
-    ostringstream s;
-
-    vector<OperationPtr>& vOperation = pPtr->getAllOperationPtr();
-
-    //生成编解码类
-    s << TAB << "// encode and decode for client" << endl;
-    s << TAB << "class " << pPtr->getId() << "Coder" << endl;
-    s << TAB << "{" << endl;
-    s << TAB << "public:" << endl << endl;
-    INC_TAB;
-    s << TAB << "typedef map<string, string> TARS_CONTEXT;" << endl << endl;
-
-    s << TAB << "enum enumResult" << endl;
-    s << TAB << "{" << endl;
-    INC_TAB;
-
-    s << TAB << "eTarsServerSuccess      = 0," << endl;
-    s << TAB << "eTarsPacketLess         = 1," << endl;
-    s << TAB << "eTarsPacketErr          = 2," << endl;
-    s << TAB << "eTarsServerDecodeErr    = -1," << endl;
-    s << TAB << "eTarsServerEncodeErr    = -2," << endl;
-    s << TAB << "eTarsServerNoFuncErr    = -3," << endl;
-    s << TAB << "eTarsServerNoServantErr = -4," << endl;
-    s << TAB << "eTarsServerQueueTimeout = -6," << endl;
-    s << TAB << "eTarsAsyncCallTimeout   = -7," << endl;
-    s << TAB << "eTarsProxyConnectErr    = -8," << endl;
-    s << TAB << "eTarsServerUnknownErr   = -99," << endl;
-
-    DEL_TAB;
-    s << TAB << "};" << endl << endl;
-
-    for (size_t i = 0; i < vOperation.size(); i++)
-    {
-        s << generateCoder(vOperation[i]) << endl;
-    }
-
-    DEL_TAB;
-    s << TAB << "protected:" << endl << endl;
-    INC_TAB;
-    s << TAB << "static " + _namespace + "::Int32 fetchPacket(const string & in, string & out)" << endl;
-    s << TAB << "{" << endl;
-
-    INC_TAB;
-    s << TAB << "if(in.length() < sizeof(" + _namespace + "::Int32)) return eTarsPacketLess;" << endl;
-
-    s << TAB << "" + _namespace + "::Int32 iHeaderLen;" << endl;
-    s << TAB << "memcpy(&iHeaderLen, in.c_str(), sizeof(" + _namespace + "::Int32));" << endl;
-
-    s << TAB << "iHeaderLen = ntohl(iHeaderLen);" << endl;
-    s << TAB << "if(iHeaderLen < (" + _namespace + "::Int32)sizeof(" + _namespace + "::Int32) || iHeaderLen > 100000000) return eTarsPacketErr;" << endl;
-    s << TAB << "if((" + _namespace + "::Int32)in.length() < iHeaderLen) return eTarsPacketLess;" << endl;
-
-    s << TAB << "out = in.substr(sizeof(" + _namespace + "::Int32), iHeaderLen - sizeof(" + _namespace + "::Int32)); " << endl;
-    s << TAB << "return 0;" << endl;
-
-    DEL_TAB;
-    s << TAB << "}" << endl;
-
-    s << endl;
-    s << TAB << "static string encodeBasePacket(const string & sServantName, const string & sFuncName, const vector<char> & buffer, "
-        << "const map<string, string>& context = TARS_CONTEXT())" << endl;
-    s << TAB << "{" << endl;
-    INC_TAB;
-
-    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> os;" << endl;
-    s << TAB << "os.write(1, 1);" << endl;
-    s << TAB << "os.write(0, 2);" << endl;
-    s << TAB << "os.write(0, 3);" << endl;
-    s << TAB << "os.write(0, 4);" << endl;
-    s << TAB << "os.write(sServantName, 5);" << endl;
-    s << TAB << "os.write(sFuncName, 6);" << endl;
-    s << TAB << "os.write(buffer, 7);" << endl;
-    s << TAB << "os.write(60, 8);" << endl;
-    s << TAB << "os.write(context, 9);" << endl;
-    s << TAB << "os.write(map<string, string>(), 10);" << endl;
-
-    s << TAB << _namespace + "::Int32 iHeaderLen;" << endl;
-    s << TAB << "iHeaderLen = htonl(sizeof(" + _namespace + "::Int32) + os.getLength());" << endl;
-    s << TAB << "string s;" << endl;
-    s << TAB << "s.append((const char*)&iHeaderLen, sizeof(" + _namespace + "::Int32));" << endl;
-    s << TAB << "s.append(os.getBuffer(), os.getLength());" << endl;
-
-    s << TAB << "return s;" << endl;
-
-    DEL_TAB;
-    s << TAB << "}" << endl;
-
-    s << endl;
-    s << TAB << "static " + _namespace + "::Int32 decodeBasePacket(const string & in, " + _namespace + "::Int32 & iServerRet, vector<char> & buffer)" << endl;
-    s << TAB << "{" << endl;
-    INC_TAB;
-
-    s << TAB << _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> is;" << endl;
-    s << TAB << "is.setBuffer(in.c_str(), in.length());" << endl;
-    s << TAB << "is.read(iServerRet, 5, true);" << endl;
-    s << TAB << "is.read(buffer, 6, true);" << endl;
-
-    s << TAB << "return 0;" << endl;
-
-    DEL_TAB;
-    s << TAB << "}" << endl;
-
-    s << endl;
-
-    DEL_TAB;
-    s << TAB << "};" << endl;
-
-    return s.str();
-}
-
-string Tars2Cpp::generateCoder(const OperationPtr& pPtr) const
-{
-    ostringstream s;
-    vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
-
-    //编码函数
-    s << TAB << "//encode & decode function for '" << pPtr->getId() << "()'" << endl << endl;
-    s << TAB << "static string encode_" << pPtr->getId() << "(const string & sServantName, ";
-
-    for (size_t i = 0; i < vParamDecl.size(); i++)
-    {
-        if (!vParamDecl[i]->isOut())
-        {
-            s << generateH(vParamDecl[i]) << ",";
-        }
-    }
-    s << endl;
-    s << TAB << "    const map<string, string>& context = TARS_CONTEXT())" << endl;
-    s << TAB << "{" << endl;
-
-    INC_TAB;
-    s << TAB << "try" << endl;
-    s << TAB << "{" << endl;
-
-    INC_TAB;
-    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> _os;" << endl;
-
-    for (size_t i = 0; i < vParamDecl.size(); i++)
-    {
-        if (vParamDecl[i]->isOut()) continue;
-        s << writeTo(vParamDecl[i]->getTypeIdPtr());
-    }
+// ////////////////////////////////
+// //for coder generating
+// ////////////////////////////////
+
+// string Tars2Cpp::generateCoder(const NamespacePtr& pPtr, const string& sInterface) const
+// {
+//     ostringstream s;
+//     vector<InterfacePtr>& is    = pPtr->getAllInterfacePtr();
+//     vector<StructPtr>& ss    = pPtr->getAllStructPtr();
+//     vector<EnumPtr>& es    = pPtr->getAllEnumPtr();
+//     vector<ConstPtr>& cs    = pPtr->getAllConstPtr();
+
+//     s << endl;
+//     s << TAB << "namespace " << pPtr->getId() << endl;
+//     s << TAB << "{" << endl;
+//     INC_TAB;
+
+//     for (size_t i = 0; i < cs.size(); i++)
+//     {
+//         s << generateH(cs[i]) << endl;
+//     }
+
+//     for (size_t i = 0; i < es.size(); i++)
+//     {
+//         s << generateH(es[i]) << endl;
+//     }
+
+//     for (size_t i = 0; i < ss.size(); i++)
+//     {
+//         s << generateH(ss[i], pPtr->getId()) << endl;
+//     }
+
+//     s << endl;
+
+//     for (size_t i = 0; i < is.size(); i++)
+//     {
+//         if (pPtr->getId() + "::" + is[i]->getId() == sInterface)
+//         {
+//             s << generateCoder(is[i]) << endl;
+//             s << endl;
+//         }
+//     }
+
+//     DEL_TAB;
+//     s << "}";
+
+//     s << endl << endl;
+
+//     return s.str();
+// }
+
+// string Tars2Cpp::generateCoder(const InterfacePtr& pPtr) const
+// {
+//     ostringstream s;
+
+//     vector<OperationPtr>& vOperation = pPtr->getAllOperationPtr();
+
+//     //生成编解码类
+//     s << TAB << "// encode and decode for client" << endl;
+//     s << TAB << "class " << pPtr->getId() << "Coder" << endl;
+//     s << TAB << "{" << endl;
+//     s << TAB << "public:" << endl << endl;
+//     INC_TAB;
+//     s << TAB << "typedef map<string, string> TARS_CONTEXT;" << endl << endl;
+
+//     s << TAB << "enum enumResult" << endl;
+//     s << TAB << "{" << endl;
+//     INC_TAB;
+
+//     s << TAB << "eTarsServerSuccess      = 0," << endl;
+//     s << TAB << "eTarsPacketLess         = 1," << endl;
+//     s << TAB << "eTarsPacketErr          = 2," << endl;
+//     s << TAB << "eTarsServerDecodeErr    = -1," << endl;
+//     s << TAB << "eTarsServerEncodeErr    = -2," << endl;
+//     s << TAB << "eTarsServerNoFuncErr    = -3," << endl;
+//     s << TAB << "eTarsServerNoServantErr = -4," << endl;
+//     s << TAB << "eTarsServerQueueTimeout = -6," << endl;
+//     s << TAB << "eTarsAsyncCallTimeout   = -7," << endl;
+//     s << TAB << "eTarsProxyConnectErr    = -8," << endl;
+//     s << TAB << "eTarsServerUnknownErr   = -99," << endl;
+
+//     DEL_TAB;
+//     s << TAB << "};" << endl << endl;
+
+//     for (size_t i = 0; i < vOperation.size(); i++)
+//     {
+//         s << generateCoder(vOperation[i]) << endl;
+//     }
+
+//     DEL_TAB;
+//     s << TAB << "protected:" << endl << endl;
+//     INC_TAB;
+//     s << TAB << "static " + _namespace + "::Int32 fetchPacket(const string & in, string & out)" << endl;
+//     s << TAB << "{" << endl;
+
+//     INC_TAB;
+//     s << TAB << "if(in.length() < sizeof(" + _namespace + "::Int32)) return eTarsPacketLess;" << endl;
+
+//     s << TAB << "" + _namespace + "::Int32 iHeaderLen;" << endl;
+//     s << TAB << "memcpy(&iHeaderLen, in.c_str(), sizeof(" + _namespace + "::Int32));" << endl;
+
+//     s << TAB << "iHeaderLen = ntohl(iHeaderLen);" << endl;
+//     s << TAB << "if(iHeaderLen < (" + _namespace + "::Int32)sizeof(" + _namespace + "::Int32) || iHeaderLen > 100000000) return eTarsPacketErr;" << endl;
+//     s << TAB << "if((" + _namespace + "::Int32)in.length() < iHeaderLen) return eTarsPacketLess;" << endl;
+
+//     s << TAB << "out = in.substr(sizeof(" + _namespace + "::Int32), iHeaderLen - sizeof(" + _namespace + "::Int32)); " << endl;
+//     s << TAB << "return 0;" << endl;
+
+//     DEL_TAB;
+//     s << TAB << "}" << endl;
+
+//     s << endl;
+//     s << TAB << "static string encodeBasePacket(const string & sServantName, const string & sFuncName, const vector<char> & buffer, "
+//         << "const map<string, string>& context = TARS_CONTEXT())" << endl;
+//     s << TAB << "{" << endl;
+//     INC_TAB;
+
+//     s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> os;" << endl;
+//     s << TAB << "os.write(1, 1);" << endl;
+//     s << TAB << "os.write(0, 2);" << endl;
+//     s << TAB << "os.write(0, 3);" << endl;
+//     s << TAB << "os.write(0, 4);" << endl;
+//     s << TAB << "os.write(sServantName, 5);" << endl;
+//     s << TAB << "os.write(sFuncName, 6);" << endl;
+//     s << TAB << "os.write(buffer, 7);" << endl;
+//     s << TAB << "os.write(60, 8);" << endl;
+//     s << TAB << "os.write(context, 9);" << endl;
+//     s << TAB << "os.write(map<string, string>(), 10);" << endl;
+
+//     s << TAB << _namespace + "::Int32 iHeaderLen;" << endl;
+//     s << TAB << "iHeaderLen = htonl(sizeof(" + _namespace + "::Int32) + os.getLength());" << endl;
+//     s << TAB << "string s;" << endl;
+//     s << TAB << "s.append((const char*)&iHeaderLen, sizeof(" + _namespace + "::Int32));" << endl;
+//     s << TAB << "s.append(os.getBuffer(), os.getLength());" << endl;
+
+//     s << TAB << "return s;" << endl;
+
+//     DEL_TAB;
+//     s << TAB << "}" << endl;
+
+//     s << endl;
+//     s << TAB << "static " + _namespace + "::Int32 decodeBasePacket(const string & in, " + _namespace + "::Int32 & iServerRet, vector<char> & buffer)" << endl;
+//     s << TAB << "{" << endl;
+//     INC_TAB;
+
+//     s << TAB << _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> is;" << endl;
+//     s << TAB << "is.setBuffer(in.c_str(), in.length());" << endl;
+//     s << TAB << "is.read(iServerRet, 5, true);" << endl;
+//     s << TAB << "is.read(buffer, 6, true);" << endl;
+
+//     s << TAB << "return 0;" << endl;
+
+//     DEL_TAB;
+//     s << TAB << "}" << endl;
+
+//     s << endl;
+
+//     DEL_TAB;
+//     s << TAB << "};" << endl;
+
+//     return s.str();
+// }
+
+// string Tars2Cpp::generateCoder(const OperationPtr& pPtr) const
+// {
+//     ostringstream s;
+//     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
+
+//     //编码函数
+//     s << TAB << "//encode & decode function for '" << pPtr->getId() << "()'" << endl << endl;
+//     s << TAB << "static string encode_" << pPtr->getId() << "(const string & sServantName, ";
+
+//     for (size_t i = 0; i < vParamDecl.size(); i++)
+//     {
+//         if (!vParamDecl[i]->isOut())
+//         {
+//             s << generateH(vParamDecl[i]) << ",";
+//         }
+//     }
+//     s << endl;
+//     s << TAB << "    const map<string, string>& context = TARS_CONTEXT())" << endl;
+//     s << TAB << "{" << endl;
+
+//     INC_TAB;
+//     s << TAB << "try" << endl;
+//     s << TAB << "{" << endl;
+
+//     INC_TAB;
+//     s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> _os;" << endl;
+
+//     for (size_t i = 0; i < vParamDecl.size(); i++)
+//     {
+//         if (vParamDecl[i]->isOut()) continue;
+//         s << writeTo(vParamDecl[i]->getTypeIdPtr());
+//     }
 
-    s << TAB << "return encodeBasePacket(sServantName, \"" << pPtr->getId() << "\", _os.getByteBuffer(), context);" << endl;
-
-    DEL_TAB;
-
-    s << TAB << "}" << endl;
-    s << TAB << "catch (" + _namespace + "::TarsException & ex)" << endl;
-    s << TAB << "{" << endl;
-    INC_TAB;
-    s << TAB << "return \"\";" << endl;
-    DEL_TAB;
-    s << TAB << "}" << endl;
-    DEL_TAB;
-    s << TAB << "}" << endl;
-
-    s << endl;
-
-    //解码函数
-
-    s << TAB << "static " + _namespace + "::Int32 decode_" << pPtr->getId() << "(const string & in ";
-
-    if (pPtr->getReturnPtr()->getTypePtr())
-    {
-        s << ", " << tostr(pPtr->getReturnPtr()->getTypePtr()) << " & _ret ";
-    }
-    for (size_t i = 0; i < vParamDecl.size(); i++)
-    {
-        if(!vParamDecl[i]->isOut())
-            continue;
+//     s << TAB << "return encodeBasePacket(sServantName, \"" << pPtr->getId() << "\", _os.getByteBuffer(), context);" << endl;
+
+//     DEL_TAB;
+
+//     s << TAB << "}" << endl;
+//     s << TAB << "catch (" + _namespace + "::TarsException & ex)" << endl;
+//     s << TAB << "{" << endl;
+//     INC_TAB;
+//     s << TAB << "return \"\";" << endl;
+//     DEL_TAB;
+//     s << TAB << "}" << endl;
+//     DEL_TAB;
+//     s << TAB << "}" << endl;
+
+//     s << endl;
+
+//     //解码函数
+
+//     s << TAB << "static " + _namespace + "::Int32 decode_" << pPtr->getId() << "(const string & in ";
+
+//     if (pPtr->getReturnPtr()->getTypePtr())
+//     {
+//         s << ", " << tostr(pPtr->getReturnPtr()->getTypePtr()) << " & _ret ";
+//     }
+//     for (size_t i = 0; i < vParamDecl.size(); i++)
+//     {
+//         if(!vParamDecl[i]->isOut())
+//             continue;
 
-        s << ", " << generateH(vParamDecl[i]);
-    }
-    s << ")" << endl;
+//         s << ", " << generateH(vParamDecl[i]);
+//     }
+//     s << ")" << endl;
 
-    s << TAB << "{" << endl;
-
-    INC_TAB;
-    s << TAB << "try" << endl;
-    s << TAB << "{" << endl;
-
-    INC_TAB;
-    s << TAB << "string out;" << endl;
-    s << TAB << _namespace + "::Int32 iRet = 0;" << endl;
-    s << TAB << "if((iRet = fetchPacket(in, out)) != 0) return iRet;" << endl;
-
-    s << TAB << _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> _is;" << endl;
-    s << TAB << _namespace + "::Int32 iServerRet=0;" << endl;
-    s << TAB << "vector<char> buffer;" << endl;
-    s << TAB << "decodeBasePacket(out, iServerRet, buffer);" << endl;
-    s << TAB << "if(iServerRet != 0)  return iServerRet;" << endl;
-
-    s << TAB << "_is.setBuffer(buffer);" << endl;
-
-    if (pPtr->getReturnPtr()->getTypePtr())
-    {
-        s << readFrom(pPtr->getReturnPtr());
-    }
-
-    for (size_t i = 0; i < vParamDecl.size(); i++)
-    {
-        if (vParamDecl[i]->isOut())
-        {
-            s << readFrom(vParamDecl[i]->getTypeIdPtr());
-        }
-    }
-
-
-    s << TAB << "return 0;" << endl;
-
-    DEL_TAB;
-    s << TAB << "}" << endl;
-    s << TAB << "catch (" + _namespace + "::TarsException & ex)" << endl;
-    s << TAB << "{" << endl;
-    INC_TAB;
-    s << TAB << "return eTarsPacketErr;" << endl;
-    DEL_TAB;
-    s << TAB << "}" << endl;
-
-    DEL_TAB;
-    s << TAB << "}" << endl;
-
-
-    s << endl;
-
-    return s.str();
-}
-
-void Tars2Cpp::generateCoder(const ContextPtr& pPtr, const string& sInterface) const
-{
-    cout << "Interface:" << sInterface << endl;
-    string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName())) + "Coder";
-
-    string fileH    = _baseDir + "/" + n + ".h";
-
-    string define   = tars::TC_Common::upper("__" + n + "_h_");
-
-    ostringstream s;
-
-    s << g_parse->printHeaderRemark();
-
-    s << "#ifndef " << define << endl;
-    s << "#define " << define << endl;
-    s << endl;
-    s << "#include <map>" << endl;
-    s << "#include <string>" << endl;
-    s << "#include <vector>" << endl;
-    s << "#include \"tup/Tars.h\"" << endl;
-
-    s << "using namespace std;" << endl;
-
-    vector<string> include = pPtr->getIncludes();
-    for (size_t i = 0; i < include.size(); i++)
-    {
-        s << "#include \"" << g_parse->getHeader()
-            << tars::TC_Common::replace(tars::TC_File::extractFileName(include[i]), ".h", "Coder.h") << "\"" << endl;
-    }
-
-    vector<NamespacePtr> namespaces = pPtr->getNamespaces();
-
-    s << endl;
-
-    for (size_t i = 0; i < namespaces.size(); i++)
-    {
-        s << generateCoder(namespaces[i], sInterface) << endl;
-    }
-
-    s << endl;
-    s << "#endif" << endl;
-
-    tars::TC_File::makeDirRecursive(_baseDir, 0755);
-    tars::TC_File::save2file(fileH, s.str());
-
-    return;
-}
+//     s << TAB << "{" << endl;
+
+//     INC_TAB;
+//     s << TAB << "try" << endl;
+//     s << TAB << "{" << endl;
+
+//     INC_TAB;
+//     s << TAB << "string out;" << endl;
+//     s << TAB << _namespace + "::Int32 iRet = 0;" << endl;
+//     s << TAB << "if((iRet = fetchPacket(in, out)) != 0) return iRet;" << endl;
+
+//     s << TAB << _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> _is;" << endl;
+//     s << TAB << _namespace + "::Int32 iServerRet=0;" << endl;
+//     s << TAB << "vector<char> buffer;" << endl;
+//     s << TAB << "decodeBasePacket(out, iServerRet, buffer);" << endl;
+//     s << TAB << "if(iServerRet != 0)  return iServerRet;" << endl;
+
+//     s << TAB << "_is.setBuffer(buffer);" << endl;
+
+//     if (pPtr->getReturnPtr()->getTypePtr())
+//     {
+//         s << readFrom(pPtr->getReturnPtr());
+//     }
+
+//     for (size_t i = 0; i < vParamDecl.size(); i++)
+//     {
+//         if (vParamDecl[i]->isOut())
+//         {
+//             s << readFrom(vParamDecl[i]->getTypeIdPtr());
+//         }
+//     }
+
+
+//     s << TAB << "return 0;" << endl;
+
+//     DEL_TAB;
+//     s << TAB << "}" << endl;
+//     s << TAB << "catch (" + _namespace + "::TarsException & ex)" << endl;
+//     s << TAB << "{" << endl;
+//     INC_TAB;
+//     s << TAB << "return eTarsPacketErr;" << endl;
+//     DEL_TAB;
+//     s << TAB << "}" << endl;
+
+//     DEL_TAB;
+//     s << TAB << "}" << endl;
+
+
+//     s << endl;
+
+//     return s.str();
+// }
+
+// void Tars2Cpp::generateCoder(const ContextPtr& pPtr, const string& sInterface) const
+// {
+//     cout << "Interface:" << sInterface << endl;
+//     string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName())) + "Coder";
+
+//     string fileH    = _baseDir + "/" + n + ".h";
+
+//     string define   = tars::TC_Common::upper("__" + n + "_h_");
+
+//     ostringstream s;
+
+//     s << g_parse->printHeaderRemark();
+
+//     s << "#ifndef " << define << endl;
+//     s << "#define " << define << endl;
+//     s << endl;
+//     s << "#include <map>" << endl;
+//     s << "#include <string>" << endl;
+//     s << "#include <vector>" << endl;
+//     s << "#include \"tup/Tars.h\"" << endl;
+
+//     s << "using namespace std;" << endl;
+
+//     vector<string> include = pPtr->getIncludes();
+//     for (size_t i = 0; i < include.size(); i++)
+//     {
+//         s << "#include \"" << g_parse->getHeader()
+//             << tars::TC_Common::replace(tars::TC_File::extractFileName(include[i]), ".h", "Coder.h") << "\"" << endl;
+//     }
+
+//     vector<NamespacePtr> namespaces = pPtr->getNamespaces();
+
+//     s << endl;
+
+//     for (size_t i = 0; i < namespaces.size(); i++)
+//     {
+//         s << generateCoder(namespaces[i], sInterface) << endl;
+//     }
+
+//     s << endl;
+//     s << "#endif" << endl;
+
+//     tars::TC_File::makeDirRecursive(_baseDir, 0755);
+//     tars::TC_File::save2file(fileH, s.str());
+
+//     return;
+// }

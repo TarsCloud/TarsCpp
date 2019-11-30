@@ -23,13 +23,14 @@
 void usage()
 {
     cout << "Usage : tars2cpp [OPTION] tarsfile" << endl;
-    cout << "  --coder=Demo::interface1;Demo::interface2   create interface encode and decode api" << endl;
+    // cout << "  --coder=Demo::interface1;Demo::interface2   create interface encode and decode api" << endl;
     cout << "  --dir=DIRECTORY                             generate source file to DIRECTORY(生成文件到目录DIRECTORY,默认为当前目录)" << endl;
     cout << "  --check-default=<true,false>                如果optional字段值为默认值不打包(默认打包)" << endl;
+    cout << "  --unjson                                    不生成json编解码" << endl;
     cout << "  --os                                        只生成tars文件中结构体编解码的程序段" << endl;
     cout << "  --include=\"dir1;dir2;dir3\"                设置tars文件搜索路径" << endl;
     cout << "  --unknown                                   生成处理tars数据流中的unkown field的代码" << endl;
-    cout << "  --tarsMaster                                 生成获取主调信息的选项" << endl;
+    cout << "  --tarsMaster                                生成获取主调信息的选项" << endl;
     cout << "  --currentPriority						   use current path first." << endl;
     cout << "  tars2cpp support type: bool byte short int long float double vector map" << endl;
     exit(0);
@@ -75,17 +76,17 @@ int main(int argc, char* argv[])
         usage();
     }
 
-    bool bCoder = option.hasParam("coder");
-    vector<string> vCoder;
-    if(bCoder)
-    {
-        vCoder = tars::TC_Common::sepstr<string>(option.getValue("coder"), ";", false);
-        if(vCoder.size() == 0)
-        {
-            usage();
-            return 0;
-        }
-    }
+    // bool bCoder = option.hasParam("coder");
+    // vector<string> vCoder;
+    // if(bCoder)
+    // {
+    //     vCoder = tars::TC_Common::sepstr<string>(option.getValue("coder"), ";", false);
+    //     if(vCoder.size() == 0)
+    //     {
+    //         usage();
+    //         return 0;
+    //     }
+    // }
 
     Tars2Cpp t2c;
 
@@ -101,6 +102,14 @@ int main(int argc, char* argv[])
     t2c.setCheckDefault(tars::TC_Common::lower(option.getValue("check-default")) == "false"?false:true);
 
     t2c.setOnlyStruct(option.hasParam("os"));
+
+    //默认支持json
+    t2c.setJsonSupport(true);
+
+    if (option.hasParam("unjson"))
+    {
+        t2c.setJsonSupport(false);
+    }
 
     t2c.setTarsMaster(option.hasParam("tarsMaster"));
 
@@ -119,7 +128,7 @@ int main(int argc, char* argv[])
         {
 
             g_parse->parse(vTars[i]);
-            t2c.createFile(vTars[i], vCoder);
+            t2c.createFile(vTars[i]);//, vCoder);
         }
     }
     catch(exception& e)
