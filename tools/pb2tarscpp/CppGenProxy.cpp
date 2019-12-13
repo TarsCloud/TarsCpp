@@ -81,15 +81,25 @@ std::string GenPrx(const ::google::protobuf::ServiceDescriptor* desc, int indent
     out += "public:";
     out += LineFeed(++indent);
     out += "typedef std::map<std::string, std::string> TARS_CONTEXT;" + LineFeed(indent);
-    // gen methods
-    for (int i = 0; i < desc->method_count(); ++i) {
-        auto method = desc->method(i);
-        out += LineFeed(indent);
-        // sync method call
-        out += GenSyncCall(method, pkg, indent);
-        // async method call
-        out += GenAsyncCall(method, name, pkg, indent);
-    }
+
+    //sort by method name
+	std::map<std::string, const ::google::protobuf::MethodDescriptor*> m_method;
+	for (int i = 0; i < desc->method_count(); ++i)
+	{
+		m_method[desc->method(i)->name()] = desc->method(i);
+	}
+
+	// gen methods
+	for(auto it = m_method.begin(); it != m_method.end(); ++it)
+	{
+		auto method = it->second;
+		out += LineFeed(indent);
+		// sync method call
+		out += GenSyncCall(method, pkg, indent);
+		// async method call
+		out += GenAsyncCall(method, name, pkg, indent);
+	}
+
 
     // hash call
     out += LineFeed(indent);
