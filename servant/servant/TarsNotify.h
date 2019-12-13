@@ -58,6 +58,12 @@ public:
      */
     void report(const string &sResult, bool bSync = false);
 
+    /**
+     * 指定通知到某个服务, 一定是异步上报的
+     * @param message
+     */
+    void report(const string &sMesage, const string & app, const string &serverName, const string &sNodeName);
+
 protected:
     /**
      * 通信器
