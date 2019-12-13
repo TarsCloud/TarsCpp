@@ -818,11 +818,13 @@ string TC_Cgi::encodeURL(const string &sUrl)
     {
         char c = sUrl[i];
         if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
-            result.append(1, c);
-        else if(c == ' ')
         {
-            result.append(1, '+');
+            result.append(1, c);
         }
+        // else if(c == ' ')
+        // {
+        //     result.append(1, '+');
+        // }
         else
         {
             result.append(1, '%');
