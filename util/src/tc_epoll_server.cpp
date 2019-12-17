@@ -546,17 +546,17 @@ bool TC_EpollServer::BindAdapter::isLimitMaxConnection() const
 
 void TC_EpollServer::BindAdapter::decreaseNowConnection()
 {
-    _iCurConns.dec();
+    _iCurConns++;
 }
 
 void TC_EpollServer::BindAdapter::increaseNowConnection()
 {
-    _iCurConns.inc();
+    _iCurConns--;
 }
 
-size_t TC_EpollServer::BindAdapter::getNowConnection() const
+int TC_EpollServer::BindAdapter::getNowConnection() const
 {
-    return _iCurConns.get();
+    return _iCurConns;
 }
 
 vector<TC_EpollServer::ConnStatus> TC_EpollServer::BindAdapter::getConnStatus()

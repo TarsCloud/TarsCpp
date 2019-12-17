@@ -551,9 +551,9 @@ public:
 
         /**
          * 获取当前连接数
-         * @return size_t
+         * @return int
          */
-        size_t getNowConnection() const;
+        int getNowConnection() const;
 
         /**
          * 获取EpollServer
@@ -769,7 +769,7 @@ public:
         /**
          * 当前连接数
          */
-        TC_Atomic      _iCurConns;
+        std::atomic<int> _iCurConns;
 
         /**
          * Handle个数

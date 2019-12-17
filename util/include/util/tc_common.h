@@ -21,6 +21,13 @@
 #define __USE_XOPEN
 #endif
 
+#include "util/tc_platform.h"
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+#include <unistd.h>
+#include <strings.h>
+#endif
+
 #include <time.h>
 #include <errno.h>
 #include <unistd.h>
@@ -38,6 +45,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <map>
+#include <unordered_map>
 #include <stack>
 #include <vector>
 
@@ -150,6 +158,15 @@ public:
     static int strgmt2tm(const string &sString, struct tm &stTm);
 
     /**
+    * @brief  格式化的字符串时间转为时间戳.
+    *
+    * @param sString  格式化的字符串时间
+    * @param sFormat  格式化的字符串时间的格式，默认为紧凑格式
+    * @return time_t  转换后的时间戳
+    */
+    static time_t str2time(const string &sString, const string &sFormat = "%Y%m%d%H%M%S");
+
+    /**
     * @brief  时间转换成字符串.
     *
     * @param stTm     时间结构
@@ -166,6 +183,30 @@ public:
     * @return string  转换后的时间字符串
     */
     static string tm2str(const time_t &t, const string &sFormat = "%Y%m%d%H%M%S");
+
+
+    /**
+    * @brief  时间转换tm.
+    *
+    * @param t        时间结构
+    */
+    static void tm2time(const time_t &t, struct tm &tt);
+
+    /**
+    * @brief  time_t转换成tm(不用系统的localtime_r, 否则很慢!!!)
+    *
+    * @param t        时间结构
+    * @param sFormat  需要转换的目标格式，默认为紧凑格式
+    * @return string  转换后的时间字符串
+    */
+    static void tm2tm(const time_t &t, struct tm &stTm);
+
+    /**
+	* @brief  获取当前的秒和毫秒
+	*
+	* @param t        时间结构
+	*/
+    static int gettimeofday(struct timeval &tv);
 
     /**
     * @brief  当前时间转换成紧凑格式字符串
@@ -296,6 +337,15 @@ public:
      */
     template<typename K, typename V, typename D, typename A>
     static string tostr(const multimap<K, V, D, A> &t);
+
+    /**
+     * @brief  把map输出为字符串.
+     *
+     * @param map<K, V, D, A>  要转换的map对象
+     * @return                    string 输出的字符串
+     */
+    template<typename K, typename V, typename D, typename P, typename A>
+    static string tostr(const unordered_map<K, V, D, P, A> &t);
 
     /**
     * @brief  pair 转化为字符串，保证map等关系容器可以直接用tostr来输出
@@ -747,6 +797,22 @@ string TC_Common::tostr(const multimap<K, V, D, A> &t)
     typename multimap<K, V, D, A>::const_iterator it = t.begin();
     while(it != t.end())
     {
+        sBuffer += " [";
+        sBuffer += tostr(it->first);
+        sBuffer += "]=[";
+        sBuffer += tostr(it->second);
+        sBuffer += "] ";
+        ++it;
+    }
+    return sBuffer;
+}
+
+template<typename K, typename V, typename D, typename P, typename A>
+string TC_Common::tostr(const unordered_map<K, V, D, P, A> &t)
+{
+    string sBuffer;
+    typename unordered_map<K, V, D, P, A>::const_iterator it = t.begin();
+    while (it != t.end()) {
         sBuffer += " [";
         sBuffer += tostr(it->first);
         sBuffer += "]=[";
