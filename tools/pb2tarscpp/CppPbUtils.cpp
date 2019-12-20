@@ -37,3 +37,15 @@ std::string LineFeed(int indent) {
     return data;
 }
 
+std::string ToCppNamespace(const std::string& name) {
+    std::string ret;
+    for(auto &c: name) {
+        if(c == '.') {
+            ret += "::";
+        } else {
+            ret += c;
+        }
+    }
+    return ret;
+}
+
