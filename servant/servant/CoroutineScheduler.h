@@ -17,18 +17,23 @@
 #ifndef _COROUTINES_SCHEDULLER_H_
 #define _COROUTINES_SCHEDULLER_H_
 
+#include <boost/version.hpp>
+#if BOOST_VERSION != 105900
+#error It is only tested with libboost of 1.59 !
+#endif
 #include <cstddef>
 #include <list>
 #include <set>
 #include <deque>
 #include <map>
-#include "util/tc_fcontext.h"
+#include <boost/context/fcontext.hpp>
 #include "util/tc_thread_queue.h"
 #include "util/tc_monitor.h"
 #include <functional>
 #include "util/tc_thread.h"
 
 using namespace std;
+using namespace boost::context;
 
 namespace tars
 {
@@ -260,7 +265,7 @@ public:
     /**
      * 获取协程所处的上下文
      */
-    inline fcontext_t* getCtx() { return (!_main ? _ctx_to : &_ctx_from); }
+    inline fcontext_t* getCtx() { return (!_main ? &_ctx_to : &_ctx_from); }
 
 public:
     /*
@@ -298,7 +303,7 @@ private:
     /*
      * 创建协程后，协程所在的上下文
      */
-    fcontext_t*                    _ctx_to;
+    fcontext_t                    _ctx_to;
 
     /*
      * 创建协程前的上下文

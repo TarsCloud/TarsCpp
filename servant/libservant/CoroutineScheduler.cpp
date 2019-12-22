@@ -175,7 +175,7 @@ void CoroutineInfo::registerFunc(const std::function<void ()>& callback)
 
     _ctx_to = make_fcontext(_stack_ctx.sp, _stack_ctx.size, CoroutineInfo::corotineEntry);
 
-    jump_fcontext(&_ctx_from, _ctx_to, (intptr_t)this, false);
+    jump_fcontext(&_ctx_from, &_ctx_to, (intptr_t)this, false);
 }
 
 void CoroutineInfo::setStackContext(stack_context stack_ctx)
@@ -190,7 +190,7 @@ void CoroutineInfo::corotineEntry(intptr_t q)
     Func    func = coro->_init_func.coroFunc;
     void*    args = coro->_init_func.args;
 
-    jump_fcontext(coro->_ctx_to, &(coro->_ctx_from), 0, false);
+    jump_fcontext(&(coro->_ctx_to), &(coro->_ctx_from), 0, false);
 
     try
     {

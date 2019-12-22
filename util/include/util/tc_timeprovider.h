@@ -22,9 +22,20 @@
 #include "util/tc_monitor.h"
 #include "util/tc_thread.h"
 #include "util/tc_autoptr.h"
+#include <time.h>
 
+
+#if defined(__x86_64__) || defined(__i386__)
 #define rdtsc(low,high) \
      __asm__ __volatile__("rdtsc" : "=a" (low), "=d" (high))
+#else
+inline void rdtsc(uint32_t low,uint32_t high) { 
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC_RAW,&ts);
+	high = ts.tv_sec ;
+	low = ts.tv_nsec ;
+}
+#endif 
 
 #define TNOW     tars::TC_TimeProvider::getInstance()->getNow()
 #define TNOWMS   tars::TC_TimeProvider::getInstance()->getNowMs()
