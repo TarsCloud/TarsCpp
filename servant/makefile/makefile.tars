@@ -33,7 +33,7 @@ endif
 
 LOCAL_SRC   += $(sort $(wildcard *.cpp *.c) $(PB_CPP))
 
-LOCAL_OBJ   += $(patsubst %.cpp,%.o, $(patsubst %.cc,%.o, $(LOCAL_SRC)))
+LOCAL_OBJ   += $(patsubst %.c,%.o,$(patsubst %.cpp,%.o, $(patsubst %.cc,%.o, $(LOCAL_SRC))))
 
 DEP_FILE    := $(foreach obj, $(LOCAL_OBJ), $(dir $(obj)).$(basename $(notdir $(obj))).d)
 
@@ -241,7 +241,9 @@ help:
 	$(CC) $(INCLUDE) -MM $< | sed '1s/.*.://' >> $@;
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
+	C89FLAGS=`echo $CFLAGS|sed -e 's/std=c++11/std=c89/g'`
+        $(CC) $(C89FLAGS) $(INCLUDE) -o $@ -c $<
+	
 
 #----------------------------------------------------------------------------------
 
