@@ -19,8 +19,8 @@
 #include "servant/AdapterProxy.h"
 #include "servant/Application.h"
 #include "servant/TarsLogger.h"
-//#include "servant/AuthLogic.h"
-#include "servant/Auth.h"
+#include "servant/AuthLogic.h"
+//#include "servant/Auth.h"
 
 #if TARS_SSL
 #include "util/tc_openssl.h"
@@ -196,10 +196,54 @@ void Transceiver::_onConnect()
 void Transceiver::_doAuthReq()
 {
     ObjectProxy* obj = _adapterProxy->getObjProxy();
-        
-    TLOGINFO("[TARS][_onConnect:" << obj->name() << " auth Type is " << _adapterProxy->endpoint().authType() << endl);
-    
-    _adapterProxy->doInvoke();
+
+    TLOGINFO("[TARS][_onConnect:" << obj->name() << " auth type is " << _adapterProxy->endpoint().authType() << endl);
+
+    if (_adapterProxy->endpoint().authType() == AUTH_TYPENONE)
+    {
+        _authState = AUTH_SUCC;
+        _adapterProxy->doInvoke();
+    }
+    else
+    {
+        BasicAuthInfo basic;
+        basic.sObjName = obj->name();
+        basic.sAccessKey = obj->getAccessKey();
+        basic.sSecretKey = obj->getSecretKey();
+
+        this->sendAuthData(basic);
+    }
+}
+
+bool Transceiver::sendAuthData(const BasicAuthInfo& info)
+{
+    assert (_authState != AUTH_SUCC);
+
+    ObjectProxy* objPrx = _adapterProxy->getObjProxy();
+
+    // 走框架的AK/SK认证
+    std::string out = tars::defaultCreateAuthReq(info);
+
+    const int kAuthType = 0x40;
+    RequestPacket request;
+    request.sFuncName = "tarsInnerAuthServer";
+    request.sServantName = "authServant";
+    request.iVersion = TARSVERSION;
+    request.iRequestId = 0;
+    request.cPacketType = TARSNORMAL;
+    request.iMessageType = kAuthType;
+    request.sBuffer.assign(out.begin(), out.end());
+
+    std::string toSend;
+    objPrx->getProxyProtocol().requestFunc(request, toSend);
+    if (sendRequest(toSend.data(), toSend.size(), true) == eRetError)
+    {
+        TLOGERROR("[TARS][Transceiver::setConnected failed sendRequest for Auth\n");
+        close();
+        return false;
+    }
+
+    return true;
 }
 
 void Transceiver::close()
@@ -290,7 +334,18 @@ int Transceiver::sendRequest(const char * pData, size_t iSize, bool forceSend)
     {
         return eRetError;
     }
-        
+
+    if (!forceSend && _authState != AUTH_SUCC)
+    {
+#if TARS_SSL
+        if (isSSL() && !_openssl)
+            return eRetError;
+#endif
+        ObjectProxy* obj = _adapterProxy->getObjProxy();
+        TLOGINFO("[TARS][Transceiver::sendRequest temporary failed because need auth for " << obj->name() << endl);
+        return eRetError; // 需要鉴权但还没通过，不能发送非认证消息
+    }
+
     //buf不为空,直接返回失败
     //等buffer可写了,epoll会通知写时间
     if(!_sendBuffer.IsEmpty())

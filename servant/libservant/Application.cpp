@@ -24,6 +24,7 @@
 #include "servant/BaseF.h"
 #include "servant/AppCache.h"
 #include "servant/NotifyObserver.h"
+#include "servant/AuthLogic.h"
 
 #include <signal.h>
 #include <sys/resource.h>
@@ -1128,7 +1129,17 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
             ServantHelperManager::getInstance()->setAdapterServant(adapterName[i], servant);
 
             TC_EpollServer::BindAdapterPtr bindAdapter = new TC_EpollServer::BindAdapter(_epollServer.get());
-               
+
+            // 设置该obj的鉴权账号密码，只要一组就够了
+            {
+                std::string accKey = _conf.get("/tars/application/server/" + adapterName[i] + "<accesskey>");
+                std::string secretKey = _conf.get("/tars/application/server/" + adapterName[i] + "<secretkey>");
+
+                if (!accKey.empty())
+                    bindAdapter->setAkSk(accKey, secretKey);
+
+                bindAdapter->setAuthProcessWrapper(&tars::processAuth);
+            }
 
             string sLastPath = "/tars/application/server/" + adapterName[i];
 
