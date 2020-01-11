@@ -14,3 +14,6 @@ extern const std::string kIndent;
 
 std::string LineFeed(int indent = 0) ;
 
+
+std::string ToCppNamespace(const std::string& name);
+

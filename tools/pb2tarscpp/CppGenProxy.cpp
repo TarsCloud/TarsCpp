@@ -16,8 +16,8 @@ static std::string GenSyncCall(const ::google::protobuf::MethodDescriptor* metho
     std::string out;
     out.reserve(8 * 1024);
 
-    out += pkg + "::" + method->output_type()->name() + " " + method->name() + "(const " +
-           pkg + "::" + method->input_type()->name() + "& req, const std::map<std::string, std::string>& context = TARS_CONTEXT(), " +
+    out += ToCppNamespace(method->output_type()->full_name()) + " " + method->name() + "(const " +
+           ToCppNamespace(method->input_type()->full_name()) + "& req, const std::map<std::string, std::string>& context = TARS_CONTEXT(), " +
            "std::map<std::string, std::string>* pResponseContext = NULL)";
     out += LineFeed(indent);
     out += "{" + LineFeed(++indent);
@@ -32,7 +32,7 @@ static std::string GenSyncCall(const ::google::protobuf::MethodDescriptor* metho
     out += "*pResponseContext = rep.context;" + LineFeed(--indent);
 
     out += LineFeed(indent);
-    out += pkg + "::" + method->output_type()->name() + " _ret;" + LineFeed(indent);
+    out += ToCppNamespace(method->output_type()->full_name()) + " _ret;" + LineFeed(indent);
     out += "_ret.ParseFromArray(rep.sBuffer.data(), rep.sBuffer.size());" + LineFeed(indent) + 
            "return _ret;";
     out += LineFeed(--indent) + "}";
@@ -49,8 +49,8 @@ static std::string GenAsyncCall(const ::google::protobuf::MethodDescriptor* meth
     std::string out;
     out.reserve(8 * 1024);
 
-    out += "void async_" + method->name() + "(" + name + "PrxCallbackPtr callback, const " + pkg + "::" + 
-           method->input_type()->name() + "& req, const std::map<std::string, std::string>& context = TARS_CONTEXT())" + LineFeed(indent);
+    out += "void async_" + method->name() + "(" + name + "PrxCallbackPtr callback, const " +
+           ToCppNamespace(method->input_type()->full_name()) + "& req, const std::map<std::string, std::string>& context = TARS_CONTEXT())" + LineFeed(indent);
     out += "{" + LineFeed(++indent);
     out += "std::string _os;" + LineFeed(indent) +
            "req.SerializeToString(&_os);" + LineFeed(indent) +
