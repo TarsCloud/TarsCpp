@@ -89,13 +89,14 @@ int main(int argc, char *argv[])
 //        cout << TC_File::getFileSize("./test_tc_file.cpp") << endl;
 //        cout << TC_File::isFileExist("./test_tc_file.cpp", S_IFDIR) << endl;
 //        cout << TC_File::makeDir("test") << endl;
-        cout << TC_File::simplifyDirectory("/.") << endl;
-        cout << TC_File::simplifyDirectory("/./ab/tt//t///t//../tt/") << endl;
-        TC_File::removeFile("./", true);
-        vector<string> v;
-        TC_File::listDirectory("/home/base.l", v, true);
-        for_each(v.begin(), v.end(), Out());
+        // cout << TC_File::simplifyDirectory("/.") << endl;
+        // cout << TC_File::simplifyDirectory("/./ab/tt//t///t//../tt/") << endl;
+        // TC_File::removeFile("./", true);
+        // vector<string> v;
+        // TC_File::listDirectory("/home/base.l", v, true);
+        // for_each(v.begin(), v.end(), Out());
 
+        TC_File::copyFile("/data/shared/Tars/web/", "/home/tars/", true);
 //        TC_File::removeFile("/home/base.l", false);
 
     }

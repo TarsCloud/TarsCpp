@@ -40,3 +40,4 @@ set(TARS2CPP "${tools_BINARY_DIR}/tars2cpp/tars2cpp")
 
 add_subdirectory(servant)
 
+#add_subdirectory(test_deprecated)

@@ -427,7 +427,7 @@ bool Application::cmdLoadProperty(const string& command, const string& params, s
 
         ServerConfig::Notify = _conf.get("/tars/application/server<notify>");
 
-        TarsRemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision());
+        TarsRemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LocalIp, setDivision());
 
         result = "loaded config items:\r\n" + sResult +
                  "log=" + ServerConfig::Log + "\r\n" +
