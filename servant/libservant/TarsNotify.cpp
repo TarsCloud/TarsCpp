@@ -101,34 +101,31 @@ void TarsRemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
     }
 }
 
-// void TarsRemoteNotify::report(const string &sMessage, const string & app, const string &serverName, const string &sNodeName)
-// {
-//     try
-//     {
-//         if(_notifyPrx)
-//         {
-//             ReportInfo info;
-//            // info.eType     = 0;
-//             info.sApp      = app;
-//             info.sServer   = serverName;
-//             info.sSet      = "";
-//             info.sThreadId = "";//TC_Common::tostr(pthread_self());
-//             info.sMessage  = sMessage;
-//             info.sNodeName = sNodeName;
-//             // info.eLevel    = level;
-//             //_notifyPrx->async_notifyServer(NULL, _app + "." + _serverName, level, sMessage);
-//             _notifyPrx->async_reportNotifyInfo(NULL, info);
-//         }
-//     }
-//     catch(exception &ex)
-//     {
-//         TLOGERROR("TarsRemoteNotify::notify error:" << ex.what() << endl);
-//     }
-//     catch(...)
-//     {
-//         TLOGERROR("TarsRemoteNotify::notify unknown error" << endl);
-//     }
-// }
+void TarsRemoteNotify::report(const string &sMessage, const string & app, const string &serverName, const string &sNodeName)
+{
+    try
+    {
+        if(_notifyPrx)
+        {
+            ReportInfo info;
+           // info.eType     = 0;
+            info.sApp      = app;
+            info.sServer   = serverName;
+            info.sSet      = "";
+            info.sMessage  = sMessage;
+            info.sNodeName = sNodeName;
+            _notifyPrx->async_reportNotifyInfo(NULL, info);
+        }
+    }
+    catch(exception &ex)
+    {
+        TLOGERROR("TarsRemoteNotify::notify error:" << ex.what() << endl);
+    }
+    catch(...)
+    {
+        TLOGERROR("TarsRemoteNotify::notify unknown error" << endl);
+    }
+}
 
 }
 
