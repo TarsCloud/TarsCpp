@@ -494,17 +494,17 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
         std::ifstream fin(sExistFile.c_str());
         if(!fin)
         {
-            throw TC_File_Exception("[TC_File::copyFile] error: "+sExistFile, errno);
+            throw TC_File_Exception("[TC_File::copyFile] ifstream error: "+sExistFile, errno);
         }
         std::ofstream fout(sNewFile.c_str());
         if(!fout )
         {
-             throw TC_File_Exception("[TC_File::copyFile] error: "+sNewFile, errno);
+             throw TC_File_Exception("[TC_File::copyFile] ofstream error: "+sNewFile, errno);
         }
         struct stat f_stat;
-        if (stat(sExistFile.c_str(), &f_stat) == -1)
+        if (lstat(sExistFile.c_str(), &f_stat) == -1)
         {
-             throw TC_File_Exception("[TC_File::copyFile] error: "+sExistFile, errno);
+             throw TC_File_Exception("[TC_File::copyFile] stat error: "+sExistFile, errno);
         }
         chmod(sNewFile.c_str(),f_stat.st_mode);
         fout<<fin.rdbuf();
