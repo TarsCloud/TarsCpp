@@ -18,6 +18,8 @@
 #define __TC_EX_H
 
 #include <stdexcept>
+#include <string>
+
 using namespace std;
 
 namespace tars
@@ -36,23 +38,22 @@ class TC_Exception : public exception
 {
 public:
     /**
-     * @brief 构造函数，提供了一个可以传入errno的构造函数， 
-     *  
-     *        异常抛出时直接获取的错误信息
-     *  
-     * @param buffer 异常的告警信息 
+	 * @brief 构造函数，提供了一个可以传入errno的构造函数
+     * @param err, 是否附带系统错误信息(linux版本, 用errno获取错误码, windows版本, 用GetLastError()获取错误)
+	 *  
+	 * @param buffer 异常的告警信息 
      */
-    explicit TC_Exception(const string &buffer);
+	explicit TC_Exception(const string &buffer);
 
     /**
-     * @brief 构造函数,提供了一个可以传入errno的构造函数， 
-     *  
-     *        异常抛出时直接获取的错误信息
-     *  
+	 * @brief 构造函数,提供了一个可以传入errno的构造函数， 
+	 *  
+	 *  	  异常抛出时直接获取的错误信息
+	 *  
      * @param buffer 异常的告警信息 
-     * @param err    错误码, 可用strerror获取错误信息
+     * @param errno  传入:errno, windows版本 传入:GetLastError()
      */
-    TC_Exception(const string &buffer, int err);
+	TC_Exception(const string &buffer, int err);
 
     /**
      * @brief 析够数函
@@ -73,21 +74,45 @@ public:
      */
     int getErrCode() { return _code; }
 
+    /**
+     * @brief 获取错误字符串(linux是errno, windows是GetLastError())
+     * 
+     * @return 成功获取返回0
+     */
+    static string parseError(int err);
+
+    /**
+     * @brief 获取系统错误码(linux是errno, windows是GetLastError)
+     * 
+     * @return 成功获取返回0
+     */
+    static int getSystemCode();
+
 private:
     void getBacktrace();
 
 private:
+
+	/**
+	 * 错误码
+     */
+    int     _code;
     /**
-     * 异常的相关信息
+	 * 异常的相关信息
      */
     string  _buffer;
 
-    /**
-     * 错误码
-     */
-    int     _code;
-
 };
+
+//为了避免windows平台GetLastError()获取不对的问题, 因为抛异常, throw TC_Exception("xxxx", TC_Exception::getSystemCode())时
+//回调用系统函数分配内存, 导致错误码被改写, 因此专门定义宏来抛出异常
+//先获取到错误码, 再throw
+#define TAF_THROW_EXCEPTION(EX_CLASS, buffer) throw EX_CLASS(buffer)
+#define TAF_THROW_EXCEPTION_SYSCODE(EX_CLASS, buffer) \
+    {   \
+    int ret = TC_Exception::getSystemCode(); \
+    throw EX_CLASS(buffer, ret);              \
+    }
 
 }
 #endif

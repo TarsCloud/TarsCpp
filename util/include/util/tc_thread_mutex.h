@@ -18,27 +18,21 @@
 #define __TC_THREAD_MUTEX_H
 
 #include "util/tc_lock.h"
+#include <mutex>
+#include <atomic>
 
 namespace tars
 {
 /////////////////////////////////////////////////
 /** 
  * @file tc_thread_mutex.h 
- * 
+ * @brief 线程锁互斥类(兼容TAF4.x版本, 底层直接封装了c++11, 从而跨平台兼容)
+ *  
+ * @author jarodruan@upchina.com  
  */
              
 /////////////////////////////////////////////////
 class TC_ThreadCond;
-
-/**
- * @brief 线程互斥对象
- */
-struct TC_ThreadMutex_Exception : public TC_Lock_Exception
-{
-    TC_ThreadMutex_Exception(const string &buffer) : TC_Lock_Exception(buffer){};
-    TC_ThreadMutex_Exception(const string &buffer, int err) : TC_Lock_Exception(buffer, err){};
-    ~TC_ThreadMutex_Exception() throw() {};
-};
 
 /**
 * @brief 线程锁 . 
@@ -71,34 +65,16 @@ public:
      */
     void unlock() const;
 
-    /**
-     * @brief 加锁后调用unlock是否会解锁， 
-     *        给TC_Monitor使用的 永远返回true
-     * @return bool
-     */
-    bool willUnlock() const { return true;}
-
 protected:
 
     // noncopyable
     TC_ThreadMutex(const TC_ThreadMutex&);
     void operator=(const TC_ThreadMutex&);
 
-    /**
-     * @brief 计数
-     */
-    int count() const;
-
-    /**
-     * @brief 计数
-     */
-    void count(int c) const;
-
     friend class TC_ThreadCond;
 
 protected:
-    mutable pthread_mutex_t _mutex;
-
+    mutable std::mutex _mutex;
 };
 
 /**
@@ -121,58 +97,38 @@ public:
     virtual ~TC_ThreadRecMutex();
 
     /**
-    * @brief 锁, 调用pthread_mutex_lock. 
-    *  
-    * return : 返回pthread_mutex_lock的返回值
+	* @brief 锁, 调用pthread_mutex_lock. 
+	*  
     */
-    int lock() const;
+    void lock() const;
 
     /**
-    * @brief 解锁, pthread_mutex_unlock. 
-    *  
-    * return : 返回pthread_mutex_lock的返回值
+	* @brief 解锁, pthread_mutex_unlock. 
+	*  
     */
-    int unlock() const;
+    void unlock() const;
 
     /**
-    * @brief 尝试锁, 失败抛出异常. 
-    *  
+	* @brief 尝试锁, 失败抛出异常. 
+	*  
     * return : true, 成功锁; false 其他线程已经锁了
     */
     bool tryLock() const;
 
-    /**
-     * @brief 加锁后调用unlock是否会解锁, 给TC_Monitor使用的
-     * 
-     * @return bool
-     */
-    bool willUnlock() const;
 protected:
 
-    /**
+	/**
      * @brief 友元类
      */
     friend class TC_ThreadCond;
-
-    /**
-     * @brief 计数
-     */
-    int count() const;
-
-    /**
-     * @brief 计数
-     */
-    void count(int c) const;
 
 private:
     /**
     锁对象
     */
-    mutable pthread_mutex_t _mutex;
-    mutable int _count;
+    mutable recursive_mutex _mutex;
 };
 
 }
-
 #endif
 

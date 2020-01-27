@@ -13,7 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 #include <cassert>
 #include <sys/file.h>
 #include <unistd.h>
@@ -124,3 +124,4 @@ bool TC_FileMutex::hasLock(int fd, int type, off_t offset, int whence, off_t len
 
 }
 
+#endif

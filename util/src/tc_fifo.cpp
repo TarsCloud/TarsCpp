@@ -13,6 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -85,5 +86,7 @@ int TC_Fifo::write(const char * szBuff, const size_t sizeBuffLen)
 }
 
 }
+
+#endif
 
 

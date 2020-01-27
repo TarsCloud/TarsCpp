@@ -17,6 +17,10 @@
 #ifndef __TC_FILE_MUTEX_H
 #define __TC_FILE_MUTEX_H
 
+#include "util/tc_platform.h"
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+
 #include <unistd.h>
 #include "util/tc_lock.h"
 
@@ -158,5 +162,6 @@ private:
 
 }
 
+#endif
 #endif
 

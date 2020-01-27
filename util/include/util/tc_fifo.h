@@ -16,8 +16,11 @@
 
 #ifndef __TC_FIFO_H
 #define __TC_FIFO_H
-#include <string>
 
+#include "util/tc_platform.h"
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+#include <string>
 
 namespace tars
 {
@@ -123,5 +126,8 @@ private:
 };
 
 }
+
+#endif
+
 #endif
 

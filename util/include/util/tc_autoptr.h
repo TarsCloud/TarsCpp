@@ -18,7 +18,7 @@
 #define __TC_AUTOPTR_H
 
 #include "util/tc_ex.h"
-#include "util/tc_atomic.h"
+// #include "util/tc_atomic.h"
 #include <atomic>
 #include <typeinfo> 
 

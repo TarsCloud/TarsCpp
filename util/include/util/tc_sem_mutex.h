@@ -17,6 +17,8 @@
 #ifndef __TC_SEM_MUTEX_H
 #define __TC_SEM_MUTEX_H
 
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -162,5 +164,7 @@ protected:
 };
 
 }
+
+#endif
 
 #endif

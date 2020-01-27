@@ -17,20 +17,10 @@
 #ifndef __TC_COMMON_H
 #define __TC_COMMON_H
 
-#ifndef __USE_XOPEN
-#define __USE_XOPEN
-#endif
-
 #include "util/tc_platform.h"
-
-#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-#include <unistd.h>
-#include <strings.h>
-#endif
 
 #include <time.h>
 #include <errno.h>
-#include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -75,6 +65,58 @@ namespace tars
 class TC_Common
 {
 public:
+
+    static const float  _EPSILON_FLOAT;
+    static const double _EPSILON_DOUBLE;
+
+    /**
+    * @brief  跨平台sleep
+    */
+    static void sleep(uint32_t sec);
+    static void msleep(uint32_t ms);
+
+    /**
+    * @brief  浮点数比较,double 默认取6位精度，float默认6位精度
+    */
+    static bool equal(double x, double y, double epsilon = _EPSILON_DOUBLE);
+    static bool equal(double x, double y, float epsilon );
+
+    static bool equal(float x, float y, float epsilon = _EPSILON_FLOAT);
+    static bool equal(float x, float y, double epsilon );
+
+    /**
+    * @brief  vector double 各种场景比较函数
+    */
+    static bool equal(const vector<double> & vx, const vector<double>& vy, double epsilon = _EPSILON_DOUBLE);
+    static bool equal(const vector<double>& vx, const vector<double>& vy, float epsilon );
+    static bool equal(const vector<float>& vx, const vector<float> & vy, float epsilon = _EPSILON_FLOAT);
+    static bool equal(const vector<float>& vx, const vector<float>& vy, double epsilon );
+
+    /**
+    * @brief  map中如果key或者value为double/float字段，则用此模板函数比较
+    */
+    template<typename V, typename E>
+    static bool equal(const V& x, const V& y, E eps);
+    template<typename K, typename V, typename D, typename A , typename E=double>
+    static bool equal(const map<K, V, D, A>& mx , const map<K, V, D, A>& my, E epsilon = _EPSILON_DOUBLE);
+
+    /**
+     * 固定宽度填充字符串, 用于输出对齐格式用(默认右填充)
+     * @param s
+     * @param c
+     * @param n
+     * @return
+     */
+    static string outfill(const string& s, char pad = ' ', size_t n = 50, bool rightPad=true)
+    {
+        if(n <= s.length())
+            return s;
+
+        if(rightPad)
+            return (s + string((n - s.length()), pad));
+
+        return (string((n - s.length()), pad) + s);
+    }
 
     /**
     * @brief  去掉头部以及尾部的字符或字符串.
@@ -282,7 +324,7 @@ public:
     template<typename T>
     static T strto(const string &sStr, const string &sDefault);
 
-    typedef bool (*depthJudge)(const string& str1, const string& str2);
+    // typedef bool (*depthJudge)(const string& str1, const string& str2);
     /**
     * @brief  解析字符串,用分隔符号分隔,保存在vector里
     *
@@ -301,7 +343,7 @@ public:
     * @return          解析后的字符vector
     */
     template<typename T>
-    static vector<T> sepstr(const string &sStr, const string &sSep, bool withEmpty = false, depthJudge judge = nullptr);
+    static vector<T> sepstr(const string &sStr, const string &sSep, bool withEmpty = false);//, depthJudge judge = nullptr);
 
     /**
     * @brief T型转换成字符串，只要T能够使用ostream对象用<<重载,即可以被该函数支持
@@ -452,6 +494,8 @@ public:
      */
     static bool isPrimeNumber(size_t n);
 
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+
     /**
      * @brief  daemon
      */
@@ -461,6 +505,15 @@ public:
      * @brief  忽略管道异常
      */
     static void ignorePipe();
+
+    /** 
+     * @brief  生成基于16进制字符的随机串
+     * @param p            存储随机字符串
+     * @param len          字符串大小
+     */
+    static void getRandomHexChars(char* p, unsigned int len);
+
+#endif
 
     /**
      * @brief  将一个string类型转成一个字节 .
@@ -478,12 +531,12 @@ public:
      */
     static size_t toSize(const string &s, size_t iDefaultSize);
 
-    /** 
-     * @brief  生成基于16进制字符的随机串
-     * @param p            存储随机字符串
-     * @param len          字符串大小
-     */
-    static void getRandomHexChars(char* p, unsigned int len);
+	/**
+	* @brief  获取主机名称.
+	* @return string    主机名，失败是返回空
+	*/
+	static string getHostName();
+
 };
 
 namespace p
@@ -527,9 +580,13 @@ namespace p
     {
         short operator()(const string &sStr)
         {
-            if(!sStr.empty())
-            {
-                return atoi(sStr.c_str());
+            if (!sStr.empty()) {
+                if (sStr.find("0x") == 0) {
+                    return (short) ::strtol(sStr.c_str(), NULL, 16);
+                }
+                else {
+                    return atoi(sStr.c_str());
+                }
             }
             return 0;
         }
@@ -540,9 +597,13 @@ namespace p
     {
         unsigned short operator()(const string &sStr)
         {
-            if(!sStr.empty())
-            {
-                return strtoul(sStr.c_str(), NULL, 10);
+            if (!sStr.empty()) {
+                if (sStr.find("0x") == 0) {
+                    return (unsigned short) ::strtoul(sStr.c_str(), NULL, 16);
+                }
+                else {
+                    return (unsigned short) strtoul(sStr.c_str(), NULL, 10);
+                }
             }
             return 0;
         }
@@ -553,9 +614,13 @@ namespace p
     {
         int operator()(const string &sStr)
         {
-            if(!sStr.empty())
-            {
-                return atoi(sStr.c_str());
+            if (!sStr.empty()) {
+                if (sStr.find("0x") == 0) {
+                    return ::strtol(sStr.c_str(), NULL, 16);
+                }
+                else {
+                    return atoi(sStr.c_str());
+                }
             }
             return 0;
         }
@@ -566,9 +631,13 @@ namespace p
     {
         unsigned int operator()(const string &sStr)
         {
-            if(!sStr.empty())
-            {
-                return strtoul(sStr.c_str(), NULL, 10);
+            if (!sStr.empty()) {
+                if (sStr.find("0x") == 0) {
+                    return ::strtoul(sStr.c_str(), NULL, 16);
+                }
+                else {
+                    return strtoul(sStr.c_str(), NULL, 10);
+                }
             }
             return 0;
         }
@@ -579,9 +648,13 @@ namespace p
     {
         long operator()(const string &sStr)
         {
-            if(!sStr.empty())
-            {
-                return atol(sStr.c_str());
+            if (!sStr.empty()) {
+                if (sStr.find("0x") == 0) {
+                    return ::strtol(sStr.c_str(), NULL, 16);
+                }
+                else {
+                    return atol(sStr.c_str());
+                }
             }
             return 0;
         }
@@ -592,9 +665,13 @@ namespace p
     {
         long long operator()(const string &sStr)
         {
-            if(!sStr.empty())
-            {
-                return atoll(sStr.c_str());
+            if (!sStr.empty()) {
+                if (sStr.find("0x") == 0) {
+                    return ::strtoll(sStr.c_str(), NULL, 16);
+                }
+                else {
+                    return atoll(sStr.c_str());
+                }
             }
             return 0;
         }
@@ -605,9 +682,13 @@ namespace p
     {
         unsigned long operator()(const string &sStr)
         {
-            if(!sStr.empty())
-            {
-                return strtoul(sStr.c_str(), NULL, 10);
+            if (!sStr.empty()) {
+                if (sStr.find("0x") == 0) {
+                    return ::strtoul(sStr.c_str(), NULL, 16);
+                }
+                else {
+                    return strtoul(sStr.c_str(), NULL, 10);
+                }
             }
             return 0;
         }
@@ -691,60 +772,39 @@ T TC_Common::strto(const string &sStr, const string &sDefault)
 
 
 template<typename T>
-vector<T> TC_Common::sepstr(const string &sStr, const string &sSep, bool withEmpty, TC_Common::depthJudge judge)
+vector<T> TC_Common::sepstr(const string &sStr, const string &sSep, bool withEmpty)
 {
     vector<T> vt;
 
     string::size_type pos = 0;
     string::size_type pos1 = 0;
-    int pos_tmp = -1;
 
-    while(true)
-    {
+    while (true) {
         string s;
-        string s1;
         pos1 = sStr.find_first_of(sSep, pos);
-        if(pos1 == string::npos)
-        {
-            if(pos + 1 <= sStr.length())
-            {
-                s = sStr.substr(-1 != pos_tmp ? pos_tmp : pos);
-                s1 = "";
+        if (pos1 == string::npos) {
+            if (pos + 1 <= sStr.length()) {
+                s = sStr.substr(pos);
             }
         }
-        else if(pos1 == pos && (pos1 + 1 == sStr.length()))
-        {
+        else if (pos1 == pos) {
             s = "";
-            s1 = "";
         }
-        else
-        {
-            s = sStr.substr(-1 != pos_tmp ? pos_tmp : pos, pos1 - (-1 != pos_tmp ? pos_tmp : pos));
-            s1 = sStr.substr(pos1 + 1);
-            if (-1 == pos_tmp)
-                pos_tmp = pos;
+        else {
+            s = sStr.substr(pos, pos1 - pos);
             pos = pos1;
         }
 
-        if (nullptr == judge || judge(s, s1))
-        {
-            if(withEmpty)
-            {
-                vt.push_back(strto<T>(s));
+        if (withEmpty) {
+            vt.push_back(std::move(strto<T>(s)));
+        }
+        else {
+            if (!s.empty()) {
+                vt.push_back(std::move(strto<T>(s)));
             }
-            else
-            {
-                if(!s.empty())
-                {
-                    T tmp = strto<T>(s);
-                    vt.push_back(tmp);
-                }
-            }
-            pos_tmp = -1;
         }
 
-        if(pos1 == string::npos)
-        {
+        if (pos1 == string::npos) {
             break;
         }
 
@@ -753,6 +813,7 @@ vector<T> TC_Common::sepstr(const string &sStr, const string &sSep, bool withEmp
 
     return vt;
 }
+
 template<typename T>
 string TC_Common::tostr(const T &t)
 {
@@ -857,6 +918,64 @@ string TC_Common::tostr(InputIter iFirst, InputIter iLast, const string &sSep)
     }
 
     return sBuffer;
+}
+
+
+template<typename V,typename E>
+bool TC_Common::equal(const V& x, const V& y,E eps)
+{
+    return x == y;
+}
+
+template<typename K, typename V, typename D, typename A, typename E>
+bool TC_Common::equal(const map<K, V, D, A>& mx, const map<K, V, D, A>& my, E epsilon)
+{
+    auto first1= mx.begin();
+    auto last1 = mx.end();
+    auto first2 = my.begin();
+    auto last2 = my.end();
+
+    if (distance(first1, last1) != distance(first2, last2))
+    {
+        return false;
+    }
+
+    bool doubleKey = (std::is_same<K, double>::value || std::is_same<K, float>::value);
+    bool doubleValue = (std::is_same<V, double>::value || std::is_same<V, float>::value);
+
+    for (; first2 != last2; ++first1, ++first2)
+    {
+            if (doubleKey )
+            {
+                if (!TC_Common::equal(first1->first ,first2->first, epsilon) )
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (first1->first != first2->first)
+                {
+                    return false;
+                }
+            }
+
+            if (doubleValue)
+            {
+                if (!TC_Common::equal(first1->second, first2->second, epsilon))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if ( first1->second != first2->second)
+                {
+                    return false;
+                }
+            }
+    }
+    return true;
 }
 
 }

@@ -2555,7 +2555,7 @@ void Tars2Cpp::generateH(const ContextPtr &pPtr) const
     s << endl;
     s << "#endif" << endl;
 
-    tars::TC_File::makeDirRecursive(_baseDir, 0755);
+    tars::TC_File::makeDirRecursive(_baseDir);
     tars::TC_File::save2file(fileH, s.str());
 }
 

@@ -17,25 +17,65 @@
 #ifndef __TC_THREAD_POOL_H_
 #define __TC_THREAD_POOL_H_
 
+#include "util/tc_platform.h"
 #include "util/tc_thread.h"
-#include "util/tc_thread_queue.h"
-#include "util/tc_monitor.h"
-#include <functional>
-
-#include <vector>
-#include <set>
+#include <future>
 #include <iostream>
+#include <queue>
+#include <set>
+#include <vector>
+#include <mutex>
+#include <utility>
 
 using namespace std;
 
-namespace tars
+namespace taf
 {
 /////////////////////////////////////////////////
 /** 
  * @file tc_thread_pool.h
- * @brief 线程池类.
- * 
- */         
+ * @brief 线程池类,采用c++11来实现了
+ * 使用说明:
+ * TC_ThreadPool tpool;
+ * tpool.init(5);   //初始化线程池线程数 
+ * //启动线程有两种方式
+ * //第一种, 直接启动
+ * tpool.start();
+ * //第二种, 启动时指定初始化函数, 比如定义函数
+ * void testFunction(int i)
+ * {
+ *     cout << i << endl;
+ * }
+ * tpool.start(testFunction, 5);    //start的第一函数是std::bind返回的函数(std::function), 后面跟参数
+ * //将任务丢到线程池中
+ * tpool.exec(testFunction, 10);    //参数和start相同
+ * //等待线程池结束, 有两种方式:
+ * //第一种等待线程池中无任务
+ * tpool.waitForAllDone(1000);      //参数<0时, 表示无限等待(注意有人调用stop也会推出)
+ * //第二种等待外部有人调用线程池的stop函数
+ * tpool.waitForStop(1000);
+ * //此时: 外部需要结束线程池是调用
+ * tpool.stop();
+ * 注意:
+ * TC_ThreadPool::exec执行任务返回的是个future, 因此可以通过future异步获取结果, 比如:
+ * int testInt(int i)
+ * {
+ *     return i;
+ * }
+ * auto f = tpool.exec(testInt, 5);
+ * cout << f.get() << endl;   //当testInt在线程池中执行后, f.get()会返回数值5
+ *
+ * class Test
+ * {
+ * public:
+ *     int test(int i);
+ * };
+ * Test t;
+ * auto f = tpool.exec(std::bind(&Test::test, &t, std::placeholders::_1), 10);
+ * //返回的future对象, 可以检查是否执行
+ * cout << f.get() << endl;
+ * @author  jarodruan@upchina.com
+ */
 /////////////////////////////////////////////////
 /**
 * @brief 线程异常
@@ -43,23 +83,19 @@ namespace tars
 struct TC_ThreadPool_Exception : public TC_Exception
 {
     TC_ThreadPool_Exception(const string &buffer) : TC_Exception(buffer){};
-    TC_ThreadPool_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
+    TC_ThreadPool_Exception(const string &buffer, bool err) : TC_Exception(buffer, err){};
     ~TC_ThreadPool_Exception() throw(){};
 };
 
-
 /**
- * @brief 用通线程池类, 与tc_functor, tc_functorwrapper配合使用. 
+ * @brief 用通线程池类(采用c++11实现)
  *  
  * 使用方式说明:
- * 1 采用tc_functorwrapper封装一个调用
- * 2 用tc_threadpool对调用进行执行 
- * 具体示例代码请参见:demo/test_tc_thread_pool.cpp
+ * 具体示例代码请参见:examples/util/example_tc_thread_pool.cpp
  */
-class TC_ThreadPool : public TC_ThreadLock
+class TC_ThreadPool
 {
-public:
-
+  public:
     /**
      * @brief 构造函数
      *
@@ -83,17 +119,26 @@ public:
      *
      * @return size_t 线程个数
      */
-    size_t getThreadNum()   { Lock sync(*this); return _jobthread.size(); }
+    size_t getThreadNum()
+    {
+        std::unique_lock<std::mutex> lock(_mutex);
+        
+        return _threads.size();
+    }
 
     /**
-     * @brief 获取线程池的任务数(exec添加进去的).
+     * @brief 获取当前线程池的任务数
      *
      * @return size_t 线程池的任务数
      */
-    size_t getJobNum()     { return _jobqueue.size(); }
+    size_t getJobNum()
+    {
+        std::unique_lock<std::mutex> lock(_mutex);
+        return _tasks.size();
+    }
 
     /**
-     * @brief 停止所有线程
+     * @brief 停止所有线程, 会等待所有线程结束
      */
     void stop();
 
@@ -103,260 +148,90 @@ public:
     void start();
 
     /**
-     * @brief 启动所有线程并, 执行初始化对象. 
+     * @brief 用线程池启用任务(F是function, Args是参数)
      *  
+     * @param ParentFunctor
      * @param tf
+     * @return 返回任务的future对象, 可以通过这个对象来获取返回值
      */
-    void start(std::function<void ()> tf)
+    template <class F, class... Args>
+    auto exec(F &&f, Args &&... args) -> std::future<decltype(f(args...))>
     {
-        for(size_t i = 0; i < _jobthread.size(); i++)
-        {
-            _startqueue.push_back(std::move(tf));
-        }
+        //定义返回值类型
+        using RetType = decltype(f(args...));
 
-        start();
+        auto task = std::make_shared<std::packaged_task<RetType()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+
+        std::future<RetType> res = task->get_future();
+
+        std::unique_lock<std::mutex> lock(_mutex); 
+
+        _tasks.emplace([task]() { (*task)(); });
+
+        _condition.notify_one();
+
+        return res;
+
     }
 
     /**
-     * @brief 添加对象到线程池执行，该函数马上返回， 
-     *        线程池的线程执行对象
-     */
-    void exec(std::function<void ()> tf)
-    {
-        _jobqueue.push_back(std::move(tf));
-    }
-
-    /**
-     * @brief 等待所有工作全部结束(队列无任务, 无空闲线程).
+     * @brief 等待当前任务队列中, 所有工作全部结束(队列无任务).
      *
      * @param millsecond 等待的时间(ms), -1:永远等待
-     * @return            true, 所有工作都处理完毕 
-     *                      false,超时退出
+     * @return           true, 所有工作都处理完毕 
+     *                   false,超时退出
      */
     bool waitForAllDone(int millsecond = -1);
 
-public:
+//    /**
+//     * @brief 可以等待所有线程结束
+//     *
+//     * @param millsecond 等待的时间(ms), -1:永远等待
+//     * @return           true, 通知了stop
+//     *                   false,超时退出
+//     */
+//    bool waitForStop(int millsecond = -1);
 
+  protected:
     /**
-     * @brief 线程数据基类,所有线程的私有数据继承于该类
-     */
-    class ThreadData
-    {
-    public:
-        /**
-         * @brief 构造
-         */
-        ThreadData(){};
-        /**
-         * @brief 析够
-         */
-        virtual ~ThreadData(){};
-
-        /**
-         * @brief 生成数据. 
-         *  
-         * @param T 
-         * @return ThreadData*
-         */
-        template<typename T>
-        static T* makeThreadData()
-        {
-            return new T;
-        }
-    };
-
-    /**
-     * @brief 设置线程数据. 
-     *  
-     * @param p 线程数据
-     */
-    static void setThreadData(ThreadData *p);
-
-    /**
-     * @brief 获取线程数据.
+     * @brief 获取任务
      *
-     * @return ThreadData* 线程数据
+     * @return std::function<void()>
      */
-    static ThreadData* getThreadData();
+    bool get(std::function<void()> &task);
 
     /**
-     * @brief 设置线程数据, key需要自己维护. 
-     *  
-     * @param pkey 线程私有数据key
-     * @param p    线程指针 
+     * @brief 线程池是否退出
      */
-    static void setThreadData(pthread_key_t pkey, ThreadData *p);
+    bool isTerminate() { return _bTerminate; }
 
     /**
-     * @brief 获取线程数据, key需要自己维护. 
-     *  
-     * @param pkey 线程私有数据key
-     * @return     指向线程的ThreadData*指针
+     * @brief 线程运行态
      */
-    static ThreadData* getThreadData(pthread_key_t pkey);
+    void run();
 
-protected:
-
-    /**
-     * @brief 释放资源. 
-     *  
-     * @param p
-     */
-    static void destructor(void *p);
-
-    /**
-     * @brief 初始化key
-     */
-    class KeyInitialize
-    {
-    public:
-        /**
-         * @brief 初始化key
-         */
-        KeyInitialize()
-        {
-            int ret = pthread_key_create(&TC_ThreadPool::g_key, TC_ThreadPool::destructor);
-            if(ret != 0)
-            {
-                throw TC_ThreadPool_Exception("[TC_ThreadPool::KeyInitialize] pthread_key_create error", ret);
-            }
-        }
-
-        /**
-         * @brief 释放key
-         */
-        ~KeyInitialize()
-        {
-            pthread_key_delete(TC_ThreadPool::g_key);
-        }
-    };
-
-    /**
-     * @brief 初始化key的控制
-     */
-    static KeyInitialize g_key_initialize;
-
-    /**
-     * @brief 数据key
-     */
-    static pthread_key_t g_key;
-
-protected:
-    /**
-     * @brief 线程池中的工作线程
-     */
-    class ThreadWorker : public TC_Thread
-    {
-    public:
-        /**
-         * @brief 工作线程构造函数. 
-         *  
-         * @param tpool
-         */
-        ThreadWorker(TC_ThreadPool *tpool);
-
-        /**
-         * @brief 通知工作线程结束
-         */
-        void terminate();
-
-    protected:
-        /**
-         * @brief 运行
-         */
-        virtual void run();
-
-    protected:
-        /**
-         * 线程池指针
-         */
-        TC_ThreadPool   *_tpool;
-
-        /**
-         * 是否结束线程
-         */
-        bool            _bTerminate;
-    };
-
-protected:
-
-    /**
-     * @brief 清除
-     */
-    void clear();
-
-    /**
-     * @brief 获取任务, 如果没有任务, 则为NULL.
-     *
-     * @return TC_FunctorWrapperInterface*
-     */
-    std::function<void ()> get(ThreadWorker *ptw);
-
-    /**
-     * @brief 获取启动任务.
-     *
-     * @return TC_FunctorWrapperInterface*
-     */
-    std::function<void ()> get();
-
-    /**
-     * @brief 空闲了一个线程. 
-     *  
-     * @param ptw
-     */
-    void idle(ThreadWorker *ptw);
-
-    /**
-     * @brief 通知等待在任务队列上的工作线程醒来
-     */
-    void notifyT();
-
-    /**
-     * @brief 是否处理结束.
-     *
-     * @return bool
-     */
-    bool finish();
-
-    /**
-     * @brief 线程退出时调用
-     */
-    void exit();
-
-    friend class ThreadWorker;
-protected:
+  protected:
 
     /**
      * 任务队列
      */
-    TC_ThreadQueue<std::function<void ()>> _jobqueue;
-
-    /**
-     * 启动任务
-     */
-    TC_ThreadQueue<std::function<void ()>> _startqueue;
+    queue<std::function<void()>> _tasks;
 
     /**
      * 工作线程
      */
-    std::vector<ThreadWorker*>                  _jobthread;
+    std::vector<std::thread*> _threads;
 
-    /**
-     * 繁忙线程
-     */
-    std::set<ThreadWorker*>                     _busthread;
+    std::mutex                _mutex;
 
-    /**
-     * 任务队列的锁
-     */
-    TC_ThreadLock                               _tmutex;
+    std::condition_variable   _condition;
 
-    /**
-     * 是否所有任务都执行完毕
-     */
-    bool                                        _bAllDone;
+    size_t                    _threadNum;
+
+    bool                      _bTerminate;
+
+    std::atomic<int>          _atomic{0};
 };
-
 }
 #endif
 

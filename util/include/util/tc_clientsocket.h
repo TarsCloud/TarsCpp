@@ -20,6 +20,7 @@
 #include "util/tc_socket.h"
 #include <sstream>
 #include "util/tc_http.h"
+#include "util/tc_epoller.h"
 
 namespace tars
 {
@@ -252,12 +253,14 @@ public:
      */
     void setWeightType(unsigned int weighttype)              { _weighttype = weighttype; }
 
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     /**
      * @brief 是否是本地套接字
      *
      * @return bool
      */
     bool isUnixLocal() const            { return _port == 0; }
+#endif
 
     /**
      * @brief is ipv6 socket or not
@@ -447,30 +450,32 @@ public:
     };
 
 protected:
+	TC_Epoller*     _epoller = NULL;
+
     /**
      * 套接字句柄
      */
-    TC_Socket     _socket;
+    TC_Socket       _socket;
 
     /**
      * ip或文件路径
      */
-    string        _ip;
+    string          _ip;
 
     /**
      * 端口或-1:标示是本地套接字
      */
-    int         _port;
+    int             _port;
 
     /**
      * 超时时间, 毫秒
      */
-    int            _timeout;
+    int             _timeout;
 
     /**
      * _ip is ipv6 or not
      */
-    int        _isIPv6;
+    int             _isIPv6;
 };
 
 /**
