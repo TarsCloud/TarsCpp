@@ -343,7 +343,7 @@ string Tars2C::generateH(const StructPtr &pPtr, const string& namespaceId) const
     s << TAB << "Int32 (*writeTo)( const "<<sStructName<<"*, TarsOutputStream *);" << endl;
     s << TAB << "Int32 (*readFrom)( "<<sStructName<<"*, TarsInputStream *);" << endl;
 
-    //¶¨Òå³ÉÔ±±äÁ¿
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½
     vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
     for (size_t j = 0; j < member.size(); j++)
     {
@@ -374,7 +374,7 @@ string Tars2C::generateC(const StructPtr &pPtr, const string& namespaceId) const
     ostringstream s;
     string sStructName = namespaceId + "_" + pPtr->getId();
 
-    //¶¨Òå³ÉÔ±±äÁ¿
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½
     vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
 
     ////////////////////////////////////////////////////////////
@@ -463,7 +463,7 @@ string Tars2C::generateC(const StructPtr &pPtr, const string& namespaceId) const
     for (size_t j = 0; j < member.size(); j++)
     {
         BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
-        //stringÖµÒª×ªÒå
+        //stringÖµÒª×ªï¿½ï¿½
         if (bPtr && bPtr->kind() == Builtin::KindString)
         {
             s << TAB << "this->" << member[j]->getId() << " = JString_new();" << endl;
@@ -537,7 +537,7 @@ string Tars2C::generateC(const StructPtr &pPtr, const string& namespaceId) const
     for (size_t j = 0; j < member.size(); j++)
     {
         BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
-        //stringÖµÒª×ªÒå
+        //stringÖµÒª×ªï¿½ï¿½
         if (bPtr && bPtr->kind() == Builtin::KindString)
         {
             if (member[j]->hasDefault())
@@ -704,7 +704,7 @@ void Tars2C::generateH(const ContextPtr &pPtr) const
     s << endl;
     s << "#endif" << endl;
 
-    tars::TC_File::makeDirRecursive(m_sBaseDir, 0755);
+    tars::TC_File::makeDirRecursive(m_sBaseDir);
     tars::TC_File::save2file(fileH, s.str());
 }
 
@@ -731,7 +731,7 @@ void Tars2C::generateC(const ContextPtr &pPtr) const
 
     s << endl;
 
-    tars::TC_File::makeDirRecursive(m_sBaseDir, 0755);
+    tars::TC_File::makeDirRecursive(m_sBaseDir);
     tars::TC_File::save2file(fileC, s.str());
 
 }
@@ -754,7 +754,7 @@ StructPtr Tars2C::findStruct(const ContextPtr &pPtr,const string &id)
 {
     string sid = id;
 
-    //ÔÚµ±Ç°namespaceÖÐ²éÕÒ
+    //ï¿½Úµï¿½Ç°namespaceï¿½Ð²ï¿½ï¿½ï¿½
     vector<NamespacePtr> namespaces = pPtr->getNamespaces();
     for (size_t i = 0; i < namespaces.size(); i++)
     {

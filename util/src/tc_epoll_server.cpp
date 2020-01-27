@@ -894,7 +894,7 @@ TC_EpollServer::header_filter_functor &TC_EpollServer::BindAdapter::getHeaderFil
 //     _iHeaderLen = iHeaderLen;
 // }
     
-void TC_EpollServer::BindAdapter::setConnProtocol(const TC_EpollServer::conn_protocol_functor& cpf, int iHeaderLen, const TC_EpollServer::header_filter_functor &hf) 
+void TC_EpollServer::BindAdapter::setConnProtocol(const TC_NetWorkBuffer::protocol_functor& cpf, int iHeaderLen, const TC_EpollServer::header_filter_functor &hf) 
 {
     _cpf = cpf; 
 
@@ -908,10 +908,10 @@ void TC_EpollServer::BindAdapter::setConnProtocol(const TC_EpollServer::conn_pro
 //     return _pf;
 // }
 
-TC_EpollServer::header_filter_functor& TC_EpollServer::BindAdapter::getHeaderFilterFunctor()
-{
-    return _hf;
-}
+// TC_EpollServer::header_filter_functor& TC_EpollServer::BindAdapter::getHeaderFilterFunctor()
+// {
+//     return _hf;
+// }
 
 int TC_EpollServer::BindAdapter::getHeaderFilterLen()
 {
@@ -1168,17 +1168,18 @@ int TC_EpollServer::Connection::parseProtocol()
             }
 #endif
 
-            string ro;
+            // string ro;
+            vector<char> ro;
 
             int b = TC_EpollServer::PACKET_LESS;
-            if (_pBindAdapter->getConnProtocol())
-            {
-                b = _pBindAdapter->getConnProtocol()(_recvbuffer, ro, this);
-            }
-            else
-            {
-                b = _pBindAdapter->getProtocol()(_recvbuffer, ro);
-            }
+            // if (_pBindAdapter->getConnProtocol())
+            // {
+            //     b = _pBindAdapter->getConnProtocol()(_recvbuffer, ro, this);
+            // }
+            // else
+            // {
+            //     b = _pBindAdapter->getProtocol()(_recvbuffer, ro);
+            // }
 
             if(b == TC_EpollServer::PACKET_LESS)
             {
@@ -1187,8 +1188,7 @@ int TC_EpollServer::Connection::parseProtocol()
             }
             else if(b == TC_EpollServer::PACKET_FULL)
             {
-                if (_pBindAdapter->_authWrapper &&
-                    _pBindAdapter->_authWrapper(this, ro))
+                if (_pBindAdapter->_authWrapper && _pBindAdapter->_authWrapper(this, ro))
                     continue;
 
                 shared_ptr<RecvContext> recv = std::make_shared<RecvContext>(getId(), _ip, _port, getfd(), _pBindAdapter);
@@ -2125,9 +2125,9 @@ void TC_EpollServer::NetThread::debug(const string &s)
     _epollServer->debug(s);
 }
 
-void TC_EpollServer::NetThread::tars(const string &s)
+void TC_EpollServer::NetThread::info(const string &s)
 {
-    _epollServer->tars(s);
+    _epollServer->info(s);
 }
 
 void TC_EpollServer::NetThread::error(const string &s)
@@ -2645,7 +2645,7 @@ void TC_EpollServer::NetThread::processPipe()
 	    	continue;
 	    }
 
-        switch(sc->cmd)
+        switch(sc->cmd())
         {
         case 'c':
             {
@@ -2897,7 +2897,7 @@ TC_EpollServer::TC_EpollServer(unsigned int iNetThreadNum)
 #if TARGET_PLATFORM_WINDOWS    
     WSADATA wsadata;
     WSAStartup(MAKEWORD(2, 2), &wsadata);
-#endi
+#endif
 
     if(_netThreadNum < 1)
     {
@@ -3500,6 +3500,11 @@ TC_EpollServer::BindAdapterPtr TC_EpollServer::getBindAdapter(const string &sNam
     return NULL;
 }
 
+vector<TC_EpollServer::BindAdapterPtr> TC_EpollServer::getBindAdapters()
+{
+    return this->_bindAdapters;
+}
+
 // TC_EpollServer::BindAdapterPtr TC_EpollServer::getBindAdapter(const string &sName)
 // {
 //     for(size_t i = 0; i < _netThreads.size(); ++i)
@@ -3551,11 +3556,11 @@ void TC_EpollServer::debug(const string &s)
     }
 }
 
-void TC_EpollServer::tars(const string &s)
+void TC_EpollServer::info(const string &s)
 {
     if(_pLocalLogger)
     {
-        _pLocalLogger->tars() << "[TARS]" << s << endl;
+        _pLocalLogger->info() << "[TARS]" << s << endl;
     }
 }
 
@@ -3581,19 +3586,25 @@ vector<TC_EpollServer::ConnStatus> TC_EpollServer::getConnStatus(int lfd)
     return vConnStatus;
 }
 
-map<int, TC_EpollServer::BindAdapterPtr> TC_EpollServer::getListenSocketInfo()
+
+unordered_map<int, TC_EpollServer::BindAdapterPtr> TC_EpollServer::getListenSocketInfo()
 {
-    map<int, TC_EpollServer::BindAdapterPtr> mListen;
-    for(size_t i = 0; i < _netThreads.size(); ++i)
-    {
-        auto tmp = _netThreads[i]->getListenSocketInfo();
-        for (const auto& kv : tmp)
-        {
-            mListen.insert(kv);
-        }
-    }
-    return mListen;
+    return _listeners;
 }
+
+// map<int, TC_EpollServer::BindAdapterPtr> TC_EpollServer::getListenSocketInfo()
+// {
+//     map<int, TC_EpollServer::BindAdapterPtr> mListen;
+//     for(size_t i = 0; i < _netThreads.size(); ++i)
+//     {
+//         auto tmp = _netThreads[i]->getListenSocketInfo();
+//         for (const auto& kv : tmp)
+//         {
+//             mListen.insert(kv);
+//         }
+//     }
+//     return mListen;
+// }
 
 size_t TC_EpollServer::getConnectionCount()
 {

@@ -26,8 +26,8 @@
 
 namespace tars
 {
-#define TNOW     taf::TC_TimeProvider::getInstance()->getNow()
-#define TNOWMS   taf::TC_TimeProvider::getInstance()->getNowMs()
+#define TNOW     TC_TimeProvider::getInstance()->getNow()
+#define TNOWMS   TC_TimeProvider::getInstance()->getNowMs()
 
 /////////////////////////////////////////////////
 /**

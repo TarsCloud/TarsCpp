@@ -25,7 +25,7 @@
 #endif
 #include "util/tc_ex.h"
 
-namespace taf
+namespace tars
 {
 /////////////////////////////////////////////////
 /** 

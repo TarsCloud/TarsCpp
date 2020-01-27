@@ -49,7 +49,7 @@ string Tars2Cs::toTypeInit(const TypePtr &pPtr) const
     VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
     if (vPtr)
     {
-        //数组特殊处理
+        //锟斤拷锟斤拷锟斤拷锟解处锟斤拷
         string sType;
         size_t iPosBegin, iPosEnd;
         sType = tostr(vPtr->getTypePtr());
@@ -57,7 +57,7 @@ string Tars2Cs::toTypeInit(const TypePtr &pPtr) const
         {
             sType = sType.substr(0, iPosBegin) +  sType.substr(iPosEnd+1);
         }
-        //[] (数组)的数组变为[1]
+        //[] (锟斤拷锟斤拷)锟斤拷锟斤拷锟斤拷锟轿猍1]
         sType = tars::TC_Common::replace(sType, "[]" , "[1]");
         return "(" + tostr(vPtr->getTypePtr()) + "[]) new " + sType + "[1];";;
     }
@@ -186,7 +186,7 @@ string Tars2Cs::generateCs(const StructPtr &pPtr, const NamespacePtr &nPtr) cons
     s << TAB << "{" << endl;
     INC_TAB;
 
-    //定义成员变量set;get函数
+    //锟斤拷锟斤拷锟皆憋拷锟斤拷锟絪et;get锟斤拷锟斤拷
     for (size_t i = 0; i < member.size(); i++)
     {
         string sDefault;
@@ -281,7 +281,7 @@ string Tars2Cs::generateCs(const StructPtr &pPtr, const NamespacePtr &nPtr) cons
     s << endl;
 
     string fileCs  = getFilePath(nPtr->getId()) + pPtr->getId() + ".cs";
-    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()), 0755);
+    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileCs, s.str());
 
     return s.str();
@@ -307,7 +307,6 @@ void Tars2Cs::generateCs(const vector<EnumPtr> &es,const vector<ConstPtr> &cs,co
         s << TAB << "class Const " << endl;
         s << TAB << "{" << endl;
         INC_TAB;
-        //-----------------const类型开始------------------------------------
         for (size_t i = 0; i < cs.size(); i++)
         {
             if (cs[i]->getConstGrammarPtr()->t == ConstGrammar::STRING)
@@ -330,10 +329,8 @@ void Tars2Cs::generateCs(const vector<EnumPtr> &es,const vector<ConstPtr> &cs,co
         DEL_TAB;
         s << TAB << "}" << endl;
     }
-    //-----------------const类型结束--------------------------------
     if (es.size()>0)
     {
-        //-----------------枚举类型开始---------------------------------
         for (size_t i = 0; i < es.size(); i++)
         {
             s << TAB << "public enum "<<es[i]->getId()<<endl;
@@ -354,12 +351,11 @@ void Tars2Cs::generateCs(const vector<EnumPtr> &es,const vector<ConstPtr> &cs,co
             s<< TAB <<"}"<<endl;
         }
     }
-    //-----------------枚举类型结束---------------------------------
     DEL_TAB;
     s << TAB << "}" << endl;
 
     string fileCs  = getFilePath(nPtr->getId()) + nPtr->getId()+"_const.cs";
-    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()), 0755);
+    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileCs, s.str());
 
     return;
@@ -377,7 +373,7 @@ void Tars2Cs::generateCs(const NamespacePtr &pPtr) const
         generateCs(ss[i], pPtr);
     }
 
-    generateCs(es,cs,pPtr);//c#里面的枚举、const都放到一起。
+    generateCs(es,cs,pPtr);
 
     return;
 }

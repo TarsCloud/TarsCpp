@@ -20,7 +20,7 @@
 #include "util/tc_thread_mutex.h"
 #include "util/tc_thread_cond.h"
 
-namespace taf
+namespace tars
 {
 /////////////////////////////////////////////////
 /** 

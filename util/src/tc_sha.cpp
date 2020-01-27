@@ -13,12 +13,11 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
 #include "util/tc_sha.h"
 #include "util/tc_common.h"
 #include <stdio.h>
 #include <string.h>
-#include <endian.h>
+// #include <endian.h>
 #include <limits.h>
 
 namespace tars
@@ -667,7 +666,7 @@ string TC_SHA::sha1file(const string &fileName)
     size_t n;
     detail_sha1::sha1_ctx cx[1];
     if(( f = fopen( fileName.c_str(), "rb" )) == NULL )
-        throw TC_SHA_Exception("[TC_SHA::sha1file] fopen '" + fileName + "', error.", errno);
+        throw TC_SHA_Exception("[TC_SHA::sha1file] fopen '" + fileName + "', error.", true);
 
     detail_sha1::sha1_begin(cx);
     while((n = fread( buf, 1, sizeof( buf ),f)) > 0 )
@@ -709,7 +708,7 @@ string TC_SHA::sha256file(const string &fileName)
     size_t n;
     detail_sha2::sha256_ctx cx[1];
     if(( f = fopen( fileName.c_str(), "rb" )) == NULL )
-        throw TC_SHA_Exception("[TC_SHA::sha256file] fopen '" + fileName + "', error.", errno);
+        throw TC_SHA_Exception("[TC_SHA::sha256file] fopen '" + fileName + "', error.", true);
 
     detail_sha2::sha256_begin(cx);
     while((n = fread( buf, 1, sizeof( buf ),f)) > 0 )
@@ -751,7 +750,7 @@ string TC_SHA::sha384file(const string &fileName)
     size_t n;
     detail_sha2::sha384_ctx cx[1];
     if(( f = fopen( fileName.c_str(), "rb" )) == NULL )
-        throw TC_SHA_Exception("[TC_SHA::sha384file] fopen '" + fileName + "', error.", errno);
+        throw TC_SHA_Exception("[TC_SHA::sha384file] fopen '" + fileName + "', error.", true);
 
     detail_sha2::sha384_begin(cx);
     while((n = fread( buf, 1, sizeof( buf ),f)) > 0 )
@@ -793,7 +792,7 @@ string TC_SHA::sha512file(const string &fileName)
     size_t n;
     detail_sha2::sha512_ctx cx[1];
     if(( f = fopen( fileName.c_str(), "rb" )) == NULL )
-        throw TC_SHA_Exception("[TC_SHA::sha512file] fopen '" + fileName + "', error.", errno);
+        throw TC_SHA_Exception("[TC_SHA::sha512file] fopen '" + fileName + "', error.", true);
 
     detail_sha2::sha512_begin(cx);
     while((n = fread( buf, 1, sizeof( buf ),f)) > 0 )
@@ -807,4 +806,3 @@ string TC_SHA::sha512file(const string &fileName)
 }
 
 }
-

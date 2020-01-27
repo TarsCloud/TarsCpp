@@ -226,6 +226,6 @@ void CodeGenerator::generateDTS(const ContextPtr &pPtr)
 
     string sFileName = TC_File::excludeFileExt(_sToPath + TC_File::extractFileName(pPtr->getFileName())) + IDL_TYPE + ".d.ts";
 
-    TC_File::makeDirRecursive(_sToPath, 0755);
+    TC_File::makeDirRecursive(_sToPath);
     makeUTF8File(sFileName, sstr.str());
 }

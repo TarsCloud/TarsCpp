@@ -34,7 +34,7 @@ string Tars2Python::generatePython(const EnumPtr &pPtr, const std::string &sName
 	s << TAB << "class " << pPtr->getId() << ":" << endl;
 	INC_TAB;
 
-	//³ÉÔ±±äÁ¿
+	//ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½
 	int nenum = -1;
 	vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
 	for (size_t i = 0; i < member.size(); i++)
@@ -233,7 +233,7 @@ string Tars2Python::generatePython(const StructPtr & pPtr, const NamespacePtr & 
 	s << TAB << "class " << pPtr->getId() << "(tarscore.struct):"<< endl;
 	INC_TAB;
 
-	//STEP01 ¿ªÊ¼¶¨ÒåÀàÐèÒªµÄÀàÐÍ
+	//STEP01 ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	s << TAB << "__tars_class__ = \"" << nPtr->getId() << "." << pPtr->getId() << "\";" << endl;
 	for (size_t i = 0, len = member.size(); i < len; i++)
 	{
@@ -255,7 +255,7 @@ string Tars2Python::generatePython(const StructPtr & pPtr, const NamespacePtr & 
 		}
 	}
 
-	//STEP02 ¶¨ÒåÊý¾Ý³ÉÔ±
+	//STEP02 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½Ô±
 	s << TAB << endl;
 	s << TAB << "def __init__(self):" << endl;
 	INC_TAB;
@@ -265,7 +265,7 @@ string Tars2Python::generatePython(const StructPtr & pPtr, const NamespacePtr & 
 	}
 	DEL_TAB;
 
-	//STEP03 ¿ªÊ¼Éú³ÉwriteToº¯Êý
+	//STEP03 ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½writeToï¿½ï¿½ï¿½ï¿½
 	s << TAB << endl;
 	s << TAB << "@staticmethod" << endl;
 	s << TAB << "def writeTo(oos, value):" << endl;
@@ -277,7 +277,7 @@ string Tars2Python::generatePython(const StructPtr & pPtr, const NamespacePtr & 
 	}
 	DEL_TAB;
 
-   	//STEP04 ¿ªÊ¼Éú³ÉreadFromº¯Êý
+   	//STEP04 ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½readFromï¿½ï¿½ï¿½ï¿½
 	s << TAB << endl;
 	s << TAB << "@staticmethod" << endl;
 	s << TAB << "def readFrom(ios):" << endl;
@@ -424,7 +424,7 @@ string Tars2Python::generatePython(const InterfacePtr &pPtr)
 	vector<OperationPtr>& vOperation = pPtr->getAllOperationPtr();
 	for(size_t i = 0; i < vOperation.size(); i++)
 	{
-		//Éú³ÉÃ¿¸ö½Ó¿ÚµÄ±à½âÂë
+		//ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½Ó¿ÚµÄ±ï¿½ï¿½ï¿½ï¿½
 		str << TAB << "def " << vOperation[i]->getId() << "(self, " << makeParams(vOperation[i]) << "):" << endl;
 		INC_TAB;
 		str << makeOperations(vOperation[i]) << endl;
@@ -441,7 +441,7 @@ string Tars2Python::generatePython(const NamespacePtr &pPtr)
 	std::ostringstream str;
 
 	/*
-	//STEP01 ¿ªÊ¼Éú³É³£Á¿
+	//STEP01 ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½É³ï¿½ï¿½ï¿½
 	vector<ConstPtr> &cs = pPtr->getAllConstPtr();
 	for (size_t i = 0; i < cs.size(); i++)
 	{
@@ -450,21 +450,21 @@ string Tars2Python::generatePython(const NamespacePtr &pPtr)
 	str << endl;
 	*/
 
-	//STEP02 ¿ªÊ¼Éú³ÉÃ¶¾ÙÖµ
+	//STEP02 ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½Öµ
 	vector<EnumPtr> & es = pPtr->getAllEnumPtr();
 	for (size_t i = 0; i < es.size(); i++)
 	{
 		str << generatePython(es[i], pPtr->getId()) << endl;
 	}
 
-	//STEP03 ¿ªÊ¼Éú³É½á¹¹Ìå±à½âÂëº¯Êý
+	//STEP03 ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½É½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ëº¯ï¿½ï¿½
 	vector<StructPtr> & ss = pPtr->getAllStructPtr();
 	for (size_t i = 0; i < ss.size(); i++)
 	{
 		str << generatePython(ss[i], pPtr) << endl;
 	}
 
-	//STEP04 ¿ªÊ¼Éú³ÉProxyº¯Êý
+	//STEP04 ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Proxyï¿½ï¿½ï¿½ï¿½
 	vector<InterfacePtr> & is = pPtr->getAllInterfacePtr();
     for(size_t i = 0; i < is.size(); i++)
     {
@@ -500,7 +500,7 @@ void Tars2Python::generatePython(const ContextPtr &pPtr)
 
 		string sPath = getFilePath() + "/" + namespaces[i]->getId() + "/";
 		string sFileName = sPath + tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName())) + ".py";
-		tars::TC_File::makeDirRecursive(sPath, 0755);
+		tars::TC_File::makeDirRecursive(sPath);
 		tars::TC_File::save2file(sFileName, str.str());
 	}
 

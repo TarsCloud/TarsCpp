@@ -216,7 +216,7 @@ public:
     * @throws              TC_Socket_Exception
     * @return
     */
-    void getSockName(string &sSockAddress, uint16_t &iSockPort);
+    void getSockName(string &sSockAddress, uint16_t &iSockPort) const;
 
     /**
     * @brief  修改socket选项. 
@@ -289,7 +289,7 @@ public:
      *        其他错误还是通过异常返回(例如),例如地址错误
      * @return int
      */
-    int connectNoThrow(struct sockaddr* addr);
+    int connectNoThrow(const struct sockaddr* addr);
 
     /**
     * @brief 在socket上监听. 
@@ -585,7 +585,7 @@ protected:
     * @param serverLen      pstServerAddr指向的结构的长度
     * @return int
     */
-    int connect(struct sockaddr *pstServerAddr, socklen_t serverLen);    
+    int connect(const struct sockaddr *pstServerAddr, socklen_t serverLen);    
 
     /**
     * @brief 获取对点的地址. 
@@ -595,7 +595,7 @@ protected:
     * @throws            TC_Socket_Exception
     * @return 
     */
-    void getPeerName(struct sockaddr *pstPeerAddr, socklen_t &iPeerLen);
+    void getPeerName(struct sockaddr *pstPeerAddr, socklen_t &iPeerLen) const;
 
     /**
     * @brief 获取自己的的ip和端口. 
@@ -605,7 +605,7 @@ protected:
     * @throws            TC_Socket_Exception
     * @return
     */
-    void getSockName(struct sockaddr *pstSockAddr, socklen_t &iSockLen);
+    void getSockName(struct sockaddr *pstSockAddr, socklen_t &iSockLen) const;
 
 private:
 

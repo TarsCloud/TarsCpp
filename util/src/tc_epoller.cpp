@@ -20,7 +20,7 @@
 #include <unistd.h>
 #endif
 
-namespace taf
+namespace tars
 {
 
 TC_Epoller::NotifyInfo::NotifyInfo() : _ep(NULL)

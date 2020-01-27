@@ -2,7 +2,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# aux_source_directory(. DIR_SRCS)
+aux_source_directory(. DIR_SRCS)
 
 # if (CMAKE_SIZEOF_VOID_P EQUAL 8)
 #     list(APPEND DIR_SRCS "tc_jump_x86_64_sysv_elf_gas.s")

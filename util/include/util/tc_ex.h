@@ -31,9 +31,6 @@ namespace tars
 */           
 /////////////////////////////////////////////////
 
-/**
-* @brief 异常类.
-*/
 class TC_Exception : public exception
 {
 public:

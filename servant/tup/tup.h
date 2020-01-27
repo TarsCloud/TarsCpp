@@ -30,11 +30,11 @@
     #include "tup/RequestF.h"
 #endif
 
-#ifdef __GNUC__
-#   if __GNUC__ >3 || __GNUC_MINOR__ > 3
-#       include <ext/pool_allocator.h>
-#   endif
-#endif
+// #ifdef __GNUC__
+// #   if __GNUC__ >3 || __GNUC_MINOR__ > 3
+// #       include <ext/pool_allocator.h>
+// #   endif
+// #endif
 
 using namespace std;
 using namespace tars;
@@ -673,13 +673,13 @@ public:
 
 };
 
-#ifdef __GNUC__
-#   if __GNUC__ >3 || __GNUC_MINOR__ > 3
-        typedef UniAttribute<BufferWriter,BufferReader, __gnu_cxx::__pool_alloc> UniAttrPoolAlloc;
-        typedef UniPacket<BufferWriter,BufferReader, __gnu_cxx::__pool_alloc> UniPacketPoolAlloc;
-        typedef TarsUniPacket<BufferWriter,BufferReader, __gnu_cxx::__pool_alloc> TarsUniPacketPoolAlloc;        
-#   endif
-#endif
+// #ifdef __GNUC__
+// #   if __GNUC__ >3 || __GNUC_MINOR__ > 3
+//         typedef UniAttribute<BufferWriter,BufferReader, __gnu_cxx::__pool_alloc> UniAttrPoolAlloc;
+//         typedef UniPacket<BufferWriter,BufferReader, __gnu_cxx::__pool_alloc> UniPacketPoolAlloc;
+//         typedef TarsUniPacket<BufferWriter,BufferReader, __gnu_cxx::__pool_alloc> TarsUniPacketPoolAlloc;        
+// #   endif
+// #endif
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////

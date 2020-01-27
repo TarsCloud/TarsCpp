@@ -27,7 +27,8 @@
 #include <cassert>
 #include <iostream>
 #include "util/tc_file.h"
-namespace taf
+
+namespace tars
 {
 
 TC_Mmap::TC_Mmap(bool bOwner)

@@ -109,7 +109,7 @@ void TC_Socket::getPeerName(string &sPeerAddress, uint16_t &iPeerPort)
 
 #if TARGET_PLATFORM_LINUX||TARGET_PLATFORM_IOS
 
-void TC_Socket::getPeerName(string &sPathName)
+void TC_Socket::getPeerName(string &sPathName) const
 {
     assert(_iDomain == AF_LOCAL);
 
@@ -121,7 +121,7 @@ void TC_Socket::getPeerName(string &sPathName)
     sPathName = stSock.sun_path;
 }
 
-void TC_Socket::getSockName(string &sPathName)
+void TC_Socket::getSockName(string &sPathName) const
 {
     assert(_iDomain == AF_LOCAL);
 
@@ -170,7 +170,7 @@ int TC_Socket::connectNoThrow(const char *sPathName)
 
 #endif
 
-void TC_Socket::getPeerName(struct sockaddr *pstPeerAddr, socklen_t &iPeerLen)
+void TC_Socket::getPeerName(struct sockaddr *pstPeerAddr, socklen_t &iPeerLen) const
 {
     if(getpeername(_sock, pstPeerAddr, &iPeerLen) < 0)
     {
@@ -178,7 +178,7 @@ void TC_Socket::getPeerName(struct sockaddr *pstPeerAddr, socklen_t &iPeerLen)
     }
 }
 
-void TC_Socket::getSockName(string &sSockAddress, uint16_t &iSockPort)
+void TC_Socket::getSockName(string &sSockAddress, uint16_t &iSockPort) const
 {
     assert(_iDomain == AF_INET || _iDomain == AF_INET6);
 
@@ -195,7 +195,7 @@ void TC_Socket::getSockName(string &sSockAddress, uint16_t &iSockPort)
     iSockPort = (AF_INET6 == _iDomain) ? ntohs(in6.sin6_port) : ntohs(in4.sin_port);
 }
 
-void TC_Socket::getSockName(struct sockaddr *pstSockAddr, socklen_t &iSockLen)
+void TC_Socket::getSockName(struct sockaddr *pstSockAddr, socklen_t &iSockLen) const
 {
     if(getsockname(_sock, pstSockAddr, &iSockLen) < 0)
     {
@@ -427,7 +427,7 @@ int TC_Socket::connectNoThrow(const string &sServerAddr, uint16_t port)
     return connect(serverAddr, len);
 }
 
-int TC_Socket::connectNoThrow(struct sockaddr* addr)
+int TC_Socket::connectNoThrow(const struct sockaddr* addr)
 {
     assert(_iDomain == AF_INET || _iDomain == AF_INET6);
 
@@ -445,7 +445,7 @@ void TC_Socket::connect(const string &sServerAddr, uint16_t port)
 }
 
 
-int TC_Socket::connect(struct sockaddr *pstServerAddr, socklen_t serverLen)
+int TC_Socket::connect(const struct sockaddr *pstServerAddr, socklen_t serverLen)
 {
     return ::connect(_sock, pstServerAddr, serverLen);
 

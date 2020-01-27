@@ -573,7 +573,7 @@ namespace tars
 			//写错误,警告,调试log
 			DEBUG_LOG_LEVEL = 5,
 			//给TAF框架打日志用
-			TAF_LOG_LEVEL = 6, 
+			TARS_LOG_LEVEL = 6, 
 		};
 
 		/**
@@ -850,7 +850,7 @@ namespace tars
 			case WARN_LOG_LEVEL:
 			case DEBUG_LOG_LEVEL:
 			case INFO_LOG_LEVEL:
-			case TAF_LOG_LEVEL:
+			case TARS_LOG_LEVEL:
 				return true;
 				break;
 			}

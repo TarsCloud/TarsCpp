@@ -35,8 +35,8 @@
 // #include "util/tc_mmap.h"
 // #include "util/tc_fifo.h"
 #include "util/tc_network_buffer.h"
-#include "util/tc_buffer.h"
-#include "util/tc_buffer_pool.h"
+// #include "util/tc_buffer.h"
+// #include "util/tc_buffer_pool.h"
 #include "util/tc_cas_queue.h"
 
 using namespace std;
@@ -123,8 +123,8 @@ public:
     class Handle;
     typedef TC_AutoPtr<Handle> HandlePtr;
 
-    class HandleGroup;
-    typedef TC_AutoPtr<HandleGroup> HandleGroupPtr;
+    // class HandleGroup;
+    // typedef TC_AutoPtr<HandleGroup> HandleGroupPtr;
 
 
     // ////////////////////////////////////////////////////////////////////////////
@@ -249,13 +249,13 @@ public:
      * 每组handle处理一个或多个Adapter消息
      * 每个handle对象一个线程
      */
-    struct HandleGroup : public TC_HandleBase
-    {
-        string                      name;
-        TC_ThreadLock               monitor;
-        vector<HandlePtr>           handles;
-        map<string, BindAdapterPtr> adapters;
-    };
+    // struct HandleGroup : public TC_HandleBase
+    // {
+    //     string                      name;
+    //     TC_ThreadLock               monitor;
+    //     vector<HandlePtr>           handles;
+    //     map<string, BindAdapterPtr> adapters;
+    // };
     ////////////////////////////////////////////////////////////////////////////
     /**
      * @brief 定义服务逻辑处理的接口
@@ -360,6 +360,11 @@ public:
          */
         virtual void notifyFilter();
 
+        /**
+         * 心跳(每处理完一个请求或者等待请求超时都会调用一次)
+         */
+        virtual void heartbeat() {}
+
     protected:
         /**
          * 具体的处理逻辑
@@ -440,11 +445,6 @@ public:
         virtual void handleCustomMessage(bool bExpectIdle = false) {}
 
         /**
-         * 心跳(每处理完一个请求或者等待请求超时都会调用一次)
-         */
-        virtual void heartbeat() {}
-
-        /**
          * 线程已经启动, 进入具体处理前调用
          */
         virtual void startHandle() {}
@@ -467,11 +467,11 @@ public:
         virtual bool allFilterIsEmpty();
 
 
-		/**
-		 * 设置服务
-		 * @param pEpollServer
-		 */
-		void setEpollServer(TC_EpollServer *pEpollServer);
+		// /**
+		//  * 设置服务
+		//  * @param pEpollServer
+		//  */
+		// void setEpollServer(TC_EpollServer *pEpollServer);
 
 		/**
 		 * 设置Adapter
@@ -535,7 +535,7 @@ public:
     };
 
     using close_functor = std::function<void (void*, EM_CLOSE_T )>;
-    using auth_process_wrapper_functor = std::function<bool (void*, const std::string& )>;
+    using auth_process_wrapper_functor = std::function<bool (void*, const std::vector<char>& )>;
 
     ////////////////////////////////////////////////////////////////////////////
     // 服务端口管理,监听socket信息
@@ -1350,7 +1350,7 @@ public:
          */
         EnumConnectionType getType() const          { return _enType; }
 
-        bool IsEmptyConn() const  {return _bEmptyConn;}
+        bool isEmptyConn() const  {return _bEmptyConn;}
 
         /**
          * Init Auth State;
@@ -1798,13 +1798,13 @@ public:
         //  */
         // void send(unsigned int uid, const string &s, const string &ip, uint16_t port);
 
-        /**
-         * 获取某一监听端口的连接数
-         * @param lfd
-         *
-         * @return vector<TC_EpollServer::ConnStatus>
-         */
-        vector<TC_EpollServer::ConnStatus> getConnStatus(int lfd);
+        // /**
+        //  * 获取某一监听端口的连接数
+        //  * @param lfd
+        //  *
+        //  * @return vector<TC_EpollServer::ConnStatus>
+        //  */
+        // vector<TC_EpollServer::ConnStatus> getConnStatus(int lfd);
 
         /**
          * 获取连接数
@@ -1954,7 +1954,7 @@ public:
         /**
          *是否空连接检测
          */
-        bool IsEmptyConnCheck() const;
+        bool isEmptyConnCheck() const;
 
         friend class BindAdapter;
         friend class ConnectionList;
@@ -2226,6 +2226,12 @@ public:
      */
     BindAdapterPtr getBindAdapter(const string &sName);
 
+	/**
+	 * 获取所有adatapters
+	 * @return
+	 */
+	vector<BindAdapterPtr> getBindAdapters();
+
     /**
      * 向网络线程添加连接
      */
@@ -2297,7 +2303,7 @@ public:
      * INFO日志
      * @param s
      */
-    void tars(const string &s);
+    void info(const string &s);
 
      /**
      * 记录错误日志
@@ -2323,7 +2329,7 @@ public:
     /**
      * 获取所有业务线程的数目
      */
-    unsigned int getLogicThreadNum();
+    size_t getLogicThreadNum();
 
 	//回调给应用服务
 	typedef std::function<void(TC_EpollServer*)> application_callback_functor;

@@ -374,7 +374,7 @@ bool CodeGenerator::generateJSServer(const ContextPtr &pPtr)
 
     string sFileName = TC_File::excludeFileExt(_sToPath + TC_File::extractFileName(pPtr->getFileName())) + ".js";
 
-    TC_File::makeDirRecursive(_sToPath, 0755);
+    TC_File::makeDirRecursive(_sToPath);
     makeUTF8File(sFileName, str.str());
 
     return true;

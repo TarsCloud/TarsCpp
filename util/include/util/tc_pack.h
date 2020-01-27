@@ -17,11 +17,10 @@
 #ifndef __TC_PACK_H_
 #define __TC_PACK_H_
 
-#include <netinet/in.h>
+#include "util/tc_platform.h"
 #include <vector>
 #include <map>
 #include <string>
-#include <assert.h>
 #include "util/tc_ex.h"
 
 namespace tars
