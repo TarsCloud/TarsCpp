@@ -42,28 +42,55 @@
 namespace tars
 {
 
-//TARSServer的协议解析器
-int AppProtocol::parseAdmin(string &in, string &out)
+// //TARSServer的协议解析器
+// int AppProtocol::parseAdmin(string &in, string &out)
+// {
+//     return parse(in, out);
+// }
+
+// void ProxyProtocol::tarsRequest(const RequestPacket& request, string& buff)
+// {
+//     TarsOutputStream<BufferWriter> os;
+
+//     request.writeTo(os);
+
+//     tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
+
+//     buff.clear();
+
+//     buff.reserve(sizeof(tars::Int32) + os.getLength());
+
+//     buff.append((const char*)&iHeaderLen, sizeof(tars::Int32));
+
+//     buff.append(os.getBuffer(), os.getLength());
+// }
+
+//TAFServer的协议解析器
+TC_NetWorkBuffer::PACKET_TYPE AppProtocol::parseAdmin(TC_NetWorkBuffer  &in, shared_ptr<TC_NetWorkBuffer::SendBuffer> &out)
 {
-    return parse(in, out);
+    return parse(in, out->getBuffer());
 }
 
-void ProxyProtocol::tarsRequest(const RequestPacket& request, string& buff)
+void ProxyProtocol::tarsRequest(const RequestPacket& request, shared_ptr<TC_NetWorkBuffer::SendBuffer>& buff)
 {
-    TarsOutputStream<BufferWriter> os;
+	TarsOutputStream<BufferWriterVector> os;
 
-    request.writeTo(os);
+	tars::Int32 iHeaderLen = 0;
 
-    tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
+//	先预留4个字节长度
+	os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
 
-    buff.clear();
+	request.writeTo(os);
 
-    buff.reserve(sizeof(tars::Int32) + os.getLength());
+	buff->swap(os.getByteBuffer());
 
-    buff.append((const char*)&iHeaderLen, sizeof(tars::Int32));
+	assert(buff->length() >= 4);
 
-    buff.append(os.getBuffer(), os.getLength());
+	iHeaderLen = htonl((int)(buff->length()));
+
+	memcpy((void*)buff->buffer(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
 }
+
 ////////////////////////////////////////////////////////////////////////////////////
 #if TARS_HTTP2
 // nghttp2读取请求包体，准备发送

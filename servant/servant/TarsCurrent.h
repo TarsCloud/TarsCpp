@@ -19,6 +19,7 @@
 
 #include "util/tc_epoll_server.h"
 #include "tup/RequestF.h"
+#include "tup/tup.h"
 #include "servant/BaseF.h"
 
 namespace tars
@@ -52,7 +53,7 @@ public:
      * 获取IP
      * @return string
      */
-    string getIp() const;
+    const string &getIp() const;
 
     /**
      * 获取端口
@@ -70,7 +71,7 @@ public:
      * 获取fd
      * @return int
      */
-    int getFd() const { return _fd; }
+    int getFd() const { return _data->fd(); }
 
     /**
      * 是否函数返回时发送响应包给客户端
@@ -185,21 +186,59 @@ public:
     void setReportStat(bool bReport);
 
     /**
-     * tars协议的发送响应数据(仅TARS协议有效)
+     * taf协议的发送响应数据(仅TAF协议有效)
      * @param iRet
      * @param status
      * @param buffer
      */
-    void sendResponse(int iRet, const vector<char>& buffer = TARS_BUFFER(),
-                      const map<string, string>& status = TARS_STATUS(),
-                      const string & sResultDesc = "");
+    void sendResponse(int iRet);
 
     /**
-     * 普通协议的发送响应数据(非TARS协议有效)
+     * taf协议的发送响应数据(仅TAF协议有效), 直接swapbuffer , 这样可以不用copy 数据
+     * @param iRet
+     * @param status
+     * @param buffer
+     */
+	void sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os, bool push = false);
+
+    /**
+     * taf协议的发送响应数据(仅TAF协议有效), 直接swapbuffer , 这样可以不用copy 数据
+     * @param iRet
+     * @param status
+     * @param buffer
+     */
+	void sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr, bool push = false);
+
+	/**
+	 * taf协议的发送响应数据(仅TAF协议有效)
+	 * @param iRet
+	 * @param buff
+	 */
+	void sendResponse(int iRet, const vector<char> &buff, bool push = false);
+
+	/**
+     * 普通协议的发送响应数据(非TAF协议有效)
      * @param buff
      * @param len
      */
     void sendResponse(const char* buff, uint32_t len);
+
+    // /**
+    //  * tars协议的发送响应数据(仅TARS协议有效)
+    //  * @param iRet
+    //  * @param status
+    //  * @param buffer
+    //  */
+    // void sendResponse(int iRet, const vector<char>& buffer = TARS_BUFFER(),
+    //                   const map<string, string>& status = TARS_STATUS(),
+    //                   const string & sResultDesc = "");
+
+    // /**
+    //  * 普通协议的发送响应数据(非TARS协议有效)
+    //  * @param buff
+    //  * @param len
+    //  */
+    // void sendResponse(const char* buff, uint32_t len);
 
 protected:
 
@@ -211,31 +250,45 @@ protected:
      * 初始化
      * @param stRecvData
      */
-    void initialize(const TC_EpollServer::tagRecvData &stRecvData);
+    // void initialize(const TC_EpollServer::tagRecvData &stRecvData);
+    void initialize(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * 初始化
      * @param stRecvData
      * @param beginTime
      */
-    void initialize(const TC_EpollServer::tagRecvData &stRecvData, int64_t beginTime);
+    // void initialize(const TC_EpollServer::tagRecvData &stRecvData, int64_t beginTime);
+    void initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * 初始化
      * @param stRecvData
      */
-    void initializeClose(const TC_EpollServer::tagRecvData &stRecvData);
+    // void initializeClose(const TC_EpollServer::tagRecvData &stRecvData);
 
     /**
      * 初始化
      * @param sRecvBuffer
      */
-    void initialize(const string &sRecvBuffer);
+    // void initialize(const string &sRecvBuffer);
+    void initialize(const vector<char> &sRecvBuffer);
 
     /**
      * 服务端上报状态，针对单向调用及TUP调用(仅对TARS协议有效)
      */
     void reportToStat(const string & sObj);
+
+
+    /**
+     *
+     * @param iRet
+     * @param response
+     * @param status
+     * @param sResultDesc
+     * @param push
+     */
+	void sendResponse(int iRet, ResponsePacket &response, const map<string, string>& status, const string& sResultDesc, bool push = false);
 
 protected:
     /**
@@ -244,29 +297,34 @@ protected:
     ServantHandle*            _servantHandle;
 
     /**
-     * 消息_bindAdapter
+     * 接收到的数据
      */
-    TC_EpollServer::BindAdapter* _bindAdapter;
+	shared_ptr<TC_EpollServer::RecvContext> _data;
 
-    /**
-     * 唯一标识
-     */
-    uint32_t                _uid;
+    // /**
+    //  * 消息_bindAdapter
+    //  */
+    // TC_EpollServer::BindAdapter* _bindAdapter;
 
-    /**
-     * ip地址
-     */
-    string                  _ip;
+    // /**
+    //  * 唯一标识
+    //  */
+    // uint32_t                _uid;
 
-    /**
-     * 端口
-     */
-    int                     _port;
+    // /**
+    //  * ip地址
+    //  */
+    // string                  _ip;
 
-    /**
-     * 用于回包时选择网络线程
-     */
-    int                        _fd;
+    // /**
+    //  * 端口
+    //  */
+    // int                     _port;
+
+    // /**
+    //  * 用于回包时选择网络线程
+    //  */
+    // int                        _fd;
 
     /**
      * 客户端请求包
@@ -278,10 +336,10 @@ protected:
      */
     bool                    _response;
 
-    /**
-     * 收到请求时间
-     */
-    int64_t                _begintime;
+    // /**
+    //  * 收到请求时间
+    //  */
+    // int64_t                _begintime;
 
     /**
      * 接口处理的返回值
@@ -296,7 +354,7 @@ protected:
     /**
      * 连接关闭的类型，初始值是-1，非法值
      */
-    int                     _closeType;
+    // int                     _closeType;
 
     /**
      * 设置额外返回的内容

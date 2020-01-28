@@ -86,13 +86,13 @@ public:
     };
 
     //定义事件类型
-    enum
-    {
-        ET_LISTEN = 1,
-        ET_CLOSE  = 2,
-        ET_NOTIFY = 3,
-        ET_NET    = 0,
-    };
+    // enum
+    // {
+    //     ET_LISTEN = 1,
+    //     ET_CLOSE  = 2,
+    //     ET_NOTIFY = 3,
+    //     ET_NET    = 0,
+    // };
     enum
     {
         MIN_EMPTY_CONN_TIMEOUT  = 2*1000,    /*空链接超时时间(ms)*/
@@ -116,7 +116,7 @@ public:
 	typedef std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer::PACKET_TYPE, vector<char>&)> header_filter_functor;
 
     class NetThread;
-
+    class Connection;
     class BindAdapter;
     typedef TC_AutoPtr<BindAdapter> BindAdapterPtr;
 
@@ -535,7 +535,7 @@ public:
     };
 
     using close_functor = std::function<void (void*, EM_CLOSE_T )>;
-    using auth_process_wrapper_functor = std::function<bool (void*, const std::vector<char>& )>;
+    using auth_process_wrapper_functor = std::function<bool (Connection *c, const shared_ptr<RecvContext> &recv )>;
 
     ////////////////////////////////////////////////////////////////////////////
     // 服务端口管理,监听socket信息
@@ -1528,19 +1528,19 @@ public:
         bool                _bEmptyConn;
 
         /*
-            *接收数据的临时buffer,加这个目的是对udp接收数据包大小进行设置
-            */
+        *接收数据的临时buffer,加这个目的是对udp接收数据包大小进行设置
+        */
         char                *_pRecvBuffer;
 
         size_t                _nRecvBufferSize;
     public:
         /*
-            *该连接的鉴权状态
-            */
+        *该连接的鉴权状态
+        */
         int                 _authState;
         /*
-            *该连接的鉴权状态是否初始化了
-            */
+        *该连接的鉴权状态是否初始化了
+        */
         bool                _authInit;
 #if TARS_SSL
         std::unique_ptr<TC_OpenSSL> _openssl;

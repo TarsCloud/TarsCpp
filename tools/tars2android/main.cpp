@@ -30,7 +30,7 @@ void usage()
     cout << "  --extends-package=NAME           set the extends package name"<< endl;
     cout << "  --with-charset                   set charset, default UTF8" << endl;
     cout << "  --with-JavaBeanRule              support javabeab, default not support" << endl;
-    cout << "  --include=dir1;dir2;dir3         设置tars文件搜索路径" << endl;
+    cout << "  --include=dir1;dir2;dir3         set search path of tars proto files" << endl;
 
     cout << endl;
     exit(0);

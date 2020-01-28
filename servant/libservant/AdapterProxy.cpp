@@ -33,7 +33,7 @@
 namespace tars
 {
     
-TC_Atomic AdapterProxy::_idGen;
+std::atomic<int> AdapterProxy::_idGen;
 
 AdapterProxy::AdapterProxy(ObjectProxy * pObjectProxy,const EndpointInfo &ep,Communicator* pCom)
 : _communicator(pCom)
@@ -55,7 +55,7 @@ AdapterProxy::AdapterProxy(ObjectProxy * pObjectProxy,const EndpointInfo &ep,Com
 , _noSendQueueLimit(1000)
 , _maxSampleCount(1000)
 , _sampleRate(0)
-, _id(_idGen.inc())
+, _id((++_idGen))
 {
     _timeoutQueue.reset(new TC_TimeoutQueueNew<ReqMessage*>());
 
@@ -138,7 +138,7 @@ int AdapterProxy::invoke(ReqMessage * msg)
 {
     assert(_trans != NULL);
 
-    TLOGINFO("[TARS][AdapterProxy::invoke objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << endl);
+    TLOGTARS("[TARS][AdapterProxy::invoke objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << endl);
 
     //未发链表有长度限制
     if(_timeoutQueue->getSendListSize() >= _noSendQueueLimit)
@@ -172,9 +172,9 @@ int AdapterProxy::invoke(ReqMessage * msg)
     _objectProxy->getProxyProtocol().requestFunc(msg->request, msg->sReqData);
 
     //交给连接发送数据,连接连上,buffer不为空,直接发送数据成功
-    if(_timeoutQueue->sendListEmpty() && _trans->sendRequest(msg->sReqData.c_str(),msg->sReqData.size()) != Transceiver::eRetError)
+    if(_timeoutQueue->sendListEmpty() && _trans->sendRequest(msg->sReqData) != Transceiver::eRetError)
     {
-        TLOGINFO("[TARS][AdapterProxy::invoke push (send) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id:" << msg->request.iRequestId << endl);
+        TLOGTARS("[TARS][AdapterProxy::invoke push (send) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id:" << msg->request.iRequestId << endl);
 
         //请求发送成功了，单向调用直接返回
         if(msg->eType == ReqMessage::ONE_WAY)
@@ -202,7 +202,7 @@ int AdapterProxy::invoke(ReqMessage * msg)
     }
     else
     {
-        TLOGINFO("[TARS][AdapterProxy::invoke push (no send) " << _objectProxy->name() << ", " << _endpoint.desc() << ",id " << msg->request.iRequestId <<endl);
+        TLOGTARS("[TARS][AdapterProxy::invoke push (no send) " << _objectProxy->name() << ", " << _endpoint.desc() << ",id " << msg->request.iRequestId <<endl);
 
         //请求发送失败了
         bool bFlag = _timeoutQueue->push(msg,msg->request.iRequestId, msg->request.iTimeout+msg->iBeginTime, false);
@@ -239,14 +239,14 @@ void AdapterProxy::doInvoke()
 
         _timeoutQueue->getSend(msg);
 
-        int iRet = _trans->sendRequest(msg->sReqData.c_str(), msg->sReqData.size());
+        int iRet = _trans->sendRequest(msg->sReqData);
 
-        TLOGINFO("[TARS][AdapterProxy::doInvoke sendRequest objname:" << _objectProxy->name() << ",desc" << _endpoint.desc() << ",id " << msg->request.iRequestId << ",ret" << iRet << endl);
+        TLOGTARS("[TARS][AdapterProxy::doInvoke sendRequest objname:" << _objectProxy->name() << ",desc" << _endpoint.desc() << ",id " << msg->request.iRequestId << ",ret" << iRet << endl);
 
         //发送失败 返回
         if(iRet == Transceiver::eRetError)
         {
-            TLOGINFO("[TARS][AdapterProxy::doInvoke fail,errono:" << iRet << endl);
+            TLOGTARS("[TARS][AdapterProxy::doInvoke fail,errono:" << iRet << endl);
             return;
         }
 
@@ -272,7 +272,7 @@ void AdapterProxy::doInvoke()
 
 void AdapterProxy::finishInvoke(bool bFail)
 {
-    TLOGINFO("[TARS][AdapterProxy::finishInvoke(bool) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",bFail:" << bFail << endl);
+    TLOGTARS("[TARS][AdapterProxy::finishInvoke(bool) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",bFail:" << bFail << endl);
 
     time_t now = TNOW;
 
@@ -301,12 +301,12 @@ void AdapterProxy::finishInvoke(bool bFail)
 
             _connExc              = false;
 
-            TLOGINFO("[TARS][AdapterProxy::finishInvoke(bool), objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",retry ok" << endl);
+            TLOGTARS("[TARS][AdapterProxy::finishInvoke(bool), objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",retry ok" << endl);
         }
         else
         {
             //结点已经屏蔽 过来失败的包不用处理
-            TLOGINFO("[TARS][AdapterProxy::finishInvoke(bool), objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",retry fail" << endl);
+            TLOGTARS("[TARS][AdapterProxy::finishInvoke(bool), objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",retry fail" << endl);
         }
         return;
     }
@@ -374,39 +374,77 @@ void AdapterProxy::finishInvoke(bool bFail)
 }
 
 
-bool AdapterProxy::checkActive(bool bForceConnect)
+bool AdapterProxy::checkActive(bool bForceConnect, bool onlyCheck)
 {
-    time_t now = TNOW;
+	if(onlyCheck)
+	{
+		return _trans->hasConnected();
+	}
+	else
+	{
+        time_t now = TNOW;
 
-    TLOGINFO("[TARS][AdapterProxy::checkActive objname:" << _objectProxy->name() 
-          << ",desc:" << _endpoint.desc() 
-          << ",_activeStatus:" << (_activeStatus ? "enable" : "disable")
-          << (bForceConnect? ",forceConnect" : "")
-          << ",freqtimeout:" << _frequenceFailInvoke
-          << ",timeout:" << _timeoutInvoke
-          << ",_connExcCnt:"<<_connExcCnt
-          << ",total:" << _totalInvoke << endl);
+        TLOGTARS("[TARS][AdapterProxy::checkActive objname:" << _objectProxy->name() 
+            << ",desc:" << _endpoint.desc() 
+            << ",_activeStatus:" << (_activeStatus ? "enable" : "disable")
+            << (bForceConnect? ",forceConnect" : "")
+            << ",freqtimeout:" << _frequenceFailInvoke
+            << ",timeout:" << _timeoutInvoke
+            << ",_connExcCnt:"<<_connExcCnt
+            << ",total:" << _totalInvoke << endl);
 
-    _trans->checkTimeout();
+        _trans->checkTimeout();
 
-    //强制重试
-    if(bForceConnect)
-    {
-        //强制重试  肯定是无效结点
-        assert(!_activeStatus);
-
-        //有效的连接
-        if(_trans->isConnecting() || _trans->hasConnected())
+        //强制重试
+        if(bForceConnect)
         {
-            return true;
+            //强制重试  肯定是无效结点
+            assert(!_activeStatus);
+
+            //有效的连接
+            if(_trans->isConnecting() || _trans->hasConnected())
+            {
+                return true;
+            }
+
+            _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
+
+            //连接没有建立或者连接无效, 重新建立连接
+            if(!_trans->isValid())
+            {
+
+                try
+                {
+                    _trans->reconnect();
+                }
+                catch(exception &ex)
+                {
+                    _activeStatus = false;
+
+                    _trans->close();
+
+                    TLOGERROR("[TARS][AdapterProxy::checkActive connect objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ", ex:" << ex.what() << endl);
+                }
+            }
+
+            return (_trans->hasConnected() || _trans->isConnecting());
         }
 
-        _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
+        //失效且没有到下次重试时间, 直接返回不可用
+        if((!_activeStatus) && (now < _nextRetryTime) )
+        {
+            TLOGTARS("[TARS][AdapterProxy::checkActive,not reach retry time ,objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc()  <<endl);
+            return false;
+        }
+
+        if(!_activeStatus)
+        {
+            _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
+        }
 
         //连接没有建立或者连接无效, 重新建立连接
         if(!_trans->isValid())
         {
-
             try
             {
                 _trans->reconnect();
@@ -421,39 +459,9 @@ bool AdapterProxy::checkActive(bool bForceConnect)
             }
         }
 
-        return (_trans->hasConnected() || _trans->isConnecting());
+        return _trans->hasConnected();
+    // return (_trans->hasConnected() || _trans->isConnecting());
     }
-
-    //失效且没有到下次重试时间, 直接返回不可用
-    if((!_activeStatus) && (now < _nextRetryTime) )
-    {
-        TLOGINFO("[TARS][AdapterProxy::checkActive,not reach retry time ,objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc()  <<endl);
-        return false;
-    }
-
-    if(!_activeStatus)
-    {
-        _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
-    }
-
-    //连接没有建立或者连接无效, 重新建立连接
-    if(!_trans->isValid())
-    {
-        try
-        {
-            _trans->reconnect();
-        }
-        catch(exception &ex)
-        {
-            _activeStatus = false;
-
-            _trans->close();
-
-            TLOGERROR("[TARS][AdapterProxy::checkActive connect objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ", ex:" << ex.what() << endl);
-        }
-    }
-
-    return (_trans->hasConnected() || _trans->isConnecting());
 }
 
 
@@ -484,22 +492,23 @@ void AdapterProxy::setInactive()
 
     _trans->close();
 
-    TLOGINFO("[TARS][AdapterProxy::setInactive objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",inactive" << endl);
+    TLOGTARS("[TARS][AdapterProxy::setInactive objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",inactive" << endl);
 }
 
-void AdapterProxy::finishInvoke(ResponsePacket & rsp)
+// void AdapterProxy::finishInvoke(ResponsePacket & rsp)
+void AdapterProxy::finishInvoke(shared_ptr<ResponsePacket> & rsp)
 {
-    TLOGINFO("[TARS][AdapterProxy::finishInvoke(ResponsePacket) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() 
-        << ",id:" << rsp.iRequestId << endl);
+    TLOGTARS("[TARS][AdapterProxy::finishInvoke(ResponsePacket) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() 
+        << ",id:" << rsp->iRequestId << endl);
 
     if (_trans->getAuthState() != AUTH_SUCC)
     {
-        std::string ret(rsp.sBuffer.begin(), rsp.sBuffer.end());
+        std::string ret(rsp->sBuffer.begin(), rsp->sBuffer.end());
         tars::AUTH_STATE tmp = AUTH_SUCC;
         tars::stoe(ret, tmp);
         int newstate = tmp;
 
-        TLOGINFO("[TARS]AdapterProxy::finishInvoke from state " << _trans->getAuthState() << " to " << newstate << endl);
+        TLOGTARS("[TARS]AdapterProxy::finishInvoke from state " << _trans->getAuthState() << " to " << newstate << endl);
         _trans->setAuthState(newstate);
 
         if (newstate == AUTH_SUCC)
@@ -519,7 +528,7 @@ void AdapterProxy::finishInvoke(ResponsePacket & rsp)
     ReqMessage * msg = NULL;
 
     //requestid 为0 是push消息
-    if(rsp.iRequestId == 0)
+    if(rsp->iRequestId == 0)
     {
         if(!_objectProxy->getPushCallback())
         {
@@ -541,14 +550,14 @@ void AdapterProxy::finishInvoke(ResponsePacket & rsp)
     else
     {
         //这里的队列中的发送链表中的数据可能已经在timeout的时候删除了
-        bool retErase = _timeoutQueue->erase(rsp.iRequestId, msg);
+        bool retErase = _timeoutQueue->erase(rsp->iRequestId, msg);
 
         //找不到此请求id信息
         if (!retErase)
         {
             if(_timeoutLogFlag)
             {
-                TLOGERROR("[TARS][AdapterProxy::finishInvoke(ResponsePacket) objname:"<< _objectProxy->name() << ",get req-ptr NULL,may be timeout,id:" << rsp.iRequestId 
+                TLOGERROR("[TARS][AdapterProxy::finishInvoke(ResponsePacket) objname:"<< _objectProxy->name() << ",get req-ptr NULL,may be timeout,id:" << rsp->iRequestId 
                     << ",desc:" << _endpoint.desc() << endl);
             }
             return ;
@@ -568,7 +577,7 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
 {
     assert(msg->eStatus != ReqMessage::REQ_REQ);
 
-    TLOGINFO("[TARS][AdapterProxy::finishInvoke(ReqMessage) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << " ,id:" << msg->response.iRequestId << endl);
+    TLOGTARS("[TARS][AdapterProxy::finishInvoke(ReqMessage) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << " ,id:" << msg->response->iRequestId << endl);
 
     //单向调用
     if(msg->eType == ReqMessage::ONE_WAY)
@@ -589,7 +598,7 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
     //超时屏蔽统计,异常不算超时统计
     if(msg->eStatus != ReqMessage::REQ_EXC && !msg->bPush)
     {
-        finishInvoke(msg->response.iRet != TARSSERVERSUCCESS);
+        finishInvoke(msg->response->iRet != TARSSERVERSUCCESS);
     }
 
     //同步调用，唤醒ServantProxy线程
@@ -654,7 +663,7 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
             else
             {
                 TLOGERROR("[TARS][AdapterProxy::finishInvoke(ReqMessage) coro parallel callback error,obj:" << _objectProxy->name() << ",desc:" << _endpoint.desc() 
-                    << ",id:" << msg->response.iRequestId << endl);
+                    << ",id:" << msg->response->iRequestId << endl);
                 delete msg;
                 msg = NULL;
             }
@@ -673,7 +682,7 @@ void AdapterProxy::doTimeout()
     ReqMessage * msg;
     while(_timeoutQueue->timeout(msg))
     {
-        TLOGINFO("[TARS][AdapterProxy::doTimeout objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id " << msg->request.iRequestId << endl);
+        TLOGTARS("[TARS][AdapterProxy::doTimeout objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id " << msg->request.iRequestId << endl);
 
         assert(msg->eStatus == ReqMessage::REQ_REQ);
 
@@ -691,7 +700,7 @@ void AdapterProxy::doTimeout()
         if(msg->eType == ReqMessage::ASYNC_CALL)
         {
             //_connExcCnt大于0说明是网络连接异常引起的超时
-            msg->response.iRet = (_connExcCnt > 0 ? TARSPROXYCONNECTERR : TARSASYNCCALLTIMEOUT);
+            msg->response->iRet = (_connExcCnt > 0 ? TARSPROXYCONNECTERR : TARSASYNCCALLTIMEOUT);
         }
 
         finishInvoke(msg);
@@ -704,7 +713,7 @@ void AdapterProxy::startTrack(ReqMessage * msg)
 {
     if(!_communicator->_traceManager)
     {
-        TLOGINFO("[TARS]tracer info is null, just return" << endl);
+        TLOGTARS("[TARS]tracer info is null, just return" << endl);
         return;
     }
 
@@ -756,18 +765,18 @@ void AdapterProxy::finishTrack(ReqMessage * msg)
         }
         else
         {
-            spanIter->second->SetTag("Retcode",msg->response.iRet);
+            spanIter->second->SetTag("Retcode",msg->response->iRet);
         }
         
         spanIter->second->Finish();
-        _spanMap.erase(msg->response.iRequestId);
+        _spanMap.erase(msg->response->iRequestId);
     }
 }
 #endif
 
 void AdapterProxy::stat(ReqMessage * msg)
 {
-    TLOGINFO("[TARS][AdapterProxy::stat(ReqMessage) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id:" << msg->response.iRequestId << endl);
+    TLOGTARS("[TARS][AdapterProxy::stat(ReqMessage) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id:" << msg->response->iRequestId << endl);
 
     if(msg->bPush)
     {
@@ -780,7 +789,7 @@ void AdapterProxy::stat(ReqMessage * msg)
     msg->iEndTime = TNOWMS;
 
     //包体信息.
-    if(msg->eStatus == ReqMessage::REQ_RSP && TARSSERVERSUCCESS == msg->response.iRet)
+    if(msg->eStatus == ReqMessage::REQ_RSP && TARSSERVERSUCCESS == msg->response->iRet)
     {
         body.count = 1;
         sptime = (msg->iEndTime >= msg->iBeginTime) ? (msg->iEndTime - msg->iBeginTime) : 10000;
@@ -807,14 +816,14 @@ void AdapterProxy::stat(ReqMessage * msg)
         _statBody[msg->request.sFuncName] = body;
     }
 
-    if(LOG->IsNeedLog(TarsRollLogger::INFO_LOG))
+    if(LOG->isNeedLog(TarsRollLogger::INFO_LOG))
     {
         ostringstream os;
         os.str("");
         _statHead.displaySimple(os);
         os << "  ";
         _statBody[msg->request.sFuncName].displaySimple(os);
-        TLOGINFO("[TARS][AdapterProxy::stat(ReqMessage) display:" << os.str() << endl);
+        TLOGTARS("[TARS][AdapterProxy::stat(ReqMessage) display:" << os.str() << endl);
     }
 }
 
@@ -839,9 +848,9 @@ void AdapterProxy::merge(const StatMicMsgBody& inBody,StatMicMsgBody& outBody/*o
     _communicator->getStatReport()->getIntervCount(inBody.maxRspTime, outBody);
 }
 
-void AdapterProxy::doStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg)
+void AdapterProxy::mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg)
 {
-    TLOGINFO("[TARS][AdapterProxy::doStat objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << endl);
+    TLOGTARS("[TARS][AdapterProxy::doStat objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << endl);
 
     for (const auto& kv : _statBody)
     {

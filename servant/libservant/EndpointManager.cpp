@@ -216,19 +216,63 @@ void QueryEpBase::setObjName(const string & sObjName)
     } 
 }
 
-bool isRealEndpoint(const string & s, const string & s1)
+// bool isRealEndpoint(const string & s, const string & s1)
+// {
+//     if (s1.empty())
+//         return true;
+
+//     const string delim = " \t\n\r";
+//     string::size_type beg;
+//     string::size_type end = 0;
+
+//     beg = s1.find_first_not_of(delim, end);
+//     if (s1[beg] != 't' && s1[beg] != 'u' && s1[beg] != 's')
+//         return false;
+//     return true;
+// }
+
+vector<string> QueryEpBase::sepEndpoint(const string& sEndpoints)
 {
-    if (s1.empty())
-        return true;
+	vector<string>  vEndpoints;
+	bool flag = false;
+	string::size_type startPos = 0;
+	string::size_type sepPos = 0;
+	for(string::size_type pos = 0; pos < sEndpoints.size(); pos++)
+	{
+		if(sEndpoints[pos] == ':' && !flag )
+		{
+			sepPos = pos;
+			flag = true;
+		}
+		else if(flag)
+		{
+			if(sEndpoints[pos] == ' ')
+			{
+				continue;
+			}
 
-    const string delim = " \t\n\r";
-    string::size_type beg;
-    string::size_type end = 0;
+			if(TC_Port::strncasecmp("tcp", (sEndpoints.c_str() + pos), 3) == 0 || TC_Port::strncasecmp("udp", (sEndpoints.c_str() + pos), 3) == 0)
+			{
+				string ep = TC_Common::trim(string(sEndpoints.c_str() + startPos, sepPos - startPos));
+				if(!ep.empty()) {
+					vEndpoints.push_back(ep);
+				}
+				startPos = pos;
+			}
 
-    beg = s1.find_first_not_of(delim, end);
-    if (s1[beg] != 't' && s1[beg] != 'u' && s1[beg] != 's')
-        return false;
-    return true;
+			flag = false;
+		}
+	}
+
+	string ep = sEndpoints.substr(startPos);
+
+	if(!ep.empty()) {
+		vEndpoints.push_back(ep);
+	}
+
+//	vEndpoints.push_back(sEndpoints.substr(startPos));
+
+	return vEndpoints;
 }
 
 void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & setEndpoints)
@@ -242,7 +286,8 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
     bool         bFirstWeightType = true;
     unsigned int iWeightType      = 0;
 
-    vector<string>  vEndpoints    = TC_Common::sepstr<string>(sEndpoints, ":", false, isRealEndpoint);
+    // vector<string>  vEndpoints    = TC_Common::sepstr<string>(sEndpoints, ":", false, isRealEndpoint);
+    vector<string>  vEndpoints = sepEndpoint(sEndpoints);
 
     for (size_t i = 0; i < vEndpoints.size(); ++i)
     {

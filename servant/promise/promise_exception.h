@@ -21,10 +21,11 @@
 #include <exception>
 #include <string>
 #include <sstream>
-#include "util/tc_shared_ptr.h"
-#include "util/detail/tc_template_util.h"
+#include <memory>
+// #include "util/tc_shared_ptr.h"
+// #include "util/detail/tc_template_util.h"
 
-namespace promise 
+namespace tars 
 {
 
 class PromiseException : public std::exception 
@@ -107,15 +108,15 @@ private:
     const char *_filename;
     int _line;
 
-    mutable TC_SharedPtr<std::string> _what;
-    mutable TC_SharedPtr<std::string> _data;
+    mutable std::shared_ptr<std::string> _what;
+    mutable std::shared_ptr<std::string> _data;
     mutable char _sep;
 
     template <typename T>
     void injectErrorInfo(const T& t) const;
     
     template <typename Exception, typename T>
-    friend typename tc_enable_if<tc_is_derived_from<Exception, PromiseException>, const Exception&>::type
+    friend typename std::enable_if<std::is_base_of<Exception, PromiseException>::value, const Exception&>::type
     operator<<(const Exception& e, const T& t)
     {
         e.injectErrorInfo(t);

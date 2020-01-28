@@ -46,6 +46,8 @@ public:
      */
     void keepAlive(const string &adapter = "");
 
+    void keepActiving();
+    
     /**
      * 上报TARS的编译版本
      * @param version

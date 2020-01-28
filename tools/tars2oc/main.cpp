@@ -22,10 +22,10 @@
 void usage()
 {
     cout << "Usage : tars2oc [OPTION] tarsfile" << endl;
-	cout << "  --dir=DIRECTORY       generate source file to DIRECTORY(生成文件到目录DIRECTORY,默认为当前目录)" << endl;
-    cout << "  --arc    是否支持arc版本" << endl;
-	cout << "  --nonamespace  设置各个成员属性是否加上名字空间前缀,默认是加上" << endl;
-	cout << "  --with-namespace=NAME 自定义变量名前缀的名字空间" << endl;
+	cout << "  --dir=DIRECTORY       generate source file to DIRECTORY(create tars protocol file to DIRECTORY, default is current directory)" << endl;
+    cout << "  --arc    create arc" << endl;
+	cout << "  --nonamespace  no namespace" << endl;
+	cout << "  --with-namespace=NAME set namespace" << endl;
     cout << "  tars2oc support type: bool byte short int long float double vector map" << endl;
     exit(0);
 }
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         usage();
     }
 
-    //是否可以以tars开头
+    //????????tars???
     g_parse->setTars(option.hasParam("with-tars"));
     g_parse->setHeader(option.getValue("header"));
 

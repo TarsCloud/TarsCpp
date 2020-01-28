@@ -17,20 +17,20 @@
 #ifndef __TARS_PROMISE_H_
 #define __TARS_PROMISE_H_
 
-#include "util/tc_callback.h"
+// #include "util/tc_callback.h"
 #include "exception_ptr.h"
 #include <pthread.h>
 #include <list>
 #include "promise_exception.h"
-#include "util/tc_bind.h"
-#include "util/tc_enable_shared_from_this.h"
-#include "util/detail/tc_assert.h"
-#include "util/detail/tc_template_util.h"
+// #include "util/tc_bind.h"
+// #include "util/tc_enable_shared_from_this.h"
+// #include "util/detail/assert.h"
+// #include "util/detail/tc_template_util.h"
 #include "util/tc_monitor.h"
 
-using namespace tars;
+// using namespace tars;
 
-namespace promise 
+namespace tars 
 {
 
 class PromiseAlreadySatisfiedException : public PromiseException 
@@ -65,8 +65,8 @@ protected:
     
 template <typename T> class Future;
 
-template <typename T> struct is_future_type : tars::false_type {};
-template <typename T> struct is_future_type<Future<T> > : tars::true_type {};
+template <typename T> struct is_future_type : std::false_type {};
+template <typename T> struct is_future_type<Future<T> > : std::true_type {};
 
 template <typename T> class Promise;
     
@@ -87,7 +87,8 @@ namespace detail
     template <typename T>
     struct FutureTraits 
     {
-        typedef TC_ScopedPtr<T> storage_type;
+        // typedef TC_ScopedPtr<T> storage_type;
+        typedef std::unique_ptr<T> storage_type;
         typedef const T& rvalue_source_type;
         typedef const T& move_dest_type;
         typedef T& dest_reference_type;
@@ -136,7 +137,7 @@ namespace detail
         typedef typename FutureTraits<T>::rvalue_source_type rvalue_source_type;
         typedef typename FutureTraits<T>::move_dest_type move_dest_type;
         typedef typename FutureTraits<T>::dest_reference_type dest_reference_type;
-        typedef TC_Callback<void(const TC_SharedPtr<FutureObjectInterface>&)> CallbackType;
+        typedef std::function<void(const std::shared_ptr<FutureObjectInterface>&)> CallbackType;
         
         virtual ~FutureObjectInterface() {}
 
@@ -155,7 +156,7 @@ namespace detail
     {
     public:
         typedef FutureTraits<void>::move_dest_type move_dest_type;
-        typedef TC_Callback<void(const TC_SharedPtr<FutureObjectInterface>&)> CallbackType;
+        typedef std::function<void(const std::shared_ptr<FutureObjectInterface>&)> CallbackType;
         
         virtual ~FutureObjectInterface() {}
 
@@ -170,7 +171,7 @@ namespace detail
     
     template <typename T>
     class PromptFutureObject : public FutureObjectInterface<T>,
-                               public TC_EnableSharedFromThis<PromptFutureObject<T> > 
+                               public std::enable_shared_from_this<PromptFutureObject<T> > 
     {
     public:
         typedef typename FutureObjectInterface<T>::move_dest_type move_dest_type;
@@ -205,7 +206,7 @@ namespace detail
         
         virtual move_dest_type get() const
         {
-            TC_ASSERT(m_exception_ptr || m_value);
+            assert(m_exception_ptr || m_value);
             if (m_exception_ptr)
                 m_exception_ptr->rethrow();
             return *m_value;
@@ -215,10 +216,10 @@ namespace detail
         
         virtual void registerCallback(const CallbackType& callback)
         {
-            TC_ASSERT(callback);
+            assert(callback);
             try 
             {
-                callback(this->sharedFromThis());
+                callback(this->shared_from_this());
             } 
             catch (...) 
             {
@@ -232,7 +233,7 @@ namespace detail
     
     template <>
     class PromptFutureObject<void> : public FutureObjectInterface<void>,
-                                     public TC_EnableSharedFromThis<PromptFutureObject<void> >
+                                     public std::enable_shared_from_this<PromptFutureObject<void> >
     {
     public:
         typedef FutureObjectInterface<void>::move_dest_type move_dest_type;
@@ -255,7 +256,7 @@ namespace detail
             return true;
         }
         
-        virtual bool hasException() const { return m_exception_ptr; }
+        virtual bool hasException() const { return (m_exception_ptr != NULL); }
 
         virtual void set() {}
         virtual void setException(const ExceptionPtr& /*e*/) {}
@@ -268,10 +269,10 @@ namespace detail
         
         virtual void registerCallback(const CallbackType& callback)
         {
-            TC_ASSERT(callback);
+            assert(callback);
             try 
             {
-                callback(this->sharedFromThis());
+                callback(this->shared_from_this());
             } 
             catch (...) 
             {
@@ -310,7 +311,7 @@ namespace detail
         
         void markFinishedWithException(const ExceptionPtr& e)
         {
-            TC_ASSERT(e);
+            assert(e);
 
             TC_ThreadLock::Lock lock(m_monitor);
             if (m_is_done) 
@@ -349,7 +350,7 @@ namespace detail
     
     template <typename T>
     class FutureObject : public FutureObjectInterface<T>,
-                         public TC_EnableSharedFromThis<FutureObject<T> >,
+                         public std::enable_shared_from_this<FutureObject<T> >,
                          private FutureObjectBase 
     {
     public:
@@ -382,7 +383,7 @@ namespace detail
         {
             wait();
 
-            TC_ASSERT(m_value);
+            assert(m_value);
             return *m_value;
         }
 
@@ -418,7 +419,7 @@ namespace detail
         
         virtual void registerCallback(const CallbackType& callback)
         {
-            TC_ASSERT(callback);
+            assert(callback);
 
             TC_ThreadLock::Lock lock(m_monitor);
             if (m_is_done) 
@@ -426,7 +427,7 @@ namespace detail
                 lock.release();
                 try 
                 {
-                    callback(this->sharedFromThis());
+                    callback(this->shared_from_this());
                 } 
                 catch (...) 
                 {
@@ -454,7 +455,7 @@ namespace detail
             {
                 try 
                 {
-                    (*it)(this->sharedFromThis());
+                    (*it)(this->shared_from_this());
                 } 
                 catch (...) 
                 {
@@ -469,7 +470,7 @@ namespace detail
 
     template <>
     class FutureObject<void> : public FutureObjectInterface<void>,
-                               public TC_EnableSharedFromThis<FutureObject<void> >,
+                               public std::enable_shared_from_this<FutureObject<void> >,
                                private FutureObjectBase 
     {
     public:
@@ -522,7 +523,7 @@ namespace detail
 
         void registerCallback(const CallbackType& callback)
         {
-            TC_ASSERT(callback);
+            assert(callback);
 
             TC_ThreadLock::Lock lock(m_monitor);
             if (m_is_done) 
@@ -530,7 +531,7 @@ namespace detail
                 lock.release();
                 try 
                 {
-                    callback(this->sharedFromThis());
+                    callback(this->shared_from_this());
                 } 
                 catch (...) 
                 {
@@ -554,7 +555,7 @@ namespace detail
                                                         end = callbacks.end();
                     it != end; ++it) 
             {
-                (*it)(this->sharedFromThis());
+                (*it)(this->shared_from_this());
             }
         }
 
@@ -568,16 +569,16 @@ namespace detail
     {
     private:
         typedef typename detail::resolved_type<R>::type value_type;
-        typedef TC_SharedPtr<detail::FutureObjectInterface<T> > FuturePtr;
+        typedef std::shared_ptr<detail::FutureObjectInterface<T> > FuturePtr;
     public:
-        SequentialCallback(const TC_Callback<R(const Future<T>&)>& callback,
+        SequentialCallback(const std::function<R(const Future<T>&)>& callback,
                            const Promise<value_type>& promise)
         : m_callback(callback)
         , m_promise(promise)
         {}
         
         template <typename U>
-        typename tc_enable_if<tc_is_void<U> >::type run(const FuturePtr& future)
+        typename std::enable_if<std::is_void<U>::value >::type run(const FuturePtr& future)
         {
             try 
             {
@@ -591,7 +592,7 @@ namespace detail
         }
 
         template <typename U>
-        typename tc_enable_if_c<!tc_is_void<U>::value && !is_future_type<U>::value>::type
+        typename std::enable_if<!std::is_void<U>::value && !is_future_type<U>::value>::type
         run(const FuturePtr& future)
         {
             try 
@@ -605,7 +606,7 @@ namespace detail
         }
 
         template <typename U>
-        typename tc_enable_if<is_future_type<U> >::type run(const FuturePtr& future)
+        typename std::enable_if<is_future_type<U>::value >::type run(const FuturePtr& future)
         {
             try 
             {
@@ -620,7 +621,7 @@ namespace detail
         
     private:
 
-        TC_Callback<R(const Future<T>&)> m_callback;
+        std::function<R(const Future<T>&)> m_callback;
         Promise<value_type> m_promise;
     };
 
@@ -633,7 +634,7 @@ namespace detail
         {}
 
         template <typename V>
-        typename tc_enable_if<tc_is_void<V> >::type run(const Future<V>& future)
+        typename std::enable_if<std::is_void<V>::value >::type run(const Future<V>& future)
         {
             try 
             {
@@ -647,7 +648,7 @@ namespace detail
         }
 
         template <typename V>
-        typename tc_disable_if<tc_is_void<V> >::type run(const Future<V>& future)
+        typename std::enable_if<!std::is_void<V>::value >::type run(const Future<V>& future)
         {
             try 
             {
@@ -675,7 +676,7 @@ namespace detail
         FutureBase() {}
 
         FutureBase(const ExceptionPtr& e)
-        : m_future(TC_SharedPtr<detail::PromptFutureObject<T> >(new detail::PromptFutureObject<T>(e)))
+        : m_future(std::shared_ptr<detail::PromptFutureObject<T> >(new detail::PromptFutureObject<T>(e)))
         {}
     
         virtual ~FutureBase() {}
@@ -717,7 +718,7 @@ namespace detail
         
     protected:
 
-        typedef TC_SharedPtr<detail::FutureObjectInterface<T> > FuturePtr;
+        typedef std::shared_ptr<detail::FutureObjectInterface<T> > FuturePtr;
     
         FutureBase(const FuturePtr& future)
             : m_future(future)
@@ -735,7 +736,7 @@ public:
     Future() {}
 
     explicit Future(typename detail::FutureTraits<T>::rvalue_source_type t)
-        : detail::FutureBase<T>(TC_SharedPtr<detail::PromptFutureObject<T> >(new detail::PromptFutureObject<T>(t)))
+        : detail::FutureBase<T>(std::shared_ptr<detail::PromptFutureObject<T> >(new detail::PromptFutureObject<T>(t)))
     {}
         
     Future(const ExceptionPtr& e)
@@ -745,7 +746,7 @@ public:
     virtual ~Future() {}
     
     template <typename R>
-    Future<typename detail::resolved_type<R>::type> then(const tars::TC_Callback<R(const Future&)>& callback) const
+    Future<typename detail::resolved_type<R>::type> then(const std::function<R(const Future&)>& callback) const
     {
         typedef typename detail::resolved_type<R>::type value_type;
 
@@ -783,7 +784,7 @@ public:
     virtual ~Future() {}
 
     template <typename R>
-    Future<typename detail::resolved_type<R>::type> then(const tars::TC_Callback<R(const Future&)>& callback) const
+    Future<typename detail::resolved_type<R>::type> then(const std::function<R(const Future&)>& callback) const
     {
         typedef typename detail::resolved_type<R>::type value_type;
 
@@ -811,7 +812,8 @@ private:
 };
 
 template <typename T>
-typename tc_disable_if<tc_is_void<T>, Future<T> >::type
+// typename std::disable_if<std::is_void<T>, Future<T> >::type
+typename std::enable_if<!std::is_void<T>::value, Future<T> >::type
 makeFuture(typename detail::FutureTraits<T>::rvalue_source_type t)
 {
     return Future<T>(t);
@@ -819,7 +821,7 @@ makeFuture(typename detail::FutureTraits<T>::rvalue_source_type t)
 
 inline Future<void> makeFuture()
 {
-    return Future<void>(TC_SharedPtr<detail::PromptFutureObject<void> >(new detail::PromptFutureObject<void>()));
+    return Future<void>(std::shared_ptr<detail::PromptFutureObject<void> >(new detail::PromptFutureObject<void>()));
 }
 
 template <typename T>
@@ -828,12 +830,12 @@ class Promise
 public:
 
     Promise()
-        : m_future(TC_SharedPtr<detail::FutureObject<T> >(new detail::FutureObject<T>()))
+        : m_future(std::shared_ptr<detail::FutureObject<T> >(new detail::FutureObject<T>()))
     {}
     
     void setValue(typename detail::FutureTraits<T>::rvalue_source_type v)
     {
-        TC_ASSERT(m_future);
+        assert(m_future);
         m_future->setValue(v);
     }
             
@@ -848,23 +850,23 @@ public:
     }
 
 private:
-    TC_SharedPtr<detail::FutureObjectInterface<T> > m_future;
+    std::shared_ptr<detail::FutureObjectInterface<T> > m_future;
 };
 
 template <>
 class Promise<void> 
 {
 private:
-    TC_SharedPtr<detail::FutureObjectInterface<void> > m_future;
+    std::shared_ptr<detail::FutureObjectInterface<void> > m_future;
 public:
 
     Promise()
-        : m_future(TC_SharedPtr<detail::FutureObject<void> >(new detail::FutureObject<void>()))
+        : m_future(std::shared_ptr<detail::FutureObject<void> >(new detail::FutureObject<void>()))
     {}
     
     void set()
     {
-        TC_ASSERT(m_future);
+        assert(m_future);
         m_future->set();
     }
             

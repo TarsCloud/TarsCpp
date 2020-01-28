@@ -167,7 +167,7 @@ void ObjectProxy::invoke(ReqMessage * msg)
     {
         TLOGERROR("[TARS][ObjectProxy::invoke, objname:"<< _name << ", selectAdapterProxy is null]"<<endl);
 
-        msg->response.iRet = TARSADAPTERNULL;
+        msg->response->iRet = TARSADAPTERNULL;
 
         doInvokeException(msg);
 
@@ -200,7 +200,7 @@ void ObjectProxy::doInvoke()
             //这里肯定是请求过主控
             TLOGERROR("[TARS][ObjectProxy::doInvoke, objname:" << _name << ", selectAdapterProxy is null]" << endl);
 
-            msg->response.iRet = TARSADAPTERNULL;
+            msg->response->iRet = TARSADAPTERNULL;
 
             doInvokeException(msg);
 
@@ -212,10 +212,10 @@ void ObjectProxy::doInvoke()
     }
 }
 
-const vector<AdapterProxy*> & ObjectProxy::getAdapters() const
-{
-    return _endpointManger->getAdapters();
-}
+// const vector<AdapterProxy*> & ObjectProxy::getAdapters() const
+// {
+//     return _endpointManger->getAdapters();
+// }
 
 void ObjectProxy::doInvokeException(ReqMessage * msg)
 {
@@ -301,15 +301,29 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 void ObjectProxy::doTimeout()
 {
 //    TLOGINFO("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
+    const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+    for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
+    {
+        vAdapterProxy[iAdapter]->doTimeout();
+    }
 
     ReqMessage * reqInfo = NULL;
     while(_reqTimeoutQueue.timeout(reqInfo))
     {
         TLOGERROR("[TARS][ObjectProxy::doTimeout, objname:" << _name << ", queue timeout error]" << endl);
 
-        reqInfo->response.iRet = TARSINVOKETIMEOUT;
+        reqInfo->response->iRet = TARSINVOKETIMEOUT;
 
         doInvokeException(reqInfo);
+    }
+}
+
+void ObjectProxy::mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg)
+{
+    const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+    for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
+    {
+        vAdapterProxy[iAdapter]->mergeStat(mStatMicMsg);
     }
 }
 

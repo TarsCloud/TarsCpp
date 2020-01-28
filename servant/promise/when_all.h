@@ -19,11 +19,11 @@
 
 #include "promise.h"
 #include <vector>
-#include "tuple.h"
+// #include "std::tuple.h"
 #include "util/tc_monitor.h"
-#include "util/tc_shared_ptr.h"
-#include "util/detail/tc_assert.h"
-namespace promise 
+// #include "util/tc_shared_ptr.h"
+// #include "util/detail/assert.h"
+namespace tars 
 {
     namespace detail 
     {
@@ -56,10 +56,10 @@ namespace promise
             
         };
 
-        // FutureAllValueType is supposed to be of type promise::Tuple<promise::Future, ...> or
+        // FutureAllValueType is supposed to be of type promise::std::tuple<promise::Future, ...> or
         // std::vector<promise::Future>.
         //
-        // This implementation is for promise::Tuple<>.
+        // This implementation is for promise::std::tuple<>.
         template <typename FutureAllValueType>
         class ParallelAllCallback : private ParallelAllCallbackBase<FutureAllValueType> 
         {
@@ -78,7 +78,7 @@ namespace promise
                 // Note: this future must be recorded no matter what exception is thrown.
                 TC_ThreadLock::Lock lock(this->m_monitor);
                 this->m_waiting_futures.template get<N>() = future;
-                TC_ASSERT(this->m_number_of_non_satisfied > 0);
+                assert(this->m_number_of_non_satisfied > 0);
                 if (--this->m_number_of_non_satisfied == 0) 
                 {
                     lock.release();
@@ -119,11 +119,11 @@ namespace promise
             void on_future(const FutureType& future, size_t idx)
             {
                 // Note: this future must be recorded no matter what exception is thrown.
-                TC_ASSERT(idx < this->m_waiting_futures.size());
+                assert(idx < this->m_waiting_futures.size());
 
                 TC_ThreadLock::Lock lock(this->m_monitor);
                 this->m_waiting_futures[idx] = future;
-                TC_ASSERT(this->m_number_of_non_satisfied > 0);
+                assert(this->m_number_of_non_satisfied > 0);
                 if (--this->m_number_of_non_satisfied == 0) 
                 {
                     lock.release();
@@ -150,7 +150,7 @@ namespace promise
         class VectorParallelCallback 
         {
         public:
-            VectorParallelCallback(const tars::TC_SharedPtr<ParallelAllCallback<std::vector<Future<T> > > >& cb, size_t idx)
+            VectorParallelCallback(const std::shared_ptr<ParallelAllCallback<std::vector<Future<T> > > >& cb, size_t idx)
                 : m_parallel_callback(cb),
                   m_idx(idx)
             {}
@@ -161,7 +161,7 @@ namespace promise
             }
 
         private:
-            tars::TC_SharedPtr<ParallelAllCallback<std::vector<Future<T> > > > m_parallel_callback;
+            std::shared_ptr<ParallelAllCallback<std::vector<Future<T> > > > m_parallel_callback;
             size_t m_idx;
         };
         
@@ -172,30 +172,30 @@ namespace promise
      * the composited future satisfied.
      */
     template <typename T1, typename T2>
-    Future<Tuple<Future<T1>, Future<T2> > >
+    Future<std::tuple<Future<T1>, Future<T2> > >
     whenAll(const Future<T1>& future1, const Future<T2>& future2)
     {
-        typedef Tuple<Future<T1>, Future<T2> > FutureAllValueType;
+        typedef std::tuple<Future<T1>, Future<T2> > FutureAllValueType;
         typedef Promise<FutureAllValueType> PromiseAll;
         typedef detail::ParallelAllCallback<FutureAllValueType> WhenAllCallback;
 
         PromiseAll promise_all;
-        tars::TC_SharedPtr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
+        std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
         future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
         future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
         return promise_all.getFuture();
     }
 
     template <typename T1, typename T2, typename T3>
-    Future<Tuple<Future<T1>, Future<T2>, Future<T3> > >
+    Future<std::tuple<Future<T1>, Future<T2>, Future<T3> > >
     whenAll(const Future<T1>& future1, const Future<T2>& future2, const Future<T3>& future3)
     {
-        typedef Tuple<Future<T1>, Future<T2>, Future<T3> > FutureAllValueType;
+        typedef std::tuple<Future<T1>, Future<T2>, Future<T3> > FutureAllValueType;
         typedef Promise<FutureAllValueType> PromiseAll;
         typedef detail::ParallelAllCallback<FutureAllValueType> WhenAllCallback;
 
         PromiseAll promise_all;
-        tars::TC_SharedPtr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
+        std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
         future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
         future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
         future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
@@ -203,15 +203,15 @@ namespace promise
     }
 
     template <typename T1, typename T2, typename T3, typename T4>
-    Future<Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4> > >
+    Future<std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4> > >
     whenAll(const Future<T1>& future1, const Future<T2>& future2, const Future<T3>& future3, const Future<T4>& future4)
     {
-        typedef Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4> > FutureAllValueType;
+        typedef std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4> > FutureAllValueType;
         typedef Promise<FutureAllValueType> PromiseAll;
         typedef detail::ParallelAllCallback<FutureAllValueType> WhenAllCallback;
 
         PromiseAll promise_all;
-        tars::TC_SharedPtr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
+        std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
         future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
         future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
         future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
@@ -220,16 +220,16 @@ namespace promise
     }
 
     template <typename T1, typename T2, typename T3, typename T4, typename T5>
-    Future<Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5> > >
+    Future<std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5> > >
     whenAll(const Future<T1>& future1, const Future<T2>& future2, const Future<T3>& future3, const Future<T4>& future4,
             const Future<T5>& future5)
     {
-        typedef Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5> > FutureAllValueType;
+        typedef std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5> > FutureAllValueType;
         typedef Promise<FutureAllValueType> PromiseAll;
         typedef detail::ParallelAllCallback<FutureAllValueType> WhenAllCallback;
 
         PromiseAll promise_all;
-        tars::TC_SharedPtr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
+        std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
         future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
         future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
         future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
@@ -239,16 +239,16 @@ namespace promise
     }
 
     template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-    Future<Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6> > >
+    Future<std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6> > >
     whenAll(const Future<T1>& future1, const Future<T2>& future2, const Future<T3>& future3, const Future<T4>& future4,
             const Future<T5>& future5, const Future<T6>& future6)
     {
-        typedef Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6> > FutureAllValueType;
+        typedef std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6> > FutureAllValueType;
         typedef Promise<FutureAllValueType> PromiseAll;
         typedef detail::ParallelAllCallback<FutureAllValueType> WhenAllCallback;
 
         PromiseAll promise_all;
-        tars::TC_SharedPtr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
+        std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
         future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
         future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
         future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
@@ -259,16 +259,16 @@ namespace promise
     }
 
     template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-    Future<Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6>, Future<T7> > >
+    Future<std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6>, Future<T7> > >
     whenAll(const Future<T1>& future1, const Future<T2>& future2, const Future<T3>& future3, const Future<T4>& future4,
             const Future<T5>& future5, const Future<T6>& future6, const Future<T7>& future7)
     {
-        typedef Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6>, Future<T7> > FutureAllValueType;
+        typedef std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6>, Future<T7> > FutureAllValueType;
         typedef Promise<FutureAllValueType> PromiseAll;
         typedef detail::ParallelAllCallback<FutureAllValueType> WhenAllCallback;
 
         PromiseAll promise_all;
-        tars::TC_SharedPtr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
+        std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
         future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
         future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
         future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
@@ -280,16 +280,16 @@ namespace promise
     }
 
     template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
-    Future<Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6>, Future<T7>, Future<T8> > >
+    Future<std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6>, Future<T7>, Future<T8> > >
     whenAll(const Future<T1>& future1, const Future<T2>& future2, const Future<T3>& future3, const Future<T4>& future4,
             const Future<T5>& future5, const Future<T6>& future6, const Future<T7>& future7, const Future<T8>& future8)
     {
-        typedef Tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6>, Future<T7>, Future<T8> > FutureAllValueType;
+        typedef std::tuple<Future<T1>, Future<T2>, Future<T3>, Future<T4>, Future<T5>, Future<T6>, Future<T7>, Future<T8> > FutureAllValueType;
         typedef Promise<FutureAllValueType> PromiseAll;
         typedef detail::ParallelAllCallback<FutureAllValueType> WhenAllCallback;
 
         PromiseAll promise_all;
-        tars::TC_SharedPtr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
+        std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
         future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
         future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
         future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
@@ -316,7 +316,7 @@ namespace promise
         } 
         else 
         {
-            tars::TC_SharedPtr<WhenAllCallback> when_all_callback(new WhenAllCallback(promise_all, std::distance(first, last)));
+            std::shared_ptr<WhenAllCallback> when_all_callback(new WhenAllCallback(promise_all, std::distance(first, last)));
             size_t i;
 
             for (i = 0; first != last; ++first, ++i) 

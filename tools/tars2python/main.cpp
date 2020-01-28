@@ -22,8 +22,8 @@
 void usage()
 {
 	cout << "Usage : tars2python [OPTION] tarsfile" << endl;
-	cout << "  --dir=DIRECTORY generate source file to DIRECTORY(生成文件到目录DIRECTORY,默认为当前目录)" << endl;
-    cout << "  --base-package=NAME              package prefix, default 'com.qq.'(package前缀，未指定则默认为com.qq.)" << endl;
+	cout << "  --dir=DIRECTORY generate source file to DIRECTORY(create tars protocol file to DIRECTORY, default is current directory)" << endl;
+    cout << "  --base-package=NAME              package prefix, default 'com.qq.'" << endl;
 	cout << "  tars2python support type: bool byte short int long float double vector map" << endl;
 
     exit(0);

@@ -153,7 +153,12 @@ private:
      * 如果是间接连接，则设置主控代理，并从缓存中加载相应的列表
      */
     void setObjName(const string & sObjName);
-    
+
+    /*
+     * 解析endpoint
+     */
+    vector<string> sepEndpoint(const string& sEndpoints);
+
     /*
      * 从sEndpoints提取ip列表信息
      */

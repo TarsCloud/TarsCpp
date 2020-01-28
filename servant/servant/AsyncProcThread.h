@@ -33,7 +33,7 @@ public:
     /**
      * 构造函数
      */
-    AsyncProcThread(size_t iQueueCap = 10000);
+    AsyncProcThread(size_t iQueueCap, bool merge);
 
     /**
      * 析构函数
@@ -63,6 +63,8 @@ public:
         return _msgQueue->size();
     }
 
+protected:
+	void callback(ReqMessage * msg);
 private:
     /**
      * 是否需要退出
@@ -72,7 +74,18 @@ private:
     /**
      * 异步队列
      */
-    ReqInfoQueue *  _msgQueue;
+    TC_CasQueue<ReqMessage*> * _msgQueue;
+    // ReqInfoQueue *  _msgQueue;
+
+    /**
+     * 队列流量控制
+     */
+    size_t _iQueueCap;
+
+    /**
+     * 合并网络线程和回调线程
+     */
+    bool    _merge;
 };
 ///////////////////////////////////////////////////////
 }

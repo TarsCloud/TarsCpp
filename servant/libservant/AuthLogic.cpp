@@ -27,15 +27,15 @@
 namespace tars
 {
 
-bool processAuth(void* c, const string& data)
+bool processAuth(TC_EpollServer::Connection *conn, const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TC_EpollServer::NetThread::Connection* const conn = (TC_EpollServer::NetThread::Connection*)c;
-    conn->tryInitAuthState(AUTH_INIT);
+    // TC_EpollServer::NetThread::Connection* const conn = (TC_EpollServer::NetThread::Connection*)c;
+    // conn->tryInitAuthState(AUTH_INIT);
 
     if (conn->_authState == AUTH_SUCC)
         return false; // data to be processed
 
-    TC_EpollServer::BindAdapter* adapter = conn->getBindAdapter();
+    TC_EpollServer::BindAdapterPtr adapter = data->adapter();
 
     const int type = adapter->getEndpoint().getAuthType();
     if (type == AUTH_TYPENONE)
@@ -50,11 +50,11 @@ bool processAuth(void* c, const string& data)
     if (adapter->isTarsProtocol())
     {
         TarsInputStream<BufferReader> is;
-        is.setBuffer(data.data(), data.size());
+        is.setBuffer(data->buffer().data(), data->buffer().size());
         try {
             request.readFrom(is);
-             ostringstream oos;
-             request.display(oos);
+            ostringstream oos;
+            request.display(oos);
         }
         catch(...) {
             conn->setClose();
@@ -63,7 +63,7 @@ bool processAuth(void* c, const string& data)
     }
     else
     {
-        request.sBuffer.assign(data.begin(), data.end());
+        request.sBuffer = data->buffer();
     }
 
     const int currentState = conn->_authState;
@@ -82,9 +82,12 @@ bool processAuth(void* c, const string& data)
                                     TC_Common::tostr(currentState) + " to " + out);
     conn->_authState = newstate;
 
+    shared_ptr<TC_EpollServer::SendContext> sData = data->createSendContext();
+
     if (adapter->isTarsProtocol())
     {
-        TarsOutputStream<BufferWriter> os;
+        TarsOutputStream<BufferWriterVector> os;
+
         ResponsePacket response;
         response.iVersion = TARSVERSION;
         response.iRequestId = request.iRequestId;
@@ -93,20 +96,27 @@ bool processAuth(void* c, const string& data)
         response.iRet = 0;
         response.sBuffer.assign(out.begin(), out.end());
 
+        tars::Int32 iHeaderLen = 0;
+
+    //	先预留4个字节长度
+        os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
+
         response.writeTo(os);
 
-        tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
+	    iHeaderLen = htonl((int)(os.getLength()));
 
-        std::string s;
-        s.append((const char*)&iHeaderLen, sizeof(tars::Int32));
-        s.append(os.getBuffer(), os.getLength());
+        sData->buffer().swap(os.getByteBuffer());
 
-        adapter->getEpollServer()->send(conn->getId(), s, "", 0, conn->getfd());
+        //重写头4个字节
+	    memcpy(sData->buffer().data(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
+
     }
     else
     {
-        adapter->getEpollServer()->send(conn->getId(), out, "", 0, conn->getfd());
+        sData->buffer().assign(out.begin(), out.end());
     }
+
+    adapter->getEpollServer()->send(sData);
 
     return true; // processed
 }

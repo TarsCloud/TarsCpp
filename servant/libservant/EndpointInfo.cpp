@@ -74,11 +74,11 @@ void EndpointInfo::parseAddress()
     // {
         if (_isIPv6)
         {
-            NetworkUtil::getAddress(_host, _port, _addr.in6);
+            TC_Socket::parseAddrWithPort(_host, _port, _addr.in6);
         }
         else
         {
-            NetworkUtil::getAddress(_host, _port, _addr.in);
+            TC_Socket::parseAddrWithPort(_host, _port, _addr.in);
         }
     // }
     // catch (...)

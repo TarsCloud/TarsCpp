@@ -228,11 +228,12 @@ protected:
 //////////////////////////////////////////////////////////////////////
 
 //线程私有数据
-class CallbackThreadData : public TC_ThreadPool::ThreadData
+class CallbackThreadData //: public TC_ThreadPool::ThreadData
 {
 public:
-    static TC_ThreadMutex _mutex;  //全局的互斥锁
-    static pthread_key_t _key;   //私有线程数据key
+    static thread_local shared_ptr<CallbackThreadData> g_sp;
+    // static TC_ThreadMutex _mutex;  //全局的互斥锁
+    // static pthread_key_t _key;   //私有线程数据key
 
     /**
      * 构造函数
@@ -248,7 +249,7 @@ public:
      * 数据资源释放
      * @param p
      */
-    static void destructor(void* p);
+    // static void destructor(void* p);
 
     /**
      * 获取线程数据，没有的话会自动创建

@@ -82,8 +82,6 @@ namespace tars
 	 *
 	 *  typedef TC_Logger<MyWriteT, MyRoll> MyLogger;
 	 *
-	 *  TAF的远程log实现例子,可以参见src/libtaf/taf_logger.h
-	 *
 	 * @author : jarodruan@tencent.com,devinchen@tencent.com,skingfan@tencent.com
 	 */
 	template<class T>
@@ -572,7 +570,7 @@ namespace tars
 			INFO_LOG_LEVEL = 4,			
 			//写错误,警告,调试log
 			DEBUG_LOG_LEVEL = 5,
-			//给TAF框架打日志用
+			//给TARS框架打日志用
 			TARS_LOG_LEVEL = 6, 
 		};
 
@@ -734,7 +732,7 @@ namespace tars
 		void enableSqareWrapper(bool bEnable) { _bHasSquareBracket = bEnable; }
 
 		/**
-		* @brief TAF记日志
+		* @brief TARS记日志
 		*/
 		LoggerStream tars() { return stream(TARS_LOG_LEVEL); }
 
@@ -916,7 +914,7 @@ namespace tars
 		virtual ~RollWrapperInterface() {}
 
 		/**
-		* @brief TAF记日志
+		* @brief TARS记日志
 		*/
 		virtual LoggerStream tars() = 0;
 
@@ -1331,16 +1329,16 @@ namespace tars
 	/**
 	 * @brief 根据时间滚动日志分隔类型
 	 */
-	class TafLogType : public TC_HandleBase
+	class TarsLogType : public TC_HandleBase
 	{
 	public:
-		TafLogType() : _next_time_t(0), _format("%Y%m%d"), _frequency(1), _des("day")
+		TarsLogType() : _next_time_t(0), _format("%Y%m%d"), _frequency(1), _des("day")
 		{
 			_next_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 			_next_cut_time = TC_Common::tm2str(_next_time_t, "%Y%m%d");
 		}
 
-		virtual ~TafLogType() {}
+		virtual ~TarsLogType() {}
 		//频率值
 		virtual size_t frequence() = 0;
 
@@ -1393,15 +1391,15 @@ namespace tars
 		size_t _frequency;
 		string _des;
 	};
-	typedef TC_AutoPtr<TafLogType> TafLogTypePtr;
+	typedef TC_AutoPtr<TarsLogType> TarsLogTypePtr;
 
-	class TafLogByDay : public TafLogType
+	class TarsLogByDay : public TarsLogType
 	{
 	public:
 		static const string FORMAT;
 
 	public:
-		explicit TafLogByDay(const string &format = "%Y%m%d", size_t frequency = 1)
+		explicit TarsLogByDay(const string &format = "%Y%m%d", size_t frequency = 1)
 		{
 			init(format, frequency);
 			_des = TC_Common::tostr(_frequency) + "day";
@@ -1413,13 +1411,13 @@ namespace tars
 		}
 	};
 
-	class TafLogByHour : public TafLogType
+	class TarsLogByHour : public TarsLogType
 	{
 	public:
 		static const string FORMAT;
 
 	public:
-		explicit TafLogByHour(const string &format = "%Y%m%d%H", size_t frequency = 1)
+		explicit TarsLogByHour(const string &format = "%Y%m%d%H", size_t frequency = 1)
 		{
 			init(format, frequency);
 			_des = TC_Common::tostr(_frequency) + "hour";
@@ -1432,13 +1430,13 @@ namespace tars
 		}
 	};
 
-	class TafLogByMinute : public TafLogType
+	class TarsLogByMinute : public TarsLogType
 	{
 	public:
 		static const string FORMAT;
 
 	public:
-		explicit TafLogByMinute(const string &format = "%Y%m%d%H%M", size_t frequency = 1)
+		explicit TarsLogByMinute(const string &format = "%Y%m%d%H%M", size_t frequency = 1)
 		{
 			init(format, frequency);
 			_des = TC_Common::tostr(_frequency) + "minute";
@@ -1472,10 +1470,10 @@ namespace tars
 			 * @param format，日志文件记录格式，按天，小时，分钟
 			 * @param bHasSufix,日志文件是否添加".log"后缀
 			 * @param sConcatstr,日志路径和时间字串之间的连接符,例如：app_log/test_20121210.log
-			 * @param logTypePtr,日志记录类型，详见TafLogType
+			 * @param logTypePtr,日志记录类型，详见TarsLogType
 			 * @param bIsRemote,是否是远程日志实例
 			 */
-			void init(const string &path, const string &format = "%Y%m%d", bool bHasSufix = true, const string &sConcatstr = "_", const TafLogTypePtr &logTypePtr = NULL, bool bIsRemote = false)
+			void init(const string &path, const string &format = "%Y%m%d", bool bHasSufix = true, const string &sConcatstr = "_", const TarsLogTypePtr &logTypePtr = NULL, bool bIsRemote = false)
 			{
 				this->_roll->init(path, format, bHasSufix, sConcatstr, logTypePtr, bIsRemote);
 			}
@@ -1541,7 +1539,7 @@ namespace tars
 		 * @param bIsRemote
 		 */
 
-		void init(const string &path, const string &format = "%Y%m%d", bool bHasSufix = true, const string &sConcatstr = "_", const TafLogTypePtr &logTypePtr = NULL, bool bIsRemote = false)
+		void init(const string &path, const string &format = "%Y%m%d", bool bHasSufix = true, const string &sConcatstr = "_", const TarsLogTypePtr &logTypePtr = NULL, bool bIsRemote = false)
 		{
 			std::lock_guard<std::mutex> lock(*this);
 
@@ -1746,7 +1744,7 @@ namespace tars
 		 * 按天/小时/分钟输出日志时的记录类型
 		 */
 
-		TafLogTypePtr _logTypePtr;
+		TarsLogTypePtr _logTypePtr;
 		/**
 		 * 是否是远程日志实例
 		 */

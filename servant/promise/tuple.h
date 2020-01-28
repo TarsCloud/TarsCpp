@@ -1,10 +1,10 @@
 #ifndef __TARS_PROMISE_TUPLE_H_
 #define __TARS_PROMISE_TUPLE_H_
 
-#include "util/detail/tc_assert.h"
+// #include "util/detail/tc_assert.h"
 #include <ostream>
 
-namespace promise 
+namespace tars 
 {
     namespace detail 
     {

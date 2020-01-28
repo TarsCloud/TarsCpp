@@ -66,18 +66,25 @@ private:
     uint16_t    _freeTail;
 
     SeqInfo  *  _p;
+
+    std::mutex _mutex;
 };
 
 /////////////////////////////////////////////////////////////////////////
 /*
  * 线程私有数据
  */
-class ServantProxyThreadData : public TC_ThreadPool::ThreadData
+class ServantProxyThreadData //: public TC_ThreadPool::ThreadData
 {
 public:
-    static TC_ThreadMutex _mutex;  //全局的互斥锁
-    static pthread_key_t  _key;    //私有线程数据key
-    static SeqManager *   _pSeq;   //生成seq的管理类
+    // static TC_ThreadMutex _mutex;  //全局的互斥锁
+    // static pthread_key_t  _key;    //私有线程数据key
+    // static SeqManager *   _pSeq;   //生成seq的管理类
+
+    static TC_SpinLock _mutex;
+    static SeqManager *_pSeq;
+
+    static thread_local shared_ptr<ServantProxyThreadData> g_sp;
 
     /**
      * 构造函数
@@ -93,7 +100,7 @@ public:
      * 数据资源释放
      * @param p
      */
-    static void destructor(void* p);
+    // static void destructor(void* p);
 
     /**
      * 获取线程数据，没有的话会自动创建
@@ -133,7 +140,7 @@ public:
     /**
      * 保存调用后端服务的地址信息
      */
-    char           _szHost[64];                       //调用对端地址
+    string           _szHost;                       //调用对端地址
 
     /**
      * ObjectProxy
@@ -175,17 +182,17 @@ public:
     /**
      * 增加调用协程接口请求的数目
      */
-    int incReqCount() { return _req_count.inc(); }
+    int incReqCount() { return (++_req_count); }
 
     /**
      * 判断协程并行请求数目是否都发送了
      */
-    bool checkAllReqSend() { return _num == _req_count.get(); }
+    bool checkAllReqSend() { return _num == _req_count; }
 
     /**
      * 判断协程并行请求是否都回来了
      */
-    bool checkAllReqReturn() { return _count.dec_and_test(); }
+    bool checkAllReqReturn() { return (--_count) == 0; }
 
     /**
      * 获取所有请求回来的响应
@@ -195,7 +202,7 @@ public:
         vector<ReqMessage*> vRet;
 
         {
-            TC_LockT<TC_ThreadMutex> lock(_mutex);
+            TC_LockT<TC_SpinLock> lock(_mutex);
             vRet = _vReqMessage;
             _vReqMessage.clear();
         }
@@ -208,7 +215,7 @@ public:
      */
     void insert(ReqMessage* msg)
     {
-        TC_LockT<TC_ThreadMutex> lock(_mutex);
+        TC_LockT<TC_SpinLock> lock(_mutex);
         _vReqMessage.push_back(msg);
     }
 
@@ -221,17 +228,17 @@ protected:
     /**
      * 并行请求的响应还未回来的数目
      */
-    TC_Atomic                _count;
+    std::atomic<int>     _count;
 
     /**
      * 并行请求的已发送的数目
      */
-    TC_Atomic                _req_count;
+    std::atomic<int>      _req_count;
 
     /**
      * 互斥锁
      */
-    TC_ThreadMutex            _mutex;
+    TC_SpinLock            _mutex;
 
     /**
      * 请求的响应的容器
@@ -457,6 +464,11 @@ public:
     void tars_ping();
 
     /**
+     * 异步ping, 不等回包
+     */
+	void tars_async_ping();
+
+    /**
      * 设置同步调用超时时间，对该proxy上所有方法都有效
      * @param msecond
      */
@@ -566,29 +578,29 @@ public:
     /**
      * TARS协议同步方法调用
      */
-    virtual void tars_invoke(char cPacketType,
+    virtual shared_ptr<ResponsePacket> tars_invoke(char cPacketType,
                             const string& sFuncName,
-                            const vector<char> &buf,
+                            tars::TarsOutputStream<tars::BufferWriterVector>& buf,
                             const map<string, string>& context,
-                            const map<string, string>& status,
-                            ResponsePacket& rep);
+                            const map<string, string>& status);
+                            // ResponsePacket& rep);
 
     /**
      * TARS协议异步方法调用
      */
     virtual void tars_invoke_async(char cPacketType,
                                   const string& sFuncName,
-                                  const vector<char> &buf,
+                                  tars::TarsOutputStream<tars::BufferWriterVector> &buf,
                                   const map<string, string>& context,
                                   const map<string, string>& status,
-                                  const ServantProxyCallbackPtr& callback,
-                                  bool bCoro = false);
+                                  const ServantProxyCallbackPtr& callback);
+                                //   bool bCoro = false);
 
     /**
      * 普通协议同步远程调用
      */
-    virtual void rpc_call(uint32_t requestId, const string& sFuncName,
-                          const char* buff, uint32_t len, ResponsePacket& rsp);
+    virtual shared_ptr<ResponsePacket> rpc_call(uint32_t requestId, const string& sFuncName,
+                          const char* buff, uint32_t len);
 
     /**
      * 普通协议异步调用
@@ -695,7 +707,7 @@ private:
     /**
      *每个业务线程与每个客户端网络线程之间通信的请求队列大小
      */
-    int                        _queueSize;
+    // int                        _queueSize;
 
     /*
      *最小的超时时间

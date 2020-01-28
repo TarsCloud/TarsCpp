@@ -23,6 +23,7 @@
 #include "servant/EndpointInfo.h"
 #include "servant/EndpointF.h"
 #include "servant/AppProtocol.h"
+#include "servant/StatReport.h"
 #include "servant/Global.h"
 #include "util/tc_timeout_queue_noid.h"
 
@@ -42,7 +43,7 @@ struct SocketOpt
 
     const void *optval;
 
-    socklen_t  optlen;
+    SOCKET_LEN_TYPE  optlen;
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -127,7 +128,9 @@ public:
     /**
      * 获取所有的adapter
      */
-    const vector<AdapterProxy*> & getAdapters() const;
+    // const vector<AdapterProxy*> & getAdapters() const;
+
+    void mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg);
 
     /**
      * 检查Obj的队列超时
@@ -162,7 +165,7 @@ public:
     /**
      * 判断此obj是否走按set规则调用流程，如果是直连方式，即使服务端是启用set的，也不认为是按set规则调用的
      */
-    bool IsInvokeBySet() const
+    bool isInvokeBySet() const
     {
         return _isInvokeBySet;
     }

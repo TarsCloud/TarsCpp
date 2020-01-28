@@ -62,7 +62,7 @@ public:
     RollWriteT();
     ~RollWriteT();
 
-    void operator()(ostream &of, const deque<pair<int, string> > &ds);
+    void operator()(ostream &of, const deque<pair<size_t, string> > &ds);
 
     void setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath,
             int iMaxSize, int iMaxNum, const CommunicatorPtr &comm, const string & sLogObj);
@@ -102,7 +102,8 @@ public:
         ERROR_LOG   = 2,    /**写错误log*/
         WARN_LOG    = 3,    /**写错误,警告log*/
         DEBUG_LOG   = 4,    /**写错误,警告,调试log*/
-        INFO_LOG    = 5        /**写错误,警告,调试,Info log*/
+        INFO_LOG    = 5,        /**写错误,警告,调试,Info log*/
+        TARS_LOG    = 6        /**写错误,警告,调试,Info log*/
     };
 public:
     typedef TC_Logger<RollWriteT, TC_RollBySize> RollLogger;
@@ -233,7 +234,7 @@ public:
      * @param of
      * @param buffer
      */
-    void operator()(ostream &of, const deque<pair<int, string> > &buffer);
+    void operator()(ostream &of, const deque<pair<size_t, string> > &buffer);
 
 protected:
     /**
@@ -351,7 +352,7 @@ public:
      * @param of
      * @param buffer
      */
-    void operator()(ostream &of, const deque<pair<int, string> > &buffer);
+    void operator()(ostream &of, const deque<pair<size_t, string> > &buffer);
 
 protected:
 
@@ -370,7 +371,7 @@ protected:
      * 记录错误文件
      * @param buffer
      */
-    void writeError(const deque<pair<int, string> > &buffer);
+    void writeError(const deque<pair<size_t, string> > &buffer);
 
     /**
      * 初始化logger
@@ -839,7 +840,7 @@ protected:
  *       标准输出流方式: cout << "I have " << vApple.size() << " apples!"<<endl;
  *       框架宏方式:     LOGMSG(TarsRollLogger::INFO_LOG,"I have " << vApple.size() << " apples!"<<endl);
  */
-#define LOGMSG(level,msg...) do{ if(LOG->IsNeedLog(level)) LOG->log(level)<<msg;}while(0)
+#define LOGMSG(level,msg...) do{ if(LOG->isNeedLog(level)) LOG->log(level)<<msg;}while(0)
 
 /**
  * @brief 按级别循环日志
@@ -854,7 +855,7 @@ protected:
 #define TLOGDEBUG(msg...)   LOGMSG(TarsRollLogger::DEBUG_LOG,msg)
 #define TLOGWARN(msg...)    LOGMSG(TarsRollLogger::WARN_LOG,msg)
 #define TLOGERROR(msg...)   LOGMSG(TarsRollLogger::ERROR_LOG,msg)
-
+#define TLOGTARS(msg...)    LOGMSG(TarsRollLogger::TARS_LOG,msg)
 /**
  * 按天日志
  */

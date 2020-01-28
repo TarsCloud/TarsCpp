@@ -976,14 +976,14 @@ string Tars2Cpp::generateParamDecl(const ParamDeclPtr& pPtr) const
 string Tars2Cpp::generateDispatchAsync(const OperationPtr& pPtr, const string& cn) const
 {
     ostringstream s;
-    s << TAB << "if (msg->response.iRet != tars::TARSSERVERSUCCESS)" << endl
+    s << TAB << "if (msg->response->iRet != tars::TARSSERVERSUCCESS)" << endl
         << TAB << "{" << endl;
 
     INC_TAB;
-    s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response.iRet);" << endl;
+    s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response->iRet);" << endl;
     s << endl;
 
-    s << TAB << "return msg->response.iRet;" << endl;
+    s << TAB << "return msg->response->iRet;" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
 
@@ -991,7 +991,7 @@ string Tars2Cpp::generateDispatchAsync(const OperationPtr& pPtr, const string& c
     s << endl;
     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
 
-    s << TAB << "_is.setBuffer(msg->response.sBuffer);" << endl;
+    s << TAB << "_is.setBuffer(msg->response->sBuffer);" << endl;
 
     //对输出参数编码
     if (pPtr->getReturnPtr()->getTypePtr())
@@ -1014,7 +1014,7 @@ string Tars2Cpp::generateDispatchAsync(const OperationPtr& pPtr, const string& c
     s << TAB << "CallbackThreadData * pCbtd = CallbackThreadData::getData();" << endl;
     s << TAB << "assert(pCbtd != NULL);" << endl;
     s << endl;
-    s << TAB << "pCbtd->setResponseContext(msg->response.context);" << endl;
+    s << TAB << "pCbtd->setResponseContext(msg->response->context);" << endl;
     s << endl;
 
     //异步回调都无返回值
@@ -1047,14 +1047,14 @@ string Tars2Cpp::generateDispatchAsync(const OperationPtr& pPtr, const string& c
 string Tars2Cpp::generateDispatchCoroAsync(const OperationPtr& pPtr, const string& cn) const
 {
     ostringstream s;
-    s << TAB << "if (msg->response.iRet != tars::TARSSERVERSUCCESS)" << endl
+    s << TAB << "if (msg->response->iRet != tars::TARSSERVERSUCCESS)" << endl
         << TAB << "{" << endl;
 
     INC_TAB;
-    s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response.iRet);" << endl;
+    s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response->iRet);" << endl;
     s << endl;
 
-    s << TAB << "return msg->response.iRet;" << endl;
+    s << TAB << "return msg->response->iRet;" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
 
@@ -1062,7 +1062,7 @@ string Tars2Cpp::generateDispatchCoroAsync(const OperationPtr& pPtr, const strin
     s << endl;
     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
 
-    s << TAB << "_is.setBuffer(msg->response.sBuffer);" << endl;
+    s << TAB << "_is.setBuffer(msg->response->sBuffer);" << endl;
 
     if(pPtr->getReturnPtr()->getTypePtr() || vParamDecl.size() >0)
     {
@@ -1089,7 +1089,7 @@ string Tars2Cpp::generateDispatchCoroAsync(const OperationPtr& pPtr, const strin
         }
     }
 
-    s << TAB << "setResponseContext(msg->response.context);" << endl;
+    s << TAB << "setResponseContext(msg->response->context);" << endl;
     s << endl;
 
     //异步回调都无返回值
@@ -1247,7 +1247,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     s << TAB << "if (_current->getRequestVersion() == TUPVERSION)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
-    s << TAB << "UniAttribute<" + _namespace + "::BufferWriter, " + _namespace + "::BufferReader>  tarsAttr;" << endl;
+    s << TAB << "UniAttribute<" + _namespace + "::BufferWriterVector, " + _namespace + "::BufferReader>  tarsAttr;" << endl;
 	s << TAB << "tarsAttr.setVersion(_current->getRequestVersion());" << endl;
     s << TAB << "tarsAttr.decode(_current->getRequestBuffer());" << endl;
     for(size_t i = 0; i < vParamDecl.size(); i++)
@@ -1326,7 +1326,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     s << TAB << "{" << endl;
     INC_TAB;
 
-    s << TAB << "UniAttribute<" + _namespace + "::BufferWriter, " + _namespace + "::BufferReader>  tarsAttr;" << endl;
+    s << TAB << "UniAttribute<" + _namespace + "::BufferWriterVector, " + _namespace + "::BufferReader>  tarsAttr;" << endl;
 	s << TAB << "tarsAttr.setVersion(_current->getRequestVersion());" << endl;
     if(pPtr->getReturnPtr()->getTypePtr())
     {
@@ -1351,7 +1351,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     //普通tars调用输出参数
     s << TAB << "{" << endl;
     INC_TAB;
-    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> _os;" << endl;
+    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> _os;" << endl;
 
     if (pPtr->getReturnPtr()->getTypePtr())
     {
@@ -1476,7 +1476,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         s << TAB << "this->tars_setMasterFlag(true);" << endl;
     }
 
-    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> _os;" << endl;
+    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> _os;" << endl;
 
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
@@ -1498,7 +1498,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         s << TAB << "_mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, " << os.str() << "));" << endl;
     }
 
-    s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os.getByteBuffer(), context, _mStatus, callback);" << endl;
+    s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os, context, _mStatus, callback);" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
     s << TAB << endl;
@@ -1506,7 +1506,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
    //promise异步的函数声明
    string sStruct = pPtr->getId();
 
-    s << TAB << "promise::Future< " << cn <<"PrxCallbackPromise::Promise" << sStruct << "Ptr > promise_async_" << pPtr->getId() << "(";
+    s << TAB << "tars::Future< " << cn <<"PrxCallbackPromise::Promise" << sStruct << "Ptr > promise_async_" << pPtr->getId() << "(";
 
     for(size_t i = 0; i < vParamDecl.size(); i++)
     {
@@ -1525,11 +1525,11 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
 	    s << TAB << "this->tars_setMasterFlag(true);" << endl;
     }
 
-    s << TAB << "promise::Promise< " << cn <<"PrxCallbackPromise::Promise" << sStruct << "Ptr > promise;" << endl;
+    s << TAB << "tars::Promise< " << cn <<"PrxCallbackPromise::Promise" << sStruct << "Ptr > promise;" << endl;
     s << TAB << cn << "PrxCallbackPromisePtr callback = new " << cn << "PrxCallbackPromise(promise);" << endl;
     s << endl;
 
-    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> _os;" << endl;
+    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> _os;" << endl;
 
     for(size_t i = 0; i < vParamDecl.size(); i++)
     {
@@ -1551,7 +1551,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         s << TAB << "_mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, " << os.str() << "));" << endl;
     }
 
-    s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os.getByteBuffer(), context, _mStatus, callback);" << endl;
+    s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os, context, _mStatus, callback);" << endl;
 
     s << endl;
     s << TAB << "return promise.getFuture();" << endl;
@@ -1582,7 +1582,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         s << TAB << "this->tars_setMasterFlag(true);" << endl;
     }
 
-    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> _os;" << endl;
+    s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> _os;" << endl;
 
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
@@ -1604,7 +1604,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         s << TAB << "_mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, " << os.str() << "));" << endl;
     }
 
-    s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os.getByteBuffer(), context, _mStatus, callback, true);" << endl;
+    s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os, context, _mStatus, callback);" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
 
@@ -1653,7 +1653,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
             s << TAB << "this->tars_setMasterFlag(true);" << endl;
         }
 
-        s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> _os;" << endl;
+        s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> _os;" << endl;
 
         for (size_t i = 0; i < vParamDecl.size(); i++)
         {
@@ -1661,7 +1661,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
             s << writeTo(vParamDecl[i]->getTypeIdPtr());
         }
 
-        s << TAB << "" + _namespace + "::ResponsePacket rep;" << endl;
+        // s << TAB << "" + _namespace + "::ResponsePacket rep;" << endl;
 
         s << TAB << "std::map<string, string> _mStatus;" << endl;
 
@@ -1674,11 +1674,13 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
             s << TAB << "_mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, " << os.str() << "));" << endl;
         }
 
-        s << TAB << "tars_invoke(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os.getByteBuffer(), context, _mStatus, rep);" << endl;
+        // s << TAB << "tars_invoke(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os.getByteBuffer(), context, _mStatus, rep);" << endl;
+        s << TAB << "shared_ptr<" + _namespace + "::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os, context, _mStatus);" << endl;
         s << TAB << "if(pResponseContext)" << endl;
         s << TAB << "{" << endl;
         INC_TAB;
-        s << TAB << "*pResponseContext = rep.context;" << endl;
+        s << TAB << "pResponseContext->swap(rep->context);" << endl;
+        // s << TAB << "*pResponseContext = rep.context;" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
 
@@ -1687,7 +1689,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
         if (vParamDecl.size() > 0 || pPtr->getReturnPtr()->getTypePtr())
         {
             s << TAB <<  _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> _is;" << endl;
-            s << TAB << "_is.setBuffer(rep.sBuffer);" << endl;
+            s << TAB << "_is.setBuffer(rep->sBuffer);" << endl;
             if (pPtr->getReturnPtr()->getTypePtr())
             {
                 s << TAB << tostr(pPtr->getReturnPtr()->getTypePtr()) << " " << pPtr->getReturnPtr()->getId() << generateInitValue(pPtr->getReturnPtr()) << ";"  << endl;
@@ -1746,7 +1748,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
         s << TAB << "{" << endl;
         INC_TAB;
 
-        s << TAB << "UniAttribute<" + _namespace + "::BufferWriter, " + _namespace + "::BufferReader>  tarsAttr;" << endl;
+        s << TAB << "UniAttribute<" + _namespace + "::BufferWriterVector, " + _namespace + "::BufferReader>  tarsAttr;" << endl;
         s << TAB << "tarsAttr.setVersion(current->getRequestVersion());" << endl;
         if(pPtr->getReturnPtr()->getTypePtr())
         {
@@ -1774,7 +1776,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
 
         INC_TAB;
 
-        s << TAB <<  _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> _os;" << endl;
+        s << TAB <<  _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> _os;" << endl;
         if(pPtr->getReturnPtr()->getTypePtr())
         {
 	        s << writeTo(pPtr->getReturnPtr()) << endl;
@@ -1846,7 +1848,7 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
     s << TAB << "typedef tars::TC_AutoPtr< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << " > Promise" << sStruct << "Ptr;" << endl;
     s << endl;
 
-    s << TAB << pInter->getId() << "PrxCallbackPromise(const promise::Promise< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << "Ptr > &promise)" << endl;
+    s << TAB << pInter->getId() << "PrxCallbackPromise(const tars::Promise< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << "Ptr > &promise)" << endl;
     s << TAB << ": _promise_" << sStruct << "(promise)" << endl;
     s << TAB << "{}" << endl;
     s << TAB << endl;
@@ -1865,7 +1867,7 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
     s << TAB << "std::string str(\"\");" << endl;
     s << TAB << "str += \"Function:" << pPtr->getId() << "_exception|Ret:\";" << endl;
     s << TAB << "str += TC_Common::tostr(ret);" << endl; 
-    s << TAB << "_promise_" << sStruct << ".setException(promise::copyException(str, ret));" << endl;
+    s << TAB << "_promise_" << sStruct << ".setException(tars::copyException(str, ret));" << endl;
 
     DEL_TAB;
     s << TAB << "}" << endl;
@@ -1874,7 +1876,7 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
     DEL_TAB;
     s << TAB << "protected:" << endl;
     INC_TAB;
-    s << TAB << "promise::Promise< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << "Ptr > _promise_" << sStruct << ";" << endl;
+    s << TAB << "tars::Promise< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << "Ptr > _promise_" << sStruct << ";" << endl;
 
     return s.str();
 }
@@ -1882,14 +1884,14 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
 string Tars2Cpp::generateDispatchPromiseAsync(const OperationPtr &pPtr, const string &cn) const
 {
     ostringstream s;
-    s << TAB << "if (msg->response.iRet != tars::TARSSERVERSUCCESS)" << endl
+    s << TAB << "if (msg->response->iRet != tars::TARSSERVERSUCCESS)" << endl
       << TAB << "{" << endl;
 
     INC_TAB;
-    s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response.iRet);" << endl;
+    s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response->iRet);" << endl;
     s << endl;
 
-    s << TAB << "return msg->response.iRet;" << endl;
+    s << TAB << "return msg->response->iRet;" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
 
@@ -1897,7 +1899,7 @@ string Tars2Cpp::generateDispatchPromiseAsync(const OperationPtr &pPtr, const st
     s << endl;
     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
 
-    s << TAB << "_is.setBuffer(msg->response.sBuffer);" << endl;
+    s << TAB << "_is.setBuffer(msg->response->sBuffer);" << endl;
     s << endl;
 
     string sStruct = pPtr->getId();
@@ -1959,7 +1961,7 @@ string Tars2Cpp::generateDispatchPromiseAsync(const OperationPtr &pPtr, const st
         s << endl;
     }
 
-    s << TAB << "ptr->_mRspContext = msg->response.context;" << endl;
+    s << TAB << "ptr->_mRspContext = msg->response->context;" << endl;
     s << endl;
 
     s << TAB << "callback_" << pPtr->getId() << "(ptr);" << endl;
@@ -2721,7 +2723,7 @@ StructPtr Tars2Cpp::findStruct(const ContextPtr& pPtr, const string& id)
 //     s << TAB << "{" << endl;
 //     INC_TAB;
 
-//     s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> os;" << endl;
+//     s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> os;" << endl;
 //     s << TAB << "os.write(1, 1);" << endl;
 //     s << TAB << "os.write(0, 2);" << endl;
 //     s << TAB << "os.write(0, 3);" << endl;
@@ -2792,7 +2794,7 @@ StructPtr Tars2Cpp::findStruct(const ContextPtr& pPtr, const string& id)
 //     s << TAB << "{" << endl;
 
 //     INC_TAB;
-//     s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriter> _os;" << endl;
+//     s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> _os;" << endl;
 
 //     for (size_t i = 0; i < vParamDecl.size(); i++)
 //     {

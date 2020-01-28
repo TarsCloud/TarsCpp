@@ -459,9 +459,9 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
            }
 
            mTemp[head] = it->second;
-           if(LOG->IsNeedLog(TarsRollLogger::INFO_LOG))
+           if(LOG->isNeedLog(TarsRollLogger::INFO_LOG))
            {
-                  ostringstream os;
+               ostringstream os;
                os.str("");
                head.displaySimple(os);
                os << "  ";
@@ -581,7 +581,7 @@ int StatReport::reportPropMsg()
                    }
                }
                mStatMsg[head]  = body;
-               if(LOG->IsNeedLog(TarsRollLogger::INFO_LOG))
+               if(LOG->isNeedLog(TarsRollLogger::INFO_LOG))
                {
                       ostringstream os;
                    os.str("");

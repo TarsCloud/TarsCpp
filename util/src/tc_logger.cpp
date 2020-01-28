@@ -25,9 +25,9 @@ bool TC_LoggerRoll::_bDyeingFlag = false;
 //TC_ThreadMutex  TC_LoggerRoll::_mutexDyeing;
 TC_SpinLock TC_LoggerRoll::_mutexDyeing;
 unordered_map<size_t, string>  TC_LoggerRoll::_mapThreadID;
-const string TafLogByDay::FORMAT = "%Y%m%d";
-const string TafLogByHour::FORMAT = "%Y%m%d%H";
-const string TafLogByMinute::FORMAT = "%Y%m%d%H%M";
+const string TarsLogByDay::FORMAT = "%Y%m%d";
+const string TarsLogByHour::FORMAT = "%Y%m%d%H";
+const string TarsLogByMinute::FORMAT = "%Y%m%d%H%M";
 
 void TC_LoggerRoll::setupThread(TC_LoggerThreadGroup *pThreadGroup)
 {

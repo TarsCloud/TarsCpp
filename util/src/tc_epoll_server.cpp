@@ -1188,12 +1188,12 @@ int TC_EpollServer::Connection::parseProtocol()
             }
             else if(b == TC_EpollServer::PACKET_FULL)
             {
-                if (_pBindAdapter->_authWrapper && _pBindAdapter->_authWrapper(this, ro))
-                    continue;
-
                 shared_ptr<RecvContext> recv = std::make_shared<RecvContext>(getId(), _ip, _port, getfd(), _pBindAdapter);
 
 	            recv->buffer().swap(ro);
+
+                if (_pBindAdapter->_authWrapper && _pBindAdapter->_authWrapper(this, recv))
+                    continue;
 
                 //收到完整的包才算
                 this->_bEmptyConn = false;

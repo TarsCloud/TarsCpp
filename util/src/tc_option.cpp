@@ -56,18 +56,29 @@ void TC_Option::parse(const string &s)
     }
 }
 
-string TC_Option::getValue(const string &sName)
+string TC_Option::getValue(const string &sName) const
 {
-    if(_mParam.find(sName) != _mParam.end())
+    auto it = _mParam.find(sName);
+    if( it != _mParam.end())
     {
-        return _mParam[sName];
+        return it->second;
     }
     return "";
 }
 
-bool TC_Option::hasParam(const string &sName)
+bool TC_Option::hasParam(const string &sName) const
 {
     return _mParam.find(sName) != _mParam.end();
+}
+
+const vector<string>& TC_Option::getSingle() const
+{
+    return _vSingle;
+}
+
+const map<string, string>& TC_Option::getMulti() const
+{
+    return _mParam;
 }
 
 vector<string>& TC_Option::getSingle()

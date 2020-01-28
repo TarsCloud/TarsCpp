@@ -26,16 +26,16 @@ namespace tars
 //////////////////////////////////////////////////////////////////
 TarsCurrent::TarsCurrent(ServantHandle *pServantHandle)
 : _servantHandle(pServantHandle)
-, _bindAdapter(NULL)
-, _uid(0)
-, _ip("NULL")
-, _port(0)
-, _fd(-1)
+// , _bindAdapter(NULL)
+// , _uid(0)
+// , _ip("NULL")
+// , _port(0)
+// , _fd(-1)
 , _response(true)
-, _begintime(0)
+// , _begintime(0)
 , _ret(0)
 , _reportStat(true)
-, _closeType(-1)
+// , _closeType(-1)
 {
 }
 
@@ -52,7 +52,7 @@ TarsCurrent::~TarsCurrent()
         {
             reportToStat("one_way_client");
         }
-        else if(!_bindAdapter->isTarsProtocol() && ServerConfig::ReportFlow)
+        else if(!_data->adapter()->isTarsProtocol() && ServerConfig::ReportFlow)
         {
             //非tars客户端 从服务端上报调用信息
             reportToStat("not_tars_client");
@@ -60,19 +60,22 @@ TarsCurrent::~TarsCurrent()
     }
 }
 
-string TarsCurrent::getIp() const
+const string &TarsCurrent::getIp() const
 {
-    return _ip;
+    return _data->ip();
+    // return _ip;
 }
 
 int TarsCurrent::getPort() const
 {
-    return _port;
+    return _data->port();
+    // return _port;
 }
 
 uint32_t TarsCurrent::getUId() const
 {
-    return _uid;
+    return _data->uid();
+    // return _uid;
 }
 
 string TarsCurrent::getServantName() const
@@ -118,8 +121,8 @@ tars::Int32 TarsCurrent::getMessageType() const
 struct timeval TarsCurrent::getRecvTime() const
 {
     timeval tm;
-    tm.tv_sec  = _begintime/1000;
-    tm.tv_usec = (_begintime%1000)*1000;
+    tm.tv_sec  = _data->recvTimeStamp()/1000;
+    tm.tv_usec = (_data->recvTimeStamp()%1000)*1000;
 
     return tm;
 }
@@ -131,7 +134,16 @@ void TarsCurrent::setReportStat(bool bReport)
 
 const vector<char>& TarsCurrent::getRequestBuffer() const
 {
-    return _request.sBuffer;
+	if (_data->adapter()->isTarsProtocol())
+	{
+		return _request.sBuffer;
+	}
+	else
+	{
+		return _data->buffer();
+	}
+
+    // return _request.sBuffer;
 }
 
 bool TarsCurrent::isResponse() const
@@ -141,105 +153,184 @@ bool TarsCurrent::isResponse() const
 
 void TarsCurrent::setCloseType(int type)
 {
-    _closeType = type;
+    _data->setCloseType(type);
 }
 
 int TarsCurrent::getCloseType() const
 {
-    return _closeType;
+    return _data->closeType();
 }
 
-
-void TarsCurrent::initialize(const TC_EpollServer::tagRecvData &stRecvData)
+void TarsCurrent::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
+// void TarsCurrent::initialize(const TC_EpollServer::tagRecvData &stRecvData)
 {
-    int64_t  begintime = TNOWMS;
+	_data = data;
 
-    initialize(stRecvData, begintime);
-}
+    _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(_data->adapter()->getName());
 
-void TarsCurrent::initialize(const TC_EpollServer::tagRecvData &stRecvData, int64_t beginTime)
-{
-     _ip         = stRecvData.ip;
-
-    _port        = stRecvData.port;
-
-    _uid         = stRecvData.uid;
-
-    _fd          = stRecvData.fd;
-
-    _bindAdapter = stRecvData.adapter.get();
-
-    _begintime   = beginTime;
-
-    _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(stRecvData.adapter->getName());
-
-    if (_bindAdapter->isTarsProtocol())
+    if (_data->adapter()->isTarsProtocol())
     {
-        initialize(stRecvData.buffer);
+        initialize(_data->buffer());
     }
-    else
-    {
-        _request.sBuffer.reserve(stRecvData.buffer.length());
-
-        _request.sBuffer.resize(stRecvData.buffer.length());
-
-        ::memcpy(&_request.sBuffer[0], stRecvData.buffer.c_str(), stRecvData.buffer.length());
-    }
+    // initialize(stRecvData, begintime);
 }
 
-void TarsCurrent::initializeClose(const TC_EpollServer::tagRecvData &stRecvData)
+
+void TarsCurrent::initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    _ip   = stRecvData.ip;
+	_data = data;
 
-    _port = stRecvData.port;
+    _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(_data->adapter()->getName());
 
-    _uid  = stRecvData.uid;
-
-    _fd   = stRecvData.fd;
-
-    _bindAdapter = stRecvData.adapter.get();
-
-    _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(stRecvData.adapter->getName());
-
-    _begintime = TNOWMS;
 }
 
-void TarsCurrent::initialize(const string &sRecvBuffer)
+void TarsCurrent::initialize(const vector<char>& sRecvBuffer)
 {
     TarsInputStream<BufferReader> is;
 
-    is.setBuffer(sRecvBuffer.c_str(), sRecvBuffer.length());
+    is.setBuffer(sRecvBuffer.data(), sRecvBuffer.size());
 
     _request.readFrom(is);
 }
 
+// void TarsCurrent::initialize(const TC_EpollServer::tagRecvData &stRecvData, int64_t beginTime)
+// {
+//      _ip         = stRecvData.ip;
+
+//     _port        = stRecvData.port;
+
+//     _uid         = stRecvData.uid;
+
+//     _fd          = stRecvData.fd;
+
+//     _bindAdapter = stRecvData.adapter.get();
+
+//     _begintime   = beginTime;
+
+//     _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(stRecvData.adapter->getName());
+
+//     if (_bindAdapter->isTarsProtocol())
+//     {
+//         initialize(stRecvData.buffer);
+//     }
+//     else
+//     {
+//         _request.sBuffer.reserve(stRecvData.buffer.length());
+
+//         _request.sBuffer.resize(stRecvData.buffer.length());
+
+//         ::memcpy(&_request.sBuffer[0], stRecvData.buffer.c_str(), stRecvData.buffer.length());
+//     }
+// }
+
+// void TarsCurrent::initializeClose(const TC_EpollServer::tagRecvData &stRecvData)
+// {
+//     _ip   = stRecvData.ip;
+
+//     _port = stRecvData.port;
+
+//     _uid  = stRecvData.uid;
+
+//     _fd   = stRecvData.fd;
+
+//     _bindAdapter = stRecvData.adapter.get();
+
+//     _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(stRecvData.adapter->getName());
+
+//     _begintime = TNOWMS;
+// }
+
+// void TarsCurrent::initialize(const string &sRecvBuffer)
+// {
+//     TarsInputStream<BufferReader> is;
+
+//     is.setBuffer(sRecvBuffer.c_str(), sRecvBuffer.length());
+
+//     _request.readFrom(is);
+// }
+
 void TarsCurrent::sendResponse(const char* buff, uint32_t len)
 {
-    _servantHandle->sendResponse(_uid, string(buff, len), _ip, _port, _fd);
+    // _servantHandle->sendResponse(_uid, string(buff, len), _ip, _port, _fd);
+	shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
+	send->buffer().assign(buff, buff + len);
+	_servantHandle->sendResponse(send);
 }
 
-void TarsCurrent::sendResponse(int iRet, const vector<char>& buffer, const map<string, string>& status, const string & sResultDesc)
+
+void TarsCurrent::sendResponse(int iRet, const vector<char> &buff, bool push)
+{
+	//单向调用不需要返回
+	if (_request.cPacketType == TARSONEWAY)
+	{
+		return;
+	}
+
+	ResponsePacket response;
+	response.sBuffer = buff;
+	sendResponse(iRet, response, TARS_STATUS(), "", push);
+}
+
+void TarsCurrent::sendResponse(int iRet)
+{
+	ResponsePacket response;
+	sendResponse(iRet, response, TARS_STATUS(), "", false);
+}
+
+void TarsCurrent::sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os, bool push)
+{
+	ResponsePacket response;
+	os.swap(response.sBuffer);
+	sendResponse(iRet, response, TARS_STATUS(), "", push);
+}
+
+void TarsCurrent::sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr, bool push)
+{
+	ResponsePacket response;
+	attr.encode(response.sBuffer);
+	sendResponse(iRet, response, TARS_STATUS(), "", push);
+}
+
+void TarsCurrent::sendResponse(int iRet, ResponsePacket &response, const map<string, string>& status, const string & sResultDesc, bool push)
 {
     _ret = iRet;
 
     //单向调用不需要返回
-    if (_request.cPacketType == TARSONEWAY)
+    if (_request.cPacketType == TARSONEWAY && !push)
     {
         return;
     }
 
-    TarsOutputStream<BufferWriter> os;
+	shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
+
+	tars::Int32 iHeaderLen = 0;
+
+	TarsOutputStream<BufferWriterVector> os;
+
+	//先预留4个字节长度
+	os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
+
+    // TarsOutputStream<BufferWriter> os;
 
     if (_request.iVersion != TUPVERSION)
     {
-        ResponsePacket response;
+        // ResponsePacket response;
 
         response.iRequestId     = _request.iRequestId;
         response.iMessageType   = _request.iMessageType;
-        response.cPacketType    = TARSNORMAL;
-        response.iVersion       = TARSVERSION;
+		if(push)
+		{
+			response.cPacketType    = TARSPUSH;
+		}
+		else
+		{
+			response.cPacketType    = TARSNORMAL;
+		}
+
+        // response.cPacketType    = TARSNORMAL;
+        response.iVersion       = _request.iVersion;
         response.status         = status;
-        response.sBuffer        = buffer;
+        // response.sBuffer        = buffer;
         response.sResultDesc    = sResultDesc;
         response.context        = _responseContext;
         response.iRet           = iRet;
@@ -255,17 +346,26 @@ void TarsCurrent::sendResponse(int iRet, const vector<char>& buffer, const map<s
     else
     {
         //tup回应包用请求包的结构
-        RequestPacket response;
+        // RequestPacket response;
 
         response.iRequestId     = _request.iRequestId;
         response.iMessageType   = _request.iMessageType;
-        response.cPacketType    = TARSNORMAL;
+		if(push)
+		{
+			response.cPacketType    = TARSPUSH;
+		}
+		else
+		{
+			response.cPacketType    = TARSNORMAL;
+		}
+
+        // response.cPacketType    = TARSNORMAL;
         response.iVersion       = _request.iVersion;
         response.status         = status;
         response.context        = _responseContext;
-        response.sBuffer        = buffer;
-        response.sServantName   = _request.sServantName;
-        response.sFuncName      = _request.sFuncName;
+        // response.sBuffer        = buffer;
+        // response.sServantName   = _request.sServantName;
+        // response.sFuncName      = _request.sFuncName;
 
         //异常的情况下buffer可能为空，要保证有一个空UniAttribute的编码内容
         if(response.sBuffer.size() == 0)
@@ -287,29 +387,40 @@ void TarsCurrent::sendResponse(int iRet, const vector<char>& buffer, const map<s
 
         TLOGINFO("[TARS]TarsCurrent::sendResponse :"
                    << response.iMessageType << "|"
-                   << response.sServantName << "|"
-                   << response.sFuncName << "|"
+                   << _request.sServantName << "|"
+                   << _request.sFuncName << "|"
                    << response.iRequestId << endl);
 
         response.writeTo(os);
     }
 
-    tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
+	os.swap(send->buffer());
 
-    string s = "";
+	assert(send->buffer().size() >= 4);
 
-    s.append((const char*)&iHeaderLen, sizeof(tars::Int32));
+	iHeaderLen = htonl((int)(send->buffer().size()));
 
-    s.append(os.getBuffer(), os.getLength());
+	memcpy(&send->buffer()[0], (const char *)&iHeaderLen, sizeof(iHeaderLen));
 
-    _servantHandle->sendResponse(_uid, s, _ip, _port, _fd);
+	_servantHandle->sendResponse(send);//data->uid, buff, _data->ip, _data->port, _data->fd);
+
+    // tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
+
+    // string s = "";
+
+    // s.append((const char*)&iHeaderLen, sizeof(tars::Int32));
+
+    // s.append(os.getBuffer(), os.getLength());
+
+    // _servantHandle->sendResponse(_uid, s, _ip, _port, _fd);
 }
 
 void TarsCurrent::close()
 {
     if (_servantHandle)
     {
-        _servantHandle->close(_uid, _fd);
+        _servantHandle->close(_data);
+        // _servantHandle->close(_uid, _fd);
     }
 }
 
@@ -320,7 +431,8 @@ ServantHandle* TarsCurrent::getServantHandle()
 
 TC_EpollServer::BindAdapter* TarsCurrent::getBindAdapter()
 {
-    return _bindAdapter;
+    return _data->adapter().get();
+    // return _bindAdapter;
 }
 
 void TarsCurrent::reportToStat(const string& sObj)
@@ -329,11 +441,11 @@ void TarsCurrent::reportToStat(const string& sObj)
 
     if(stat && stat->getStatPrx())
     {
-        int64_t endtime = TNOWMS;
-        int sptime = endtime - _begintime;
+        // int64_t endtime = TNOWMS;
+        // int sptime = endtime - _begintime;
 
         //被调上报自己的set信息，set信息在setReportInfo设置
-        stat->report(sObj, "" , _request.sFuncName, _ip, 0, (StatReport::StatResult)_ret, sptime, 0, false);
+        stat->report(sObj, "" , _request.sServantName, _data->ip(), 0, _request.sFuncName, (StatReport::StatResult)_ret, TNOWMS - _data->recvTimeStamp(), 0);
     }
 }
 

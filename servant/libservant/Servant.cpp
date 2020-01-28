@@ -25,8 +25,9 @@
 namespace tars
 {
 
-TC_ThreadMutex CallbackThreadData::_mutex;
-pthread_key_t CallbackThreadData::_key = 0;
+thread_local shared_ptr<CallbackThreadData> CallbackThreadData::g_sp;
+// TC_ThreadMutex CallbackThreadData::_mutex;
+// pthread_key_t CallbackThreadData::_key = 0;
 
 Servant::Servant():_handle(NULL)
 {
@@ -118,43 +119,49 @@ CallbackThreadData::CallbackThreadData():_contextValid(false)
 {
 }
 
-void CallbackThreadData::destructor(void* p)
-{
-    CallbackThreadData * pCbtd = (CallbackThreadData*)p;
-    if(pCbtd)
-        delete pCbtd;
-}
+// void CallbackThreadData::destructor(void* p)
+// {
+//     CallbackThreadData * pCbtd = (CallbackThreadData*)p;
+//     if(pCbtd)
+//         delete pCbtd;
+// }
 
 CallbackThreadData * CallbackThreadData::getData()
 {
-    if(_key == 0)
+    if(!g_sp)
     {
-        TC_LockT<TC_ThreadMutex> lock(_mutex);
-        if(_key == 0)
-        {
-            int iRet = ::pthread_key_create(&_key, CallbackThreadData::destructor);
-
-            if (iRet != 0)
-            {
-                TLOGERROR("[TARS][CallbackThreadData pthread_key_create fail:" << errno << ":" << strerror(errno) << "]" << endl);
-                return NULL;
-            }
-        }
+        g_sp.reset(new CallbackThreadData());
     }
+    return g_sp.get();
 
-    CallbackThreadData * pCbtd = (CallbackThreadData*)pthread_getspecific(_key);
+    // if(_key == 0)
+    // {
+    //     TC_LockT<TC_ThreadMutex> lock(_mutex);
+    //     if(_key == 0)
+    //     {
+    //         int iRet = ::pthread_key_create(&_key, CallbackThreadData::destructor);
 
-    if(!pCbtd)
-    {
-        TC_LockT<TC_ThreadMutex> lock(_mutex);
+    //         if (iRet != 0)
+    //         {
+    //             TLOGERROR("[TARS][CallbackThreadData pthread_key_create fail:" << errno << ":" << strerror(errno) << "]" << endl);
+    //             return NULL;
+    //         }
+    //     }
+    // }
 
-        pCbtd = new CallbackThreadData();
+    // CallbackThreadData * pCbtd = (CallbackThreadData*)pthread_getspecific(_key);
 
-        int iRet = pthread_setspecific(_key, (void *)pCbtd);
+    // if(!pCbtd)
+    // {
+    //     TC_LockT<TC_ThreadMutex> lock(_mutex);
 
-        assert(iRet == 0);
-    }
-    return pCbtd;
+    //     pCbtd = new CallbackThreadData();
+
+    //     int iRet = pthread_setspecific(_key, (void *)pCbtd);
+
+    //     assert(iRet == 0);
+    // }
+    // return pCbtd;
 }
 
 

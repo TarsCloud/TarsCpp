@@ -22,8 +22,8 @@
 void usage()
 {
     cout << "Usage : tars2c [OPTION] tarsfile" << endl;
-	cout << "  --dir=DIRECTORY       generate source file to DIRECTORY(生成文件到目录DIRECTORY,默认为当前目录)" << endl;
-    cout << "  --check-default<>     如果optional字段值为默认值，不打包(默认不打包)(value:true or false)" << endl;
+	cout << "  --dir=DIRECTORY       generate source file to DIRECTORY(create tars protocol file to DIRECTORY, default is current directory)" << endl;
+    cout << "  --check-default<true, false>     optional field with default value not do package(default: true)" << endl;
     cout << "  tars2c support type: bool byte short int long float double vector map" << endl;
     exit(0);
 }
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     j2c.setCheckDefault(tars::TC_Common::lower(option.getValue("check-default")) == "false"?false:true);
     try
     {
-        //是否可以以tars开头
+        //锟角凤拷锟斤拷锟斤拷锟絫ars锟斤拷头
         g_parse->setTars(option.hasParam("with-tars"));
         g_parse->setHeader(option.getValue("header"));
 

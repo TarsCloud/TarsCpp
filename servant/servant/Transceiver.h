@@ -21,7 +21,7 @@
 #include "servant/NetworkUtil.h"
 #include "servant/CommunicatorEpoll.h"
 #include "servant/AuthLogic.h"
-#include "util/tc_buffer.h"
+// #include "util/tc_buffer.h"
 #include <list>
 #include <sys/uio.h>
 
@@ -115,7 +115,8 @@ public:
      * 如果fd缓冲区已满,返回错误
      * 如果数据发送一半，缓冲区满了,返回成功
      */
-    int sendRequest(const char * pData,size_t iSize, bool forceSend = false);
+    // int sendRequest(const char * pData,size_t iSize, bool forceSend = false);
+	int sendRequest(const shared_ptr<TC_NetWorkBuffer::SendBuffer> &pData, bool forceSend = false);
 
     /*
      * 处理请求，判断Send BufferCache是否有完整的包
@@ -128,7 +129,7 @@ public:
      * @param done
      * @return int
      */
-    virtual int doResponse(list<ResponsePacket>& done) = 0;
+    virtual int doResponse() = 0;
 
     /*
      * 网络发送接口
@@ -261,15 +262,19 @@ protected:
      */
     int64_t                  _conTimeoutTime;
 
-    /*
-     * 发送缓存buff
-     */
-    TC_Buffer                _sendBuffer;
+    shared_ptr<TC_NetWorkBuffer::SendBuffer> _sendBuffer;
 
-    /*
-     * 接收缓存buff
-     */
-    TC_Buffer                _recvBuffer;
+    TC_NetWorkBuffer _recvBuffer;
+
+    // /*
+    //  * 发送缓存buff
+    //  */
+    // TC_Buffer                _sendBuffer;
+
+    // /*
+    //  * 接收缓存buff
+    //  */
+    // TC_Buffer                _recvBuffer;
 
     /* 
      * 鉴权状态 
@@ -323,13 +328,14 @@ public:
      *
      * @return int
      */
-    int readv(const struct iovec*, int32_t count);
+    // int readv(const struct iovec*, int32_t count);
     /**
      * 处理返回，判断接收是否有完整的包
      * @param done
      * @return int, =1,表示有数据就包
      */
-    virtual int doResponse(list<ResponsePacket>& done);
+    // virtual int doResponse(list<ResponsePacket>& done);
+    virtual int doResponse();
 
 };
 //////////////////////////////////////////////////////////
@@ -378,13 +384,14 @@ public:
      * @param done
      * @return int
      */
-    virtual int doResponse(list<ResponsePacket>& done);
+    // virtual int doResponse(list<ResponsePacket>& done);
+    virtual int doResponse();
 
 private:
     /*
      * 接收缓存
      */
-    char*                       _recvBuffer;
+    char*                       _pRecvBuffer;
 };
 //////////////////////////////////////////////////////////
 

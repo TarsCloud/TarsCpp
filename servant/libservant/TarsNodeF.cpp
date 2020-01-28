@@ -73,6 +73,25 @@ void TarsNodeFHelper::keepAlive(const string &adapter)
         }
 }
 
+void TarsNodeFHelper::keepActiving()
+{
+    try
+    {
+        if(_nodePrx)
+        {
+            _nodePrx->async_keepActiving(NULL, _si);
+        }
+    }
+    catch(exception &ex)
+    {
+        LOG->error() << "TafNodeFHelper::keepAlive error:" << ex.what() << endl;
+    }
+    catch(...)
+    {
+        LOG->error() << "TafNodeFHelper::keepAlive unknown error" << endl;
+    }
+}
+
 void TarsNodeFHelper::reportVersion(const string &version)
 {
         try
