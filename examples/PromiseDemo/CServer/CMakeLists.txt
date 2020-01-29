@@ -1,1 +1,0 @@
-build_tars_server("PromiseDemoCServer")

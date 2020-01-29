@@ -788,7 +788,7 @@ clean:
     TAF_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createPipe] error");
 }
 
-#if TARGET_PLATFORM_LINUX||TARGET_PLATFORM_IOS
+#if TARGET_PLATFORM_LINUX
 vector<string> TC_Socket::getLocalHosts(int domain)
 {
     vector<string> result;
@@ -857,6 +857,35 @@ vector<string> TC_Socket::getLocalHosts(int domain)
     free(ifc.ifc_buf);
 
     return result;
+}
+#elif TARGET_PLATFORM_IOS
+vector<string> TC_Socket::getLocalHosts(int domain)
+{
+    vector<string> hosts;
+    char local[255] = { 0 };
+    gethostname(local, sizeof(local));
+    hostent* ph = gethostbyname(local);
+    if (ph == NULL)
+    {
+        return hosts;
+    }
+
+    in_addr addr;
+    if (ph->h_addrtype == AF_INET) 
+    {
+        int i = 0;
+        while (ph->h_addr_list[i] != 0) 
+        {
+            addr.s_addr = *(u_long*)ph->h_addr_list[i++];
+            hosts.emplace_back(inet_ntoa(addr));
+        }
+    }
+    else 
+    {
+        // unsupport AF_INET6  ...
+        return hosts;
+    }
+    return hosts;
 }
 #endif
 

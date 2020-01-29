@@ -64,7 +64,7 @@ public:
     /**
      * setUnknownField for UnknownField support
      */
-    void setUnknownField(bool bUnkownField) { _unknownField = bUnkownField; }
+    // void setUnknownField(bool bUnkownField) { _unknownField = bUnkownField; }
 
     /**
      * added for master info
@@ -113,7 +113,7 @@ protected:
      *
      * @return string
      */
-    string promiseReadFrom(const TypeIdPtr &pPtr, bool bIsRequire = true) const;
+    // string promiseReadFrom(const TypeIdPtr &pPtr, bool bIsRequire = true) const;
 
     /**
      *
@@ -121,14 +121,14 @@ protected:
      *
      * @return string
      */
-    string readUnknown(const TypeIdPtr &pPtr) const;
+    // string readUnknown(const TypeIdPtr &pPtr) const;
     /**
      *
      * @param pPtr
      *
      * @return string
      */
-    string writeUnknown()const;
+    // string writeUnknown()const;
     /**
      *
      * @param pPtr
@@ -354,7 +354,7 @@ protected:
      *
      * @return string
      */
-    string generateHPromiseAsync(const InterfacePtr &pInter, const OperationPtr &pPtr) const;
+//    string generateHPromiseAsync(const InterfacePtr &pInter, const OperationPtr &pPtr) const;
 
     /**
      * 生成操作函数调用分发的源码
@@ -363,7 +363,7 @@ protected:
      *
      * @return string
      */
-    string generateDispatchPromiseAsync(const OperationPtr &pPtr, const string &cn) const;
+//    string generateDispatchPromiseAsync(const OperationPtr &pPtr, const string &cn) const;
 
     /**
      * 生成操作的servant的头文件源码
@@ -440,7 +440,7 @@ protected:
 
     string generateInitValue(const TypeIdPtr &pPtr) const;
 
-    bool isPromiseDispatchInitValue(const TypeIdPtr &pPtr) const;
+//    bool isPromiseDispatchInitValue(const TypeIdPtr &pPtr) const;
 
 private:
     std::string _baseDir;
@@ -453,7 +453,7 @@ private:
 
     std::string _namespace ;
 
-    bool _unknownField;
+    // bool _unknownField;
 
     bool _tarsMaster;
 };

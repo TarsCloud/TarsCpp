@@ -29,7 +29,7 @@ int main(int argc,char ** argv)
     try
     {
         HelloPrx prx;
-        comm.stringToProxy("TestApp.HelloServer.HelloObj@tcp -h 10.120.129.226 -p 20001" , prx);
+        comm.stringToProxy("TestApp.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 8999" , prx);
 
         try
         {

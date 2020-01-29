@@ -29,7 +29,7 @@ void usage()
     cout << "  --unjson                                    not json interface" << endl;
     cout << "  --os                                        only create struct(not create interface) " << endl;
     cout << "  --include=\"dir1;dir2;dir3\"                set search path of tars protocol" << endl;
-    cout << "  --unknown                                   create unkown field" << endl;
+    // cout << "  --unknown                                   create unkown field" << endl;
     cout << "  --tarsMaster                                create get registry info interface" << endl;
     cout << "  --currentPriority						   use current path first." << endl;
     cout << "  tars2cpp support type: bool byte short int long float double vector map" << endl;
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
         g_parse->setHeader(option.getValue("header"));
         g_parse->setCurrentPriority(option.hasParam("currentPriority"));
 
-        t2c.setUnknownField(option.hasParam("unknown"));
+        // t2c.setUnknownField(option.hasParam("unknown"));
         for(size_t i = 0; i < vTars.size(); i++)
         {
 

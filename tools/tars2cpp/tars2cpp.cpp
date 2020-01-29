@@ -31,7 +31,7 @@ Tars2Cpp::Tars2Cpp()
 , _onlyStruct(false)
 , _bJsonSupport(true)
 , _namespace("tars")
-, _unknownField(false)
+// , _unknownField(false)
 , _tarsMaster(false)
 {
 
@@ -230,18 +230,18 @@ string Tars2Cpp::readFrom(const TypeIdPtr& pPtr, bool bIsRequire) const
 
 
 
-string Tars2Cpp::readUnknown(const TypeIdPtr& pPtr) const
-{
-    ostringstream s;
-    s << TAB << "_is.readUnknown(sUnknownField, " <<  pPtr->getTag() << ");" << endl;
-    return s.str();
-}
-string Tars2Cpp::writeUnknown() const
-{
-    ostringstream s;
-    s << TAB << "_os.writeUnknown(sUnknownField);" << endl;
-    return s.str();
-}
+// string Tars2Cpp::readUnknown(const TypeIdPtr& pPtr) const
+// {
+//     ostringstream s;
+//     s << TAB << "_is.readUnknown(sUnknownField, " <<  pPtr->getTag() << ");" << endl;
+//     return s.str();
+// }
+// string Tars2Cpp::writeUnknown() const
+// {
+//     ostringstream s;
+//     s << TAB << "_os.writeUnknown(sUnknownField);" << endl;
+//     return s.str();
+// }
 
 string Tars2Cpp::display(const TypeIdPtr& pPtr) const
 {
@@ -568,14 +568,14 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
         }
     }
 
-    if (b)
-    {
-    	if (_unknownField)
-    	{
-        	s << ",sUnknownField(\"\")";
-    	}
-        s << endl;
-    }
+    // if (b)
+    // {
+    // 	if (_unknownField)
+    // 	{
+    //     	s << ",sUnknownField(\"\")";
+    // 	}
+    //     s << endl;
+    // }
 
     s << TAB << "{" << endl;
     INC_TAB;
@@ -656,10 +656,10 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
     {
         s << writeTo(member[j]);
     }
-	if (_unknownField)
-    {
-		s << writeUnknown();
-	}
+	// if (_unknownField)
+    // {
+	// 	s << writeUnknown();
+	// }
     DEL_TAB;
     s << TAB << "}" << endl;
 
@@ -673,10 +673,10 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
     {
         s << readFrom(member[j]);
     }
-    if (_unknownField)
-    {
-        s << readUnknown(member[member.size() - 1]);
-    }
+    // if (_unknownField)
+    // {
+    //     s << readUnknown(member[member.size() - 1]);
+    // }
 
     DEL_TAB;
     s << TAB << "}" << endl;
@@ -771,10 +771,10 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
         s << TAB << tostr(member[j]->getTypePtr()) << " " << member[j]->getId() << toStrSuffix(member[j]) << ";" << endl;
 
     }
-    if  (_unknownField)
-    {
-	    s << TAB << "std::string sUnknownField;" << endl;
-    }
+    // if  (_unknownField)
+    // {
+	//     s << TAB << "std::string sUnknownField;" << endl;
+    // }
     DEL_TAB;
     s << TAB << "};" << endl;
 
@@ -1376,6 +1376,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     return s.str();
 }
 
+/*
 string Tars2Cpp::promiseReadFrom(const TypeIdPtr &pPtr, bool bIsRequire) const
 {
     ostringstream s;
@@ -1442,6 +1443,7 @@ bool Tars2Cpp::isPromiseDispatchInitValue(const TypeIdPtr &pPtr) const
     }
     return false;
 }
+*/
 string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) const
 {
     ostringstream s;
@@ -1502,7 +1504,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
     DEL_TAB;
     s << TAB << "}" << endl;
     s << TAB << endl;
-
+/*
    //promise异步的函数声明
    string sStruct = pPtr->getId();
 
@@ -1559,7 +1561,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
     DEL_TAB;
     s << TAB << "}" << endl;
     s << endl;
-
+*/
     //协程并行异步的函数声明
     s << TAB << "void coro_" << pPtr->getId() << "(";
     s << cn << "CoroPrxCallbackPtr callback,";
@@ -1811,6 +1813,7 @@ struct SortOperation {
     }
 };
 
+/*
 string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const OperationPtr &pPtr) const
 {
     ostringstream s;
@@ -1972,6 +1975,7 @@ string Tars2Cpp::generateDispatchPromiseAsync(const OperationPtr &pPtr, const st
 
     return s.str();
 }
+*/
 /******************************InterfacePtr***************************************/
 string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) const
 {
@@ -2077,9 +2081,9 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
 
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallback> " << pPtr->getId() << "PrxCallbackPtr;" << endl;
     s << endl;
-
+/*
 	//生成promise异步回调Proxy
-    s << TAB << "/* callback of promise async proxy for client */" << endl;
+    s << TAB << "//callback of promise async proxy for client" << endl;
     s << TAB << "class " << pPtr->getId() << "PrxCallbackPromise: public tars::ServantProxyCallback" << endl;
     s << TAB << "{" << endl;
     s << TAB << "public:" << endl;
@@ -2156,7 +2160,7 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
 
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallbackPromise> " << pPtr->getId() << "PrxCallbackPromisePtr;" << endl;
     s << endl;
-
+*/
     //生成协程异步回调类，用于并发请求
     s << TAB << "/* callback of coroutine async proxy for client */" << endl;
     s << TAB << "class " << pPtr->getId() << "CoroPrxCallback: public " << pPtr->getId() << "PrxCallback" << endl;
@@ -2542,7 +2546,7 @@ void Tars2Cpp::generateH(const ContextPtr &pPtr) const
         {
             s << "#include \"servant/ServantProxy.h\"" << endl;
             s << "#include \"servant/Servant.h\"" << endl;
-			s << "#include \"promise/promise.h\"" << endl;
+			// s << "#include \"promise/promise.h\"" << endl;
             break;
         }
     }
