@@ -70,7 +70,7 @@ void TC_Mmap::mmap(const char *file, size_t length)
     _hFile = CreateFile(file, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ| FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN|FILE_FLAG_WRITE_THROUGH|FILE_FLAG_NO_BUFFERING, NULL);
     if(_hFile == INVALID_HANDLE_VALUE)
     {
-        TAF_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
     }
 
 	_hMap = CreateFileMapping(_hFile, NULL, PAGE_READWRITE, 0, length, NULL);
@@ -84,7 +84,7 @@ void TC_Mmap::mmap(const char *file, size_t length)
     }
     else
     {
-		TAF_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
+		TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
     }
 
     _pAddr = (char*)MapViewOfFile(_hMap, FILE_MAP_ALL_ACCESS, 0, 0, length);
@@ -94,7 +94,7 @@ void TC_Mmap::mmap(const char *file, size_t length)
 	{
 		CloseHandle(_hFile);
 		CloseHandle(_hMap);
-		TAF_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
+		TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
 	}
 #else
     //注意_bCreate的赋值位置:保证多线程用一个对象的时候也不会有问题
@@ -103,14 +103,14 @@ void TC_Mmap::mmap(const char *file, size_t length)
     {
         if(errno != EEXIST)
         {
-            TAF_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
+            TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
         }
         else
         {
             fd = open(file, O_CREAT|O_RDWR, 0666);
             if(fd == -1)
             {
-                TAF_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
+                TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
             }
             _bCreate = false;
         }
@@ -132,7 +132,7 @@ void TC_Mmap::mmap(const char *file, size_t length)
     {
         _pAddr = NULL;
         close(fd);
-        TAF_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] mmap file '" + string(file) + "' error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] mmap file '" + string(file) + "' error");
     }
     if(fd != -1)
     {
@@ -159,7 +159,7 @@ void TC_Mmap::munmap()
 	BOOL ret = FlushViewOfFile(_pAddr, 0);
     if(!ret)
     {
-        TAF_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::munmap] munmap error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::munmap] munmap error");
     }
     UnmapViewOfFile(_pAddr);
 
@@ -172,7 +172,7 @@ void TC_Mmap::munmap()
     int ret = ::munmap(_pAddr, _iLength);
     if(ret == -1)
     {
-        TAF_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::munmap] munmap error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::munmap] munmap error");
     }
 #endif
     _pAddr      = NULL;
@@ -197,7 +197,7 @@ void TC_Mmap::msync(bool bSync)
 #endif    
     if(ret != 0)
     {
-        TAF_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::msync] msync error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::msync] msync error");
     }
 }
 

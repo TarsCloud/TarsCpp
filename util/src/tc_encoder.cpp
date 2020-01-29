@@ -152,7 +152,7 @@ string TC_Encoder::gbk2utf8(const string &sIn)
 	cd = iconv_open("UTF-8","GBK");
 	if (cd == (iconv_t)-1)
     {
-        TAF_THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv_open error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv_open error");
  
         // throw TC_Encoder_Exception("[TC_Encoder::gbk2utf8] iconv_open error", TC_Exception::getSystemCode());
     }
@@ -212,7 +212,7 @@ void TC_Encoder::gbk2utf8(const string &sIn, vector<string> &vtStr)
 	cd = iconv_open("UTF-8","GBK");
 	if (cd == (iconv_t)-1)
     {
-        TAF_THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv_open error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv_open error");
         // throw TC_Encoder_Exception("[TC_Encoder::gbk2utf8] iconv_open error", TC_Exception::getSystemCode());
 	}
 
@@ -321,7 +321,7 @@ void TC_Encoder::utf82gbk(char *sOut, int &iMaxOutLen, const char *sIn, int iInL
     cd = iconv_open("GBK","UTF-8");
     if (cd == (iconv_t)-1)
     {
-        TAF_THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::utf82gbk] iconv_open error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::utf82gbk] iconv_open error");
         // throw TC_Encoder_Exception("[TC_Encoder::utf82gbk] iconv_open error", TC_Exception::getSystemCode());
     }
 
@@ -335,7 +335,7 @@ void TC_Encoder::utf82gbk(char *sOut, int &iMaxOutLen, const char *sIn, int iInL
     {
         iMaxOutLen = 0;
         iconv_close(cd);
-        TAF_THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::utf82gbk] iconv error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::utf82gbk] iconv error");
         // throw TC_Encoder_Exception("[TC_Encoder::utf82gbk] iconv error", TC_Exception::getSystemCode());
         return;
     }

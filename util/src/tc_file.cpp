@@ -183,7 +183,7 @@ string TC_File::getExePath()
 
     if ( count < 0 )
     {
-        TAF_THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::getExePath] could not get exe path error");
+        TARS_THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::getExePath] could not get exe path error");
         // throw TC_File_Exception("[TC_File::getExePath] could not get exe path error", TC_Exception::getSystemCode());
     }
 
@@ -733,12 +733,12 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
 		std::ifstream fin(sExistFile.c_str(), ios::binary);
         if(!fin)
         {
-            TAF_THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sExistFile);
+            TARS_THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sExistFile);
         }
         std::ofstream fout(sNewFile.c_str(), ios::binary);
         if(!fout )
         {
-            TAF_THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sNewFile);
+            TARS_THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sNewFile);
         }
 
         fout << fin.rdbuf();
@@ -748,7 +748,7 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
 		TC_Port::stat_t f_stat;
         if (TC_Port::lstat(sExistFile.c_str(), &f_stat) == -1)
         {
-            TAF_THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sExistFile);
+            TARS_THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sExistFile);
         }
 
         TC_Port::chmod(sNewFile.c_str(),f_stat.st_mode);

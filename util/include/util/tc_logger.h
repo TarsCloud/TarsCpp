@@ -1231,7 +1231,7 @@ namespace tars
 
 					//抛异常前继续进入_t 以便打远程日志
 					_t(_of, buffer);
-					TAF_THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
+					TARS_THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
 					// throw TC_Logger_Exception("[TC_RollBySize::roll]:fopen fail: " + sLogFileName, TC_Exception::getSystemCode());
 				}
 			}
@@ -1281,7 +1281,7 @@ namespace tars
 			_of.open(sLogFileName.c_str(), ios::app);
 			if (!_of)
 			{
-				TAF_THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
+				TARS_THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
 				// throw TC_Logger_Exception("[TC_RollBySize::roll]:fopen fail: " + sLogFileName, TC_Exception::getSystemCode());
 			}
 		}
@@ -1692,7 +1692,7 @@ namespace tars
 				{
 					//抛异常前继续进入_t 以便打远程日志
 					_t(_of, buffer);
-					TAF_THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollByTime::roll]:fopen fail: " + sLogFileName);
+					TARS_THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollByTime::roll]:fopen fail: " + sLogFileName);
 					// throw TC_Logger_Exception("[TC_RollByTime::roll]:fopen fail: " + sLogFileName, TC_Exception::getSystemCode());
 				}
 			}
