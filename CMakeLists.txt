@@ -4,8 +4,8 @@ project(tars_cpp)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 set(CMAKE_VERBOSE_MAKEFILE off)
 
-set(MYSQL_DIR_INC "/usr/local/mysql/include")
-set(MYSQL_DIR_LIB "/usr/local/mysql/lib")
+#set(MYSQL_DIR_INC "/usr/local/mysql/include")
+#set(MYSQL_DIR_LIB "/usr/local/mysql/lib")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O2 -Wall -Wno-deprecated")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O2 -Wall -Wno-deprecated")
@@ -47,7 +47,7 @@ IF (UNIX)
 set(INSTALL_PREFIX "/usr/local/tars/cpp")
 ELSE()
 set(INSTALL_PREFIX "c:\\taf\\cpp")
-set(LIB_MYSQL "libmysql")
+#set(LIB_MYSQL "libmysql")
 ENDIF()
 
 set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
@@ -56,6 +56,7 @@ IF (WIN32)
 set(MYSQL_PATH "${CMAKE_SOURCE_DIR}/thirdparty/win_64")
 include_directories("${MYSQL_PATH}/include/mysql")
 link_directories("${MYSQL_PATH}/lib")
+link_libraries("libmysql")
 
 ELSE()
 

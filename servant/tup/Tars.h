@@ -17,13 +17,13 @@
 #ifndef __TARS_H__
 #define __TARS_H__
 
-// #include <netinet/in.h>
 #include <iostream>
 #include <cassert>
 #include <vector>
 #include <map>
 #include <string>
 #include <stdexcept>
+#include <functional>
 #include <stdint.h>
 #include <string.h>
 #include <limits.h>
@@ -81,21 +81,6 @@
 //////////////////////////////////////////////////////////////////
 //// 保留接口版本Tars宏定义
 //编码相应的宏
-// #define TarsReserveBuf(os, len) \
-// do{ \
-//     if((os)._reverse) \
-//     { \
-//         if(tars_unlikely((os)._buf_len < (len))) \
-//         { \
-//             size_t len1 = (len)<<1; \
-//             char * p = new char[(len1)]; \
-//             memcpy(p, (os)._buf, (os)._len); \
-//             delete[] (os)._buf; \
-//             (os)._buf = p; \
-//             (os)._buf_len = (len1); \
-//         } \
-//     } \
-// }while(0)
 
 #define TarsReserveBuf(os, len) \
 do{ \

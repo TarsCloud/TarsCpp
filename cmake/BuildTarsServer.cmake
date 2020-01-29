@@ -50,8 +50,8 @@ macro(build_tars_server MODULE)
 
     endif (TARS_LIST)
 
-    add_dependencies(${MODULE} tarsutil tarsservant)
+    add_dependencies(${MODULE} tarsservant tarsutil)
 
-    target_link_libraries(${MODULE} tarsutil tarsservant)
+    target_link_libraries(${MODULE} tarsservant tarsutil)
         
 endmacro()

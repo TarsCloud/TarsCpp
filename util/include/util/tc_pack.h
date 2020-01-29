@@ -21,6 +21,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <cassert>
 #include "util/tc_ex.h"
 
 namespace tars

@@ -17,6 +17,7 @@
 #include "util/tc_thread.h"
 #include <sstream>
 #include <cerrno>
+#include <cassert>
 
 namespace tars
 {
