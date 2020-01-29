@@ -47,6 +47,16 @@ string Servant::getName() const
     return _name;
 }
 
+void Servant::setApplication(Application *application)
+{
+    _application = application;
+}
+
+Application* Servant::getApplication() const
+{
+    return _application;
+}
+
 void Servant::setHandle(TC_EpollServer::Handle* handle)
 {
     _handle = handle;

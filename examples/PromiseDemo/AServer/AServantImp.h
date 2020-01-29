@@ -29,16 +29,16 @@
 using namespace Test;
 
 ///////////////////////////////////
-promise::Future<std::string> sendBReq(BServantPrx prx, const std::string& sIn, tars::TarsCurrentPtr current);
+tars::Future<std::string> sendBReq(BServantPrx prx, const std::string& sIn, tars::TarsCurrentPtr current);
 
-promise::Future<std::string> handleBRspAndSendCReq(CServantPrx prx, TarsCurrentPtr current, const promise::Future<std::string>& future);
+tars::Future<std::string> handleBRspAndSendCReq(CServantPrx prx, TarsCurrentPtr current, const tars::Future<std::string>& future);
 
-promise::Future<std::string> sendCReq(CServantPrx prx, const std::string& sIn, tars::TarsCurrentPtr current);
+tars::Future<std::string> sendCReq(CServantPrx prx, const std::string& sIn, tars::TarsCurrentPtr current);
 
-int handleCRspAndReturnClient(TarsCurrentPtr current, const promise::Future<std::string>& future);
+int handleCRspAndReturnClient(TarsCurrentPtr current, const tars::Future<std::string>& future);
 
 ///////////////////////////////////
-int handleBCRspAndReturnClient(TarsCurrentPtr current, const promise::Future<promise::Tuple<promise::Future<std::string>, promise::Future<std::string> > >& allFuture);
+int handleBCRspAndReturnClient(TarsCurrentPtr current, const tars::Future<std::tuple<tars::Future<std::string>, tars::Future<std::string> > >& allFuture);
 
 ///////////////////////////////////
 class AServantImp : public Test::AServant

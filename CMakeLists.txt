@@ -114,11 +114,15 @@ IF(WIN32)
 include_directories(${CMAKE_SOURCE_DIR}/util/src/epoll_windows)
 ENDIF()
 
+include("${CMAKE_SOURCE_DIR}/cmake/BuildTarsServer.cmake")
+
+include_directories(${CMAKE_SOURCE_DIR}/util/include)
+include_directories(${CMAKE_SOURCE_DIR}/servant)
+include_directories(${CMAKE_SOURCE_DIR}/servant/protocol)
+
 add_subdirectory(util)
 add_subdirectory(tools)
-
-# set(TARS2CPP "${tools_BINARY_DIR}/tars2cpp/tars2cpp")
-
 add_subdirectory(servant)
+add_subdirectory(examples)
 
 #add_subdirectory(test_deprecated)

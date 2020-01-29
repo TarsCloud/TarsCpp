@@ -161,7 +161,7 @@ int main(int argc,char ** argv)
             tp.exec(fwrapper3);
             cout << "********************" <<endl;
         }
-        tp.wait();
+        tp.waitForAllDone();
     }catch(exception &e)
     {
         cout<<e.what()<<endl;

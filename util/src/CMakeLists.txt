@@ -1,7 +1,5 @@
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
-
 aux_source_directory(. DIR_SRCS)
 
 # if (CMAKE_SIZEOF_VOID_P EQUAL 8)

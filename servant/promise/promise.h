@@ -746,20 +746,38 @@ public:
     virtual ~Future() {}
     
     template <typename R>
-    Future<typename detail::resolved_type<R>::type> then(const std::function<R(const Future&)>& callback) const
+    Future<R> then(const std::function<R(const Future<T>&)>& callback) const
     {
-        typedef typename detail::resolved_type<R>::type value_type;
+        // typedef typename detail::resolved_type<R>::type value_type;
 
         if (!this->m_future)
         {
             throwException(FutureUninitializedException(__FILE__, __LINE__));
         }
 
-        Promise<value_type> promise;
-        this->m_future->registerCallback(TC_Bind(&detail::SequentialCallback<R, T>::template run<R>,
-                                              tc_owned(new detail::SequentialCallback<R, T>(callback, promise))));
+        Promise<R> promise;
+        shared_ptr<detail::SequentialCallback<R, T>> ptr(new detail::SequentialCallback<R, T>(callback, promise));
+        
+        this->m_future->registerCallback(std::bind(&detail::SequentialCallback<R, T>::template run<R>, ptr));
         return promise.getFuture();
     }
+    
+
+    // template <typename R>
+    // Future<typename detail::resolved_type<R>::type> then(const std::function<R(const Future<T>&)>& callback) const
+    // {
+    //     typedef typename detail::resolved_type<R>::type value_type;
+
+    //     if (!this->m_future)
+    //     {
+    //         throwException(FutureUninitializedException(__FILE__, __LINE__));
+    //     }
+
+    //     Promise<value_type> promise;
+    //     this->m_future->registerCallback(TC_Bind(&detail::SequentialCallback<R, T>::template run<R>,
+    //                                           tc_owned(new detail::SequentialCallback<R, T>(callback, promise))));
+    //     return promise.getFuture();
+    // }
     
 private:
 
@@ -784,7 +802,7 @@ public:
     virtual ~Future() {}
 
     template <typename R>
-    Future<typename detail::resolved_type<R>::type> then(const std::function<R(const Future&)>& callback) const
+    Future<typename detail::resolved_type<R>::type> then(const std::function<R(const Future<void>&)>& callback) const
     {
         typedef typename detail::resolved_type<R>::type value_type;
 

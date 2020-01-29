@@ -129,7 +129,7 @@ int main(int argc,char ** argv)
             cout << "********************" <<endl;
         }
 
-        tp.wait(); 
+        tp.waitForAllDone(); 
     }
     catch(exception &e)
     {

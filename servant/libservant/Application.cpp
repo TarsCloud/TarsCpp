@@ -61,6 +61,8 @@ static BOOL WINAPI HandlerRoutine(DWORD dwCtrlType)
 }
 #endif
 
+
+std::string ServerConfig::TarsPath;         //服务路径
 std::string ServerConfig::Application;      //应用名称
 std::string ServerConfig::ServerName;       //服务名称,一个服务名称含一个或多个服务标识
 std::string ServerConfig::LocalIp;          //本机IP
@@ -1238,7 +1240,7 @@ void Application::initializeServer()
 
     if(!ServerConfig::Local.empty())
     {
-        ServantHelperManager::getInstance()->addServant<AdminServant>("AdminObj");
+        ServantHelperManager::getInstance()->addServant<AdminServant>("AdminObj", this);
 
         ServantHelperManager::getInstance()->setAdapterServant("AdminAdapter", "AdminObj");
 

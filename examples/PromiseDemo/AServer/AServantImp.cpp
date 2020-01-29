@@ -31,7 +31,7 @@ public:
     : _current(current)
     {}
 
-    BServantCallback(TarsCurrentPtr &current, const promise::Promise<std::string> &promise)
+    BServantCallback(TarsCurrentPtr &current, const tars::Promise<std::string> &promise)
     : _current(current)
     , _promise(promise)
     {}
@@ -60,7 +60,7 @@ private:
         s += "|ret:";
         s += TC_Common::tostr(ret);
 
-        _promise.setException(promise::copyException(s));
+        _promise.setException(tars::copyException(s));
 
         TLOGDEBUG("ServerPrxCallback handExp:" << s << endl);
     }
@@ -68,7 +68,7 @@ private:
 private:
 
     TarsCurrentPtr                    _current;
-    promise::Promise<std::string>    _promise;
+    tars::Promise<std::string>    _promise;
 };
 //////////////////////////////////////////////////////
 class CServantCallback : public CServantPrxCallback
@@ -79,7 +79,7 @@ public:
     : _current(current)
     {}
 
-    CServantCallback(TarsCurrentPtr &current, const promise::Promise<std::string> &promise)
+    CServantCallback(TarsCurrentPtr &current, const tars::Promise<std::string> &promise)
     : _current(current)
     , _promise(promise)
     {}
@@ -108,7 +108,7 @@ private:
         s += "|ret:";
         s += TC_Common::tostr(ret);
 
-        _promise.setException(promise::copyException(s));
+        _promise.setException(tars::copyException(s));
 
         TLOGDEBUG("ServerPrxCallback handExp:" << s << endl);
     }
@@ -116,12 +116,12 @@ private:
 private:
 
     TarsCurrentPtr                    _current;
-    promise::Promise<std::string>    _promise;
+    tars::Promise<std::string>    _promise;
 };
 //////////////////////////////////////////////////////
-promise::Future<std::string> sendBReq(BServantPrx prx, const std::string& sIn, tars::TarsCurrentPtr current)
+tars::Future<std::string> sendBReq(BServantPrx prx, const std::string& sIn, tars::TarsCurrentPtr current)
 {
-    promise::Promise<std::string> promise;
+    tars::Promise<std::string> promise;
 
     Test::BServantPrxCallbackPtr cb = new BServantCallback(current, promise);
 
@@ -130,9 +130,9 @@ promise::Future<std::string> sendBReq(BServantPrx prx, const std::string& sIn, t
     return promise.getFuture();
 }
 //////////////////////////////////////////////////////
-promise::Future<std::string> sendCReq(CServantPrx prx, const std::string& sIn, tars::TarsCurrentPtr current)
+tars::Future<std::string> sendCReq(CServantPrx prx, const std::string& sIn, tars::TarsCurrentPtr current)
 {
-    promise::Promise<std::string> promise;
+    tars::Promise<std::string> promise;
 
     Test::CServantPrxCallbackPtr cb = new CServantCallback(current, promise);
 
@@ -141,7 +141,7 @@ promise::Future<std::string> sendCReq(CServantPrx prx, const std::string& sIn, t
     return promise.getFuture();
 }
 //////////////////////////////////////////////////////
-promise::Future<std::string> handleBRspAndSendCReq(CServantPrx prx, TarsCurrentPtr current, const promise::Future<std::string>& future)
+tars::Future<std::string> handleBRspAndSendCReq(CServantPrx prx, TarsCurrentPtr current, const tars::Future<std::string>& future)
 {
     std::string sResult("");
     std::string sException("");
@@ -157,13 +157,13 @@ promise::Future<std::string> handleBRspAndSendCReq(CServantPrx prx, TarsCurrentP
         sException = e.what();
     }
 
-    promise::Promise<std::string> promise;
+    tars::Promise<std::string> promise;
     promise.setValue(sException);
 
     return promise.getFuture();
 }
 //////////////////////////////////////////////////////
-int handleCRspAndReturnClient(TarsCurrentPtr current, const promise::Future<std::string>& future)
+int handleCRspAndReturnClient(TarsCurrentPtr current, const tars::Future<std::string>& future)
 {
     int ret = 0;
     std::string sResult("");
@@ -184,16 +184,16 @@ int handleCRspAndReturnClient(TarsCurrentPtr current, const promise::Future<std:
     return 0;
 }
 //////////////////////////////////////////////////////
-int handleBCRspAndReturnClient(TarsCurrentPtr current, const promise::Future<promise::Tuple<promise::Future<std::string>, promise::Future<std::string> > >& allFuture)
+int handleBCRspAndReturnClient(TarsCurrentPtr current, const tars::Future<std::tuple<tars::Future<std::string>, tars::Future<std::string> > >& allFuture)
 {
     int ret = 0;
     std::string sResult("");
     try 
     {
-        promise::Tuple<promise::Future<std::string>, promise::Future<std::string> > tupleFuture = allFuture.get();
+        std::tuple<tars::Future<std::string>, tars::Future<std::string> > tupleFuture = allFuture.get();
 
-        std::string sResult1 = tupleFuture.get<0>().get();
-        std::string sResult2 = tupleFuture.get<1>().get();
+        std::string sResult1 = std::get<0>(tupleFuture).get();
+        std::string sResult2 = std::get<1>(tupleFuture).get();
 
         sResult = sResult1;
         sResult += "|";
@@ -223,15 +223,30 @@ void AServantImp::initialize()
 void AServantImp::destroy()
 {
 }
+
+// class Test1
+// {
+// public:
+//     template <typename R>
+//     void then(const std::function<R(const Future&)>& callback);
+//     {
+//         cout <<"then" << endl;
+//     }
+// }
+
 //////////////////////////////////////////////////////
 tars::Int32 AServantImp::queryResultSerial(const std::string& sIn, std::string &sOut, tars::TarsCurrentPtr current)
 {
     current->setResponse(false);
 
-    promise::Future<std::string> f = sendBReq(_pPrxB, sIn, current);
+    tars::Future<std::string> f = sendBReq(_pPrxB, sIn, current);
 
-    f.then(tars::TC_Bind(&handleBRspAndSendCReq, _pPrxC, current)).then(tars::TC_Bind(&handleCRspAndReturnClient, current));
+    auto b1 = std::bind(handleBRspAndSendCReq, _pPrxC, current);//, std::placeholders::_3);
+    auto b2 = std::bind(handleCRspAndReturnClient, current);//, std::placeholders::_2);
+    f.then(b1).then(b2);
 
+    // Test1 t;
+    // t.then<std::string>(b1);
     return 0;
 }
 //////////////////////////////////////////////////////
@@ -239,13 +254,13 @@ tars::Int32 AServantImp::queryResultParallel(const std::string& sIn, std::string
 {
     current->setResponse(false);
 
-    promise::Future<std::string> f1 = sendBReq(_pPrxB, sIn, current);
+    tars::Future<std::string> f1 = sendBReq(_pPrxB, sIn, current);
 
-    promise::Future<std::string> f2 = sendCReq(_pPrxC, sIn, current);
+    tars::Future<std::string> f2 = sendCReq(_pPrxC, sIn, current);
 
-    promise::Future<promise::Tuple<promise::Future<std::string>, promise::Future<std::string> > > f_all = promise::whenAll(f1, f2);
+    tars::Future<std::tuple<tars::Future<std::string>, tars::Future<std::string> > > f_all = tars::whenAll(f1, f2);
 
-    f_all.then(tars::TC_Bind(&handleBCRspAndReturnClient, current));
+    f_all.then(std::bind(&handleBCRspAndReturnClient, current));
 
     return 0;
 }

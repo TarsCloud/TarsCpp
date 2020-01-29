@@ -41,10 +41,13 @@ typedef TC_AutoPtr<ServantHelperCreation> ServantHelperCreationPtr;
 /**
  * Servant
  */
+
 template<class T>
 struct ServantCreation : public ServantHelperCreation
 {
-    ServantPtr create(const string &s) { T *p = new T; p->setName(s); return p; }
+    ServantCreation(Application *application) : _application(application){}
+    ServantPtr create(const string &s) { T *p = new T; p->setName(s); p->setApplication(_application); return p; }
+    Application *_application;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -69,14 +72,14 @@ public:
      * @param id
      */
     template<typename T>
-    void addServant(const string &id,bool check = false)
+    void addServant(const string &id, Application *application, bool check = false)
     {
         if(check && _servant_adapter.end() == _servant_adapter.find(id))
         {
-            cerr<<"[TARS]ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not conf in the web)"<<endl;
-            throw runtime_error("[TARS]ServantHelperManager::addServant " + id + " not find adapter.(maybe not conf in the web)");
+            cerr<<"[TAF]ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not conf in the web)"<<endl;
+			throw runtime_error("[TAF]ServantHelperManager::addServant " + id + " not find adapter.(maybe not conf in the web)");
         }
-        _servant_creator[id] = new ServantCreation<T>();
+        _servant_creator[id] = new ServantCreation<T>(application);
     }
 
     /**
@@ -99,14 +102,15 @@ public:
      * @param sAdapter
      * @return string
      */
-    string getAdapterServant(const string &sAdapter)
+    const string &getAdapterServant(const string &sAdapter) const
     {
-        map<string, string>::iterator it = _adapter_servant.find(sAdapter);
+        static const string s = "(NO TARS PROTOCOL)";
+		auto it = _adapter_servant.find(sAdapter);
         if(it != _adapter_servant.end())
         {
             return it->second;
         }
-        return "(NO TARS PROTOCOL)";
+        return s;
     }
 
     /**
@@ -114,21 +118,22 @@ public:
      * @param sServant
      * @return string
      */
-    string getServantAdapter(const string& sServant)
+    const string &getServantAdapter(const string& sServant) const
     {
-        map<string, string>::iterator it = _servant_adapter.find(sServant);
+	    static const string s = "";
+
+	    auto it = _servant_adapter.find(sServant);
         if(it != _servant_adapter.end())
         {
             return it->second;
         }
-        return "";
+        return s;
     }
-
     /**
      * 获取Adapter/Servant对应表
      * @return map<string, string>
      */
-    map<string, string> getAdapterServant() {return _adapter_servant;}
+    const map<string, string> & getAdapterServant() const {return _adapter_servant;}
 
     /**
      * 设置染色信息
@@ -177,7 +182,7 @@ protected:
     /**
      * 锁
      */
-    TC_ThreadMutex _mutex;
+    TC_SpinLock _mutex;
 
     /**
      * 是否染色

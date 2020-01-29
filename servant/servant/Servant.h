@@ -27,6 +27,7 @@ namespace tars
 {
 
 class BaseNotify;
+class Application;
 ////////////////////////////////////////////////////////////////////
 /**
  * 每个对象的基类
@@ -61,6 +62,18 @@ public:
      * @param handle 
      */
     void setHandle(TC_EpollServer::Handle* handle);
+
+    /**
+     * 设置全局的应用
+     * @param application
+     */
+    void setApplication(Application *application);
+
+    /**
+     * 获取应用
+     * @return
+     */
+    Application* getApplication() const;
 
     /**
      * 获取所属的Handle
@@ -165,6 +178,11 @@ protected:
      * 名字
      */
     string _name;
+
+    /**
+     * 应用
+     */
+    Application *_application;
 
     /**
      * 所属的Handle

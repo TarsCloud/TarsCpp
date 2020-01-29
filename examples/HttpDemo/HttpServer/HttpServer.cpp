@@ -21,44 +21,42 @@ using namespace std;
 
 HttpServer g_app;
 
-/////////////////////////////////////////////////////////////////
-struct HttpProtocol
-{
-    /**
-     * 解析http请求
-     * @param in
-     * @param out
-     *
-     * @return int
-     */
-    static int parseHttp(string &in, string &out)
-    {
-        try
-        {
-                        //判断请求是否是HTTP请求
-            bool b = TC_HttpRequest ::checkRequest(in.c_str(), in.length());
-                        //完整的HTTP请求
-            if(b)
-            {
-                out = in;
-                in  = "";
-                //TLOGDEBUG("out size: " << out.size() << endl);
-                return TC_EpollServer::PACKET_FULL;
-            }
-            else
-            {
-                return TC_EpollServer::PACKET_LESS;
-            }
-        }
-        catch(exception &ex)
-        {
-            return TC_EpollServer::PACKET_ERR;
-        }
+// /////////////////////////////////////////////////////////////////
+// struct HttpProtocol
+// {
+//     /**
+//      * http鍗忚瑙ｆ瀽
+//      * @param in
+//      * @param out
+//      *
+//      * @return int
+//      */
+//     static int parseHttp(TC_NetWorkBuffer &in, vector<char> &out)
+//     {
+//         try
+//         {
+//             bool b = in.checkRequest(in.length());
+//             if(b)
+//             {
+//                 out = in;
+//                 in.clearBuffers();
+//                 //TLOGDEBUG("out size: " << out.size() << endl);
+//                 return TC_EpollServer::PACKET_FULL;
+//             }
+//             else
+//             {
+//                 return TC_EpollServer::PACKET_LESS;
+//             }
+//         }
+//         catch(exception &ex)
+//         {
+//             return TC_EpollServer::PACKET_ERR;
+//         }
 
-        return TC_EpollServer::PACKET_LESS;             //表示收到的包不完全
-    }
+//         return TC_EpollServer::PACKET_LESS;             //锟斤拷示锟秸碉拷锟侥帮拷锟斤拷锟斤拷全
+//     }
 
-};
+// };
 
 void
 HttpServer::initialize()
@@ -67,7 +65,7 @@ HttpServer::initialize()
     //...
 
     addServant<HttpImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj");
-    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",&HttpProtocol::parseHttp);
+    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",&TC_NetWorkBuffer::parseHttp);
 }
 /////////////////////////////////////////////////////////////////
 void

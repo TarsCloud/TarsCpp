@@ -56,10 +56,10 @@ namespace tars
             
         };
 
-        // FutureAllValueType is supposed to be of type promise::std::tuple<promise::Future, ...> or
-        // std::vector<promise::Future>.
+        // FutureAllValueType is supposed to be of type tars::std::tuple<tars::Future, ...> or
+        // std::vector<tars::Future>.
         //
-        // This implementation is for promise::std::tuple<>.
+        // This implementation is for tars::std::tuple<>.
         template <typename FutureAllValueType>
         class ParallelAllCallback : private ParallelAllCallbackBase<FutureAllValueType> 
         {
@@ -88,7 +88,7 @@ namespace tars
                     } 
                     catch (...) 
                     {
-                        this->m_promise_all.setException(promise::currentException());
+                        this->m_promise_all.setException(currentException());
                     }
                     return;
                 }
@@ -100,7 +100,7 @@ namespace tars
             
         };
 
-        // This implementation is specialized for std::vector<promise::Future<> >.
+        // This implementation is specialized for std::vector<tars::Future<> >.
         template <typename FutureType>
         class ParallelAllCallback<std::vector<FutureType> > : private ParallelAllCallbackBase<std::vector<FutureType> > 
         {
@@ -133,7 +133,7 @@ namespace tars
                     } 
                     catch (...) 
                     {
-                        this->m_promise_all.setException(promise::currentException());
+                        this->m_promise_all.setException(tars::currentException());
                     }
                     return;
                 }
@@ -181,8 +181,8 @@ namespace tars
 
         PromiseAll promise_all;
         std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
-        future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
-        future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
+        future1.then(std::bind(&WhenAllCallback::template on_future<0>, (future_callback)));
+        future2.then(std::bind(&WhenAllCallback::template on_future<1>, (future_callback)));
         return promise_all.getFuture();
     }
 
@@ -196,9 +196,9 @@ namespace tars
 
         PromiseAll promise_all;
         std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
-        future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
-        future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
-        future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
+        future1.then(std::bind(&WhenAllCallback::template on_future<0>, (future_callback)));
+        future2.then(std::bind(&WhenAllCallback::template on_future<1>, (future_callback)));
+        future3.then(std::bind(&WhenAllCallback::template on_future<2>, (future_callback)));
         return promise_all.getFuture();
     }
 
@@ -212,10 +212,10 @@ namespace tars
 
         PromiseAll promise_all;
         std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
-        future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
-        future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
-        future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
-        future4.then(tars::TC_Bind(&WhenAllCallback::template on_future<3>, tars::tc_shared(future_callback)));
+        future1.then(std::bind(&WhenAllCallback::template on_future<0>, (future_callback)));
+        future2.then(std::bind(&WhenAllCallback::template on_future<1>, (future_callback)));
+        future3.then(std::bind(&WhenAllCallback::template on_future<2>, (future_callback)));
+        future4.then(std::bind(&WhenAllCallback::template on_future<3>, (future_callback)));
         return promise_all.getFuture();
     }
 
@@ -230,11 +230,11 @@ namespace tars
 
         PromiseAll promise_all;
         std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
-        future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
-        future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
-        future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
-        future4.then(tars::TC_Bind(&WhenAllCallback::template on_future<3>, tars::tc_shared(future_callback)));
-        future5.then(tars::TC_Bind(&WhenAllCallback::template on_future<4>, tars::tc_shared(future_callback)));
+        future1.then(std::bind(&WhenAllCallback::template on_future<0>, (future_callback)));
+        future2.then(std::bind(&WhenAllCallback::template on_future<1>, (future_callback)));
+        future3.then(std::bind(&WhenAllCallback::template on_future<2>, (future_callback)));
+        future4.then(std::bind(&WhenAllCallback::template on_future<3>, (future_callback)));
+        future5.then(std::bind(&WhenAllCallback::template on_future<4>, (future_callback)));
         return promise_all.getFuture();
     }
 
@@ -249,12 +249,12 @@ namespace tars
 
         PromiseAll promise_all;
         std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
-        future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
-        future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
-        future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
-        future4.then(tars::TC_Bind(&WhenAllCallback::template on_future<3>, tars::tc_shared(future_callback)));
-        future5.then(tars::TC_Bind(&WhenAllCallback::template on_future<4>, tars::tc_shared(future_callback)));
-        future6.then(tars::TC_Bind(&WhenAllCallback::template on_future<5>, tars::tc_shared(future_callback)));
+        future1.then(std::bind(&WhenAllCallback::template on_future<0>, (future_callback)));
+        future2.then(std::bind(&WhenAllCallback::template on_future<1>, (future_callback)));
+        future3.then(std::bind(&WhenAllCallback::template on_future<2>, (future_callback)));
+        future4.then(std::bind(&WhenAllCallback::template on_future<3>, (future_callback)));
+        future5.then(std::bind(&WhenAllCallback::template on_future<4>, (future_callback)));
+        future6.then(std::bind(&WhenAllCallback::template on_future<5>, (future_callback)));
         return promise_all.getFuture();
     }
 
@@ -269,13 +269,13 @@ namespace tars
 
         PromiseAll promise_all;
         std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
-        future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
-        future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
-        future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
-        future4.then(tars::TC_Bind(&WhenAllCallback::template on_future<3>, tars::tc_shared(future_callback)));
-        future5.then(tars::TC_Bind(&WhenAllCallback::template on_future<4>, tars::tc_shared(future_callback)));
-        future6.then(tars::TC_Bind(&WhenAllCallback::template on_future<5>, tars::tc_shared(future_callback)));
-        future7.then(tars::TC_Bind(&WhenAllCallback::template on_future<6>, tars::tc_shared(future_callback)));
+        future1.then(std::bind(&WhenAllCallback::template on_future<0>, (future_callback)));
+        future2.then(std::bind(&WhenAllCallback::template on_future<1>, (future_callback)));
+        future3.then(std::bind(&WhenAllCallback::template on_future<2>, (future_callback)));
+        future4.then(std::bind(&WhenAllCallback::template on_future<3>, (future_callback)));
+        future5.then(std::bind(&WhenAllCallback::template on_future<4>, (future_callback)));
+        future6.then(std::bind(&WhenAllCallback::template on_future<5>, (future_callback)));
+        future7.then(std::bind(&WhenAllCallback::template on_future<6>, (future_callback)));
         return promise_all.getFuture();
     }
 
@@ -290,14 +290,14 @@ namespace tars
 
         PromiseAll promise_all;
         std::shared_ptr<WhenAllCallback> future_callback(new WhenAllCallback(promise_all));
-        future1.then(tars::TC_Bind(&WhenAllCallback::template on_future<0>, tars::tc_shared(future_callback)));
-        future2.then(tars::TC_Bind(&WhenAllCallback::template on_future<1>, tars::tc_shared(future_callback)));
-        future3.then(tars::TC_Bind(&WhenAllCallback::template on_future<2>, tars::tc_shared(future_callback)));
-        future4.then(tars::TC_Bind(&WhenAllCallback::template on_future<3>, tars::tc_shared(future_callback)));
-        future5.then(tars::TC_Bind(&WhenAllCallback::template on_future<4>, tars::tc_shared(future_callback)));
-        future6.then(tars::TC_Bind(&WhenAllCallback::template on_future<5>, tars::tc_shared(future_callback)));
-        future7.then(tars::TC_Bind(&WhenAllCallback::template on_future<6>, tars::tc_shared(future_callback)));
-        future8.then(tars::TC_Bind(&WhenAllCallback::template on_future<7>, tars::tc_shared(future_callback)));
+        future1.then(std::bind(&WhenAllCallback::template on_future<0>, (future_callback)));
+        future2.then(std::bind(&WhenAllCallback::template on_future<1>, (future_callback)));
+        future3.then(std::bind(&WhenAllCallback::template on_future<2>, (future_callback)));
+        future4.then(std::bind(&WhenAllCallback::template on_future<3>, (future_callback)));
+        future5.then(std::bind(&WhenAllCallback::template on_future<4>, (future_callback)));
+        future6.then(std::bind(&WhenAllCallback::template on_future<5>, (future_callback)));
+        future7.then(std::bind(&WhenAllCallback::template on_future<6>, (future_callback)));
+        future8.then(std::bind(&WhenAllCallback::template on_future<7>, (future_callback)));
         return promise_all.getFuture();
     }
 
@@ -321,8 +321,9 @@ namespace tars
 
             for (i = 0; first != last; ++first, ++i) 
             {
-                first->then(tars::TC_Bind(&detail::VectorParallelCallback<T>::on_future,
-                                      tars::tc_owned(new detail::VectorParallelCallback<T>(when_all_callback, i))));
+                std::shared_ptr<detail::VectorParallelCallback<T>> ptr(new detail::VectorParallelCallback<T>(when_all_callback, i)); 
+                first->then(std::bind(&detail::VectorParallelCallback<T>::on_future, ptr));
+                                    //   tars::tc_owned(new detail::VectorParallelCallback<T>(when_all_callback, i))));
             }
         }
         return promise_all.getFuture();

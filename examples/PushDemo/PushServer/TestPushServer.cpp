@@ -7,37 +7,6 @@ TestPushServer g_app;
 
 /////////////////////////////////////////////////////////////////
 
-static int parse(string &in, string &out)
-{
-    if(in.length() < sizeof(unsigned int))
-    {
-        return TC_EpollServer::PACKET_LESS;
-    }
-
-    unsigned int iHeaderLen;
-
-    memcpy(&iHeaderLen, in.c_str(), sizeof(unsigned int));
-
-    iHeaderLen = ntohl(iHeaderLen);
-
-    if(iHeaderLen < (unsigned int)(sizeof(unsigned int))|| iHeaderLen > 1000000)
-    {
-        return TC_EpollServer::PACKET_ERR;
-    }
-
-    if((unsigned int)in.length() < iHeaderLen)
-    {
-        return TC_EpollServer::PACKET_LESS;
-    }
-
-    out = in.substr(0, iHeaderLen);
-
-    in  = in.substr(iHeaderLen);
-
-    return TC_EpollServer::PACKET_FULL;
-}
-
-
 void
 TestPushServer::initialize()
 {
@@ -46,7 +15,7 @@ TestPushServer::initialize()
 
     addServant<TestPushServantImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".TestPushServantObj");
 
-    addServantProtocol("Test.TestPushServer.TestPushServantObj", parse);
+    addServantProtocol("Test.TestPushServer.TestPushServantObj", TC_NetWorkBuffer::parseBinary4<8, 1024*1024*10>);
 
     pushThread.start();
 

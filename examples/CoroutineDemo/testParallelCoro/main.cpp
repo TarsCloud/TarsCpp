@@ -57,133 +57,133 @@ public:
 };
 typedef tars::TC_AutoPtr<BServantCoroCallback> BServantCoroCallbackPtr;
 
-//自定义协程类
-class CoroutineClass : public TC_Thread
-{
-public:
-	/**
-     * 构造函数
-     */
-	CoroutineClass();
+// //自定义协程类
+// class CoroutineClass : public TC_Thread
+// {
+// public:
+// 	/**
+//      * 构造函数
+//      */
+// 	CoroutineClass();
 
-	/**
-     * 析构函数
-     */
-	virtual ~CoroutineClass();
+// 	/**
+//      * 析构函数
+//      */
+// 	virtual ~CoroutineClass();
 
-	/**
-     * 返回0，代表成功，-1，表示失败
-     */
-	int registerFunc(const vector< tars::TC_Callback<void ()> > &vFunc);
+// 	/**
+//      * 返回0，代表成功，-1，表示失败
+//      */
+// 	int registerFunc(const vector< std::function<void ()> > &vFunc);
 
-	/**
-     * 线程初始化
-     */
-	virtual void initialize() {}
+// 	/**
+//      * 线程初始化
+//      */
+// 	virtual void initialize() {}
 
-	/**
-	 * 线程处理方法
-	 */
-	virtual void run();
+// 	/**
+// 	 * 线程处理方法
+// 	 */
+// 	virtual void run();
 
-	/**
-	 * 停止线程
-	 */
-	void terminate();
+// 	/**
+// 	 * 停止线程
+// 	 */
+// 	void terminate();
 
-protected:
-	/**
-	 * 线程已经启动, 进入具体协程处理前调用
-	 */
-	virtual void startCoro() {}
+// protected:
+// 	/**
+// 	 * 线程已经启动, 进入具体协程处理前调用
+// 	 */
+// 	virtual void startCoro() {}
 
-	/**
-	 * 线程马上要退出时调用
-	 */
-	virtual void stopCoro() {}
+// 	/**
+// 	 * 线程马上要退出时调用
+// 	 */
+// 	virtual void stopCoro() {}
 
-	/**
-	 * 具体的处理逻辑
-	 */
-	virtual void handleCoro();
+// 	/**
+// 	 * 具体的处理逻辑
+// 	 */
+// 	virtual void handleCoro();
 
-protected:
-	CoroutineScheduler *_coroSched;
-	uint32_t			_iPoolSize;
-	size_t				_iStackSize;
-	vector< tars::TC_Callback<void ()> > _vFunc;
-};
+// protected:
+// 	CoroutineScheduler *_coroSched;
+// 	uint32_t			_iPoolSize;
+// 	size_t				_iStackSize;
+// 	vector<std::function<void ()> > _vFunc;
+// };
 
-CoroutineClass::CoroutineClass()
-: _coroSched(NULL)
-, _iPoolSize(1024)
-, _iStackSize(128*1024)
-{
-}
+// CoroutineClass::CoroutineClass()
+// : _coroSched(NULL)
+// , _iPoolSize(1024)
+// , _iStackSize(128*1024)
+// {
+// }
 
-CoroutineClass::~CoroutineClass()
-{
-	if(isAlive())
-    {
-        terminate();
+// CoroutineClass::~CoroutineClass()
+// {
+// 	if(isAlive())
+//     {
+//         terminate();
 
-        getThreadControl().join();
-    }
-}
+//         getThreadControl().join();
+//     }
+// }
 
-int CoroutineClass::registerFunc(const vector< tars::TC_Callback<void ()> > &vFunc)
-{
-	if(vFunc.size() > _iPoolSize || vFunc.size() <= 0)
-	{
-		return -1;
-	}
+// int CoroutineClass::registerFunc(const vector< std::function<void ()> > &vFunc)
+// {
+// 	if(vFunc.size() > _iPoolSize || vFunc.size() <= 0)
+// 	{
+// 		return -1;
+// 	}
 
-	_vFunc = vFunc;
+// 	_vFunc = vFunc;
 
-	return 0;
-}
+// 	return 0;
+// }
 
-void CoroutineClass::run()
-{
-	initialize();
+// void CoroutineClass::run()
+// {
+// 	initialize();
 
-	startCoro();
+// 	startCoro();
 
-	handleCoro();
+// 	handleCoro();
 
-	stopCoro();
-}
+// 	stopCoro();
+// }
 
-void CoroutineClass::terminate()
-{
-	if(_coroSched)
-	{
-		_coroSched->terminate();
-	}
-}
+// void CoroutineClass::terminate()
+// {
+// 	if(_coroSched)
+// 	{
+// 		_coroSched->terminate();
+// 	}
+// }
 
-void CoroutineClass::handleCoro()
-{
-	_coroSched = new CoroutineScheduler();
+// void CoroutineClass::handleCoro()
+// {
+// 	_coroSched = new CoroutineScheduler();
 
-	_coroSched->init(_iPoolSize, _iStackSize);
+// 	_coroSched->init(_iPoolSize, _iStackSize);
 
-	ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
+// 	ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
 
-	assert(pSptd != NULL);
+// 	assert(pSptd != NULL);
 
-	pSptd->_sched = _coroSched;
+// 	pSptd->_sched = _coroSched;
 
-	for(size_t i = 0; i < _vFunc.size(); ++i)
-	{
-		_coroSched->createCoroutine(_vFunc[i]);
-	}
+// 	for(size_t i = 0; i < _vFunc.size(); ++i)
+// 	{
+// 		_coroSched->createCoroutine(_vFunc[i]);
+// 	}
 
-	_coroSched->run();
+// 	_coroSched->run();
 
-	delete _coroSched;
-	_coroSched = NULL;
-}
+// 	delete _coroSched;
+// 	_coroSched = NULL;
+// }
 
 ////////////////////////////////////////////
 //继承框架的协程类
