@@ -17,6 +17,7 @@
 #ifndef __TARS_ENDPOINT_MANAGER_H_
 #define __TARS_ENDPOINT_MANAGER_H_
 
+#include "util/tc_spin_lock.h"
 #include "util/tc_consistent_hash_new.h"
 #include "servant/EndpointInfo.h"
 #include "servant/EndpointF.h"
@@ -362,7 +363,8 @@ private:
     /*
      * 根据hash值选取一个结点
      */
-    AdapterProxy* getHashProxy(int64_t hashCode, bool bConsistentHash = false);
+    AdapterProxy* getHashProxy(int64_t hashCode,  bool bConsistentHash = false);
+
 
     /*
      * 根据hash值按取模方式，从正常节点中选取一个结点
@@ -585,7 +587,8 @@ private:
     /*
      * 锁
      */
-    TC_ThreadLock            _lock;
+    // TC_ThreadLock            _mutex;
+    TC_SpinLock             _mutex;
 
 
     /*
@@ -680,7 +683,8 @@ private:
     /*
      * 锁
      */
-    TC_ThreadLock                  _lock;
+    // TC_ThreadLock                  _mutex;
+    TC_SpinLock                     _mutex;
 
     /*
      * 保存对象的map

@@ -1826,8 +1826,8 @@ void EndpointThread::getEndpoints(vector<EndpointInfo> &activeEndPoint, vector<E
     }
 
     {
-    
-        TC_ThreadLock::Lock lock(_lock);
+        TC_LockT<TC_SpinLock> lock(_mutex);
+        // TC_ThreadLock::Lock lock(_mutex);
     
         refreshReg(_type,_name);
     
@@ -1846,7 +1846,7 @@ void EndpointThread::getTCEndpoints(vector<TC_Endpoint> &activeEndPoint, vector<
 
     {
     
-        TC_ThreadLock::Lock lock(_lock);
+        TC_LockT<TC_SpinLock> lock(_mutex);
     
         refreshReg(_type,_name);
     
@@ -1859,7 +1859,7 @@ void EndpointThread::notifyEndpoints(const set<EndpointInfo> & active, const set
 {
     if(!bSync)
     {
-        TC_ThreadLock::Lock lock(_lock);
+        TC_LockT<TC_SpinLock> lock(_mutex);
 
         update(active, inactive);
     }
@@ -1975,7 +1975,7 @@ void EndpointManagerThread::getTCEndpointByStation(const string sName, vector<TC
 
 EndpointThread * EndpointManagerThread::getEndpointThread(GetEndpointType type,const string & sName)
 {
-    TC_ThreadLock::Lock lock(_lock);
+    TC_LockT<TC_SpinLock> lock(_mutex);
 
     string sAllName = TC_Common::tostr((int)type) + ":" +  sName;
 
