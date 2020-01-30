@@ -73,7 +73,8 @@ public:
      * @onlyCheck: 只判断是否已经连接上 
      * @return bool
      */
-    bool checkActive(bool bForceConnect = false, bool onlyCheck = false);
+    // bool checkActive(bool bForceConnect = false, bool onlyCheck = false);
+    bool checkActive(bool bForceConnect, bool onlyCheck);
 
     /**
      * 记录连接是否异常

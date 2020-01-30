@@ -399,7 +399,7 @@ bool AdapterProxy::checkActive(bool bForceConnect, bool onlyCheck)
         if(bForceConnect)
         {
             //强制重试  肯定是无效结点
-            assert(!_activeStatus);
+            // assert(!_activeStatus);
 
             //有效的连接
             if(_trans->isConnecting() || _trans->hasConnected())
