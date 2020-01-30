@@ -335,7 +335,7 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"test", _os, context, _mStatus, callback);
+            tars_invoke_async(tars::TARSNORMAL,"test", _os, context, _mStatus, callback, true);
         }
 
         tars::Int32 testInt(tars::Int32 iIn,tars::Int32 &iOut,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
@@ -371,7 +371,7 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(iIn, 1);
             std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"testInt", _os, context, _mStatus, callback);
+            tars_invoke_async(tars::TARSNORMAL,"testInt", _os, context, _mStatus, callback, true);
         }
 
         tars::Int32 testStr(const std::string & sIn,std::string &sOut,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
@@ -407,7 +407,7 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(sIn, 1);
             std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"testStr", _os, context, _mStatus, callback);
+            tars_invoke_async(tars::TARSNORMAL,"testStr", _os, context, _mStatus, callback, true);
         }
 
         AServantProxy* tars_hash(int64_t key)

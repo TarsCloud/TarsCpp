@@ -261,7 +261,7 @@ namespace TestApp
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"test", _os, context, _mStatus, callback);
+            tars_invoke_async(tars::TARSNORMAL,"test", _os, context, _mStatus, callback, true);
         }
 
         tars::Int32 testProxy(const std::string & sReq,std::string &sRsp,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
@@ -297,7 +297,7 @@ namespace TestApp
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(sReq, 1);
             std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"testProxy", _os, context, _mStatus, callback);
+            tars_invoke_async(tars::TARSNORMAL,"testProxy", _os, context, _mStatus, callback, true);
         }
 
         ProxyProxy* tars_hash(int64_t key)

@@ -335,7 +335,7 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"test", _os, context, _mStatus, callback);
+            tars_invoke_async(tars::TARSNORMAL,"test", _os, context, _mStatus, callback, true);
         }
 
         tars::Int32 testCoroParallel(const std::string & sIn,std::string &sOut,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
@@ -371,7 +371,7 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(sIn, 1);
             std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"testCoroParallel", _os, context, _mStatus, callback);
+            tars_invoke_async(tars::TARSNORMAL,"testCoroParallel", _os, context, _mStatus, callback, true);
         }
 
         tars::Int32 testCoroSerial(const std::string & sIn,std::string &sOut,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
@@ -407,7 +407,7 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(sIn, 1);
             std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"testCoroSerial", _os, context, _mStatus, callback);
+            tars_invoke_async(tars::TARSNORMAL,"testCoroSerial", _os, context, _mStatus, callback, true);
         }
 
         BServantProxy* tars_hash(int64_t key)

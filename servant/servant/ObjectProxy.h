@@ -181,17 +181,17 @@ public:
     /**
      * 生成唯一Id
      */
-    inline uint32_t generateId()
-    {
-        _id++;
+    // inline uint32_t generateId()
+    // {
+    //     _id++;
 
-        if(_id == 0)
-        {
-            ++_id;
-        }
+    //     if(_id == 0)
+    //     {
+    //         ++_id;
+    //     }
 
-        return _id;
-    }
+    //     return _id;
+    // }
 
     /**
      * 获取连接超时时间
@@ -283,7 +283,7 @@ private:
     /*
      * 生成请求的唯一id
      */
-    uint32_t                              _id;
+    // uint32_t                              _id;
 
     /*
      * 是否调用了tars_set_protocol设置过proxy的协议函数，

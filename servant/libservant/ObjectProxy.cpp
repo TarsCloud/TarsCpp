@@ -30,7 +30,7 @@ ObjectProxy::ObjectProxy(CommunicatorEpoll * pCommunicatorEpoll, const string & 
 : _communicatorEpoll(pCommunicatorEpoll)
 , _invokeSetId(setName)
 , _isInvokeBySet(false)
-, _id(0)
+// , _id(0)
 , _hasSetProtocol(false)
 , _conTimeout(1000)
 , _servantProxy(NULL)

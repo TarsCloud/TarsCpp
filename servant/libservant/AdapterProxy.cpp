@@ -155,7 +155,7 @@ int AdapterProxy::invoke(ReqMessage * msg)
     //tars调用 而且 不是单向调用
     if(!msg->bFromRpc)
     {
-        msg->request.iRequestId = _objectProxy->generateId();
+        msg->request.iRequestId = _timeoutQueue->generateId();
     }
 
 #if TARS_HTTP2
@@ -192,7 +192,7 @@ int AdapterProxy::invoke(ReqMessage * msg)
         bool bFlag = _timeoutQueue->push(msg, msg->request.iRequestId, msg->request.iTimeout + msg->iBeginTime);
         if(!bFlag)
         {
-            TLOGERROR("[TARS][AdapterProxy::invoke fail1 : insert timeout queue fail,queue size:" << _timeoutQueue->size() << ",objname" <<_objectProxy->name() << ",desc" << _endpoint.desc() <<endl);
+            TLOGERROR("[TARS][AdapterProxy::invoke fail1 : insert timeout queue fail,queue size:" << _timeoutQueue->size() << ",id:" << msg->request.iRequestId << ", objname:" <<_objectProxy->name() << ",desc:" << _endpoint.desc() <<endl);
             msg->eStatus = ReqMessage::REQ_EXC;
 
             finishInvoke(msg);
@@ -202,7 +202,7 @@ int AdapterProxy::invoke(ReqMessage * msg)
     }
     else
     {
-        TLOGTARS("[TARS][AdapterProxy::invoke push (no send) " << _objectProxy->name() << ", " << _endpoint.desc() << ",id " << msg->request.iRequestId <<endl);
+        TLOGTARS("[TARS][AdapterProxy::invoke push (no send) " << _objectProxy->name() << ", " << _endpoint.desc() << ",id:" << msg->request.iRequestId <<endl);
 
         //请求发送失败了
         bool bFlag = _timeoutQueue->push(msg,msg->request.iRequestId, msg->request.iTimeout+msg->iBeginTime, false);

@@ -533,8 +533,12 @@ ServantProxy* ServantProxy::tars_set_timeout(int msecond)
 
 uint32_t ServantProxy::tars_gen_requestid()
 {
-    TC_LockT<TC_ThreadMutex> lock(*this);
-    return (*_objectProxy)->generateId();
+    uint32_t i = ++_id;
+    if(i == 0) {
+        i = ++_id;
+    }
+
+    return i; 
 }
 
 void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
@@ -765,8 +769,8 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
                                     tars::TarsOutputStream<tars::BufferWriterVector> &buf,
                                     const map<string, string>& context,
                                     const map<string, string>& status,
-                                    const ServantProxyCallbackPtr& callback)
-                                    // bool  bCoro)
+                                    const ServantProxyCallbackPtr& callback,
+                                    bool  bCoro)
 {
     ReqMessage * msg = new ReqMessage();
 
@@ -792,8 +796,7 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
 
     checkDye(msg->request);
 
-    // invoke(msg, bCoro);
-    invoke(msg);
+    invoke(msg, bCoro);
 }
 
 shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,

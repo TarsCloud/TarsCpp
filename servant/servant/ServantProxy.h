@@ -593,8 +593,8 @@ public:
                                   tars::TarsOutputStream<tars::BufferWriterVector> &buf,
                                   const map<string, string>& context,
                                   const map<string, string>& status,
-                                  const ServantProxyCallbackPtr& callback);
-                                //   bool bCoro = false);
+                                  const ServantProxyCallbackPtr& callback,
+                                  bool bCoro = false);
 
     /**
      * 普通协议同步远程调用
