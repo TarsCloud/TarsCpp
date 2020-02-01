@@ -144,7 +144,7 @@ ServantProxyCallbackPtr ObjectProxy::getPushCallback()
 
 void ObjectProxy::invoke(ReqMessage * msg)
 {
-    TLOGINFO("[TARS][ObjectProxy::invoke, objname:" << _name << ", begin...]" << endl);
+    TLOGTARS("[TARS][ObjectProxy::invoke, objname:" << _name << ", begin...]" << endl);
 
     //选择一个远程服务的Adapter来调用
     AdapterProxy * pAdapterProxy = NULL;
@@ -158,7 +158,7 @@ void ObjectProxy::invoke(ReqMessage * msg)
         assert(bRet);
 
         //把数据缓存在obj里面
-        TLOGINFO("[TARS][ObjectProxy::invoke, objname:" << _name << ", select adapter proxy not valid (have not inovoke reg)]" << endl);
+        TLOGTARS("[TARS][ObjectProxy::invoke, objname:" << _name << ", select adapter proxy not valid (have not inovoke reg)]" << endl);
 
         return;
     }
@@ -180,11 +180,11 @@ void ObjectProxy::invoke(ReqMessage * msg)
 
 void ObjectProxy::doInvoke()
 {
-    TLOGINFO("[TARS][ObjectProxy::doInvoke, objname:" << _name << ", begin...]" << endl);
+    TLOGTARS("[TARS][ObjectProxy::doInvoke, objname:" << _name << ", begin...]" << endl);
 
     while(!_reqTimeoutQueue.empty())
     {
-        TLOGINFO("[TARS][ObjectProxy::doInvoke, objname:" << _name << ", pop...]" << endl);
+        TLOGTARS("[TARS][ObjectProxy::doInvoke, objname:" << _name << ", pop...]" << endl);
 
         ReqMessage * msg = NULL;
         _reqTimeoutQueue.pop(msg);
@@ -219,7 +219,7 @@ void ObjectProxy::doInvoke()
 
 void ObjectProxy::doInvokeException(ReqMessage * msg)
 {
-    // TLOGINFO("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
+    // TLOGTARS("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
 
     //单向调用出现异常直接删除请求
     if(msg->eType == ReqMessage::ONE_WAY)
@@ -300,7 +300,7 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 
 void ObjectProxy::doTimeout()
 {
-//    TLOGINFO("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
+//    TLOGTARS("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
     const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
     for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
     {

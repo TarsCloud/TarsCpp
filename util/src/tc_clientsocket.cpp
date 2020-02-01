@@ -255,6 +255,36 @@ void TC_Endpoint::parse(const string &str)
 
 #define LEN_MAXRECV 8196
 
+TC_ClientSocket::TC_ClientSocket() : _port(0),_timeout(3000)
+{
+}
+
+TC_ClientSocket::~TC_ClientSocket()
+{
+	if(_epoller)
+	{
+		_epoller->close();
+		delete _epoller;
+		_epoller = NULL;
+	}
+}
+
+void TC_ClientSocket::init(const string &sIp, int iPort, int iTimeout)
+{
+	if(!_epoller)
+	{
+		_epoller = new TC_Epoller();
+		_epoller->create(10);
+	}
+
+    _socket.close();
+    _ip         = sIp;
+    _port       = iPort;
+    _timeout    = iTimeout;
+    _isIPv6 = TC_Socket::addressIsIPv6(sIp);
+}
+
+
 int TC_TCPClient::checkSocket()
 {
     if(!_socket.isValid())
@@ -266,7 +296,8 @@ int TC_TCPClient::checkSocket()
 #else
 	        _socket.createSocket(SOCK_STREAM, _isIPv6 ? AF_INET6 : AF_INET);
 #endif
-            // _socket.createSocket(SOCK_STREAM, _port ? (_isIPv6 ? AF_INET6 : AF_INET) : AF_LOCAL);
+
+	        _epoller->add(_socket.getfd(), 0, EPOLLOUT);
 
             //设置非阻塞模式
             _socket.setblock(false);

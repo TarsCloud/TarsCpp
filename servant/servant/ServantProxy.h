@@ -67,20 +67,16 @@ private:
 
     SeqInfo  *  _p;
 
-    std::mutex _mutex;
+    TC_SpinLock _mutex;
 };
 
 /////////////////////////////////////////////////////////////////////////
 /*
  * 线程私有数据
  */
-class ServantProxyThreadData //: public TC_ThreadPool::ThreadData
+class ServantProxyThreadData
 {
 public:
-    // static TC_ThreadMutex _mutex;  //全局的互斥锁
-    // static pthread_key_t  _key;    //私有线程数据key
-    // static SeqManager *   _pSeq;   //生成seq的管理类
-
     static TC_SpinLock _mutex;
     static SeqManager *_pSeq;
 
@@ -95,12 +91,6 @@ public:
      * 析构函数
      */
     ~ServantProxyThreadData();
-
-    /**
-     * 数据资源释放
-     * @param p
-     */
-    // static void destructor(void* p);
 
     /**
      * 获取线程数据，没有的话会自动创建
@@ -143,17 +133,19 @@ public:
     string           _szHost;                       //调用对端地址
 
     /**
-     * ObjectProxy
-     */
-    size_t         _objectProxyNum;                  //ObjectProxy对象的个数，其个数由客户端的网络线程数决定，每个网络线程有一个ObjectProxy
-    ObjectProxy ** _objectProxy;                    //保存ObjectProxy对象的指针数组
-
-    /**
      * 协程调度
      */
     CoroutineScheduler*        _sched;                   //协程调度器
 
+    /**
+     * ObjectProxy
+     */
+    size_t         _objectProxyNum;                  //ObjectProxy对象的个数，其个数由客户端的网络线程数决定，每个网络线程有一个ObjectProxy
 
+    /**
+     *  objectProxy Pointer
+     */
+    shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
 #ifdef _USE_OPENTRACKING
     std::unordered_map<std::string, std::string> _trackInfoMap;
 #endif
@@ -307,7 +299,21 @@ public:
      * @param msg
      * @return int
      */
-    virtual int onDispatch(ReqMessagePtr msg) = 0;
+    virtual int onDispatch(ReqMessagePtr ptr);
+
+    /**
+     * 异步回调对象实现该方法，进行业务逻辑处理
+     * @param msg
+     * @return int
+     */
+    virtual int onDispatchResponse(const RequestPacket &req, const ResponsePacket &rsp);
+
+    /**
+     * 异步回调对象实现该方法(异常)，进行业务逻辑处理
+     * @param msg
+     * @return int
+     */
+    virtual int onDispatchException(const RequestPacket &req, const ResponsePacket &rsp);
 
 protected:
 
@@ -327,12 +333,47 @@ protected:
      */
     tars::CoroParallelBasePtr _pPtr;
 };
+///////////////////////////////////////////////////////////////////////////////////////////////
+// class PushCallback : public TC_HandleBase
+// {
+// public:
+//     virtual int onRequestException(int iRet) = 0;
+//     virtual int onRequestResponse(const RequestPacket& request, const ResponsePacket& response) = 0;
+//     virtual int onPushResponse(const ResponsePacket& response) = 0;
+// };
 
+// typedef TC_AutoPtr<PushCallback> PushCallbackPtr;
+
+// class PushServantProxyCallback : virtual public ServantProxyCallback
+// {
+// public:
+//     explicit PushServantProxyCallback(PushCallback* cb);
+
+//     /**
+//      * 异步回调对象实现该方法，进行业务逻辑处理
+//      * @param msg
+//      * @return void
+//      */
+//     virtual int onDispatchResponse(const RequestPacket &request, const ResponsePacket &response);
+
+//     /**
+//      * 异步回调对象实现该方法(异常)，进行业务逻辑处理
+//      * @param msg
+//      * @return void
+//      */
+//     virtual int onDispatchException(const RequestPacket &request, const ResponsePacket &response){return 0;}
+
+
+// private:
+//     TC_AutoPtr<PushCallback> _pushCb;
+// };
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 // for http
 class HttpCallback : public TC_HandleBase
 {
 public:
-    virtual ~HttpCallback() {}
     virtual int onHttpResponse(const std::map<std::string, std::string>& requestHeaders ,
                                const std::map<std::string, std::string>& responseHeaders ,
                                const std::vector<char>& rspBody) = 0;
@@ -343,15 +384,26 @@ public:
 class HttpServantProxyCallback : virtual public ServantProxyCallback
 {
 public:
-    explicit
-    HttpServantProxyCallback(HttpCallback* cb);
+    explicit HttpServantProxyCallback(HttpCallback* cb);
 
-    virtual int onDispatch(ReqMessagePtr msg);
+    /**
+     * 异步回调对象实现该方法，进行业务逻辑处理
+     * @param msg
+     * @return void
+     */
+    virtual int onDispatchResponse(const RequestPacket &req, const ResponsePacket &rsp);
+
+    /**
+     * 异步回调对象实现该方法(异常)，进行业务逻辑处理
+     * @param msg
+     * @return void
+     */
+    virtual int onDispatchException(const RequestPacket &req, const ResponsePacket &rsp);
+
 
 private:
     TC_AutoPtr<HttpCallback> _httpCb;
 };
-
 
 //////////////////////////////////////////////////////////////////////////
 /**
@@ -599,8 +651,8 @@ public:
     /**
      * 普通协议同步远程调用
      */
-    virtual shared_ptr<ResponsePacket> rpc_call(uint32_t requestId, const string& sFuncName,
-                          const char* buff, uint32_t len);
+    virtual void rpc_call(uint32_t requestId, const string& sFuncName,
+                          const char* buff, uint32_t len, ResponsePacket &rsp);
 
     /**
      * 普通协议异步调用
@@ -671,7 +723,8 @@ private:
     /**
      * 保存ObjectProxy对象的指针数组
      */
-    ObjectProxy **            _objectProxy;
+    ObjectProxy ** _objectProxy;                    //保存ObjectProxy对象的指针数组
+    shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
 
     /**
      * ObjectProxy对象的个数，其个数由客户端的网络线程数决定，
@@ -692,7 +745,7 @@ private:
     /**
      * 唯一id
      */
-    uint32_t                _id;
+    std::atomic<uint32_t>      _id;
 
     /**
      * 获取endpoint对象
@@ -703,11 +756,6 @@ private:
      * 是否在RequestPacket中的context设置主调信息
      */
     bool                    _masterFlag;
-
-    /**
-     *每个业务线程与每个客户端网络线程之间通信的请求队列大小
-     */
-    // int                        _queueSize;
 
     /*
      *最小的超时时间

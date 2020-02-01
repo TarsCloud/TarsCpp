@@ -266,32 +266,32 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buff, bool push)
 		return;
 	}
 
-	ResponsePacket response;
-	response.sBuffer = buff;
-	sendResponse(iRet, response, TARS_STATUS(), "", push);
+	// ResponsePacket response;
+	// response.sBuffer = buff;
+	sendResponse(iRet, buff, TARS_STATUS(), "", push);
 }
 
 void TarsCurrent::sendResponse(int iRet)
 {
-	ResponsePacket response;
-	sendResponse(iRet, response, TARS_STATUS(), "", false);
+	// ResponsePacket response;
+	sendResponse(iRet, vector<char>(), TARS_STATUS(), "", false);
 }
 
 void TarsCurrent::sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os, bool push)
 {
-	ResponsePacket response;
-	os.swap(response.sBuffer);
-	sendResponse(iRet, response, TARS_STATUS(), "", push);
+	// ResponsePacket response;
+	// os.swap(response.sBuffer);
+	sendResponse(iRet, os.getByteBuffer(), TARS_STATUS(), "", push);
 }
 
 void TarsCurrent::sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr, bool push)
 {
 	ResponsePacket response;
 	attr.encode(response.sBuffer);
-	sendResponse(iRet, response, TARS_STATUS(), "", push);
+	sendResponse(iRet, response.sBuffer, TARS_STATUS(), "", push);
 }
 
-void TarsCurrent::sendResponse(int iRet, ResponsePacket &response, const map<string, string>& status, const string & sResultDesc, bool push)
+void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<string, string>& status, const string & sResultDesc, bool push)
 {
     _ret = iRet;
 
@@ -314,7 +314,7 @@ void TarsCurrent::sendResponse(int iRet, ResponsePacket &response, const map<str
 
     if (_request.iVersion != TUPVERSION)
     {
-        // ResponsePacket response;
+        ResponsePacket response;
 
         response.iRequestId     = _request.iRequestId;
         response.iMessageType   = _request.iMessageType;
@@ -327,15 +327,14 @@ void TarsCurrent::sendResponse(int iRet, ResponsePacket &response, const map<str
 			response.cPacketType    = TARSNORMAL;
 		}
 
-        // response.cPacketType    = TARSNORMAL;
         response.iVersion       = _request.iVersion;
         response.status         = status;
-        // response.sBuffer        = buffer;
+        response.sBuffer        = std::move(buffer);
         response.sResultDesc    = sResultDesc;
         response.context        = _responseContext;
         response.iRet           = iRet;
 
-        TLOGINFO("[TARS]TarsCurrent::sendResponse :"
+        TLOGTARS("[TARS]TarsCurrent::sendResponse :"
                    << response.iMessageType << "|"
                    << _request.sServantName << "|"
                    << _request.sFuncName << "|"
@@ -345,8 +344,8 @@ void TarsCurrent::sendResponse(int iRet, ResponsePacket &response, const map<str
     }
     else
     {
-        //tup回应包用请求包的结构
-        // RequestPacket response;
+        //tup回应包用请求包的结构(这里和新版本TAF是有区别的)
+        RequestPacket response;
 
         response.iRequestId     = _request.iRequestId;
         response.iMessageType   = _request.iMessageType;
@@ -359,13 +358,12 @@ void TarsCurrent::sendResponse(int iRet, ResponsePacket &response, const map<str
 			response.cPacketType    = TARSNORMAL;
 		}
 
-        // response.cPacketType    = TARSNORMAL;
         response.iVersion       = _request.iVersion;
         response.status         = status;
         response.context        = _responseContext;
-        // response.sBuffer        = buffer;
-        // response.sServantName   = _request.sServantName;
-        // response.sFuncName      = _request.sFuncName;
+        response.sBuffer        = std::move(buffer);
+        response.sServantName   = _request.sServantName;
+        response.sFuncName      = _request.sFuncName;
 
         //异常的情况下buffer可能为空，要保证有一个空UniAttribute的编码内容
         if(response.sBuffer.size() == 0)
@@ -385,7 +383,7 @@ void TarsCurrent::sendResponse(int iRet, ResponsePacket &response, const map<str
             response.status[ServantProxy::STATUS_RESULT_DESC] = sResultDesc;
         }
 
-        TLOGINFO("[TARS]TarsCurrent::sendResponse :"
+        TLOGTARS("[TARS]TarsCurrent::sendResponse :"
                    << response.iMessageType << "|"
                    << _request.sServantName << "|"
                    << _request.sFuncName << "|"
@@ -402,25 +400,16 @@ void TarsCurrent::sendResponse(int iRet, ResponsePacket &response, const map<str
 
 	memcpy(&send->buffer()[0], (const char *)&iHeaderLen, sizeof(iHeaderLen));
 
-	_servantHandle->sendResponse(send);//data->uid, buff, _data->ip, _data->port, _data->fd);
+	_servantHandle->sendResponse(send);
 
-    // tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
-
-    // string s = "";
-
-    // s.append((const char*)&iHeaderLen, sizeof(tars::Int32));
-
-    // s.append(os.getBuffer(), os.getLength());
-
-    // _servantHandle->sendResponse(_uid, s, _ip, _port, _fd);
 }
+
 
 void TarsCurrent::close()
 {
     if (_servantHandle)
     {
         _servantHandle->close(_data);
-        // _servantHandle->close(_uid, _fd);
     }
 }
 
@@ -432,7 +421,6 @@ ServantHandle* TarsCurrent::getServantHandle()
 TC_EpollServer::BindAdapter* TarsCurrent::getBindAdapter()
 {
     return _data->adapter().get();
-    // return _bindAdapter;
 }
 
 void TarsCurrent::reportToStat(const string& sObj)

@@ -371,7 +371,7 @@ protected:
      * @param protocol
      * @param servant
      */
-    void addServantConnProtocol(const string& servant, const TC_NetWorkBuffer::protocol_functor& protocol);
+    // void addServantConnProtocol(const string& servant, const TC_NetWorkBuffer::protocol_functor& protocol);
 
     /**
      *设置Servant的连接断开回调

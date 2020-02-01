@@ -123,6 +123,18 @@ public:
     };
 
     /**
+     * 必须以connection来构造(不同服务模型中获取的对象不一样, 需要自己强制转换)
+     * @param buff
+     */
+    TC_NetWorkBuffer(void *connection) { _connection = connection; }
+
+    /**
+     * 获取connection, 不同服务模型中获取的对象不一样, 需要自己强制转换
+     * @param buff
+     */
+    void* getConnection() { return _connection; }
+
+    /**
      * 增加buffer
      * @param buff
      */
@@ -354,6 +366,10 @@ protected:
         return PACKET_FULL;
     }
 protected:
+    /**
+     * 连接信息(不同的类里面不一样)
+     */
+    void*   _connection = NULL;
 
     /**
      * buffer list

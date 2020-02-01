@@ -334,6 +334,11 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseEcho(TC_NetWorkBuffer&in, v
 {
     try
     {
+        if(in.empty())
+        {
+            return PACKET_LESS;
+        }
+        
         out = in.getBuffers();
         in.clearBuffers();
         return TC_NetWorkBuffer::PACKET_FULL;

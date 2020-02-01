@@ -260,8 +260,6 @@ void Communicator::initialize()
 
     _servantProxyFactory = new ServantProxyFactory(this);
 
-
-    //客户端网络线程
     _clientThreadNum = TC_Common::strto<size_t>(getProperty("netthread","1"));
 
     if(0 == _clientThreadNum)
@@ -341,30 +339,44 @@ void Communicator::terminate()
         TC_LockT<TC_ThreadRecMutex> lock(*this);
 
         _terminating = true;
-    }
 
-    if(_initialized)
-    {
-        for(size_t i = 0; i < _clientThreadNum; ++i)
+        if(_initialized)
         {
-            _communicatorEpoll[i]->terminate();
-            _communicatorEpoll[i]->getThreadControl().join();
-            //delete _communicatorEpoll[i];
-            //_communicatorEpoll[i] = NULL;
-        }
+            for(size_t i = 0; i < _clientThreadNum; ++i)
+            {
+                _communicatorEpoll[i]->terminate();
+            }
 
-        if(_statReport)
-        {
-            if (_statReport->isAlive())
+            if(_statReport)
             {
                 _statReport->terminate();
-                _statReport->getThreadControl().join();
             }
-            delete _statReport;
-            _statReport = NULL;
         }
     }
 
+    if (_initialized)
+    {
+        for (size_t i = 0; i < _clientThreadNum; ++i)
+        {
+            _communicatorEpoll[i]->getThreadControl().join();
+            delete _communicatorEpoll[i];
+            _communicatorEpoll[i] = NULL;
+        }
+
+        if (_statReport)
+        {
+            _statReport->getThreadControl().join();
+            delete _statReport;
+            _statReport = NULL;
+        }        
+
+        if(_servantProxyFactory)
+        {
+            delete _servantProxyFactory;
+            _servantProxyFactory = NULL; 
+        }
+    }
+        
 }
 
 ServantProxy * Communicator::getServantProxy(const string& objectName,const string& setName)
@@ -383,7 +395,7 @@ StatReport * Communicator::getStatReport()
 
 ServantProxyFactory* Communicator::servantProxyFactory()
 {
-    return _servantProxyFactory.get();
+    return _servantProxyFactory;
 }
 ///////////////////////////////////////////////////////////////
 }

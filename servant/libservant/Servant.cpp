@@ -73,7 +73,7 @@ int Servant::dispatch(TarsCurrentPtr current, vector<char> &buffer)
 
     if (current->getFuncName() == "tars_ping")
     {
-        TLOGINFO("[TARS][Servant::dispatch] tars_ping ok from [" << current->getIp() << ":" << current->getPort() << "]" << endl);
+        TLOGTARS("[TARS][Servant::dispatch] tars_ping ok from [" << current->getIp() << ":" << current->getPort() << "]" << endl);
 
         ret = TARSSERVERSUCCESS;
     }

@@ -17,7 +17,6 @@
 #include "servant/Global.h"
 #include "util/tc_epoller.h"
 #include "util/tc_port.h"
-// #include "servant/TarsLogger.h"
 
 #include <sstream>
 #include <assert.h>

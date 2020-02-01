@@ -894,14 +894,14 @@ TC_EpollServer::header_filter_functor &TC_EpollServer::BindAdapter::getHeaderFil
 //     _iHeaderLen = iHeaderLen;
 // }
     
-void TC_EpollServer::BindAdapter::setConnProtocol(const TC_NetWorkBuffer::protocol_functor& cpf, int iHeaderLen, const TC_EpollServer::header_filter_functor &hf) 
-{
-    _cpf = cpf; 
+// void TC_EpollServer::BindAdapter::setConnProtocol(const TC_NetWorkBuffer::protocol_functor& cpf, int iHeaderLen, const TC_EpollServer::header_filter_functor &hf) 
+// {
+//     _cpf = cpf; 
 
-    _hf = hf;
+//     _hf = hf;
 
-    _iHeaderLen = iHeaderLen;
-}
+//     _iHeaderLen = iHeaderLen;
+// }
 
 // TC_EpollServer::protocol_functor& TC_EpollServer::BindAdapter::getProtocol()
 // {
@@ -930,6 +930,7 @@ size_t TC_EpollServer::BindAdapter::getBackPacketBuffLimit()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 服务连接
+
 TC_EpollServer::Connection::Connection(TC_EpollServer::BindAdapter *pBindAdapter, int lfd, int timeout, int fd, const string& ip, uint16_t port)
 : _pBindAdapter(pBindAdapter)
 , _uid(0)
@@ -937,20 +938,17 @@ TC_EpollServer::Connection::Connection(TC_EpollServer::BindAdapter *pBindAdapter
 , _timeout(timeout)
 , _ip(ip)
 , _port(port)
+, _recvbuffer(this)
+, _sendbuffer(this)
 , _iHeaderLen(0)
 , _bClose(false)
 , _iMaxTemQueueSize(100)
 , _enType(EM_TCP)
 , _bEmptyConn(true)
-, _pRecvBuffer(NULL)
-, _nRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
-, _authInit(false)
 
 {
     assert(fd != -1);
-
     _iLastRefreshTime = TNOW;
-
     _sock.init(fd, true, pBindAdapter->_ep.isIPv6() ? AF_INET6 : AF_INET);
 }
 
@@ -960,39 +958,36 @@ TC_EpollServer::Connection::Connection(BindAdapter *pBindAdapter, int fd)
 , _lfd(-1)
 , _timeout(2)
 , _port(0)
+, _recvbuffer(this)
+, _sendbuffer(this)
 , _iHeaderLen(0)
 , _bClose(false)
 , _iMaxTemQueueSize(100)
-, _enType(EM_TCP)
-,_bEmptyConn(false) /*udp is always false*/
-,_pRecvBuffer(NULL)
-,_nRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
-,_authInit(false)
+, _enType(EM_UDP)
+, _bEmptyConn(false) /*udp is always false*/
 
 {
     _iLastRefreshTime = TNOW;
-
     _sock.init(fd, false, pBindAdapter->_ep.isIPv6() ? AF_INET6 : AF_INET);
 }
 
-TC_EpollServer::Connection::Connection(BindAdapter *pBindAdapter)
-: _pBindAdapter(pBindAdapter)
-, _uid(0)
-, _lfd(-1)
-, _timeout(0)
-, _port(0)
-, _iHeaderLen(0)
-, _bClose(false)
-, _iMaxTemQueueSize(100)
-, _enType(EM_TCP)
-,_bEmptyConn(false) /*udp is always false*/
-,_pRecvBuffer(NULL)
-,_nRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
-,_authInit(false)
+// TC_EpollServer::Connection::Connection(BindAdapter *pBindAdapter)
+// : _pBindAdapter(pBindAdapter)
+// , _uid(0)
+// , _lfd(-1)
+// , _timeout(0)
+// , _port(0)
+// , _recvbuffer(this)
+// , _sendbuffer(this)
+// , _iHeaderLen(0)
+// , _bClose(false)
+// , _iMaxTemQueueSize(100)
+// , _enType(EM_TCP)
+// , _bEmptyConn(false) /*udp is always false*/
+// {
+//     _iLastRefreshTime = TNOW;
+// }
 
-{
-    _iLastRefreshTime = TNOW;
-}
 TC_EpollServer::Connection::~Connection()
 {
     if(_pRecvBuffer)
@@ -1006,11 +1001,6 @@ TC_EpollServer::Connection::~Connection()
     {
         assert(!_sock.isValid());
     }
-
-    // if(_lfd != -1)
-    // {
-    //     assert(!_sock.isValid());
-    // }
 }
 
 void TC_EpollServer::Connection::tryInitAuthState(int initState)
@@ -1113,31 +1103,25 @@ int TC_EpollServer::Connection::parseProtocol()
 {
     try
     {
-        while (true)
+        while (!_recvbuffer.empty())
         {
             //需要过滤首包包头
             if(_iHeaderLen > 0)
             {
                 if(_recvbuffer.getBufferLength() >= (unsigned) _iHeaderLen)
                 {
-                    // string header = _recvbuffer.substr(0, _iHeaderLen);
                     vector<char> header;
                     _recvbuffer.getHeader(_iHeaderLen, header);
                     _pBindAdapter->getHeaderFilterFunctor()(TC_NetWorkBuffer::PACKET_FULL, header);
                     _recvbuffer.moveHeader(_iHeaderLen);
-                    // _pBindAdapter->getHeaderFilterFunctor()((int)(TC_EpollServer::PACKET_FULL), header);
-                    // _recvbuffer = _recvbuffer.substr(_iHeaderLen);
                     _iHeaderLen = 0;
                 }
                 else
                 {
 	                vector<char> header = _recvbuffer.getBuffers();
                     _pBindAdapter->getHeaderFilterFunctor()(TC_NetWorkBuffer::PACKET_LESS, header);
-                    // _pBindAdapter->getHeaderFilterFunctor()((int)(TC_EpollServer::PACKET_LESS), _recvbuffer);
                     _iHeaderLen -= (int)_recvbuffer.getBufferLength();
                     _recvbuffer.clearBuffers();
-                    // _iHeaderLen -= _recvbuffer.length();
-                    // _recvbuffer = "";
                     break;
                 }
             }
@@ -1171,7 +1155,7 @@ int TC_EpollServer::Connection::parseProtocol()
             // string ro;
             vector<char> ro;
 
-            int b = TC_EpollServer::PACKET_LESS;
+            // int b = TC_EpollServer::PACKET_LESS;
             // if (_pBindAdapter->getConnProtocol())
             // {
             //     b = _pBindAdapter->getConnProtocol()(_recvbuffer, ro, this);
@@ -1181,12 +1165,13 @@ int TC_EpollServer::Connection::parseProtocol()
             //     b = _pBindAdapter->getProtocol()(_recvbuffer, ro);
             // }
 
-            if(b == TC_EpollServer::PACKET_LESS)
+            TC_NetWorkBuffer::PACKET_TYPE b = _pBindAdapter->getProtocol()(_recvbuffer, ro);
+            if(b == TC_NetWorkBuffer::PACKET_LESS)
             {
                 //包不完全
                 break;
             }
-            else if(b == TC_EpollServer::PACKET_FULL)
+            else if(b == TC_NetWorkBuffer::PACKET_FULL)
             {
                 shared_ptr<RecvContext> recv = std::make_shared<RecvContext>(getId(), _ip, _port, getfd(), _pBindAdapter);
 
@@ -2689,7 +2674,6 @@ void TC_EpollServer::NetThread::processPipe()
 void TC_EpollServer::NetThread::processNet(const epoll_event &ev)
 {
 	uint32_t uid = TC_Epoller::getU32(ev, false);
-    // uint32_t uid = ev.data.u32;
 
     Connection *cPtr = getConnectionPtr(uid);
 
@@ -3029,7 +3013,6 @@ bool TC_EpollServer::accept(int fd, int domain)
 	else
 	{
 		//直到发生EAGAIN才不继续accept
-//		if (errno == EAGAIN)
 		if (TC_Socket::isPending())
 		{
 			return false;
@@ -3141,7 +3124,6 @@ void TC_EpollServer::waitForShutdown()
 						        {
 
 						        	ret = accept(fd, it->second->_ep.isIPv6() ? AF_INET6 : AF_INET);
-//							        ret = accept(fd);
 						        } while (ret);
 #else
 
@@ -3214,10 +3196,8 @@ void TC_EpollServer::bind(const TC_Endpoint &ep, TC_Socket &s, bool manualListen
 {
 #if TARGET_PLATFORM_WINDOWS
 	int type = ep.isIPv6() ? AF_INET6 : AF_INET;
-//	int type = AF_INET;
 #else
 	int type = ep.isUnixLocal() ? AF_LOCAL : ep.isIPv6() ? AF_INET6 : AF_INET;
-//	int type = ep.isUnixLocal() ? AF_LOCAL : AF_INET;
 #endif
 
 	if (ep.isTcp())

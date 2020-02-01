@@ -104,6 +104,28 @@ static void printPushInfo(const string &sResponseStr)
 	cout << "push message: " << sResponseStr << endl;
 }
 
+// int TestPushCallBack::onRequestException(int iRet)
+// {
+// 	return 0;
+// }
+
+// int TestPushCallBack::onRequestResponse(const tars::RequestPacket& request, const tars::ResponsePacket& response)
+// {
+// 	string sRet;
+// 	cout << "sBuffer: " << response.sBuffer.size() << endl;
+// 	sRet.assign(&(response.sBuffer[0]), response.sBuffer.size());
+// 	printResult(response.iRequestId, sRet);
+// 	return 0;
+// }
+
+// int TestPushCallBack::onPushResponse(const tars::ResponsePacket& response)
+// {
+// 	string sRet;
+// 	sRet.assign(&(response.sBuffer[0]), response.sBuffer.size());
+// 	printPushInfo(sRet);
+// 	return 0;
+// }
+
 int TestPushCallBack::onDispatch(ReqMessagePtr msg)
 {
 	if(msg->request.sFuncName == "printResult")

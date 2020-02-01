@@ -241,7 +241,7 @@ void AdapterProxy::doInvoke()
 
         int iRet = _trans->sendRequest(msg->sReqData);
 
-        TLOGTARS("[TARS][AdapterProxy::doInvoke sendRequest objname:" << _objectProxy->name() << ",desc" << _endpoint.desc() << ",id " << msg->request.iRequestId << ",ret" << iRet << endl);
+        TLOGTARS("[TARS][AdapterProxy::doInvoke sendRequest objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id:" << msg->request.iRequestId << ",ret:" << iRet << endl);
 
         //发送失败 返回
         if(iRet == Transceiver::eRetError)
@@ -374,77 +374,39 @@ void AdapterProxy::finishInvoke(bool bFail)
 }
 
 
-bool AdapterProxy::checkActive(bool bForceConnect, bool onlyCheck)
+bool AdapterProxy::checkActive(bool bForceConnect)
 {
-	if(onlyCheck)
-	{
-		return _trans->hasConnected();
-	}
-	else
-	{
-        time_t now = TNOW;
+    time_t now = TNOW;
 
-        TLOGTARS("[TARS][AdapterProxy::checkActive objname:" << _objectProxy->name() 
-            << ",desc:" << _endpoint.desc() 
-            << ",_activeStatus:" << (_activeStatus ? "enable" : "disable")
-            << (bForceConnect? ",forceConnect" : "")
-            << ",freqtimeout:" << _frequenceFailInvoke
-            << ",timeout:" << _timeoutInvoke
-            << ",_connExcCnt:"<<_connExcCnt
-            << ",total:" << _totalInvoke << endl);
+    TLOGTARS("[TARS][AdapterProxy::checkActive objname:" << _objectProxy->name() 
+        << ",desc:" << _endpoint.desc() 
+        << ",_activeStatus:" << (_activeStatus ? "enable" : "disable")
+        << (bForceConnect? ",forceConnect" : "")
+        << ",freqtimeout:" << _frequenceFailInvoke
+        << ",timeout:" << _timeoutInvoke
+        << ",_connExcCnt:"<<_connExcCnt
+        << ",total:" << _totalInvoke << endl);
 
-        _trans->checkTimeout();
+    _trans->checkTimeout();
 
-        //强制重试
-        if(bForceConnect)
+    //强制重试
+    if(bForceConnect)
+    {
+        //强制重试  肯定是无效结点
+        // assert(!_activeStatus);
+
+        //有效的连接
+        if(_trans->isConnecting() || _trans->hasConnected())
         {
-            //强制重试  肯定是无效结点
-            // assert(!_activeStatus);
-
-            //有效的连接
-            if(_trans->isConnecting() || _trans->hasConnected())
-            {
-                return true;
-            }
-
-            _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
-
-            //连接没有建立或者连接无效, 重新建立连接
-            if(!_trans->isValid())
-            {
-
-                try
-                {
-                    _trans->reconnect();
-                }
-                catch(exception &ex)
-                {
-                    _activeStatus = false;
-
-                    _trans->close();
-
-                    TLOGERROR("[TARS][AdapterProxy::checkActive connect objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ", ex:" << ex.what() << endl);
-                }
-            }
-
-            return (_trans->hasConnected() || _trans->isConnecting());
+            return true;
         }
 
-        //失效且没有到下次重试时间, 直接返回不可用
-        if((!_activeStatus) && (now < _nextRetryTime) )
-        {
-            TLOGTARS("[TARS][AdapterProxy::checkActive,not reach retry time ,objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc()  <<endl);
-            return false;
-        }
-
-        if(!_activeStatus)
-        {
-            _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
-        }
+        _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
 
         //连接没有建立或者连接无效, 重新建立连接
         if(!_trans->isValid())
         {
+
             try
             {
                 _trans->reconnect();
@@ -459,9 +421,39 @@ bool AdapterProxy::checkActive(bool bForceConnect, bool onlyCheck)
             }
         }
 
-        return _trans->hasConnected();
-    // return (_trans->hasConnected() || _trans->isConnecting());
+        return (_trans->hasConnected() || _trans->isConnecting());
     }
+
+    //失效且没有到下次重试时间, 直接返回不可用
+    if((!_activeStatus) && (now < _nextRetryTime) )
+    {
+        TLOGTARS("[TARS][AdapterProxy::checkActive,not reach retry time ,objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc()  <<endl);
+        return false;
+    }
+
+    if(!_activeStatus)
+    {
+        _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
+    }
+
+    //连接没有建立或者连接无效, 重新建立连接
+    if(!_trans->isValid())
+    {
+        try
+        {
+            _trans->reconnect();
+        }
+        catch(exception &ex)
+        {
+            _activeStatus = false;
+
+            _trans->close();
+
+            TLOGERROR("[TARS][AdapterProxy::checkActive connect objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ", ex:" << ex.what() << endl);
+        }
+    }
+
+    return _trans->hasConnected();
 }
 
 
@@ -528,7 +520,8 @@ void AdapterProxy::finishInvoke(shared_ptr<ResponsePacket> & rsp)
     ReqMessage * msg = NULL;
 
     //requestid 为0 是push消息
-    if(rsp->iRequestId == 0)
+    // if(rsp->iRequestId == 0)
+    if (rsp->cPacketType == TARSPUSH)
     {
         if(!_objectProxy->getPushCallback())
         {

@@ -71,12 +71,12 @@ public:
     /**
      * 定义协议解析的返回值
      */
-    enum
-    {
-        PACKET_LESS = 0,
-        PACKET_FULL = 1,
-        PACKET_ERR  = -1,
-    };
+    // enum
+    // {
+    //     PACKET_LESS = 0,
+    //     PACKET_FULL = 1,
+    //     PACKET_ERR  = -1,
+    // };
 
     enum EM_CLOSE_T
     {
@@ -1050,13 +1050,13 @@ public:
         /**  
          * 注册协议解析器 
          */
-        void setConnProtocol(const TC_NetWorkBuffer::protocol_functor& cpf, int iHeaderLen = 0, const header_filter_functor& hf = echo_header_filter);
+        // void setConnProtocol(const TC_NetWorkBuffer::protocol_functor& cpf, int iHeaderLen = 0, const header_filter_functor& hf = echo_header_filter);
 
         /**  
          * 获取协议解析器 
          * @return protocol_functor& 
          */
-        const TC_NetWorkBuffer::protocol_functor& getConnProtocol() { return _cpf; }
+        // const TC_NetWorkBuffer::protocol_functor& getConnProtocol() { return _cpf; }
         /**
          * 注册鉴权包裹函数
          * @param apwf
@@ -1207,7 +1207,7 @@ public:
         /**
          * 协议名称,缺省为"tars"
          */
-        string          _protocolName;
+        string                  _protocolName;
 
         //回包缓存限制大小
         size_t                    _iBackPacketBuffLimit;
@@ -1226,14 +1226,14 @@ public:
         /**
          * 该obj的AK SK
          */
-        std::string                 _accessKey;
-        std::string                 _secretKey;
+        std::string              _accessKey;
+        std::string              _secretKey;
         
         //连接关闭的回调函数 
         close_functor           _closeFunc;
 
         // 协议解析
-        TC_NetWorkBuffer::protocol_functor   _cpf;
+        // TC_NetWorkBuffer::protocol_functor   _cpf;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1264,10 +1264,11 @@ public:
          * @param fd
          */
         Connection(BindAdapter *pBindAdapter, int fd);
+
         /**
          * 通讯组件初始化
          */
-        Connection(BindAdapter *pBindAdapter);
+        // Connection(BindAdapter *pBindAdapter);
 
         /**
          * 析构函数
@@ -1343,7 +1344,7 @@ public:
         /**
          * 设置关闭,发送完当前数据就关闭连接
          */
-        bool setClose();//                             { _bClose = true; return _sendbuffer.empty(); }
+        bool setClose();
 
         /**
          * 获取连接类型
@@ -1499,12 +1500,12 @@ public:
         /**
          * 接收数据buffer
          */
-        TC_NetWorkBuffer   _recvbuffer;
+        TC_NetWorkBuffer    _recvbuffer;
 
         /**
          * 发送数据buffer
          */
-        TC_NetWorkBuffer  _sendbuffer;
+        TC_NetWorkBuffer    _sendbuffer;
 
         /**
          * 需要过滤的头部字节数
@@ -1530,9 +1531,10 @@ public:
         /*
         *接收数据的临时buffer,加这个目的是对udp接收数据包大小进行设置
         */
-        char                *_pRecvBuffer;
+        char                *_pRecvBuffer = NULL;
 
-        size_t                _nRecvBufferSize;
+        size_t              _nRecvBufferSize;
+
     public:
         /*
         *该连接的鉴权状态

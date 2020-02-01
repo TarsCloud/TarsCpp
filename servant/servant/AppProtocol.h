@@ -522,7 +522,7 @@ public:
 
                 is.read(rsp.cPacketType, 2, true);
 
-                if (rsp.cPacketType != TARSNORMAL)
+                if (rsp.cPacketType != TARSNORMAL && rsp.cPacketType != TARSPUSH)
                 {
                     throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
                 }
@@ -543,10 +543,6 @@ public:
 
             is.setBuffer(buffer.data() + sizeof(tars::Int32), buffer.size() - sizeof(tars::Int32));
 
-            // is.setBuffer(&(buffer[0]) + sizeof(tars::Int32), buffer.size() - sizeof(tars::Int32));
-
-            // pos += iHeaderLen;
-
             //TUP的响应包其实也是返回包
             RequestPacket req;
             req.readFrom(is);
@@ -561,7 +557,6 @@ public:
                 throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)req.cPacketType));
             }
 
-            ResponsePacket rsp;
             rsp.cPacketType     = req.cPacketType;
             rsp.iMessageType    = req.iMessageType;
             rsp.iRequestId      = req.iRequestId;
@@ -733,7 +728,7 @@ public:
                 TarsInputStream<BufferReader> is;
                 is.setBuffer(buffer.c_str() + sizeof(tars::Int32), head);
 
-                ResponsePacket rsp;
+                // ResponsePacket rsp;
                 is.read(rsp.iVersion, 1, false);
 
                 if (rsp.iVersion != TARSVERSION)
@@ -774,7 +769,7 @@ public:
 
             // pos += iHeaderLen;
 
-            ResponsePacket rsp;
+            // ResponsePacket rsp;
             rsp.readFrom(is);
 
             if (rsp.iVersion != TARSVERSION)
@@ -782,7 +777,7 @@ public:
                 throw TarsDecodeException("version not correct, version:" + TC_Common::tostr(rsp.iVersion));
             }
 
-            if (rsp.cPacketType != TARSNORMAL)
+            if (rsp.cPacketType != TARSNORMAL && rsp.cPacketType != TARSPUSH)
             {
                 throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
             }

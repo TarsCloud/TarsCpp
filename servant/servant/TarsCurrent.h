@@ -279,16 +279,15 @@ protected:
      */
     void reportToStat(const string & sObj);
 
-
     /**
-     *
+     * 发送消息
      * @param iRet
      * @param response
      * @param status
      * @param sResultDesc
      * @param push
      */
-	void sendResponse(int iRet, ResponsePacket &response, const map<string, string>& status, const string& sResultDesc, bool push = false);
+	void sendResponse(int iRet, const vector<char> &buffer, const map<string, string>& status, const string& sResultDesc, bool push = false);
 
 protected:
     /**

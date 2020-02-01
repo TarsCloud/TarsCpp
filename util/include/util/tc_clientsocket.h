@@ -388,12 +388,12 @@ public:
     /**
     *  @brief 构造函数
      */
-    TC_ClientSocket() : _port(0),_timeout(3000) {}
+    TC_ClientSocket();
 
     /**
      * @brief 析够函数
      */
-    virtual ~TC_ClientSocket(){}
+    virtual ~TC_ClientSocket();
 
     /**
     * @brief 构造函数
@@ -409,14 +409,7 @@ public:
     * @param iPort    端口, port为0时:表示本地套接字此时ip为文件路径
     * @param iTimeout 超时时间, 毫秒
     */
-    void init(const string &sIp, int iPort, int iTimeout)
-    {
-        _socket.close();
-        _ip         = sIp;
-        _port       = iPort;
-        _timeout    = iTimeout;
-        _isIPv6 = TC_Socket::addressIsIPv6(sIp);
-    }
+    void init(const string &sIp, int iPort, int iTimeout);
 
     /**
     * @brief 发送到服务器

@@ -53,7 +53,7 @@ namespace Test
         }
 
     public:
-        virtual int onDispatch(tars::ReqMessagePtr msg)
+        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
         {
             static ::std::string __AServant_all[]=
             {
@@ -61,28 +61,59 @@ namespace Test
                 "testInt",
                 "testStr"
             };
-            pair<string*, string*> r = equal_range(__AServant_all, __AServant_all+3, string(msg->request.sFuncName));
+            pair<string*, string*> r = equal_range(__AServant_all, __AServant_all+3, request.sFuncName);
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __AServant_all)
             {
                 case 0:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_test_exception(msg->response->iRet);
+                        callback_test_exception(response.iRet);
 
-                        return msg->response->iRet;
-                    }
+                        return response.iRet;
+
+                }
+                case 1:
+                {
+                        callback_testInt_exception(response.iRet);
+
+                        return response.iRet;
+
+                }
+                case 2:
+                {
+                        callback_testStr_exception(response.iRet);
+
+                        return response.iRet;
+
+                }
+            }
+            return tars::TARSSERVERNOFUNCERR;
+        }
+
+        virtual int onDispatchResponse(const tars::RequestPacket &request, const tars::ResponsePacket &response)
+        {
+            static ::std::string __AServant_all[]=
+            {
+                "test",
+                "testInt",
+                "testStr"
+            };
+            pair<string*, string*> r = equal_range(__AServant_all, __AServant_all+3, request.sFuncName);
+            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
+            switch(r.first - __AServant_all)
+            {
+                case 0:
+                {
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(response.sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(response.context);
 
                     callback_test(_ret);
 
@@ -93,15 +124,9 @@ namespace Test
                 }
                 case 1:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_testInt_exception(msg->response->iRet);
-
-                        return msg->response->iRet;
-                    }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(response.sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
@@ -110,7 +135,7 @@ namespace Test
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(response.context);
 
                     callback_testInt(_ret, iOut);
 
@@ -121,15 +146,9 @@ namespace Test
                 }
                 case 2:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_testStr_exception(msg->response->iRet);
-
-                        return msg->response->iRet;
-                    }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(response.sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
@@ -138,7 +157,7 @@ namespace Test
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(response.context);
 
                     callback_testStr(_ret, sOut);
 
@@ -165,7 +184,7 @@ namespace Test
         virtual void setResponseContext(const map<std::string, std::string> &mContext) { _mRspContext = mContext; }
 
     public:
-        int onDispatch(tars::ReqMessagePtr msg)
+        virtual int onDispatchResponse(const tars::RequestPacket &request, const tars::ResponsePacket &response)
         {
             static ::std::string __AServant_all[]=
             {
@@ -174,27 +193,59 @@ namespace Test
                 "testStr"
             };
 
-            pair<string*, string*> r = equal_range(__AServant_all, __AServant_all+3, string(msg->request.sFuncName));
+            pair<string*, string*> r = equal_range(__AServant_all, __AServant_all+3, request.sFuncName);
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __AServant_all)
             {
                 case 0:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_test_exception(msg->response->iRet);
+                        callback_test_exception(response.iRet);
 
-                        return msg->response->iRet;
-                    }
+                        return response.iRet;
+
+                }
+                case 1:
+                {
+                        callback_testInt_exception(response.iRet);
+
+                        return response.iRet;
+
+                }
+                case 2:
+                {
+                        callback_testStr_exception(response.iRet);
+
+                        return response.iRet;
+
+                }
+            }
+            return tars::TARSSERVERNOFUNCERR;
+        }
+
+        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
+        {
+            static ::std::string __AServant_all[]=
+            {
+                "test",
+                "testInt",
+                "testStr"
+            };
+
+            pair<string*, string*> r = equal_range(__AServant_all, __AServant_all+3, request.sFuncName);
+            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
+            switch(r.first - __AServant_all)
+            {
+                case 0:
+                {
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(response.sBuffer);
                     try
                     {
                         tars::Int32 _ret;
                         _is.read(_ret, 0, true);
 
-                        setResponseContext(msg->response->context);
+                        setResponseContext(response.context);
 
                         callback_test(_ret);
 
@@ -217,15 +268,9 @@ namespace Test
                 }
                 case 1:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_testInt_exception(msg->response->iRet);
-
-                        return msg->response->iRet;
-                    }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(response.sBuffer);
                     try
                     {
                         tars::Int32 _ret;
@@ -233,7 +278,7 @@ namespace Test
 
                         tars::Int32 iOut;
                         _is.read(iOut, 2, true);
-                        setResponseContext(msg->response->context);
+                        setResponseContext(response.context);
 
                         callback_testInt(_ret, iOut);
 
@@ -256,15 +301,9 @@ namespace Test
                 }
                 case 2:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_testStr_exception(msg->response->iRet);
-
-                        return msg->response->iRet;
-                    }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(response.sBuffer);
                     try
                     {
                         tars::Int32 _ret;
@@ -272,7 +311,7 @@ namespace Test
 
                         std::string sOut;
                         _is.read(sOut, 2, true);
-                        setResponseContext(msg->response->context);
+                        setResponseContext(response.context);
 
                         callback_testStr(_ret, sOut);
 

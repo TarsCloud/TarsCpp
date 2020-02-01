@@ -262,8 +262,24 @@ protected:
      */
     int64_t                  _conTimeoutTime;
 
+    /* 
+     * 鉴权状态 
+     */ 
+    int                      _authState;
+
+protected:
+#if TARS_SSL
+    std::unique_ptr<TC_OpenSSL> _openssl;
+#endif
+
+    /*
+     * 发送buffer
+     */
     shared_ptr<TC_NetWorkBuffer::SendBuffer> _sendBuffer;
 
+    /*
+     * 接收buffer
+     */
     TC_NetWorkBuffer _recvBuffer;
 
     // /*
@@ -275,16 +291,6 @@ protected:
     //  * 接收缓存buff
     //  */
     // TC_Buffer                _recvBuffer;
-
-    /* 
-     * 鉴权状态 
-     */ 
-    int                      _authState;
-
-protected:
-#if TARS_SSL
-    std::unique_ptr<TC_OpenSSL> _openssl;
-#endif
 
 };
 

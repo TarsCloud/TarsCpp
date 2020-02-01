@@ -75,7 +75,7 @@ typedef TC_AutoPtr<TarsCurrent> TarsCurrentPtr;
 typedef TC_AutoPtr<StatFProxy> StatFPrx;
 typedef TC_AutoPtr<StatReport> StatReportPtr;
 typedef TC_AutoPtr<FDReactor> FDReactorPtr;
-typedef TC_AutoPtr<ServantProxyFactory> ServantProxyFactoryPtr;
+// typedef TC_AutoPtr<ServantProxyFactory> ServantProxyFactoryPtr;
 typedef TC_AutoPtr<ObjectProxyFactory> ObjectProxyFactoryPtr;
 typedef TC_AutoPtr<AsyncProcThread> AsyncProcThreadPtr;
 

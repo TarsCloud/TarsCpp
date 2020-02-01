@@ -76,20 +76,19 @@ int doRequest(TC_HttpRequest& stHttp,TC_TCPClient&tcpClient, TC_HttpResponse &st
     return 0;
 }
 
-void th_dohandle(int excut_num, int iSplit)
+void th_dohandle(int excut_num)
 {
-    tars::Int32 count = 0;
     unsigned long sum = 0;
-    unsigned long id = 1;
     int64_t _iTime = TC_TimeProvider::getInstance()->getNowMs();
+
+    string sServer1("http://127.0.0.1:8080/");
 
     TC_HttpRequest stHttpReq;
     stHttpReq.setCacheControl("no-cache");
-
-    string sServer1("http://10.120.129.226:10024/");
+    stHttpReq.setGetRequest(sServer1);
 
     TC_TCPClient tcpClient1;
-    tcpClient1.init("10.120.129.226", 10024, 3000);
+    tcpClient1.init("127.0.0.1", 8080, 3000);
 
     int iRet = 0;
 
@@ -99,45 +98,36 @@ void th_dohandle(int excut_num, int iSplit)
         {
             TC_HttpResponse stHttpRsp;
 
-            stHttpReq.setGetRequest(sServer1);
 
-            iRet = doRequest(stHttpReq, tcpClient1, stHttpRsp, 3000);  //³¤Á´½Ó
+            iRet = doRequest(stHttpReq, tcpClient1, stHttpRsp, 3000);  
+            // iRet = stHttpReq.doRequest(stHttpRsp, 3000);  
             
-            if (iRet == 0)
+            if (iRet != 0)
             {
-                ++sum;
-                ++count;
-
-                if (excut_num == count)
-                {
-                    cout << "pthread id: " << pthread_self() << " | " << TC_TimeProvider::getInstance()->getNowMs() - _iTime <<"(ms)"<< endl;
-                    _iTime=TC_TimeProvider::getInstance()->getNowMs();
-                    count = 0;
-                }
+                cout <<"pthread id: " << TC_Thread::CURRENT_THREADID() << ", iRet:" << iRet << "" <<endl;
             }
             else
             {
-                 cout <<"pthread id: " << pthread_self()<< "|iRet:"<<iRet<<endl;
+                sum++;
             }
         }
         catch(TC_Exception &e)
         {
-               cout << "pthread id: " << pthread_self() << " id: " << i << " exception: " << e.what() << endl;
+            cout << "pthread id: " << TC_Thread::CURRENT_THREADID() << " id: " << i << " exception: " << e.what() << endl;
         }
         catch(...)
         {
-             cout << "pthread id: " << pthread_self() << " id: " << i << " unknown exception." << endl;
+             cout << "pthread id: " << TC_Thread::CURRENT_THREADID() << " id: " << i << " unknown exception." << endl;
         }
-        id += iSplit;
     }
-    cout << "succ:" << sum <<endl;
+    cout <<  "pthread id: " << TC_Thread::CURRENT_THREADID() << ", succ:" << sum << "/" << excut_num << ", " << TC_TimeProvider::getInstance()->getNowMs() - _iTime <<"(ms)"<<endl;
 }
 
 int main(int argc,char ** argv)
 {
-    if(argc != 3 && argc != 4)
+    if(argc != 3)
     {
-        cout << "usage: " << argv[0] << " ThreadNum CallTimes Split" << endl;
+        cout << "usage: " << argv[0] << " ThreadNum CallTimes" << endl;
         return -1;
     }
 
@@ -150,17 +140,11 @@ int main(int argc,char ** argv)
         cout << "init tp succ" << endl;
         tars::Int32 times = TC_Common::strto<tars::Int32>(string(argv[2]));
  
-        int iSplit = 1;
-        if(argc == 4)
-        {
-             iSplit = TC_Common::strto<tars::Int32>(string(argv[3]));
-        }
-        auto fwrapper3 = std::bind(&th_dohandle, times, iSplit);
         for(int i = 0; i<threads; i++)
         {
-            tp.exec(fwrapper3);
-            cout << "********************" <<endl;
+            tp.exec(std::bind(th_dohandle, times));
         }
+
         tp.waitForAllDone();
     }catch(exception &e)
     {

@@ -231,9 +231,9 @@ struct ReqMessage : public TC_HandleBase
         proxy          = NULL;
         pObjectProxy   = pObj;
 
-	response       = std::make_shared<ResponsePacket>();
+	    response       = std::make_shared<ResponsePacket>();
         // sReqData.clear();
-	sReqData       = std::make_shared<TC_NetWorkBuffer::SendBuffer>();
+	    sReqData       = std::make_shared<TC_NetWorkBuffer::SendBuffer>();
         pMonitor       = NULL;
         bMonitorFin    = false;
 

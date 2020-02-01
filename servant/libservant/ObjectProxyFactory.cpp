@@ -53,7 +53,6 @@ ObjectProxy * ObjectProxyFactory::getObjectProxy(const string& sObjectProxyName,
     pObjectProxy->initialize();
 
     _objectProxys[tmpObjName] = pObjectProxy;
-    //_objectProxys.insert(make_pair<string,ObjectProxy*>(tmpObjName,pObjectProxy));
 
     _vObjectProxys.push_back(pObjectProxy);
 

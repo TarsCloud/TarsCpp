@@ -995,13 +995,11 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
 
     string sResultDesc = "";
 
-    // vector<char> buffer;
-
-	ResponsePacket response;
+    vector<char> buffer;
     try
     {
         //业务逻辑处理
-        ret = sit->second->dispatch(current, response.sBuffer);
+        ret = sit->second->dispatch(current, buffer);
     }
     catch(TarsDecodeException &ex)
     {
@@ -1039,8 +1037,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     //单向调用或者业务不需要同步返回
     if (current->isResponse())
     {
-        current->sendResponse(ret, response, TarsCurrent::TARS_STATUS(), sResultDesc);
-        // current->sendResponse(ret, buffer, TarsCurrent::TARS_STATUS(), sResultDesc);
+        current->sendResponse(ret, buffer, TarsCurrent::TARS_STATUS(), sResultDesc);
     }
 #ifdef _USE_OPENTRACKING
     finishTracking(ret, current);

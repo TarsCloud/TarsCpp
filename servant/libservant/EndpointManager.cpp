@@ -50,7 +50,7 @@ QueryEpBase::QueryEpBase(Communicator * pComm, bool bFirstNetThread,bool bInterf
 
 void QueryEpBase::callback_findObjectById4All(tars::Int32 ret, const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectById4All _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[TARS][callback_findObjectById4All _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -66,7 +66,7 @@ void QueryEpBase::callback_findObjectById4All_exception(tars::Int32 ret)
 
 void QueryEpBase::callback_findObjectById4Any(tars::Int32 ret, const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectById4Any _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[TARS][callback_findObjectById4Any _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -82,7 +82,7 @@ void QueryEpBase::callback_findObjectById4Any_exception(tars::Int32 ret)
 
 void QueryEpBase::callback_findObjectByIdInSameGroup(tars::Int32 ret, const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectByIdInSameGroup _objName:" << _objName << "|ret:"<<ret
+    TLOGTARS("[TARS][callback_findObjectByIdInSameGroup _objName:" << _objName << "|ret:"<<ret
             << ",active:" << activeEp.size()
                << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -98,7 +98,7 @@ void QueryEpBase::callback_findObjectByIdInSameGroup_exception(tars::Int32 ret)
 
 void QueryEpBase::callback_findObjectByIdInSameSet( Int32 ret, const vector<tars::EndpointF> &activeEp, const vector<tars::EndpointF> & inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectByIdInSameSet _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[TARS][callback_findObjectByIdInSameSet _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -114,7 +114,7 @@ void QueryEpBase::callback_findObjectByIdInSameSet_exception( Int32 ret)
 
 void QueryEpBase::callback_findObjectByIdInSameStation( Int32 ret, const vector<tars::EndpointF> &activeEp, const vector<tars::EndpointF> &inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectByIdInSameStation _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[TARS][callback_findObjectByIdInSameStation _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -137,7 +137,7 @@ int QueryEpBase::setLocatorPrx(QueryFPrx prx)
 
 bool QueryEpBase::init(const string & sObjName,const string & sLocator,const string& setName)
 {
-    TLOGINFO("[TARS][QueryEpBase::init sObjName:" << sObjName << ",sLocator:" << sLocator << ",setName:" << setName << "]" << endl);
+    TLOGTARS("[TARS][QueryEpBase::init sObjName:" << sObjName << ",sLocator:" << sLocator << ",setName:" << setName << "]" << endl);
 
     _locator = sLocator;
 
@@ -386,7 +386,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
         //一定时间不回调就算超时了
         _requestTimeout = iNow + _timeoutInterval;
 
-        TLOGINFO("[TARS][QueryEpBase::refresh,"<<_objName<<"]"<<endl);
+        TLOGTARS("[TARS][QueryEpBase::refresh,"<<_objName<<"]"<<endl);
 
         //判断是同步调用还是异步调用
         //内部请求主控都是异步请求
@@ -687,7 +687,7 @@ void QueryEpBase::setEndPointToCache(bool bInactive)
         AppCache::getInstance()->set(objName,sEndpoints,sLocatorKey);
     }
 
-    TLOGINFO("[TARS][setEndPointToCache,obj:" << _objName << ",invokeSetId:" << _invokeSetId << ",endpoint:" << sEndpoints << "]" << endl);
+    TLOGTARS("[TARS][setEndPointToCache,obj:" << _objName << ",invokeSetId:" << _invokeSetId << ",endpoint:" << sEndpoints << "]" << endl);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -932,7 +932,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
 
         int64_t iEnd = TNOWMS;
 
-        TLOGINFO("[TARS][EndpointManager::getHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
+        TLOGTARS("[TARS][EndpointManager::getHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
     }
 
     if(vRouterCache.size() > 0)
@@ -1039,7 +1039,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
 
         int64_t iEnd = TNOWMS;
 
-        TLOGINFO("[TARS][EndpointManager::getConHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
+        TLOGTARS("[TARS][EndpointManager::getConHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
     }
 
     if(_consistentHashWeight.size() > 0)
@@ -1266,7 +1266,7 @@ void EndpointManager::updateHashProxyWeighted(bool bStatic)
             }
         }
         
-        TLOGINFO("[TARS]EndpointManager::updateHashProxyWeighted bStatic:" << bStatic << "|_objName:" << _objName << "|endpoint:" << vRegProxys[i]->endpoint().desc() << "|iWeight:" << vRegProxys[i]->getWeight() << "|iWeightR:" << iWeight << "|iIndex:" << vIndex[i] << endl);
+        TLOGTARS("[TARS]EndpointManager::updateHashProxyWeighted bStatic:" << bStatic << "|_objName:" << _objName << "|endpoint:" << vRegProxys[i]->endpoint().desc() << "|iWeight:" << vRegProxys[i]->getWeight() << "|iWeightR:" << iWeight << "|iIndex:" << vIndex[i] << endl);
     }
 
     for(size_t i = 0; i < iMaxRouterR; i++)
@@ -1429,7 +1429,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
 
         int64_t iEnd = TNOWMS;
 
-        TLOGINFO("[TARS][EndpointManager::getConHashProxyForNormal update _objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
+        TLOGTARS("[TARS][EndpointManager::getConHashProxyForNormal update _objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
     }
 
     if(_consistentHash.size() > 0)
@@ -1777,7 +1777,7 @@ void EndpointManager::dispatchEndpointCache(const vector<int> &vWeight)
             _staticRouterCache.push_back(i);
         }
         
-        TLOGINFO("[TARS]EndpointManager::dispatchEndpointCache _objName:" << _objName << "|endpoint:" << _activeWeightProxy[i]->endpoint().desc() << "|iWeightR:" << iWeight << endl);
+        TLOGTARS("[TARS]EndpointManager::dispatchEndpointCache _objName:" << _objName << "|endpoint:" << _activeWeightProxy[i]->endpoint().desc() << "|iWeightR:" << iWeight << endl);
     }
 
     for(size_t i = 0; i < iMaxRouterR; i++)

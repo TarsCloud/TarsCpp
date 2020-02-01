@@ -8,6 +8,16 @@ class TestPushCallBack : public ServantProxyCallback
 public:
 	virtual int onDispatch(ReqMessagePtr msg);
 };
+
+// class TestPushCallBack : public tars::PushCallback
+// {
+// public:
+//     virtual int onRequestException(int iRet);
+//     virtual int onRequestResponse(const tars::RequestPacket& request, const tars::ResponsePacket& response);
+//     virtual int onPushResponse(const tars::ResponsePacket& response);
+// };
+
+
 typedef tars::TC_AutoPtr<TestPushCallBack> TestPushCallBackPtr;
 
 class RecvThread : public TC_Thread, public TC_ThreadLock

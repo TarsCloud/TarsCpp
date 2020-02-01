@@ -101,7 +101,6 @@ CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThre
 	for(size_t i = 0;i < MAX_CLIENT_NOTIFYEVENT_NUM;++i)
 	{
 		_notify[i] = NULL;
-		// _notifySignal[i] = false;
 	}
 
 	if(isFirstNetThread()) {

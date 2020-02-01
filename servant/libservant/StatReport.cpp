@@ -50,6 +50,15 @@ StatReport::~StatReport()
 
         getThreadControl().join();
     }
+
+    for(size_t i = 0; i < _statMsg.size(); ++i)
+    {
+        if(_statMsg[i])
+        {
+            delete _statMsg[i];
+            _statMsg[i] = NULL;
+        }
+    }
 }
 
 void StatReport::terminate()
@@ -440,7 +449,7 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
            msg.swap(mStatMsg);
        }
 
-       TLOGINFO("[TARS][StatReport::reportMicMsg get size:" << mStatMsg.size()<<"]"<< endl);
+       TLOGTARS("[TARS][StatReport::reportMicMsg get size:" << mStatMsg.size()<<"]"<< endl);
        for(MapStatMicMsg::iterator it = mStatMsg.begin(); it != mStatMsg.end(); it++)
        {
            const StatMicMsgHead &head = it->first;
@@ -451,7 +460,7 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
            {
                if(_statPrx)
                {
-                   TLOGINFO("[TARS][StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
+                   TLOGTARS("[TARS][StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
                    _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient);
                }
                iLen = iTemLen;
@@ -466,14 +475,14 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
                head.displaySimple(os);
                os << "  ";
                mTemp[head].displaySimple(os);
-               TLOGINFO("[TARS][StatReport::reportMicMsg display:" << os.str() << endl);
+               TLOGTARS("[TARS][StatReport::reportMicMsg display:" << os.str() << endl);
            }
        }
        if(0 != (int)mTemp.size())
        {
            if(_statPrx)
            {
-               TLOGINFO("[TARS][StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
+               TLOGTARS("[TARS][StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
                _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient);
            }
        }
@@ -588,12 +597,12 @@ int StatReport::reportPropMsg()
                       head.displaySimple(os);
                    os << "  ";
                    mStatMsg[head].displaySimple(os);
-                   TLOGINFO("[TARS][StatReport::reportPropMsg display:" << os.str() << endl);
+                   TLOGTARS("[TARS][StatReport::reportPropMsg display:" << os.str() << endl);
                }
            }
        }
 
-       TLOGINFO("[TARS][StatReport::reportPropMsg get size:" << mStatMsg.size()<<"]"<< endl);
+       TLOGTARS("[TARS][StatReport::reportPropMsg get size:" << mStatMsg.size()<<"]"<< endl);
        int iLen = 0;
        MapStatPropMsg mTemp;
        for(MapStatPropMsg::iterator it = mStatMsg.begin(); it != mStatMsg.end(); it++)
@@ -612,7 +621,7 @@ int StatReport::reportPropMsg()
            {
                if(_propertyPrx)
                {
-                   TLOGINFO("[TARS][StatReport::reportPropMsg send size:" << mTemp.size()<<"]"<< endl);
+                   TLOGTARS("[TARS][StatReport::reportPropMsg send size:" << mTemp.size()<<"]"<< endl);
                    _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL,mTemp);
                }
                iLen = iTemLen;
@@ -624,7 +633,7 @@ int StatReport::reportPropMsg()
        {
            if(_propertyPrx)
            {
-               TLOGINFO("[TARS][StatReport::reportPropMsg send size:" << mTemp.size()<< "]"<< endl);
+               TLOGTARS("[TARS][StatReport::reportPropMsg send size:" << mTemp.size()<< "]"<< endl);
                _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL,mTemp);
            }
        }
@@ -651,7 +660,7 @@ int StatReport::reportSampleMsg()
             _statSampleMsg.swap(mmStatSampleMsg);
         }
 
-        TLOGINFO("[TARS][StatReport::reportSampleMsg get size:" << mmStatSampleMsg.size()<<"]"<< endl);
+        TLOGTARS("[TARS][StatReport::reportSampleMsg get size:" << mmStatSampleMsg.size()<<"]"<< endl);
 
         int iLen = 0;
         vector<StatSampleMsg> vTemp;
@@ -664,7 +673,7 @@ int StatReport::reportSampleMsg()
            {
                if(_statPrx)
                {
-                   TLOGINFO("[TARS][StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
+                   TLOGTARS("[TARS][StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
                    _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp);
                }
                iLen = iTemLen;
@@ -676,7 +685,7 @@ int StatReport::reportSampleMsg()
         {
            if(_statPrx)
            {
-               TLOGINFO("[TARS][StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
+               TLOGTARS("[TARS][StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
                _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp);
            }
         }

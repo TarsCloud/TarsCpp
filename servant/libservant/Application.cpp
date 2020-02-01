@@ -255,7 +255,7 @@ void Application::terminate()
 
 bool Application::cmdViewStatus(const string& command, const string& params, string& result)
 {
-    TLOGINFO("Application::cmdViewStatus:" << command << " " << params << endl);
+    TLOGTARS("Application::cmdViewStatus:" << command << " " << params << endl);
 
     ostringstream os;
 
@@ -336,7 +336,7 @@ bool Application::cmdCloseCoreDump(const string& command, const string& params, 
 }
 bool Application::cmdSetLogLevel(const string& command, const string& params, string& result)
 {
-    TLOGINFO("Application::cmdSetLogLevel:" << command << " " << params << endl);
+    TLOGTARS("Application::cmdSetLogLevel:" << command << " " << params << endl);
 
     string level = TC_Common::trim(params);
 
@@ -360,7 +360,7 @@ bool Application::cmdSetLogLevel(const string& command, const string& params, st
 
 bool Application::cmdEnableDayLog(const string& command, const string& params, string& result)
 {
-    TLOGINFO("Application::cmdEnableDayLog:" << command << " " << params << endl);
+    TLOGTARS("Application::cmdEnableDayLog:" << command << " " << params << endl);
 
     vector<string> vParams = TC_Common::sepstr<string>(TC_Common::trim(params),"|");
 
@@ -427,7 +427,7 @@ bool Application::cmdEnableDayLog(const string& command, const string& params, s
 
 bool Application::cmdLoadConfig(const string& command, const string& params, string& result)
 {
-    TLOGINFO("Application::cmdLoadConfig:" << command << " " << params << endl);
+    TLOGTARS("Application::cmdLoadConfig:" << command << " " << params << endl);
 
     string filename = TC_Common::trim(params);
 
@@ -445,7 +445,7 @@ bool Application::cmdLoadConfig(const string& command, const string& params, str
 
 // bool Application::cmdConnections(const string& command, const string& params, string& result)
 // {
-//     TLOGINFO("Application::cmdConnections:" << command << " " << params << endl);
+//     TLOGTARS("Application::cmdConnections:" << command << " " << params << endl);
 
 //     ostringstream os;
 
@@ -526,7 +526,7 @@ bool Application::cmdLoadProperty(const string& command, const string& params, s
 {
     try
     {
-        TLOGINFO("Application::cmdLoadProperty:" << command << " " << params << endl);
+        TLOGTARS("Application::cmdLoadProperty:" << command << " " << params << endl);
 
         //重新解析配置文件
         _conf.parseFile(ServerConfig::ConfigFile);
@@ -569,7 +569,7 @@ bool Application::cmdLoadProperty(const string& command, const string& params, s
 
 bool Application::cmdViewAdminCommands(const string& command, const string& params, string& result)
 {
-    TLOGINFO("Application::cmdViewAdminCommands:" << command << " " << params << endl);
+    TLOGTARS("Application::cmdViewAdminCommands:" << command << " " << params << endl);
 
     result =result +  NotifyObserver::getInstance()->viewRegisterCommand();
 
@@ -597,7 +597,7 @@ bool Application::cmdSetDyeing(const string& command, const string& params, stri
 
 bool Application::cmdCloseCout(const string& command, const string& params, string& result)
 {
-    TLOGINFO("Application::cmdCloseCout:" << command << " " << params << endl);
+    TLOGTARS("Application::cmdCloseCout:" << command << " " << params << endl);
 
     string s = TC_Common::lower(TC_Common::trim(params));
 
@@ -617,7 +617,7 @@ bool Application::cmdCloseCout(const string& command, const string& params, stri
 
 bool Application::cmdReloadLocator(const string& command, const string& params, string& result)
 {
-    TLOGINFO("Application::cmdReloadLocator:" << command << " " << params << endl);
+    TLOGTARS("Application::cmdReloadLocator:" << command << " " << params << endl);
 
     string sPara = TC_Common::lower(TC_Common::trim(params));
 
@@ -629,7 +629,7 @@ bool Application::cmdReloadLocator(const string& command, const string& params, 
         reloadConf.parseFile(ServerConfig::ConfigFile);
         string sLocator = reloadConf.get("/tars/application/client/<locator>", "");
 
-        TLOGINFO(__FUNCTION__ << "|" << __LINE__ << "|conf file:" << ServerConfig::ConfigFile << "\n"
+        TLOGTARS(__FUNCTION__ << "|" << __LINE__ << "|conf file:" << ServerConfig::ConfigFile << "\n"
             << "|sLocator:" << sLocator << endl);
 
         if (sLocator.empty())
@@ -1041,17 +1041,17 @@ void Application::addServantProtocol(const string& servant, const TC_NetWorkBuff
     getEpollServer()->getBindAdapter(adapterName)->setProtocol(protocol);
 }
 
-void Application::addServantConnProtocol(const string& servant, const TC_NetWorkBuffer::protocol_functor& protocol)
-{
-    string adapterName = ServantHelperManager::getInstance()->getServantAdapter(servant);
+// void Application::addServantConnProtocol(const string& servant, const TC_NetWorkBuffer::protocol_functor& protocol)
+// {
+//     string adapterName = ServantHelperManager::getInstance()->getServantAdapter(servant);
 
-    if (adapterName.empty())
-    {
-        throw runtime_error("[TARS]addServantConnProtocol fail, no found adapter for servant:" + servant);
-    }
+//     if (adapterName.empty())
+//     {
+//         throw runtime_error("[TARS]addServantConnProtocol fail, no found adapter for servant:" + servant);
+//     }
 
-    getEpollServer()->getBindAdapter(adapterName)->setConnProtocol(protocol);
-}
+//     getEpollServer()->getBindAdapter(adapterName)->setConnProtocol(protocol);
+// }
 
 void Application::addServantOnClose(const string& servant, const TC_EpollServer::close_functor& cf)
 {

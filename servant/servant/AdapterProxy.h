@@ -74,7 +74,7 @@ public:
      * @return bool
      */
     // bool checkActive(bool bForceConnect = false, bool onlyCheck = false);
-    bool checkActive(bool bForceConnect, bool onlyCheck);
+    bool checkActive(bool bForceConnect = false);
 
     /**
      * 记录连接是否异常

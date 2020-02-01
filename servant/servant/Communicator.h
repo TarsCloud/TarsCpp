@@ -26,6 +26,7 @@
 #include "servant/ObjectProxyFactory.h"
 #include "servant/AsyncProcThread.h"
 #include "servant/CommunicatorEpoll.h"
+#include "servant/TarsLogger.h"
 #ifdef _USE_OPENTRACKING
 #include "zipkin/opentracing.h"
 #include "zipkin/tracer.h"
@@ -281,7 +282,7 @@ protected:
     /**
      * ServantProxy代码的工厂类
      */
-    ServantProxyFactoryPtr _servantProxyFactory;
+    ServantProxyFactory* _servantProxyFactory;
 
     /*
      * 网络线程数组
