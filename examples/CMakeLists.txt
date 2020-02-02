@@ -15,3 +15,8 @@ add_custom_target(run-http
         DEPENDS HttpServer HttpClient
         COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-http.sh
         COMMENT "call run http")
+
+add_custom_target(run-co
+        DEPENDS CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro
+        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-co.sh
+        COMMENT "call run co")

@@ -1217,7 +1217,7 @@ string Tars2Cpp::generateDispatchExceptionAsync(const OperationPtr& pPtr, const 
 //     return s.str();
 // }
 
-string Tars2Cpp::generateDispatchCoroResponseAsync(const OperationPtr& pPtr, const string& cn) const
+string Tars2Cpp::generateDispatchCoroExceptionAsync(const OperationPtr& pPtr, const string& cn) const
 {
     ostringstream s;
 
@@ -1232,7 +1232,7 @@ string Tars2Cpp::generateDispatchCoroResponseAsync(const OperationPtr& pPtr, con
 }
 
 
-string Tars2Cpp::generateDispatchCoroExceptionAsync(const OperationPtr& pPtr, const string& cn) const
+string Tars2Cpp::generateDispatchCoroResponseAsync(const OperationPtr& pPtr, const string& cn) const
 {
     ostringstream s;
 

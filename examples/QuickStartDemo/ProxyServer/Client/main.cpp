@@ -29,16 +29,23 @@ int main(int argc,char ** argv)
     try
     {
         ProxyPrx prx;
-        comm.stringToProxy("TestApp.ProxyServer.ProxyObj@tcp -h 10.208.139.242 -p 10007" , prx);
+        comm.stringToProxy("TestApp.ProxyServer.ProxyObj@tcp -h 127.0.0.1 -p 9200" , prx);
 
         try
         {
-            string sReq("hello");
-            string sRsp("");
+            int i = 1000;
+            while(i-- >= 0)
+            {
+                string sReq("hello");
+                string sRsp("");
 
-            int iRet = prx->testProxy(sReq, sRsp);
+                int iRet = prx->testProxy(sReq, sRsp);
 
-            cout<<"iRet:"<<iRet<<" sReq:"<<sReq<<" sRsp:"<<sRsp<<endl;
+                assert(iRet == 0);
+                assert(sReq == sRsp);
+            }
+
+            // cout<<"iRet:"<<iRet<<" sReq:"<<sReq<<" sRsp:"<<sRsp<<endl;
 
         }
         catch(exception &ex)

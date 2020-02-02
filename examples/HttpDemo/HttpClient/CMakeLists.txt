@@ -1,1 +1,1 @@
-build_tars_server("HttpClient")
+build_tars_server("HttpClient" "HttpServer")

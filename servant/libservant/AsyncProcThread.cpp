@@ -25,7 +25,6 @@ namespace tars
 AsyncProcThread::AsyncProcThread(size_t iQueueCap, bool merge)
 : _terminate(false), _iQueueCap(iQueueCap), _merge(merge)
 {
-    //  _msgQueue = new ReqInfoQueue(iQueueCap);
 	 _msgQueue = new TC_CasQueue<ReqMessage*>();
 
 	 if(!_merge)
@@ -48,7 +47,7 @@ AsyncProcThread::~AsyncProcThread()
 void AsyncProcThread::terminate()
 {
 	if(!_merge) {
-        Lock lock(*this);
+        TC_ThreadLock::Lock lock(*this);
 
         _terminate = true;
 
@@ -85,19 +84,15 @@ void AsyncProcThread::run()
     {
         ReqMessage * msg;
 
-        //异步请求回来的响应包处理
-        if(_msgQueue->empty())
-        {
-            TC_ThreadLock::Lock lock(*this);
-            if(_msgQueue->empty()) {
-	            timedWait(1000);
-			}
-        }
-
         if (_msgQueue->pop_front(msg))
         {
 	        callback(msg);
         }
+		else
+		{
+			TC_ThreadLock::Lock lock(*this);
+	        timedWait(1000);		
+		}
     }
 }
 

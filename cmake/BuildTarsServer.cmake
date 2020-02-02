@@ -1,5 +1,5 @@
 
-macro(build_tars_server MODULE)
+macro(build_tars_server MODULE DEPS)
 
     include_directories(./)
 
@@ -50,7 +50,7 @@ macro(build_tars_server MODULE)
 
     endif (TARS_LIST)
 
-    add_dependencies(${MODULE} tarsservant tarsutil)
+    add_dependencies(${MODULE} ${DEPS} tarsservant tarsutil)
 
     target_link_libraries(${MODULE} tarsservant tarsutil)
         

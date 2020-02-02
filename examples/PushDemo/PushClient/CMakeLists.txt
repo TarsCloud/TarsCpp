@@ -1,1 +1,1 @@
-build_tars_server("PushClient")
+build_tars_server("PushClient" "PushServer")

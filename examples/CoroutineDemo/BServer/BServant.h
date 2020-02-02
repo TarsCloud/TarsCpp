@@ -199,44 +199,6 @@ namespace Test
             {
                 case 0:
                 {
-                        callback_test_exception(response.iRet);
-
-                        return response.iRet;
-
-                }
-                case 1:
-                {
-                        callback_testCoroParallel_exception(response.iRet);
-
-                        return response.iRet;
-
-                }
-                case 2:
-                {
-                        callback_testCoroSerial_exception(response.iRet);
-
-                        return response.iRet;
-
-                }
-            }
-            return tars::TARSSERVERNOFUNCERR;
-        }
-
-        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
-        {
-            static ::std::string __BServant_all[]=
-            {
-                "test",
-                "testCoroParallel",
-                "testCoroSerial"
-            };
-
-            pair<string*, string*> r = equal_range(__BServant_all, __BServant_all+3, request.sFuncName);
-            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
-            switch(r.first - __BServant_all)
-            {
-                case 0:
-                {
                     tars::TarsInputStream<tars::BufferReader> _is;
 
                     _is.setBuffer(response.sBuffer);
@@ -330,6 +292,44 @@ namespace Test
                     }
 
                     return tars::TARSSERVERSUCCESS;
+
+                }
+            }
+            return tars::TARSSERVERNOFUNCERR;
+        }
+
+        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
+        {
+            static ::std::string __BServant_all[]=
+            {
+                "test",
+                "testCoroParallel",
+                "testCoroSerial"
+            };
+
+            pair<string*, string*> r = equal_range(__BServant_all, __BServant_all+3, request.sFuncName);
+            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
+            switch(r.first - __BServant_all)
+            {
+                case 0:
+                {
+                        callback_test_exception(response.iRet);
+
+                        return response.iRet;
+
+                }
+                case 1:
+                {
+                        callback_testCoroParallel_exception(response.iRet);
+
+                        return response.iRet;
+
+                }
+                case 2:
+                {
+                        callback_testCoroSerial_exception(response.iRet);
+
+                        return response.iRet;
 
                 }
             }

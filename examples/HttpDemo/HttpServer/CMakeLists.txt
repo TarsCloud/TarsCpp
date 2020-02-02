@@ -1,1 +1,1 @@
-build_tars_server("HttpServer")
+build_tars_server("HttpServer" "")

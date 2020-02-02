@@ -210,25 +210,6 @@ struct TupCallback : public ServantProxyCallback
 		return 0;
 	}
 
-    // virtual int onDispatch(ReqMessagePtr msg)
-    // {
-	//     callback_count++;
-
-    //     TarsUniPacket<> rsp;
-
-    //     rsp.decode(package.sBuffer.data(), package.sBuffer.size());
-
-    //     int ret = rsp.get<int>("");            
-    //     string sRsp = rsp.get<string>("sRsp");
-    //     if(cur == count-1)
-    //     {
-    //         int64_t cost = TC_Common::now2us() - start;
-    //         cout << "TupCallback count:" << count << ", " << cost << " us, avg:" << 1.*cost/count << "us" << endl;
-    //     }        
-
-    //     return 0;
-    // }
-
     int64_t start;
     int     cur;
     int     count;

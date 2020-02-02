@@ -1,1 +1,1 @@
-build_tars_server("QuickStartDemo")
+build_tars_server("QuickStartDemo" "")

@@ -3075,14 +3075,14 @@ void TC_EpollServer::waitForShutdown()
     }
 
 	int64_t iLastCheckTime = TNOWMS;
-	while (!_bTerminate)
-    {
-        try
-        {
+	// while (!_bTerminate)
+    // {
+        // try
+        // {
 	        //循环监听网路连接请求
 	        while (!_bTerminate)
 	        {
-		        int iEvNum = _epoller.wait(300);
+		        int iEvNum = _epoller.wait(3000);
 
 		        if (_bTerminate)
 			        break;
@@ -3136,18 +3136,22 @@ void TC_EpollServer::waitForShutdown()
 			        {
 				        error("run exception:" + string(ex.what()));
 			        }
+			        catch (...)
+			        {
+				        error("run exception");
+			        }
 		        }
 	        }
-        }
-        catch (exception &ex)
-        {
-            error(string("TC_EpollServer::waitForShutdown error : ") + ex.what());
-        }
-        catch (...)
-        {
-            error("TC_EpollServer::waitForShutdown unknown error");
-        }
-    }
+        // }
+        // catch (exception &ex)
+        // {
+        //     error(string("TC_EpollServer::waitForShutdown error : ") + ex.what());
+        // }
+        // catch (...)
+        // {
+        //     error("TC_EpollServer::waitForShutdown unknown error");
+        // }
+    // }
 
     for (size_t i = 0; i < _netThreads.size(); ++i)
     {

@@ -18,4 +18,6 @@ echo "client: ${WORKDIR}/../bin/HttpClient"
 
 ${WORKDIR}/../bin/HttpClient 2 10000
 
+killall -9 HttpServer 
+
 

@@ -1,3 +1,3 @@
-build_tars_server("ProxyServer")
+build_tars_server("ProxyServer" "")
 
 

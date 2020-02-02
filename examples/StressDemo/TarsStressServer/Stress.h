@@ -162,36 +162,6 @@ namespace Test
             {
                 case 0:
                 {
-                        callback_test_exception(response.iRet);
-
-                        return response.iRet;
-
-                }
-                case 1:
-                {
-                        callback_testStr_exception(response.iRet);
-
-                        return response.iRet;
-
-                }
-            }
-            return tars::TARSSERVERNOFUNCERR;
-        }
-
-        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
-        {
-            static ::std::string __Stress_all[]=
-            {
-                "test",
-                "testStr"
-            };
-
-            pair<string*, string*> r = equal_range(__Stress_all, __Stress_all+2, request.sFuncName);
-            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
-            switch(r.first - __Stress_all)
-            {
-                case 0:
-                {
                     tars::TarsInputStream<tars::BufferReader> _is;
 
                     _is.setBuffer(response.sBuffer);
@@ -252,6 +222,36 @@ namespace Test
                     }
 
                     return tars::TARSSERVERSUCCESS;
+
+                }
+            }
+            return tars::TARSSERVERNOFUNCERR;
+        }
+
+        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
+        {
+            static ::std::string __Stress_all[]=
+            {
+                "test",
+                "testStr"
+            };
+
+            pair<string*, string*> r = equal_range(__Stress_all, __Stress_all+2, request.sFuncName);
+            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
+            switch(r.first - __Stress_all)
+            {
+                case 0:
+                {
+                        callback_test_exception(response.iRet);
+
+                        return response.iRet;
+
+                }
+                case 1:
+                {
+                        callback_testStr_exception(response.iRet);
+
+                        return response.iRet;
 
                 }
             }

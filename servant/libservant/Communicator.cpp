@@ -271,6 +271,33 @@ void Communicator::initialize()
         _clientThreadNum = MAX_CLIENT_THREAD_NUM;
     }
 
+    //异步线程数
+    _asyncThreadNum = TC_Common::strto<size_t>(getProperty("asyncthread", "3"));
+
+    if(_asyncThreadNum == 0)
+    {
+        _asyncThreadNum = 3;
+    }
+
+    if(_asyncThreadNum > MAX_CLIENT_ASYNCTHREAD_NUM)
+    {
+        _asyncThreadNum = MAX_CLIENT_ASYNCTHREAD_NUM;
+    }
+
+	bool merge = TC_Common::strto<bool>(getProperty("mergenetasync", "0"));
+
+    //异步队列的大小
+    size_t iAsyncQueueCap = TC_Common::strto<size_t>(getProperty("asyncqueuecap", "10-000"));
+    if(iAsyncQueueCap < 10000)
+    {
+        iAsyncQueueCap = 10000;
+    }
+
+    //第一个通信器才去启动回调线程
+    for (size_t i = 0; i < _asyncThreadNum; ++i) {
+        _asyncThread.push_back(new AsyncProcThread(iAsyncQueueCap, merge));
+    }
+
     //stat总是有对象, 保证getStat返回的对象总是有效
     _statReport = new StatReport(_clientThreadNum);
 
@@ -280,12 +307,17 @@ void Communicator::initialize()
         _communicatorEpoll[i]->start();
     }
 
+    //异步队列数目上报
+    string moduleName = getProperty("modulename", "");
+    if(!moduleName.empty())
+    {
+        _reportAsyncQueue= getStatReport()->createPropertyReport(moduleName + ".asyncqueue", PropertyReport::avg());
+    }
+
     //初始化统计上报接口
     string statObj = getProperty("stat", "");
 
     string propertyObj = getProperty("property", "");
-
-    string moduleName = getProperty("modulename", "");
 
     int iReportInterval = TC_Common::strto<int>(getProperty("report-interval", "60000"));
 
@@ -333,10 +365,39 @@ vector<TC_Endpoint> Communicator::getEndpoint4All(const string & objName)
     return pServantProxy->getEndpoint4All();
 }
 
+void Communicator::doStat()
+{
+    if(_reportAsyncQueue)
+    {
+        size_t n = 0;
+        for(size_t i = 0;i < _asyncThreadNum; ++i)
+        {
+            n = n + _asyncThread[i]->getSize();
+        }
+        _reportAsyncQueue->report(n);
+    }    
+
+}
+
+void Communicator::pushAsyncThreadQueue(ReqMessage * msg)
+{
+    //先不考虑每个线程队列数目不一致的情况
+    _asyncThread[_asyncSeq]->push_back(msg);
+    _asyncSeq ++;
+
+    if(_asyncSeq == _asyncThreadNum)
+    {
+        _asyncSeq = 0;
+    }
+}
+
 void Communicator::terminate()
 {
     {
         TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+        if (_terminating)
+            return;
 
         _terminating = true;
 
@@ -351,6 +412,22 @@ void Communicator::terminate()
             {
                 _statReport->terminate();
             }
+
+            for(size_t i = 0;i < _asyncThreadNum; ++i)
+            {
+                if(_asyncThread[i])
+                {
+                    if (_asyncThread[i]->isAlive())
+                    {
+                        _asyncThread[i]->terminate();
+                        _asyncThread[i]->getThreadControl().join();
+                    }
+
+                    delete _asyncThread[i];
+                    _asyncThread[i] = NULL;
+                }
+            }
+            _asyncThread.clear();
         }
     }
 

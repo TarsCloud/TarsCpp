@@ -1,1 +1,1 @@
-build_tars_server("testParallelCoro")
+build_tars_server("testParallelCoro" "AServer BServer")

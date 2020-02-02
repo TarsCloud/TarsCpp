@@ -23,3 +23,10 @@ ${WORKDIR}/../bin/QuickStartDemoClient --count=100000 --call=async --thread=2 --
 ${WORKDIR}/../bin/QuickStartDemoClient --count=100000 --call=synctup --thread=2 --buffersize=100 --netthread=2
 
 ${WORKDIR}/../bin/QuickStartDemoClient --count=100000 --call=asynctup --thread=2 --buffersize=100 --netthread=2
+
+${WORKDIR}/../bin/ProxyServer --config=${WORKDIR}/../../examples/QuickStartDemo/ProxyServer/Server/config.conf &
+${WORKDIR}/../bin/ProxyServerClient
+
+
+killall -9 QuickStartDemo
+killall -9 ProxyServer

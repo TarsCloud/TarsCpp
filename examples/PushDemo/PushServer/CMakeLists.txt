@@ -1,1 +1,1 @@
-build_tars_server("PushServer")
+build_tars_server("PushServer" "")

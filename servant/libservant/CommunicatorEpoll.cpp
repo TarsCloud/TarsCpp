@@ -24,28 +24,19 @@ using namespace std;
 namespace tars
 {
 
-vector<AsyncProcThread*> CommunicatorEpoll::_asyncThread;
-PropertyReport * CommunicatorEpoll::_reportAsyncQueue = NULL;
-
 CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThreadSeq)
 : _communicator(pCommunicator)
 , _terminate(false)
 , _nextTime(0)
 , _nextStatTime(0)
 , _objectProxyFactory(NULL)
-, _asyncThreadNum(3)
-, _asyncSeq(0)
+// , _asyncThreadNum(3)
+// , _asyncSeq(0)
 , _netThreadSeq(netThreadSeq)
 // , _reportAsyncQueue(NULL)
 , _noSendQueueLimit(1000)
-// , _waitTimeout(100)
 , _timeoutCheckInterval(100)
 {
-    // _ep.create(1024);
-
-    // _shutdown.createSocket();
-    // _ep.add(_shutdown.getfd(), 0, EPOLLIN);
-
     _ep.create(1024);
 
     _terminateFDInfo.notify.init(&_ep);
@@ -55,31 +46,11 @@ CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThre
     //ObjectProxyFactory 对象
     _objectProxyFactory = new ObjectProxyFactory(this);
 
-    //异步线程数
-    _asyncThreadNum = TC_Common::strto<size_t>(pCommunicator->getProperty("asyncthread", "3"));
-
-    if(_asyncThreadNum == 0)
-    {
-        _asyncThreadNum = 3;
-    }
-
-    if(_asyncThreadNum > MAX_CLIENT_ASYNCTHREAD_NUM)
-    {
-        _asyncThreadNum = MAX_CLIENT_ASYNCTHREAD_NUM;
-    }
-
     //节点队列未发送请求的大小限制
     _noSendQueueLimit = TC_Common::strto<size_t>(pCommunicator->getProperty("nosendqueuelimit", "100000"));
     if(_noSendQueueLimit < 1000)
     {
         _noSendQueueLimit = 1000;
-    }
-
-    //异步队列的大小
-    size_t iAsyncQueueCap = TC_Common::strto<size_t>(pCommunicator->getProperty("asyncqueuecap", "10-000"));
-    if(iAsyncQueueCap < 10000)
-    {
-        iAsyncQueueCap = 10000;
     }
 
     // //epollwait的超时时间
@@ -96,69 +67,59 @@ CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThre
         _timeoutCheckInterval = 1;
     }
 
-	bool merge = TC_Common::strto<bool>(pCommunicator->getProperty("mergenetasync", "0"));
-
 	for(size_t i = 0;i < MAX_CLIENT_NOTIFYEVENT_NUM;++i)
 	{
 		_notify[i] = NULL;
 	}
 
-	if(isFirstNetThread()) {
-    	//第一个通信器才去启动回调线程
-	    for (size_t i = 0; i < _asyncThreadNum; ++i) {
-		    _asyncThread.push_back(new AsyncProcThread(iAsyncQueueCap, merge));
-	    }
+	// if(isFirstNetThread()) {
 
-	    //异步队列数目上报
-	    string moduleName = pCommunicator->getProperty("modulename", "");
-	    if(!moduleName.empty())
-	    {
-		    PropertyReportPtr asyncQueuePtr = pCommunicator->getStatReport()->createPropertyReport(moduleName + ".asyncqueue", PropertyReport::avg());
-		    _reportAsyncQueue = asyncQueuePtr.get();
-	    }
-    }
+    //     //异步线程数
+    //     _asyncThreadNum = TC_Common::strto<size_t>(pCommunicator->getProperty("asyncthread", "3"));
 
+    //     if(_asyncThreadNum == 0)
+    //     {
+    //         _asyncThreadNum = 3;
+    //     }
 
-    // //创建异步线程
-    // for(size_t i = 0; i < _asyncThreadNum; ++i)
-    // {
-    //     _asyncThread[i] = new AsyncProcThread(iAsyncQueueCap);
-    //     _asyncThread[i]->start();
+    //     if(_asyncThreadNum > MAX_CLIENT_ASYNCTHREAD_NUM)
+    //     {
+    //         _asyncThreadNum = MAX_CLIENT_ASYNCTHREAD_NUM;
+    //     }
+
+    // 	//第一个通信器才去启动回调线程
+	//     for (size_t i = 0; i < _asyncThreadNum; ++i) {
+	// 	    _asyncThread.push_back(new AsyncProcThread(iAsyncQueueCap, merge));
+	//     }
+
+	//     //异步队列数目上报
+	//     string moduleName = pCommunicator->getProperty("modulename", "");
+	//     if(!moduleName.empty())
+	//     {
+	// 	    PropertyReportPtr asyncQueuePtr = pCommunicator->getStatReport()->createPropertyReport(moduleName + ".asyncqueue", PropertyReport::avg());
+	// 	    _reportAsyncQueue = asyncQueuePtr.get();
+	//     }
     // }
-
-    // //初始化请求的事件通知
-    // for(size_t i = 0; i < MAX_CLIENT_NOTIFYEVENT_NUM; ++i)
-    // {
-    //     _notify[i].bValid = false;
-    // }
-
-    // //异步队列数目上报
-    //  string moduleName = pCommunicator->getProperty("modulename", "");
-    //  if(!moduleName.empty())
-    //  {
-    //      PropertyReportPtr asyncQueuePtr = pCommunicator->getStatReport()->createPropertyReport(moduleName + ".asyncqueue"+TC_Common::tostr(netThreadSeq), PropertyReport::avg());
-    //      _reportAsyncQueue = asyncQueuePtr.get();
-    //  }
 }
 
 CommunicatorEpoll::~CommunicatorEpoll()
 {
-	if(isFirstNetThread()) {
-        for(size_t i = 0;i < _asyncThreadNum; ++i)
-        {
-            if(_asyncThread[i])
-            {
-                if (_asyncThread[i]->isAlive())
-                {
-                    _asyncThread[i]->terminate();
-                    _asyncThread[i]->getThreadControl().join();
-                }
+	// if(isFirstNetThread()) {
+    //     for(size_t i = 0;i < _asyncThreadNum; ++i)
+    //     {
+    //         if(_asyncThread[i])
+    //         {
+    //             if (_asyncThread[i]->isAlive())
+    //             {
+    //                 _asyncThread[i]->terminate();
+    //                 _asyncThread[i]->getThreadControl().join();
+    //             }
 
-                delete _asyncThread[i];
-                _asyncThread[i] = NULL;
-            }
-        }
-    }
+    //             delete _asyncThread[i];
+    //             _asyncThread[i] = NULL;
+    //         }
+    //     }
+    // }
 
     for(size_t i = 0;i < MAX_CLIENT_NOTIFYEVENT_NUM;++i)
     {
@@ -181,7 +142,6 @@ void CommunicatorEpoll::terminate()
     _terminate = true;
     //通知epoll响应
     _terminateFDInfo.notify.notify();
-    // _ep.mod(_shutdown.getfd(), 0, EPOLLOUT);
 }
 
 ObjectProxy * CommunicatorEpoll::getObjectProxy(const string & sObjectProxyName,const string& setName)
@@ -219,22 +179,6 @@ void CommunicatorEpoll::notify(size_t iSeq,ReqInfoQueue * msgQueue)
     }
 
     _notify[iSeq]->notify.notify();
-    // if(_notify[iSeq].bValid)
-    // {
-    //     _ep.mod(_notify[iSeq].notify.getfd(),(long long)&_notify[iSeq].stFDInfo, EPOLLIN);
-    //     assert(_notify[iSeq].stFDInfo.p == (void*)msgQueue);
-    // }
-    // else
-    // {
-    //     _notify[iSeq].stFDInfo.iType   = FDInfo::ET_C_NOTIFY;
-    //     _notify[iSeq].stFDInfo.p       = (void*)msgQueue;
-    //     _notify[iSeq].stFDInfo.fd      = _notify[iSeq].eventFd;
-    //     _notify[iSeq].stFDInfo.iSeq    = iSeq;
-    //     _notify[iSeq].notify.createSocket();
-    //     _notify[iSeq].bValid           = true;
-
-    //     _ep.add(_notify[iSeq].notify.getfd(),(long long)&_notify[iSeq].stFDInfo, EPOLLIN);
-    // }
 }
 
 void CommunicatorEpoll::notifyDel(size_t iSeq)
@@ -244,11 +188,6 @@ void CommunicatorEpoll::notifyDel(size_t iSeq)
     {
         _notify[iSeq]->notify.notify();
     }
-
-    // if(_notify[iSeq].bValid && NULL != _notify[iSeq].stFDInfo.p)
-    // {
-    //     _ep.mod(_notify[iSeq].notify.getfd(),(long long)&_notify[iSeq].stFDInfo, EPOLLIN);
-    // }
 }
 
 
@@ -275,16 +214,6 @@ void CommunicatorEpoll::handleInputImp(Transceiver * pTransceiver)
     }
 
 	pTransceiver->doResponse();
-
-    // list<ResponsePacket> done;
-    // if(pTransceiver->doResponse(done) > 0)
-    // {
-    //     list<ResponsePacket>::iterator it = done.begin();
-    //     for (; it != done.end(); ++it)
-    //     {
-    //         pTransceiver->getAdapterProxy()->finishInvoke(*it);
-    //     }
-    // }
 }
 
 void CommunicatorEpoll::handleOutputImp(Transceiver * pTransceiver)
@@ -394,7 +323,6 @@ void CommunicatorEpoll::handle(FDInfo * pFDInfo, const epoll_event &ev)
             Transceiver *pTransceiver = (Transceiver*)pFDInfo->p;
 
             //先收包
-            // if (events & EPOLLIN)
             if(TC_Epoller::readEvent(ev))
             {
                 try
@@ -412,7 +340,6 @@ void CommunicatorEpoll::handle(FDInfo * pFDInfo, const epoll_event &ev)
             }
 
             //发包
-            // if (events & EPOLLOUT)
             if(TC_Epoller::writeEvent(ev))
             {
                 try
@@ -430,7 +357,6 @@ void CommunicatorEpoll::handle(FDInfo * pFDInfo, const epoll_event &ev)
             }
 
             //连接出错 直接关闭连接
-            // if(events & EPOLLERR)
 	        if(TC_Epoller::errorEvent(ev))
             {
                 try
@@ -471,11 +397,6 @@ void CommunicatorEpoll::doTimeout()
 
     for(size_t i = 0; i < _objectProxyFactory->getObjNum(); ++i)
     {
-        // const vector<AdapterProxy*> & vAdapterProxy=_objectProxyFactory->getObjectProxy(i)->getAdapters();
-        // for(size_t iAdapter=0;iAdapter<vAdapterProxy.size();++iAdapter)
-        // {
-        //     vAdapterProxy[iAdapter]->doTimeout();
-        // }
         _objectProxyFactory->getObjectProxy(i)->doTimeout();
     }
 }
@@ -490,16 +411,18 @@ void CommunicatorEpoll::doStat()
     _nextStatTime = iNow + 10;
 
 	if(isFirstNetThread()) {
-        //异步队列长度上报
-        if(_reportAsyncQueue)
-        {
-            size_t n = 0;
-            for(size_t i = 0;i < _asyncThreadNum; ++i)
-            {
-                n = n + _asyncThread[i]->getSize();
-            }
-            _reportAsyncQueue->report(n);
-        }
+
+        _communicator->doStat();
+        // //异步队列长度上报
+        // if(_reportAsyncQueue)
+        // {
+        //     size_t n = 0;
+        //     for(size_t i = 0;i < _asyncThreadNum; ++i)
+        //     {
+        //         n = n + _asyncThread[i]->getSize();
+        //     }
+        //     _reportAsyncQueue->report(n);
+        // }
     }
 
     StatReport::MapStatMicMsg mStatMicMsg;
@@ -507,12 +430,6 @@ void CommunicatorEpoll::doStat()
     for(size_t i = 0;i < _objectProxyFactory->getObjNum(); ++i)
     {
         _objectProxyFactory->getObjectProxy(i)->mergeStat(mStatMicMsg);
-
-        // const vector<AdapterProxy*> & vAdapterProxy = _objectProxyFactory->getObjectProxy(i)->getAdapters();
-        // for(size_t iAdapter = 0;iAdapter < vAdapterProxy.size(); ++iAdapter)
-        // {
-        //     vAdapterProxy[iAdapter]->doStat(mStatMicMsg);
-        // }
     }
 
     //有数据才上报
@@ -525,14 +442,15 @@ void CommunicatorEpoll::doStat()
 
 void CommunicatorEpoll::pushAsyncThreadQueue(ReqMessage * msg)
 {
-    //先不考虑每个线程队列数目不一致的情况
-    _asyncThread[_asyncSeq]->push_back(msg);
-    _asyncSeq ++;
+    _communicator->pushAsyncThreadQueue(msg);
+    // //先不考虑每个线程队列数目不一致的情况
+    // _asyncThread[_asyncSeq]->push_back(msg);
+    // _asyncSeq ++;
 
-    if(_asyncSeq == _asyncThreadNum)
-    {
-        _asyncSeq = 0;
-    }
+    // if(_asyncSeq == _asyncThreadNum)
+    // {
+    //     _asyncSeq = 0;
+    // }
 }
 
 void CommunicatorEpoll::run()
@@ -562,7 +480,6 @@ void CommunicatorEpoll::run()
                 const epoll_event& ev = _ep.get(i);
 
                 uint64_t data = TC_Epoller::getU64(ev);
-                // uint64_t data = ev.data.u64;
 
                 if(data == 0)
                 {

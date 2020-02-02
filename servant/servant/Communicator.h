@@ -247,6 +247,18 @@ protected:
     ServantProxy * getServantProxy(const string& objectName,const string& setName="");
 
     /**
+     * 数据加入到异步线程队列里面
+     * @return
+     */
+    void pushAsyncThreadQueue(ReqMessage * msg);
+
+    /**
+     * 上报统计事件
+     * @return
+     */
+    void doStat();
+
+    /**
      * 框架内部需要直接访问通信器的类
      */
     friend class AdapterProxy;
@@ -308,6 +320,26 @@ protected:
      * 最小的超时时间
      */
     int64_t                _minTimeout;
+
+    /*
+     * 异步线程数组
+     */
+    //异步线程(跨通信器共享)
+    vector<AsyncProcThread*> _asyncThread;//[MAX_THREAD_NUM];
+
+    /*
+     * 异步队列的统计上报的对象
+     */
+    PropertyReportPtr        _reportAsyncQueue;
+
+    /*
+     * 异步线程数目
+     */
+    size_t                 _asyncThreadNum;
+    /*
+     * 分发给异步线程的索引seq
+     */
+    size_t                 _asyncSeq;
 
 #ifdef _USE_OPENTRACKING
 public:

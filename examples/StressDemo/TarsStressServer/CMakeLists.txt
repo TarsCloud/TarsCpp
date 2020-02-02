@@ -1,1 +1,1 @@
-build_tars_server("TarsStressServer")
+build_tars_server("TarsStressServer" "")

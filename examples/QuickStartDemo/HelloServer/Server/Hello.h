@@ -162,36 +162,6 @@ namespace TestApp
             {
                 case 0:
                 {
-                        callback_test_exception(response.iRet);
-
-                        return response.iRet;
-
-                }
-                case 1:
-                {
-                        callback_testHello_exception(response.iRet);
-
-                        return response.iRet;
-
-                }
-            }
-            return tars::TARSSERVERNOFUNCERR;
-        }
-
-        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
-        {
-            static ::std::string __Hello_all[]=
-            {
-                "test",
-                "testHello"
-            };
-
-            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+2, request.sFuncName);
-            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
-            switch(r.first - __Hello_all)
-            {
-                case 0:
-                {
                     tars::TarsInputStream<tars::BufferReader> _is;
 
                     _is.setBuffer(response.sBuffer);
@@ -252,6 +222,36 @@ namespace TestApp
                     }
 
                     return tars::TARSSERVERSUCCESS;
+
+                }
+            }
+            return tars::TARSSERVERNOFUNCERR;
+        }
+
+        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
+        {
+            static ::std::string __Hello_all[]=
+            {
+                "test",
+                "testHello"
+            };
+
+            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+2, request.sFuncName);
+            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
+            switch(r.first - __Hello_all)
+            {
+                case 0:
+                {
+                        callback_test_exception(response.iRet);
+
+                        return response.iRet;
+
+                }
+                case 1:
+                {
+                        callback_testHello_exception(response.iRet);
+
+                        return response.iRet;
 
                 }
             }

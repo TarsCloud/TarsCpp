@@ -27,7 +27,7 @@ namespace tars
 /**
  * 异步回调后的处理线程
  */
-class AsyncProcThread : public TC_Thread, public TC_HandleBase, public TC_ThreadLock
+class AsyncProcThread : public TC_Thread, public TC_ThreadLock
 {
 public:
     /**
@@ -75,7 +75,6 @@ private:
      * 异步队列
      */
     TC_CasQueue<ReqMessage*> * _msgQueue;
-    // ReqInfoQueue *  _msgQueue;
 
     /**
      * 队列流量控制

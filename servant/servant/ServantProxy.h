@@ -195,8 +195,7 @@ public:
 
         {
             TC_LockT<TC_SpinLock> lock(_mutex);
-            vRet = _vReqMessage;
-            _vReqMessage.clear();
+            vRet.swap(_vReqMessage);
         }
 
         return vRet;

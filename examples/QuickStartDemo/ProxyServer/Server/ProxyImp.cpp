@@ -50,7 +50,7 @@ void ProxyImp::initialize()
     //initialize servant here:
     //...
 
-    _prx = Application::getCommunicator()->stringToProxy<HelloPrx>("TestApp.HelloServer.HelloObj");
+    _prx = Application::getCommunicator()->stringToProxy<HelloPrx>("TestApp.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 8999");
 }
 
 //////////////////////////////////////////////////////

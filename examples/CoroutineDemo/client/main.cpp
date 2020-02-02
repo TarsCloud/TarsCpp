@@ -26,7 +26,7 @@ using namespace tars;
 class Test1
 {
 public:
-    Test1(const string &sStr);
+    Test1();
 
     ~Test1();
 
@@ -37,11 +37,11 @@ private:
     BServantPrx     _prx;
 };
 
-Test1::Test1(const string &sStr)
+Test1::Test1()
 {
-    _comm.setProperty("locator", "tars.tarsregistry.QueryObj@tcp -h 10.208.139.242 -p 17890 -t 10000");
-    _comm.setProperty("stat", "tars.tarsstat.StatObj");
-    _comm.stringToProxy(sStr, _prx);
+    // _comm.setProperty("locator", "tars.tarsregistry.QueryObj@tcp -h 10.208.139.242 -p 17890 -t 10000");
+    // _comm.setProperty("stat", "tars.tarsstat.StatObj");
+    _prx = _comm.stringToProxy<BServantPrx>("Test.BServer.BServantObj@tcp -h 127.0.0.1 -p 9100");
 }
 
 Test1::~Test1()
@@ -54,14 +54,11 @@ void Test1::queryResult(int iFlag, int iExecuteNum)
     string sIn(10,'a');
     string sOut("");
 
-    tars::Int32 count = 0;
-    unsigned long sum = 0;
-
-    time_t _iTime=TC_TimeProvider::getInstance()->getNowMs();
+    time_t t = TC_Common::now2us();
 
     for(int i=0; i<iExecuteNum; i++) 
     {
-        sOut = "";
+        // sOut = "";
         try
         {
             int ret = -1;
@@ -74,59 +71,48 @@ void Test1::queryResult(int iFlag, int iExecuteNum)
                 ret = _prx->testCoroParallel(sIn, sOut);
             }
 
-            if(ret == 0)
-            {
-                ++sum;
-                ++count;
-                if(count == iExecuteNum)
-                {
-                    cout << "pthread id: " << pthread_self() << " | " << TC_TimeProvider::getInstance()->getNowMs() - _iTime << endl;
-                    _iTime=TC_TimeProvider::getInstance()->getNowMs();
-                    count = 0;
-                }
-            }
+            assert(sIn == sOut);
+            // cout << ret << ", " << sIn << ", " << sOut << endl;
         }
         catch(TC_Exception &e)
         {
-            cout << "pthread id: " << pthread_self() << "id: " << i << "exception: " << e.what() << endl;
+            cout << "pthread id: " << std::this_thread::get_id() << "id: " << i << "exception: " << e.what() << endl;
         }
         catch(...)
         {
-            cout << "pthread id: " << pthread_self() << "id: " << i << "unknown exception." << endl;
+            cout << "pthread id: " << std::this_thread::get_id() << "id: " << i << "unknown exception." << endl;
         }
     }
-    cout << "succ:" << sum << endl;
-    cout << "sOut:" << sOut << endl;
+
+    int64_t cost = TC_Common::now2us() - t;
+    cout << "syncCall total:" << cost << "us, avg:" << 1.*cost/iExecuteNum << "us" << endl;
 }
 
 int main(int argc,char ** argv)
 {
-    if(argc != 5)
+    if(argc != 4)
     {
-        cout << "usage: " << argv[0] << " sObj ThreadNum CallTimes  CallMode" << endl;
+        cout << "usage: " << argv[0] << " ThreadNum CallTimes  CallMode" << endl;
         return -1;
     }
 
-    string s = string(argv[1]);
-
-    Test1 test1(s);
+    Test1 test1;
 
     try
     {
-        tars::Int32 threads = TC_Common::strto<tars::Int32>(string(argv[2]));
+        tars::Int32 threads = TC_Common::strto<tars::Int32>(string(argv[1]));
 
         TC_ThreadPool tp;
         tp.init(threads);
         tp.start();
 
-        tars::Int32 times = TC_Common::strto<tars::Int32>(string(argv[3]));
-        tars::Int32 callMode = TC_Common::strto<tars::Int32>(string(argv[4]));
+        tars::Int32 times = TC_Common::strto<tars::Int32>(string(argv[2]));
+        tars::Int32 callMode = TC_Common::strto<tars::Int32>(string(argv[3]));
         
         for(int i = 0; i<threads; i++) 
         {
             auto fw = std::bind(&Test1::queryResult, &test1, callMode, times);
             tp.exec(fw);
-            cout << "********************" <<endl;
         }
 
         tp.waitForAllDone(); 

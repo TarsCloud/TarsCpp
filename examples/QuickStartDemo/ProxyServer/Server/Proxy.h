@@ -162,36 +162,6 @@ namespace TestApp
             {
                 case 0:
                 {
-                        callback_test_exception(response.iRet);
-
-                        return response.iRet;
-
-                }
-                case 1:
-                {
-                        callback_testProxy_exception(response.iRet);
-
-                        return response.iRet;
-
-                }
-            }
-            return tars::TARSSERVERNOFUNCERR;
-        }
-
-        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
-        {
-            static ::std::string __Proxy_all[]=
-            {
-                "test",
-                "testProxy"
-            };
-
-            pair<string*, string*> r = equal_range(__Proxy_all, __Proxy_all+2, request.sFuncName);
-            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
-            switch(r.first - __Proxy_all)
-            {
-                case 0:
-                {
                     tars::TarsInputStream<tars::BufferReader> _is;
 
                     _is.setBuffer(response.sBuffer);
@@ -252,6 +222,36 @@ namespace TestApp
                     }
 
                     return tars::TARSSERVERSUCCESS;
+
+                }
+            }
+            return tars::TARSSERVERNOFUNCERR;
+        }
+
+        virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)
+        {
+            static ::std::string __Proxy_all[]=
+            {
+                "test",
+                "testProxy"
+            };
+
+            pair<string*, string*> r = equal_range(__Proxy_all, __Proxy_all+2, request.sFuncName);
+            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
+            switch(r.first - __Proxy_all)
+            {
+                case 0:
+                {
+                        callback_test_exception(response.iRet);
+
+                        return response.iRet;
+
+                }
+                case 1:
+                {
+                        callback_testProxy_exception(response.iRet);
+
+                        return response.iRet;
 
                 }
             }
