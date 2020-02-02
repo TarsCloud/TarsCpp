@@ -30,10 +30,10 @@ int main(int argc,char ** argv)
     {
         ProxyPrx prx;
         comm.stringToProxy("TestApp.ProxyServer.ProxyObj@tcp -h 127.0.0.1 -p 9200" , prx);
-
+	    int64_t t = TC_Common::now2us();
         try
         {
-            int i = 1000;
+            int i = 10000;
             while(i-- >= 0)
             {
                 string sReq("hello");
@@ -45,7 +45,8 @@ int main(int argc,char ** argv)
                 assert(sReq == sRsp);
             }
 
-            // cout<<"iRet:"<<iRet<<" sReq:"<<sReq<<" sRsp:"<<sRsp<<endl;
+            int64_t cost = TC_Common::now2us() - t;
+            cout << "syncCall total:" << cost << "us, avg:" << 1.*cost/10000 << "us" << endl;
 
         }
         catch(exception &ex)

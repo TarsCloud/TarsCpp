@@ -64,7 +64,7 @@ void AsyncProcThread::push_back(ReqMessage * msg)
 	else {
 		if(_msgQueue->size() >= _iQueueCap)
 		{
-			TLOGERROR("[TARS][AsyncProcThread::push_back] async_queue full." << endl);
+			TLOGERROR("[TARS][AsyncProcThread::push_back] async_queue full:" << _msgQueue->size() << ">=" << _iQueueCap << endl);
 			delete msg;
 		}
 		else

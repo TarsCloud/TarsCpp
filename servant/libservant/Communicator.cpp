@@ -287,7 +287,7 @@ void Communicator::initialize()
 	bool merge = TC_Common::strto<bool>(getProperty("mergenetasync", "0"));
 
     //异步队列的大小
-    size_t iAsyncQueueCap = TC_Common::strto<size_t>(getProperty("asyncqueuecap", "10-000"));
+    size_t iAsyncQueueCap = TC_Common::strto<size_t>(getProperty("asyncqueuecap", "100000"));
     if(iAsyncQueueCap < 10000)
     {
         iAsyncQueueCap = 10000;
@@ -382,13 +382,13 @@ void Communicator::doStat()
 void Communicator::pushAsyncThreadQueue(ReqMessage * msg)
 {
     //先不考虑每个线程队列数目不一致的情况
-    _asyncThread[_asyncSeq]->push_back(msg);
-    _asyncSeq ++;
+    _asyncThread[(++_asyncSeq)%_asyncThreadNum]->push_back(msg);
+    // _asyncSeq ++;
 
-    if(_asyncSeq == _asyncThreadNum)
-    {
-        _asyncSeq = 0;
-    }
+    // if(_asyncSeq == _asyncThreadNum)
+    // {
+    //     _asyncSeq = 0;
+    // }
 }
 
 void Communicator::terminate()

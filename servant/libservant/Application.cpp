@@ -743,9 +743,6 @@ void Application::main(const TC_Option &option)
         //绑定对象和端口
         bindAdapter(adapters);
 
-        //业务应用的初始化
-        initialize();
-
         //输出所有adapter
         outAllAdapter(cout);
 

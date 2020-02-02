@@ -30,7 +30,7 @@ int TestPushServantImp::doRequest(tars::TarsCurrentPtr current, vector<char>& re
 		LOG->debug() << "connect ip: " << current->getIp() << endl;
 	}
 	(PushUser::mapMutex).unlock();
-	//返回给客户端它自己请求的数据包，即原包返回
+	//返回给客户端它自己请求的数据包，即原包返回(4字节长度+4字节requestid+buffer)
 	const vector<char>& request = current->getRequestBuffer();
 	response = request;
 

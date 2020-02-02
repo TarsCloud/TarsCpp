@@ -20,3 +20,8 @@ add_custom_target(run-co
         DEPENDS CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro
         COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-co.sh
         COMMENT "call run co")
+
+add_custom_target(run-push
+        DEPENDS PushServer PushClient
+        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-push.sh
+        COMMENT "call run push")
