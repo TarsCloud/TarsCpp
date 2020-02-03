@@ -12,11 +12,13 @@ echo "start server: ${WORKDIR}/../bin/HttpServer --config=${WORKDIR}/../../examp
 
 ${WORKDIR}/../bin/HttpServer --config=${WORKDIR}/../../examples/HttpDemo/HttpServer/config.conf &
 
-sleep 3
+sleep 1
 
 echo "client: ${WORKDIR}/../bin/HttpClient"
 
 ${WORKDIR}/../bin/HttpClient 2 10000
+
+sleep 1
 
 killall -9 HttpServer 
 

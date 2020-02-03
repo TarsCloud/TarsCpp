@@ -57,7 +57,10 @@ void TC_ThreadPool::stop()
 
     for (size_t i = 0; i < _threads.size(); i++)
     {
-        _threads[i]->join();
+        if(_threads[i]->joinable())
+        {
+            _threads[i]->join();
+        }
         delete _threads[i];
         _threads[i] = NULL;
     }
@@ -87,7 +90,7 @@ bool TC_ThreadPool::get(std::function<void()> &task)
 
     if (_tasks.empty())
     {
-        _condition.wait(lock);
+        _condition.wait(lock, [this] { return _bTerminate || !_tasks.empty(); });
     }
 
     if (_bTerminate)

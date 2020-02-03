@@ -50,7 +50,12 @@ macro(build_tars_server MODULE DEPS)
 
     endif (TARS_LIST)
 
-    add_dependencies(${MODULE} ${DEPS} tarsservant tarsutil)
+    if("${DEPS}" STREQUAL "")
+        add_dependencies(${MODULE} tarsservant tarsutil)
+    else()
+        string(REPLACE " " ";" DEP_LIST ${DEPS})
+        add_dependencies(${MODULE} ${DEP_LIST} tarsservant tarsutil)
+    endif()
 
     target_link_libraries(${MODULE} tarsservant tarsutil)
         

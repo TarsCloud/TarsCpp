@@ -183,15 +183,6 @@ class TC_ThreadPool
      */
     bool waitForAllDone(int millsecond = -1);
 
-//    /**
-//     * @brief 可以等待所有线程结束
-//     *
-//     * @param millsecond 等待的时间(ms), -1:永远等待
-//     * @return           true, 通知了stop
-//     *                   false,超时退出
-//     */
-//    bool waitForStop(int millsecond = -1);
-
   protected:
     /**
      * @brief 获取任务

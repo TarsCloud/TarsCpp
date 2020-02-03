@@ -1,1 +1,1 @@
-build_tars_server("CoroutineDemoBServer" "AServer")
+build_tars_server("CoroutineDemoBServer" "CoroutineDemoAServer")

@@ -3082,7 +3082,7 @@ void TC_EpollServer::waitForShutdown()
 	        //循环监听网路连接请求
 	        while (!_bTerminate)
 	        {
-		        int iEvNum = _epoller.wait(3000);
+		        int iEvNum = _epoller.wait(1000);
 
 		        if (_bTerminate)
 			        break;

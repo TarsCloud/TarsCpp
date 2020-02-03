@@ -396,12 +396,7 @@ int TC_TCPClient::recv(char *sRecvBuffer, size_t &iRecvLen)
         return iRet;
     }
 
-    // TC_Epoller epoller(false);
-    // epoller.create(1);
-    // epoller.add(_socket.getfd(), 0, EPOLLIN);
-
     int iRetCode = _epoller->wait(_timeout);
-    // int iRetCode = epoller.wait(_timeout);
     if (iRetCode < 0)
     {
         _socket.close();
@@ -413,10 +408,17 @@ int TC_TCPClient::recv(char *sRecvBuffer, size_t &iRecvLen)
         return EM_TIMEOUT;
     }
 
-    // epoll_event ev  = epoller.get(0);
-    epoll_event ev  = _epoller->get(0);
-    if(TC_Epoller::readEvent(ev))
-    // if(ev.events & EPOLLIN)
+    const epoll_event &ev  = _epoller->get(0);
+    if(TC_Epoller::errorEvent(ev))
+    {
+        _socket.close();
+        return EM_CLOSE;
+    }
+#if TARGET_PLATFORM_IOS   
+    else
+#else   
+    else if(TC_Epoller::readEvent(ev))
+#endif
     {
         int iLen = _socket.recv((void*)sRecvBuffer, iRecvLen);
         if (iLen < 0)
@@ -433,10 +435,6 @@ int TC_TCPClient::recv(char *sRecvBuffer, size_t &iRecvLen)
         iRecvLen = iLen;
         return EM_SUCCESS;
     }
-    else
-    {
-        _socket.close();
-    }
 
     return EM_SELECT;
 }
@@ -450,10 +448,6 @@ int TC_TCPClient::recvBySep(string &sRecvBuffer, const string &sSep)
     {
         return iRet;
     }
-
-    // TC_Epoller epoller(false);
-    // epoller.create(1);
-    // epoller.add(_socket.getfd(), 0, EPOLLIN);
 
     while(true)
     {
@@ -470,11 +464,18 @@ int TC_TCPClient::recvBySep(string &sRecvBuffer, const string &sSep)
             return EM_TIMEOUT;
         }
 
-        epoll_event ev  = _epoller->get(0);
+        const epoll_event &ev  = _epoller->get(0);
 
-	    if(TC_Epoller::readEvent(ev))
-        // epoll_event ev  = epoller.get(0);
-        // if(ev.events & EPOLLIN)
+        if(TC_Epoller::errorEvent(ev))
+        {
+            _socket.close();
+            return EM_CLOSE;
+        }
+#if TARGET_PLATFORM_IOS   
+        else
+#else   
+        else if(TC_Epoller::readEvent(ev))
+#endif
         {
             char buffer[LEN_MAXRECV] = "\0";
 
@@ -513,13 +514,8 @@ int TC_TCPClient::recvAll(string &sRecvBuffer)
         return iRet;
     }
 
-    // TC_Epoller epoller(false);
-    // epoller.create(1);
-    // epoller.add(_socket.getfd(), 0, EPOLLIN);
-
     while(true)
     {
-        // int iRetCode = epoller.wait(_timeout);
         int iRetCode = _epoller->wait(_timeout);
         if (iRetCode < 0)
         {
@@ -532,10 +528,17 @@ int TC_TCPClient::recvAll(string &sRecvBuffer)
             return EM_TIMEOUT;
         }
 
-        // epoll_event ev  = epoller.get(0);
-        // if(ev.events & EPOLLIN)
-        epoll_event ev  = _epoller->get(0);
-	    if(TC_Epoller::readEvent(ev))
+        const epoll_event &ev  = _epoller->get(0);
+        if(TC_Epoller::errorEvent(ev))
+        {
+            _socket.close();
+            return EM_CLOSE;
+        }
+#if TARGET_PLATFORM_IOS   
+        else
+#else   
+        else if(TC_Epoller::readEvent(ev))
+#endif
         {
             char sTmpBuffer[LEN_MAXRECV] = "\0";
 
@@ -553,11 +556,6 @@ int TC_TCPClient::recvAll(string &sRecvBuffer)
 
             sRecvBuffer.append(sTmpBuffer, len);
         }
-        else
-        {
-            _socket.close();
-            return EM_SELECT;
-        }
     }
 
     return EM_SUCCESS;
@@ -574,13 +572,8 @@ int TC_TCPClient::recvLength(char *sRecvBuffer, size_t iRecvLen)
     size_t iRecvLeft = iRecvLen;
     iRecvLen = 0;
 
-    // TC_Epoller epoller(false);
-    // epoller.create(1);
-    // epoller.add(_socket.getfd(), 0, EPOLLIN);
-
     while(iRecvLeft != 0)
     {
-        // int iRetCode = epoller.wait(_timeout);
         int iRetCode = _epoller->wait(_timeout);
         if (iRetCode < 0)
         {
@@ -593,10 +586,17 @@ int TC_TCPClient::recvLength(char *sRecvBuffer, size_t iRecvLen)
             return EM_TIMEOUT;
         }
 
-        // epoll_event ev  = epoller.get(0);
-        // if(ev.events & EPOLLIN)
-        epoll_event ev  = _epoller->get(0);
-	    if(TC_Epoller::readEvent(ev))
+        const epoll_event &ev  = _epoller->get(0);
+        if(TC_Epoller::errorEvent(ev))
+        {
+            _socket.close();
+            return EM_SELECT;
+        }
+#if TARGET_PLATFORM_IOS   
+        else
+#else   
+        else if(TC_Epoller::readEvent(ev))
+#endif
         {
             int len = _socket.recv((void*)(sRecvBuffer + iRecvLen), iRecvLeft);
             if (len < 0)
@@ -612,11 +612,6 @@ int TC_TCPClient::recvLength(char *sRecvBuffer, size_t iRecvLen)
 
             iRecvLeft -= len;
             iRecvLen += len;
-        }
-        else
-        {
-            _socket.close();
-            return EM_SELECT;
         }
     }
 
@@ -675,7 +670,6 @@ int TC_UDPClient::checkSocket()
 #else
 	        _socket.createSocket(SOCK_DGRAM, _isIPv6 ? AF_INET6 : AF_INET);
 #endif
-            // _socket.createSocket(SOCK_DGRAM, _port ? (_isIPv6 ? AF_INET6 : AF_INET) : AF_LOCAL);
         }
         catch(TC_Socket_Exception &ex)
         {
@@ -687,15 +681,6 @@ int TC_UDPClient::checkSocket()
 
         try
         {
-            // if(_port == 0)
-            // {
-            //     _socket.connect(_ip.c_str());
-            //     if(_port == 0)
-            //     {
-            //         _socket.bind(_ip.c_str());
-            //     }
-            // }
-            // else
 #if TARGET_PLATFORM_LINUX            
             
             if(_port == 0)
@@ -759,10 +744,6 @@ int TC_UDPClient::recv(char *sRecvBuffer, size_t &iRecvLen, string &sRemoteIp, u
         return iRet;
     }
 
-    // TC_Epoller epoller(false);
-    // epoller.create(1);
-    // epoller.add(_socket.getfd(), 0, EPOLLIN);
-    // int iRetCode = epoller.wait(_timeout);
     int iRetCode = _epoller->wait(_timeout);
     if (iRetCode < 0)
     {
@@ -773,10 +754,17 @@ int TC_UDPClient::recv(char *sRecvBuffer, size_t &iRecvLen, string &sRemoteIp, u
         return EM_TIMEOUT;
     }
 
-    // epoll_event ev  = epoller.get(0);
-    // if(ev.events & EPOLLIN)
-    epoll_event ev  = _epoller->get(0);
-	if(TC_Epoller::readEvent(ev))
+    const epoll_event &ev  = _epoller->get(0);
+    if(TC_Epoller::errorEvent(ev))
+    {
+        _socket.close();
+        return EM_SELECT;
+    }
+#if TARGET_PLATFORM_IOS   
+    else
+#else   
+    else if(TC_Epoller::readEvent(ev))
+#endif
     {
         iRet = _socket.recvfrom(sRecvBuffer, iRecvLen, sRemoteIp, iRemotePort);
         if(iRet <0 )

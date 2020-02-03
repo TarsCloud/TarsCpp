@@ -81,14 +81,14 @@ void th_dohandle(int excut_num)
     unsigned long sum = 0;
     int64_t _iTime = TC_TimeProvider::getInstance()->getNowMs();
 
-    string sServer1("http://127.0.0.1:8080/");
+    string sServer1("http://127.0.0.1:8081/");
 
     TC_HttpRequest stHttpReq;
     stHttpReq.setCacheControl("no-cache");
     stHttpReq.setGetRequest(sServer1);
 
     TC_TCPClient tcpClient1;
-    tcpClient1.init("127.0.0.1", 8080, 3000);
+    tcpClient1.init("127.0.0.1", 8081, 3000);
 
     int iRet = 0;
 
@@ -104,7 +104,8 @@ void th_dohandle(int excut_num)
             
             if (iRet != 0)
             {
-                cout <<"pthread id: " << TC_Thread::CURRENT_THREADID() << ", iRet:" << iRet << "" <<endl;
+                cout <<"pthread id: " << TC_Thread::CURRENT_THREADID() << ", iRet:" << iRet <<endl;
+                exit(-1);
             }
             else
             {
@@ -114,10 +115,12 @@ void th_dohandle(int excut_num)
         catch(TC_Exception &e)
         {
             cout << "pthread id: " << TC_Thread::CURRENT_THREADID() << " id: " << i << " exception: " << e.what() << endl;
+            exit(-1);
         }
         catch(...)
         {
-             cout << "pthread id: " << TC_Thread::CURRENT_THREADID() << " id: " << i << " unknown exception." << endl;
+            cout << "pthread id: " << TC_Thread::CURRENT_THREADID() << " id: " << i << " unknown exception." << endl;
+            exit(-1);
         }
     }
     cout <<  "pthread id: " << TC_Thread::CURRENT_THREADID() << ", succ:" << sum << "/" << excut_num << ", " << TC_TimeProvider::getInstance()->getNowMs() - _iTime <<"(ms)"<<endl;
@@ -145,7 +148,7 @@ int main(int argc,char ** argv)
             tp.exec(std::bind(th_dohandle, times));
         }
 
-        tp.waitForAllDone();
+        tp.waitForAllDone(1000);
     }catch(exception &e)
     {
         cout<<e.what()<<endl;

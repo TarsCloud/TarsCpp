@@ -25,3 +25,11 @@ add_custom_target(run-push
         DEPENDS PushServer PushClient
         COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-push.sh
         COMMENT "call run push")
+
+add_custom_target(run-all
+        DEPENDS QuickStartDemo QuickStartDemoClient HttpServer HttpClient CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro PushServer PushClient
+        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-quick-start.sh
+        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-http.sh
+        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-co.sh
+        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-push.sh
+        COMMENT "call run all")
