@@ -207,6 +207,7 @@ struct TupCallback : public ServantProxyCallback
 
     virtual int onDispatchException(const RequestPacket &req, const ResponsePacket &rsp)
 	{
+		cout << "onDispatchException" << endl;
 		return 0;
 	}
 
@@ -330,7 +331,7 @@ int main(int argc, char *argv[])
         }
 
         std::thread print([&]{while(callback_count != param.count * param.thread) {
-	        cout << "----------finish count:" << callback_count << endl;
+	        cout << param.call << ": ----------finish count:" << callback_count << endl;
 	        std::this_thread::sleep_for(std::chrono::seconds(1));
         };});
 

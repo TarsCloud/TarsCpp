@@ -2,7 +2,7 @@
 echo "run-co.bat"
 
 
-killall -2 CoroutineDemoAServer.exe 
+killall -9 CoroutineDemoAServer.exe 
 
 sleep 1
 
@@ -12,7 +12,7 @@ echo "start server: .\\bin\\Release\\CoroutineDemoAServer.exe --config=..\\examp
 
 #-------------------------------------------------------------------------------------------------------
 
-killall -2 CoroutineDemoBServer.exe 
+killall -9 CoroutineDemoBServer.exe 
 
 sleep 1
 
@@ -38,7 +38,7 @@ echo "client: .\\bin\\CoroutineDemoClient"
 
 sleep 1
 
-killall -2 CoroutineDemoAServer.exe 
-killall -2 CoroutineDemoBServer.exe 
+killall -9 CoroutineDemoAServer.exe 
+killall -9 CoroutineDemoBServer.exe 
 
 

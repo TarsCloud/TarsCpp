@@ -1,14 +1,14 @@
 
 echo "run-http.bat"
 
-killall -2 HttpServer.exe 
+killall -9 HttpServer.exe 
 sleep 1
 
 echo "start server: .\\bin\\Release\\HttpServer.exe --config=..\\examples\\HttpDemo\\HttpServer\\config.conf &"
 
 .\\bin\\Release\\HttpServer.exe --config=..\\examples\\HttpDemo\\HttpServer\\config.conf &
 
-sleep 1
+sleep 3
 
 echo "client: .\\bin\\Release\\HttpClient.exe"
 
@@ -16,6 +16,6 @@ echo "client: .\\bin\\Release\\HttpClient.exe"
 
 sleep 1
 
-killall -2 HttpServer.exe 
+killall -9 HttpServer.exe 
 
 

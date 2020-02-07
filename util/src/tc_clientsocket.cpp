@@ -297,7 +297,7 @@ int TC_TCPClient::checkSocket()
 	        _socket.createSocket(SOCK_STREAM, _isIPv6 ? AF_INET6 : AF_INET);
 #endif
 
-	        _epoller->add(_socket.getfd(), 0, EPOLLOUT);
+	        _epoller->add(_socket.getfd(), 0, EPOLLOUT | EPOLLIN);
 
             //设置非阻塞模式
             _socket.setblock(false);
@@ -357,9 +357,6 @@ int TC_TCPClient::checkSocket()
 
             //设置为阻塞模式
             _socket.setblock(true);
-
-            _epoller->mod(_socket.getfd(), 0, EPOLLIN);
-
         }
         catch(TC_Socket_Exception &ex)
         {
@@ -677,7 +674,7 @@ int TC_UDPClient::checkSocket()
             return EM_SOCKET;
         }
 
-	    _epoller->add(_socket.getfd(), 0, EPOLLIN);
+	    _epoller->add(_socket.getfd(), 0, EPOLLIN | EPOLLOUT);
 
         try
         {

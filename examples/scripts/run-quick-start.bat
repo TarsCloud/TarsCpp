@@ -1,7 +1,8 @@
 
 echo "run-quick-start.bat"
 
-killall -2 QuickStartDemo.exe ProxyServer.exe
+killall -9 QuickStartDemo.exe 
+killall -9 roxyServer.exe
 sleep 1
 
 echo "start server: .\\bin\\Release\\QuickStartDemo.exe --config=..\\examples\\QuickStartDemo\\HelloServer\\Server\\config.conf &"
@@ -27,6 +28,7 @@ echo "client: .\\bin\\Release\\ProxyServerClient.exe"
 
 sleep 2
 
-killall -2 ProxyServer.exe QuickStartDemo.exe
+killall -9 ProxyServer.exe
+killall -9 QuickStartDemo.exe
 
 
