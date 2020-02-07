@@ -1,14 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(tars_cpp)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 set(CMAKE_VERBOSE_MAKEFILE off)
-
-#set(MYSQL_DIR_INC "/usr/local/mysql/include")
-#set(MYSQL_DIR_LIB "/usr/local/mysql/lib")
-
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O2 -Wall -Wno-deprecated")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O2 -Wall -Wno-deprecated")
 
 #for coverage statistics
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O2 -Wall -Wno-deprecated -fprofile-arcs -ftest-coverage")
@@ -41,31 +35,38 @@ set(OPENTRACKING_INC "/usr/local/include")
 add_definitions(-D_USE_OPENTRACKING=${_USE_OPENTRACKING})
 endif()
 
-
+#-------------------------------------------------------------
 IF (UNIX)
-#set(LIB_MYSQL "mysqlclient")
 set(INSTALL_PREFIX "/usr/local/tars/cpp")
 ELSE()
 set(INSTALL_PREFIX "c:\\tars\\cpp")
-#set(LIB_MYSQL "libmysql")
 ENDIF()
 
 set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
 
+#-------------------------------------------------------------
+
+set(MYSQL_DIR_INC "${CMAKE_SOURCE_DIR}/thirdparty/include/mysql")
+
 IF (WIN32)
-    set(MYSQL_PATH "${CMAKE_SOURCE_DIR}/thirdparty/win_64")
-    include_directories("${MYSQL_PATH}/include/mysql")
-    link_directories("${MYSQL_PATH}/lib")
-    link_libraries(libmysql)
+    set(MYSQL_DIR_LIB "${CMAKE_SOURCE_DIR}/thirdparty/win_64")
+    set(LIB_MYSQL "libmysql")
 ELSE()
-    find_package(MySQL REQUIRED)
-    add_definitions(-DMySQL)
-    include_directories(${MYSQL_INCLUDE_DIR})
-    list(APPEND LIB_MYSQL ${MYSQL_LIBRARIES})
-    link_libraries(${LIB_MYSQL})
-    link_libraries(pthread dl)
+    IF(APPLE)
+        set(MYSQL_DIR_LIB "${CMAKE_SOURCE_DIR}/thirdparty/mac_64")
+    ELSE(LINUX)
+        set(MYSQL_DIR_LIB "${CMAKE_SOURCE_DIR}/thirdparty/linux_64")
+        link_libraries(pthread dl)
+    ENDIF()
+    set(LIB_MYSQL "libmysqlclient")
 ENDIF()
 
+include_directories(${MYSQL_DIR_INC})
+link_directories(${MYSQL_DIR_LIB})
+link_libraries(${libmysql})
+
+
+#-------------------------------------------------------------
 IF (APPLE)
 link_libraries(iconv)
 ENDIF(APPLE)
@@ -98,6 +99,7 @@ ELSE ()
     MESSAGE(STATUS "================ ERROR: This platform is unsupported!!! ================")
 ENDIF (UNIX)
 
+#-------------------------------------------------------------
 
 IF(WIN32)
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/tars2cpp.exe")
@@ -105,6 +107,7 @@ ELSE()
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
 ENDIF()
 
+#-------------------------------------------------------------
 
 IF(WIN32)
 include_directories(${CMAKE_SOURCE_DIR}/util/src/epoll_windows)
