@@ -166,7 +166,7 @@ int64_t TC_Port::getpid()
 #if TARGET_PLATFORM_WINDOWS
 	int64_t pid = ::GetCurrentProcessId();
 #else
-    int64_t pid         = getpid();
+    int64_t pid = ::getpid();
 #endif
 	return pid;
 }

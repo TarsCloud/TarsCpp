@@ -84,7 +84,9 @@ public:
         os.write(t, 0);
 
 		VECTOR_CHAR_TYPE & v = _data[name];
-		v.assign(os.getBuffer(), os.getBuffer() + os.getLength());
+        
+        os.swap(v);
+		// v.assign(os.getBuffer(), os.getBuffer() + os.getLength());
 
     }
 
@@ -94,8 +96,8 @@ public:
         os.writeUnknownV2(value);
 
         VECTOR_CHAR_TYPE & v = _data[name];
-        v.assign(os.getBuffer(), os.getBuffer() + os.getLength());
-
+        os.swap(v);
+        // v.assign(os.getBuffer(), os.getBuffer() + os.getLength());
     }
 
     void getUnknown(const string& name, string& value)
@@ -210,8 +212,9 @@ public:
         os.reset();
 
         os.write(_data, 0);
-		
-        buff.assign(os.getBuffer(), os.getLength());
+
+        os.swap(buff);	
+        // buff.assign(os.getBuffer(), os.getLength());
     }
 
     /** 编码
@@ -224,7 +227,8 @@ public:
 
         os.write(_data, 0);
 
-        buff.assign(os.getBuffer(), os.getBuffer() + os.getLength());
+        os.swap(buff);
+        // buff.assign(os.getBuffer(), os.getBuffer() + os.getLength());
     }
 
     /** 编码
@@ -394,16 +398,18 @@ public:
      */
     void encode(string& buff)
     {
-        TarsOutputStream<TWriter> &os = UniAttribute<TWriter, TReader,Alloc>::os;
+        encodeBuff<string>(buff);
 
-        os.reset();
+        // TarsOutputStream<TWriter> &os = UniAttribute<TWriter, TReader,Alloc>::os;
+
+        // os.reset();
         
-        doEncode(os);
+        // doEncode(os);
 
-        tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
-        buff.assign((const char*)&iHeaderLen, sizeof(tars::Int32));
+        // tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
+        // buff.assign((const char*)&iHeaderLen, sizeof(tars::Int32));
 
-        buff.append(os.getBuffer(), os.getLength());
+        // buff.append(os.getBuffer(), os.getLength());
     }
 
     /**
@@ -414,17 +420,18 @@ public:
      */
     void encode(vector<char>& buff)
     {
-        TarsOutputStream<TWriter> & os = UniAttribute<TWriter, TReader,Alloc>::os;
+        encodeBuff<vector<char>>(buff);
+        // TarsOutputStream<TWriter> & os = UniAttribute<TWriter, TReader,Alloc>::os;
 
-        os.reset();
+        // os.reset();
 
-        doEncode(os);
+        // doEncode(os);
 
-        tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
+        // tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
 
-        buff.resize(sizeof(tars::Int32) + os.getLength());
-        memcpy(&buff[0], &iHeaderLen, sizeof(tars::Int32));
-        memcpy(&buff[sizeof(tars::Int32)], os.getBuffer(), os.getLength());
+        // buff.resize(sizeof(tars::Int32) + os.getLength());
+        // memcpy(&buff[0], &iHeaderLen, sizeof(tars::Int32));
+        // memcpy(&buff[sizeof(tars::Int32)], os.getBuffer(), os.getLength());
 
     }
 
@@ -436,19 +443,37 @@ public:
      */
     void encode(char* buff, size_t & len)
     {
-        TarsOutputStream<TWriter> &os = UniAttribute<TWriter, TReader,Alloc>::os;
+        TarsOutputStream<TWriter>& os = UniAttribute<TWriter, TReader>::os;
 
         os.reset();
 
         doEncode(os);
 
+        os.reset();
+ 
+        writeTo(os);
+
         tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
-        if(len < sizeof(tars::Int32) + os.getLength()) throw runtime_error("encode error, buffer length too short");
+        if (len < sizeof(tars::Int32) + os.getLength()) throw runtime_error("encode error, buffer length too short");
 
         memcpy(buff, &iHeaderLen, sizeof(tars::Int32));
         memcpy(buff + sizeof(tars::Int32), os.getBuffer(), os.getLength());
 
         len = sizeof(tars::Int32) + os.getLength();
+
+        // TarsOutputStream<TWriter> &os = UniAttribute<TWriter, TReader,Alloc>::os;
+
+        // os.reset();
+
+        // doEncode(os);
+
+        // tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
+        // if(len < sizeof(tars::Int32) + os.getLength()) throw runtime_error("encode error, buffer length too short");
+
+        // memcpy(buff, &iHeaderLen, sizeof(tars::Int32));
+        // memcpy(buff + sizeof(tars::Int32), os.getBuffer(), os.getLength());
+
+        // len = sizeof(tars::Int32) + os.getLength();
     }
 
     /** 解码
@@ -460,7 +485,7 @@ public:
 
     void decode(const char* buff, size_t len)
     {
-        if(len < sizeof(tars::Int32)) throw runtime_error("packet length too short");
+        if(len < sizeof(tars::Int32)) throw runtime_error("packet length too short, first 4 bytes must be buffer length.");
     
         TarsInputStream<TReader> &is = UniAttribute<TWriter, TReader,Alloc>::is;
 
@@ -519,25 +544,70 @@ public:
     void setFuncName(const std::string& value) { sFuncName = value; }
 
 protected:
+    template<typename T>
+    void encodeBuff(T& buff)
+    {
+        TarsOutputStream<TWriter>& os = UniAttribute<TWriter, TReader>::os;
+
+        os.reset();
+
+        doEncode(os);
+
+        os.reset();
+ 
+        tars::Int32 iHeaderLen = 0;
+
+        //	先预留4个字节长度
+	    os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
+        
+        writeTo(os);
+
+	    os.swap(buff);
+
+	    assert(buff.size() >= 4);
+
+	    iHeaderLen = htonl((int)(buff.size()));
+
+	    memcpy(&buff[0], (const char *)&iHeaderLen, sizeof(iHeaderLen));
+    }
+
     /**
      * 内部编码
      */
     void doEncode(TarsOutputStream<TWriter>& os)
     {
         //ServantName、FuncName不能为空
-        if(sServantName.empty()) throw runtime_error("ServantName must not be empty");
-        if(sFuncName.empty())    throw runtime_error("FuncName must not be empty");
+        if (sServantName.empty()) throw runtime_error("ServantName must not be empty");
+        if (sFuncName.empty())    throw runtime_error("FuncName must not be empty");
 
         os.reset();
 
-        os.write(UniAttribute<TWriter, TReader,Alloc>::_data, 0);
-	
-        sBuffer.assign(os.getBuffer(), os.getBuffer() + os.getLength());
+        os.write(UniAttribute<TWriter, TReader>::_data, 0);
+
+        os.swap(sBuffer);
 
         os.reset();
-
-        writeTo(os);
     }
+
+    // /**
+    //  * 内部编码
+    //  */
+    // void doEncode(TarsOutputStream<TWriter>& os)
+    // {
+    //     //ServantName、FuncName不能为空
+    //     if(sServantName.empty()) throw runtime_error("ServantName must not be empty");
+    //     if(sFuncName.empty())    throw runtime_error("FuncName must not be empty");
+
+    //     os.reset();
+
+    //     os.write(UniAttribute<TWriter, TReader,Alloc>::_data, 0);
+	
+    //     sBuffer.assign(os.getBuffer(), os.getBuffer() + os.getLength());
+
+    //     os.reset();
+
+    //     writeTo(os);
+    // }
 };
 
 /////////////////////////////////////////////////////////////////////////////////
