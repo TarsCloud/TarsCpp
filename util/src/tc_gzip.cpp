@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -15,9 +15,13 @@
  */
 
 #include "util/tc_gzip.h"
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+
 #include <zlib.h>
 #include <string.h>
 #include <cassert>
+
 
 namespace tars
 {
@@ -139,3 +143,5 @@ bool TC_GZip::compress(const char *src, size_t length, vector<char>& buffer)
 //}
 
 }
+
+#endif

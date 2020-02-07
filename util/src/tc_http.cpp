@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -127,21 +127,21 @@ bool TC_URL::parseURL(const string &sURL)
 
     int iPos = 0;
 
-    if(strncasecmp(originRequest.c_str(), "http://" ,7) == 0)
+    if(TC_Port::strncasecmp(originRequest.c_str(), "http://" ,7) == 0)
     {
         //http开头
         _iURLType  = HTTP;
         iPos = 7;
         _sScheme = "http";
     }
-    else if(strncasecmp(originRequest.c_str(), "https://" ,8) == 0)
+    else if(TC_Port::strncasecmp(originRequest.c_str(), "https://" ,8) == 0)
     {
         //https开头
         _iURLType  = HTTPS;
         iPos = 8;
         _sScheme = "https";
     }
-    else if(strncasecmp(originRequest.c_str(), "ftp://", 6) == 0)
+    else if(TC_Port::strncasecmp(originRequest.c_str(), "ftp://", 6) == 0)
     {
         //ftps开头
         _iURLType  = FTP;
@@ -574,7 +574,7 @@ vector<string> TC_Http::getHeaderMulti(const string &sHeadName) const
 
     for( http_header_type::const_iterator it = _headers.begin(); it != itEnd; ++it)
     {
-        if(strcasecmp(it->first.c_str(), sHeadName.c_str()) == 0)
+        if(TC_Port::strcasecmp(it->first.c_str(), sHeadName.c_str()) == 0)
         {
             v.push_back(it->second);
         }
@@ -661,8 +661,8 @@ const char* TC_Http::parseHeader(const char* szBuffer, http_header_type &sHeader
 
     const char **ppChar = &szBuffer;
 
-    long length = strlen(szBuffer);
-    long srcPtr = (long)(*ppChar);
+    size_t length = strlen(szBuffer);
+	size_t srcPtr = (size_t)(*ppChar);
 
     while(true)
     {
@@ -671,14 +671,14 @@ const char* TC_Http::parseHeader(const char* szBuffer, http_header_type &sHeader
         if(sLine.empty()) break;
 
         //如果是第一行, 则忽略掉
-        if(strncasecmp(sLine.c_str(), "GET ", 4) ==0
-           || strncasecmp(sLine.c_str(), "POST ", 5) ==0
-           || strncasecmp(sLine.c_str(), "PUT ", 4) ==0
-           || strncasecmp(sLine.c_str(), "PATCH ", 6) ==0
-           || strncasecmp(sLine.c_str(), "OPTIONS ", 8) ==0
-           || strncasecmp(sLine.c_str(), "HEAD ", 5) ==0
-           || strncasecmp(sLine.c_str(), "DELETE ", 7) ==0
-           || strncasecmp(sLine.c_str(), "HTTP/", 5) ==0)
+        if(TC_Port::strncasecmp(sLine.c_str(), "GET ", 4) ==0
+           || TC_Port::strncasecmp(sLine.c_str(), "POST ", 5) ==0
+           || TC_Port::strncasecmp(sLine.c_str(), "PUT ", 4) ==0
+           || TC_Port::strncasecmp(sLine.c_str(), "PATCH ", 6) ==0
+           || TC_Port::strncasecmp(sLine.c_str(), "OPTIONS ", 8) ==0
+           || TC_Port::strncasecmp(sLine.c_str(), "HEAD ", 5) ==0
+           || TC_Port::strncasecmp(sLine.c_str(), "DELETE ", 7) ==0
+           || TC_Port::strncasecmp(sLine.c_str(), "HTTP/", 5) ==0)
         {
             continue;
         }
@@ -689,7 +689,7 @@ const char* TC_Http::parseHeader(const char* szBuffer, http_header_type &sHeader
             sHeader.insert(multimap<string, string>::value_type(TC_Common::trim(sLine.substr(0, index), " "), TC_Common::trim(sLine.substr(index + 1), " ")));
         }
 
-        long offset = (long)(*ppChar - srcPtr);
+		size_t offset = (size_t)(*ppChar - srcPtr);
 
         if(offset >= length)
         {
@@ -819,7 +819,7 @@ void TC_HttpCookie::addCookie(const Cookie &cookie, list<Cookie> &cookies)
         {
             cookies.erase(it++);
         }
-        else if(strcasecmp(it->_domain.c_str(), cookieNew._domain.c_str()) == 0
+        else if(TC_Port::strcasecmp(it->_domain.c_str(), cookieNew._domain.c_str()) == 0
             && strcmp(it->_path.c_str(), cookieNew._path.c_str()) == 0
             && it->_isSecure == cookieNew._isSecure)
         {
@@ -905,11 +905,11 @@ void TC_HttpCookie::addCookie(const string &sRspURL, const vector<string> &vCook
             {
                 name  = TC_Common::trim(v[j]);
             }
-            if(strcasecmp(name.c_str(), "secure") == 0)
+            if(TC_Port::strcasecmp(name.c_str(), "secure") == 0)
             {
                 cookie._isSecure = true;
             }
-            else if(strcasecmp(name.c_str(), "expires") == 0)
+            else if(TC_Port::strcasecmp(name.c_str(), "expires") == 0)
             {
                 struct tm stTm;
                 //兼容时间格式
@@ -927,17 +927,17 @@ void TC_HttpCookie::addCookie(const string &sRspURL, const vector<string> &vCook
 
                 TC_Common::strgmt2tm(value, stTm);
 
-                cookie._expires = timegm(&stTm);
+                cookie._expires = TC_Port::timegm(&stTm);
             }
-            else if(strcasecmp(name.c_str(), "path") == 0)
+            else if(TC_Port::strcasecmp(name.c_str(), "path") == 0)
             {
                 cookie._path = value;
             }
-            else if(strcasecmp(name.c_str(), "domain") == 0)
+            else if(TC_Port::strcasecmp(name.c_str(), "domain") == 0)
             {
                 cookie._domain = value;
             }
-            else if(strcasecmp(name.c_str(), "httponly") == 0)
+            else if(TC_Port::strcasecmp(name.c_str(), "httponly") == 0)
             {
                 //TODO
                 //cookie._isHttpOnly = true;
@@ -1798,14 +1798,14 @@ bool TC_HttpRequest::decode(const char *sBuffer, size_t iLength)
 {
     assert(sBuffer != NULL);
 
-    if(strncasecmp(sBuffer, "GET " ,4) !=0 &&
-       strncasecmp(sBuffer, "POST " ,5) !=0 &&
-       strncasecmp(sBuffer, "PUT " ,4) !=0 &&
-       strncasecmp(sBuffer, "PATCH " ,6) !=0 &&
-       strncasecmp(sBuffer, "OPTIONS " ,8) !=0 &&
-       strncasecmp(sBuffer, "PRI " , 4) !=0 &&
-       strncasecmp(sBuffer, "DELETE " , 7) !=0 &&
-       strncasecmp(sBuffer, "HEAD " ,5))
+    if(TC_Port::strncasecmp(sBuffer, "GET " ,4) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "POST " ,5) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "PUT " ,4) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "PATCH " ,6) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "OPTIONS " ,8) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "PRI " , 4) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "DELETE " , 7) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "HEAD " ,5))
     {
         throw runtime_error("[TC_HttpRequest::checkRequest] protocol not support, only support GET HEAD POST and OPTIONS ");
     }
@@ -1864,14 +1864,14 @@ bool TC_HttpRequest::decode(const char *sBuffer, size_t iLength)
 
 bool TC_HttpRequest::checkRequest(const char* sBuffer, size_t iLen)
 {
-    if(strncasecmp(sBuffer, "GET " ,4) !=0 &&
-       strncasecmp(sBuffer, "POST " ,5) !=0 &&
-       strncasecmp(sBuffer, "PUT " ,4) !=0 &&
-       strncasecmp(sBuffer, "PATCH " ,6) !=0 &&
-       strncasecmp(sBuffer, "OPTIONS " ,8) !=0 &&
-       strncasecmp(sBuffer, "PRI " , 4) !=0 &&
-       strncasecmp(sBuffer, "DELETE " , 7) !=0 &&
-       strncasecmp(sBuffer, "HEAD " ,5))
+    if(TC_Port::strncasecmp(sBuffer, "GET " ,4) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "POST " ,5) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "PUT " ,4) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "PATCH " ,6) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "OPTIONS " ,8) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "PRI " , 4) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "DELETE " , 7) !=0 &&
+		TC_Port::strncasecmp(sBuffer, "HEAD " ,5))
    {
        throw runtime_error("[TC_HttpRequest::checkRequest] protocol not support, only support GET HEAD POST PUT PATCH DELETE and OPTIONS ");
    }
@@ -1901,17 +1901,17 @@ bool TC_HttpRequest::checkRequest(const char* sBuffer, size_t iLen)
        }
 
        size_t len = 0;
-       string sLine = getLine(ppChar, iHeadLen-iMoveLen);
+       string sLine = getLine(ppChar, (int)(iHeadLen-iMoveLen));
        if(sLine == "")
        {
            len = 0;
        }
-       else if(strncasecmp(sLine.c_str(), "Transfer-Encoding:", 18) == 0)
+       else if(TC_Port::strncasecmp(sLine.c_str(), "Transfer-Encoding:", 18) == 0)
        {
            bChunk = (tars::TC_Common::trim(sLine.substr(18)) == "chunked");
            if(bChunk) break;
        }
-       else if(strncasecmp(sLine.c_str(), "Content-Length:", 15) != 0)
+       else if(TC_Port::strncasecmp(sLine.c_str(), "Content-Length:", 15) != 0)
        {
            continue;
        }
@@ -1965,7 +1965,7 @@ bool TC_HttpRequest::checkRequest(const char* sBuffer, size_t iLen)
 */
     if(bChunk)
     {
-        int    remain_len = iLen - iHeadLen;
+        int remain_len = (int)(iLen - iHeadLen);
         int move_len = 0;
         const char * pCur = p + 4;
         while(true)
@@ -2021,31 +2021,31 @@ size_t TC_HttpRequest::parseRequestHeader(const char* szBuffer)
     string sMethod = TC_Common::trim(sLine.substr(0, pos));
 
     //解析请求类型
-    if(strncasecmp(sMethod.c_str(), "GET", 3) ==0)    //if(sMethod == "GET")
+    if(TC_Port::strncasecmp(sMethod.c_str(), "GET", 3) ==0)    //if(sMethod == "GET")
     {
         _requestType = REQUEST_GET;
     }
-    else if(strncasecmp(sMethod.c_str(), "POST", 4) ==0)    //else if(sMethod == "POST")
+    else if(TC_Port::strncasecmp(sMethod.c_str(), "POST", 4) ==0)    //else if(sMethod == "POST")
     {
         _requestType = REQUEST_POST;
     }
-    else if(strncasecmp(sMethod.c_str(), "PUT", 3) ==0)
+    else if(TC_Port::strncasecmp(sMethod.c_str(), "PUT", 3) ==0)
     {
         _requestType = REQUEST_PUT;
     }
-    else if(strncasecmp(sMethod.c_str(), "PATCH", 5) ==0)
+    else if(TC_Port::strncasecmp(sMethod.c_str(), "PATCH", 5) ==0)
     {
         _requestType = REQUEST_PATCH;
     }
-    else if(strncasecmp(sMethod.c_str(), "OPTIONS", 7) ==0)    //else if(sMethod == "OPTIONS")
+    else if(TC_Port::strncasecmp(sMethod.c_str(), "OPTIONS", 7) ==0)    //else if(sMethod == "OPTIONS")
     {
         _requestType = REQUEST_OPTIONS;
     }
-    else if(strncasecmp(sMethod.c_str(), "HEAD", 4) == 0)
+    else if(TC_Port::strncasecmp(sMethod.c_str(), "HEAD", 4) == 0)
     {
          _requestType = REQUEST_HEAD;
     }
-    else if(strncasecmp(sMethod.c_str(), "DELETE", 6) == 0)
+    else if(TC_Port::strncasecmp(sMethod.c_str(), "DELETE", 6) == 0)
     {
          _requestType = REQUEST_DELETE;
     }
@@ -2073,9 +2073,9 @@ size_t TC_HttpRequest::parseRequestHeader(const char* szBuffer)
 
     size_t n = parseHeader(*ppChar, _headers) - szBuffer_copy;
 
-    if(strncasecmp(sURL.c_str(), "https://", 8) !=0 )
+    if(TC_Port::strncasecmp(sURL.c_str(), "https://", 8) !=0 )
     {
-        if(strncasecmp(sURL.c_str(), "http://", 7) !=0 )
+        if(TC_Port::strncasecmp(sURL.c_str(), "http://", 7) !=0 )
         {
             sURL = "http://" + getHost() + sURL;
         }

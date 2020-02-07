@@ -1,6 +1,6 @@
-#include "TestRecvThread.h"
+﻿#include "TestRecvThread.h"
 #include <iostream>
-#include <arpa/inet.h>
+//#include <arpa/inet.h>
 
 /*
  响应包解码函数，根据特定格式解码从服务端收到的数据，解析为ResponsePacket

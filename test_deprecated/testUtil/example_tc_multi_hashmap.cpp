@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
@@ -36,7 +36,7 @@ struct FunctionTest
 {
     static void initMem()
     {
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined _WIN64
         size_t iMemSize    = 1024*20;
 #else
         size_t iMemSize    = 1024*10;

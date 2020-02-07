@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -16,6 +16,9 @@
 
 #ifndef __TC_GZIP_H
 #define __TC_GZIP_H
+
+#include  "util/tc_platform.h"
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 
 #include <string>
 #include <vector>
@@ -182,4 +185,5 @@ public:
 };
 
 }
+#endif
 #endif

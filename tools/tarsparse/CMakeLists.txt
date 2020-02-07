@@ -30,7 +30,9 @@ endforeach()
 
 add_library(${TARGETNAME} ${DIR_SRCS} ${DEPENDS_SRC_LIST})
 
-add_dependencies(${TARGETNAME} COPY-LEX-YACC)
+if(UNIX)
+    add_dependencies(${TARGETNAME} COPY-LEX-YACC)
+endif(UNIX)
 
 install(TARGETS tarsparse
         LIBRARY DESTINATION lib

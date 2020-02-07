@@ -2,23 +2,22 @@
 
 echo "run-co.sh"
 
-WORKDIR=$(pwd)
+killall -2 PushServer 
 
-echo ${WORKDIR}
+sleep 1
+echo "start server: ./bin/PushServer --config=../examples/PushDemo/PushServer/config.conf &"
 
-killall -9 PushServer 
+./bin/PushServer --config=../examples/PushDemo/PushServer/config.conf &
 
-echo "start server: ${WORKDIR}/../bin/PushServer --config=${WORKDIR}/../../examples/PushDemo/PushServer/config.conf &"
-
-${WORKDIR}/../bin/PushServer --config=${WORKDIR}/../../examples/PushDemo/PushServer/config.conf &
-
-sleep 3
+sleep 2
 
 #-------------------------------------------------------------------------------------------------------
 
-echo "client: ${WORKDIR}/../bin/PushClient"
+echo "client: ./bin/PushClient"
 
-${WORKDIR}/../bin/PushClient 5
+./bin/PushClient 5
+
+killall -2 PushServer
 
 
 

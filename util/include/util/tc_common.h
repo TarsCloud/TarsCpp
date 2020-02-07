@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -813,6 +813,49 @@ vector<T> TC_Common::sepstr(const string &sStr, const string &sSep, bool withEmp
 
     return vt;
 }
+
+
+template<>
+string TC_Common::tostr<bool>(const bool &t);
+
+template<>
+string TC_Common::tostr<char>(const char &t);
+
+template<>
+string TC_Common::tostr<unsigned char>(const unsigned char &t);
+
+template<>
+string TC_Common::tostr<short>(const short &t);
+
+template<>
+string TC_Common::tostr<unsigned short>(const unsigned short &t);
+
+template<>
+string TC_Common::tostr<int>(const int &t);
+
+template<>
+string TC_Common::tostr<unsigned int>(const unsigned int &t);
+
+template<>
+string TC_Common::tostr<long>(const long &t);
+
+template<>
+string TC_Common::tostr<long long>(const long long &t);
+
+template<>
+string TC_Common::tostr<unsigned long>(const unsigned long &t);
+
+template<>
+string TC_Common::tostr<float>(const float &t);
+
+template<>
+string TC_Common::tostr<double>(const double &t);
+
+template<>
+string TC_Common::tostr<long double>(const long double &t);
+
+template<>
+string TC_Common::tostr<std::string>(const std::string &t);
 
 template<typename T>
 string TC_Common::tostr(const T &t)

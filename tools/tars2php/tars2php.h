@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -24,8 +24,8 @@
 using namespace tars;
 
 /**
- * ¸ù¾İtarsÉú³Éc++ÎÄ¼ş
- * °üÀ¨½á¹¹µÄ±à½âÂëÒÔ¼°Éú³ÉProxyºÍServant
+ * ï¿½ï¿½ï¿½ï¿½tarsï¿½ï¿½ï¿½ï¿½c++ï¿½Ä¼ï¿½
+ * ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½Proxyï¿½ï¿½Servant
  */
 class Tars2Php
 {
@@ -33,28 +33,28 @@ public:
 	Tars2Php();
 
     /**
-     * Éú³É
+     * ï¿½ï¿½ï¿½ï¿½
      * @param file
      */
     void createFile(const string &file, const vector<string> &vsCoder);
 
 
     /**
-    * ÉèÖÃÉú³ÉÎÄ¼şµÄÄ¿Â¼
+    * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ä¿Â¼
     *
     */
     void setBaseDir(const std::string & sPath) { m_sBaseDir = sPath; }
 
 	/**
-	 * ÉèÖÃÊÇ·ñĞèÒª´ò°üÄ¬ÈÏÖµ
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Öµ
 	 */
 	void setCheckDefault(bool bCheck) { m_bCheckDefault = bCheck; }
 
-    //ÏÂÃæÊÇ±à½âÂëµÄÔ´ÂëÉú³É
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 protected:
 
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ½âÂëÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ÍµÄ½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -62,7 +62,7 @@ protected:
     string writeTo(const TypeIdPtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ±àÂëÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ÍµÄ±ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -70,10 +70,10 @@ protected:
     string readFrom(const TypeIdPtr &pPtr, bool bIsRequire = true) const;
 
 
-    //ÏÂÃæÊÇÀàĞÍÃèÊöµÄÔ´ÂëÉú³É
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 protected:
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ×Ö·û´®ÃèÊöÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½Íµï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -81,14 +81,14 @@ protected:
     string tostr(const TypePtr &pPtr) const;
 
     /**
-     * Éú³ÉÄÚ½¨ÀàĞÍµÄ×Ö·û´®Ô´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
      */
     string tostrBuiltin(const BuiltinPtr &pPtr) const;
     /**
-     * Éú³ÉvectorµÄ×Ö·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½vectorï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -96,7 +96,7 @@ protected:
     string tostrVector(const VectorPtr &pPtr) const;
 
     /**
-     * Éú³ÉmapµÄ×Ö·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½mapï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -104,7 +104,7 @@ protected:
     string tostrMap(const MapPtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÖÖ½á¹¹µÄ·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½Ö½á¹¹ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -112,7 +112,7 @@ protected:
     string tostrStruct(const StructPtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÖÖÃ¶¾ÙµÄ·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½Ã¶ï¿½ÙµÄ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -120,7 +120,7 @@ protected:
     string tostrEnum(const EnumPtr &pPtr) const;
 
     /**
-     * »ñÈ¡¶¨³¤Êı×éµÄ×ø±ê
+     * ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -129,7 +129,7 @@ protected:
     string toStrSuffix(const TypeIdPtr &pPtr) const;
 
     /**
-     * »ñÈ¡¶¨³¤Êı×éµÄ×ø±ê
+     * ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return int
@@ -137,7 +137,7 @@ protected:
     int getSuffix(const TypeIdPtr &pPtr) const;
 
     /**
-     * Éú³ÉÀàĞÍ±äÁ¿µÄ½âÂëÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í±ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -145,17 +145,17 @@ protected:
     string decode(const TypeIdPtr &pPtr) const;
 
     /**
-     * Éú³ÉÀàĞÍ±äÁ¿µÄ±àÂëÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í±ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
      */
     string encode(const TypeIdPtr &pPtr) const;
 
-    //ÒÔÏÂÊÇhºÍcppÎÄ¼şµÄ¾ßÌåÉú³É
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½hï¿½ï¿½cppï¿½Ä¼ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 protected:
     /**
-     * Éú³É½á¹¹µÄÍ·ÎÄ¼şÄÚÈİ
+     * ï¿½ï¿½ï¿½É½á¹¹ï¿½ï¿½Í·ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -164,7 +164,7 @@ protected:
 
 
     /**
-     * Éú³ÉÃû×Ö¿Õ¼äµÄÍ·ÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½ï¿½Í·ï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -173,7 +173,7 @@ protected:
 
 
     /**
-     * Éú³ÉÃû×Ö¿Õ¼äµÄÍ·ÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½ï¿½Í·ï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string

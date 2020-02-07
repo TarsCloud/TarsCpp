@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -295,8 +295,8 @@ void TC_HashMap::Block::deallocate()
 
 void TC_HashMap::Block::makeNew(size_t index, size_t iAllocSize)
 {
-    getBlockHead()->_iSize          = iAllocSize;
-    getBlockHead()->_iIndex         = index;
+    getBlockHead()->_iSize          = (uint32_t)iAllocSize;
+    getBlockHead()->_iIndex         = (uint32_t)index;
     getBlockHead()->_iSetNext       = 0;
     getBlockHead()->_iSetPrev       = 0;
     getBlockHead()->_iGetNext       = 0;
@@ -2515,7 +2515,7 @@ void TC_HashMap::doUpdate(bool bUpdate)
             {
                 *(size_t*)((char*)_pHead + _pstModifyHead->_stModifyData[i]._iModifyAddr) = _pstModifyHead->_stModifyData[i]._iModifyValue;
             }
-#if __WORDSIZE == 64
+#if __WORDSIZE == 6|| defined _WIN644
             else if(_pstModifyHead->_stModifyData[i]._cBytes == sizeof(uint32_t))
             {
                 *(uint32_t*)((char*)_pHead + _pstModifyHead->_stModifyData[i]._iModifyAddr) = (uint32_t)_pstModifyHead->_stModifyData[i]._iModifyValue;
@@ -2551,7 +2551,7 @@ void TC_HashMap::update(void* iModifyAddr, size_t iModifyValue)
     assert(_pstModifyHead->_iNowIndex < sizeof(_pstModifyHead->_stModifyData) / sizeof(tagModifyData));
 }
 
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined _WIN64
 void TC_HashMap::update(void* iModifyAddr, uint32_t iModifyValue)
 {
     _pstModifyHead->_cModifyStatus = 1;

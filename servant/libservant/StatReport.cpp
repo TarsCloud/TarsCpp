@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -36,6 +36,8 @@ StatReport::StatReport(size_t iEpollNum)
 , _epollNum(iEpollNum)
 , _retValueNumLimit(10)
 {
+	srand(time(NULL));
+
     for(size_t i = 0 ; i < _epollNum; i++)
     {
         _statMsg.push_back(new stat_queue(MAX_STAT_QUEUE_SIZE));
@@ -382,10 +384,12 @@ void StatReport::report(const string& strMasterName,
 
 string StatReport::sampleUnid()
 {
+	static atomic<int> g_id(rand());
+
     char s[14]              = {0};
     time_t t                = TNOW;
     int ip                  = inet_addr(_ip.c_str());
-    int thread              = syscall(SYS_gettid);
+    int thread              = ++g_id;
     static unsigned short n = 0;
     ++n;
     memcpy( s, &ip, 4 );

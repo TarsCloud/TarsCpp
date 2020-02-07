@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
@@ -26,9 +26,9 @@ void ThreadEntry1(TC_FileMutex *fl)
     while(i == 0)
     {
         fl->rlock();
-        cout << i << ":" << pthread_self() << " : 1234567890abcdefghijklmnopqrstuvwxyz" << endl;
+        cout << i << ":" << std::this_thread::get_id() << " : 1234567890abcdefghijklmnopqrstuvwxyz" << endl;
         sleep(1);
-        cout << i << ":" << pthread_self() << " : 1234567890abcdefghijklmnopqrstuvwxyz" << endl;
+        cout << i << ":" << std::this_thread::get_id() << " : 1234567890abcdefghijklmnopqrstuvwxyz" << endl;
 //        fl->unlock();
         sleep(1);
         i++;
@@ -41,9 +41,9 @@ void ThreadEntry2(TC_FileMutex *fl)
     while(i == 0)
     {
         fl->wlock();
-        cout << i << ":" << pthread_self() << " : 1234567890abcdefghijklmnopqrstuvwxyz" << endl;
+        cout << i << ":" << std::this_thread::get_id() << " : 1234567890abcdefghijklmnopqrstuvwxyz" << endl;
         sleep(1);
-        cout << i << ":" << pthread_self() << " : 1234567890abcdefghijklmnopqrstuvwxyz" << endl;
+        cout << i << ":" << std::this_thread::get_id() << " : 1234567890abcdefghijklmnopqrstuvwxyz" << endl;
 //        fl->unlock();
         sleep(1);
         i++;

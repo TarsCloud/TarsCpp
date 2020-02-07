@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -130,6 +130,8 @@ public:
         /** 
           * @brief 主key头
           */
+#pragma pack(1) 
+
         struct tagMainKeyHead
         {
             uint32_t    _iSize;         /**容量大小*/
@@ -161,7 +163,7 @@ public:
             {
                 _cData[0] = 0;
             }
-        }__attribute__((packed));
+        };
 
          /**
          * @brief 
@@ -186,7 +188,8 @@ public:
                 _cData[0] = 0;
             }
 
-        }__attribute__((packed));
+        };
+#pragma pack() 
 
         /**
          * @brief 构造函数
@@ -431,6 +434,8 @@ public:
         /**
          * @brief block数据头
          */
+#pragma pack(1) 
+
         struct tagBlockHead
         {
             uint32_t        _iSize;         /**block的容量大小*/
@@ -470,7 +475,7 @@ public:
                 _cData[0] = 0;
             }
 
-        }__attribute__((packed));
+        };
 
         /**
          * @brief 
@@ -495,7 +500,8 @@ public:
                 _cData[0] = 0;
             }
 
-        }__attribute__((packed));
+        };
+#pragma pack() 
 
         /**
          * @brief 构造函数
@@ -1419,6 +1425,8 @@ public:
     /**
      * @brief map头
      */
+#pragma pack(1) 
+
     struct tagMapHead
     {
         char        _cMaxVersion;        /**大版本*/
@@ -1450,7 +1458,7 @@ public:
         size_t        _iOnlyKeyCount;         /**主键的OnlyKey个数, 这个数通常为0*/
         size_t        _iMaxBlockCount;     /**主key链下最大的记录数，这个数值要监控，不能太大，否则会导致查询变慢*/
         size_t        _iReserve[4];        /**保留*/
-    }__attribute__((packed));
+    };
 
     /**
      * @brief 需要修改的地址
@@ -1460,7 +1468,7 @@ public:
         size_t        _iModifyAddr;       /**修改的地址*/
         char        _cBytes;            /**字节数*/
         size_t        _iModifyValue;      /**值*/
-    }__attribute__((packed));
+    };
 
     /**
      * @brief 修改数据块头部
@@ -1470,7 +1478,7 @@ public:
         char            _cModifyStatus;         /**修改状态: 0:目前没有人修改, 1: 开始准备修改, 2:修改完毕, 没有copy到内存中*/
         size_t          _iNowIndex;             /**更新到目前的索引, 不能操作1000个*/
         tagModifyData   _stModifyData[1000];     /**一次最多1000次修改*/
-    }__attribute__((packed));
+    };
 
     /**
      * @brief HashItem
@@ -1479,7 +1487,7 @@ public:
     {
         uint32_t    _iBlockAddr;        /**指向数据项的内存地址索引*/
         uint32_t    _iListCount;        /**链表个数*/
-    }__attribute__((packed));
+    };
 
     /**
     * @brief 主key HashItem
@@ -1488,10 +1496,11 @@ public:
     {
         uint32_t    _iMainKeyAddr;        /**主key数据项的偏移地址*/
         uint32_t    _iListCount;        /**相同主key hash索引下主key个数*/
-    }__attribute__((packed));
+    };
+#pragma pack() 
 
     /**64位操作系统用基数版本号, 32位操作系统用偶数版本号*/
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined _WIN64
 
     /**
     * @brief 定义版本号

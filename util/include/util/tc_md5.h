@@ -1,4 +1,4 @@
-#ifndef __TC_MD5_H
+﻿#ifndef __TC_MD5_H
 #define __TC_MD5_H
 
 #include <string>

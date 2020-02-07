@@ -6,30 +6,66 @@ add_subdirectory(PushDemo)
 add_subdirectory(QuickStartDemo)
 add_subdirectory(StressDemo)
 
-add_custom_target(run-quick-start
+if(WIN32)
+    add_custom_target(run-quick-start
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS QuickStartDemo QuickStartDemoClient
-        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-quick-start.sh
+        COMMAND ../servant/script/busybosy.exe bash ../examples/scripts/run-quick-start.bat
         COMMENT "call quick start")
 
-add_custom_target(run-http
+    add_custom_target(run-http
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS HttpServer HttpClient
-        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-http.sh
+        COMMAND ../servant/script/busybosy.exe bash ../examples/scripts/run-http.bat
         COMMENT "call run http")
 
-add_custom_target(run-co
+    add_custom_target(run-co
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro
-        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-co.sh
+        COMMAND ../servant/script/busybosy.exe bash ../examples/scripts/run-co.bat
         COMMENT "call run co")
 
-add_custom_target(run-push
+    add_custom_target(run-push
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS PushServer PushClient
-        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-push.sh
+        COMMAND ../servant/script/busybosy.exe bash ../examples/scripts/run-push.bat
         COMMENT "call run push")
 
-add_custom_target(run-all
+    add_custom_target(run-all
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS QuickStartDemo QuickStartDemoClient HttpServer HttpClient CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro PushServer PushClient
-        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-quick-start.sh
-        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-http.sh
-        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-co.sh
-        COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run-push.sh
+        COMMAND ../servant/script/busybosy.exe bash ../examples/scripts/run-all.bat
         COMMENT "call run all")
+
+else(WIN32)
+
+    add_custom_target(run-quick-start
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS QuickStartDemo QuickStartDemoClient
+        COMMAND sh ../examples/scripts/run-quick-start.sh
+        COMMENT "call quick start")
+
+    add_custom_target(run-http
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS HttpServer HttpClient
+        COMMAND sh ../examples/scripts/run-http.sh
+        COMMENT "call run http")
+
+    add_custom_target(run-co
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro
+        COMMAND sh ../examples/scripts/run-co.sh
+        COMMENT "call run co")
+
+    add_custom_target(run-push
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS PushServer PushClient
+        COMMAND sh ../examples/scripts/run-push.sh
+        COMMENT "call run push")
+
+    add_custom_target(run-all
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS run-quick-start run-http run-co run-push
+        COMMAND sh ../examples/scripts/run-all.sh
+        COMMENT "call run all")
+endif(WIN32)

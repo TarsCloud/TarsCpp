@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -25,10 +25,9 @@
 #include <deque>
 #include <vector>
 #include <memory>
-#include <netinet/in.h>
 #include <errno.h>
 #include <iomanip>
-#include <sys/ipc.h>
+//#include <sys/ipc.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>

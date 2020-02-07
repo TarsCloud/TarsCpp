@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
@@ -35,9 +35,9 @@ public:
     {
         typename T::Lock lock(*this);
         ++i;
-        cout << pthread_self() << ":" << i << endl;
+        cout << std::this_thread::get_id() << ":" << i << endl;
         sleep(3);
-        cout << pthread_self() << ":" << i << endl;
+        cout << std::this_thread::get_id() << ":" << i << endl;
     }
 
     void testLock(int i)

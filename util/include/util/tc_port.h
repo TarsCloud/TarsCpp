@@ -61,6 +61,7 @@ public:
 
     static int closeSocket(int fd);
 
+    static int64_t getpid();
 };
 
 }

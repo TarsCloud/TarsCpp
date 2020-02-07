@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
@@ -393,12 +393,14 @@ public:
 
     }
 
+#pragma pack(1) 
     struct helper
+
     {
         unsigned int    type : 4;
         unsigned int    tag : 4;
-    }__attribute__((packed));
-
+    }
+#pragma pack() 
 public:
     AnalyzerDataHead() : _type(0), _tag(0) {}
     AnalyzerDataHead(uint8_t type, uint8_t tag) : _type(type), _tag(tag) {}

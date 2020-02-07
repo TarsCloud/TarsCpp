@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -138,11 +138,13 @@ public:
         int load5file(const string &sFile);
 
         /**共享内存头部*/
+#pragma pack(1) 
         struct tagBitMapHead
         {
            char     _cVersion;          /**版本, 当前版本为1*/
            size_t   _iMemSize;          /**共享内存大小*/
-        }__attribute__((packed));
+        };
+#pragma pack() 
 
         /**
          * @brief 获取头部地址 

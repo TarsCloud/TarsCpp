@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -102,7 +102,7 @@ void TC_Socket::getPeerName(string &sPeerAddress, uint16_t &iPeerPort)
 
     bzero(stPeer, iPeerLen);
     getPeerName(stPeer, iPeerLen);
-    inet_ntop(_iDomain, (AF_INET6 == _iDomain) ? (const void*)&stPeer6.sin6_addr : (const void *)&stPeer4.sin_addr, sAddr, sizeof(sAddr));
+    inet_ntop(_iDomain, (AF_INET6 == _iDomain) ? (void*)&stPeer6.sin6_addr : (void *)&stPeer4.sin_addr, sAddr, sizeof(sAddr));
     sPeerAddress = sAddr;
     iPeerPort = (AF_INET6 == _iDomain) ? ntohs(stPeer6.sin6_port) : ntohs(stPeer4.sin_port);
 }
@@ -190,7 +190,7 @@ void TC_Socket::getSockName(string &sSockAddress, uint16_t &iSockPort) const
 
     bzero(in, len);
     getSockName(in, len);
-    inet_ntop(_iDomain, (AF_INET6 == _iDomain) ? (const void *)&in6.sin6_addr : (const void *)&in4.sin_addr, sAddr, sizeof(sAddr));
+    inet_ntop(_iDomain, (AF_INET6 == _iDomain) ? (void *)&in6.sin6_addr : (void *)&in4.sin_addr, sAddr, sizeof(sAddr));
     sSockAddress = sAddr;
     iSockPort = (AF_INET6 == _iDomain) ? ntohs(in6.sin6_port) : ntohs(in4.sin_port);
 }
@@ -461,12 +461,12 @@ void TC_Socket::listen(int iConnBackLog)
 
 int TC_Socket::recv(void *pvBuf, size_t iLen, int iFlag)
 {
-    return ::recv(_sock, pvBuf, iLen, iFlag);
+    return ::recv(_sock, (char*)pvBuf, iLen, iFlag);
 }
 
 int TC_Socket::send(const void *pvBuf, size_t iLen, int iFlag)
 {
-    return ::send(_sock, pvBuf, iLen, iFlag);
+    return ::send(_sock, (const char*)pvBuf, iLen, iFlag);
 }
 
 int TC_Socket::recvfrom(void *pvBuf, size_t iLen, string &sFromAddr, uint16_t &iFromPort, int iFlags)
@@ -482,7 +482,7 @@ int TC_Socket::recvfrom(void *pvBuf, size_t iLen, string &sFromAddr, uint16_t &i
     if (iBytes >= 0)
     {
         char sAddr[INET6_ADDRSTRLEN] = "\0";
-        inet_ntop(_iDomain, (AF_INET6 == _iDomain) ? (const void *)&stFromAddr6.sin6_addr : (const void *)&stFromAddr4.sin_addr, sAddr, sizeof(sAddr));
+        inet_ntop(_iDomain, (AF_INET6 == _iDomain) ? (void *)&stFromAddr6.sin6_addr : (void *)&stFromAddr4.sin_addr, sAddr, sizeof(sAddr));
         sFromAddr = sAddr;
         iFromPort = (AF_INET6 == _iDomain) ? ntohs(stFromAddr6.sin6_port) : ntohs(stFromAddr4.sin_port);
     }
@@ -491,7 +491,7 @@ int TC_Socket::recvfrom(void *pvBuf, size_t iLen, string &sFromAddr, uint16_t &i
 
 int TC_Socket::recvfrom(void *pvBuf, size_t iLen, struct sockaddr *pstFromAddr, socklen_t &iFromLen, int iFlags)
 {
-    return ::recvfrom(_sock, pvBuf, iLen, iFlags, pstFromAddr, &iFromLen);
+    return ::recvfrom(_sock, (char*)pvBuf, iLen, iFlags, pstFromAddr, &iFromLen);
 }
 
 int TC_Socket::sendto(const void *pvBuf, size_t iLen, const string &sToAddr, uint16_t port, int iFlags)
@@ -537,7 +537,7 @@ int TC_Socket::sendto(const void *pvBuf, size_t iLen, const string &sToAddr, uin
 
 int TC_Socket::sendto(const void *pvBuf, size_t iLen, struct sockaddr *pstToAddr, socklen_t iToLen, int iFlags)
 {
-    return ::sendto(_sock, pvBuf, iLen, iFlags, pstToAddr, iToLen);
+    return ::sendto(_sock, (const char *)pvBuf, iLen, iFlags, pstToAddr, iToLen);
 }
 
 void TC_Socket::shutdown(int iHow)
@@ -557,12 +557,12 @@ void TC_Socket::setblock(bool bBlock)
 
 int TC_Socket::setSockOpt(int opt, const void *pvOptVal, socklen_t optLen, int level)
 {
-    return setsockopt(_sock, level, opt, pvOptVal, optLen);
+    return setsockopt(_sock, level, opt, (const char*)pvOptVal, optLen);
 }
 
 int TC_Socket::getSockOpt(int opt, void *pvOptVal, socklen_t &optLen, int level)
 {
-    return getsockopt(_sock, level, opt, pvOptVal, &optLen);
+    return getsockopt(_sock, level, opt, (char*)pvOptVal, &optLen);
 }
 
 void TC_Socket::setNoCloseWait()

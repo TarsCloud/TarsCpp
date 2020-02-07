@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -47,17 +47,17 @@ void TarsRemoteNotify::report(const string &sResult, bool bSync)
             info.sApp      = _app;
             info.sServer   = _serverName;
             info.sSet      = _setName;
-            info.sThreadId = TC_Common::tostr(pthread_self());
+            info.sThreadId = TC_Common::tostr(std::this_thread::get_id());
             info.sMessage  = sResult;
             info.sNodeName = _nodeName;
             if(!bSync)
             {
-                //_notifyPrx->async_reportServer(NULL, _app + "." + _serverName, TC_Common::tostr(pthread_self()), sResult);
+                //_notifyPrx->async_reportServer(NULL, _app + "." + _serverName, TC_Common::tostr(std::this_thread::get_id()), sResult);
                 _notifyPrx->async_reportNotifyInfo(NULL, info);
             }
             else
             {
-                //_notifyPrx->reportServer(_app + "." + _serverName, TC_Common::tostr(pthread_self()), sResult);
+                //_notifyPrx->reportServer(_app + "." + _serverName, TC_Common::tostr(std::this_thread::get_id()), sResult);
                 _notifyPrx->reportNotifyInfo(info);
             }
         }
@@ -83,7 +83,7 @@ void TarsRemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
             info.sApp      = _app;
             info.sServer   = _serverName;
             info.sSet      = _setName;
-            info.sThreadId = TC_Common::tostr(pthread_self());
+            info.sThreadId = TC_Common::tostr(std::this_thread::get_id());
             info.sMessage  = sMessage;
             info.eLevel    = level;
             info.sNodeName = _nodeName;

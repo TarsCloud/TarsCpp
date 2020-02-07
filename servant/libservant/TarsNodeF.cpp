@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -14,6 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
+#include "util/tc_port.h"
 #include "servant/TarsNodeF.h"
 #include "servant/TarsLogger.h"
 #include "servant/Communicator.h"
@@ -31,7 +32,7 @@ void TarsNodeFHelper::setNodeInfo(const CommunicatorPtr &comm, const string &obj
 
     _si.application = app;
     _si.serverName  = server;
-    _si.pid         = getpid();
+	_si.pid = TC_Port::getpid();
 }
 
 void TarsNodeFHelper::keepAlive(const string &adapter)

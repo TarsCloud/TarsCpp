@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -1857,7 +1857,7 @@ namespace tars
                     throw TarsDecodeInvalidValue(ss);
                 }
                 TarsWriteToHead(*this, TarsHeadeString4, tag);
-                uint32_t n = htonl(s.size());
+                uint32_t n = (uint32_t)htonl(s.size());
                 TarsWriteUInt32TTypeBuf(*this, n, (*this)._len); 
                 //this->writeBuf(s.data(), s.size());
                 TarsWriteTypeBuf(*this, s.data(), s.size());
@@ -1903,7 +1903,7 @@ namespace tars
             //DataHead h(DataHead::eList, tag);
             //h.writeTo(*this);
             TarsWriteToHead(*this, TarsHeadeList, tag);
-            Int32 n = v.size();
+            Int32 n = (Int32)v.size();
             write(n, 0);
             typedef typename std::vector<T, Alloc>::const_iterator IT;
             for (IT i = v.begin(); i != v.end(); ++i)

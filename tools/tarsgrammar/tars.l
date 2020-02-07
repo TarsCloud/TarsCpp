@@ -23,7 +23,6 @@
 #include <cassert>
 #include <errno.h>
 #include <math.h>
-
 #define YYSTYPE GrammarBasePtr
 
 #include "parse.h"
@@ -48,6 +47,11 @@ struct include_file_state
 #define MAX_INCLUDE_DEPTH 200
 include_file_state include_file_stack[MAX_INCLUDE_DEPTH];
 int include_file_stack_ptr = 0;
+
+int isatty(int)
+{
+	return 0;
+}
 
 %}
 
@@ -115,9 +119,9 @@ tars_const_float         (({tars_float_literal}{tars_float_exp}?)|((\+|-)?[[:dig
 }
 
 "//" {
-    // C++的注释风格
-    bool end = false;
-    while(!end)
+    // C++ comment
+    bool e = false;
+    while(!e)
     {
         int input = yyinput();
         if(input == '\n')
@@ -127,16 +131,16 @@ tars_const_float         (({tars_float_literal}{tars_float_exp}?)|((\+|-)?[[:dig
     	
     	if(input == '\n' || input == EOF)
     	{
-    	    end = true;
+    	    e = true;
     	}
     }
 }
 
 "/*" {
-    // C的注释风格
-    bool end = false;
+    // C comment
+    bool e = false;
     string comment = yytext + 2;
-    while(!end)
+    while(!e)
     {
         int input = yyinput();
         switch(input)
@@ -146,7 +150,7 @@ tars_const_float         (({tars_float_literal}{tars_float_exp}?)|((\+|-)?[[:dig
                 int nextInput = yyinput();
                 if(nextInput == '/')
                 {
-                    end = true;
+                    e = true;
                 }
                 else
                 {
@@ -163,9 +167,8 @@ tars_const_float         (({tars_float_literal}{tars_float_exp}?)|((\+|-)?[[:dig
             }
             case EOF:
             {
-                //到文件尾部, 但是没有出现*/
                 g_parse->error("EOF in comment");
-                end = true; 
+                e = true; 
                 break;
             }
             default:
@@ -177,7 +180,7 @@ tars_const_float         (({tars_float_literal}{tars_float_exp}?)|((\+|-)?[[:dig
     }
     if(comment[0] == '*')
     {
-        //注释内容暂时未处理
+        //todo 
     }
 }
 
@@ -200,15 +203,15 @@ tars_const_float         (({tars_float_literal}{tars_float_exp}?)|((\+|-)?[[:dig
 
 \"  {
     StringGrammarPtr str = new StringGrammar;
-    bool end = false;
-    while(!end)
+    bool e = false;
+    while(!e)
     {
     	int input = yyinput();
     	switch(input)
     	{
     	    case '"':
     	    {
-    	        end = true;
+    	        e = true;
     	        break;
     	    }
     	    case '\n':
@@ -317,10 +320,10 @@ tars_const_float         (({tars_float_literal}{tars_float_exp}?)|((\+|-)?[[:dig
     
     string value = yytext;
     const char* beg = value.c_str();
-    char* end = 0;
+    char* e = 0;
 
-    ptr->v = strtoll(beg, &end, 0);
-    if(!(errno == 0 && beg != end))
+    ptr->v = strtoll(beg, &e, 0);
+    if(!(errno == 0 && beg != e))
     {
         assert(ptr->v != 0);
         string err = "integer constant `";

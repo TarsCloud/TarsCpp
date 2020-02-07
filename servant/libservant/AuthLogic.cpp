@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -169,7 +169,7 @@ int processAuthReqHelper(const BasicAuthPackage& pkg, const BasicAuthInfo& info)
         vector<char> dec;
         try
         {
-            dec = TC_Tea::decrypt2(tmpKey.data(), pkg.sSignature.data(), pkg.sSignature.size());
+            TC_Tea::decrypt(tmpKey.data(), pkg.sSignature.data(), pkg.sSignature.size(), dec);
             secret1.assign(dec.begin(), dec.end());
         }
         catch (const TC_Tea_Exception& )
@@ -253,7 +253,9 @@ string defaultCreateAuthReq(const BasicAuthInfo& info /*, const string& hashMeth
     }
 
     // then use tmpKey to enc secret1, show server that I know secret1, ie, I know secret.
-    vector<char> secret1Enc = TC_Tea::encrypt2(tmpKey.data(), secret1.data(), secret1.size());
+    vector<char> secret1Enc;
+    
+    TC_Tea::encrypt(tmpKey.data(), secret1.data(), secret1.size(), secret1Enc);
 
     pkg.sSignature.assign(secret1Enc.begin(), secret1Enc.end());
     pkg.writeTo(os);

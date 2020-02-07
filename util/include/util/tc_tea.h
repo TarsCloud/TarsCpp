@@ -1,22 +1,7 @@
-/**
- * Tencent is pleased to support the open source community by making Tars available.
- *
- * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
- *
- * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except 
- * in compliance with the License. You may obtain a copy of the License at
- *
- * https://opensource.org/licenses/BSD-3-Clause
- *
- * Unless required by applicable law or agreed to in writing, software distributed 
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
- * specific language governing permissions and limitations under the License.
- */
+ï»¿#ifndef _TC_TEA_H_
+#define _TC_TEA_H_
 
-#ifndef _TARS_TC_TEA_H_
-#define _TARS_TC_TEA_H_
-
+#include "util/tc_platform.h"
 #include <vector>
 #include <string>
 #include <string.h>
@@ -31,16 +16,15 @@ namespace tars
 /////////////////////////////////////////////////
 /**
  * @file tc_tea.h 
- * @brief tea¼Ó½âÃÜÀà(ĞŞ¸ÄÖÁc°æ±¾) . 
+ * @brief teaåŠ è§£å¯†ç±»(ä¿®æ”¹è‡³cç‰ˆæœ¬) . 
  *  
+ * @author jarodruan@tencent.com 
  */
 /////////////////////////////////////////////////
            
-	
-	
 /**
- * @brief ¼ÓÃÜÒì³£Àà
- */	           
+ * @brief åŠ å¯†å¼‚å¸¸ç±»
+ */            
 struct TC_Tea_Exception : public TC_Exception
 {
     TC_Tea_Exception(const string &buffer) : TC_Exception(buffer){};
@@ -48,125 +32,32 @@ struct TC_Tea_Exception : public TC_Exception
 };
 
 /**
- * @brief teaËã·¨£¬Í¨³£ÓÃµÚ¶ş´úËã·¨ 
+ * @brief teaç®—æ³•ï¼Œé€šå¸¸ç”¨ç¬¬äºŒä»£ç®—æ³• 
  */
 class TC_Tea
 {
 public:
+
     /**
-     * @brief µÚÒ»´ú¼ÓÃÜ.
+     * @brief åŠ å¯†.
      *
-     * @param key      ¼ÓÃÜµÄkey, 16¸ö×Ö½Ú 
-     * @param sIn      ÊäÈëbuffer 
-	 * @param iLength  ÊäÈëbuffer³¤¶È 
-     * @return         vector<char>, ¼ÓÃÜºó¶ş½øÖÆ´®
+     * @param key       åŠ å¯†çš„key, 16ä¸ªå­—èŠ‚ 
+     * @param sIn       è¾“å…¥buffer 
+     * @param iLength   è¾“å…¥bufferé•¿åº¦ 
+     * @param buffer    vector<char>, åŠ å¯†åäºŒè¿›åˆ¶ä¸²
      */
-    static vector<char> encrypt(const char *key, const char *sIn, size_t iLength);
+    static void encrypt(const char *key, const char *sIn, size_t iLength, vector<char> &buffer);
 
-	/**
-	 * @brief µÚÒ»´ú½âÃÜ.
+    /**
+     * @brief è§£å¯†.
      *   
-     * @param key       ½âÃÜµÄkey, 16¸ö×Ö½Ú 
-     * @param sIn       ĞèÒª½âÃÜµÄbuffer 
-     * @param iLength   buffer³¤¶È 
-	 * @throw           TC_Tea_Exception, ½âÃÜÊ§°Ü»áÅ×³öÒì³£ 
-     * @return          vector<char>, ½âÃÜºóÊı¾İ
-	 */
-	static vector<char> decrypt(const char *key, const char *sIn, size_t iLength);
-
-    /**
-     * @brief µÚ¶ş´ú¼ÓÃÜ.
-     *
-     * @param key       ¼ÓÃÜµÄkey, 16¸ö×Ö½Ú 
-     * @param sIn       ÊäÈëbuffer 
-	 * @param iLength   ÊäÈëbuffer³¤¶È 
-     * @return          vector<char>, ¼ÓÃÜºó¶ş½øÖÆ´®
+     * @param key      è§£å¯†çš„key, 16ä¸ªå­—èŠ‚ 
+     * @param sIn      éœ€è¦è§£å¯†çš„buffer 
+     * @param iLength  bufferé•¿åº¦ 
+     * @param buffer   vector<char>, è§£å¯†åäºŒè¿›åˆ¶ä¸²
+     * @return bool,   æˆåŠŸå¤±è´¥
      */
-    static vector<char> encrypt2(const char *key, const char *sIn, size_t iLength);
-
-	/**
-	 * @brief µÚ¶ş´ú½âÃÜ.
-     *   
-     * @param key      ½âÃÜµÄkey, 16¸ö×Ö½Ú 
-     * @param sIn      ĞèÒª½âÃÜµÄbuffer 
-     * @param iLength  buffer³¤¶È 
-	 * @throw          TC_Tea_Exception, ½âÃÜÊ§°Ü»áÅ×³öÒì³£ 
-     * @return         vector<char>, ½âÃÜºóÊı¾İ
-	 */
-	static vector<char> decrypt2(const char *key, const char *sIn, size_t iLength);
-
-protected:
-    /**
-     * @brief ¼ÓÃÜÔËËãÒ»¸ö¿é.
-     * 
-     * @param pInBuf   8¸ö×Ö½Ú  
-     * @param pKey     16¸ö×Ö½ÚµÄkey
-     * @param pOutBuf  Êä³ö8¸ö×Ö½ÚµÄ½á¹û
-     */
-    static void TeaEncryptECB(const char *pInBuf, const char *pKey, char *pOutBuf);
-
-    /**
-     * @brief ½âÃÜÔËËãÒ»¸ö¿é.
-     * 
-     * @param pInBuf   8¸ö×Ö½Ú  
-     * @param pKey     16¸ö×Ö½ÚµÄkey
-     * @param pOutBuf  Êä³ö8¸ö×Ö½ÚµÄ½á¹û
-     */
-    static void TeaDecryptECB(const char *pInBuf, const char *pKey, char *pOutBuf);
-
-    /**
-     * @brief ¼ÓÃÜ.
-     * 
-     * @param pInBuf       ¼ÓÃÜµÄÃ÷ÎÄ²¿·Ö(Body)
-     * @param nInBufLen    ³¤¶È
-     * @param pKey         key ±ØĞëÊÇ¿É¼û×Ö·û
-	 * @param pOutBuf      ¼ÓÃÜºóµÄÃ÷ÎÄ²¿·Ö 
-     * @param pOutBufLen   ¼ÓÃÜºóµÄ³¤¶È
-     */
-    static void oi_symmetry_encrypt(const char* pInBuf, size_t nInBufLen, const char* pKey, char* pOutBuf, size_t *pOutBufLen);
-
-    /**
-     * @brief ½âÃÜ.
-     * 
-     * @param pInBuf      ¼ÓÃÜµÄÃ÷ÎÄ²¿·Ö(Body) 
-     * @param nInBufLen   ³¤¶È
-     * @param pKey        key ±ØĞëÊÇ¿É¼û×Ö·û
-     * @param pOutBuf     ½âÃÜºóµÄÃ÷ÎÄ²¿·Ö
-     * @param pOutBufLen  ½âÃÜºóµÄ³¤¶È
-     * @return bool       ½âÃÜ³É¹¦·µ»Øtrue£¬·ñÔò·µ»Øfalse
-     */
-    static bool oi_symmetry_decrypt(const char* pInBuf, size_t nInBufLen, const char* pKey, char* pOutBuf, size_t *pOutBufLen);
-
-    /**
-     * @brief ¸ù¾İ¼ÓÃÜÊäÈëbuffer³¤¶È, ¼ÆËã¼ÓÃÜÊä³ö³¤¶È(8µÄÕûÊı±¶).
-     * 
-     * @param len   buffer³¤¶È
-     * @return      size_t £¬¼ÓÃÜÊä³ö³¤¶È
-     */
-    static size_t oi_symmetry_encrypt2_len(size_t len);
-
-    /**
-     * @brief ¼ÓÃÜ.
-     * 
-     * @param pInBuf      ¼ÓÃÜµÄÃ÷ÎÄ²¿·Ö(Body)
-     * @param nInBufLen   ³¤¶È
-     * @param pKey        key ±ØĞëÊÇ¿É¼û×Ö·û
-     * @param pOutBuf     ¼ÓÃÜºóµÄÃ÷ÎÄ²¿·Ö
-     * @param pOutBufLen  ¼ÓÃÜºóµÄ³¤¶È
-     */
-    static void oi_symmetry_encrypt2(const char* pInBuf, size_t nInBufLen, const char* pKey, char* pOutBuf, size_t *pOutBufLen);
-
-    /**
-     * @brief ½âÃÜ.
-     * 
-     * @param pInBuf        ¼ÓÃÜµÄÃ÷ÎÄ²¿·Ö(Body) 
-     * @param nInBufLen     ³¤¶È
-     * @param pKey          key ±ØĞëÊÇ¿É¼û×Ö·û
-     * @param pOutBuf       ½âÃÜºóµÄÃ÷ÎÄ²¿·Ö
-     * @param pOutBufLen    ½âÃÜºóµÄ³¤¶È 
-     * @return              bool £¬³É¹¦½âÃÜ·µ»Øtrue£¬·ñÔò·µ»Øfalse
-     */
-    static bool oi_symmetry_decrypt2(const char* pInBuf, size_t nInBufLen, const char* pKey, char* pOutBuf, size_t *pOutBufLen);
+    static bool decrypt(const char *key, const char *sIn, size_t iLength, vector<char> &buffer);
 };
 
 }

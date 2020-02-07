@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -158,13 +158,16 @@ public:
     /**
      * @brief chunk头部
      */
+#pragma pack(1) 
+
     struct tagChunkHead
     {
         size_t  _iBlockSize;            /**区块大小*/
         size_t  _iBlockCount;           /**block个数*/
         size_t  _firstAvailableBlock;   /**第一个可用的block索引*/
         size_t  _blockAvailable;        /**可用block个数*/
-    }__attribute__((packed));
+    };
+#pragma pack() 
 
     /**
      * @brief 获取头部信息
@@ -322,11 +325,14 @@ public:
     /**
      * @brief 头部内存块
      */
+#pragma pack(1) 
+
     struct tagChunkAllocatorHead
     {
         size_t  _iSize;
         size_t  _iBlockSize;
-    }__attribute__((packed));
+    };
+#pragma pack() 
 
     /**
      * @brief 取获头部大小 
@@ -533,6 +539,8 @@ public:
     /**
      * @brief 头部内存块
      */
+#pragma pack(1) 
+
     struct tagChunkAllocatorHead
     {
         size_t  _iSize;             /**当前块大小*/
@@ -541,7 +549,8 @@ public:
         size_t  _iMaxBlockSize;
         float   _fFactor;
         size_t  _iNext;             /**下一个分配器地址, 如果没有则为0*/
-    }__attribute__((packed));
+    };
+#pragma pack() 
 
     /**
      * @brief 头部大小

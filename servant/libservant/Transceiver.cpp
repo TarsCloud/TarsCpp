@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#include <sys/uio.h>
+//#include <sys/uio.h>
 #include "servant/Transceiver.h"
 #include "servant/AdapterProxy.h"
 #include "servant/Application.h"
@@ -139,7 +139,7 @@ void Transceiver::connect()
     vector<SocketOpt> &socketOpts = _adapterProxy->getObjProxy()->getSocketOpt();
     for(size_t i=0; i<socketOpts.size(); ++i)
     {
-        if(setsockopt(_fd,socketOpts[i].level,socketOpts[i].optname,socketOpts[i].optval,socketOpts[i].optlen) == -1)
+        if(setsockopt(_fd,socketOpts[i].level,socketOpts[i].optname, (const char*)socketOpts[i].optval,socketOpts[i].optlen) == -1)
         {
             TLOGERROR("[TARS][setsockopt error:" << NetworkUtil::errorToString(errno) 
                 << ",objname:" << _adapterProxy->getObjProxy()->name() 

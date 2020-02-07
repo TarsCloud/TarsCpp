@@ -9,7 +9,7 @@ else()
 include_directories(${util_SOURCE_DIR}/include)
 endif()
 
-link_libraries(pthread)
+# link_libraries(pthread)
 
 #调用tars2cpp, 生成tars对应的文件
 macro(complice_tars OUT_DEPENDS_LIST HEADER TARS_DIR)

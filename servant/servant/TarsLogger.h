@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -840,7 +840,11 @@ protected:
  *       标准输出流方式: cout << "I have " << vApple.size() << " apples!"<<endl;
  *       框架宏方式:     LOGMSG(TarsRollLogger::INFO_LOG,"I have " << vApple.size() << " apples!"<<endl);
  */
+#if TARGET_PLATFORM_WINDOWS
+#define LOGMSG(level,...) do{ if(LOG->isNeedLog(level)) LOG->log(level)<<__VA_ARGS__;}while(0)
+#else
 #define LOGMSG(level,msg...) do{ if(LOG->isNeedLog(level)) LOG->log(level)<<msg;}while(0)
+#endif
 
 /**
  * @brief 按级别循环日志
@@ -851,11 +855,20 @@ protected:
  *       标准输出流方式: cout << "I have " << vApple.size() << " apples!"<<endl;
  *       框架宏方式:     TLOGINFO("I have " << vApple.size() << " apples!"<<endl);
  */
+#if TARGET_PLATFORM_WINDOWS
+#define TLOGINFO(...)    LOGMSG(TarsRollLogger::INFO_LOG,__VA_ARGS__)
+#define TLOGDEBUG(...)   LOGMSG(TarsRollLogger::DEBUG_LOG,__VA_ARGS__)
+#define TLOGWARN(...)    LOGMSG(TarsRollLogger::WARN_LOG,__VA_ARGS__)
+#define TLOGERROR(...)   LOGMSG(TarsRollLogger::ERROR_LOG,__VA_ARGS__)
+#define TLOGTARS(...)    LOGMSG(TarsRollLogger::TARS_LOG,__VA_ARGS__)
+#else
 #define TLOGINFO(msg...)    LOGMSG(TarsRollLogger::INFO_LOG,msg)
 #define TLOGDEBUG(msg...)   LOGMSG(TarsRollLogger::DEBUG_LOG,msg)
 #define TLOGWARN(msg...)    LOGMSG(TarsRollLogger::WARN_LOG,msg)
 #define TLOGERROR(msg...)   LOGMSG(TarsRollLogger::ERROR_LOG,msg)
 #define TLOGTARS(msg...)    LOGMSG(TarsRollLogger::TARS_LOG,msg)
+#endif
+
 /**
  * 按天日志
  */

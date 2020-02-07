@@ -2,24 +2,21 @@
 
 echo "run-http.sh"
 
-WORKDIR=$(pwd)
+killall -2 HttpServer 
 
-echo ${WORKDIR}
+sleep 1
+echo "start server: ./bin/HttpServer --config=../examples/HttpDemo/HttpServer/config.conf &"
 
-killall -9 HttpServer 
-
-echo "start server: ${WORKDIR}/../bin/HttpServer --config=${WORKDIR}/../../examples/HttpDemo/HttpServer/config.conf &"
-
-${WORKDIR}/../bin/HttpServer --config=${WORKDIR}/../../examples/HttpDemo/HttpServer/config.conf &
+./bin/HttpServer --config=../examples/HttpDemo/HttpServer/config.conf &
 
 sleep 1
 
-echo "client: ${WORKDIR}/../bin/HttpClient"
+echo "client: ./bin/HttpClient"
 
-${WORKDIR}/../bin/HttpClient 2 10000
+./bin/HttpClient 2 10000
 
 sleep 1
 
-killall -9 HttpServer 
+killall -2 HttpServer 
 
 

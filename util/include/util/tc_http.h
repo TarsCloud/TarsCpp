@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -18,6 +18,7 @@
 #define __TC_HTTP_H_
 
 #include "util/tc_ex.h"
+#include "util/tc_port.h"
 #include "util/tc_common.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_thread.h"
@@ -359,7 +360,7 @@ public:
         bool operator()(const string &s1, const string &s2) const
         {
             //return TC_Common::upper(s1) < TC_Common::upper(s2);
-            if(strcasecmp(s1.c_str(), s2.c_str()) < 0)
+            if(TC_Port::strcasecmp(s1.c_str(), s2.c_str()) < 0)
             {
                 return true;
             }
@@ -464,7 +465,7 @@ public:
         //Set-Cookie和Cookie可以有多个头
         const char * pStr1 = "SET-COOKIE";
         const char * pStr2 = "COOKIE";//原则上COOKIE只有一个，担心有兼容性问题，保留
-        if((strcasecmp(sHeadName.c_str(), pStr1) != 0) && (strcasecmp(sHeadName.c_str(), pStr2) != 0))
+        if((TC_Port::strcasecmp(sHeadName.c_str(), pStr1) != 0) && (TC_Port::strcasecmp(sHeadName.c_str(), pStr2) != 0))
         {
             _headers.erase(sHeadName);
         }

@@ -1,4 +1,4 @@
-#if TARS_HTTP2
+ï»¿#if TARS_HTTP2
 
 #include "util/tc_http.h"
 #include "util/tc_http2session.h"
@@ -139,7 +139,7 @@ static int on_frame_recv_callback(nghttp2_session *session,
                 {
                     it->second.bFinish = true;
 
-                    //streamÒÑ¾­½éÉÜÁË£¬ÅĞ¶ÏÍ·²¿ÊÇ·ñÕıÈ·
+                    //streamï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë£ï¿½ï¿½Ğ¶ï¿½Í·ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½È·
                     if(it->second.header.find(":method") != it->second.header.end() ||
                        it->second.header.find(":path") != it->second.header.end() ||
                        it->second.header.find(":scheme") != it->second.header.end())
@@ -221,9 +221,9 @@ TC_Http2Session::TC_Http2Session():session_(NULL), bNewCon_(true)
 
     nghttp2_session_server_new(&session_, callbacks, ((void*)this));
 
-    //ÉèÖÃremote_window_size
-    //ÒòÎªÏÖÔÚµÄnghttp2Ã»ÓĞÉèÖÃÕâ¸öµÄÈë¿Ú£¬Ö»ÄÜÕâÃ´¸É
-    //Èç¹ûnghttp2_sessionµÄ½á¹¹±äÁË£¬Õâ¸ö¾ÍÓĞÎÊÌâÁË
+    //ï¿½ï¿½ï¿½ï¿½remote_window_size
+    //ï¿½ï¿½Îªï¿½ï¿½ï¿½Úµï¿½nghttp2Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½Ö»ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½
+    //ï¿½ï¿½ï¿½nghttp2_sessionï¿½Ä½á¹¹ï¿½ï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     *(int32_t*)((char*)session_ + 2380) = 100000000;
 
     //TLOGDEBUG("window size:" << nghttp2_session_get_remote_window_size(session_) << endl);
@@ -240,7 +240,7 @@ int TC_Http2Session::parse(string &in, string &out)
 {
     if(bNewCon_)
     {
-        //Á¬½ÓµÄÊ×¸ö°ü
+        //ï¿½ï¿½ï¿½Óµï¿½ï¿½×¸ï¿½ï¿½ï¿½
         bNewCon_ = false;
 
         nghttp2_settings_entry iv[2] = {{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},

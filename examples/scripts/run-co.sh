@@ -2,42 +2,42 @@
 
 echo "run-co.sh"
 
-WORKDIR=$(pwd)
 
-echo ${WORKDIR}
+killall -2 CoroutineDemoAServer 
+sleep 1
 
-killall -9 CoroutineDemoAServer 
+echo "start server: ./bin/CoroutineDemoAServer --config=../examples/CoroutineDemo/AServer/config.conf &"
 
-echo "start server: ${WORKDIR}/../bin/CoroutineDemoAServer --config=${WORKDIR}/../../examples/CoroutineDemo/AServer/config.conf &"
-
-${WORKDIR}/../bin/CoroutineDemoAServer --config=${WORKDIR}/../../examples/CoroutineDemo/AServer/config.conf &
+./bin/CoroutineDemoAServer --config=../examples/CoroutineDemo/AServer/config.conf &
 
 #-------------------------------------------------------------------------------------------------------
 
-killall -9 CoroutineDemoBServer 
+killall -2 CoroutineDemoBServer 
+sleep 1
 
-echo "start server: ${WORKDIR}/../bin/CoroutineDemoBServer --config=${WORKDIR}/../../examples/CoroutineDemo/BServer/config.conf &"
+echo "start server: ./bin/CoroutineDemoBServer --config=../examples/CoroutineDemo/BServer/config.conf &"
 
-${WORKDIR}/../bin/CoroutineDemoBServer --config=${WORKDIR}/../../examples/CoroutineDemo/BServer/config.conf &
+./bin/CoroutineDemoBServer --config=../examples/CoroutineDemo/BServer/config.conf &
 
 
 #-------------------------------------------------------------------------------------------------------
-sleep 3
+sleep 1
 
+echo "client: ./bin/CoroutineDemoClient"
 
-echo "client: ${WORKDIR}/../bin/CoroutineDemoClient"
+./bin/CoroutineDemoClient 2 10000 0
 
-${WORKDIR}/../bin/CoroutineDemoClient 2 10000 0
+./bin/CoroutineDemoClient 2 10000 1
 
-${WORKDIR}/../bin/CoroutineDemoClient 2 10000 1
+./bin/testCoro 1000
 
-${WORKDIR}/../bin/testCoro 1000
-
-${WORKDIR}/../bin/testParallelCoro 1000
+./bin/testParallelCoro 1000
 
 #-------------------------------------------------------------------------------------------------------
 
-#killall -9 CoroutineDemoAServer 
-#killall -9 CoroutineDemoBServer 
+sleep 1
+
+killall -2 CoroutineDemoAServer 
+killall -2 CoroutineDemoBServer 
 
 

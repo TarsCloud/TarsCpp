@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -23,7 +23,7 @@
 #include "servant/AuthLogic.h"
 // #include "util/tc_buffer.h"
 #include <list>
-#include <sys/uio.h>
+//#include <sys/uio.h>
 
 using namespace std;
 

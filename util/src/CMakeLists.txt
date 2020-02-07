@@ -1,15 +1,10 @@
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
+IF(WIN32)
+aux_source_directory(epoll_windows/src. DIR_SRCS)
+ENDIF()
+
 aux_source_directory(. DIR_SRCS)
-
-# if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-#     list(APPEND DIR_SRCS "tc_jump_x86_64_sysv_elf_gas.s")
-#     list(APPEND DIR_SRCS "tc_make_x86_64_sysv_elf_gas.s")
-# else ()
-#     list(APPEND DIR_SRCS "tc_jump_i386_sysv_elf_gas.s")
-#     list(APPEND DIR_SRCS "tc_make_i386_sysv_elf_gas.s")
-# endif ()
-
 
 message("CMAKE_SYSTEM_NAME:${CMAKE_SYSTEM_NAME}, CMAKE_SYSTEM_PROCESSOR:${CMAKE_SYSTEM_PROCESSOR}, CMAKE_CXX_COMPILER_ID:${CMAKE_CXX_COMPILER_ID}")
 
@@ -18,11 +13,13 @@ macro(cpu CPU_STR)
 
     if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i386")
         set(CPU_STR "i386")
-    elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
-        set(CPU_STR "x86_64")
     elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
-        set(CPU_STR "x86_64")
-    elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm")
+        if(${CMAKE_C_SIZEOF_DATA_PTR} STREQUAL "8")
+            set(CPU_STR "x86_64")
+        else()
+            set(CPU_STR "i386")
+        endif()
+    elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ARM" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ARM64")
         set(CPU_STR "arm")
     elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "mips")
         set(CPU_STR "mips")
@@ -189,3 +186,8 @@ endif()
 install(TARGETS tarsutil
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
+
+IF(WIN32)
+install(DIRECTORY epoll_windows/sys
+        DESTINATION include)
+ENDIF()        

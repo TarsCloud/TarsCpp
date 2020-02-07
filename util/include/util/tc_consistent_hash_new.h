@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -31,7 +31,7 @@ struct node_T_new
     /**
      *节点hash值
      */
-    long iHashCode;
+    int32_t iHashCode;
 
     /**
      *节点下标
@@ -51,11 +51,11 @@ enum TC_HashAlgorithmType
 class TC_HashAlgorithm : public TC_HandleBase
 {
 public:
-    virtual long hash(const string & sKey) = 0;
+    virtual int32_t hash(const string & sKey) = 0;
     virtual TC_HashAlgorithmType getHashType() = 0;
 
 protected:
-    long subTo32Bit(long hash)
+    int32_t subTo32Bit(int32_t hash)
     {
         return (hash & 0xFFFFFFFFL);
     }
@@ -70,15 +70,15 @@ typedef TC_AutoPtr<TC_HashAlgorithm> TC_HashAlgorithmPtr;
 class TC_KetamaHashAlg : public TC_HashAlgorithm
 {
 public:
-    virtual long hash(const string & sKey)
+    virtual int32_t hash(const string & sKey)
     {
         string sMd5 = TC_MD5::md5bin(sKey);
         const char *p = (const char *) sMd5.c_str();
 
-        long hash = ((long)(p[3] & 0xFF) << 24)
-            | ((long)(p[2] & 0xFF) << 16)
-            | ((long)(p[1] & 0xFF) << 8)
-            | ((long)(p[0] & 0xFF));
+        int32_t hash = ((int32_t)(p[3] & 0xFF) << 24)
+            | ((int32_t)(p[2] & 0xFF) << 16)
+            | ((int32_t)(p[1] & 0xFF) << 8)
+            | ((int32_t)(p[0] & 0xFF));
 
         return subTo32Bit(hash);
     }
@@ -95,12 +95,12 @@ public:
 class TC_DefaultHashAlg : public TC_HashAlgorithm
 {
 public:
-    virtual long hash(const string & sKey)
+    virtual int32_t hash(const string & sKey)
     {
         string sMd5 = TC_MD5::md5bin(sKey);
         const char *p = (const char *) sMd5.c_str();
 
-        long hash = (*(int*)(p)) ^ (*(int*)(p+4)) ^ (*(int*)(p+8)) ^ (*(int*)(p+12));
+        int32_t hash = (*(int*)(p)) ^ (*(int*)(p+4)) ^ (*(int*)(p+8)) ^ (*(int*)(p+12));
 
         return subTo32Bit(hash);
     }
@@ -273,10 +273,10 @@ public:
 
                 for (int i = 0; i < 4; i++)
                 {
-                    stItem.iHashCode = ((long)(p[i * 4 + 3] & 0xFF) << 24)
-                        | ((long)(p[i * 4 + 2] & 0xFF) << 16)
-                        | ((long)(p[i * 4 + 1] & 0xFF) << 8)
-                        | ((long)(p[i * 4 + 0] & 0xFF));
+                    stItem.iHashCode = ((int32_t)(p[i * 4 + 3] & 0xFF) << 24)
+                        | ((int32_t)(p[i * 4 + 2] & 0xFF) << 16)
+                        | ((int32_t)(p[i * 4 + 1] & 0xFF) << 8)
+                        | ((int32_t)(p[i * 4 + 0] & 0xFF));
                     stItem.iIndex = index;
                     _vHashList.push_back(stItem);
                 }
@@ -306,7 +306,7 @@ public:
             return -1;
         }
 
-        long iCode = _ptrHashAlg->hash(TC_MD5::md5bin(key));
+        int32_t iCode = _ptrHashAlg->hash(TC_MD5::md5bin(key));
 
         return getIndex(iCode, iIndex);
     }
@@ -318,7 +318,7 @@ public:
      * @param iIndex  对应到的节点下标
      * @return        0:获取成功   -1:没有被添加的节点
      */
-    int getIndex(long hashcode, unsigned int & iIndex)
+    int getIndex(int32_t hashcode, unsigned int & iIndex)
     {
         if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
         {
@@ -327,10 +327,10 @@ public:
         }
 
         // 只保留32位
-        long iCode = (hashcode & 0xFFFFFFFFL);
+		size_t iCode = (hashcode & 0xFFFFFFFFL);
 
         int low = 0;
-        int high = _vHashList.size();
+        size_t high = _vHashList.size();
 
         if(iCode <= _vHashList[0].iHashCode || iCode > _vHashList[high-1].iHashCode)
         {

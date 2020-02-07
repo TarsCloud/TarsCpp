@@ -1,4 +1,4 @@
-#ifndef __TC_MALLOC_CHUNK_H
+﻿#ifndef __TC_MALLOC_CHUNK_H
 #define __TC_MALLOC_CHUNK_H
 
 #include <iostream>
@@ -165,13 +165,16 @@ namespace tars
          */
         void deallocate(void *pAddr);
 
+#pragma pack(1) 
+
         struct tagSpanAlloc
         {
             size_t  _iSpanSize;            /**span区块大小*/
             size_t  _iSpanCount;           /**span个数*/
             size_t  _firstAvailableSpan;   /**第一个可用的span索引*/
             size_t  _spanAvailable;        /**可用span个数*/
-        }__attribute__((packed));
+        };
+#pragma pack() 
 
         static size_t getHeadSize() { return sizeof(tagSpanAlloc); }
 
@@ -209,6 +212,8 @@ namespace tars
     class TC_Page
     {
     public:
+#pragma pack(1) 
+
         struct tagShmFlag
         {
             bool         _bShmProtectedArea;    /*是否设置保护区*/
@@ -220,21 +225,21 @@ namespace tars
             size_t       _iShmSpanNum;            /*TC_Span内存区中span的个数*/
             size_t       _iShmPageMapNum;        /*PageMap内存区中map的个数*/
             size_t       _iShmPageNum;            /*Data内存区中页的个数*/
-        }__attribute__((packed));
+        };
 
         struct tagModifyData
         {
             size_t       _iModifyAddr;            /*修改的地址*/
             char         _cBytes;                /*字节数*/
             size_t       _iModifyValue;            /*值*/
-        }__attribute__((packed));
+        };
 
         struct tagModifyHead
         {
             char           _cModifyStatus;        /*修改状态: 0:目前没有人修改, 1: 开始准备修改, 2:修改完毕, 没有copy到内存中*/
             size_t         _iNowIndex;            /*更新到目前的索引*/
             tagModifyData  _stModifyData[32];    /*一次最多32次修改*/
-        }__attribute__((packed));
+        };
 
         struct TC_Span
         {
@@ -248,14 +253,15 @@ namespace tars
             unsigned int location;                /*用于识别该span是空闲，还是处于使用中*/
 
             enum { IN_USE, ON_FREELIST };
-        }__attribute__((packed));    
+        };    
 
         struct TC_CenterList
         {
             size_t       size_class;            /*内存大小的类别*/
             TC_Span      empty;                    /*空闲链表*/
             TC_Span      nonempty;                /*非空闲链表*/
-        }__attribute__((packed));
+        };
+#pragma pack() 
 
     public:
         TC_Page() : _pShmFlagHead(NULL),_pModifyHead(NULL),_pCenterCache(NULL),_pLarge(NULL),_pFree(NULL),_pSpanMemHead(NULL),_pPageMap(NULL),_pData(NULL) {}
@@ -656,13 +662,16 @@ namespace tars
         /**
          * 头部内存块
          */
+#pragma pack(1) 
+
         struct tagChunkAllocatorHead
         {
             bool   _bProtectedArea;
             size_t _iSize;
             size_t _iTotalSize;
             size_t _iNext;
-        }__attribute__((packed));
+        };
+#pragma pack() 
 
         /**
          * 头部内存块大小
