@@ -9,6 +9,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
+    - name: git
+      run: git submodule init --remote --recursive
     - name: configure
       run: mkdir build;cd build;cmake ..
     - name: make
