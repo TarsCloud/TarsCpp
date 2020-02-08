@@ -171,6 +171,7 @@ list(APPEND DIR_SRCS ${JUMP_SRC})
 list(APPEND DIR_SRCS ${MAKE_SRC})
 
 add_library(tarsutil ${DIR_SRCS})
+add_dependencies(tarsutil thirdparty)
 
 if(${TARS_SSL} EQUAL 1)
     target_link_libraries(tarsutil; crypto; ssl)

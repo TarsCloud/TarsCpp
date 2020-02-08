@@ -46,25 +46,36 @@ set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
 
 #-------------------------------------------------------------
 
-set(MYSQL_DIR_INC "${CMAKE_SOURCE_DIR}/thirdparty/include/mysql")
+include(ExternalProject)
+
+ExternalProject_Add(thirdparty
+        # This is the upstream source code repackaged in a .tar.gz for
+        # compatibility with older CMake. Also the tests/ directory
+        # removed to save space.
+        URL http://cdn.tarsyun.com/src/20200208092837.tgz
+        # URL /Users/jarod/centos/TarsCpp/build/thirdparty/src/20200208092837.tgz
+        PREFIX    ${CMAKE_BINARY_DIR}/thirdparty
+        INSTALL_DIR ${CMAKE_SOURCE_DIR}
+        #URL_MD5 ${clang_md5}
+        )
+
+set(THIRDPARTY_PATH "${CMAKE_BINARY_DIR}/thirdparty")
+set(MYSQL_DIR_INC "${THIRDPARTY_PATH}/include/mysql")
 
 IF (WIN32)
-    set(MYSQL_DIR_LIB "${CMAKE_SOURCE_DIR}/thirdparty/win_64")
+    set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/lib/win")
     set(LIB_MYSQL "libmysql")
 ELSE()
     IF(APPLE)
-        set(MYSQL_DIR_LIB "${CMAKE_SOURCE_DIR}/thirdparty/mac_64")
+        set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/lib/mac")
     ELSE(LINUX)
-        set(MYSQL_DIR_LIB "${CMAKE_SOURCE_DIR}/thirdparty/linux_64")
+        set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/lib/linux")
         link_libraries(pthread dl)
     ENDIF()
     set(LIB_MYSQL "libmysqlclient")
 ENDIF()
 
 include_directories(${MYSQL_DIR_INC})
-link_directories(${MYSQL_DIR_LIB})
-link_libraries(${libmysql})
-
 
 #-------------------------------------------------------------
 IF (APPLE)
