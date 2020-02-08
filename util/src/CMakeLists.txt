@@ -13,7 +13,7 @@ macro(cpu CPU_STR)
 
     if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i386")
         set(CPU_STR "i386")
-    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+    else if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
         set(CPU_STR "x86_64")
     elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
         if(${CMAKE_C_SIZEOF_DATA_PTR} STREQUAL "8")
