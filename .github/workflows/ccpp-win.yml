@@ -17,5 +17,5 @@ jobs:
     - name: configure
       run: mkdir build;cd build;cmake .. -A X64
     - name: make
-      run: cd build; cmake --build . --config relese --target run-all
+      run: cd build; cmake --build . --config release --target run-all
 

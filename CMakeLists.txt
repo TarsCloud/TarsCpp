@@ -52,7 +52,7 @@ ExternalProject_Add(thirdparty
         # This is the upstream source code repackaged in a .tar.gz for
         # compatibility with older CMake. Also the tests/ directory
         # removed to save space.
-        URL http://cdn.tarsyun.com/src/20200208092837.tgz
+        URL http://cdn.tarsyun.com/src/20200208130936.tgz
         # URL /Users/jarod/centos/TarsCpp/build/thirdparty/src/20200208092837.tgz
         PREFIX    ${CMAKE_BINARY_DIR}/thirdparty
         INSTALL_DIR ${CMAKE_SOURCE_DIR}
