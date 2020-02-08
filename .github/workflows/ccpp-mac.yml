@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install
-      run: brew install -y bison flex
+      run: brew install bison flex
     - name: git
       run: git submodule update --init --recursive
     - name: configure
