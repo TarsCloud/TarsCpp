@@ -199,7 +199,7 @@ public:
      * @param status
      * @param buffer
      */
-	void sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os, bool push = false);
+	void sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os);
 
     /**
      * taf协议的发送响应数据(仅TAF协议有效), 直接swapbuffer , 这样可以不用copy 数据
@@ -207,14 +207,14 @@ public:
      * @param status
      * @param buffer
      */
-	void sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr, bool push = false);
+	void sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr);
 
 	/**
 	 * taf协议的发送响应数据(仅TAF协议有效)
 	 * @param iRet
 	 * @param buff
 	 */
-	void sendResponse(int iRet, const vector<char> &buff, bool push = false);
+	void sendResponse(int iRet, const vector<char> &buff);
 
 	/**
      * 普通协议的发送响应数据(非TAF协议有效)
@@ -287,7 +287,7 @@ protected:
      * @param sResultDesc
      * @param push
      */
-	void sendResponse(int iRet, const vector<char> &buffer, const map<string, string>& status, const string& sResultDesc, bool push = false);
+	void sendResponse(int iRet, const vector<char> &buffer, const map<string, string>& status, const string& sResultDesc);
 
 protected:
     /**

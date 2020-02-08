@@ -80,11 +80,13 @@ public:
     virtual int onDispatchResponse(const RequestPacket &req, const ResponsePacket &rsp)
 	{
 		cout << "async response:" << rsp.sBuffer.data() << endl;
+		return 0;
 	}
 
     virtual int onDispatchException(const RequestPacket &req, const ResponsePacket &rsp)
 	{
 		cout << "async exception:" << rsp.iRet << endl;
+		return 0;
 	}
 };
 

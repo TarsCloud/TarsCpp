@@ -258,7 +258,7 @@ void TarsCurrent::sendResponse(const char* buff, uint32_t len)
 }
 
 
-void TarsCurrent::sendResponse(int iRet, const vector<char> &buff, bool push)
+void TarsCurrent::sendResponse(int iRet, const vector<char> &buff)
 {
 	//单向调用不需要返回
 	if (_request.cPacketType == TARSONEWAY)
@@ -268,35 +268,35 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buff, bool push)
 
 	// ResponsePacket response;
 	// response.sBuffer = buff;
-	sendResponse(iRet, buff, TARS_STATUS(), "", push);
+	sendResponse(iRet, buff, TARS_STATUS(), "");
 }
 
 void TarsCurrent::sendResponse(int iRet)
 {
 	// ResponsePacket response;
-	sendResponse(iRet, vector<char>(), TARS_STATUS(), "", false);
+	sendResponse(iRet, vector<char>(), TARS_STATUS(), "");
 }
 
-void TarsCurrent::sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os, bool push)
+void TarsCurrent::sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os)
 {
 	// ResponsePacket response;
 	// os.swap(response.sBuffer);
-	sendResponse(iRet, os.getByteBuffer(), TARS_STATUS(), "", push);
+	sendResponse(iRet, os.getByteBuffer(), TARS_STATUS(), "");
 }
 
-void TarsCurrent::sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr, bool push)
+void TarsCurrent::sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr)
 {
 	ResponsePacket response;
 	attr.encode(response.sBuffer);
-	sendResponse(iRet, response.sBuffer, TARS_STATUS(), "", push);
+	sendResponse(iRet, response.sBuffer, TARS_STATUS(), "");
 }
 
-void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<string, string>& status, const string & sResultDesc, bool push)
+void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<string, string>& status, const string & sResultDesc)
 {
     _ret = iRet;
 
     //单向调用不需要返回
-    if (_request.cPacketType == TARSONEWAY && !push)
+    if (_request.cPacketType == TARSONEWAY)
     {
         return;
     }
@@ -318,14 +318,7 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<
 
         response.iRequestId     = _request.iRequestId;
         response.iMessageType   = _request.iMessageType;
-		if(push)
-		{
-			response.cPacketType    = TARSPUSH;
-		}
-		else
-		{
-			response.cPacketType    = TARSNORMAL;
-		}
+		response.cPacketType    = TARSNORMAL;
 
         response.iVersion       = _request.iVersion;
         response.status         = status;
@@ -349,14 +342,7 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<
 
         response.iRequestId     = _request.iRequestId;
         response.iMessageType   = _request.iMessageType;
-		if(push)
-		{
-			response.cPacketType    = TARSPUSH;
-		}
-		else
-		{
-			response.cPacketType    = TARSNORMAL;
-		}
+		response.cPacketType    = TARSNORMAL;
 
         response.iVersion       = _request.iVersion;
         response.status         = status;

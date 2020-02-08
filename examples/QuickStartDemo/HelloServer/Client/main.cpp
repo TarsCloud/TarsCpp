@@ -165,6 +165,9 @@ void syncTupCall(int c)
 
             int ret = rsp.get<int>("");            
             string sRsp = rsp.get<string>("sRsp");
+
+			// assert(ret == 0);
+			// assert(sRsp == buffer);
 		}
 		catch(exception& e)
 		{

@@ -15,6 +15,7 @@
  */
 
 #include "util/tc_timeprovider.h"
+#include <cmath>
 
 namespace tars
 {
