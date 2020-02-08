@@ -2,6 +2,7 @@
 add_subdirectory(UtilDemo)
 add_subdirectory(CoroutineDemo)
 add_subdirectory(HttpDemo)
+add_subdirectory(CustomDemo)
 add_subdirectory(PushDemo)
 add_subdirectory(QuickStartDemo)
 add_subdirectory(StressDemo)
@@ -24,6 +25,12 @@ if(WIN32)
         DEPENDS CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-co.bat
         COMMENT "call run co")
+
+    add_custom_target(run-custom
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS CustomServer CustomClient
+        COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-custom.bat
+        COMMENT "call run custom")
 
     add_custom_target(run-push
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -59,6 +66,12 @@ else(WIN32)
         DEPENDS CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro
         COMMAND sh ../examples/scripts/run-co.sh
         COMMENT "call run co")
+
+    add_custom_target(run-custom
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS CustomServer CustomClient
+        COMMAND sh ../examples/scripts/run-custom.sh
+        COMMENT "call run custom")
 
     add_custom_target(run-push
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

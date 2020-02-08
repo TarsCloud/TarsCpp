@@ -520,8 +520,7 @@ void AdapterProxy::finishInvoke(shared_ptr<ResponsePacket> & rsp)
     ReqMessage * msg = NULL;
 
     //requestid 为0 是push消息
-    if(rsp->iRequestId == 0 || rsp->cPacketType == TARSPUSH)
-    // if (rsp->cPacketType == TARSPUSH)
+    if(rsp->iRequestId == 0)
     {
         if(!_objectProxy->getPushCallback())
         {

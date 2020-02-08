@@ -522,7 +522,7 @@ public:
 
                 is.read(rsp.cPacketType, 2, true);
 
-                if (rsp.cPacketType != TARSNORMAL && rsp.cPacketType != TARSPUSH)
+                if (rsp.cPacketType != TARSNORMAL)
                 {
                     throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
                 }
@@ -777,7 +777,7 @@ public:
                 throw TarsDecodeException("version not correct, version:" + TC_Common::tostr(rsp.iVersion));
             }
 
-            if (rsp.cPacketType != TARSNORMAL && rsp.cPacketType != TARSPUSH)
+            if (rsp.cPacketType != TARSNORMAL)
             {
                 throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
             }

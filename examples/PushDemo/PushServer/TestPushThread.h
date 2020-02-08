@@ -13,7 +13,7 @@ public:
 class PushInfoThread : public TC_Thread, public TC_ThreadLock
 {
 public:
-	PushInfoThread():_bTerminate(false),_tLastPushTime(0),_iId(0){}
+	PushInfoThread():_bTerminate(false), _iId(0){}
 
 	virtual void run();
 
@@ -23,7 +23,6 @@ public:
 
 private:
 	bool _bTerminate;
-	time_t _tLastPushTime;
 	unsigned int _iId;
 	string _sPushInfo;
 };
