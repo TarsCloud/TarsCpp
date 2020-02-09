@@ -216,7 +216,7 @@ int TC_NgHttp2::settings(unsigned int maxCurrentStreams)
 
 void TC_NgHttp2::onNegotiateDone(bool succ)
 {
-    assert (_state == Negotiating);
+    // assert (_state == Negotiating);
     _state = succ ? Http2: Http1;
     if (succ) 
     {

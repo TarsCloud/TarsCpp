@@ -58,6 +58,32 @@ pair<const char*, size_t> TC_NetWorkBuffer::getBufferPointer() const
     return make_pair(it->data() + _pos, it->size() - _pos);
 }
 
+string TC_NetWorkBuffer::getBuffersString() const
+{
+	string buffer;
+	buffer.resize(_length);
+
+    auto it = _bufferList.begin();
+
+    size_t pos = 0;
+    while(it != _bufferList.end())
+    {
+        if(it == _bufferList.begin())
+        {
+        	memcpy(&buffer[pos], it->data() + _pos, it->size() - _pos);
+        	pos += it->size() - _pos;
+        }
+        else
+        {
+	        memcpy(&buffer[pos], it->data(), it->size());
+	        pos += it->size();
+        }
+        ++it;
+    }
+
+    return buffer;    
+}
+
 vector<char> TC_NetWorkBuffer::getBuffers() const
 {
 	vector<char> buffer;
@@ -293,6 +319,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::checkHttp()
     }
     catch (exception &ex)
     {
+        cout << ex.what() << endl;
         return PACKET_ERR;
     }
 

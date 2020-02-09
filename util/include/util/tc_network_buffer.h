@@ -135,6 +135,18 @@ public:
     void* getConnection() { return _connection; }
 
     /**
+     * 设置上下文数据, 可以业务存放数据
+     * @param buff
+     */
+    void* setContextData(void *contextData) { _contextData = contextData; return _contextData; }
+
+    /**
+     * 获取上下文数据,  给业务存放数据
+     * @param buff
+     */
+    void *getContextData() { return _contextData; }
+
+    /**
      * 增加buffer
      * @param buff
      */
@@ -180,6 +192,12 @@ public:
      * @return string
      */
     vector<char> getBuffers() const;
+
+    /**
+     * 返回所有buffer(将所有buffer拼接起来, 注意性能)
+     * @return string
+     */
+    string getBuffersString() const;
 
     /**
      * 读取len字节的buffer(避免len个字节被分割到多个buffer的情况)(注意: 不往后移动)
@@ -370,6 +388,11 @@ protected:
      * 连接信息(不同的类里面不一样)
      */
     void*   _connection = NULL;
+
+    /**
+     * contextData for use
+     */
+    void*   _contextData = NULL;
 
     /**
      * buffer list

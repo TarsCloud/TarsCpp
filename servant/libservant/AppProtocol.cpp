@@ -18,6 +18,7 @@
 #include "util/tc_http.h"
 #include "servant/AppProtocol.h"
 #include "servant/Transceiver.h"
+#include "servant/AdapterProxy.h"
 #include "servant/TarsLogger.h"
 #include "tup/Tars.h"
 #include <iostream>
@@ -92,7 +93,7 @@ static ssize_t reqbody_read_callback(nghttp2_session *session, int32_t stream_id
     }
 
     ssize_t len = length > body->size() ? body->size() : length;
-    std::memcpy(buf, &(*body)[0], len);
+    memcpy(buf, body->data(), len);
         
     vector<char>::iterator end = body->begin();
     std::advance(end, len);
@@ -101,8 +102,10 @@ static ssize_t reqbody_read_callback(nghttp2_session *session, int32_t stream_id
     return len;
 }
 
-vector<char> ProxyProtocol::http1Request(tars::RequestPacket& request, Transceiver *)
+vector<char> ProxyProtocol::http1Request(tars::RequestPacket& request, Transceiver *trans)
 {
+    request.iRequestId = trans->getAdapterProxy()->getId();
+
     TC_HttpRequest httpRequest;
 
     httpRequest.setRequest(request.sFuncName, request.sServantName, string(request.sBuffer.data(), request.sBuffer.size()), true);
@@ -114,32 +117,51 @@ vector<char> ProxyProtocol::http1Request(tars::RequestPacket& request, Transceiv
     return buffer;
 }
 
+struct Http1Context
+{
+    string buff;
+
+    TC_HttpResponse httpRsp;
+};
+
 TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in, ResponsePacket& rsp)
 {
-    TC_NetWorkBuffer::PACKET_TYPE flag = in.checkHttp();
+    void *contextData = in.getContextData();
 
-    if(flag == TC_NetWorkBuffer::PACKET_FULL)
+    if(contextData == NULL)
     {
-        TC_HttpResponse httpRsp;
-        vector<char> buffer = in.getBuffers();
+        contextData = in.setContextData(new Http1Context()); 
+    }
 
-        httpRsp.decode(buffer.data(), buffer.size());
+    Http1Context *context = (Http1Context*)contextData;
 
-        // ResponsePacket rsp;
-        rsp.status["status"]  = httpRsp.getResponseHeaderLine();
-        for (const auto& kv : httpRsp.getHeaders())
+    context->buff.append(in.getBuffersString());
+    in.clearBuffers();
+
+    if(context->httpRsp.incrementDecode(context->buff))
+    {
+        rsp.iRequestId = ((Transceiver*)(in.getConnection()))->getAdapterProxy()->getId();
+
+        rsp.status["status"]  = context->httpRsp.getResponseHeaderLine();
+        for (const auto& kv : context->httpRsp.getHeaders())
         {
             // 响应的头部 
             rsp.status[kv.first] = kv.second; 
         } 
 
-        rsp.sBuffer.assign(httpRsp.getContent().begin(), httpRsp.getContent().end());
+        rsp.sBuffer.assign(context->httpRsp.getContent().begin(), context->httpRsp.getContent().end());
+
+        delete context;
+
+        context = NULL;
+
+        in.setContextData(NULL); 
+
+        return TC_NetWorkBuffer::PACKET_FULL;
+
     }
 
-    return flag;
-
-    // done.push_back(rsp);
-    // return httpRsp.getHeadLength() + httpRsp.getContentLength();
+    return TC_NetWorkBuffer::PACKET_LESS;
 }
 
 // vector<char> encodeHttp2(RequestPacket& request, TC_NgHttp2* session)

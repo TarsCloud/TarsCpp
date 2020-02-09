@@ -278,8 +278,11 @@ void Transceiver::close()
 
 #if TARS_HTTP2
     // Http2ClientSessionManager::getInstance()->delSession(_adapterProxy->getId());
-    nghttp2_session_del(_http2Session->session());
-    _http2Session = NULL;
+    if(_http2Session)
+    {
+        nghttp2_session_del(_http2Session->session());
+        _http2Session = NULL;
+    }
 #endif
 
     _adapterProxy->getObjProxy()->getCommunicatorEpoll()->delFd(_fd,&_fdInfo,EPOLLIN|EPOLLOUT);
@@ -489,6 +492,9 @@ int TcpTransceiver::doResponse()
 	int iRet = 0;
 
     int recvCount = 0;
+
+    shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
+
 	do
     {
 	    char buff[BUFFER_SIZE] = {0x00};
@@ -504,8 +510,6 @@ int TcpTransceiver::doResponse()
 			    TC_NetWorkBuffer::PACKET_TYPE ret;
 			    do
 		        {
-				    shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
-
 				    ret = _adapterProxy->getObjProxy()->getProxyProtocol().responseFunc(_recvBuffer, *rsp.get());
 
 				    if (ret == TC_NetWorkBuffer::PACKET_ERR) {
@@ -515,6 +519,8 @@ int TcpTransceiver::doResponse()
 				    }
 				    else if (ret == TC_NetWorkBuffer::PACKET_FULL) {
 	                    _adapterProxy->finishInvoke(rsp);
+
+                        rsp = std::make_shared<ResponsePacket>();
 				    }
 				    else {
 					    break;
