@@ -903,6 +903,7 @@ void ServantProxy::http_call(const std::string& method,
     msg->request.sFuncName = method;
     // 使用下面两个字段保存头部和包体
     msg->request.context = headers;
+
     msg->request.sBuffer.assign(body.begin(), body.end());
 
     invoke(msg);

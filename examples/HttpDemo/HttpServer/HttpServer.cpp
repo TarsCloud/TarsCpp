@@ -16,37 +16,31 @@
 
 #include "HttpServer.h"
 #include "HttpImp.h"
+#include "Http2Imp.h"
+#include "util/tc_http2session.h"
 
 using namespace std;
 
 HttpServer g_app;
 
-
-static TC_NetWorkBuffer::PACKET_TYPE parseHttp(TC_NetWorkBuffer &in, vector<char> &out)
+TC_NetWorkBuffer::PACKET_TYPE parseHttp2(TC_NetWorkBuffer&in, vector<char> &out)
 {
-    vector<char> buffer = in.getBuffers();
-    cout << "parseHttp:" << buffer.data() << endl;
-    try
+    TC_Http2Session *session = (TC_Http2Session*)(in.getContextData());
+
+    if(session == NULL)
     {
-        bool b = TC_HttpRequest::checkRequest(buffer.data(), buffer.size());
-        if(b)
-        {
-            out.swap(buffer);
-            in.clearBuffers();
-            return TC_NetWorkBuffer::PACKET_FULL;
-        }
-        else
-        {
-            return TC_NetWorkBuffer::PACKET_LESS;
-        }
-    }
-    catch(exception &ex)
-    {
-        return TC_NetWorkBuffer::PACKET_ERR;
+        session = new TC_Http2Session();
+        in.setContextData(session);
+
+        TC_EpollServer::Connection *connection = (TC_EpollServer::Connection *)in.getConnection();
+        Http2Imp::addHttp2Session(connection->getId(), session);
     }
 
-    return TC_NetWorkBuffer::PACKET_LESS; 
+    cout << "parseHttp2:" << in.getBufferLength() << endl;
+
+    return session->parse(in, out);
 }
+
 
 void
 HttpServer::initialize()
@@ -55,8 +49,9 @@ HttpServer::initialize()
     //...
 
     addServant<HttpImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj");
-    // addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",&TC_NetWorkBuffer::parseHttp);
-    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",parseHttp);
+    addServant<Http2Imp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".Http2Obj");
+    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",&TC_NetWorkBuffer::parseHttp);
+    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".Http2Obj", &parseHttp2);
 }
 /////////////////////////////////////////////////////////////////
 void

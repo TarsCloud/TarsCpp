@@ -223,23 +223,6 @@ public:
      */
     void sendResponse(const char* buff, uint32_t len);
 
-    // /**
-    //  * tars协议的发送响应数据(仅TARS协议有效)
-    //  * @param iRet
-    //  * @param status
-    //  * @param buffer
-    //  */
-    // void sendResponse(int iRet, const vector<char>& buffer = TARS_BUFFER(),
-    //                   const map<string, string>& status = TARS_STATUS(),
-    //                   const string & sResultDesc = "");
-
-    // /**
-    //  * 普通协议的发送响应数据(非TARS协议有效)
-    //  * @param buff
-    //  * @param len
-    //  */
-    // void sendResponse(const char* buff, uint32_t len);
-
 protected:
 
     friend class ServantHandle;
@@ -248,30 +231,20 @@ protected:
 
     /**
      * 初始化
-     * @param stRecvData
+     * @param data
      */
-    // void initialize(const TC_EpollServer::tagRecvData &stRecvData);
     void initialize(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * 初始化
-     * @param stRecvData
-     * @param beginTime
+     * @param data
      */
-    // void initialize(const TC_EpollServer::tagRecvData &stRecvData, int64_t beginTime);
     void initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &data);
-
-    /**
-     * 初始化
-     * @param stRecvData
-     */
-    // void initializeClose(const TC_EpollServer::tagRecvData &stRecvData);
 
     /**
      * 初始化
      * @param sRecvBuffer
      */
-    // void initialize(const string &sRecvBuffer);
     void initialize(const vector<char> &sRecvBuffer);
 
     /**
@@ -300,31 +273,6 @@ protected:
      */
 	shared_ptr<TC_EpollServer::RecvContext> _data;
 
-    // /**
-    //  * 消息_bindAdapter
-    //  */
-    // TC_EpollServer::BindAdapter* _bindAdapter;
-
-    // /**
-    //  * 唯一标识
-    //  */
-    // uint32_t                _uid;
-
-    // /**
-    //  * ip地址
-    //  */
-    // string                  _ip;
-
-    // /**
-    //  * 端口
-    //  */
-    // int                     _port;
-
-    // /**
-    //  * 用于回包时选择网络线程
-    //  */
-    // int                        _fd;
-
     /**
      * 客户端请求包
      */
@@ -335,11 +283,6 @@ protected:
      */
     bool                    _response;
 
-    // /**
-    //  * 收到请求时间
-    //  */
-    // int64_t                _begintime;
-
     /**
      * 接口处理的返回值
      */
@@ -349,11 +292,6 @@ protected:
      * 是否上报stat
      */
     bool                    _reportStat;
-
-    /**
-     * 连接关闭的类型，初始值是-1，非法值
-     */
-    // int                     _closeType;
 
     /**
      * 设置额外返回的内容

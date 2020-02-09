@@ -28,45 +28,11 @@ using namespace std;
 using namespace tars;
 using namespace tup;
 
-// int main(int argc,char ** argv)
-// {
-//     if(argc != 3)
-//     {
-//         cout << "usage: " << argv[0] << " ThreadNum CallTimes" << endl;
-//         return -1;
-//     }
-
-//     try
-//     {
-//         tars::Int32 threads = TC_Common::strto<tars::Int32>(string(argv[1]));
-//         TC_ThreadPool tp;
-//         tp.init(threads);
-//         tp.start(); 
-//         cout << "init tp succ" << endl;
-//         tars::Int32 times = TC_Common::strto<tars::Int32>(string(argv[2]));
- 
-//         for(int i = 0; i<threads; i++)
-//         {
-//             tp.exec(std::bind(httpClient, times));
-//         }
-
-//         tp.waitForAllDone(1000);
-//     }catch(exception &e)
-//     {
-//         cout<<e.what()<<endl;
-//     }
-//     catch(...)
-//     {
-
-//     }
-
-//     return 0;
-// }
-
 
 Communicator* _comm;
 
 static string httpObj = "Test.HttpServer.httpObj@tcp -h 127.0.0.1 -p 8081";
+static string http2Obj = "Test.HttpServer.http2Obj@tcp -h 127.0.0.1 -p 8082";
 
 struct Param
 {
@@ -75,6 +41,7 @@ struct Param
 	int thread;
 
 	ServantPrx servantPrx;
+	ServantPrx servant2Prx;
 };
 
 Param param;
@@ -178,11 +145,40 @@ void syncRpc(int c)
     cout << "syncCall total:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
 }
 
-    // void http_call_async(const std::map<std::string, std::string>& headers,
-    //                      const std::string& body,
-    //                      HttpCallback* cb);
 
-void asyncRpc(int c)
+void syncRpc2(int c)
+{
+	int64_t t = TC_Common::now2us();
+
+    std::map<std::string, std::string> header;
+    header[":authority"] = "domain.com";
+    header[":scheme"] = "http";
+
+    std::map<std::string, std::string> rheader;
+    //发起远程调用
+    for (int i = 0; i < c; ++i)
+    {
+        string rbody;
+
+        try
+        {
+
+		    param.servant2Prx->http_call("GET", "/", header, "helloworld", rheader, rbody);
+
+            cout << "rsp:" << rbody << endl;
+        }
+        catch(exception& e)
+        {
+            cout << "exception:" << e.what() << endl;
+        }
+        ++callback_count;
+    }
+
+    int64_t cost = TC_Common::now2us() - t;
+    cout << "syncRpc2 total:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
+}
+
+void asyncRpc2(int c)
 {
 	int64_t t = TC_Common::now2us();
 
@@ -196,7 +192,7 @@ void asyncRpc(int c)
 
 		try
 		{
-			param.servantPrx->http_call_async(header, "helloworld", p);
+			param.servant2Prx->http_call_async(header, "helloworld", p);
 		}
 		catch(exception& e)
 		{
@@ -205,7 +201,7 @@ void asyncRpc(int c)
 	}
 
 	int64_t cost = TC_Common::now2us() - t;
-	cout << "asyncCall send:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
+	cout << "asyncRpc2 send:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
 }
 
 int main(int argc, char *argv[])
@@ -214,7 +210,7 @@ int main(int argc, char *argv[])
     {
         if (argc < 4)
         {
-	        cout << "Usage:" << argv[0] << "--count=1000 --call=[basehttp|synchttp|asynchttp] --thread=1" << endl;
+	        cout << "Usage:" << argv[0] << "--count=1000 --call=[basehttp|synchttp|synchttp2|asynchttp2] --thread=1" << endl;
 
 	        return 0;
         }
@@ -235,6 +231,7 @@ int main(int argc, char *argv[])
         _comm->setProperty("asyncqueuecap", "1000000");
 
 	    param.servantPrx = _comm->stringToProxy<ServantPrx>(httpObj);
+        param.servant2Prx = _comm->stringToProxy<ServantPrx>(http2Obj);
 
 	    param.servantPrx->tars_connect_timeout(5000);
         param.servantPrx->tars_async_timeout(60*1000);
@@ -242,9 +239,11 @@ int main(int argc, char *argv[])
         ProxyProtocol proto;
         proto.requestFunc = ProxyProtocol::http1Request;
         proto.responseFunc = ProxyProtocol::http1Response;
-        // proto.requestFunc = ProxyProtocol::http2Request;
-        // proto.responseFunc = ProxyProtocol::http2Response;
         param.servantPrx->tars_set_protocol(proto);
+
+        proto.requestFunc = ProxyProtocol::http2Request;
+        proto.responseFunc = ProxyProtocol::http2Response;
+        param.servant2Prx->tars_set_protocol(proto);
 
         int64_t start = TC_Common::now2us();
 
@@ -258,9 +257,17 @@ int main(int argc, char *argv[])
         {
             func = syncRpc;
         }
-        else if(param.call == "asynchttp")
+        // else if(param.call == "asynchttp")
+        // {
+        // 	func = asyncRpc;
+        // }
+        else if (param.call == "synchttp2")
         {
-        	func = asyncRpc;
+            func = syncRpc2;
+        }
+        else if(param.call == "asynchttp2")
+        {
+        	func = asyncRpc2;
         }
         else
         {

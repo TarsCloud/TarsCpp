@@ -137,59 +137,6 @@ CommunicatorPtr& Application::getCommunicator()
     return _communicator;
 }
 
-// void Application::waitForQuit()
-// {
-//     int64_t iLastCheckTime = TNOW;
-//     int64_t iNow = iLastCheckTime;
-
-//     unsigned int iNetThreadNum = _epollServer->getNetThreadNum();
-//     vector<TC_EpollServer::NetThread*> vNetThread = _epollServer->getNetThread();
-
-//     for (size_t i = 0; i < iNetThreadNum; ++i)
-//     {
-//         vNetThread[i]->start();
-//     }
-
-//     _epollServer->debug("server netthread num : " + TC_Common::tostr(iNetThreadNum));
-
-//     while(!_epollServer->isTerminate())
-//     {
-//         {
-//             TC_ThreadLock::Lock sync(*_epollServer);
-//             _epollServer->timedWait(5000);
-//         }
-
-//         iNow = TNOW;
-
-//         if(iNow - iLastCheckTime > REPORT_SEND_QUEUE_INTERVAL)
-//         {
-//             iLastCheckTime = iNow;
-
-//             size_t n = 0;
-//             for(size_t i = 0;i < iNetThreadNum; ++i)
-//             {
-//                 n = n + vNetThread[i]->getSendRspSize();
-//             }
-
-//             if(_epollServer->_pReportRspQueue)
-//             {
-//                 _epollServer->_pReportRspQueue->report(n);
-//             }
-//         }
-//     }
-
-//     if(_epollServer->isTerminate())
-//     {
-//         for(size_t i = 0; i < iNetThreadNum; ++i)
-//         {
-//             vNetThread[i]->terminate();
-//             vNetThread[i]->getThreadControl().join();
-//         }
-
-//         _epollServer->stopThread();
-//     }
-// }
-
 void reportRspQueue(TC_EpollServer *epollServer)
 {
     // TLOGDEBUG("Application::reportRspQueue" << endl);
@@ -271,6 +218,7 @@ bool Application::cmdViewStatus(const string& command, const string& params, str
 
     return true;
 }
+
 bool Application::cmdCloseCoreDump(const string& command, const string& params, string& result)
 {
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
@@ -436,43 +384,6 @@ bool Application::cmdLoadConfig(const string& command, const string& params, str
 
     return true;
 }
-
-// bool Application::cmdConnections(const string& command, const string& params, string& result)
-// {
-//     TLOGTARS("Application::cmdConnections:" << command << " " << params << endl);
-
-//     ostringstream os;
-
-//     os << OUT_LINE_LONG << endl;
-
-//     map<int, TC_EpollServer::BindAdapterPtr> m = _epollServer->getListenSocketInfo();
-
-//     for(map<int, TC_EpollServer::BindAdapterPtr>::const_iterator it = m.begin(); it != m.end(); ++it)
-//     {
-//         vector<TC_EpollServer::ConnStatus> v = it->second->getConnStatus();
-
-//         os << OUT_LINE << "\n" << outfill("[adater:" + it->second->getName() + "] [connections:" + TC_Common::tostr(v.size())+ "]") << endl;
-
-//         os  << outfill("conn-uid", ' ', 15)
-//             << outfill("ip:port", ' ', 25)
-//             << outfill("last-time", ' ', 25)
-//             << outfill("timeout", ' ', 10) << endl;
-
-//         for(size_t i = 0; i < v.size(); i++)
-//         {
-//             os  << outfill(TC_Common::tostr<uint32_t>(v[i].uid), ' ', 15)
-//                 << outfill(v[i].ip + ":" + TC_Common::tostr(v[i].port), ' ', 25)
-//                 << outfill(TC_Common::tm2str(v[i].iLastRefreshTime,"%Y-%m-%d %H:%M:%S"), ' ', 25)
-//                 << outfill(TC_Common::tostr(v[i].timeout), ' ', 10) << endl;
-//         }
-//     }
-//     os << OUT_LINE_LONG << endl;
-
-//     result = os.str();
-
-//     return true;
-// }
-
 
 bool Application::cmdConnections(const string& command, const string& params, string& result)
 {
@@ -648,18 +559,6 @@ bool Application::cmdReloadLocator(const string& command, const string& params, 
     return bSucc;
 }
 
-// void Application::outAllAdapter(ostream &os)
-// {
-//     map<int, TC_EpollServer::BindAdapterPtr> m = _epollServer->getListenSocketInfo();
-
-//     for(map<int, TC_EpollServer::BindAdapterPtr>::const_iterator it = m.begin(); it != m.end(); ++it)
-//     {
-//         outAdapter(os, ServantHelperManager::getInstance()->getAdapterServant(it->second->getName()),it->second);
-
-//         os << OUT_LINE << endl;
-//     }
-// }
-
 void Application::outAllAdapter(ostream &os)
 {
     auto m = _epollServer->getListenSocketInfo();
@@ -705,12 +604,6 @@ bool Application::addAppConfig(const string &filename)
     return true;
 }
 
-// void Application::setHandle(TC_EpollServer::BindAdapterPtr& adapter)
-// {
-//     adapter->setHandle<ServantHandle>();
-// }
-
-
 void Application::main(int argc, char *argv[])
 {
     TC_Option op;
@@ -719,7 +612,6 @@ void Application::main(int argc, char *argv[])
 }
     
 void Application::main(const TC_Option &option)
-// void Application::main(int argc, char *argv[])
 {
     try
     {
@@ -730,8 +622,8 @@ void Application::main(const TC_Option &option)
         TC_Common::ignorePipe();
 #endif
         //解析配置文件
-        // parseConfig(argc, argv);
         parseConfig(option);
+
         //初始化Proxy部分
         initializeClient();
 
@@ -787,34 +679,6 @@ void Application::main(const TC_Option &option)
                 exit(-1);
             }
         }
-
-        // //设置HandleGroup分组，启动线程
-        // for (size_t i = 0; i < adapters.size(); ++i)
-        // {
-        //     string name = adapters[i]->getName();
-
-        //     string groupName = adapters[i]->getHandleGroupName();
-
-        //     if(name != groupName)
-        //     {
-        //         TC_EpollServer::BindAdapterPtr ptr = _epollServer->getBindAdapter(groupName);
-
-        //         if (!ptr)
-        //         {
-        //             throw runtime_error("[TARS][adater `" + name + "` setHandle to group `" + groupName + "` fail!");
-        //         }
-
-        //     }
-        //     setHandle(adapters[i]);
-        // }
-
-        //启动业务处理线程
-        // _epollServer->startHandle();
-        // _epollServer->createEpoll();
-
-        // cout << "\n" << outfill("[initialize server] ", '.')  << " [Done]" << endl;
-
-        // cout << OUT_LINE_LONG << endl;
 
         //动态加载配置文件
         TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_LOAD_CONFIG, Application::cmdLoadConfig);
@@ -888,9 +752,9 @@ void Application::main(const TC_Option &option)
     }
     catch (exception &ex)
     {
-        TarsRemoteNotify::getInstance()->report("exit: " + string(ex.what()));
-
         cout << "[main exception]:" << ex.what() << endl;
+
+        TarsRemoteNotify::getInstance()->report("exit: " + string(ex.what()));
         
         exit(-1);
     }

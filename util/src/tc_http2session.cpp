@@ -46,7 +46,7 @@ static ssize_t send_callback(nghttp2_session *session, const uint8_t *data,
 {
     TC_Http2Session *ptr = (TC_Http2Session*)user_data;
     {
-        TC_ThreadLock::Lock lock(ptr->responseBufLock_);
+        TC_LockT<TC_SpinLock> lock(ptr->responseBufLock_);
         ptr->responseBuf_.append((char*)data, length);
     }
     //TLOGDEBUG("[send_callback] length:" << length << endl);
@@ -62,7 +62,7 @@ static int on_header_callback(nghttp2_session *session,
 
     TC_Http2Session *ptr = (TC_Http2Session*)user_data;
     {
-        TC_ThreadLock::Lock lock(ptr->reqLock_);
+        TC_LockT<TC_SpinLock>lock(ptr->reqLock_);
         map<int32_t, TC_Http2Session::RequestPack>::iterator it = ptr->mReq_.find(frame->hd.stream_id);
         if (it != ptr->mReq_.end()) 
         {
@@ -109,17 +109,17 @@ static int on_begin_headers_callback(nghttp2_session *session,
     }
 
     {
-        TC_ThreadLock::Lock lock(ptr->reqLock_);
+        TC_LockT<TC_SpinLock> lock(ptr->reqLock_);
         ptr->mReq_[frame->hd.stream_id].streamId = frame->hd.stream_id;
     }
 
     return 0;
 }
 
-static int on_frame_recv_callback(nghttp2_session *session,
-                                  const nghttp2_frame *frame, void *user_data) 
+static int on_frame_recv_callback(nghttp2_session *session, const nghttp2_frame *frame, void *user_data) 
 {
     //TLOGDEBUG("[on_frame_recv_callback] id:" << frame->hd.stream_id << " type:" << int(frame->hd.type) << endl);
+    cout << "[on_frame_recv_callback] id:" << frame->hd.stream_id << " type:" << int(frame->hd.type) << endl;
 
     TC_Http2Session *ptr = (TC_Http2Session*)user_data;
 
@@ -133,19 +133,19 @@ static int on_frame_recv_callback(nghttp2_session *session,
             //TLOGDEBUG("[on_frame_recv_callback] NGHTTP2_FLAG_END_STREAM" << endl);
 
             {
-                TC_ThreadLock::Lock lock(ptr->reqLock_);
+                TC_LockT<TC_SpinLock> lock(ptr->reqLock_);
                 map<int32_t, TC_Http2Session::RequestPack>::iterator it = ptr->mReq_.find(frame->hd.stream_id);
                 if (it != ptr->mReq_.end()) 
                 {
                     it->second.bFinish = true;
 
-                    //stream�Ѿ������ˣ��ж�ͷ���Ƿ���ȷ
                     if(it->second.header.find(":method") != it->second.header.end() ||
                        it->second.header.find(":path") != it->second.header.end() ||
                        it->second.header.find(":scheme") != it->second.header.end())
                     {
-                        TC_Http2Session::RequestPack *tmpptr = &(it->second);
-                        ptr->reqout_.append((char*)&tmpptr, sizeof(TC_Http2Session::RequestPack *));
+                        cout << "insert reqout_" << endl;
+                        char *tmpptr = (char*)&(it->second);
+                        ptr->reqout_.insert(ptr->reqout_.end(), (char*)&tmpptr, (char*)&tmpptr + sizeof(TC_Http2Session::RequestPack *));
                     }
                 }
             }
@@ -165,7 +165,7 @@ static int on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
     //TLOGDEBUG("[on_data_chunk_recv_callback] stream_id:" << stream_id << endl);
     TC_Http2Session *ptr = (TC_Http2Session*)user_data;
     {
-        TC_ThreadLock::Lock lock(ptr->reqLock_);
+        TC_LockT<TC_SpinLock> lock(ptr->reqLock_);
         map<int32_t, TC_Http2Session::RequestPack>::iterator it = ptr->mReq_.find(stream_id);
         if (it != ptr->mReq_.end()) 
         {
@@ -175,15 +175,14 @@ static int on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
     return 0;
 }
 
-static int on_stream_close_callback(nghttp2_session *session, int32_t stream_id,
-                                    uint32_t error_code, void *user_data) 
+static int on_stream_close_callback(nghttp2_session *session, int32_t stream_id, uint32_t error_code, void *user_data) 
 {
     //TLOGDEBUG("[on_stream_close_callback] streamid:" << stream_id << endl);
 
     TC_Http2Session *ptr = (TC_Http2Session*)user_data;
 
     {
-        TC_ThreadLock::Lock lock(ptr->reqLock_);
+        TC_LockT<TC_SpinLock> lock(ptr->reqLock_);
         map<int32_t, TC_Http2Session::RequestPack>::iterator it = ptr->mReq_.find(stream_id);
         if (it != ptr->mReq_.end()) 
         {
@@ -204,26 +203,18 @@ TC_Http2Session::TC_Http2Session():session_(NULL), bNewCon_(true)
 
     nghttp2_session_callbacks_set_send_callback(callbacks, send_callback);
 
-    nghttp2_session_callbacks_set_on_frame_recv_callback(callbacks,
-                                                       on_frame_recv_callback);
+    nghttp2_session_callbacks_set_on_frame_recv_callback(callbacks, on_frame_recv_callback);
 
-    nghttp2_session_callbacks_set_on_data_chunk_recv_callback(callbacks,
-                                                       on_data_chunk_recv_callback);
+    nghttp2_session_callbacks_set_on_data_chunk_recv_callback(callbacks, on_data_chunk_recv_callback);
 
-    nghttp2_session_callbacks_set_on_stream_close_callback(
-      callbacks, on_stream_close_callback);
+    nghttp2_session_callbacks_set_on_stream_close_callback(callbacks, on_stream_close_callback);
 
-    nghttp2_session_callbacks_set_on_header_callback(callbacks,
-                                                   on_header_callback);
+    nghttp2_session_callbacks_set_on_header_callback(callbacks, on_header_callback);
 
-    nghttp2_session_callbacks_set_on_begin_headers_callback(
-      callbacks, on_begin_headers_callback);
+    nghttp2_session_callbacks_set_on_begin_headers_callback(callbacks, on_begin_headers_callback);
 
     nghttp2_session_server_new(&session_, callbacks, ((void*)this));
 
-    //����remote_window_size
-    //��Ϊ���ڵ�nghttp2û�������������ڣ�ֻ����ô��
-    //���nghttp2_session�Ľṹ���ˣ��������������
     *(int32_t*)((char*)session_ + 2380) = 100000000;
 
     //TLOGDEBUG("window size:" << nghttp2_session_get_remote_window_size(session_) << endl);
@@ -236,7 +227,7 @@ TC_Http2Session::~TC_Http2Session()
     nghttp2_session_del(session_);
 }
 
-int TC_Http2Session::parse(string &in, string &out)
+TC_NetWorkBuffer::PACKET_TYPE TC_Http2Session::parse(TC_NetWorkBuffer&in, vector<char> &out)
 {
     if(bNewCon_)
     {
@@ -246,30 +237,38 @@ int TC_Http2Session::parse(string &in, string &out)
                                         {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 100*1024*1024}};
         nghttp2_submit_settings(session_, NGHTTP2_FLAG_NONE, iv,  ARRLEN(iv));
     }
-	
-    int readlen = nghttp2_session_mem_recv(session_, (uint8_t *)in.c_str(), in.size()); 
+
+    vector<char> buff = in.getBuffers();
+
+    int readlen = nghttp2_session_mem_recv(session_, (uint8_t *)buff.data(), buff.size()); 
+
+    cout << "parse:" << readlen << ", reqout_ size: " << reqout_.size() << endl;
+
     if(readlen < 0)
     {
         return TC_NetWorkBuffer::PACKET_ERR;
     }
     else
     {
-        in = in.substr(readlen);
+        in.moveHeader(readlen);
 
-        out.clear();
-        out.swap(reqout_);
-        if (out.empty())
+        if (reqout_.empty())
+        {
             return TC_NetWorkBuffer::PACKET_LESS;
-        else
-            return TC_NetWorkBuffer::PACKET_FULL;
+        }
+        
+        out.insert(out.end(), reqout_.begin(), reqout_.end());
+        reqout_.clear();
     }
+
+    return TC_NetWorkBuffer::PACKET_FULL;
 }
 
-int TC_Http2Session::getRequest(const vector<char> &request, vector<int32_t>& vtReqid)
+int TC_Http2Session::doRequest(const vector<char> &request, vector<int32_t>& vtReqid)
 {
     vtReqid.clear();
 
-    string resopnseAbout;
+    string responseAbout;
     TC_Http::http_header_type responseHeader;
     string sstatus;
     for (unsigned int i = 0; i < request.size(); i += sizeof(TC_Http2Session::RequestPack *)) 
@@ -283,10 +282,10 @@ int TC_Http2Session::getRequest(const vector<char> &request, vector<int32_t>& vt
     return 0;
 }
 
-int TC_Http2Session::doResopnse(int32_t reqid, const Http2Response &response, vector<char>& out)
+int TC_Http2Session::doResponse(int32_t reqid, const Http2Response &response, vector<char>& out)
 {
     {
-        TC_ThreadLock::Lock lock(reqLock_);
+        TC_LockT<TC_SpinLock> lock(reqLock_);
         map<int32_t, RequestPack>::iterator it = mReq_.find(reqid);
         if (it == mReq_.end())
             return -1;
@@ -319,7 +318,7 @@ int TC_Http2Session::doResopnse(int32_t reqid, const Http2Response &response, ve
     data_prd.read_callback = str_read_callback;
     int ret ;
     {
-        TC_ThreadLock::Lock lock(nghttpLock);
+        TC_LockT<TC_SpinLock> lock(nghttpLock);
 
         ret = nghttp2_submit_response(session_, reqid, hdrs, response.header.size()+1, &data_prd);
         if (ret != 0) 
@@ -335,7 +334,7 @@ int TC_Http2Session::doResopnse(int32_t reqid, const Http2Response &response, ve
     delete [] hdrs;
 
     {
-        TC_ThreadLock::Lock lock(responseBufLock_);
+        TC_LockT<TC_SpinLock> lock(responseBufLock_);
         out.clear();
         out.insert(out.end(), responseBuf_.begin(), responseBuf_.end());
 
@@ -343,7 +342,7 @@ int TC_Http2Session::doResopnse(int32_t reqid, const Http2Response &response, ve
     }
 
     {
-        TC_ThreadLock::Lock lock(reqLock_);
+        TC_LockT<TC_SpinLock> lock(reqLock_);
         mReq_.erase(reqid);
     }
 
@@ -352,8 +351,8 @@ int TC_Http2Session::doResopnse(int32_t reqid, const Http2Response &response, ve
 
 int TC_Http2Session::doRequest(const vector<char> &request, vector<char>& response)
 {
-    int resopnseStatus = 0;
-    string resopnseAbout;
+    int responseStatus = 0;
+    string responseAbout;
     TC_Http::http_header_type responseHeader;
     string sstatus;
     for (unsigned int i = 0; i < request.size(); i += sizeof(TC_Http2Session::RequestPack *)) 
@@ -363,36 +362,36 @@ int TC_Http2Session::doRequest(const vector<char> &request, vector<char>& respon
 
         string sMethod = TC_Common::upper(TC_Common::trim(ptr->header.find(":method")->second));
         if (sMethod == "GET") 
-            resopnseStatus = REQUEST_GET;
+            responseStatus = REQUEST_GET;
         else if (sMethod == "POST") 
-            resopnseStatus = REQUEST_POST;
+            responseStatus = REQUEST_POST;
         else if (sMethod == "OPTIONS") 
-            resopnseStatus = REQUEST_OPTIONS;
+            responseStatus = REQUEST_OPTIONS;
         else if (sMethod == "HEAD") 
-            resopnseStatus = REQUEST_HEAD;
+            responseStatus = REQUEST_HEAD;
         else if (sMethod == "PUT") 
-            resopnseStatus = REQUEST_PUT;
+            responseStatus = REQUEST_PUT;
         else if (sMethod == "DELETE") 
-            resopnseStatus = REQUEST_DELETE;
+            responseStatus = REQUEST_DELETE;
         else
         {
             continue;
         }
         sstatus = ptr->header.find(":path")->second;
-        resopnseAbout.clear();
+        responseAbout.clear();
         responseHeader.clear();
         DataPack dataPack;
         dataPack.readPos = 0;
-        responseFunc_((Req_Type)resopnseStatus, 
+        responseFunc_((Req_Type)responseStatus, 
                       sstatus, 
                       ptr->header,
                       ptr->body, 
-                      resopnseStatus,
-                      resopnseAbout,
+                      responseStatus,
+                      responseAbout,
                       responseHeader, 
                       dataPack.dataBuf); 
 
-        sstatus = TC_Common::tostr(resopnseStatus);
+        sstatus = TC_Common::tostr(responseStatus);
 
         const char* strstatus = ":status";
         nghttp2_nv *hdrs = new nghttp2_nv[responseHeader.size() + 1];
@@ -416,7 +415,7 @@ int TC_Http2Session::doRequest(const vector<char> &request, vector<char>& respon
         data_prd.read_callback = str_read_callback;
         int ret ;
         {
-            TC_ThreadLock::Lock lock(nghttpLock);
+            TC_LockT<TC_SpinLock> lock(nghttpLock);
 
             ret = nghttp2_submit_response(session_, ptr->streamId, hdrs, responseHeader.size()+1, &data_prd);
             if (ret != 0) 
@@ -435,7 +434,7 @@ int TC_Http2Session::doRequest(const vector<char> &request, vector<char>& respon
 
         delete [] hdrs;
         {
-            TC_ThreadLock::Lock lock(reqLock_);
+            TC_LockT<TC_SpinLock> lock(reqLock_);
             mReq_.erase(ptr->streamId); 
         }
 
@@ -444,6 +443,53 @@ int TC_Http2Session::doRequest(const vector<char> &request, vector<char>& respon
     return 0;
 }
 
+int TC_Http2Session::getMethod(int32_t reqid, Req_Type &method)
+{
+    TC_LockT<TC_SpinLock> lock(reqLock_);
+    map<int32_t, RequestPack>::iterator it = mReq_.find(reqid);
+    if (it != mReq_.end()) 
+        method = it->second.method;
+    else
+        return -1;
+
+    return 0;
+}
+
+int TC_Http2Session::getUri(int32_t reqid, string &uri)
+{
+    TC_LockT<TC_SpinLock> lock(reqLock_);
+    map<int32_t, RequestPack>::iterator it = mReq_.find(reqid);
+    if (it != mReq_.end()) 
+        uri = it->second.uri;
+    else
+        return -1;
+
+    return 0;
+}
+
+int TC_Http2Session::getHeader(int32_t reqid, TC_Http::http_header_type &header)
+{
+    TC_LockT<TC_SpinLock> lock(reqLock_);
+    map<int32_t, RequestPack>::iterator it = mReq_.find(reqid);
+    if (it != mReq_.end()) 
+        header = it->second.header;
+    else
+        return -1;
+
+    return 0;
+}
+
+int TC_Http2Session::getBody(int32_t reqid, string &body)
+{
+    TC_LockT<TC_SpinLock> lock(reqLock_);
+    map<int32_t, RequestPack>::iterator it = mReq_.find(reqid);
+    if (it != mReq_.end()) 
+        body = it->second.body;
+    else
+        return -1;
+
+    return 0;
+}
 } 
 
 #endif

@@ -182,7 +182,7 @@ protected:
     /**
      * 锁
      */
-    TC_SpinLock _mutex;
+    TC_SpinLock    _mutex;
 
     /**
      * 是否染色

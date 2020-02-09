@@ -129,6 +129,18 @@ public:
     TC_NetWorkBuffer(void *connection) { _connection = connection; }
 
     /**
+     * deconstruct
+     * @param buff
+     */    
+    ~TC_NetWorkBuffer()
+    {
+        if(_deconstruct)
+        {
+            _deconstruct();
+        }
+    }
+
+    /**
      * 获取connection, 不同服务模型中获取的对象不一样, 需要自己强制转换
      * @param buff
      */
@@ -138,7 +150,7 @@ public:
      * 设置上下文数据, 可以业务存放数据
      * @param buff
      */
-    void* setContextData(void *contextData) { _contextData = contextData; return _contextData; }
+    void setContextData(void *contextData, std::function<void()> deconstruct = std::function<void()>() ) { _contextData = contextData; _deconstruct = deconstruct; }
 
     /**
      * 获取上下文数据,  给业务存放数据
@@ -311,7 +323,7 @@ public:
     }
 
     /**
-     * http协议判读
+     * http1
      * @param in
      * @param out
      * @return
@@ -319,7 +331,7 @@ public:
     static TC_NetWorkBuffer::PACKET_TYPE parseHttp(TC_NetWorkBuffer&in, vector<char> &out);
 
     /**
-     * echo协议, 一般用于调试
+     * echo
      * @param in
      * @param out
      * @return
@@ -393,6 +405,11 @@ protected:
      * contextData for use
      */
     void*   _contextData = NULL;
+
+    /**
+     * deconstruct contextData
+     */
+    std::function<void()> _deconstruct;
 
     /**
      * buffer list

@@ -6,6 +6,8 @@
 #include "util/tc_thread.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_http.h"
+#include "util/tc_network_buffer.h"
+#include "util/tc_spin_lock.h"
 #include "nghttp2/nghttp2.h"
 
 namespace tars
@@ -35,6 +37,10 @@ class TC_Http2Session: public TC_HandleBase
 {
 public:
 
+    TC_Http2Session();
+
+    ~TC_Http2Session();
+
     struct Http2Response
     {
         int status;
@@ -43,66 +49,35 @@ public:
         string body;
     };
 
-    int parse(string &in, string &out);
+    /**
+     * get all http2 request id
+     * @param in
+     * @param out
+     * @return
+     */
+    static int doRequest(const vector<char> &request, vector<int32_t>& vtReqid);
 
-    int getRequest(const vector<char> &request, vector<int32_t>& vtReqid);
+    /**
+     * http2
+     * @param in
+     * @param out
+     * @return
+     */
+    TC_NetWorkBuffer::PACKET_TYPE parse(TC_NetWorkBuffer&in, vector<char> &out);
 
-    int doResopnse(int32_t reqid, const Http2Response &response, vector<char>& out);
-
-    int getMethod(int32_t reqid, Req_Type &method)
-    {
-        TC_ThreadLock::Lock lock(reqLock_);
-        map<int32_t, RequestPack>::iterator it = mReq_.find(reqid);
-        if (it != mReq_.end()) 
-            method = it->second.method;
-        else
-            return -1;
-
-        return 0;
-    }
-
-    int getUri(int32_t reqid, string &uri)
-    {
-        TC_ThreadLock::Lock lock(reqLock_);
-        map<int32_t, RequestPack>::iterator it = mReq_.find(reqid);
-        if (it != mReq_.end()) 
-            uri = it->second.uri;
-        else
-            return -1;
-
-        return 0;
-    }
-
-    int getHeader(int32_t reqid, TC_Http::http_header_type &header)
-    {
-        TC_ThreadLock::Lock lock(reqLock_);
-        map<int32_t, RequestPack>::iterator it = mReq_.find(reqid);
-        if (it != mReq_.end()) 
-            header = it->second.header;
-        else
-            return -1;
-
-        return 0;
-    }
-
-    int getBody(int32_t reqid, string &body)
-    {
-        TC_ThreadLock::Lock lock(reqLock_);
-        map<int32_t, RequestPack>::iterator it = mReq_.find(reqid);
-        if (it != mReq_.end()) 
-            body = it->second.body;
-        else
-            return -1;
-
-        return 0;
-    }
+    int doResponse(int32_t reqid, const Http2Response &response, vector<char>& out);
 
     int doRequest(const vector<char> &request, vector<char>& response);
 
-    void setResponseFunc(ResponseFunc func)
-    {
-        responseFunc_ = func;
-    }
+    void setResponseFunc(ResponseFunc func) { responseFunc_ = func; }
+
+    int getMethod(int32_t reqid, Req_Type &method);
+
+    int getUri(int32_t reqid, string &uri);
+
+    int getHeader(int32_t reqid, TC_Http::http_header_type &header);
+
+    int getBody(int32_t reqid, string &body);
 
     struct RequestPack
     {
@@ -126,17 +101,17 @@ public:
         unsigned int readPos;
     };
 
-    TC_Http2Session();
 
-    ~TC_Http2Session();
-
-    TC_ThreadLock responseBufLock_;
+    TC_SpinLock responseBufLock_;
     string responseBuf_;
 
-    TC_ThreadLock reqLock_;
+    TC_SpinLock reqLock_;
     map<int32_t, RequestPack> mReq_;
 
-    string reqout_;
+    vector<char> reqout_;
+
+protected:
+
 
 private:
 
@@ -153,7 +128,7 @@ private:
 
     bool bNewCon_;
 
-    TC_ThreadLock nghttpLock;
+    TC_SpinLock nghttpLock;
 
     // bool bOldVersion_;
     // bool bUpgrade_;
