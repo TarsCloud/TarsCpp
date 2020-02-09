@@ -240,7 +240,6 @@ int TC_Http2Session::parse(string &in, string &out)
 {
     if(bNewCon_)
     {
-        //���ӵ��׸���
         bNewCon_ = false;
 
         nghttp2_settings_entry iv[2] = {{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},
@@ -251,7 +250,7 @@ int TC_Http2Session::parse(string &in, string &out)
     int readlen = nghttp2_session_mem_recv(session_, (uint8_t *)in.c_str(), in.size()); 
     if(readlen < 0)
     {
-        return TC_EpollServer::PACKET_ERR;
+        return TC_NetWorkBuffer::PACKET_ERR;
     }
     else
     {
@@ -260,9 +259,9 @@ int TC_Http2Session::parse(string &in, string &out)
         out.clear();
         out.swap(reqout_);
         if (out.empty())
-            return TC_EpollServer::PACKET_LESS;
+            return TC_NetWorkBuffer::PACKET_LESS;
         else
-            return TC_EpollServer::PACKET_FULL;
+            return TC_NetWorkBuffer::PACKET_FULL;
     }
 }
 

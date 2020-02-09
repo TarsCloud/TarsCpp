@@ -21,42 +21,32 @@ using namespace std;
 
 HttpServer g_app;
 
-// /////////////////////////////////////////////////////////////////
-// struct HttpProtocol
-// {
-//     /**
-//      * http协议解析
-//      * @param in
-//      * @param out
-//      *
-//      * @return int
-//      */
-//     static int parseHttp(TC_NetWorkBuffer &in, vector<char> &out)
-//     {
-//         try
-//         {
-//             bool b = in.checkRequest(in.length());
-//             if(b)
-//             {
-//                 out = in;
-//                 in.clearBuffers();
-//                 //TLOGDEBUG("out size: " << out.size() << endl);
-//                 return TC_EpollServer::PACKET_FULL;
-//             }
-//             else
-//             {
-//                 return TC_EpollServer::PACKET_LESS;
-//             }
-//         }
-//         catch(exception &ex)
-//         {
-//             return TC_EpollServer::PACKET_ERR;
-//         }
 
-//         return TC_EpollServer::PACKET_LESS;             //��ʾ�յ��İ�����ȫ
-//     }
+static TC_NetWorkBuffer::PACKET_TYPE parseHttp(TC_NetWorkBuffer &in, vector<char> &out)
+{
+    vector<char> buffer = in.getBuffers();
+    cout << "parseHttp:" << buffer.data() << endl;
+    try
+    {
+        bool b = TC_HttpRequest::checkRequest(buffer.data(), buffer.size());
+        if(b)
+        {
+            out.swap(buffer);
+            in.clearBuffers();
+            return TC_NetWorkBuffer::PACKET_FULL;
+        }
+        else
+        {
+            return TC_NetWorkBuffer::PACKET_LESS;
+        }
+    }
+    catch(exception &ex)
+    {
+        return TC_NetWorkBuffer::PACKET_ERR;
+    }
 
-// };
+    return TC_NetWorkBuffer::PACKET_LESS; 
+}
 
 void
 HttpServer::initialize()
@@ -65,7 +55,8 @@ HttpServer::initialize()
     //...
 
     addServant<HttpImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj");
-    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",&TC_NetWorkBuffer::parseHttp);
+    // addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",&TC_NetWorkBuffer::parseHttp);
+    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",parseHttp);
 }
 /////////////////////////////////////////////////////////////////
 void

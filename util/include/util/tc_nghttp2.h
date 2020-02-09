@@ -58,15 +58,15 @@ struct Http2Response
 /** 
  *@brief  注册给taf client网络线程使用的打包函数
  */
-void http2Request(const RequestPacket& , std::string& );
+// void http2Request(const RequestPacket& , std::string& );
 
 /** 
  *@brief  NGHTTP2封装
  */
 class TC_NgHttp2
 {
-     friend void http2Request(const RequestPacket& , std::string& );
-     friend size_t http2Response(const char* , size_t , std::list<tars::ResponsePacket>& , void*);
+    //  friend const vector<char> & http2Request(const RequestPacket&);
+    //  friend size_t http2Response(const char* , size_t , std::list<tars::ResponsePacket>& , void*);
 public:
     /** 
      *@brief  注册给ng session的send回调

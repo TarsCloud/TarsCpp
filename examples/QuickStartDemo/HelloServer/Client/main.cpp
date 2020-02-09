@@ -278,6 +278,7 @@ int main(int argc, char *argv[])
 	    TC_Option option;
         option.decode(argc, argv);
 
+		param.count = TC_Common::strto<int>(option.getValue("count"));
 	    if(param.count <= 0) param.count = 1000;
 	    param.buffersize = TC_Common::strto<int>(option.getValue("buffersize"));
 	    if(param.buffersize <= 0) param.buffersize = 1000;

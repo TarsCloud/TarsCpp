@@ -248,7 +248,7 @@ bool Transceiver::sendAuthData(const BasicAuthInfo& info)
     request.sBuffer.assign(out.begin(), out.end());
 
     // vector<char> toSend;
-    objPrx->getProxyProtocol().requestFunc(request, _sendBuffer);
+    _sendBuffer->addBuffer(objPrx->getProxyProtocol().requestFunc(request));
 
     // _sendBuffer.addBuffer(toSend);
 

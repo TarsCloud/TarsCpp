@@ -57,6 +57,8 @@ public:
             method = it->second.method;
         else
             return -1;
+
+        return 0;
     }
 
     int getUri(int32_t reqid, string &uri)
@@ -67,6 +69,8 @@ public:
             uri = it->second.uri;
         else
             return -1;
+
+        return 0;
     }
 
     int getHeader(int32_t reqid, TC_Http::http_header_type &header)
@@ -77,6 +81,8 @@ public:
             header = it->second.header;
         else
             return -1;
+
+        return 0;
     }
 
     int getBody(int32_t reqid, string &body)
@@ -87,6 +93,8 @@ public:
             body = it->second.body;
         else
             return -1;
+
+        return 0;
     }
 
     int doRequest(const vector<char> &request, vector<char>& response);
@@ -147,8 +155,8 @@ private:
 
     TC_ThreadLock nghttpLock;
 
-    bool bOldVersion_;
-    bool bUpgrade_;
+    // bool bOldVersion_;
+    // bool bUpgrade_;
 };
 
 typedef TC_AutoPtr<TC_Http2Session> TC_Http2SessionPtr;

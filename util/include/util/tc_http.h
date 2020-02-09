@@ -521,7 +521,7 @@ public:
      *
      * @return http内容串
      */
-    string getContent() const { return _content; }
+    const string &getContent() const { return _content; }
 
     /**
      * @brief 设置http body(默认不修改content-length).

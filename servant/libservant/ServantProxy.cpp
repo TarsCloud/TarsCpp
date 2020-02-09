@@ -205,10 +205,9 @@ int ServantProxyCallback::onDispatchException(const RequestPacket &req, const Re
 // 	}
 // }
 
-HttpServantProxyCallback::HttpServantProxyCallback(HttpCallback* cb) :
+HttpServantProxyCallback::HttpServantProxyCallback(const HttpCallbackPtr& cb) :
     _httpCb(cb)
 {
-    assert(_httpCb);
 }
 
 int HttpServantProxyCallback::onDispatchException(const RequestPacket &request, const ResponsePacket &response)
@@ -705,7 +704,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         //判断eStatus来判断状态
         assert(msg->eStatus != ReqMessage::REQ_REQ);
 
-        TLOGTARS("[TARS]ServantProxy::invoke line: " << __LINE__ << " status: " << msg->eStatus << " ret: " <<msg->response->iRet << endl);
+        TLOGTARS("[TARS]ServantProxy::invoke line: " << __LINE__ << " status: " << msg->eStatus << ", ret: " <<msg->response->iRet << endl);
 
         if(msg->eStatus == ReqMessage::REQ_RSP && msg->response->iRet == TARSSERVERSUCCESS)
         {
@@ -729,7 +728,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 
         if(msg->adapter)
         {
-            os << ",adapter" << msg->adapter->endpoint().desc();
+            os << ",adapter:" << msg->adapter->endpoint().desc();
         }
 
         os << ",reqid:" << msg->request.iRequestId << "]";
@@ -917,7 +916,7 @@ void ServantProxy::http_call(const std::string& method,
 
 void ServantProxy::http_call_async(const std::map<std::string, std::string>& headers,
                                    const std::string& body,
-                                   HttpCallback* cb)
+                                   const HttpCallbackPtr &cb)
 {
     ReqMessage * msg = new ReqMessage();
 

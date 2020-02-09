@@ -55,7 +55,7 @@ static TC_NetWorkBuffer::PACKET_TYPE customResponse(TC_NetWorkBuffer &in, Respon
 /*
    Whole package length (4 bytes) + irequestid (4 bytes) + package content
 */
-static void customRequest(const RequestPacket& request, shared_ptr<TC_NetWorkBuffer::SendBuffer>& sbuff)
+static vector<char> customRequest(const RequestPacket& request)
 {
     unsigned int net_bufflength = htonl(request.sBuffer.size()+8);
     unsigned char * bufflengthptr = (unsigned char*)(&net_bufflength);
@@ -71,7 +71,7 @@ static void customRequest(const RequestPacket& request, shared_ptr<TC_NetWorkBuf
 	memcpy(buffer.data() + sizeof(unsigned int), netrequestIdptr, sizeof(unsigned int));
 	memcpy(buffer.data() + sizeof(unsigned int) * 2, request.sBuffer.data(), request.sBuffer.size());
 
-	sbuff->addBuffer(buffer);
+	return buffer;
 }
 
 class CustomCallBack : public ServantProxyCallback

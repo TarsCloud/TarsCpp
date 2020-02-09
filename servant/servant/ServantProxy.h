@@ -380,10 +380,12 @@ public:
                                         int expCode) = 0;
 };
 
+typedef TC_AutoPtr<HttpCallback> HttpCallbackPtr;
+
 class HttpServantProxyCallback : virtual public ServantProxyCallback
 {
 public:
-    explicit HttpServantProxyCallback(HttpCallback* cb);
+    explicit HttpServantProxyCallback(const HttpCallbackPtr& cb);
 
     /**
      * 异步回调对象实现该方法，进行业务逻辑处理
@@ -401,7 +403,7 @@ public:
 
 
 private:
-    TC_AutoPtr<HttpCallback> _httpCb;
+    HttpCallbackPtr _httpCb;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -675,7 +677,7 @@ public:
      */
     void http_call_async(const std::map<std::string, std::string>& headers,
                          const std::string& body,
-                         HttpCallback* cb);
+                         const HttpCallbackPtr &cb);
 
     /**
      * 在RequestPacket中的context设置主调信息标识

@@ -22,7 +22,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(TARS_VERSION "1.4.0")
+set(TARS_VERSION "2.0.0")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 set(TARS_SSL 0)
 add_definitions(-DTARS_SSL=${TARS_SSL})
@@ -52,7 +52,7 @@ ExternalProject_Add(thirdparty
         # This is the upstream source code repackaged in a .tar.gz for
         # compatibility with older CMake. Also the tests/ directory
         # removed to save space.
-        URL http://cdn.tarsyun.com/src/20200208130936.tgz
+        URL http://cdn.tarsyun.com/src/ThirdParty.tgz
         # URL /Users/jarod/centos/TarsCpp/build/thirdparty/src/20200208092837.tgz
         PREFIX    ${CMAKE_BINARY_DIR}/thirdparty
         INSTALL_DIR ${CMAKE_SOURCE_DIR}
@@ -61,21 +61,29 @@ ExternalProject_Add(thirdparty
 
 set(THIRDPARTY_PATH "${CMAKE_BINARY_DIR}/thirdparty")
 set(MYSQL_DIR_INC "${THIRDPARTY_PATH}/include/mysql")
+set(THIRDPARTY_LIB_PATH "${THIRDPARTY_PATH}/lib")
 
+set(LIB_MYSQL)
 IF (WIN32)
-    set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/lib/win")
     set(LIB_MYSQL "libmysql")
+    if(TARS_HTTP2)
+        link_libraries(libnghttp2_static)
+    endif()
 ELSE()
-    IF(APPLE)
-        set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/lib/mac")
-    ELSE(LINUX)
-        set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/lib/linux")
-        link_libraries(pthread dl)
-    ENDIF()
-    set(LIB_MYSQL "libmysqlclient")
+    link_libraries(pthread dl)
+
+    set(LIB_MYSQL "mysqlclient")
+
+    if(TARS_HTTP2)
+        link_libraries(nghttp2)
+    endif()    
 ENDIF()
 
+include_directories(${THIRDPARTY_PATH}/include)
 include_directories(${MYSQL_DIR_INC})
+
+link_directories(${THIRDPARTY_LIB_PATH})
+link_libraries(${mysqlclient})
 
 #-------------------------------------------------------------
 IF (APPLE)

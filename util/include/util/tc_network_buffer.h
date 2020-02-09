@@ -220,6 +220,12 @@ public:
     uint32_t getValueOf4() const;
 
     /**
+     * http协议判读
+     * @return
+     */
+    TC_NetWorkBuffer::PACKET_TYPE checkHttp();
+
+    /**
     * 解析一个包头是1字节的包, 把包体解析出来(解析后, 往后移动)
     * 注意: buffer只返回包体, 不包括头部的1个字节的长度
     * @param buffer, 输出的buffer
@@ -303,13 +309,6 @@ public:
     static TC_NetWorkBuffer::PACKET_TYPE parseEcho(TC_NetWorkBuffer&in, vector<char> &out);
 
 protected:
-    /**
-     * 检查http请求包是否齐全
-     * @param buffer, 将所有数据返回到buffer中
-     * @return, true: http包完整了, false: http还不完整
-     */
-//    bool checkHttp(std::string &buffer) const;
-
     template<typename T>
     T getValue() const
     {
@@ -365,6 +364,7 @@ protected:
         moveHeader(length - sizeof(T));
         return PACKET_FULL;
     }
+
 protected:
     /**
      * 连接信息(不同的类里面不一样)

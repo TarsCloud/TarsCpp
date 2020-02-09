@@ -268,53 +268,22 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseBufferOf4(vector<char> &buf
 //    return PACKET_LESS;
 //}
 
-TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseHttp(TC_NetWorkBuffer&in, vector<char> &out)
+TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::checkHttp()
 {
-    try
+   try
     {
-        if(in._bufferList.empty())
+        const static int headerLen = 10;
+        if(_bufferList.empty() || getBufferLength() <= headerLen)
         {
             return PACKET_LESS;
         }
 
 	    vector<char> buffer;
+        getHeader(headerLen, buffer);
 
-        bool b;
-
-        if(in._bufferList.empty())
-        {
-            b = false;
-        }
-        else
-        {
-            //不用size来判读只有一个元素, list的size会比较慢!!!
-
-            auto it = in._bufferList.begin();
-            auto pre = it;
-
-            ++it;
-
-            if (it == in._bufferList.end())
-            {
-                //只有一个buffer
-                b = TC_HttpRequest::checkRequest(pre->data(), pre->size());
-				if (b)
-				{
-					buffer = in.getBuffers();
-				}
-            }
-            else
-            {
-            	//todo 性能还需要优化
-                buffer = in.getBuffers();
-                b = TC_HttpRequest::checkRequest(buffer.data(), buffer.size());
-            }
-        }
-
+        bool b = TC_HttpRequest::checkRequest(buffer.data(), buffer.size());
         if (b)
         {
-            out.swap(buffer);
-            in.clearBuffers();
             return PACKET_FULL;
         }
         else
@@ -328,6 +297,19 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseHttp(TC_NetWorkBuffer&in, v
     }
 
     return PACKET_LESS;
+}
+
+TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseHttp(TC_NetWorkBuffer&in, vector<char> &out)
+{
+    TC_NetWorkBuffer::PACKET_TYPE b = in.checkHttp();
+
+    if (b == PACKET_FULL)
+    {
+        out = in.getBuffers();
+        in.clearBuffers();
+    }
+
+    return b;
 }
 
 TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseEcho(TC_NetWorkBuffer&in, vector<char> &out)

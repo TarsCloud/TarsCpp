@@ -19,7 +19,6 @@
 #include "tup/Tars.h"
 #include <iostream>
 
-
 #if TARS_HTTP2
 #include "util/tc_nghttp2.h"
 #include "util/tc_http2clientmgr.h"
@@ -42,36 +41,13 @@
 namespace tars
 {
 
-// //TARSServer的协议解析器
-// int AppProtocol::parseAdmin(string &in, string &out)
-// {
-//     return parse(in, out);
-// }
-
-// void ProxyProtocol::tarsRequest(const RequestPacket& request, string& buff)
-// {
-//     TarsOutputStream<BufferWriter> os;
-
-//     request.writeTo(os);
-
-//     tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
-
-//     buff.clear();
-
-//     buff.reserve(sizeof(tars::Int32) + os.getLength());
-
-//     buff.append((const char*)&iHeaderLen, sizeof(tars::Int32));
-
-//     buff.append(os.getBuffer(), os.getLength());
-// }
-
 //TAFServer的协议解析器
 TC_NetWorkBuffer::PACKET_TYPE AppProtocol::parseAdmin(TC_NetWorkBuffer  &in, shared_ptr<TC_NetWorkBuffer::SendBuffer> &out)
 {
     return parse(in, out->getBuffer());
 }
 
-void ProxyProtocol::tarsRequest(const RequestPacket& request, shared_ptr<TC_NetWorkBuffer::SendBuffer>& buff)
+vector<char> ProxyProtocol::tarsRequest(const RequestPacket& request)
 {
 	TarsOutputStream<BufferWriterVector> os;
 
@@ -82,13 +58,17 @@ void ProxyProtocol::tarsRequest(const RequestPacket& request, shared_ptr<TC_NetW
 
 	request.writeTo(os);
 
-	buff->swap(os.getByteBuffer());
+    vector<char> buff;
 
-	assert(buff->length() >= 4);
+	buff.swap(os.getByteBuffer());
 
-	iHeaderLen = htonl((int)(buff->length()));
+	assert(buff.size() >= 4);
 
-	memcpy((void*)buff->buffer(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
+	iHeaderLen = htonl((int)(buff.size()));
+
+	memcpy((void*)buff.data(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
+
+    return buff;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -117,28 +97,33 @@ static ssize_t reqbody_read_callback(nghttp2_session *session, int32_t stream_id
     return len;
 }
 
-size_t http1Response(const char* recvBuffer, size_t length, std::list<tars::ResponsePacket>& done)
+TC_NetWorkBuffer::PACKET_TYPE http1Response(TC_NetWorkBuffer &in, tars::ResponsePacket& rsp)
 {
-    tars::TC_HttpResponse httpRsp;
-    bool ok = httpRsp.decode(std::string(recvBuffer, length));
-    if(!ok)
-        return 0;
+    TC_NetWorkBuffer::PACKET_TYPE flag = in.checkHttp();
 
-    ResponsePacket rsp;
-    rsp.status["status"]  = httpRsp.getResponseHeaderLine();
-    for (const auto& kv : httpRsp.getHeaders())
+    if(flag == TC_NetWorkBuffer::PACKET_FULL)
     {
-        // 响应的头部 
-        rsp.status[kv.first] = kv.second; 
-    } 
+        tars::TC_HttpResponse httpRsp;
+        httpRsp.decode(in.getBuffers());
 
-    std::string content(httpRsp.getContent()); 
-    rsp.sBuffer.assign(content.begin(), content.end());
-    done.push_back(rsp);
-    return httpRsp.getHeadLength() + httpRsp.getContentLength();
+        // ResponsePacket rsp;
+        rsp.status["status"]  = httpRsp.getResponseHeaderLine();
+        for (const auto& kv : httpRsp.getHeaders())
+        {
+            // 响应的头部 
+            rsp.status[kv.first] = kv.second; 
+        } 
+
+        rsp.sBuffer.assign(httpRsp.getContent().begin(), httpRsp.getContent().end());
+    }
+
+    return flag;
+
+    // done.push_back(rsp);
+    // return httpRsp.getHeadLength() + httpRsp.getContentLength();
 }
 
-std::string encodeHttp2(RequestPacket& request, TC_NgHttp2* session)
+vector<char> encodeHttp2(RequestPacket& request, TC_NgHttp2* session)
 {
     std::vector<nghttp2_nv> nva;
 
@@ -186,13 +171,19 @@ std::string encodeHttp2(RequestPacket& request, TC_NgHttp2* session)
     nghttp2_session_send(session->session());
         
     // 交给tars发送
-    std::string out;
-    out.swap(session->sendBuffer());
+    // std::string out;
+    // out.swap(session->sendBuffer());
+    // return out;
+
+    vector<char> out;
+
+    out.assign(session->sendBuffer().begin(), session->sendBuffer().end());
+
     return out;
 }
 
 // ENCODE function, called by network thread
-void http2Request(const RequestPacket& request, std::string& out)
+vector<char> http2Request(const RequestPacket& request)
 {
     TC_NgHttp2* session = Http2ClientSessionManager::getInstance()->getSession(request.iRequestId);
     if (session->getState() == TC_NgHttp2::None)
@@ -203,39 +194,59 @@ void http2Request(const RequestPacket& request, std::string& out)
 
     assert (session->getState() == TC_NgHttp2::Http2);
 
-    out = encodeHttp2(const_cast<RequestPacket&>(request), session);
+    return encodeHttp2(request, session);
 }
 
-size_t http2Response(const char* recvBuffer, size_t length, list<ResponsePacket>& done, void* userptr)
+// TC_NetWorkBuffer::PACKET_TYPE http2Response(TC_NetWorkBuffer &in, list<ResponsePacket>& done, void* userptr)
+TC_NetWorkBuffer::PACKET_TYPE http2Response(TC_NetWorkBuffer &in, ResponsePacket& done)
 {
-    const int sessionId = *(int*)&userptr;
-    TC_NgHttp2* session = Http2ClientSessionManager::getInstance()->getSession(sessionId);
-    assert (session->getState() == TC_NgHttp2::Http2);
+    auto it = session->_doneResponses.begin();
 
-    int readlen = nghttp2_session_mem_recv(session->session(),
-                                           (const uint8_t*)recvBuffer,
-                                           length);
-
-    if (readlen < 0)
+    if(it == session->_doneResponses.end())
     {
-        throw std::runtime_error("nghttp2_session_mem_recv return error");
-        return 0;
+        vector<char> buffer = in.getBuffers();
+        in.clearBuffers();
+
+        Transceiver* userptr = ((Transceiver*))in->getConnection();
+        int sessionId = userptr->getAdapterProxy()->getId();
+        TC_NgHttp2* session = Http2ClientSessionManager::getInstance()->getSession(sessionId);
+        assert (session->getState() == TC_NgHttp2::Http2);
+
+        int readlen = nghttp2_session_mem_recv(session->session(), (const uint8_t*)buffer.data(), buffer.length());
+
+        if (readlen < 0)
+        {
+            // throw std::runtime_error("nghttp2_session_mem_recv return error");
+            return TC_NetWorkBuffer::PACKET_ERROR;
+        }
     }
 
-    std::map<int, Http2Response>::const_iterator it(session->_doneResponses.begin());
-    for (; it != session->_doneResponses.end(); ++ it)
+    it = session->_doneResponses.begin();
+    if(it == session->_doneResponses.end())
     {
-        ResponsePacket rsp;
+        return TC_NetWorkBuffer::PACKET_LESS;
+    }    
+
+    rsp.iRequestId = it->second.streamId;
+    rsp.status = it->second.headers;
+    rsp.sBuffer.assign(it->second.body.begin(), it->second.body.end());
+
+    session->_doneResponses.erase(it);
+
+    // std::map<int, Http2Response>::const_iterator it(session->_doneResponses.begin());
+    // for (; it != session->_doneResponses.end(); ++ it)
+    // {
+    //     ResponsePacket rsp;
              
-        rsp.iRequestId = it->second.streamId;
-        rsp.status = it->second.headers;
-        rsp.sBuffer.assign(it->second.body.begin(), it->second.body.end());
+    //     rsp.iRequestId = it->second.streamId;
+    //     rsp.status = it->second.headers;
+    //     rsp.sBuffer.assign(it->second.body.begin(), it->second.body.end());
 
-        done.push_back(rsp);
-    }
+    //     done.push_back(rsp);
+    // }
 
-    session->_doneResponses.clear();
-    return readlen;
+    // session->_doneResponses.clear();
+    return TC_NetWorkBuffer::PACKET_FULL;
 }
 
 #endif
