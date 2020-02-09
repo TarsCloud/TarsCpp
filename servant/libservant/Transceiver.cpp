@@ -28,7 +28,7 @@
 
 #if TARS_HTTP2
 #include "util/tc_nghttp2.h"
-#include "util/tc_http2clientmgr.h"
+// #include "util/tc_http2clientmgr.h"
 #endif
 namespace tars
 {
@@ -163,6 +163,7 @@ void Transceiver::setConnected()
 
     _onConnect();
 
+
 	TLOGTARS("[TARS][tcp setConnected, " << _adapterProxy->getObjProxy()->name() << ",fd:" << _fd << "]" << endl);
 }
 
@@ -248,7 +249,7 @@ bool Transceiver::sendAuthData(const BasicAuthInfo& info)
     request.sBuffer.assign(out.begin(), out.end());
 
     // vector<char> toSend;
-    _sendBuffer->addBuffer(objPrx->getProxyProtocol().requestFunc(request));
+    _sendBuffer->addBuffer(objPrx->getProxyProtocol().requestFunc(request, this));
 
     // _sendBuffer.addBuffer(toSend);
 
@@ -276,7 +277,9 @@ void Transceiver::close()
 #endif
 
 #if TARS_HTTP2
-    Http2ClientSessionManager::getInstance()->delSession(_adapterProxy->getId());
+    // Http2ClientSessionManager::getInstance()->delSession(_adapterProxy->getId());
+    nghttp2_session_del(_http2Session->session());
+    _http2Session = NULL;
 #endif
 
     _adapterProxy->getObjProxy()->getCommunicatorEpoll()->delFd(_fd,&_fdInfo,EPOLLIN|EPOLLOUT);
@@ -300,6 +303,24 @@ void Transceiver::close()
     TLOGTARS("[TARS][trans close:"<< _adapterProxy->getObjProxy()->name()<< "," << _ep.desc() << "]" << endl);
 }
 
+#if TARS_HTTP2
+TC_NgHttp2* Transceiver::getHttp2Session() 
+{ 
+    if(_http2Session == NULL)
+    {
+        _http2Session = new TC_NgHttp2(false);
+
+        // if (_http2Session->getState() == TC_NgHttp2::None)
+        // {
+        //     _http2Session->Init();
+        //     _http2Session->settings();
+        // }
+    }
+
+    return _http2Session; 
+}
+
+#endif 
 // int Transceiver::doRequest()
 // {
 //     if(!isValid())

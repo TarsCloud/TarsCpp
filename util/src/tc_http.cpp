@@ -1532,20 +1532,20 @@ void TC_HttpRequest::encode(int iRequestType, ostream &os)
 
 void TC_HttpRequest::setRequest(const string& method, const string &sUrl, const std::string& body, bool bNewCreateHost)
 {
-    std::string lowMethod(method);
-    std::transform(method.begin(), method.end(), lowMethod.begin(), ::tolower);
+    // std::string lowMethod(method);
+    // std::transform(method.begin(), method.end(), lowMethod.begin(), ::tolower);
 
-    if (lowMethod == "get")
+    if (TC_Port::strncasecmp(method.c_str(), "GET", 3) == 0)
         setGetRequest(sUrl, bNewCreateHost);
-    else if (lowMethod == "head")
+    else if (TC_Port::strncasecmp(method.c_str(), "HEAD", 4) == 0)
         setHeadRequest(sUrl, bNewCreateHost);
-    else if (lowMethod == "post")
+    else if (TC_Port::strncasecmp(method.c_str(),  "POST", 4) == 0)
         setPostRequest(sUrl, body, bNewCreateHost);
-    else if (lowMethod == "put")
+    else if (TC_Port::strncasecmp(method.c_str(),  "PUT", 3) == 0)
         setPutRequest(sUrl, body, bNewCreateHost);
-    else if (lowMethod == "delete")
+    else if (TC_Port::strncasecmp(method.c_str(),  "DELETE", 6) == 0)
         setDeleteRequest(sUrl, body, bNewCreateHost);
-    else if (lowMethod == "patch")
+    else if (TC_Port::strncasecmp(method.c_str(),  "PATH", 5) == 0)
         setPatchRequest(sUrl, body, bNewCreateHost);
 }
 

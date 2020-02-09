@@ -26,7 +26,7 @@ set(TARS_VERSION "2.0.0")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 set(TARS_SSL 0)
 add_definitions(-DTARS_SSL=${TARS_SSL})
-set(TARS_HTTP2 0)
+set(TARS_HTTP2 1)
 add_definitions(-DTARS_HTTP2=${TARS_HTTP2})
 
 set(_USE_OPENTRACKING $ENV{_USE_OPENTRACKING})

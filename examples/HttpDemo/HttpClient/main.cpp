@@ -153,7 +153,8 @@ void syncRpc(int c)
 	int64_t t = TC_Common::now2us();
 
     std::map<std::string, std::string> header;
-    header["X-Test"] = "YYYY";
+    // header[":authority"] = "domain.com";
+    // header[":scheme"] = "http";
 
     std::map<std::string, std::string> rheader;
     //发起远程调用
@@ -239,8 +240,11 @@ int main(int argc, char *argv[])
         param.servantPrx->tars_async_timeout(60*1000);
 
         ProxyProtocol proto;
-        proto.requestFunc = tars::http2Request;
-        proto.responseFunc = tars::http2Response;
+        proto.requestFunc = ProxyProtocol::http1Request;
+        proto.responseFunc = ProxyProtocol::http1Response;
+        // proto.requestFunc = ProxyProtocol::http2Request;
+        // proto.responseFunc = ProxyProtocol::http2Response;
+        param.servantPrx->tars_set_protocol(proto);
 
         int64_t start = TC_Common::now2us();
 

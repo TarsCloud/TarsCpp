@@ -26,19 +26,6 @@ using namespace tars;
 namespace tars
 {
 
-struct node_T_new
-{
-    /**
-     *节点hash值
-     */
-    int32_t iHashCode;
-
-    /**
-     *节点下标
-     */
-    unsigned int iIndex;
-};
-
 enum TC_HashAlgorithmType
 {
     E_TC_CONHASH_KETAMAHASH = 0,
@@ -55,10 +42,7 @@ public:
     virtual TC_HashAlgorithmType getHashType() = 0;
 
 protected:
-    int32_t subTo32Bit(int32_t hash)
-    {
-        return (hash & 0xFFFFFFFFL);
-    }
+    int32_t subTo32Bit(int32_t hash) { return (hash & 0xFFFFFFFFL); }
 
 };
 
@@ -70,23 +54,8 @@ typedef TC_AutoPtr<TC_HashAlgorithm> TC_HashAlgorithmPtr;
 class TC_KetamaHashAlg : public TC_HashAlgorithm
 {
 public:
-    virtual int32_t hash(const string & sKey)
-    {
-        string sMd5 = TC_MD5::md5bin(sKey);
-        const char *p = (const char *) sMd5.c_str();
-
-        int32_t hash = ((int32_t)(p[3] & 0xFF) << 24)
-            | ((int32_t)(p[2] & 0xFF) << 16)
-            | ((int32_t)(p[1] & 0xFF) << 8)
-            | ((int32_t)(p[0] & 0xFF));
-
-        return subTo32Bit(hash);
-    }
-
-    virtual TC_HashAlgorithmType getHashType()
-    {
-        return E_TC_CONHASH_KETAMAHASH;
-    }
+    virtual int32_t hash(const string & sKey);
+    virtual TC_HashAlgorithmType getHashType();
 };
 
 /**
@@ -95,20 +64,8 @@ public:
 class TC_DefaultHashAlg : public TC_HashAlgorithm
 {
 public:
-    virtual int32_t hash(const string & sKey)
-    {
-        string sMd5 = TC_MD5::md5bin(sKey);
-        const char *p = (const char *) sMd5.c_str();
-
-        int32_t hash = (*(int*)(p)) ^ (*(int*)(p+4)) ^ (*(int*)(p+8)) ^ (*(int*)(p+12));
-
-        return subTo32Bit(hash);
-    }
-
-    virtual TC_HashAlgorithmType getHashType()
-    {
-        return E_TC_CONHASH_DEFAULTHASH;
-    }
+    virtual int32_t hash(const string & sKey);
+    virtual TC_HashAlgorithmType getHashType();
 };
 
 /**
@@ -117,34 +74,7 @@ public:
 class TC_HashAlgFactory
 {
 public:
-    static TC_HashAlgorithm *getHashAlg()
-    {
-        TC_HashAlgorithm *ptrHashAlg = new TC_DefaultHashAlg();
-
-        return ptrHashAlg;
-    }
-
-    static TC_HashAlgorithm *getHashAlg(TC_HashAlgorithmType hashType)
-    {
-        TC_HashAlgorithm *ptrHashAlg = NULL;
-
-        switch(hashType)
-        {
-            case E_TC_CONHASH_KETAMAHASH:
-            {
-                ptrHashAlg = new TC_KetamaHashAlg();
-                break;
-            }
-            case E_TC_CONHASH_DEFAULTHASH:
-            default:
-            {
-                ptrHashAlg = new TC_DefaultHashAlg();
-                break;
-            }
-        }
-
-        return ptrHashAlg;
-    }
+    static TC_HashAlgorithm *getHashAlg(TC_HashAlgorithmType hashType);
 };
 
 /**
@@ -154,93 +84,42 @@ class  TC_ConsistentHashNew
 {
 public:
 
-    /**
-     *  @brief 构造函数
-     */
-    TC_ConsistentHashNew()
+    struct node_T_new
     {
-        _ptrHashAlg = TC_HashAlgFactory::getHashAlg();
-    }
+        /**
+         *节点hash值
+        */
+        int32_t iHashCode;
+
+        /**
+         *节点下标
+        */
+        unsigned int iIndex;
+    };
 
     /**
      *  @brief 构造函数
      */
-    TC_ConsistentHashNew(TC_HashAlgorithmType hashType)
-    {
-        _ptrHashAlg = TC_HashAlgFactory::getHashAlg(hashType);
-    }
+    TC_ConsistentHashNew();
 
     /**
-     * @brief 节点比较.
-     *
-     * @param m1 node_T_new类型的对象，比较节点之一
-     * @param m2 node_T_new类型的对象，比较节点之一
-     * @return less or not 比较结果，less返回ture，否则返回false
+     *  @brief 构造函数
      */
-    static bool less_hash(const node_T_new & m1, const node_T_new & m2)
-    {
-        return m1.iHashCode < m2.iHashCode;
-    }
+    TC_ConsistentHashNew(TC_HashAlgorithmType hashType);
 
     /**
-     * @brief 增加节点.
+     * @brief 排序
      *
      * @param node  节点名称
      * @param index 节点的下标值
-     * @return      节点的hash值
      */
-    int sortNode()
-    {
-        sort(_vHashList.begin(), _vHashList.end(), less_hash);
-
-        return 0;
-    }
+    void sortNode();
 
     /**
      * @brief 打印节点信息
      *
      */
-    void printNode()
-    {
-        map<unsigned int, unsigned int> mapNode;
-        size_t size = _vHashList.size();
-
-        for (size_t i = 0; i < size; i++)
-        {
-            if (i == 0)
-            {
-                unsigned int value = 0xFFFFFFFF - _vHashList[size - 1].iHashCode + _vHashList[0].iHashCode;
-                mapNode[_vHashList[0].iIndex] = value;
-            }
-            else
-            {
-                unsigned int value = _vHashList[i].iHashCode - _vHashList[i - 1].iHashCode;
-
-                if (mapNode.find(_vHashList[i].iIndex) != mapNode.end())
-                {
-                    value += mapNode[_vHashList[i].iIndex];
-                }
-
-                mapNode[_vHashList[i].iIndex] = value;
-            }
-
-            cout << "printNode: " << _vHashList[i].iHashCode << "|" << _vHashList[i].iIndex << "|" << mapNode[_vHashList[i].iIndex] << endl;
-        }
-
-        map<unsigned int, unsigned int>::iterator it = mapNode.begin();
-        double avg = 100;
-        double sum = 0;
-
-        while (it != mapNode.end())
-        {
-            double tmp = it->second;
-            cerr << "result: " << it->first << "|" << it->second << "|" << (tmp * 100 * mapNode.size() / 0xFFFFFFFF - avg) << endl;
-            sum += (tmp * 100 * mapNode.size() / 0xFFFFFFFF - avg) * (tmp * 100 * mapNode.size() / 0xFFFFFFFF - avg);
-            it++;
-        }
-
-        cerr << "variance: " << sum / mapNode.size() << ", size: " << _vHashList.size() << endl;
-    }
+    void printNode();
 
     /**
      * @brief 增加节点.
@@ -250,46 +129,7 @@ public:
      * @param weight 节点的权重，默认为1
      * @return      是否成功
      */
-    int addNode(const string & node, unsigned int index, int weight = 1)
-    {
-        if (_ptrHashAlg.get() == NULL)
-        {
-            return -1;
-        }
-
-        node_T_new stItem;
-        stItem.iIndex = index;
-
-        for (int j = 0; j < weight; j++)
-        {
-            string virtualNode = node + "_" + TC_Common::tostr<int>(j);
-
-            // TODO: 目前写了2 种hash 算法，可以根据需要选择一种，
-            // TODO: 其中KEMATA 为参考memcached client 的hash 算法，default 为原有的hash 算法，测试结论在表格里有
-            if (_ptrHashAlg->getHashType() == E_TC_CONHASH_KETAMAHASH)
-            {
-                string sMd5 = TC_MD5::md5bin(virtualNode);
-                char *p = (char *) sMd5.c_str();
-
-                for (int i = 0; i < 4; i++)
-                {
-                    stItem.iHashCode = ((int32_t)(p[i * 4 + 3] & 0xFF) << 24)
-                        | ((int32_t)(p[i * 4 + 2] & 0xFF) << 16)
-                        | ((int32_t)(p[i * 4 + 1] & 0xFF) << 8)
-                        | ((int32_t)(p[i * 4 + 0] & 0xFF));
-                    stItem.iIndex = index;
-                    _vHashList.push_back(stItem);
-                }
-            }
-            else
-            {
-                stItem.iHashCode = _ptrHashAlg->hash(virtualNode);
-                _vHashList.push_back(stItem);
-            }
-        }
-
-        return 0;
-    }
+    int addNode(const string & node, unsigned int index, int weight = 1);
 
     /**
      * @brief 获取某key对应到的节点node的下标.
@@ -298,18 +138,7 @@ public:
      * @param iIndex  对应到的节点下标
      * @return        0:获取成功   -1:没有被添加的节点
      */
-    int getIndex(const string & key, unsigned int & iIndex)
-    {
-        if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
-        {
-            iIndex = 0;
-            return -1;
-        }
-
-        int32_t iCode = _ptrHashAlg->hash(TC_MD5::md5bin(key));
-
-        return getIndex(iCode, iIndex);
-    }
+    int getIndex(const string & key, unsigned int & iIndex);
 
     /**
      * @brief 获取某hashcode对应到的节点node的下标.
@@ -318,60 +147,20 @@ public:
      * @param iIndex  对应到的节点下标
      * @return        0:获取成功   -1:没有被添加的节点
      */
-    int getIndex(int32_t hashcode, unsigned int & iIndex)
-    {
-        if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
-        {
-            iIndex = 0;
-            return -1;
-        }
-
-        // 只保留32位
-		size_t iCode = (hashcode & 0xFFFFFFFFL);
-
-        int low = 0;
-        size_t high = _vHashList.size();
-
-        if(iCode <= _vHashList[0].iHashCode || iCode > _vHashList[high-1].iHashCode)
-        {
-            iIndex = _vHashList[0].iIndex;
-            return 0;
-        }
-
-        while (low < high - 1)
-        {
-            int mid = (low + high) / 2;
-            if (_vHashList[mid].iHashCode > iCode)
-            {
-                high = mid;
-            }
-            else
-            {
-                low = mid;
-            }
-        }
-        iIndex = _vHashList[low+1].iIndex;
-        return 0;
-    }
+    int getIndex(int32_t hashcode, unsigned int & iIndex);
 
     /**
      * @brief 获取当前hash列表的长度.
      *
      * @return        长度值
      */
-    size_t size()
-    {
-        return _vHashList.size();
-    }
+    size_t size() { return _vHashList.size(); }
 
     /**
      * @brief 清空当前的hash列表.
      *
      */
-    void clear()
-    {
-        _vHashList.clear();
-    }
+    void clear() { _vHashList.clear(); }
 
 protected:
     vector<node_T_new>    _vHashList;

@@ -55,7 +55,7 @@ static TC_NetWorkBuffer::PACKET_TYPE customResponse(TC_NetWorkBuffer &in, Respon
 /*
    Whole package length (4 bytes) + irequestid (4 bytes) + package content
 */
-static vector<char> customRequest(const RequestPacket& request)
+static vector<char> customRequest(RequestPacket& request, Transceiver *)
 {
     unsigned int net_bufflength = htonl(request.sBuffer.size()+8);
     unsigned char * bufflengthptr = (unsigned char*)(&net_bufflength);

@@ -33,6 +33,8 @@ using namespace tup;
 namespace tars
 {
 
+class Transceiver;
+
 #define TARS_NET_MIN_PACKAGE_SIZE 5
 #define TARS_NET_MAX_PACKAGE_SIZE 1024*1024*10
 
@@ -131,13 +133,8 @@ public:
     }
 };
 
-typedef std::function<vector<char>(const RequestPacket&)> request_protocol;
-/**
- * 接收协议处理, 返回值表示解析了多少字节
- * 框架层会自动对处理了包做处理
- */
+typedef std::function<vector<char>(RequestPacket&, Transceiver *)> request_protocol;
 typedef std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer&, ResponsePacket&)> response_protocol;
-// typedef std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer&, ResponsePacket&)> response_ex_protocol;
 
 //////////////////////////////////////////////////////////////////////
 /**
@@ -151,12 +148,23 @@ public:
      */
     ProxyProtocol() : requestFunc(streamRequest) {}
 
+#if TARS_HTTP2
+    static vector<char> http1Request(tars::RequestPacket& request, Transceiver *);
+    static TC_NetWorkBuffer::PACKET_TYPE http1Response(TC_NetWorkBuffer &in, ResponsePacket& done);
+
+    // ENCODE function, called by network thread
+    static vector<char> http2Request(tars::RequestPacket& request, Transceiver *);
+
+    // DECODE function, called by network thread
+    static TC_NetWorkBuffer::PACKET_TYPE http2Response(TC_NetWorkBuffer &in, ResponsePacket& done);
+#endif
+
     /**
      * 普通二进制请求包
      * @param request
      * @param buff
      */
-    static const vector<char> &streamRequest(const RequestPacket& request)
+    static vector<char> streamRequest(RequestPacket& request, Transceiver *)
     {
         return request.sBuffer;
     }
@@ -246,12 +254,6 @@ public:
     }
 
     /**
-     * tup响应包(tup的响应会放在ResponsePacket的buffer中)
-     * @param request
-     * @param buff
-     */
-
-    /**
      * wup响应包(wup的响应会放在ResponsePacket的buffer中)
      * @param request
      * @param buff
@@ -293,8 +295,6 @@ public:
                 TarsInputStream<BufferReader> is;
 
                 is.setBuffer(buffer.c_str() + sizeof(tars::Int32), head);
-
-                // is.setBuffer(recvBuffer + pos + sizeof(tars::Int32), head);
 
                 //tup回来是requestpackage
                 RequestPacket rsp;
@@ -363,7 +363,7 @@ public:
      * @param request
      * @param buff
      */
-    static vector<char> tarsRequest(const RequestPacket& request);
+    static vector<char> tarsRequest(RequestPacket& request, Transceiver *);
 
     /**
      * tars响应包解析
@@ -471,18 +471,7 @@ public:
     request_protocol  requestFunc;
 
     response_protocol responseFunc;
-
-    // response_ex_protocol responseExFunc;
 };
-
-vector<char> http1Request(const tars::RequestPacket& request);
-TC_NetWorkBuffer::PACKET_TYPE http1Response(TC_NetWorkBuffer &in, ResponsePacket& done);
-
-// ENCODE function, called by network thread
-vector<char> http2Request(const tars::RequestPacket& request);
-
-// DECODE function, called by network thread
-TC_NetWorkBuffer::PACKET_TYPE http2Response(TC_NetWorkBuffer &in, ResponsePacket& done);
 
 
 //////////////////////////////////////////////////////////////////////

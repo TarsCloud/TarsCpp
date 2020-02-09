@@ -25,7 +25,7 @@
 #include "servant/StatF.h"
 #include "servant/StatReport.h"
 #include "util/tc_nghttp2.h"
-#include "util/tc_http2clientmgr.h"
+// #include "util/tc_http2clientmgr.h"
 #ifdef _USE_OPENTRACKING
 #include "servant/text_map_carrier.h"
 #endif
@@ -158,18 +158,18 @@ int AdapterProxy::invoke(ReqMessage * msg)
         msg->request.iRequestId = _timeoutQueue->generateId();
     }
 
-#if TARS_HTTP2
-    if (getObjProxy()->getProtoName() == HTTP2)
-    {
-        msg->request.iRequestId = getId(); // session Id
-    }
-#endif
+// #if TARS_HTTP2
+//     if (getObjProxy()->getProtoName() == HTTP2)
+//     {
+//         msg->request.iRequestId = getId(); // session Id
+//     }
+// #endif
 
 #ifdef _USE_OPENTRACKING
     startTrack(msg);
 #endif
 
-    msg->sReqData->addBuffer(_objectProxy->getProxyProtocol().requestFunc(msg->request));
+    msg->sReqData->addBuffer(_objectProxy->getProxyProtocol().requestFunc(msg->request, _trans.get()));
 
     //交给连接发送数据,连接连上,buffer不为空,直接发送数据成功
     if(_timeoutQueue->sendListEmpty() && _trans->sendRequest(msg->sReqData) != Transceiver::eRetError)

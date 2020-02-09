@@ -33,6 +33,10 @@ namespace tars
     class TC_OpenSSL;
 #endif
 
+#if TARS_HTTP2
+    class TC_NgHttp2;
+#endif   
+
 class AdapterProxy;
 
 //////////////////////////////////////////////////////////
@@ -221,6 +225,10 @@ public:
      * 发送鉴权数据
      */
     bool sendAuthData(const BasicAuthInfo& );
+
+#if TARS_HTTP2
+    TC_NgHttp2* getHttp2Session();
+#endif    
 protected:
     /** 
      ** 物理连接成功回调
@@ -272,6 +280,9 @@ protected:
     std::unique_ptr<TC_OpenSSL> _openssl;
 #endif
 
+#if TARS_HTTP2
+    TC_NgHttp2*             _http2Session = NULL;
+#endif
     /*
      * 发送buffer
      */

@@ -55,7 +55,7 @@ static TC_NetWorkBuffer::PACKET_TYPE pushResponse(TC_NetWorkBuffer &in, Response
    请求包编码函数，本函数的打包格式为
    整个包长度（4字节）+iRequestId（4字节）+包内容
 */
-static vector<char> pushRequest(const RequestPacket& request)
+static vector<char> pushRequest(RequestPacket& request, Transceiver *)
 {
     unsigned int net_bufflength = htonl(request.sBuffer.size()+8);
     unsigned char * bufflengthptr = (unsigned char*)(&net_bufflength);

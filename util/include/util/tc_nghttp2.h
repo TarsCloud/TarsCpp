@@ -27,8 +27,8 @@
 namespace tars
 {
 
-struct RequestPacket;
-struct ResponsePacket;
+// struct RequestPacket;
+// struct ResponsePacket;
 
 enum ResponseState
 {
@@ -154,6 +154,10 @@ public:
      */
     nghttp2_session* session() const;
 
+    /** 
+     * @brief 响应包
+     */
+    std::map<int, Http2Response> &doneResponses() { return _doneResponses; }
 private:
     /**
      * session
