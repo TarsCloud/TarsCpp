@@ -37,36 +37,43 @@ void Http2Imp::destroy()
     //...
 }
 
-// typedef int (*ResponseFunc)(const Req_Type reqtype, 
-//                          const string &requri, 
-//                          const TC_Http::http_header_type &reqHeader, 
-//                          const string &reqBody,
-//                          int &resopnseStatus,
-//                          string &resopnseAbout,
-//                          TC_Http::http_header_type &responseHeader,
-//                          string &responseBody);
+void doRequestFunc(const TC_Http2Server::Req_Type reqtype, const string &requri, const TC_Http::http_header_type &reqHeader, const string &reqBody, TC_Http2Server::Http2Response &rsp)
+{
+    rsp.status = 200;
+    rsp.about  = "OK";
+    rsp.body   = "response helloworld 2";
+}
 
 int Http2Imp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 {
-    vector<int32_t> vtReqid;
-
-    TC_Http2Server::doRequest(current->getRequestBuffer(), vtReqid);
-    
-    cout << "doRequest:" << TC_Common::tostr(vtReqid.begin(), vtReqid.end(), ", ") << endl;
-
     TC_Http2Server* session = getHttp2(current->getUId());
 
-    TC_Http2Server::Http2Response rsp;
-    rsp.status = 200;
-    rsp.about  = "OK";
-    rsp.body   = "response helloworld";
-
-    for(size_t i = 0; i < vtReqid.size(); i++)
+cout << "doRequest" << endl;
+    static bool flag = true;
+    if(flag)
     {
-        session->doResponse(vtReqid[i], rsp, buffer);
+        //method 1:
+        vector<int32_t> vtReqid;
+        TC_Http2Server::doRequest(current->getRequestBuffer(), vtReqid);
+        
+        TC_Http2Server::Http2Response rsp;
+        rsp.status = 200;
+        rsp.about  = "OK";
+        rsp.body   = "response helloworld 1";
+
+        for(size_t i = 0; i < vtReqid.size(); i++)
+        {
+            session->doResponse(vtReqid[i], rsp, buffer);
+        }
+    }
+    else
+    {
+        //method 2:
+        session->doRequest(current->getRequestBuffer(), doRequestFunc, buffer);
     }
 
-    cout << "response buffer size:" << buffer.size() << endl;
+    flag = !flag;
+
     return 0;
 }
 

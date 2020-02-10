@@ -94,6 +94,7 @@ struct TestHttpCallback : public HttpCallback
     {
 	    callback_count++;
 
+cout << "onHttpResponse" << endl;
         if(cur == count-1)
         {
             int64_t cost = TC_Common::now2us() - start;
@@ -162,10 +163,7 @@ void syncRpc2(int c)
 
         try
         {
-
 		    param.servant2Prx->http_call("GET", "/", header, "helloworld", rheader, rbody);
-
-            cout << "rsp:" << rbody << endl;
         }
         catch(exception& e)
         {
@@ -183,7 +181,10 @@ void asyncRpc2(int c)
 	int64_t t = TC_Common::now2us();
 
     std::map<std::string, std::string> header;
-    header["X-Test"] = "YYYY";
+    header[":path"] = "/";
+    header[":method"] = "GET";
+    header[":authority"] = "domain.com";
+    header[":scheme"] = "http";
 
 	//发起远程调用
 	for (int i = 0; i < c; ++i)
@@ -226,6 +227,8 @@ int main(int argc, char *argv[])
 	    if(param.thread <= 0) param.thread = 1;
 
         _comm = new Communicator();
+
+        // TarsRollLogger::getInstance()->logger()->setLogLevel(6);
 
         _comm->setProperty("sendqueuelimit", "1000000");
         _comm->setProperty("asyncqueuecap", "1000000");
