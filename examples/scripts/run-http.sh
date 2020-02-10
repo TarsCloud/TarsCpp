@@ -14,8 +14,8 @@ sleep 1
 echo "client: ./bin/HttpClient"
 
 ./bin/HttpClient --count=10000 --thread=2 --call=basehttp
-./bin/HttpClient --count=10000 --thread=2 --call=synchttp
-./bin/HttpClient --count=10000 --thread=2 --call=asynchttp
+./bin/HttpClient --count=10000 --thread=2 --call=synchttp2
+./bin/HttpClient --count=10000 --thread=2 --call=asynchttp2
 
 sleep 1
 

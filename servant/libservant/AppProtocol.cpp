@@ -86,6 +86,8 @@ static ssize_t reqbody_read_callback(nghttp2_session *session, int32_t stream_id
                                      void *user_data)
 {
     std::vector<char>* body = (std::vector<char>* )source->ptr;
+    // cout << "reqbody_read_callback:" << body->size() << endl;
+
     if (body->empty())
     {
         *data_flags |= NGHTTP2_DATA_FLAG_EOF;
@@ -165,7 +167,6 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
 // ENCODE function, called by network thread
 vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *trans)
 {
-    
     TC_Http2Client* session = trans->getHttp2Client();
 
     std::vector<nghttp2_nv> nva;
@@ -195,9 +196,10 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
         data.read_callback = reqbody_read_callback;
     }
 
+// cout << "pData:" << pData << ", " << data.read_callback << endl;
     int32_t sid = nghttp2_submit_request(session->session(),
                                          NULL,
-                                         &nva[0],
+                                         nva.data(),
                                          nva.size(),
                                          pData,
                                          NULL);
@@ -208,28 +210,49 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
     }
 
     request.iRequestId = sid;
-    nghttp2_session_send(session->session());
 
+    int rv = nghttp2_session_send(session->session());
+    if (rv != 0) {
+        TLOGERROR("[TARS]http2Request::Fatal error: nghttp2_session_send return: " << nghttp2_strerror(rv) << endl);
+        return vector<char>();
+    }
+    // cout << "nghttp2_session_send, id:" << request.iRequestId << ", buff size:" << session->sendBuffer().size() << endl;
+
+    // if(session->sendBuffer().empty())
+    // {
+    //     exit(0);
+    // }
     // get data to send
     vector<char> out;
     out.swap(session->sendBuffer());
-
-    cout << "http2Request out buffer size:" << out.size() << endl;
-
+    
     return out;
 }
 
 TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in, ResponsePacket& rsp)
 {
+    // cout << "http2Response" << endl;
+
     TC_Http2Client* session = ((Transceiver*)(in.getConnection()))->getHttp2Client();
 
     auto it = session->doneResponses().begin();
 
     if(it == session->doneResponses().end() && !in.empty())
     {
-        vector<char> buffer = in.getBuffers();
+        if(in.empty())
+        {
+            return TC_NetWorkBuffer::PACKET_LESS;
+        }
+        //merge to one buffer
+        in.mergeBuffers();
 
-        int readlen = nghttp2_session_mem_recv(session->session(), (const uint8_t*)buffer.data(), buffer.size());
+        pair<const char*, size_t> buffer = in.getBufferPointer();
+
+        int readlen = nghttp2_session_mem_recv(session->session(), (const uint8_t*)buffer.first, buffer.second);
+
+        // vector<char> buffer = in.getBuffers();
+
+        // int readlen = nghttp2_session_mem_recv(session->session(), (const uint8_t*)buffer.data(), buffer.size());
 
         if (readlen < 0)
         {

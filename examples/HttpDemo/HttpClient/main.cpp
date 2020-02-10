@@ -58,9 +58,6 @@ void httpCall(int excut_num)
     stHttpReq.setCacheControl("no-cache");
     stHttpReq.setGetRequest(sServer1);
 
-    // TC_TCPClient tcpClient1;
-    // tcpClient1.init("127.0.0.1", 8081, 3000);
-
     int iRet = 0;
 
     for (int i = 0; i<excut_num; i++)
@@ -75,10 +72,9 @@ void httpCall(int excut_num)
             cout <<"pthread id: " << TC_Thread::CURRENT_THREADID() << ", iRet:" << iRet <<endl;
         }
         
-
         ++callback_count;
     }
-    cout <<  "pthread id: " << TC_Thread::CURRENT_THREADID() << ", succ:" << param.count << "/" << excut_num << ", " << TC_TimeProvider::getInstance()->getNowMs() - _iTime <<"(ms)"<<endl;
+    cout <<  "httpCall, succ:" << param.count << "/" << excut_num << ", " << TC_TimeProvider::getInstance()->getNowMs() - _iTime <<"(ms)"<<endl;
 }
 
 struct TestHttpCallback : public HttpCallback
@@ -94,7 +90,6 @@ struct TestHttpCallback : public HttpCallback
     {
 	    callback_count++;
 
-cout << "onHttpResponse" << endl;
         if(cur == count-1)
         {
             int64_t cost = TC_Common::now2us() - start;
@@ -106,6 +101,8 @@ cout << "onHttpResponse" << endl;
     virtual int onHttpResponseException(const std::map<std::string, std::string>& requestHeaders,
                                         int expCode)
     {
+        cout << "onHttpResponseException expCode:" << expCode  << endl;
+
 	    callback_count++;
 
         return 0;
@@ -121,8 +118,6 @@ void syncRpc(int c)
 	int64_t t = TC_Common::now2us();
 
     std::map<std::string, std::string> header;
-    // header[":authority"] = "domain.com";
-    // header[":scheme"] = "http";
 
     std::map<std::string, std::string> rheader;
     //发起远程调用
@@ -133,7 +128,7 @@ void syncRpc(int c)
         try
         {
 
-		    param.servantPrx->http_call("GET", "http://127.0.0.1:8081", header, "helloworld", rheader, rbody);
+		    param.servantPrx->http_call("GET", "/", header, "helloworld", rheader, rbody);
         }
         catch(exception& e)
         {
@@ -199,6 +194,13 @@ void asyncRpc2(int c)
 		{
 			cout << "exception:" << e.what() << endl;
 		}
+
+        TC_Common::msleep(10);
+
+        // while(i-callback_count > 0 )
+        // {
+        //     TC_Common::msleep(100);
+        // }
 	}
 
 	int64_t cost = TC_Common::now2us() - t;
@@ -238,6 +240,9 @@ int main(int argc, char *argv[])
 
 	    param.servantPrx->tars_connect_timeout(5000);
         param.servantPrx->tars_async_timeout(60*1000);
+
+	    param.servant2Prx->tars_connect_timeout(5000);
+        param.servant2Prx->tars_async_timeout(60*1000);
 
         ProxyProtocol proto;
         proto.requestFunc = ProxyProtocol::http1Request;

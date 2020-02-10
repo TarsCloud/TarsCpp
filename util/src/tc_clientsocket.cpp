@@ -301,6 +301,7 @@ int TC_TCPClient::checkSocket()
 
             //设置非阻塞模式
             _socket.setblock(false);
+            _socket.setNoCloseWait();
 
             int iRet;
 #if TARGET_PLATFORM_LINUX

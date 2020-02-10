@@ -982,13 +982,6 @@ public:
 			}
 		}
 
-        // /**
-        //  * 初始化处理线程,线程将会启动
-        //  */
-        // template<typename T> void setHandle()
-        // {
-        //     _pEpollServer->setHandleGroup<T>(_handleGroupName, _iHandleNum, this);
-        // }
 		/**
 		 * 获取第几个句柄
 		 * @param index
@@ -1121,12 +1114,6 @@ public:
          * adapter的名字
          */
         string          _name;
-
-        /**
-         * handle分组名称
-         */
-        string      _handleGroupName;
-
         /**
          * 监听fd
          */
@@ -1518,10 +1505,6 @@ public:
         bool                _bClose;
 
         /**
-        * 临时队列的最大长度
-        */
-        int                 _iMaxTemQueueSize;
-        /**
          * 连接类型
          */
         EnumConnectionType  _enType;
@@ -1688,7 +1671,7 @@ public:
         /**
          * 构造函数
          */
-        NetThread(TC_EpollServer *epollServer);
+        NetThread(TC_EpollServer *epollServer, int index);
 
         /**
          * 析构函数
@@ -1766,48 +1749,6 @@ public:
 		 */
 		vector<TC_EpollServer::ConnStatus> getConnStatus(int lfd);
 
-		// /**
-		//  * 获取连接数
-		//  *
-		//  * @return size_t
-		//  */
-		// size_t getConnectionCount()     { return _list.size(); }
-
-        // /**
-        //  * 获取监听socket信息
-        //  *
-        //  * @return map<int,ListenSocket>
-        //  */
-        // map<int, BindAdapterPtr> getListenSocketInfo();
-
-        // /**
-        //  * 根据名称获取BindAdapter
-        //  * @param sName
-        //  * @return BindAdapterPtr
-        //  */
-        // BindAdapterPtr getBindAdapter(const string &sName);
-
-        // /**
-        //  * 关闭连接
-        //  * @param uid
-        //  */
-        // void close(unsigned int uid);
-
-        //  /**
-        //  * 发送数据
-        //  * @param uid
-        //  * @param s
-        //  */
-        // void send(unsigned int uid, const string &s, const string &ip, uint16_t port);
-
-        // /**
-        //  * 获取某一监听端口的连接数
-        //  * @param lfd
-        //  *
-        //  * @return vector<TC_EpollServer::ConnStatus>
-        //  */
-        // vector<TC_EpollServer::ConnStatus> getConnStatus(int lfd);
-
         /**
          * 获取连接数
          *
@@ -1855,11 +1796,6 @@ public:
          */
         void setUdpRecvBufferSize(size_t nSize=DEFAULT_RECV_BUFFERSIZE);
 
-        // /*
-        //  *当网络线程中listeners没有监听socket时，使用adapter中设置的最大连接数
-        //  */
-        // void setListSize(size_t iSize) { _listSize += iSize; }
-
         /**
          * 发送队列的大小
          * @return size_t
@@ -1898,28 +1834,6 @@ public:
          */
         void delConnection(Connection *cPtr, bool bEraseList = true,EM_CLOSE_T closeType=EM_CLIENT_CLOSE);
 
-        // /**
-        //  * 发送数据
-        //  * @param cPtr
-        //  * @param buffer
-        //  */
-        // int sendBuffer(Connection *cPtr, const string &buffer, const string &ip, uint16_t port);
-
-        // /**
-        //  * 发送数据
-        //  * @param cPtr
-        //  * @return int
-        //  */
-        // int sendBuffer(Connection *cPtr);
-
-        // /**
-        //  * 接收buffer
-        //  * @param cPtr
-        //  * @param buffer
-        //  * @return int
-        //  */
-        // int recvBuffer(Connection *cPtr, recv_queue::queue_type &v);
-
         /**
          * 处理管道消息
          */
@@ -1929,24 +1843,6 @@ public:
          * 处理网络请求
          */
         void processNet(const epoll_event &ev);
-
-        // /**
-        //  * 停止线程
-        //  */
-        // void stopThread();
-
-        // /**
-        //  * 新连接建立
-        //  * @param fd
-        //  */
-        // bool accept(int fd, int domain = AF_INET);
-
-        // /**
-        //  * 绑定端口
-        //  * @param ep
-        //  * @param s
-        //  */
-        // void bind(const TC_Endpoint &ep, TC_Socket &s);
 
         /**
          * 空连接超时时间
@@ -1979,16 +1875,6 @@ public:
 		int                         _threadIndex;
 
         /**
-         * 监听socket
-         */
-        // map<int, BindAdapterPtr>    _listeners;
-
-        /**
-         * 没有监听socket的网络线程时，使用此变量保存adapter信息
-         */
-        // size_t                        _listSize;
-
-        /**
          * epoll
          */
         TC_Epoller                  _epoller;
@@ -1997,11 +1883,6 @@ public:
          * 停止
          */
         bool                        _bTerminate;
-
-        /**
-         * epoll是否已经创建
-         */
-        // bool                        _createEpoll;
 
         /**
          * handle是否已经启动
@@ -2013,14 +1894,6 @@ public:
 		 */ 
 		TC_Epoller::NotifyInfo 		_notify;
 
-        // /**
-        //  * 管道(用于关闭服务)
-        //  */
-        // TC_Socket                   _shutdown;
-
-        // //管道(用于通知有数据需要发送就)
-        // TC_Socket                   _notify;
-
         /**
          * 管理的连接链表
          */
@@ -2030,11 +1903,6 @@ public:
          * 发送队列
          */
         send_queue                  _sbuffer;
-
-        /**
-         * BindAdapter是否有udp监听
-         */
-        // bool                        _hasUdp;
 
         /**
          *空连接检测机制开关
@@ -2056,21 +1924,6 @@ public:
 		 * 通知信号
 		 */
 		bool                        _notifySignal = false;
-        /**
-         * 属于该网络线程的内存池,目前主要用于发送使用
-         */
-        // TC_BufferPool*                 _bufferPool;
-
-        // /**
-        //  * 该网络线程的内存池所负责分配的最小字节和最大字节(2的幂向上取整)
-        //  */
-        // size_t                         _poolMinBlockSize;
-        // size_t                         _poolMaxBlockSize;
-
-        /**
-         * 该网络线程的内存池hold的最大字节
-         */
-        // size_t                         _poolMaxBytes;
     };
     ////////////////////////////////////////////////////////////////////////////
 public:

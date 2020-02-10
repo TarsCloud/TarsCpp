@@ -200,6 +200,12 @@ public:
     pair<const char*, size_t> getBufferPointer() const;
 
     /**
+     * 将链表上的所有buffer拼接起来
+     * @return string
+     */
+    void mergeBuffers();
+
+    /**
      * 返回所有buffer(将所有buffer拼接起来, 注意性能)
      * @return string
      */

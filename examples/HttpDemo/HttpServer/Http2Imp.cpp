@@ -46,16 +46,18 @@ void doRequestFunc(const TC_Http2Server::Req_Type reqtype, const string &requri,
 
 int Http2Imp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 {
+
     TC_Http2Server* session = getHttp2(current->getUId());
 
-cout << "doRequest" << endl;
     static bool flag = true;
     if(flag)
     {
         //method 1:
         vector<int32_t> vtReqid;
         TC_Http2Server::doRequest(current->getRequestBuffer(), vtReqid);
-        
+
+    // cout << "doRequest size:" << vtReqid.size() << endl;
+
         TC_Http2Server::Http2Response rsp;
         rsp.status = 200;
         rsp.about  = "OK";
@@ -72,7 +74,7 @@ cout << "doRequest" << endl;
         session->doRequest(current->getRequestBuffer(), doRequestFunc, buffer);
     }
 
-    flag = !flag;
+    // flag = !flag;
 
     return 0;
 }

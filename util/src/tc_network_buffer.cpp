@@ -58,6 +58,21 @@ pair<const char*, size_t> TC_NetWorkBuffer::getBufferPointer() const
     return make_pair(it->data() + _pos, it->size() - _pos);
 }
 
+void TC_NetWorkBuffer::mergeBuffers()
+{
+    //merge to one buffer
+    if(_bufferList.size() > 1)
+    {
+        vector<char> buffer = getBuffers();
+
+        _pos    = 0;
+        _bufferList.clear();
+        _bufferList.push_back(buffer);
+    } 
+
+    assert(_bufferList.size() <= 1);
+}
+
 string TC_NetWorkBuffer::getBuffersString() const
 {
 	string buffer;
@@ -86,8 +101,8 @@ string TC_NetWorkBuffer::getBuffersString() const
 
 vector<char> TC_NetWorkBuffer::getBuffers() const
 {
-	vector<char> buffer;
-	buffer.resize(_length);
+    vector<char> buffer;
+    buffer.resize(_length);
 
     auto it = _bufferList.begin();
 
@@ -96,17 +111,17 @@ vector<char> TC_NetWorkBuffer::getBuffers() const
     {
         if(it == _bufferList.begin())
         {
-        	memcpy(&buffer[pos], it->data() + _pos, it->size() - _pos);
-        	pos += it->size() - _pos;
+            memcpy(&buffer[pos], it->data() + _pos, it->size() - _pos);
+            pos += it->size() - _pos;
         }
         else
         {
-	        memcpy(&buffer[pos], it->data(), it->size());
-	        pos += it->size();
+            memcpy(&buffer[pos], it->data(), it->size());
+            pos += it->size();
         }
         ++it;
     }
-
+    
     return buffer;
 }
 
@@ -261,65 +276,25 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseBufferOf4(vector<char> &buf
     return parseBuffer<uint32_t>(buffer, minLength, maxLength);
 }
 
-//bool TC_NetWorkBuffer::checkHttp(string &buffer) const
-//{
-//    //这样处理性能是有问题的, 有提升的空间
-//    buffer = getBuffers();
-//
-//    return TC_HttpRequest::checkRequest(buffer.c_str(), buffer.length());
-//}
-//
-//TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseHttp(TC_NetWorkBuffer&in, string &out)
-//{
-//    try
-//    {
-//        string buffer;
-//        bool b = in.checkHttp(buffer);
-//        if (b)
-//        {
-//            out.swap(buffer);
-//            in.clearBuffers();;
-//            return PACKET_FULL;
-//        }
-//        else
-//        {
-//            return PACKET_LESS;
-//        }
-//    }
-//    catch (exception &ex)
-//    {
-//        return PACKET_ERR;
-//    }
-//
-//    return PACKET_LESS;
-//}
-
 TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::checkHttp()
 {
    try
     {
-        const static int headerLen = 10;
-        if(_bufferList.empty() || getBufferLength() <= headerLen)
+        mergeBuffers();
+
+        pair<const char*, size_t> buffer = getBufferPointer();
+
+        if(buffer.first == NULL || buffer.second == 0)
         {
             return PACKET_LESS;
         }
 
-	    vector<char> buffer;
-        getHeader(headerLen, buffer);
+        bool b = TC_HttpRequest::checkRequest(buffer.first, buffer.second);
 
-        bool b = TC_HttpRequest::checkRequest(buffer.data(), buffer.size());
-        if (b)
-        {
-            return PACKET_FULL;
-        }
-        else
-        {
-            return PACKET_LESS;
-        }
+        return b ? PACKET_FULL : PACKET_LESS;
     }
     catch (exception &ex)
     {
-        cout << ex.what() << endl;
         return PACKET_ERR;
     }
 
@@ -333,7 +308,6 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseHttp(TC_NetWorkBuffer&in, v
     if (b == PACKET_FULL)
     {
         out = in.getBuffers();
-        in.clearBuffers();
     }
 
     return b;
@@ -348,9 +322,8 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseEcho(TC_NetWorkBuffer&in, v
         {
             return PACKET_LESS;
         }
-        
+
         out = in.getBuffers();
-        in.clearBuffers();
         return TC_NetWorkBuffer::PACKET_FULL;
     }
     catch (exception &ex)

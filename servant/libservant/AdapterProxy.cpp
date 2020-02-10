@@ -162,7 +162,7 @@ int AdapterProxy::invoke(ReqMessage * msg)
     startTrack(msg);
 #endif
 
-    msg->sReqData->addBuffer(_objectProxy->getProxyProtocol().requestFunc(msg->request, _trans.get()));
+    msg->sReqData->setBuffer(_objectProxy->getProxyProtocol().requestFunc(msg->request, _trans.get()));
 
     //交给连接发送数据,连接连上,buffer不为空,直接发送数据成功
     if(_timeoutQueue->sendListEmpty() && _trans->sendRequest(msg->sReqData) != Transceiver::eRetError)
