@@ -251,10 +251,7 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
     if (!request.sServantName.empty())
         nva.push_back(nv2);
 
-    for (std::map<std::string, std::string>::const_iterator
-                it(request.context.begin());
-                it != request.context.end();
-                ++ it)
+    for (std::map<std::string, std::string>::const_iterator it(request.context.begin()); it != request.context.end(); ++ it)
     {
         nghttp2_nv nv = MAKE_STRING_NV(it->first, it->second);
         nva.push_back(nv);
@@ -292,6 +289,7 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
     vector<char> out;
 
     out.assign(session->sendBuffer().begin(), session->sendBuffer().end());
+    session->sendBuffer().clear();
 
     cout << "iRequestId:" << request.iRequestId << ", size:" << out.size() << endl; 
 

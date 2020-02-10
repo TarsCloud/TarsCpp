@@ -15,7 +15,7 @@
  */
 
 #ifndef _Http2Imp_H_
-#define _HttpImp_H_
+#define _Http2Imp_H_
 
 #include "servant/Application.h"
 #include "util/tc_spin_lock.h"

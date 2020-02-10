@@ -58,7 +58,7 @@ static int on_header_callback(nghttp2_session *session,
                               size_t namelen, const uint8_t *value,
                               size_t valuelen, uint8_t flags, void *user_data) 
 {
-    //TLOGDEBUG("[on_header_callback] streamid:" << frame->hd.stream_id << " name:" << name << " value:" << value << " flags:" << flags << endl);
+    cout << "[on_header_callback] streamid:" << frame->hd.stream_id << " name:" << name << " value:" << value << " flags:" << flags << endl;
 
     TC_Http2Session *ptr = (TC_Http2Session*)user_data;
     {
@@ -100,11 +100,10 @@ static int on_begin_headers_callback(nghttp2_session *session,
                                      const nghttp2_frame *frame,
                                      void *user_data) 
 {
-    //TLOGDEBUG("[on_begin_headers_callback] streamid:" << frame->hd.stream_id << endl);
+    cout << "[on_begin_headers_callback] streamid:" << frame->hd.stream_id << endl;
     TC_Http2Session *ptr = (TC_Http2Session*)user_data;
 
-    if (frame->hd.type != NGHTTP2_HEADERS ||
-            frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
+    if (frame->hd.type != NGHTTP2_HEADERS || frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
         return 0;
     }
 
@@ -130,7 +129,7 @@ static int on_frame_recv_callback(nghttp2_session *session, const nghttp2_frame 
         /* Check that the client request has finished */
         if (frame->hd.flags & NGHTTP2_FLAG_END_STREAM) 
         {
-            //TLOGDEBUG("[on_frame_recv_callback] NGHTTP2_FLAG_END_STREAM" << endl);
+            cout << "[on_frame_recv_callback] NGHTTP2_FLAG_END_STREAM" << endl;
 
             {
                 TC_LockT<TC_SpinLock> lock(ptr->reqLock_);
@@ -162,7 +161,8 @@ static int on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
                                        int32_t stream_id, const uint8_t *data,
                                        size_t len, void *user_data) 
 {
-    //TLOGDEBUG("[on_data_chunk_recv_callback] stream_id:" << stream_id << endl);
+    cout << "[on_data_chunk_recv_callback] stream_id:" << stream_id << endl;
+    
     TC_Http2Session *ptr = (TC_Http2Session*)user_data;
     {
         TC_LockT<TC_SpinLock> lock(ptr->reqLock_);
@@ -177,7 +177,7 @@ static int on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
 
 static int on_stream_close_callback(nghttp2_session *session, int32_t stream_id, uint32_t error_code, void *user_data) 
 {
-    //TLOGDEBUG("[on_stream_close_callback] streamid:" << stream_id << endl);
+    cout << "[on_stream_close_callback] streamid:" << stream_id << endl;
 
     TC_Http2Session *ptr = (TC_Http2Session*)user_data;
 

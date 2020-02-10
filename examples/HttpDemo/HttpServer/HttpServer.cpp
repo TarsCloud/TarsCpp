@@ -36,7 +36,7 @@ TC_NetWorkBuffer::PACKET_TYPE parseHttp2(TC_NetWorkBuffer&in, vector<char> &out)
         Http2Imp::addHttp2Session(connection->getId(), session);
     }
 
-    cout << "parseHttp2:" << in.getBufferLength() << endl;
+    cout << "parseHttp2:" << in.getBufferLength() << ", " << session << endl;
 
     return session->parse(in, out);
 }
