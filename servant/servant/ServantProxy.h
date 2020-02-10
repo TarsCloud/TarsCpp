@@ -333,42 +333,6 @@ protected:
     tars::CoroParallelBasePtr _pPtr;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// class PushCallback : public TC_HandleBase
-// {
-// public:
-//     virtual int onRequestException(int iRet) = 0;
-//     virtual int onRequestResponse(const RequestPacket& request, const ResponsePacket& response) = 0;
-//     virtual int onPushResponse(const ResponsePacket& response) = 0;
-// };
-
-// typedef TC_AutoPtr<PushCallback> PushCallbackPtr;
-
-// class PushServantProxyCallback : virtual public ServantProxyCallback
-// {
-// public:
-//     explicit PushServantProxyCallback(PushCallback* cb);
-
-//     /**
-//      * 异步回调对象实现该方法，进行业务逻辑处理
-//      * @param msg
-//      * @return void
-//      */
-//     virtual int onDispatchResponse(const RequestPacket &request, const ResponsePacket &response);
-
-//     /**
-//      * 异步回调对象实现该方法(异常)，进行业务逻辑处理
-//      * @param msg
-//      * @return void
-//      */
-//     virtual int onDispatchException(const RequestPacket &request, const ResponsePacket &response){return 0;}
-
-
-// private:
-//     TC_AutoPtr<PushCallback> _pushCb;
-// };
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
 // for http
 class HttpCallback : public TC_HandleBase
 {

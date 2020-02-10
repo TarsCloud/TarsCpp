@@ -183,28 +183,6 @@ int ServantProxyCallback::onDispatchException(const RequestPacket &req, const Re
     return 0;
 }
 
-// PushServantProxyCallback::PushServantProxyCallback(PushCallback* cb) :
-//     _pushCb(cb)
-// {
-//     assert(_pushCb);
-// }
-
-// int PushServantProxyCallback::onDispatchResponse(const RequestPacket &request, const ResponsePacket &response)
-// {
-// 	if(response.iRequestId != 0)
-// 	{
-//         if (response.iRet != tars::TARSSERVERSUCCESS)
-//         {
-//             return _pushCb->onRequestException(response.iRet);
-//         }
-//         return _pushCb->onRequestResponse(request, response); 
-// 	}
-// 	else 
-// 	{
-//         return _pushCb->onPushResponse(response); 
-// 	}
-// }
-
 HttpServantProxyCallback::HttpServantProxyCallback(const HttpCallbackPtr& cb) :
     _httpCb(cb)
 {
@@ -219,20 +197,6 @@ int HttpServantProxyCallback::onDispatchResponse(const RequestPacket &request, c
 {
     return _httpCb->onHttpResponse(request.context, response.status, response.sBuffer);
 }
-
-
-// int HttpServantProxyCallback::onDispatch(ReqMessagePtr msg)
-// {
-//     if (!_httpCb)
-//         return 0;
-
-//     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
-//         _httpCb->onHttpResponseException(msg->request.context, msg->response->iRet);
-//     else
-//         return _httpCb->onHttpResponse(msg->request.context, msg->response->status, msg->response->sBuffer);
-
-//     return 0;
-// }
 
 ///////////////////////////////////////////////////////////////
 void coroWhenAll(const CoroParallelBasePtr &ptr)
@@ -468,16 +432,6 @@ void ServantProxy::tars_ping()
 	tars::TarsOutputStream<tars::BufferWriterVector> os;
 
 	tars_invoke(tars::TARSNORMAL, "tars_ping", os, m, s);
-
-    // vector<char> v;
-
-    // map<string, string> m;
-
-    // map<string, string> s;
-
-    // ResponsePacket rsp;
-
-    // tars_invoke(tars::TARSNORMAL, "tars_ping", v, m, s, rsp);
 }
 
 
