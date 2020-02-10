@@ -27,8 +27,7 @@
 #endif
 
 #if TARS_HTTP2
-#include "util/tc_nghttp2.h"
-// #include "util/tc_http2clientmgr.h"
+#include "util/tc_http2.h"
 #endif
 namespace tars
 {
@@ -277,11 +276,10 @@ void Transceiver::close()
 #endif
 
 #if TARS_HTTP2
-    // Http2ClientSessionManager::getInstance()->delSession(_adapterProxy->getId());
-    if(_http2Session)
+    if(_http2Client)
     {
-        nghttp2_session_del(_http2Session->session());
-        _http2Session = NULL;
+        delete _http2Client;
+        _http2Client = NULL;
     }
 #endif
 
@@ -307,20 +305,16 @@ void Transceiver::close()
 }
 
 #if TARS_HTTP2
-TC_NgHttp2* Transceiver::getHttp2Session() 
+TC_Http2Client* Transceiver::getHttp2Client() 
 { 
-    if(_http2Session == NULL)
+    if(_http2Client == NULL)
     {
-        _http2Session = new TC_NgHttp2(false);
-
-        // if (_http2Session->getState() == TC_NgHttp2::None)
-        // {
-        //     _http2Session->Init();
-        //     _http2Session->settings();
-        // }
+        _http2Client = new TC_Http2Client();
+        // _http2Client->Init();
+        _http2Client->settings();
     }
 
-    return _http2Session; 
+    return _http2Client; 
 }
 
 #endif 

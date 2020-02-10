@@ -15,14 +15,13 @@
  */
 
 #include "Http2Imp.h"
-#include "util/tc_http2session.h"
 #include "servant/Application.h"
 
 using namespace std;
 
 TC_SpinLock Http2Imp::_mutex;
 
-unordered_map<int32_t, TC_Http2Session*> Http2Imp::_http2Sessions;
+unordered_map<int32_t, TC_Http2Server*> Http2Imp::_http2;
 
 //////////////////////////////////////////////////////
 void Http2Imp::initialize()
@@ -51,13 +50,13 @@ int Http2Imp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 {
     vector<int32_t> vtReqid;
 
-    TC_Http2Session::doRequest(current->getRequestBuffer(), vtReqid);
+    TC_Http2Server::doRequest(current->getRequestBuffer(), vtReqid);
     
     cout << "doRequest:" << TC_Common::tostr(vtReqid.begin(), vtReqid.end(), ", ") << endl;
 
-    TC_Http2Session* session = getHttp2Session(current->getUId());
+    TC_Http2Server* session = getHttp2(current->getUId());
 
-    TC_Http2Session::Http2Response rsp;
+    TC_Http2Server::Http2Response rsp;
     rsp.status = 200;
     rsp.about  = "OK";
     rsp.body   = "response helloworld";
@@ -73,7 +72,7 @@ int Http2Imp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 
 int Http2Imp::doClose(TarsCurrentPtr current)
 {
-    delHttp2Session(current->getUId());
+    delHttp2(current->getUId());
 
     return 0;
 }

@@ -19,7 +19,7 @@
 
 #include "servant/Application.h"
 #include "util/tc_spin_lock.h"
-#include "util/tc_http2session.h"
+#include "util/tc_http2.h"
 
 /**
  *
@@ -53,37 +53,35 @@ public:
      */    
     int doClose(TarsCurrentPtr current);
 
-    static TC_Http2Session *getHttp2Session(uint32_t uid)
+    static TC_Http2Server *getHttp2(uint32_t uid)
     {
         TC_LockT<TC_SpinLock> lock(_mutex);
 
-        auto it = _http2Sessions.find(uid);
+        auto it = _http2.find(uid);
 
-        if(it != _http2Sessions.end())
+        if(it != _http2.end())
         {
             return it->second;
         }
         return NULL;
     }
 
-    static void addHttp2Session(uint32_t uid, TC_Http2Session* ptr)
+    static void addHttp2(uint32_t uid, TC_Http2Server* ptr)
     {
         TC_LockT<TC_SpinLock> lock(_mutex);
 
-        _http2Sessions[uid] = ptr;
+        _http2[uid] = ptr;
     }
 
-    static void delHttp2Session(uint32_t uid)
+    static void delHttp2(uint32_t uid)
     {
         TC_LockT<TC_SpinLock> lock(_mutex);
 
-        auto it = _http2Sessions.find(uid);
+        auto it = _http2.find(uid);
 
-        if(it != _http2Sessions.end())
+        if(it != _http2.end())
         {
-            delete it->second;
-
-            _http2Sessions.erase(it);
+            _http2.erase(it);
         }
     }
     
@@ -91,7 +89,7 @@ protected:
 
     static TC_SpinLock _mutex;
 
-    static unordered_map<int32_t, TC_Http2Session*> _http2Sessions;
+    static unordered_map<int32_t, TC_Http2Server*> _http2;
 };
 /////////////////////////////////////////////////////
 #endif

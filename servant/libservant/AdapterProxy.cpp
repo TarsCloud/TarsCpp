@@ -24,7 +24,7 @@
 #include "tup/tup.h"
 #include "servant/StatF.h"
 #include "servant/StatReport.h"
-#include "util/tc_nghttp2.h"
+#include "util/tc_http2.h"
 // #include "util/tc_http2clientmgr.h"
 #ifdef _USE_OPENTRACKING
 #include "servant/text_map_carrier.h"

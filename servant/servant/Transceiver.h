@@ -34,7 +34,7 @@ namespace tars
 #endif
 
 #if TARS_HTTP2
-    class TC_NgHttp2;
+    class TC_Http2Client;
 #endif   
 
 class AdapterProxy;
@@ -227,7 +227,7 @@ public:
     bool sendAuthData(const BasicAuthInfo& );
 
 #if TARS_HTTP2
-    TC_NgHttp2* getHttp2Session();
+    TC_Http2Client* getHttp2Client();
 #endif    
 protected:
     /** 
@@ -281,7 +281,7 @@ protected:
 #endif
 
 #if TARS_HTTP2
-    TC_NgHttp2*             _http2Session = NULL;
+    TC_Http2Client*          _http2Client = NULL;
 #endif
     /*
      * 发送buffer

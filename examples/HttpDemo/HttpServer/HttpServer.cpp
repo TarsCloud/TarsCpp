@@ -17,7 +17,7 @@
 #include "HttpServer.h"
 #include "HttpImp.h"
 #include "Http2Imp.h"
-#include "util/tc_http2session.h"
+#include "util/tc_http2.h"
 
 using namespace std;
 
@@ -25,18 +25,16 @@ HttpServer g_app;
 
 TC_NetWorkBuffer::PACKET_TYPE parseHttp2(TC_NetWorkBuffer&in, vector<char> &out)
 {
-    TC_Http2Session *session = (TC_Http2Session*)(in.getContextData());
+    TC_Http2Server*session = (TC_Http2Server*)(in.getContextData());
 
     if(session == NULL)
     {
-        session = new TC_Http2Session();
-        in.setContextData(session);
+        session = new TC_Http2Server();
+        in.setContextData(session, [=]{delete session;});
 
         TC_EpollServer::Connection *connection = (TC_EpollServer::Connection *)in.getConnection();
-        Http2Imp::addHttp2Session(connection->getId(), session);
+        Http2Imp::addHttp2(connection->getId(), session);
     }
-
-    cout << "parseHttp2:" << in.getBufferLength() << ", " << session << endl;
 
     return session->parse(in, out);
 }
