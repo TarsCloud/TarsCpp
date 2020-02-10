@@ -119,7 +119,6 @@ public:
      * 如果fd缓冲区已满,返回错误
      * 如果数据发送一半，缓冲区满了,返回成功
      */
-    // int sendRequest(const char * pData,size_t iSize, bool forceSend = false);
 	int sendRequest(const shared_ptr<TC_NetWorkBuffer::SendBuffer> &pData, bool forceSend = false);
 
     /*
@@ -292,17 +291,6 @@ protected:
      * 接收buffer
      */
     TC_NetWorkBuffer _recvBuffer;
-
-    // /*
-    //  * 发送缓存buff
-    //  */
-    // TC_Buffer                _sendBuffer;
-
-    // /*
-    //  * 接收缓存buff
-    //  */
-    // TC_Buffer                _recvBuffer;
-
 };
 
 //////////////////////////////////////////////////////////

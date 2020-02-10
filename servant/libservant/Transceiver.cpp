@@ -310,7 +310,6 @@ TC_Http2Client* Transceiver::getHttp2Client()
     if(_http2Client == NULL)
     {
         _http2Client = new TC_Http2Client();
-        // _http2Client->Init();
         _http2Client->settings();
     }
 
@@ -318,55 +317,11 @@ TC_Http2Client* Transceiver::getHttp2Client()
 }
 
 #endif 
-// int Transceiver::doRequest()
-// {
-//     if(!isValid())
-//     {
-//         return -1;
-//     }
-
-//     int iRet = 0;
-
-//     //buf不为空,先发生buffer的内容
-//     if(!_sendBuffer.IsEmpty())
-//     {
-//         size_t length = 0;
-//         void* data = NULL;
-//         _sendBuffer.PeekData(data, length);
-
-//         iRet = this->send(data, length, 0);
-
-//         //失败，直接返回
-//         if(iRet < 0)
-//         {
-//             return iRet;
-//         }
-
-//         if(iRet > 0)
-//         {
-//             _sendBuffer.Consume(iRet);
-//             if (_sendBuffer.IsEmpty())
-//                 _sendBuffer.Shrink();
-//             else
-//                 return 0;
-//         }
-//     }
-
-//     //取adapter里面积攒的数据
-//     _adapterProxy->doInvoke();
-
-//     //object里面应该是空的
-//     assert(_adapterProxy->getObjProxy()->timeoutQSize()  == 0);
-
-//     return 0;
-// }
 
 
 int Transceiver::doRequest()
 {
     if(!isValid()) return -1;
-
-//	int64_t s = TC_Common::now2us();
 
 	//buf不为空,先发送buffer的内容
     if(_sendBuffer && !_sendBuffer->empty())
@@ -386,15 +341,12 @@ int Transceiver::doRequest()
         _adapterProxy->doInvoke();
     }
 
-//	cout << "doRequest:" << std::this_thread::get_id() << ", us:" << TC_Common::now2us() - s  << ", invoke:" << voke << endl;
-
 	//object里面应该是空的
     // assert(_adapterProxy->getObjProxy()->timeQEmpty());
 
     return 0;
 }
 
-// int Transceiver::sendRequest(const char * pData, size_t iSize, bool forceSend)
 int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::SendBuffer> &buff, bool forceSend)
 {
     //空数据 直接返回成功

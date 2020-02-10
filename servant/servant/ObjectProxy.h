@@ -91,18 +91,13 @@ public:
      * 设置协议解析器
      * @return UserProtocol&
      */
-    void setProxyProtocol(const ProxyProtocol& protocol, const std::string& name = "tars");
+    void setProxyProtocol(const ProxyProtocol& protocol);
+
     /**
      * 获取协议解析器
      * @return ProxyProtocol&
      */
     ProxyProtocol& getProxyProtocol();
-
-    /**
-     * 获取协议名字
-     * @return ProxyProtocol&
-     */
-    const std::string& getProtoName() const;
 
     /**
      * 设置套接口选项
@@ -177,21 +172,6 @@ public:
     {
         return _invokeSetId;
     }
-
-    /**
-     * 生成唯一Id
-     */
-    // inline uint32_t generateId()
-    // {
-    //     _id++;
-
-    //     if(_id == 0)
-    //     {
-    //         ++_id;
-    //     }
-
-    //     return _id;
-    // }
 
     /**
      * 获取连接超时时间
@@ -281,11 +261,6 @@ private:
     bool                                  _isInvokeBySet;
 
     /*
-     * 生成请求的唯一id
-     */
-    // uint32_t                              _id;
-
-    /*
      * 是否调用了tars_set_protocol设置过proxy的协议函数，
      * 设置过了就不在设置
      */
@@ -295,10 +270,6 @@ private:
      * 请求和响应的协议解析器
      */
     ProxyProtocol                         _proxyProtocol;
-    /*
-     * 协议名称
-     */
-    std::string                           _protoName;
 
     /*
      * 连接超时的时间

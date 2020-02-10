@@ -298,21 +298,7 @@ public:
      * @param msg
      * @return int
      */
-    virtual int onDispatch(ReqMessagePtr ptr);
-
-    /**
-     * 异步回调对象实现该方法，进行业务逻辑处理
-     * @param msg
-     * @return int
-     */
-    virtual int onDispatchResponse(const RequestPacket &req, const ResponsePacket &rsp);
-
-    /**
-     * 异步回调对象实现该方法(异常)，进行业务逻辑处理
-     * @param msg
-     * @return int
-     */
-    virtual int onDispatchException(const RequestPacket &req, const ResponsePacket &rsp);
+    virtual int onDispatch(ReqMessagePtr ptr) = 0;
 
 protected:
 
@@ -350,6 +336,13 @@ class HttpServantProxyCallback : virtual public ServantProxyCallback
 {
 public:
     explicit HttpServantProxyCallback(const HttpCallbackPtr& cb);
+
+   /**
+     * 异步回调对象实现该方法，进行业务逻辑处理
+     * @param msg
+     * @return int
+     */
+    virtual int onDispatch(ReqMessagePtr ptr);
 
     /**
      * 异步回调对象实现该方法，进行业务逻辑处理
@@ -519,7 +512,7 @@ public:
      * 设置用户自定义协议
      * @param protocol
      */
-    void tars_set_protocol(const ProxyProtocol& protocol, const std::string& protoName = "tars");
+    void tars_set_protocol(const ProxyProtocol& protocol);
 
     /**
     *设置套接字选项
@@ -600,7 +593,6 @@ public:
                             tars::TarsOutputStream<tars::BufferWriterVector>& buf,
                             const map<string, string>& context,
                             const map<string, string>& status);
-                            // ResponsePacket& rep);
 
     /**
      * TARS协议异步方法调用

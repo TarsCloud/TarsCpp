@@ -70,16 +70,6 @@ public:
     }
 
     /**
-     * 解析协议
-     * @param in, 目前的buffer
-     * @param out, 一个完整的包
-     *
-     * @return int, 0表示没有接收完全, 1表示收到一个完整包
-     */
-    static TC_NetWorkBuffer::PACKET_TYPE  parseAdmin(TC_NetWorkBuffer &in, shared_ptr<TC_NetWorkBuffer::SendBuffer> &out);
-
-
-    /**
      *
      * @param T
      * @param offset

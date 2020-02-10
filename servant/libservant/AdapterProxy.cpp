@@ -158,13 +158,6 @@ int AdapterProxy::invoke(ReqMessage * msg)
         msg->request.iRequestId = _timeoutQueue->generateId();
     }
 
-// #if TARS_HTTP2
-//     if (getObjProxy()->getProtoName() == HTTP2)
-//     {
-//         msg->request.iRequestId = getId(); // session Id
-//     }
-// #endif
-
 #ifdef _USE_OPENTRACKING
     startTrack(msg);
 #endif

@@ -309,16 +309,7 @@ protected:
      *
      * @return string
      */
-    string generateDispatchResponseAsync(const OperationPtr &pPtr, const string &cn) const;
-
-    /**
-     * 生成onDispatchException
-     * @param pPtr
-     * @param cn
-     *
-     * @return string
-     */
-    string generateDispatchExceptionAsync(const OperationPtr& pPtr, const string& cn) const;
+    string generateDispatchAsync(const OperationPtr &pPtr, const string &cn) const;
 
     /**
      * 生成操作函数调用分发的源码
@@ -327,17 +318,7 @@ protected:
      *
      * @return string
      */
-    string generateDispatchCoroResponseAsync(const OperationPtr &pPtr, const string &cn) const;
-
-    /**
-     * 生成操作函数调用分发的源码
-     * @param pPtr
-     * @param cn
-     *
-     * @return string
-     */
-    string generateDispatchCoroExceptionAsync(const OperationPtr &pPtr, const string &cn) const;
-
+    string generateDispatchCoroAsync(const OperationPtr &pPtr, const string &cn) const;
 
     /**
      * 生成servant操作函数调用的源码
@@ -478,5 +459,3 @@ private:
 };
 
 #endif
-
-

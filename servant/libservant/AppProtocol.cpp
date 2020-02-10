@@ -31,11 +31,11 @@
 namespace tars
 {
 
-//TAFServer的协议解析器
-TC_NetWorkBuffer::PACKET_TYPE AppProtocol::parseAdmin(TC_NetWorkBuffer  &in, shared_ptr<TC_NetWorkBuffer::SendBuffer> &out)
-{
-    return parse(in, out->getBuffer());
-}
+// //TAFServer的协议解析器
+// TC_NetWorkBuffer::PACKET_TYPE AppProtocol::parseAdmin(TC_NetWorkBuffer  &in, shared_ptr<TC_NetWorkBuffer::SendBuffer> &out)
+// {
+//     return parse(in, out->getBuffer());
+// }
 
 vector<char> ProxyProtocol::tarsRequest(RequestPacket& request, Transceiver *)
 {

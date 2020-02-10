@@ -189,29 +189,33 @@ struct TupCallback : public ServantProxyCallback
 
     }
 
-    virtual int onDispatchResponse(const RequestPacket &request, const ResponsePacket &response)
+    virtual int onDispatch(ReqMessagePtr msg)
 	{
-		callback_count++;
+		if(msg->response->iRet != tars::TARSSERVERSUCCESS)
+		{
+			cout << "ret error:" << msg->response->iRet << endl;
+		}
+		else
+		{
+			callback_count++;
 
-        TarsUniPacket<> rsp;
+			TarsUniPacket<> rsp;
 
-        rsp.decode(response.sBuffer.data(), response.sBuffer.size());
+			rsp.decode(msg->response->sBuffer.data(), msg->response->sBuffer.size());
 
-        int ret = rsp.get<int>("");            
-        string sRsp = rsp.get<string>("sRsp");
-        if(cur == count-1)
-        {
-            int64_t cost = TC_Common::now2us() - start;
-            cout << "TupCallback count:" << count << ", " << cost << " us, avg:" << 1.*cost/count << "us" << endl;
-        }        
+			int ret = rsp.get<int>("");            
+			string sRsp = rsp.get<string>("sRsp");
 
-        return 0;
-	}
+			if(cur == count-1)
+			{
+				int64_t cost = TC_Common::now2us() - start;
+				cout << "TupCallback count:" << count << ", " << cost << " us, avg:" << 1.*cost/count << "us" << endl;
+			}        
 
-    virtual int onDispatchException(const RequestPacket &req, const ResponsePacket &rsp)
-	{
-		cout << "onDispatchException" << endl;
-		return 0;
+			return 0;
+		}
+
+		return msg->response->iRet;
 	}
 
     int64_t start;

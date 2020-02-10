@@ -77,17 +77,20 @@ static vector<char> customRequest(RequestPacket& request, Transceiver *)
 class CustomCallBack : public ServantProxyCallback
 {
 public:
-    virtual int onDispatchResponse(const RequestPacket &req, const ResponsePacket &rsp)
+    virtual int onDispatch(ReqMessagePtr msg)
 	{
-		cout << "async response:" << rsp.sBuffer.data() << endl;
-		return 0;
+		if(msg->response->iRet != tars::TARSSERVERSUCCESS)
+		{
+			cout << "ret error:" << msg->response->iRet << endl;
+		}
+		else
+		{
+			cout << "succ:" << msg->response->sBuffer.data() << endl;
+		}
+
+		return msg->response->iRet;
 	}
 
-    virtual int onDispatchException(const RequestPacket &req, const ResponsePacket &rsp)
-	{
-		cout << "async exception:" << rsp.iRet << endl;
-		return 0;
-	}
 };
 
 typedef tars::TC_AutoPtr<CustomCallBack> CustomCallBackPtr;

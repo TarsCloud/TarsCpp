@@ -973,86 +973,25 @@ string Tars2Cpp::generateParamDecl(const ParamDeclPtr& pPtr) const
     return s.str();
 }
 
-// string Tars2Cpp::generateDispatchResponseAsync(const OperationPtr& pPtr, const string& cn) const
-// {
-//     ostringstream s;
-//     s << TAB << "if (msg->response->iRet != tars::TARSSERVERSUCCESS)" << endl
-//         << TAB << "{" << endl;
-
-//     INC_TAB;
-//     s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response->iRet);" << endl;
-//     s << endl;
-
-//     s << TAB << "return msg->response->iRet;" << endl;
-//     DEL_TAB;
-//     s << TAB << "}" << endl;
-
-//     s << TAB << _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> _is;" << endl;
-//     s << endl;
-//     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
-
-//     s << TAB << "_is.setBuffer(msg->response->sBuffer);" << endl;
-
-//     //对输出参数编码
-//     if (pPtr->getReturnPtr()->getTypePtr())
-//     {
-//         s << TAB << tostr(pPtr->getReturnPtr()->getTypePtr()) << " " << pPtr->getReturnPtr()->getId() << generateInitValue(pPtr->getReturnPtr()) << ";" << endl;
-//         s << readFrom(pPtr->getReturnPtr()) << endl;
-//     }
-
-//     for (size_t i = 0; i < vParamDecl.size(); i++)
-//     {
-//         if (vParamDecl[i]->isOut())
-//         {
-//             s << TAB << tostr(vParamDecl[i]->getTypeIdPtr()->getTypePtr()) << " "
-//                 << vParamDecl[i]->getTypeIdPtr()->getId() << generateInitValue(vParamDecl[i]->getTypeIdPtr()) << ";" << endl;
-//             s << readFrom(vParamDecl[i]->getTypeIdPtr());
-//         }
-//     }
-
-//     //处理线程私有数据
-//     s << TAB << "CallbackThreadData * pCbtd = CallbackThreadData::getData();" << endl;
-//     s << TAB << "assert(pCbtd != NULL);" << endl;
-//     s << endl;
-//     s << TAB << "pCbtd->setResponseContext(msg->response->context);" << endl;
-//     s << endl;
-
-//     //异步回调都无返回值
-//     s << TAB << "callback_" << pPtr->getId() << "(";
-//     string sParams;
-//     if (pPtr->getReturnPtr()->getTypePtr())
-//     {
-//         sParams = pPtr->getReturnPtr()->getId() + ", ";
-//     }
-//     for (size_t i = 0; i < vParamDecl.size(); i++)
-//     {
-//         if (vParamDecl[i]->isOut())
-//         {
-//             sParams += vParamDecl[i]->getTypeIdPtr()->getId() + ", ";
-//         }
-//     }
-//     s << tars::TC_Common::trimright(sParams, ", ", false) <<  ");" << endl;
-
-//     s << endl;
-//     s << TAB << "pCbtd->delResponseContext();" << endl;
-//     s << endl;
-
-
-//     s << TAB << "return tars::TARSSERVERSUCCESS;" << endl;
-
-//     return s.str();
-// }
-
-
-string Tars2Cpp::generateDispatchResponseAsync(const OperationPtr& pPtr, const string& cn) const
+string Tars2Cpp::generateDispatchAsync(const OperationPtr& pPtr, const string& cn) const
 {
     ostringstream s;
+    s << TAB << "if (msg->response->iRet != tars::TARSSERVERSUCCESS)" << endl
+        << TAB << "{" << endl;
+
+    INC_TAB;
+    s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response->iRet);" << endl;
+    s << endl;
+
+    s << TAB << "return msg->response->iRet;" << endl;
+    DEL_TAB;
+    s << TAB << "}" << endl;
 
     s << TAB << _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> _is;" << endl;
     s << endl;
     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
 
-    s << TAB << "_is.setBuffer(response.sBuffer);" << endl;
+    s << TAB << "_is.setBuffer(msg->response->sBuffer);" << endl;
 
     //对输出参数编码
     if (pPtr->getReturnPtr()->getTypePtr())
@@ -1075,7 +1014,7 @@ string Tars2Cpp::generateDispatchResponseAsync(const OperationPtr& pPtr, const s
     s << TAB << "CallbackThreadData * pCbtd = CallbackThreadData::getData();" << endl;
     s << TAB << "assert(pCbtd != NULL);" << endl;
     s << endl;
-    s << TAB << "pCbtd->setResponseContext(response.context);" << endl;
+    s << TAB << "pCbtd->setResponseContext(msg->response->context);" << endl;
     s << endl;
 
     //异步回调都无返回值
@@ -1104,143 +1043,26 @@ string Tars2Cpp::generateDispatchResponseAsync(const OperationPtr& pPtr, const s
     return s.str();
 }
 
-string Tars2Cpp::generateDispatchExceptionAsync(const OperationPtr& pPtr, const string& cn) const
-{
-    ostringstream s;
-    INC_TAB;
-    s << TAB << "callback_" << pPtr->getId() << "_exception(response.iRet);" << endl;
-    s << endl;
-
-    s << TAB << "return response.iRet;" << endl;
-    DEL_TAB;
-
-    return s.str();
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// string Tars2Cpp::generateDispatchCoroAsync(const OperationPtr& pPtr, const string& cn) const
-// {
-//     ostringstream s;
-//     s << TAB << "if (msg->response->iRet != tars::TARSSERVERSUCCESS)" << endl
-//         << TAB << "{" << endl;
-
-//     INC_TAB;
-//     s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response->iRet);" << endl;
-//     s << endl;
-
-//     s << TAB << "return msg->response->iRet;" << endl;
-//     DEL_TAB;
-//     s << TAB << "}" << endl;
-
-//     s << TAB << _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> _is;" << endl;
-//     s << endl;
-//     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
-
-//     s << TAB << "_is.setBuffer(msg->response->sBuffer);" << endl;
-
-//     if(pPtr->getReturnPtr()->getTypePtr() || vParamDecl.size() >0)
-//     {
-//         s << TAB << "try" << endl;
-//         s << TAB << "{" << endl;
-
-//         INC_TAB;
-//     }
-
-//     //对输出参数编码
-//     if (pPtr->getReturnPtr()->getTypePtr())
-//     {
-//         s << TAB << tostr(pPtr->getReturnPtr()->getTypePtr()) << " " << pPtr->getReturnPtr()->getId() << generateInitValue(pPtr->getReturnPtr()) << ";" << endl;
-//         s << readFrom(pPtr->getReturnPtr()) << endl;
-//     }
-
-//     for (size_t i = 0; i < vParamDecl.size(); i++)
-//     {
-//         if (vParamDecl[i]->isOut())
-//         {
-//             s << TAB << tostr(vParamDecl[i]->getTypeIdPtr()->getTypePtr()) << " "
-//                 << vParamDecl[i]->getTypeIdPtr()->getId() << generateInitValue(vParamDecl[i]->getTypeIdPtr()) << ";" << endl;
-//             s << readFrom(vParamDecl[i]->getTypeIdPtr());
-//         }
-//     }
-
-//     s << TAB << "setResponseContext(msg->response->context);" << endl;
-//     s << endl;
-
-//     //异步回调都无返回值
-//     s << TAB << "callback_" << pPtr->getId() << "(";
-//     string sParams;
-//     if (pPtr->getReturnPtr()->getTypePtr())
-//     {
-//         sParams = pPtr->getReturnPtr()->getId() + ", ";
-//     }
-//     for (size_t i = 0; i < vParamDecl.size(); i++)
-//     {
-//         if (vParamDecl[i]->isOut())
-//         {
-//             sParams += vParamDecl[i]->getTypeIdPtr()->getId() + ", ";
-//         }
-//     }
-//     s << tars::TC_Common::trimright(sParams, ", ", false) <<  ");" << endl;
-
-//     s << endl;
-
-//     if(pPtr->getReturnPtr()->getTypePtr() || vParamDecl.size() >0)
-//     {
-//         DEL_TAB;
-
-//         s << TAB << "}" << endl;
-//         s << TAB << "catch(std::exception &ex)" << endl;
-//         s << TAB << "{" << endl;
-
-//         INC_TAB;
-//         s << TAB << "callback_" << pPtr->getId() << "_exception(tars::TARSCLIENTDECODEERR);" << endl;
-//         s << endl;
-//         s << TAB << "return tars::TARSCLIENTDECODEERR;" << endl;
-//         DEL_TAB;
-
-//         s << TAB << "}" << endl;
-//         s << TAB << "catch(...)" << endl;
-//         s << TAB << "{" << endl;
-
-//         INC_TAB;
-//         s << TAB << "callback_" << pPtr->getId() << "_exception(tars::TARSCLIENTDECODEERR);" << endl;
-//         s << endl;
-//         s << TAB << "return tars::TARSCLIENTDECODEERR;" << endl;
-//         DEL_TAB;
-
-//         s << TAB << "}" << endl;
-//         s << endl;
-//     }
-
-//     s << TAB << "return tars::TARSSERVERSUCCESS;" << endl;
-
-//     return s.str();
-// }
-
-string Tars2Cpp::generateDispatchCoroExceptionAsync(const OperationPtr& pPtr, const string& cn) const
+string Tars2Cpp::generateDispatchCoroAsync(const OperationPtr& pPtr, const string& cn) const
 {
     ostringstream s;
+    s << TAB << "if (msg->response->iRet != tars::TARSSERVERSUCCESS)" << endl
+        << TAB << "{" << endl;
 
     INC_TAB;
-    s << TAB << "callback_" << pPtr->getId() << "_exception(response.iRet);" << endl;
+    s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response->iRet);" << endl;
     s << endl;
 
-    s << TAB << "return response.iRet;" << endl;
+    s << TAB << "return msg->response->iRet;" << endl;
     DEL_TAB;
-
-    return s.str();
-}
-
-
-string Tars2Cpp::generateDispatchCoroResponseAsync(const OperationPtr& pPtr, const string& cn) const
-{
-    ostringstream s;
+    s << TAB << "}" << endl;
 
     s << TAB << _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> _is;" << endl;
     s << endl;
     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
 
-    s << TAB << "_is.setBuffer(response.sBuffer);" << endl;
+    s << TAB << "_is.setBuffer(msg->response->sBuffer);" << endl;
 
     if(pPtr->getReturnPtr()->getTypePtr() || vParamDecl.size() >0)
     {
@@ -1267,7 +1089,7 @@ string Tars2Cpp::generateDispatchCoroResponseAsync(const OperationPtr& pPtr, con
         }
     }
 
-    s << TAB << "setResponseContext(response.context);" << endl;
+    s << TAB << "setResponseContext(msg->response->context);" << endl;
     s << endl;
 
     //异步回调都无返回值
@@ -1320,7 +1142,6 @@ string Tars2Cpp::generateDispatchCoroResponseAsync(const OperationPtr& pPtr, con
 
     return s.str();
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 string Tars2Cpp::generateHAsync(const OperationPtr& pPtr) const
 {
@@ -1563,7 +1384,6 @@ string Tars2Cpp::promiseReadFrom(const TypeIdPtr &pPtr, bool bIsRequire) const
     {
         //枚举强制类型转换在O2编译选项情况下会告警
         string tmp = _namespace + "::Int32 eTemp" + TC_Common::tostr(pPtr->getTag()) + generateInitValue(pPtr);
-
         s << TAB << tmp <<endl;
         s << TAB << "_is.read(eTemp"<<TC_Common::tostr(pPtr->getTag());
     }
@@ -1580,20 +1400,15 @@ string Tars2Cpp::promiseReadFrom(const TypeIdPtr &pPtr, bool bIsRequire) const
     {
         s << TAB << "_is.read(ptr->"<< pPtr->getId();
     }
-
     s << ", " << pPtr->getTag() << ", " << ((pPtr->isRequire() && bIsRequire)?"true":"false") << ");" << endl;
-
     if(EnumPtr::dynamicCast(pPtr->getTypePtr()))
     {
         s << TAB << "ptr->" << pPtr->getId() << " = (" <<tostr(pPtr->getTypePtr()) <<")eTemp"<<TC_Common::tostr(pPtr->getTag())<<";"<<endl;
     }
-
     if(pPtr->getTypePtr()->isPointer())
     s << TAB <<"_is.mapBufferSkip("<<pPtr->getId() << "Len);"<<endl;
-
     return s.str();
 }
-
 bool Tars2Cpp::isPromiseDispatchInitValue(const TypeIdPtr &pPtr) const
 {
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
@@ -1602,7 +1417,6 @@ bool Tars2Cpp::isPromiseDispatchInitValue(const TypeIdPtr &pPtr) const
     {
         return true;
     }
-
     //枚举强制类型转换在O2编译选项情况下会告警
     EnumPtr ePtr = EnumPtr::dynamicCast(pPtr->getTypePtr());
     if(ePtr)
@@ -1686,9 +1500,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
 /*
    //promise异步的函数声明
    string sStruct = pPtr->getId();
-
     s << TAB << "tars::Future< " << cn <<"PrxCallbackPromise::Promise" << sStruct << "Ptr > promise_async_" << pPtr->getId() << "(";
-
     for(size_t i = 0; i < vParamDecl.size(); i++)
     {
         if (!vParamDecl[i]->isOut())
@@ -1697,21 +1509,16 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         }
     }
     s << "const map<string, string>& context)" << endl;
-
     s << TAB << "{" << endl;
     INC_TAB;
-
     if (_tarsMaster)
     {
 	    s << TAB << "this->tars_setMasterFlag(true);" << endl;
     }
-
     s << TAB << "tars::Promise< " << cn <<"PrxCallbackPromise::Promise" << sStruct << "Ptr > promise;" << endl;
     s << TAB << cn << "PrxCallbackPromisePtr callback = new " << cn << "PrxCallbackPromise(promise);" << endl;
     s << endl;
-
     s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> _os;" << endl;
-
     for(size_t i = 0; i < vParamDecl.size(); i++)
     {
         if(vParamDecl[i]->isOut())
@@ -1720,23 +1527,16 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         }
         s << writeTo(vParamDecl[i]->getTypeIdPtr());
     }
-
     s << TAB << "std::map<string, string> _mStatus;" << endl;
-
     if (!routekey.empty())
     {
         ostringstream os;
-
         os << routekey;
-
         s << TAB << "_mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, " << os.str() << "));" << endl;
     }
-
     s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os, context, _mStatus, callback);" << endl;
-
     s << endl;
     s << TAB << "return promise.getFuture();" << endl;
-
     DEL_TAB;
     s << TAB << "}" << endl;
     s << endl;
@@ -1996,7 +1796,6 @@ struct SortOperation {
 string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const OperationPtr &pPtr) const
 {
     ostringstream s;
-
     string sStruct = pPtr->getId();
     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
     ////////
@@ -2007,12 +1806,10 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
     s << TAB << "{" << endl;
     s << TAB << "public:" << endl;
     INC_TAB;
-
     if (pPtr->getReturnPtr()->getTypePtr())
     {
         s << TAB << tostr(pPtr->getReturnPtr()->getTypePtr()) << " _ret;" << endl;
     }
-
     for(size_t i = 0; i < vParamDecl.size(); i++)
     {
         ParamDeclPtr& pPtr = vParamDecl[i];
@@ -2021,82 +1818,63 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
 			s << TAB << tostr(pPtr->getTypeIdPtr()->getTypePtr()) << " " << pPtr->getTypeIdPtr()->getId() << ";" << endl;
         }
     }
-
     s << TAB << "map<std::string, std::string> _mRspContext;" << endl;
-
     DEL_TAB;
     s << TAB << "};" << endl;
     s << TAB << endl;
     s << TAB << "typedef tars::TC_AutoPtr< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << " > Promise" << sStruct << "Ptr;" << endl;
     s << endl;
-
     s << TAB << pInter->getId() << "PrxCallbackPromise(const tars::Promise< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << "Ptr > &promise)" << endl;
     s << TAB << ": _promise_" << sStruct << "(promise)" << endl;
     s << TAB << "{}" << endl;
     s << TAB << endl;
-
     s << TAB << "virtual void " << "callback_" << pPtr->getId() << "(const " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << "Ptr &ptr)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
     s << TAB << "_promise_" << sStruct << ".setValue(ptr);" << endl; 
     DEL_TAB;
     s << TAB << "}" << endl;
-
     s << TAB << "virtual void " << "callback_" << pPtr->getId() << "_exception(" + _namespace + "::Int32 ret)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
-
     s << TAB << "std::string str(\"\");" << endl;
     s << TAB << "str += \"Function:" << pPtr->getId() << "_exception|Ret:\";" << endl;
     s << TAB << "str += TC_Common::tostr(ret);" << endl; 
     s << TAB << "_promise_" << sStruct << ".setException(tars::copyException(str, ret));" << endl;
-
     DEL_TAB;
     s << TAB << "}" << endl;
-
     s << endl;
     DEL_TAB;
     s << TAB << "protected:" << endl;
     INC_TAB;
     s << TAB << "tars::Promise< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << "Ptr > _promise_" << sStruct << ";" << endl;
-
     return s.str();
 }
-
 string Tars2Cpp::generateDispatchPromiseAsync(const OperationPtr &pPtr, const string &cn) const
 {
     ostringstream s;
     s << TAB << "if (msg->response->iRet != tars::TARSSERVERSUCCESS)" << endl
       << TAB << "{" << endl;
-
     INC_TAB;
     s << TAB << "callback_" << pPtr->getId() << "_exception(msg->response->iRet);" << endl;
     s << endl;
-
     s << TAB << "return msg->response->iRet;" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
-
     s << TAB << _namespace + "::TarsInputStream<" + _namespace + "::BufferReader> _is;" << endl;
     s << endl;
     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
-
     s << TAB << "_is.setBuffer(msg->response->sBuffer);" << endl;
     s << endl;
-
     string sStruct = pPtr->getId();
-
     s << TAB << cn << "PrxCallbackPromise::Promise" << sStruct << "Ptr ptr = new "<< cn << "PrxCallbackPromise::Promise" << sStruct << "();" << endl;
     s << endl;
-
     if(pPtr->getReturnPtr()->getTypePtr() || vParamDecl.size() >0)
     {
         s << TAB << "try" << endl;
         s << TAB << "{" << endl;
-
         INC_TAB;
     }
-
     //对输出参数编码
     if(pPtr->getReturnPtr()->getTypePtr())
     {
@@ -2104,7 +1882,6 @@ string Tars2Cpp::generateDispatchPromiseAsync(const OperationPtr &pPtr, const st
 	        s << TAB << "ptr->_ret " << generateInitValue(pPtr->getReturnPtr())<< ";"<< endl;
         s << promiseReadFrom(pPtr->getReturnPtr()) << endl;
     }
-
     for(size_t i = 0; i < vParamDecl.size(); i++)
     {
         if(vParamDecl[i]->isOut())
@@ -2114,44 +1891,33 @@ string Tars2Cpp::generateDispatchPromiseAsync(const OperationPtr &pPtr, const st
             s << promiseReadFrom(vParamDecl[i]->getTypeIdPtr());
         }
     }
-
     if(pPtr->getReturnPtr()->getTypePtr() || vParamDecl.size() >0)
     {
         DEL_TAB;
-
         s << TAB << "}" << endl;
         s << TAB << "catch(std::exception &ex)" << endl;
         s << TAB << "{" << endl;
-
         INC_TAB;
         s << TAB << "callback_" << pPtr->getId() << "_exception(tars::TARSCLIENTDECODEERR);" << endl;
         s << endl;
         s << TAB << "return tars::TARSCLIENTDECODEERR;" << endl;
         DEL_TAB;
-
         s << TAB << "}" << endl;
         s << TAB << "catch(...)" << endl;
         s << TAB << "{" << endl;
-
         INC_TAB;
         s << TAB << "callback_" << pPtr->getId() << "_exception(tars::TARSCLIENTDECODEERR);" << endl;
         s << endl;
         s << TAB << "return tars::TARSCLIENTDECODEERR;" << endl;
         DEL_TAB;
-
         s << TAB << "}" << endl;
         s << endl;
     }
-
     s << TAB << "ptr->_mRspContext = msg->response->context;" << endl;
     s << endl;
-
     s << TAB << "callback_" << pPtr->getId() << "(ptr);" << endl;
     s << endl;
-
-
     s << TAB << "return tars::TARSSERVERSUCCESS;" << endl;
-
     return s.str();
 }
 */
@@ -2202,125 +1968,64 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     s << TAB << "public:" << endl;
     INC_TAB;
 
-    //生成异步回调接口 onDispatchException
+    s << TAB << "virtual int onDispatch(tars::ReqMessagePtr msg)" << endl;
+
+    //生成异步回调接口
+    s << TAB << "{" << endl;
+    INC_TAB;
+    string dname    = "__" + pPtr->getId() + "_all";
+    string dispatch =  "static ::std::string " + dname;
+    s << TAB << dispatch << "[]=" << endl;
+    s << TAB << "{" << endl;
+    INC_TAB;
+
+    for (size_t i = 0; i < vOperation.size(); i++)
     {
-        s << TAB << "virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)" << endl;
-
-        s << TAB << "{" << endl;
-        INC_TAB;
-        string dname    = "__" + pPtr->getId() + "_all";
-        string dispatch =  "static ::std::string " + dname;
-        s << TAB << dispatch << "[]=" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-
-        for (size_t i = 0; i < vOperation.size(); i++)
+        s << TAB << "\"" << vOperation[i]->getId() << "\"";
+        if (i != vOperation.size() - 1)
         {
-            s << TAB << "\"" << vOperation[i]->getId() << "\"";
-            if (i != vOperation.size() - 1)
-            {
-                s << ",";
-            }
-            s << endl;
-
+            s << ",";
         }
-        DEL_TAB;
-        s << TAB << "};" << endl;
-
-        s << TAB << "pair<string*, string*> r = equal_range(" << dname << ", " << dname << "+" << vOperation.size() << ", request.sFuncName);" << endl;
-
-        s << TAB << "if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;" << endl;
-
-        s << TAB << "switch(r.first - " << dname << ")" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-
-        for (size_t i = 0; i < vOperation.size(); i++)
-        {
-            s << TAB << "case " << i << ":" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
-
-            s << generateDispatchExceptionAsync(vOperation[i], pPtr->getId()) << endl;
-
-            DEL_TAB;
-            s << TAB << "}" << endl;
-        }
-
-        DEL_TAB;
-        s << TAB << "}" << endl;
-
-        s << TAB << "return tars::TARSSERVERNOFUNCERR;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-
         s << endl;
 
-        // DEL_TAB;
-        // s << TAB << "};" << endl;
+    }
+    DEL_TAB;
+    s << TAB << "};" << endl;
+
+    s << TAB << "pair<string*, string*> r = equal_range(" << dname << ", " << dname << "+" << vOperation.size() << ", string(msg->request.sFuncName));" << endl;
+
+    s << TAB << "if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;" << endl;
+
+    s << TAB << "switch(r.first - " << dname << ")" << endl;
+    s << TAB << "{" << endl;
+    INC_TAB;
+
+    for (size_t i = 0; i < vOperation.size(); i++)
+    {
+        s << TAB << "case " << i << ":" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+
+        s << generateDispatchAsync(vOperation[i], pPtr->getId()) << endl;
+
+        DEL_TAB;
+        s << TAB << "}" << endl;
     }
 
-    //生成异步回调接口 onDispatchResponse
-    {
-        s << TAB << "virtual int onDispatchResponse(const tars::RequestPacket &request, const tars::ResponsePacket &response)" << endl;
+    DEL_TAB;
+    s << TAB << "}" << endl;
 
-        s << TAB << "{" << endl;
-        INC_TAB;
-        string dname    = "__" + pPtr->getId() + "_all";
-        string dispatch =  "static ::std::string " + dname;
-        s << TAB << dispatch << "[]=" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
+    s << TAB << "return tars::TARSSERVERNOFUNCERR;" << endl;
+    DEL_TAB;
+    s << TAB << "}" << endl;
 
-        for (size_t i = 0; i < vOperation.size(); i++)
-        {
-            s << TAB << "\"" << vOperation[i]->getId() << "\"";
-            if (i != vOperation.size() - 1)
-            {
-                s << ",";
-            }
-            s << endl;
+    s << endl;
 
-        }
-        DEL_TAB;
-        s << TAB << "};" << endl;
+    DEL_TAB;
+    s << TAB << "};" << endl;
 
-        s << TAB << "pair<string*, string*> r = equal_range(" << dname << ", " << dname << "+" << vOperation.size() << ", request.sFuncName);" << endl;
-
-        s << TAB << "if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;" << endl;
-
-        s << TAB << "switch(r.first - " << dname << ")" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-
-        for (size_t i = 0; i < vOperation.size(); i++)
-        {
-            s << TAB << "case " << i << ":" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
-
-            s << generateDispatchResponseAsync(vOperation[i], pPtr->getId()) << endl;
-
-            DEL_TAB;
-            s << TAB << "}" << endl;
-        }
-
-        DEL_TAB;
-        s << TAB << "}" << endl;
-
-        s << TAB << "return tars::TARSSERVERNOFUNCERR;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-
-        s << endl;
-
-        DEL_TAB;
-        s << TAB << "};" << endl;
-
-
-        s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallback> " << pPtr->getId() << "PrxCallbackPtr;" << endl;
-        s << endl;
-    }
+    s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallback> " << pPtr->getId() << "PrxCallbackPtr;" << endl;
+    s << endl;
 /*
 	//生成promise异步回调Proxy
     s << TAB << "//callback of promise async proxy for client" << endl;
@@ -2329,21 +2034,82 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     s << TAB << "public:" << endl;
     INC_TAB;
     s << TAB << "virtual ~" << pPtr->getId() << "PrxCallbackPromise(){}" << endl;
-
     for(size_t i = 0; i < vOperation.size(); i++)
     {
         s << generateHPromiseAsync(pPtr, vOperation[i]) << endl;
     }
-
     DEL_TAB;
-
 	s << TAB << "public:" << endl;
     INC_TAB;
     s << TAB << "virtual int onDispatch(tars::ReqMessagePtr msg)" << endl;
-
 	s << TAB << "{" << endl;
     INC_TAB;
+    dname    = "__" + pPtr->getId() + "_all";
+    dispatch =  "static ::std::string " + dname;
+    s << TAB << dispatch << "[]=" << endl;
+    s << TAB << "{" << endl;
+    INC_TAB;
+    for (size_t i = 0; i < vOperation.size(); i++)
+    {
+        s << TAB << "\"" << vOperation[i]->getId() << "\"";
+        if (i != vOperation.size() - 1)
+        {
+            s << ",";
+        }
+        s << endl;
+    }
+    DEL_TAB;
+    s << TAB << "};" << endl;
+    s << endl;
+    s << TAB << "pair<string*, string*> r = equal_range(" << dname << ", " << dname << "+" << vOperation.size() << ", string(msg->request.sFuncName));" << endl;
+    s << TAB << "if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;" << endl;
+    s << TAB << "switch(r.first - " << dname << ")" << endl;
+    s << TAB << "{" << endl;
+    INC_TAB;
+    for(size_t i = 0; i < vOperation.size(); i++)
+    {
+        s << TAB << "case " << i << ":" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << generateDispatchPromiseAsync(vOperation[i], pPtr->getId()) << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+    }
+    DEL_TAB;
+    s << TAB << "}" << endl;
+    s << TAB << "return tars::TARSSERVERNOFUNCERR;" << endl;
+    DEL_TAB;
+    s << TAB << "}" << endl;
+    s << endl;
+    DEL_TAB;
+    s << TAB << "};" << endl;
+    s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallbackPromise> " << pPtr->getId() << "PrxCallbackPromisePtr;" << endl;
+    s << endl;
+*/
+    //生成协程异步回调类，用于并发请求
+    s << TAB << "/* callback of coroutine async proxy for client */" << endl;
+    s << TAB << "class " << pPtr->getId() << "CoroPrxCallback: public " << pPtr->getId() << "PrxCallback" << endl;
+    s << TAB << "{" << endl;
+    s << TAB << "public:" << endl;
+    INC_TAB;
+    s << TAB << "virtual ~" << pPtr->getId() << "CoroPrxCallback(){}" << endl;
+    DEL_TAB;
 
+    s << TAB << "public:" << endl;
+
+    INC_TAB;
+    s << TAB << "virtual const map<std::string, std::string> & getResponseContext() const { return _mRspContext; }" << endl;
+    s << endl;
+    s << TAB << "virtual void setResponseContext(const map<std::string, std::string> &mContext) { _mRspContext = mContext; }" << endl;
+    s << endl;
+    DEL_TAB;
+
+    s << TAB << "public:" << endl;
+    INC_TAB;
+    //生成协程异步回调接口
+    s << TAB << "int onDispatch(tars::ReqMessagePtr msg)" << endl;
+    s << TAB << "{" << endl;
+    INC_TAB;
     dname    = "__" + pPtr->getId() + "_all";
     dispatch =  "static ::std::string " + dname;
     s << TAB << dispatch << "[]=" << endl;
@@ -2373,13 +2139,13 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     s << TAB << "{" << endl;
     INC_TAB;
 
-    for(size_t i = 0; i < vOperation.size(); i++)
+    for (size_t i = 0; i < vOperation.size(); i++)
     {
         s << TAB << "case " << i << ":" << endl;
         s << TAB << "{" << endl;
         INC_TAB;
 
-        s << generateDispatchPromiseAsync(vOperation[i], pPtr->getId()) << endl;
+        s << generateDispatchCoroAsync(vOperation[i], pPtr->getId()) << endl;
 
         DEL_TAB;
         s << TAB << "}" << endl;
@@ -2393,199 +2159,6 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     s << TAB << "}" << endl;
 
     s << endl;
-
-    DEL_TAB;
-
-    s << TAB << "};" << endl;
-
-    s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallbackPromise> " << pPtr->getId() << "PrxCallbackPromisePtr;" << endl;
-    s << endl;
-*/
-    //生成协程异步回调类，用于并发请求
-    s << TAB << "/* callback of coroutine async proxy for client */" << endl;
-    s << TAB << "class " << pPtr->getId() << "CoroPrxCallback: public " << pPtr->getId() << "PrxCallback" << endl;
-    s << TAB << "{" << endl;
-    s << TAB << "public:" << endl;
-    INC_TAB;
-    s << TAB << "virtual ~" << pPtr->getId() << "CoroPrxCallback(){}" << endl;
-    DEL_TAB;
-
-    s << TAB << "public:" << endl;
-
-    INC_TAB;
-    s << TAB << "virtual const map<std::string, std::string> & getResponseContext() const { return _mRspContext; }" << endl;
-    s << endl;
-    s << TAB << "virtual void setResponseContext(const map<std::string, std::string> &mContext) { _mRspContext = mContext; }" << endl;
-    s << endl;
-    DEL_TAB;
-
-    s << TAB << "public:" << endl;
-    INC_TAB;
-
-    //生成协程异步回调接口
-    {
-        s << TAB << "virtual int onDispatchResponse(const tars::RequestPacket &request, const tars::ResponsePacket &response)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        string dname    = "__" + pPtr->getId() + "_all";
-        string dispatch =  "static ::std::string " + dname;
-        s << TAB << dispatch << "[]=" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-
-        for (size_t i = 0; i < vOperation.size(); i++)
-        {
-            s << TAB << "\"" << vOperation[i]->getId() << "\"";
-            if (i != vOperation.size() - 1)
-            {
-                s << ",";
-            }
-            s << endl;
-        }
-
-        DEL_TAB;
-        s << TAB << "};" << endl;
-
-        s << endl;
-
-        s << TAB << "pair<string*, string*> r = equal_range(" << dname << ", " << dname << "+" << vOperation.size() << ", request.sFuncName);" << endl;
-
-        s << TAB << "if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;" << endl;
-
-        s << TAB << "switch(r.first - " << dname << ")" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-
-        for (size_t i = 0; i < vOperation.size(); i++)
-        {
-            s << TAB << "case " << i << ":" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
-
-            s << generateDispatchCoroResponseAsync(vOperation[i], pPtr->getId()) << endl;
-
-            DEL_TAB;
-            s << TAB << "}" << endl;
-        }
-
-        DEL_TAB;
-        s << TAB << "}" << endl;
-
-        s << TAB << "return tars::TARSSERVERNOFUNCERR;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-
-        s << endl;
-    }
-
-
-    {
-        //生成协程异步回调接口
-        s << TAB << "virtual int onDispatchException(const tars::RequestPacket &request, const tars::ResponsePacket &response)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        string dname    = "__" + pPtr->getId() + "_all";
-        string dispatch =  "static ::std::string " + dname;
-        s << TAB << dispatch << "[]=" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-
-        for (size_t i = 0; i < vOperation.size(); i++)
-        {
-            s << TAB << "\"" << vOperation[i]->getId() << "\"";
-            if (i != vOperation.size() - 1)
-            {
-                s << ",";
-            }
-            s << endl;
-        }
-
-        DEL_TAB;
-        s << TAB << "};" << endl;
-
-        s << endl;
-
-        s << TAB << "pair<string*, string*> r = equal_range(" << dname << ", " << dname << "+" << vOperation.size() << ", request.sFuncName);" << endl;
-
-        s << TAB << "if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;" << endl;
-
-        s << TAB << "switch(r.first - " << dname << ")" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-
-        for (size_t i = 0; i < vOperation.size(); i++)
-        {
-            s << TAB << "case " << i << ":" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
-
-            s << generateDispatchCoroExceptionAsync(vOperation[i], pPtr->getId()) << endl;
-
-            DEL_TAB;
-            s << TAB << "}" << endl;
-        }
-
-        DEL_TAB;
-        s << TAB << "}" << endl;
-
-        s << TAB << "return tars::TARSSERVERNOFUNCERR;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-
-        s << endl;        
-    }
-    // s << TAB << "int onDispatch(tars::ReqMessagePtr msg)" << endl;
-    // s << TAB << "{" << endl;
-    // INC_TAB;
-    // dname    = "__" + pPtr->getId() + "_all";
-    // dispatch =  "static ::std::string " + dname;
-    // s << TAB << dispatch << "[]=" << endl;
-    // s << TAB << "{" << endl;
-    // INC_TAB;
-
-    // for (size_t i = 0; i < vOperation.size(); i++)
-    // {
-    //     s << TAB << "\"" << vOperation[i]->getId() << "\"";
-    //     if (i != vOperation.size() - 1)
-    //     {
-    //         s << ",";
-    //     }
-    //     s << endl;
-    // }
-
-    // DEL_TAB;
-    // s << TAB << "};" << endl;
-
-    // s << endl;
-
-    // s << TAB << "pair<string*, string*> r = equal_range(" << dname << ", " << dname << "+" << vOperation.size() << ", string(msg->request.sFuncName));" << endl;
-
-    // s << TAB << "if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;" << endl;
-
-    // s << TAB << "switch(r.first - " << dname << ")" << endl;
-    // s << TAB << "{" << endl;
-    // INC_TAB;
-
-    // for (size_t i = 0; i < vOperation.size(); i++)
-    // {
-    //     s << TAB << "case " << i << ":" << endl;
-    //     s << TAB << "{" << endl;
-    //     INC_TAB;
-
-    //     s << generateDispatchCoroAsync(vOperation[i], pPtr->getId()) << endl;
-
-    //     DEL_TAB;
-    //     s << TAB << "}" << endl;
-    // }
-
-    // DEL_TAB;
-    // s << TAB << "}" << endl;
-
-    // s << TAB << "return tars::TARSSERVERNOFUNCERR;" << endl;
-    // DEL_TAB;
-    // s << TAB << "}" << endl;
-
-    // s << endl;
 
 
     ////////////////////////////////////////////////////////////////////
@@ -2669,8 +2242,8 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
 
     s << TAB << "{" << endl;
     INC_TAB;
-    string dname    = "__" + nPtr->getId() + "__" + pPtr->getId() + "_all";
-    string dispatch =  "static ::std::string " + dname;
+    dname    = "__" + nPtr->getId() + "__" + pPtr->getId() + "_all";
+    dispatch =  "static ::std::string " + dname;
     s << TAB << dispatch << "[]=" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
@@ -3286,8 +2859,4 @@ StructPtr Tars2Cpp::findStruct(const ContextPtr& pPtr, const string& id)
 //     s << endl;
 //     s << "#endif" << endl;
 
-//     tars::TC_File::makeDirRecursive(_baseDir, 0755);
-//     tars::TC_File::save2file(fileH, s.str());
-
-//     return;
-// }
+//   

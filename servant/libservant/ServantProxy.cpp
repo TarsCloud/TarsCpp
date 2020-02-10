@@ -161,7 +161,7 @@ ServantProxyCallback::ServantProxyCallback()
 {
 }
 
-int ServantProxyCallback::onDispatch(ReqMessagePtr msg)
+int HttpServantProxyCallback::onDispatch(ReqMessagePtr msg)
 {
     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
     {
@@ -169,18 +169,6 @@ int ServantProxyCallback::onDispatch(ReqMessagePtr msg)
     }
 
     return onDispatchResponse(msg->request, *msg->response);
-}
-
-int ServantProxyCallback::onDispatchResponse(const RequestPacket &req, const ResponsePacket &rsp)
-{
-    TLOGERROR("[TARS][ServantProxyCallback::onDispatchResponse not be implemented]"<<endl);
-    return 0;
-}
-
-int ServantProxyCallback::onDispatchException(const RequestPacket &req, const ResponsePacket &rsp)
-{
-    TLOGERROR("[TARS][ServantProxyCallback::onDispatchException not be implemented]"<<endl);
-    return 0;
 }
 
 HttpServantProxyCallback::HttpServantProxyCallback(const HttpCallbackPtr& cb) :
@@ -370,13 +358,13 @@ int ServantProxy::tars_async_timeout() const
 }
 
 
-void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol, const std::string& protoName)
+void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol)
 {
     TC_LockT<TC_ThreadMutex> lock(*this);
 
     for(size_t i = 0;i < _objectProxyNum; ++i)
     {
-        (*(_objectProxy + i))->setProxyProtocol(protocol, protoName);
+        (*(_objectProxy + i))->setProxyProtocol(protocol);
     }
 }
 
