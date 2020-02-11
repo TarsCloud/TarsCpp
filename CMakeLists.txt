@@ -6,12 +6,13 @@ set(TARS_VERSION "2.0.0")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 set(TARS_SSL 1)
 add_definitions(-DTARS_SSL=${TARS_SSL})
-set(TARS_HTTP2 0)
+set(TARS_HTTP2 1)
 add_definitions(-DTARS_HTTP2=${TARS_HTTP2})
+set(TARS_PROTOBUF 1)
 
 if(TARS_HTTP2)
 cmake_minimum_required(VERSION 3.0)
-project(tars_cpp VERSION ${TARS_VERSION})
+project(tars_cpp)
 else()
 cmake_minimum_required(VERSION 2.8)
 project(tars_cpp)
@@ -54,58 +55,7 @@ ENDIF()
 set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
 
 #-------------------------------------------------------------
-
-include(ExternalProject)
-
 set(APP_LIBRARIES)
-
-ExternalProject_Add(mysql-lib
-    # URL ${CMAKE_SOURCE_DIR}/thirdparty-src/mysql-5.6.26.tar.gz
-    URL http://cdn.tarsyun.com/src/mysql-5.6.26.tar.gz
-    PREFIX    ${CMAKE_BINARY_DIR}
-    INSTALL_DIR ${CMAKE_SOURCE_DIR}
-    CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/install/mysql-lib -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND make -j4 mysqlclient
-    LOG_CONFIGURE 1
-    LOG_BUILD 1
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
-    URL_MD5 c537c08c1276abc79d76e8e562bbcea5
-    )
-
-if(TARS_HTTP2)
-ExternalProject_Add(nghttp2-lib
-    URL http://cdn.tarsyun.com/src/nghttp2-1.40.0.tar.gz
-    PREFIX    ${CMAKE_BINARY_DIR}
-    INSTALL_DIR ${CMAKE_SOURCE_DIR}
-    CONFIGURE_COMMAND cmake .
-    CMAKE_ARGS -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}/install/nghttp2-lib -DENABLE_STATIC_LIB -DENABLE_LIB_ONLY
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
-    BUILD_IN_SOURCE 1
-    LOG_BUILD 1
-    LOG_CONFIGURE 1
-    BUILD_COMMAND make -j4
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
-    URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
-    )
-endif()
-
-if(TARS_SSL)
-ExternalProject_Add(openssl-lib
-    URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
-    PREFIX    ${CMAKE_BINARY_DIR}
-    INSTALL_DIR ${CMAKE_SOURCE_DIR}
-    CONFIGURE_COMMAND ./config --prefix=${CMAKE_BINARY_DIR}/install/openssl-lib
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND make -j4
-    LOG_CONFIGURE 1
-    LOG_BUILD 1
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
-    URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
-    )
-endif()
 
 set(THIRDPARTY_PATH "${CMAKE_BINARY_DIR}/src")
 
@@ -113,6 +63,16 @@ set(MYSQL_DIR_INC "${THIRDPARTY_PATH}/mysql-lib/include")
 set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/mysql-lib/libmysql")
 include_directories(${MYSQL_DIR_INC})
 link_directories(${MYSQL_DIR_LIB})
+
+set(PROTOBUF_DIR_INC "${THIRDPARTY_PATH}/protobuf-lib/src")
+set(PROTOBUF_DIR_LIB "${THIRDPARTY_PATH}/protobuf-lib")
+include_directories(${PROTOBUF_DIR_INC})
+link_directories(${PROTOBUF_DIR_LIB})
+
+set(ZLIB_DIR_INC "${THIRDPARTY_PATH}/z-lib")
+set(ZLIB_DIR_LIB "${THIRDPARTY_PATH}/z-lib")
+include_directories(${ZLIB_DIR_INC})
+link_directories(${ZLIB_DIR_LIB})
 
 set(NGHTTP2_DIR_INC "${THIRDPARTY_PATH}/nghttp2-lib/lib/includes/")
 set(NGHTTP2_DIR_LIB "${THIRDPARTY_PATH}/nghttp2-lib/lib")
@@ -128,34 +88,125 @@ set(LIB_MYSQL)
 set(LIB_NGHTTP2)
 set(LIB_SSL)
 set(LIB_CRYPTO)
+set(LIB_ZLIB)
+set(LIB_PROTOBUF)
 
 IF (WIN32)
     set(LIB_MYSQL "libmysql")
     set(LIB_NGHTTP2 "libnghttp2_static")
     set(LIB_SSL "libssl")
     set(LIB_CRYPTO "libcrypto")
+    set(LIB_ZLIB "libz")
+    set(LIB_PROTOBUF "libprotoc")
+
 ELSE()
     link_libraries(pthread dl)
     set(LIB_MYSQL "mysqlclient")
     set(LIB_NGHTTP2 "nghttp2_static")
     set(LIB_SSL "ssl")
     set(LIB_CRYPTO "crypto")
+    set(LIB_ZLIB "z")
+    set(LIB_PROTOBUF "protoc")
 ENDIF()
 
 link_libraries(${LIB_MYSQL})
+link_libraries(${LIB_ZLIB})
 
 if(TARS_HTTP2)
-list(APPEND APP_LIBRARIES ${LIB_NGHTTP2})
+    list(APPEND APP_LIBRARIES ${LIB_PROTOBUF})
+endif()
+
+if(TARS_PROTOBUF)
+    list(APPEND APP_LIBRARIES ${LIB_NGHTTP2})
 endif()
 
 if(TARS_SSL)
-list(APPEND APP_LIBRARIES ${LIB_SSL})
-list(APPEND APP_LIBRARIES ${LIB_CRYPTO})
+    list(APPEND APP_LIBRARIES ${LIB_SSL})
+    list(APPEND APP_LIBRARIES ${LIB_CRYPTO})
 endif()
 
 link_libraries(${APP_LIBRARIES})
 
-add_custom_target(thirdparty DEPENDS ${APP_LIBRARIES})
+include(ExternalProject)
+
+if(TARS_PROTOBUF)
+ExternalProject_Add(${LIB_PROTOBUF}
+    URL http://cdn.tarsyun.com/src/protobuf-cpp-3.11.3.tar.gz
+    PREFIX    ${CMAKE_BINARY_DIR}
+    INSTALL_DIR ${CMAKE_SOURCE_DIR}
+    CONFIGURE_COMMAND cmake cmake
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND make -j4 libprotoc
+    LOG_CONFIGURE 1
+    LOG_BUILD 1
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+    URL_MD5 fb59398329002c98d4d92238324c4187
+    )
+endif()
+
+ExternalProject_Add(${LIB_MYSQL}
+        URL http://cdn.tarsyun.com/src/mysql-5.6.26.tar.gz
+        PREFIX    ${CMAKE_BINARY_DIR}
+        INSTALL_DIR ${CMAKE_SOURCE_DIR}
+        CONFIGURE_COMMAND cmake . -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
+        BUILD_IN_SOURCE 1
+        BUILD_COMMAND make -j4 mysqlclient
+        LOG_CONFIGURE 1
+        LOG_BUILD 1
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+        URL_MD5 c537c08c1276abc79d76e8e562bbcea5
+        )
+
+ExternalProject_Add(${LIB_ZLIB}
+        URL http://cdn.tarsyun.com/src/zlib-1.2.11.tar.gz
+        PREFIX    ${CMAKE_BINARY_DIR}
+        INSTALL_DIR ${CMAKE_SOURCE_DIR}
+        CONFIGURE_COMMAND cmake .
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/src/z-lib
+        BUILD_IN_SOURCE 1
+        BUILD_COMMAND make zlibstatic
+        LOG_CONFIGURE 1
+        LOG_BUILD 1
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+        URL_MD5 1c9f62f0778697a09d36121ead88e08e
+        )
+
+if(TARS_HTTP2)
+ExternalProject_Add(${LIB_NGHTTP2}
+    URL http://cdn.tarsyun.com/src/nghttp2-1.40.0.tar.gz
+    PREFIX    ${CMAKE_BINARY_DIR}
+    INSTALL_DIR ${CMAKE_SOURCE_DIR}
+    CONFIGURE_COMMAND cmake . -DENABLE_SHARED_LIB=OFF -DENABLE_STATIC_LIB=ON -DENABLE_LIB_ONLY=ON
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
+    BUILD_IN_SOURCE 1
+    LOG_BUILD 1
+    LOG_CONFIGURE 1
+    BUILD_COMMAND make -j4
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+    URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
+    )
+endif()
+
+if(TARS_SSL)
+ExternalProject_Add(${LIB_SSL}
+    DEPENDS ${LIB_ZLIB}
+    URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
+    PREFIX    ${CMAKE_BINARY_DIR}
+    INSTALL_DIR ${CMAKE_SOURCE_DIR}
+    CONFIGURE_COMMAND ./config --with-zlib-lib=${CMAKE_BINARY_DIR}/src/z-lib --with-zlib-include=${CMAKE_BINARY_DIR}/src/z-lib no-shared
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND make -j4
+    LOG_CONFIGURE 1
+    LOG_BUILD 1
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+    URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
+    )
+endif()
+
+add_custom_target(thirdparty DEPENDS ${LIB_MYSQL} ${LIB_NGHTTP2} ${LIB_SSL})
 
 #-------------------------------------------------------------
 IF (APPLE)
