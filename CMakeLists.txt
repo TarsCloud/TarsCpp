@@ -48,42 +48,105 @@ set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
 
 include(ExternalProject)
 
-ExternalProject_Add(thirdparty
-        # This is the upstream source code repackaged in a .tar.gz for
-        # compatibility with older CMake. Also the tests/ directory
-        # removed to save space.
-        URL http://cdn.tarsyun.com/src/ThirdParty.tgz
-        # URL /Users/jarod/centos/TarsCpp/build/thirdparty/src/20200208092837.tgz
-        PREFIX    ${CMAKE_BINARY_DIR}/thirdparty
-        INSTALL_DIR ${CMAKE_SOURCE_DIR}
-        #URL_MD5 ${clang_md5}
-        )
+# ExternalProject_Add(thirdparty
+#         # This is the upstream source code repackaged in a .tar.gz for
+#         # compatibility with older CMake. Also the tests/ directory
+#         # removed to save space.
+#         URL http://cdn.tarsyun.com/src/ThirdParty.tgz
+#         # URL /Users/jarod/centos/TarsCpp/build/thirdparty/src/20200208092837.tgz
+#         PREFIX    ${CMAKE_BINARY_DIR}/thirdparty
+#         INSTALL_DIR ${CMAKE_SOURCE_DIR}
+#         #URL_MD5 ${clang_md5}
+#         )
 
-set(THIRDPARTY_PATH "${CMAKE_BINARY_DIR}/thirdparty")
-set(MYSQL_DIR_INC "${THIRDPARTY_PATH}/include/mysql")
-set(THIRDPARTY_LIB_PATH "${THIRDPARTY_PATH}/lib")
+
+ExternalProject_Add(mysql-lib
+    # URL ${CMAKE_SOURCE_DIR}/thirdparty-src/mysql-5.6.26.tar.gz
+    URL http://cdn.tarsyun.com/src/mysql-5.6.26.tar.gz
+    PREFIX    ${CMAKE_BINARY_DIR}
+    INSTALL_DIR ${CMAKE_SOURCE_DIR}
+    CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/install/mysql-lib -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND make -j4 mysqlclient
+    LOG_CONFIGURE 1
+    LOG_BUILD 1
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+    URL_MD5 c537c08c1276abc79d76e8e562bbcea5
+    )
+
+ExternalProject_Add(nghttp2-lib
+    URL http://cdn.tarsyun.com/src/nghttp2-1.40.0.tar.gz
+    PREFIX    ${CMAKE_BINARY_DIR}
+    INSTALL_DIR ${CMAKE_SOURCE_DIR}
+    # CONFIGURE_COMMAND ./configure --enable-static --prefix=${CMAKE_BINARY_DIR}/install/nghttp2-lib
+    CONFIGURE_COMMAND cmake . -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}/install/nghttp2-lib -DENABLE_STATIC_LIB=1
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
+    BUILD_IN_SOURCE 1
+    LOG_BUILD 1
+    LOG_CONFIGURE 1
+    BUILD_COMMAND make -j4
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+    URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
+    )
+
+ExternalProject_Add(openssl-lib
+    URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
+    PREFIX    ${CMAKE_BINARY_DIR}
+    INSTALL_DIR ${CMAKE_SOURCE_DIR}
+    CONFIGURE_COMMAND ./config --prefix=${CMAKE_BINARY_DIR}/install/openssl-lib
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND make -j4
+    LOG_CONFIGURE 1
+    LOG_BUILD 1
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+    URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
+    )
+
+add_custom_target(thirdparty DEPENDS nghttp2-lib openssl-lib mysql-lib)
+
+set(THIRDPARTY_PATH "${CMAKE_BINARY_DIR}/src")
+
+set(MYSQL_DIR_INC "${THIRDPARTY_PATH}/mysql-lib/include")
+set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/mysql-lib/libmysql")
+include_directories(${MYSQL_DIR_INC})
+link_directories(${MYSQL_DIR_LIB})
+
+set(NGHTTP2_DIR_INC "${THIRDPARTY_PATH}/nghttp2-lib/lib/includes/")
+set(NGHTTP2_DIR_LIB "${THIRDPARTY_PATH}/nghttp2-lib/lib")
+include_directories(${NGHTTP2_DIR_INC})
+link_directories(${NGHTTP2_DIR_LIB})
+
+set(SSL_DIR_INC "${THIRDPARTY_PATH}/openssl-lib/include/openssl")
+set(SSL_DIR_LIB "${THIRDPARTY_PATH}/openssl-lib")
+include_directories(${SSL_DIR_INC})
+link_directories(${SSL_DIR_LIB})
 
 set(LIB_MYSQL)
+set(LIB_NGHTTP2)
+set(LIB_SSL)
+
 IF (WIN32)
     set(LIB_MYSQL "libmysql")
-    if(TARS_HTTP2)
-        link_libraries(libnghttp2_static)
-    endif()
+    set(LIB_NGHTTP2 "libnghttp2_static")
+    set(LIB_SSL "libssl")
 ELSE()
     link_libraries(pthread dl)
-
     set(LIB_MYSQL "mysqlclient")
-
-    if(TARS_HTTP2)
-        link_libraries(nghttp2)
-    endif()    
+    set(LIB_NGHTTP2 "nghttp2_static")
+    set(LIB_SSL "ssl")
 ENDIF()
 
-include_directories(${THIRDPARTY_PATH}/include)
-include_directories(${MYSQL_DIR_INC})
+link_libraries(${LIB_MYSQL})
 
-link_directories(${THIRDPARTY_LIB_PATH})
-link_libraries(${mysqlclient})
+if(TARS_HTTP2)
+link_libraries(${LIB_NGHTTP2})
+endif()
+
+if(TARS_SSL)
+link_libraries(${LIB_SSL})
+endif()
 
 #-------------------------------------------------------------
 IF (APPLE)
