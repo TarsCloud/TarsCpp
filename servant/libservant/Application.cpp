@@ -616,7 +616,7 @@ void Application::main(const TC_Option &option)
     try
     {
 #if TARS_SSL
-        SSLManager::GlobalInit();
+        TC_SSLManager::GlobalInit();
 #endif
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
         TC_Common::ignorePipe();
@@ -840,7 +840,7 @@ void Application::initializeClient()
         string key = path + _conf.get("/tars/application/clientssl/<key>");
         if (key == path) key.clear();
 
-        if (!SSLManager::getInstance()->AddCtx("client", ca, cert, key, false))
+        if (!TC_SSLManager::getInstance()->addCtx("client", ca, cert, key, false))
             cout << "failed add client cert " << ca << endl;
         else
             cout << "succ add client cert " << ca << endl;
@@ -1153,7 +1153,7 @@ void Application::initializeServer()
         string key = path + _conf.get("/tars/application/serverssl/<key>");
         bool verifyClient = (_conf.get("/tars/application/serverssl/<verifyclient>", "0") == "0") ? false : true;
 
-        if (!SSLManager::getInstance()->AddCtx("server", ca, cert, key, verifyClient))
+        if (!TC_SSLManager::getInstance()->addCtx("server", ca, cert, key, verifyClient))
             cout << "failed add server cert " << ca << endl;
         else
             cout << "succ add server cert " << ca << ", verifyClient " << verifyClient << endl;

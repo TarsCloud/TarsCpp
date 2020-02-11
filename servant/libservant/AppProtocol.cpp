@@ -32,7 +32,7 @@ namespace tars
 {
 
 // //TAFServer的协议解析器
-// TC_NetWorkBuffer::PACKET_TYPE AppProtocol::parseAdmin(TC_NetWorkBuffer  &in, shared_ptr<TC_NetWorkBuffer::SendBuffer> &out)
+// TC_NetWorkBuffer::PACKET_TYPE AppProtocol::parseAdmin(TC_NetWorkBuffer  &in, shared_ptr<TC_NetWorkBuffer::Buffer> &out)
 // {
 //     return parse(in, out->getBuffer());
 // }
@@ -216,9 +216,9 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
         TLOGERROR("[TARS]http2Request::Fatal error: nghttp2_session_send return: " << nghttp2_strerror(rv) << endl);
         return vector<char>();
     }
-    // cout << "nghttp2_session_send, id:" << request.iRequestId << ", buff size:" << session->sendBuffer().size() << endl;
+    // cout << "nghttp2_session_send, id:" << request.iRequestId << ", buff size:" << session->_buffer().size() << endl;
 
-    // if(session->sendBuffer().empty())
+    // if(session->_buffer().empty())
     // {
     //     exit(0);
     // }

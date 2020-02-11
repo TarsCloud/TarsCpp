@@ -233,7 +233,7 @@ struct ReqMessage : public TC_HandleBase
 
 	    response       = std::make_shared<ResponsePacket>();
         // sReqData.clear();
-	    sReqData       = std::make_shared<TC_NetWorkBuffer::SendBuffer>();
+	    sReqData       = std::make_shared<TC_NetWorkBuffer::Buffer>();
         pMonitor       = NULL;
         bMonitorFin    = false;
 
@@ -264,10 +264,9 @@ struct ReqMessage : public TC_HandleBase
     ObjectProxy *               pObjectProxy;   //调用端的proxy对象
 
     RequestPacket               request;        //请求消息体
-    // ResponsePacket              response;       //响应消息体
     shared_ptr<ResponsePacket>      response;   //响应消息体
     // string                      sReqData;       //请求消息体
-	shared_ptr<TC_NetWorkBuffer::SendBuffer> sReqData;       //请求消息体
+	shared_ptr<TC_NetWorkBuffer::Buffer> sReqData;       //请求消息体
 
     ReqMonitor *                pMonitor;        //用于同步的monitor
     bool                        bMonitorFin;    //同步请求timewait是否结束

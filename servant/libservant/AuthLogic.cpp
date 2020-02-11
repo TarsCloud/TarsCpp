@@ -105,15 +105,15 @@ bool processAuth(TC_EpollServer::Connection *conn, const shared_ptr<TC_EpollServ
 
 	    iHeaderLen = htonl((int)(os.getLength()));
 
-        sData->buffer().swap(os.getByteBuffer());
+        sData->buffer()->swap(os.getByteBuffer());
 
         //重写头4个字节
-	    memcpy(sData->buffer().data(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
+	    memcpy(sData->buffer()->buffer(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
 
     }
     else
     {
-        sData->buffer().assign(out.begin(), out.end());
+        sData->buffer()->assign(out.c_str(), out.size());
     }
 
     adapter->getEpollServer()->send(sData);

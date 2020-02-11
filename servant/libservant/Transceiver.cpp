@@ -42,6 +42,7 @@ Transceiver::Transceiver(AdapterProxy * pAdapterProxy,const EndpointInfo &ep)
 , _connStatus(eUnconnected)
 , _conTimeoutTime(0)
 , _authState(AUTH_INIT)
+, _sendBuffer(this)
 , _recvBuffer(this)
 {
     _fdInfo.iType = FDInfo::ET_C_NET;
@@ -172,7 +173,7 @@ void Transceiver::_onConnect()
     if (isSSL())
     {
         // 分配ssl对象
-        SSL* ssl = NewSSL("client");
+        SSL* ssl = TC_SSLManager::getInstance()->newSSL("client");
         if (!ssl)
         {
             ObjectProxy* obj = _adapterProxy->getObjProxy();
@@ -183,21 +184,21 @@ void Transceiver::_onConnect()
 
         _openssl.reset(new TC_OpenSSL());
         _openssl->Init(ssl, false);
-        std::string out = _openssl->DoHandshake();
-        if (_openssl->HasError())
+        int ret = _openssl->DoHandshake(_sendBuffer);
+        if (ret != 0)
         {
             TLOGERROR("[TARS] SSL_connect failed " << endl);
             this->close();
             return;
         }
 
-        _sendBuffer.addBuffer(out);
+//        _sendBuffer.addBuffer(out);
 
         // send the encrypt data from write buffer
-        if (!out.empty())
+        if (!_sendBuffer.empty())
         {
-            // this->sendRequest(out.data(), out.size(), true);
-            this->sendRequest(_sendBuffer);
+        	this->doRequest();
+//            this->sendRequest(_sendBuffer);
         }
         return;
     }
@@ -247,13 +248,13 @@ bool Transceiver::sendAuthData(const BasicAuthInfo& info)
     request.iMessageType = kAuthType;
     request.sBuffer.assign(out.begin(), out.end());
 
-    // vector<char> toSend;
-    _sendBuffer->addBuffer(objPrx->getProxyProtocol().requestFunc(request, this));
+    _sendBuffer.addBuffer(objPrx->getProxyProtocol().requestFunc(request, this));
 
     // _sendBuffer.addBuffer(toSend);
 
-    // if (sendRequest(toSend.data(), toSend.size(), true) == eRetError)
-    if (sendRequest(_sendBuffer, true) == eRetError)
+//    if (sendRequest(_sendBuffer, true) == eRetError)
+	int ret = doRequest();
+	if (ret != 0)
     {
         TLOGERROR("[TARS][Transceiver::setConnected failed sendRequest for Auth\n");
         close();
@@ -291,7 +292,7 @@ void Transceiver::close()
 
     _fd = -1;
 
-	_sendBuffer.reset();
+	_sendBuffer.clearBuffers();
 
 	_recvBuffer.clearBuffers();
 
@@ -324,20 +325,24 @@ int Transceiver::doRequest()
     if(!isValid()) return -1;
 
 	//buf不为空,先发送buffer的内容
-    if(_sendBuffer && !_sendBuffer->empty())
+    while(!_sendBuffer.empty())
     {
-        int iRet = this->send(_sendBuffer->buffer(), (uint32_t) _sendBuffer->length(), 0);
+    	auto data = _sendBuffer.getBufferPointer();
+    	assert(data.first != NULL && data.second != 0);
+
+        int iRet = this->send(data.first, (uint32_t) data.second, 0);
 
         if (iRet < 0)
         {
             return -1;
         }
 
-        _sendBuffer->add(iRet);
+	    _sendBuffer.moveHeader(iRet);
+//        _sendBuffer->add(iRet);
     }
 
 	//取adapter里面积攒的数据
-    if(!_sendBuffer || _sendBuffer->empty()) {
+    if(_sendBuffer.empty()) {
         _adapterProxy->doInvoke();
     }
 
@@ -347,7 +352,7 @@ int Transceiver::doRequest()
     return 0;
 }
 
-int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::SendBuffer> &buff, bool forceSend)
+int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff, bool forceSend)
 {
     //空数据 直接返回成功
     if(buff->empty())
@@ -369,9 +374,9 @@ int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::SendBuffer> &buf
         return eRetError; // 需要鉴权但还没通过，不能发送非认证消息
     }
 
-    //buf不为空,直接返回失败
+    //buf不为空, 表示之前的数据还没发送完, 直接返回失败
     //等buffer可写了,epoll会通知写事件
-    if(_sendBuffer && !_sendBuffer->empty())
+    if(!_sendBuffer.empty())
         return eRetError;
 
     int iRet = this->send(buff->buffer(), (uint32_t)buff->length(), 0);
@@ -383,15 +388,17 @@ int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::SendBuffer> &buf
     //没有全部发送完,写buffer 返回成功
     if(iRet < (int)buff->length())
     {
-	    _sendBuffer = buff;
-	    _sendBuffer->add(iRet);
+    	buff->add(iRet);
+	    _sendBuffer.addBuffer(buff);
+//	    _sendBuffer = buff;
+//	    _sendBuffer->add(iRet);
         return eRetFull;
     }
-    else
-    {
-    	//全部发送完毕了
-	    _sendBuffer.reset();
-    }
+//    else
+//    {
+//    	//全部发送完毕了
+//	    _sendBuffer.reset();
+//    }
 
     return eRetOk;
 

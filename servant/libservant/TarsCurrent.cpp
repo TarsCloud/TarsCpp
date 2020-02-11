@@ -253,7 +253,7 @@ void TarsCurrent::sendResponse(const char* buff, uint32_t len)
 {
     // _servantHandle->sendResponse(_uid, string(buff, len), _ip, _port, _fd);
 	shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
-	send->buffer().assign(buff, buff + len);
+	send->buffer()->assign(buff, len);
 	_servantHandle->sendResponse(send);
 }
 
@@ -378,13 +378,13 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<
         response.writeTo(os);
     }
 
-	os.swap(send->buffer());
+	assert(send->buffer()->length() >= 4);
 
-	assert(send->buffer().size() >= 4);
+	iHeaderLen = htonl((int)(send->buffer()->length()));
 
-	iHeaderLen = htonl((int)(send->buffer().size()));
+	memcpy(os.getByteBuffer().data(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
 
-	memcpy(&send->buffer()[0], (const char *)&iHeaderLen, sizeof(iHeaderLen));
+	send->buffer()->swap(os.getByteBuffer());
 
 	_servantHandle->sendResponse(send);
 

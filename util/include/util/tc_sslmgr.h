@@ -21,7 +21,8 @@
 
 #include <map>
 #include <string>
-#include "util/tc_buffer.h"
+// #include "util/tc_buffer.h"
+#include "util/tc_network_buffer.h"
 #include "util/tc_singleton.h"
 
 struct bio_st;
@@ -48,30 +49,32 @@ namespace tars
 
 static const size_t kSSLHeadSize = 5;
 
-// new ssl conn
-SSL* NewSSL(const std::string& ctxName);
-// fetch data from mem bio
-void GetMemData(BIO* bio, TC_Buffer& buf);
-// fetch ssl head info
-void GetSSLHead(const char* data, char& type, unsigned short& ver, unsigned short& len);
-// read from ssl
-bool DoSSLRead(SSL*, std::string& out);
+ // new ssl conn
+ // fetch data from mem bio
+// void GetMemData(BIO* bio, TC_NetWorkBuffer& buf);
+ // fetch ssl head info
+// void GetSSLHead(const char* data, char& type, unsigned short& ver, unsigned short& len);
+ // read from ssl
+// bool DoSSLRead(SSL*, std::string& out);
 
-class SSLManager : public TC_Singleton<SSLManager>
+class TC_SSLManager : public TC_Singleton<TC_SSLManager>
 {
 public:
     static void GlobalInit();
 
-    SSLManager();
-    ~SSLManager();
+    TC_SSLManager();
 
-    bool AddCtx(const std::string& name,
+    ~TC_SSLManager();
+
+	SSL* newSSL(const std::string& ctxName);
+
+    bool addCtx(const std::string& name,
                 const std::string& cafile, 
                 const std::string& certfile, 
                 const std::string& keyfile,
                 bool verifyClient);
 
-    SSL_CTX* GetCtx(const std::string& name) const;
+    SSL_CTX* getCtx(const std::string& name) const;
 
 private:
 

@@ -54,7 +54,7 @@ public:
 			string buffer = response.encode();
 
 			shared_ptr<TC_EpollServer::SendContext> send = data->createSendContext();
-			send->buffer().assign(buffer.c_str(), buffer.c_str() + buffer.size());
+			send->buffer()->assign(buffer.c_str(), buffer.size());
 
 			sendResponse(send);
 
@@ -141,7 +141,7 @@ public:
 			cout << "SocketHandle::handle : " << data->ip() << ":" << data->port() << endl;
 
 			shared_ptr<TC_EpollServer::SendContext> send = data->createSendContext();
-			send->buffer() = data->buffer();
+			send->buffer()->setBuffer(data->buffer());
 			sendResponse(send);
 
 		}

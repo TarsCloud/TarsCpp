@@ -17,19 +17,19 @@
 #if TARS_SSL
 
 #include "util/tc_sslmgr.h"
-#include "util/tc_buffer.h"
-#include <arpa/inet.h>
+// #include "util/tc_buffer.h"
+// #include <arpa/inet.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
 namespace tars
 {
 
-SSLManager::SSLManager()
+TC_SSLManager::TC_SSLManager()
 {
 }
 
-void SSLManager::GlobalInit()
+void TC_SSLManager::GlobalInit()
 {
     (void)SSL_library_init();
     OpenSSL_add_all_algorithms();
@@ -39,7 +39,7 @@ void SSLManager::GlobalInit()
 }
 
 
-SSLManager::~SSLManager()
+TC_SSLManager::~TC_SSLManager()
 { 
     for (CTX_MAP::iterator it(_ctxSet.begin());
                            it != _ctxSet.end();
@@ -52,7 +52,7 @@ SSLManager::~SSLManager()
     EVP_cleanup();
 }
 
-bool SSLManager::AddCtx(const std::string& name,
+bool TC_SSLManager::addCtx(const std::string& name,
                         const std::string& cafile, 
                         const std::string& certfile, 
                         const std::string& keyfile,
@@ -99,17 +99,15 @@ bool SSLManager::AddCtx(const std::string& name,
     return _ctxSet.insert(std::make_pair(name, ctx)).second;
 }
 
-SSL_CTX* SSLManager::GetCtx(const std::string& name) const
+SSL_CTX* TC_SSLManager::getCtx(const std::string& name) const
 {
     CTX_MAP::const_iterator it = _ctxSet.find(name);
     return it == _ctxSet.end() ? NULL: it->second;
 }
 
-
-
-SSL* NewSSL(const std::string& ctxName)
+SSL* TC_SSLManager::newSSL(const std::string& ctxName)
 {
-    SSL_CTX* ctx = SSLManager::getInstance()->GetCtx(ctxName);
+    SSL_CTX* ctx = TC_SSLManager::getInstance()->getCtx(ctxName);
     if (!ctx)
         return NULL;
 
@@ -123,64 +121,62 @@ SSL* NewSSL(const std::string& ctxName)
 
     return ssl;
 }
-
-void GetMemData(BIO* bio, TC_Buffer& buf)
-{
-    while (true)
-    {
-        buf.AssureSpace(16 * 1024);
-        int bytes = BIO_read(bio, buf.WriteAddr(), buf.WritableSize());
-        if (bytes <= 0)
-            return;
-
-        buf.Produce(bytes);
-    }
-            
-    // never here
-}
-
-void GetSSLHead(const char* data, char& type, unsigned short& ver, unsigned short& len)
-{
-    type = data[0];
-    ver = *(unsigned short*)(data + 1);
-    len = *(unsigned short*)(data + 3);
-
-    ver = ntohs(ver);
-    len = ntohs(len);
-}
-
-bool DoSSLRead(SSL* ssl, std::string& out)
-{
-    while (true)
-    {
-        char plainBuf[32 * 1024];
-                    
-        ERR_clear_error();
-        int bytes = SSL_read(ssl, plainBuf, sizeof plainBuf);
-        if (bytes > 0)
-        {
-            out.append(plainBuf, bytes);
-        }
-        else
-        {
-            int err = SSL_get_error(ssl, bytes);
-                    
-            // when peer issued renegotiation, here will demand us to send handshake data.
-            // write to mem bio will always success, only need to check whether has data to send.
-            //assert (err != SSL_ERROR_WANT_WRITE);
-                
-            if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_ZERO_RETURN)
-            {
-                printf("DoSSLRead err %d\n", err);
-                return false;
-            }
-
-            break;
-        }
-    }
-
-    return true;
-}
+//
+//void GetMemData(BIO* bio, TC_NetWorkBuffer& buf)
+//{
+//	while (true)
+//	{
+//		char data[8*1024];
+//		int bytes = BIO_read(bio, data, sizeof(data));
+//		if (bytes <= 0)
+//		    return;
+//
+//		buf.addBuffer(data, bytes);
+//	}
+//}
+//
+//void GetSSLHead(const char* data, char& type, unsigned short& ver, unsigned short& len)
+//{
+//    type = data[0];
+//    ver = *(unsigned short*)(data + 1);
+//    len = *(unsigned short*)(data + 3);
+//
+//    ver = ntohs(ver);
+//    len = ntohs(len);
+//}
+//
+//bool DoSSLRead(SSL* ssl, std::string& out)
+//{
+//    while (true)
+//    {
+//        char plainBuf[32 * 1024];
+//
+//        ERR_clear_error();
+//        int bytes = SSL_read(ssl, plainBuf, sizeof plainBuf);
+//        if (bytes > 0)
+//        {
+//            out.append(plainBuf, bytes);
+//        }
+//        else
+//        {
+//            int err = SSL_get_error(ssl, bytes);
+//
+//            // when peer issued renegotiation, here will demand us to send handshake data.
+//            // write to mem bio will always success, only need to check whether has data to send.
+//            //assert (err != SSL_ERROR_WANT_WRITE);
+//
+//            if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_ZERO_RETURN)
+//            {
+//                printf("DoSSLRead err %d\n", err);
+//                return false;
+//            }
+//
+//            break;
+//        }
+//    }
+//
+//    return true;
+//}
 
 } // end namespace tars
 

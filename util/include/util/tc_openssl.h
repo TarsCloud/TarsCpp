@@ -20,7 +20,9 @@
 #if TARS_SSL
 
 #include <string>
-#include "tc_sslmgr.h"
+#include <vector>
+#include "util/tc_network_buffer.h"
+#include "util/tc_sslmgr.h"
 
 struct ssl_st;
 typedef struct ssl_st SSL;
@@ -45,19 +47,17 @@ public:
    /**
     * @brief 构造函数. 
     */
-    TC_OpenSSL() :
-        _ssl(NULL),
-        _bHandshaked(false),
-        _isServer(false),
-        _err(0)
-    {
-    }
+    TC_OpenSSL();
 
    /**
     * @brief 析构函数. 
     */
     ~TC_OpenSSL();
 
+//	static SSL* newSSL(const std::string& ctxName);
+	static void getMemData(BIO* bio, TC_NetWorkBuffer& buf);
+//	static void getSSLHead(const char* data, char& type, unsigned short& ver, unsigned short& len)
+	static int doSSLRead(SSL* ssl, TC_NetWorkBuffer& out);
 private:
    /**
     * @brief 禁止复制
@@ -83,22 +83,16 @@ public:
      */
     bool IsHandshaked() const;
 
-    /** 
-     * @brief  当前错误 
-     * @return 当前错误 
-     */
-    bool HasError() const;
-
-    /** 
+    /**
      * @brief  当前接收缓冲区
      */
-    string* RecvBuffer();
+    TC_NetWorkBuffer * RecvBuffer() { return &_plainBuf; }
 
     /** 
      * @brief 握手 
      * @return 需要发送的握手数据 
      */
-    std::string DoHandshake(const void* data = NULL, size_t size = 0);
+    int DoHandshake(TC_NetWorkBuffer &out, const void* data = NULL, size_t size = 0);
 
     /** 
      * @brief 发送数据前加密 
@@ -106,7 +100,7 @@ public:
      * @param size  数据的大小 
      * @return 加密后的数据 
      */
-    std::string Write(const void* data, size_t size);
+    int Write(const char* data, size_t size, TC_NetWorkBuffer &out);
 
     /** 
      * @brief 接收数据后解密 
@@ -115,7 +109,7 @@ public:
      * @param out   需要发送的数据 
      * @return 解密后的数据 
      */
-    bool Read(const void* data, size_t size, std::string& out);
+    int Read(const void* data, size_t size, TC_NetWorkBuffer &out);
 
 private:
     /**
@@ -136,11 +130,7 @@ private:
     /**
      * 收到的数据解密后
      */
-    std::string _plainBuf;
-    /**
-     * 类似于errno
-     */
-    int _err;
+    TC_NetWorkBuffer _plainBuf;
 };
 
 } // end namespace tars

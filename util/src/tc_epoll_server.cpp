@@ -701,8 +701,8 @@ TC_EpollServer::Connection::Connection(TC_EpollServer::BindAdapter *pBindAdapter
 , _timeout(timeout)
 , _ip(ip)
 , _port(port)
-, _recvbuffer(this)
-, _sendbuffer(this)
+, _recvBuffer(this)
+, _sendBuffer(this)
 , _iHeaderLen(0)
 , _bClose(false)
 , _enType(EM_TCP)
@@ -720,8 +720,8 @@ TC_EpollServer::Connection::Connection(BindAdapter *pBindAdapter, int fd)
 , _lfd(-1)
 , _timeout(2)
 , _port(0)
-, _recvbuffer(this)
-, _sendbuffer(this)
+, _recvBuffer(this)
+, _sendBuffer(this)
 , _iHeaderLen(0)
 , _bClose(false)
 , _enType(EM_UDP)
@@ -740,7 +740,7 @@ TC_EpollServer::Connection::~Connection()
         _pRecvBuffer = NULL;
     }
     
-    // clearSlices(_sendbuffer);
+    // clearSlices(_sendBuffer);
     if (isTcp())
     {
         assert(!_sock.isValid());
@@ -808,59 +808,63 @@ int TC_EpollServer::Connection::parseProtocol()
 {
     try
     {
-        while (!_recvbuffer.empty())
+        while (!_recvBuffer.empty())
         {
             //需要过滤首包包头
             if(_iHeaderLen > 0)
             {
-                if(_recvbuffer.getBufferLength() >= (unsigned) _iHeaderLen)
+                if(_recvBuffer.getBufferLength() >= (unsigned) _iHeaderLen)
                 {
                     vector<char> header;
-                    _recvbuffer.getHeader(_iHeaderLen, header);
+                    _recvBuffer.getHeader(_iHeaderLen, header);
                     _pBindAdapter->getHeaderFilterFunctor()(TC_NetWorkBuffer::PACKET_FULL, header);
-                    _recvbuffer.moveHeader(_iHeaderLen);
+                    _recvBuffer.moveHeader(_iHeaderLen);
                     _iHeaderLen = 0;
                 }
                 else
                 {
-	                vector<char> header = _recvbuffer.getBuffers();
+	                vector<char> header = _recvBuffer.getBuffers();
                     _pBindAdapter->getHeaderFilterFunctor()(TC_NetWorkBuffer::PACKET_LESS, header);
-                    _iHeaderLen -= (int)_recvbuffer.getBufferLength();
-                    _recvbuffer.clearBuffers();
+                    _iHeaderLen -= (int)_recvBuffer.getBufferLength();
+                    _recvBuffer.clearBuffers();
                     break;
                 }
             }
 
-            // std::string* rbuf = &_recvbuffer;
+            TC_NetWorkBuffer *rbuf = &_recvBuffer;
 #if TARS_SSL
             // ssl connection
             if (_pBindAdapter->getEndpoint().isSSL())
             {
-                char buffer[BUFFER_SIZE] = {0x00};
-                std::string out;
-                // if (!_openssl->Read(_recvbuffer.data(), _recvbuffer.size(), out))
-                if (!_openssl->Read(buffer, BUFFER_SIZE, out))
+	            const char * data = _recvBuffer.mergeBuffers();
+
+//                std::string out;
+				int ret = _openssl->Read(data, _recvBuffer.getBufferLength(), _sendBuffer);
+                if (ret != 0)
+                // if (!_openssl->Read(buffer, BUFFER_SIZE, out))
                 {
                     _pBindAdapter->getEpollServer()->error("[TARS][SSL_read failed");
                     return -1;
                 }
                 else
                 {
-                    if (!out.empty())
-                        this->send(out, "", 0);
+                    if (!_sendBuffer.empty())
+                    {
+						this->sendBuffer();
+                    }
 
-                    // rbuf = _openssl->RecvBuffer();
+                    rbuf = _openssl->RecvBuffer();
                 }
 
-                _recvbuffer.clearBuffers();
-                // _recvbuffer.clear();
+                _recvBuffer.clearBuffers();
+                // _recvBuffer.clear();
             }
 #endif
 
             // string ro;
             vector<char> ro;
 
-            TC_NetWorkBuffer::PACKET_TYPE b = _pBindAdapter->getProtocol()(_recvbuffer, ro);
+            TC_NetWorkBuffer::PACKET_TYPE b = _pBindAdapter->getProtocol()(*rbuf, ro);
             if(b == TC_NetWorkBuffer::PACKET_LESS)
             {
                 //包不完全
@@ -937,10 +941,10 @@ int TC_EpollServer::Connection::recvTcp()
         else
         {
             totalRecv += iBytesReceived;
-            _recvbuffer.addBuffer(buffer, iBytesReceived);
+            _recvBuffer.addBuffer(buffer, iBytesReceived);
 
             //字符串太长时, 强制解析协议
-            if (_recvbuffer.getBufferLength() > 8192) {
+            if (_recvBuffer.getBufferLength() > 8192) {
                 parseProtocol();
             }
 
@@ -996,7 +1000,7 @@ int TC_EpollServer::Connection::recvUdp()
             if (_pBindAdapter->isIpAllow(_ip) == true)
             {
                 //保存接收到数据
-                _recvbuffer.addBuffer(_pRecvBuffer, iBytesReceived);
+                _recvBuffer.addBuffer(_pRecvBuffer, iBytesReceived);
 
                 parseProtocol();
             }
@@ -1005,7 +1009,7 @@ int TC_EpollServer::Connection::recvUdp()
                 //udp ip无权限
                 _pBindAdapter->getEpollServer()->debug( "accept [" + _ip + ":" + TC_Common::tostr(_port) + "] [" + TC_Common::tostr(_lfd) + "] not allowed");
             }
-            _recvbuffer.clearBuffers();
+            _recvBuffer.clearBuffers();
 
             if(++recvCount > 100)
             {
@@ -1026,9 +1030,9 @@ int TC_EpollServer::Connection::recv()
 
 int TC_EpollServer::Connection::sendBuffer()
 {
-	while(!_sendbuffer.empty())
+	while(!_sendBuffer.empty())
 	{
-		pair<const char*, size_t> data = _sendbuffer.getBufferPointer();
+		pair<const char*, size_t> data = _sendBuffer.getBufferPointer();
 
 		assert(data.first != NULL);
 
@@ -1049,7 +1053,7 @@ int TC_EpollServer::Connection::sendBuffer()
 
 		if(iBytesSent > 0)
 		{
-			_sendbuffer.moveHeader(iBytesSent);
+			_sendBuffer.moveHeader(iBytesSent);
 		}
 
 		//发送的数据小于需要发送的,break, 内核会再通知你的
@@ -1060,7 +1064,7 @@ int TC_EpollServer::Connection::sendBuffer()
 	}
 
 	//需要关闭链接
-	if (_bClose && _sendbuffer.empty())
+	if (_bClose && _sendBuffer.empty())
 	{
 		_pBindAdapter->getEpollServer()->debug("send [" + _ip + ":" + TC_Common::tostr(_port) + "] close connection by user.");
 		return -2;
@@ -1073,8 +1077,8 @@ int TC_EpollServer::Connection::sendBuffer()
 int TC_EpollServer::Connection::sendTcp(const shared_ptr<SendContext> &sc)
 {
     //tcp的, 将buffer放到队列末尾
-    if (!sc->buffer().empty()) {
-        _sendbuffer.addSwapBuffer(sc->buffer());
+    if (!sc->buffer()->empty()) {
+	    _sendBuffer.addBuffer(sc->buffer());
     }
 
     return sendBuffer();
@@ -1083,7 +1087,7 @@ int TC_EpollServer::Connection::sendTcp(const shared_ptr<SendContext> &sc)
 int TC_EpollServer::Connection::sendUdp(const shared_ptr<SendContext> &sc)
 {
     //udp的直接发送即可
-    int iRet = _sock.sendto((const void *) sc->buffer().data(), sc->buffer().size(), sc->ip(), sc->port(), 0);
+    int iRet = _sock.sendto((const void *) sc->buffer()->buffer(), sc->buffer()->length(), sc->ip(), sc->port(), 0);
     if (iRet < 0)
     {
         _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send [" + _ip + ":" + TC_Common::tostr(_port) + "] error");
@@ -1116,7 +1120,7 @@ bool TC_EpollServer::Connection::setRecvBuffer(size_t nSize)
 bool TC_EpollServer::Connection::setClose()
 {
     _bClose = true;
-    if (_sendbuffer.empty())
+    if (_sendBuffer.empty())
         return true;
     else
         return false;
@@ -1470,28 +1474,31 @@ void TC_EpollServer::NetThread::addTcpConnection(TC_EpollServer::Connection *cPt
         cPtr->getBindAdapter()->getEpollServer()->info("[TARS][addTcpConnection ssl connection");
 
         // 分配ssl对象, ctxName 放在obj proxy里
-        SSL* ssl = NewSSL("server");
+        SSL* ssl = TC_SSLManager::getInstance()->newSSL("server");
         if (!ssl)
         {
             cPtr->getBindAdapter()->getEpollServer()->error("[TARS][SSL_accept not find server cert");
-            this->close(uid);
+	        cPtr->close();
+//            this->close(uid);
             return;
         }
 
         cPtr->_openssl.reset(new TC_OpenSSL());
         cPtr->_openssl->Init(ssl, true);
-        std::string out = cPtr->_openssl->DoHandshake();
-        if (cPtr->_openssl->HasError())
+
+        int ret = cPtr->_openssl->DoHandshake(cPtr->_sendBuffer);
+        if (ret != 0)
         {
             cPtr->getBindAdapter()->getEpollServer()->error("[TARS][SSL_accept error: " + cPtr->getBindAdapter()->getEndpoint().toString());
-            this->close(uid);
+	        cPtr->close();
+//            this->close(uid);
             return;
         }
     
         // send the encrypt data from write buffer
-        if (!out.empty())
+        if (!cPtr->_sendBuffer.empty())
         {
-            this->sendBuffer(cPtr, out, "", 0);
+	        cPtr->sendBuffer();
         }
     }
 #endif
@@ -1621,18 +1628,30 @@ void TC_EpollServer::NetThread::processPipe()
             }
         case 's':
             {
+            	int ret = 0;
 #if TARS_SSL
                 if (cPtr->getBindAdapter()->getEndpoint().isSSL() && cPtr->_openssl->IsHandshaked())
                 {
-                    std::string out = cPtr->_openssl->Write((*it)->buffer.data(), (*it)->buffer.size());
-                    if (cPtr->_openssl->HasError())
-                        break; // should not happen
+//                    std::string out = cPtr->_openssl->Write((*it)->buffer.data(), (*it)->buffer.size());
+//                    if (cPtr->_openssl->HasError())
+//                        break; // should not happen
+//
+//                    (*it)->buffer = out;
 
-                    (*it)->buffer = out;
+	                ret = cPtr->_openssl->Write(sc->buffer()->buffer(), sc->buffer()->length(), cPtr->_sendBuffer);
+	                if (ret != 0)
+		                break; // should not happen
+
+		            cPtr->sendBuffer();
+//	                (*it)->buffer = out;
                 }
+                else
+                {
+	                ret = cPtr->send(sc);
+                }
+#else
+                ret = cPtr->send(sc);
 #endif
-                int ret = cPtr->send(sc);
-
                 if(ret < 0)
                 {
                     delConnection(cPtr,true,(ret==-1)?EM_CLIENT_CLOSE:EM_SERVER_CLOSE);

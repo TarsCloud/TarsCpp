@@ -683,7 +683,7 @@ int TC_Http2Client::settings(unsigned int maxCurrentStreams)
 //     }
 // }
 
-// string& TC_Http2Client::sendBuffer()
+// string& TC_Http2Client::_buffer()
 // {
 //     return _sendBuf;
 // }

@@ -9,17 +9,23 @@ using namespace std;
 namespace tars
 {
 
-void TC_NetWorkBuffer::addSwapBuffer(vector<char>& buff)
-{
-	_length += buff.size();
+//void TC_NetWorkBuffer::addSwapBuffer(vector<char>& buff)
+//{
+//	_length += buff.size();
+//
+//	_bufferList.push_back(std::make_shared<Buffervector<char>());
+//	_bufferList.back().swap(buff);
+//}
 
-	_bufferList.push_back(vector<char>());
-	_bufferList.back().swap(buff);
+void TC_NetWorkBuffer::addBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> & buff)
+{
+	_bufferList.push_back(buff);
+	_length += buff->length();
 }
 
 void TC_NetWorkBuffer::addBuffer(const vector<char>& buff)
 {
-    _bufferList.push_back(buff);
+    _bufferList.push_back(std::make_shared<Buffer>(buff));
 
     _length += buff.size();
 }
@@ -33,7 +39,6 @@ void TC_NetWorkBuffer::clearBuffers()
 {
     _bufferList.clear();
     _length = 0;
-    _pos    = 0;
 }
 
 bool TC_NetWorkBuffer::empty() const
@@ -55,22 +60,52 @@ pair<const char*, size_t> TC_NetWorkBuffer::getBufferPointer() const
 
     auto it = _bufferList.begin();
 
-    return make_pair(it->data() + _pos, it->size() - _pos);
+    return make_pair((*it)->buffer(), (*it)->length());
 }
 
-void TC_NetWorkBuffer::mergeBuffers()
+const char * TC_NetWorkBuffer::mergeBuffers()
 {
     //merge to one buffer
     if(_bufferList.size() > 1)
     {
         vector<char> buffer = getBuffers();
 
-        _pos    = 0;
         _bufferList.clear();
-        _bufferList.push_back(buffer);
-    } 
+
+	    addBuffer(buffer);
+//        _bufferList.push_back(buffer);
+    }
 
     assert(_bufferList.size() <= 1);
+
+    if(!_bufferList.empty())
+    {
+    	return (*_bufferList.begin())->buffer();
+    }
+
+    return NULL;
+}
+
+void TC_NetWorkBuffer::getBuffers(char *buffer, size_t length) const
+{
+	assert(length <= getBufferLength());
+
+	auto it = _bufferList.begin();
+
+	size_t left = length;
+	size_t pos = 0;
+
+	while(it != _bufferList.end() || left == 0)
+	{
+		size_t len = std::min(left, (*it)->length());
+
+		memcpy(buffer + pos, (*it)->buffer(), len);
+
+		left -= len;
+		pos += len;
+
+		++it;
+	}
 }
 
 string TC_NetWorkBuffer::getBuffersString() const
@@ -78,25 +113,9 @@ string TC_NetWorkBuffer::getBuffersString() const
 	string buffer;
 	buffer.resize(_length);
 
-    auto it = _bufferList.begin();
+	getBuffers(&buffer[0], _length);
 
-    size_t pos = 0;
-    while(it != _bufferList.end())
-    {
-        if(it == _bufferList.begin())
-        {
-        	memcpy(&buffer[pos], it->data() + _pos, it->size() - _pos);
-        	pos += it->size() - _pos;
-        }
-        else
-        {
-	        memcpy(&buffer[pos], it->data(), it->size());
-	        pos += it->size();
-        }
-        ++it;
-    }
-
-    return buffer;    
+	return buffer;
 }
 
 vector<char> TC_NetWorkBuffer::getBuffers() const
@@ -104,25 +123,9 @@ vector<char> TC_NetWorkBuffer::getBuffers() const
     vector<char> buffer;
     buffer.resize(_length);
 
-    auto it = _bufferList.begin();
+	getBuffers(&buffer[0], _length);
 
-    size_t pos = 0;
-    while(it != _bufferList.end())
-    {
-        if(it == _bufferList.begin())
-        {
-            memcpy(&buffer[pos], it->data() + _pos, it->size() - _pos);
-            pos += it->size() - _pos;
-        }
-        else
-        {
-            memcpy(&buffer[pos], it->data(), it->size());
-            pos += it->size();
-        }
-        ++it;
-    }
-    
-    return buffer;
+	return buffer;
 }
 
 bool TC_NetWorkBuffer::getHeader(size_t len, std::string &buffer) const
@@ -138,31 +141,32 @@ bool TC_NetWorkBuffer::getHeader(size_t len, std::string &buffer) const
     }
 
     buffer.reserve(len);
-    auto it = _bufferList.begin();
 
-    size_t left = len;
-    size_t cur  = _pos;
+	getBuffers(&buffer[0], len);
+//
+//    auto it = _bufferList.begin();
+//
+//    size_t left = len;
+//
+//    while(it != _bufferList.end())
+//    {
+//        if((*it)->length() >= left)
+//        {
+//            //当前buffer足够
+//            buffer.append((*it)->buffer(), left);
+//            return true;
+//        }
+//        else
+//        {
+//            //当前buffer不够
+//            buffer.append((*it)->buffer(), (*it)->length());
+//            left = left - (*it)->length();
+//        }
+//
+//        ++it;
+//    }
 
-    while(it != _bufferList.end())
-    {
-        if(it->size() - cur >= left)
-        {
-            //当前buffer足够
-            buffer.append(it->data() + cur, left);
-            return true;
-        }
-        else
-        {
-            //当前buffer不够
-            buffer.append(it->data() + cur, it->size() - cur);
-            left = left - (it->size() - cur);
-            cur     = 0;
-        }
-
-        ++it;
-    }
-
-    assert(buffer.length() == len);
+//    assert(buffer.length() == len);
 
     return true;
 }
@@ -181,34 +185,35 @@ bool TC_NetWorkBuffer::getHeader(size_t len, std::vector<char> &buffer) const
 
     buffer.reserve(len);
 
-    auto it = _bufferList.begin();
-
-    size_t left = len;
-    size_t cur  = _pos;
-
-    while(it != _bufferList.end())
-    {
-        if(it->size() - cur >= left)
-        {
-            //当前buffer足够
-            buffer.insert(buffer.end(), it->data() + cur, it->data() + cur + left);
-            return true;
-        }
-        else
-        {
-            //当前buffer不够
-            buffer.insert(buffer.end(), it->data() + cur, it->data() + it->size());
-            left = left - (it->size() - cur);
-            cur     = 0;
-        }
-
-        ++it;
-    }
-
-    assert(buffer.size() == len);
+	getBuffers(&buffer[0], len);
+//
+//	auto it = _bufferList.begin();
+//
+//    size_t left = len;
+//
+//    while(it != _bufferList.end())
+//    {
+//	    if((*it)->length() >= left)
+//        {
+//            //当前buffer足够
+//            buffer.insert(buffer.end(), (*it)->buffer(), (*it)->buffer() + left);
+//            return true;
+//        }
+//        else
+//        {
+//            //当前buffer不够
+//            buffer.insert(buffer.end(), (*it)->buffer(), (*it)->buffer() + (*it)->length());
+//	        left = left - (*it)->length();
+//        }
+//
+//        ++it;
+//    }
+//
+//    assert(buffer.size() == len);
 
     return true;
 }
+
 bool TC_NetWorkBuffer::moveHeader(size_t len)
 {
     if(getBufferLength() < len)
@@ -219,24 +224,22 @@ bool TC_NetWorkBuffer::moveHeader(size_t len)
 
     auto it = _bufferList.begin();
 
-    assert(it->size() >= _pos);
+//    assert(it->size() >= _pos);
 
-    size_t left = it->size() - _pos;
+    size_t left = (*it)->length();
 
     if(left > len)
     {
-        _pos    += len;
+	    (*it)->add(len);
         _length -= len;
     }
     else if(left == len)
     {
-        _pos    = 0;
         _length -= len;
         _bufferList.erase(it);
     }
     else
     {
-        _pos    = 0;
         _length -= left;
 
         _bufferList.erase(it);
@@ -278,7 +281,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseBufferOf4(vector<char> &buf
 
 TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::checkHttp()
 {
-   try
+    try
     {
         mergeBuffers();
 
@@ -308,6 +311,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseHttp(TC_NetWorkBuffer&in, v
     if (b == PACKET_FULL)
     {
         out = in.getBuffers();
+        in.clearBuffers();
     }
 
     return b;
@@ -318,12 +322,8 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseEcho(TC_NetWorkBuffer&in, v
 {
     try
     {
-        if(in.empty())
-        {
-            return PACKET_LESS;
-        }
-
         out = in.getBuffers();
+        in.clearBuffers();
         return TC_NetWorkBuffer::PACKET_FULL;
     }
     catch (exception &ex)

@@ -123,39 +123,6 @@ public:
     class Handle;
     typedef TC_AutoPtr<Handle> HandlePtr;
 
-    // class HandleGroup;
-    // typedef TC_AutoPtr<HandleGroup> HandleGroupPtr;
-
-
-    // ////////////////////////////////////////////////////////////////////////////
-    // /**定义数据队列中的结构*/
-    // struct tagRecvData
-    // {
-    //     uint32_t        uid;            /**连接标示*/
-    //     string          buffer;         /**需要发送的内容*/
-    //     string          ip;             /**远程连接的ip*/
-    //     uint16_t        port;           /**远程连接的端口*/
-    //     int64_t         recvTimeStamp;  /**接收到数据的时间*/
-    //     bool            isOverload;     /**是否已过载 */
-    //     bool            isClosed;       /**是否已关闭*/
-    //     int                fd;                /*保存产生该消息的fd，用于回包时选择网络线程*/
-    //     BindAdapterPtr  adapter;        /**标识哪一个adapter的消息*/
-    //     int             closeType;     /*如果是关闭消息包，则标识关闭类型,0:表示客户端主动关闭；1:服务端主动关闭;2:连接超时服务端主动关闭*/
-    // };
-
-    // struct tagSendData
-    // {
-    //     char            cmd;            /**命令:'c',关闭fd; 's',有数据需要发送*/
-    //     uint32_t        uid;            /**连接标示*/
-    //     string          buffer;         /**需要发送的内容*/
-    //     string          ip;             /**远程连接的ip*/
-    //     uint16_t        port;           /**远程连接的端口*/
-    // };
-
-    // typedef TC_ThreadQueue<tagRecvData*, deque<tagRecvData*> > recv_queue;
-    // typedef TC_ThreadQueue<tagSendData*, deque<tagSendData*> > send_queue;
-    // typedef recv_queue::queue_type recv_queue_type;
-
 	class RecvContext;
 	/**
 	 * 发送包的上下文
@@ -167,8 +134,8 @@ public:
 		SendContext(const shared_ptr<RecvContext> &context, char cmd) : _context(context), _cmd(cmd) {}
 
 		const shared_ptr<RecvContext> &getRecvContext() { return _context; }
-		vector<char> &buffer()       { return _sbuffer; }
-		const vector<char> &buffer()  const     { return _sbuffer; }
+		const shared_ptr<TC_NetWorkBuffer::Buffer> & buffer()       { return _sbuffer; }
+//		const vector<char> &buffer()  const     { return _sbuffer; }
 		char cmd() const        { return _cmd; }
 		uint32_t uid() const    { return _context->uid(); }
 		int fd() const          { return _context->fd(); }
@@ -180,7 +147,7 @@ public:
 	protected:
 		shared_ptr<RecvContext>     _context;
 		char                        _cmd;            /**send包才有效, 命令:'c',关闭fd; 's',有数据需要发送*/
-		vector<char>                _sbuffer;        /**发送的内容*/
+		shared_ptr<TC_NetWorkBuffer::Buffer> _sbuffer;        /**发送的内容*/
 	};
 
 	////////////////////////////////////////////////////////////////////////////
@@ -245,19 +212,6 @@ public:
     };
     ////////////////////////////////////////////////////////////////////////////
     /**
-     * 按name对handle分组，
-     * 每组handle处理一个或多个Adapter消息
-     * 每个handle对象一个线程
-     */
-    // struct HandleGroup : public TC_HandleBase
-    // {
-    //     string                      name;
-    //     TC_ThreadLock               monitor;
-    //     vector<HandlePtr>           handles;
-    //     map<string, BindAdapterPtr> adapters;
-    // };
-    ////////////////////////////////////////////////////////////////////////////
-    /**
      * @brief 定义服务逻辑处理的接口
      *
      */
@@ -288,18 +242,6 @@ public:
          * @return TC_EpollServer*
          */
         TC_EpollServer* getEpollServer();
-
-        // /**
-        //  * 设置所属的Group
-        //  * @param pHandleGroup
-        //  */
-        // void setHandleGroup(HandleGroupPtr& pHandleGroup);
-
-        // /**
-        //  * 获取所属Group
-        //  * @return HandleGroup*
-        //  */
-        // HandleGroupPtr& getHandleGroup();
 
 		/**
 		 * 获取Handle的索引(0~handle个数-1)
@@ -334,14 +276,12 @@ public:
          * @param stRecvData
          * @param sSendBuffer
          */
-        // void sendResponse(unsigned int uid, const string &sSendBuffer, const string &ip, int port, int fd);
 		void sendResponse(const shared_ptr<SendContext> &data);
 
         /**
          * 关闭链接
          * @param stRecvData
          */
-        // void close(unsigned int uid, int fd);
         void close(const shared_ptr<RecvContext> &data);
 
         /**
@@ -370,36 +310,6 @@ public:
          * 具体的处理逻辑
          */
         virtual void handleImp();
-
-        // /**
-        //  * 处理函数
-        //  * @param stRecvData: 接收到的数据
-        //  */
-        // virtual void handle(const tagRecvData &stRecvData) = 0;
-
-        // /**
-        //  * 处理超时数据, 即数据在队列中的时间已经超过
-        //  * 默认直接关闭连接
-        //  * @param stRecvData: 接收到的数据
-        //  */
-        // virtual void handleTimeout(const tagRecvData &stRecvData);
-
-        // /**
-        //  * 处理连接关闭通知，包括
-        //  * 1.close by peer
-        //  * 2.recv/send fail
-        //  * 3.close by timeout or overload
-        //  * @param stRecvData:
-        //  */
-        // virtual void handleClose(const tagRecvData &stRecvData);
-
-        // /**
-        //  * 处理overload数据 即数据队列中长度已经超过允许值
-        //  * 默认直接关闭连接
-        //  * @param stRecvData: 接收到的数据
-        //  */
-        // virtual void handleOverload(const tagRecvData &stRecvData);
-
 
 		/**
 		 * 处理函数
@@ -465,13 +375,6 @@ public:
          * @return bool
          */
         virtual bool allFilterIsEmpty();
-
-
-		// /**
-		//  * 设置服务
-		//  * @param pEpollServer
-		//  */
-		// void setEpollServer(TC_EpollServer *pEpollServer);
 
 		/**
 		 * 设置Adapter
@@ -840,26 +743,6 @@ public:
 		 */
 		bool waitForRecvQueue(uint32_t handleIndex, shared_ptr<RecvContext> &recv);
 
-
-        // /**
-        //  * 增加数据到队列中
-        //  * @param vtRecvData
-        //  * @param bPushBack 后端插入
-        //  * @param sBuffer
-        //  */
-        // void insertRecvQueue(const recv_queue::queue_type &vtRecvData,bool bPushBack = true);
-
-        // /**
-        //  * 通知等待在接收队列上面的线程醒过来
-        //  */
-        // void notifyRecvQueue();
-
-        // /**
-        //  * 等待数据
-        //  * @return bool
-        //  */
-        // bool waitForRecvQueue(tagRecvData* &recv, uint32_t iWaitTime);
-
         /**
          * 接收队列的大小
          * @return size_t
@@ -882,48 +765,10 @@ public:
 		 */
 		static TC_NetWorkBuffer::PACKET_TYPE echo_header_filter(TC_NetWorkBuffer::PACKET_TYPE i, vector<char> &o);
 
-        // /**
-        //  * 默认的协议解析类, 直接echo
-        //  * @param r
-        //  * @param o
-        //  * @return int
-        //  */
-        // static int echo_protocol(string &r, string &o);
-
-        // /**
-        //  * 默认的包头处理
-        //  * @param i
-        //  * @param o
-        //  * @return int
-        //  */
-        // static int echo_header_filter(int i, string &o);
-
         /**
          * 获取需要过滤的包头长度
          */
         int getHeaderFilterLen();
-
-        /**
-         * 设置所属的handle组名
-         * @param handleGroupName
-         */
-        // void setHandleGroupName(const string& handleGroupName);
-
-        /**
-         * 获得所属的handle组名
-         * @return string
-         */
-        // string getHandleGroupName() const;
-
-        /**
-         * 获得所属的handle
-         * @return HandleGroupPtr
-         */
-
-        // HandleGroupPtr getHandleGroup() const
-        // {
-        //     return _handleGroup;
-        // }
 
         /**
          * 设置ServantHandle数目
@@ -936,16 +781,6 @@ public:
          * @return int
          */
         int getHandleNum();
-
-        // /**
-        //  * 绑定两个Adapter到同一个Group
-        //  * @param otherAdapter
-        //  */
-        // void setHandle(BindAdapterPtr& otherAdapter)
-        // {
-        //     _pEpollServer->setHandleGroup(otherAdapter->getHandleGroupName(), this);
-        // }
-
 
 		/**
 		 * 初始化处理线程,线程将会启动
@@ -1253,11 +1088,6 @@ public:
         Connection(BindAdapter *pBindAdapter, int fd);
 
         /**
-         * 通讯组件初始化
-         */
-        // Connection(BindAdapter *pBindAdapter);
-
-        /**
          * 析构函数
          */
         virtual ~Connection();
@@ -1266,7 +1096,6 @@ public:
          * 链接所属的adapter
          */
 		BindAdapterPtr& getBindAdapter()       { return _pBindAdapter; }
-        // BindAdapter* getBindAdapter()       { return _pBindAdapter; }
 
         /**
          * 初始化
@@ -1338,12 +1167,17 @@ public:
          */
         EnumConnectionType getType() const          { return _enType; }
 
+	    /**
+	 	* 是否是空连接
+	 	*/
         bool isEmptyConn() const  {return _bEmptyConn;}
 
         /**
          * Init Auth State;
          */
         void tryInitAuthState(int initState);
+
+	    friend class NetThread;
 
     protected:
 
@@ -1397,14 +1231,13 @@ public:
          * @param o
          * @return int: <0:协议错误, 0:没有一个完整的包, 1:收到至少一个包
          */
-        // int parseProtocol(recv_queue::queue_type &o);
         int parseProtocol();
 
         /**
          * 增加数据到队列中
          * @param vtRecvData
          */
-		void insertRecvQueue(const shared_ptr<RecvContext> &recv);//recv_queue::queue_type &vRecvData);
+		void insertRecvQueue(const shared_ptr<RecvContext> &recv);
 
         /**
          * 对于udp方式的连接，分配指定大小的接收缓冲区
@@ -1418,28 +1251,6 @@ public:
 		 */
 		bool isTcp() const { return _lfd != -1; }
 
-        friend class NetThread;
-
-    // private:
-    //     /**
-    //      * tcp发送数据
-    //      */
-    //     int tcpSend(const void* data, size_t len);
-    //     int tcpWriteV(const std::vector<iovec>& buffers);
-
-    //     /**
-    //      * 清空buffer-slices
-    //      * @param slices
-    //      */
-    //     void clearSlices(std::vector<TC_Slice>& slices);
-
-    //     /**
-    //      * 整理buffer-slices
-    //      * @param slices
-    //      * @param toSkippedBytes 
-    //      */
-    //     void adjustSlices(std::vector<TC_Slice>& slices, size_t toSkippedBytes);
-
     public:
         /**
          * 最后刷新时间
@@ -1452,7 +1263,6 @@ public:
          * 适配器
          */
 		BindAdapterPtr      _pBindAdapter;
-        // BindAdapter         *_pBindAdapter;
 
         /**
          * TC_Socket
@@ -1487,12 +1297,12 @@ public:
         /**
          * 接收数据buffer
          */
-        TC_NetWorkBuffer    _recvbuffer;
+        TC_NetWorkBuffer    _recvBuffer;
 
         /**
          * 发送数据buffer
          */
-        TC_NetWorkBuffer    _sendbuffer;
+        TC_NetWorkBuffer    _sendBuffer;
 
         /**
          * 需要过滤的头部字节数
@@ -2105,20 +1915,6 @@ public:
 	 */
 	void send(const shared_ptr<SendContext> &data);
 
-
-    // /**
-    //  * 关闭连接
-    //  * @param uid
-    //  */
-    // void close(unsigned int uid, int fd);
-
-    // /**
-    //  * 发送数据
-    //  * @param uid
-    //  * @param s
-    //  */
-    // void send(unsigned int uid, const string &s, const string &ip, uint16_t port, int fd);
-
     /**
      * 获取某一监听端口的连接数
      * @param lfd
@@ -2133,13 +1929,6 @@ public:
 	 * @return map<int,ListenSocket>
 	 */
 	unordered_map<int, BindAdapterPtr> getListenSocketInfo();
-
-    // /**
-    //  * 获取监听socket信息
-    //  *
-    //  * @return map<int,ListenSocket>
-    //  */
-    // map<int, BindAdapterPtr> getListenSocketInfo();
 
     /**
      * 获取所有连接的数目

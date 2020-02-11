@@ -50,76 +50,64 @@ public:
     /**
     * 发送buffer
     */
-    class SendBuffer
+    class Buffer
     {
-    protected:
-        vector<char> sendBuffer;
-        uint32_t sendPos = 0;
 
     public:
-	    SendBuffer() { }
-	    SendBuffer(const vector<char> &sBuffer) : sendBuffer(sBuffer) {}
-	    SendBuffer(const char *sBuffer, size_t length) : sendBuffer(sBuffer, sBuffer+length) {}
+	    Buffer() { }
+	    Buffer(const vector<char> &sBuffer) : _buffer(sBuffer) {}
+	    Buffer(const char *sBuffer, size_t length) : _buffer(sBuffer, sBuffer+length) {}
 
-        void swap(vector<char> &buff)
+        void swap(vector<char> &buff, size_t pos = 0)
         {
-	        sendPos = 0;
-        	buff.swap(sendBuffer);
+	        _pos = pos;
+        	buff.swap(_buffer);
         }
 
         void clear()
         {
-            sendBuffer.clear();
-            sendPos = 0;
+            _buffer.clear();
+	        _pos = 0;
         }
 
         bool empty() const
         {
-            return sendBuffer.size() <= sendPos;
+            return _buffer.size() <= _pos;
         }
 
         void addBuffer(const vector<char> &buffer)
         {
-            sendBuffer.insert(sendBuffer.end(), buffer.begin(), buffer.end());// += buffer;
+            _buffer.insert(_buffer.end(), buffer.begin(), buffer.end());
         }
 
-        void assign(const char *buffer, size_t length)
+        void assign(const char *buffer, size_t length, size_t pos = 0)
         {
-            sendBuffer.assign(buffer, buffer + length);
-            sendPos = 0;
-        }
-
-        vector<char> &getBuffer()
-        {
-        	return sendBuffer;
+            _buffer.assign(buffer, buffer + length);
+	        _pos = pos;
         }
 
         void setBuffer(const vector<char> &buff, int pos = 0)
         {
-	        sendBuffer  = buff;
-	        sendPos     = pos;
+	        _buffer  = buff;
+	        _pos     = pos;
         }
 
-	    char *buffer()
-	    {
-		    return sendBuffer.data() + sendPos;
-	    }
+	    char *buffer() { return _buffer.data() + _pos; }
 
-        const char *buffer() const
-        {
-            return sendBuffer.data() + sendPos;
-        }
+        const char *buffer() const { return _buffer.data() + _pos; }
 
-        uint32_t length() const
-        {
-            return (uint32_t)(sendBuffer.size() - sendPos);
-        }
+        size_t length() const { return _buffer.size() - _pos; }
 
         void add(uint32_t ret)
         {
-            sendPos += ret;
-            assert(sendPos <= sendBuffer.size());
+	        _pos += ret;
+            assert(_pos <= _buffer.size());
         }
+
+    protected:
+	    vector<char>    _buffer;
+	    uint32_t        _pos = 0;
+
     };
 
     /**
@@ -158,17 +146,17 @@ public:
      */
     void *getContextData() { return _contextData; }
 
+	/**
+	 * 增加buffer
+	 * @param buff
+	 */
+	void addBuffer(const shared_ptr<Buffer> & buff);
+
     /**
      * 增加buffer
      * @param buff
      */
     void addBuffer(const vector<char>& buff);
-
-    /**
-     * add & swap, 避免一次数据copy
-     * @param buff
-     */
-	void addSwapBuffer(vector<char>& buff);
 
 	/**
      * 增加buffer
@@ -201,9 +189,9 @@ public:
 
     /**
      * 将链表上的所有buffer拼接起来
-     * @return string
+     * @return const char *, 返回第一个数据buffer的指针, 为空则返回NULL
      */
-    void mergeBuffers();
+    const char * mergeBuffers();
 
     /**
      * 返回所有buffer(将所有buffer拼接起来, 注意性能)
@@ -345,6 +333,9 @@ public:
     static TC_NetWorkBuffer::PACKET_TYPE parseEcho(TC_NetWorkBuffer&in, vector<char> &out);
 
 protected:
+
+	void getBuffers(char *buffer, size_t length) const;
+
     template<typename T>
     T getValue() const
     {
@@ -420,17 +411,13 @@ protected:
     /**
      * buffer list
      */
-	std::list<std::vector<char>> _bufferList;
+	std::list<std::shared_ptr<Buffer>> _bufferList;
 
 	/**
 	 * buffer剩余没解析的字节总数
 	 */
     size_t _length = 0;
 
-    /**
-     * 当前buffer的位置
-     */
-    size_t _pos = 0;
 };
 
 }
