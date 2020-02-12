@@ -161,13 +161,13 @@ void Transceiver::setConnected()
     _adapterProxy->setConTimeout(false);
     _adapterProxy->addConnExc(false);
 
-    _onConnect();
+	onConnect();
 
 
 	TLOGTARS("[TARS][tcp setConnected, " << _adapterProxy->getObjProxy()->name() << ",fd:" << _fd << "]" << endl);
 }
 
-void Transceiver::_onConnect()
+void Transceiver::onConnect()
 {
 #if TARS_SSL
     if (isSSL())
@@ -204,14 +204,14 @@ void Transceiver::_onConnect()
     }
 #endif
 
-    _doAuthReq();
+	doAuthReq();
 }
 
-void Transceiver::_doAuthReq()
+void Transceiver::doAuthReq()
 {
     ObjectProxy* obj = _adapterProxy->getObjProxy();
 
-    TLOGTARS("[TARS][_onConnect:" << obj->name() << " auth type is " << _adapterProxy->endpoint().authType() << endl);
+    TLOGTARS("[TARS][onConnect:" << obj->name() << " auth type is " << _adapterProxy->endpoint().authType() << endl);
 
     if (_adapterProxy->endpoint().authType() == AUTH_TYPENONE)
     {
@@ -227,6 +227,35 @@ void Transceiver::_doAuthReq()
 
         this->sendAuthData(basic);
     }
+}
+
+void Transceiver::finishInvoke(shared_ptr<ResponsePacket> &rsp)
+{
+
+	if (_authState != AUTH_SUCC)
+	{
+		std::string ret(rsp->sBuffer.begin(), rsp->sBuffer.end());
+		tars::AUTH_STATE tmp = AUTH_SUCC;
+		tars::stoe(ret, tmp);
+		int newstate = tmp;
+
+		TLOGTARS("[TARS]AdapterProxy::finishInvoke from state " << _authState << " to " << newstate << endl);
+		setAuthState(newstate);
+
+		if (newstate == AUTH_SUCC)
+		{
+			// flush old buffered msg when auth is not complete
+			_adapterProxy->doInvoke();
+		}
+		else
+		{
+			TLOGERROR("newstate is " << newstate << ", error close!\n");
+			close();
+		}
+
+		return;
+	}
+	_adapterProxy->finishInvoke(rsp);
 }
 
 bool Transceiver::sendAuthData(const BasicAuthInfo& info)
@@ -474,7 +503,7 @@ int TcpTransceiver::doResponse()
 					    break;
 				    }
 				    else if (ret == TC_NetWorkBuffer::PACKET_FULL) {
-	                    _adapterProxy->finishInvoke(rsp);
+	                    finishInvoke(rsp);
 				    }
 				    else {
 					    break;
@@ -585,7 +614,7 @@ int TcpTransceiver::doResponse()
 //                     return 0;
 
 //                 if (preNotHandshake) 
-//                     _doAuthReq();
+//                     doAuthReq();
                 
 //                 std::string* plainBuf = _openssl->RecvBuffer();
 //                 data = plainBuf->data();
@@ -817,7 +846,7 @@ int UdpTransceiver::doResponse()
                 }
                 else
                 {
-	                _adapterProxy->finishInvoke(rsp);
+	                finishInvoke(rsp);
                 }
             }
             catch (exception &ex)

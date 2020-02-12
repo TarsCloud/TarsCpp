@@ -210,6 +210,8 @@ public:
         _connStatus = eUnconnected; 
     }
 
+    void finishInvoke(shared_ptr<ResponsePacket> &rsp);
+
     /**
      * 设置鉴权状态
      */
@@ -232,12 +234,12 @@ protected:
     /** 
      ** 物理连接成功回调
      **/
-    void                     _onConnect();
+    void                     onConnect();
 
     /** 
      ** 鉴权初始化请求
      **/
-    void                     _doAuthReq();
+    void                     doAuthReq();
 
     /*
      * AdapterProxy
