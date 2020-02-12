@@ -4,11 +4,16 @@ project(tars_cpp)
 
 set(TARS_VERSION "2.0.0")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
-set(TARS_SSL 1)
+set(TARS_MYSQL 1)
+add_definitions(-DTARS_MYSQL=${TARS_MYSQL})
+set(TARS_SSL 0)
 add_definitions(-DTARS_SSL=${TARS_SSL})
-set(TARS_HTTP2 1)
+set(TARS_HTTP2 0)
 add_definitions(-DTARS_HTTP2=${TARS_HTTP2})
-set(TARS_PROTOBUF 1)
+set(TARS_PROTOBUF 0)
+add_definitions(-DTARS_PROTOBUF=${TARS_PROTOBUF})
+set(TARS_ZLIB 0)
+add_definitions(-TARS_ZLIB=${TARS_ZLIB})
 
 # list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 set(CMAKE_VERBOSE_MAKEFILE off)
@@ -84,25 +89,50 @@ set(LIB_ZLIB)
 set(LIB_PROTOBUF)
 
 IF (WIN32)
+if(TARS_MYSQL)
     set(LIB_MYSQL "libmysql")
+endif()    
+if(TARS_HTTP2)
     set(LIB_NGHTTP2 "libnghttp2_static")
+endif()    
+if(TARS_SSL)
     set(LIB_SSL "libssl")
     set(LIB_CRYPTO "libcrypto")
+endif()
+if(TARS_ZLIB)
     set(LIB_ZLIB "libz")
-    set(LIB_PROTOBUF "libprotoc")
+endif()
 
+if(TARS_PROTOBUF)
+    set(LIB_PROTOBUF "libprotoc")
+endif()    
 ELSE()
     link_libraries(pthread dl)
+if(TARS_MYSQL)
     set(LIB_MYSQL "mysqlclient")
+endif()    
+if(TARS_HTTP2)
     set(LIB_NGHTTP2 "nghttp2_static")
+endif()
+
+if(TARS_SSL)
     set(LIB_SSL "ssl")
     set(LIB_CRYPTO "crypto")
+endif()    
+if(TARS_ZLIB)
     set(LIB_ZLIB "z")
+endif()    
+if(TARS_PROTOBUF)
     set(LIB_PROTOBUF "protoc")
+endif()    
 ENDIF()
 
+if(TARS_MYSQL)
 link_libraries(${LIB_MYSQL})
+endif()
+if(TARS_ZLIB)
 link_libraries(${LIB_ZLIB})
+endif()
 
 if(TARS_HTTP2)
     list(APPEND APP_LIBRARIES ${LIB_PROTOBUF})
@@ -117,7 +147,10 @@ if(TARS_SSL)
     list(APPEND APP_LIBRARIES ${LIB_CRYPTO})
 endif()
 
-link_libraries(${APP_LIBRARIES})
+list(LENGTH APP_LIBRARIES RET)
+if(${RET} GREATER 0)
+    link_libraries(${APP_LIBRARIES})
+endif()
 
 include(ExternalProject)
 
@@ -137,6 +170,7 @@ ExternalProject_Add(${LIB_PROTOBUF}
     )
 endif()
 
+if(TARS_MYSQL)
 ExternalProject_Add(${LIB_MYSQL}
         URL http://cdn.tarsyun.com/src/mysql-5.6.26.tar.gz
         PREFIX    ${CMAKE_BINARY_DIR}
@@ -150,7 +184,9 @@ ExternalProject_Add(${LIB_MYSQL}
         INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
         URL_MD5 c537c08c1276abc79d76e8e562bbcea5
         )
+endif()
 
+if(TARS_ZLIB)
 ExternalProject_Add(${LIB_ZLIB}
         URL http://cdn.tarsyun.com/src/zlib-1.2.11.tar.gz
         PREFIX    ${CMAKE_BINARY_DIR}
@@ -164,6 +200,7 @@ ExternalProject_Add(${LIB_ZLIB}
         INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
         URL_MD5 1c9f62f0778697a09d36121ead88e08e
         )
+endif()
 
 if(TARS_HTTP2)
 ExternalProject_Add(${LIB_NGHTTP2}

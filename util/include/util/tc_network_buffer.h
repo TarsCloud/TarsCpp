@@ -9,6 +9,7 @@
 #include <vector>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include "util/tc_socket.h"
 
 /////////////////////////////////////////////////
@@ -150,13 +151,13 @@ public:
 	 * 增加buffer
 	 * @param buff
 	 */
-	void addBuffer(const shared_ptr<Buffer> & buff);
+	void addBuffer(const std::shared_ptr<Buffer> & buff);
 
     /**
      * 增加buffer
      * @param buff
      */
-    void addBuffer(const vector<char>& buff);
+    void addBuffer(const std::vector<char>& buff);
 
 	/**
      * 增加buffer

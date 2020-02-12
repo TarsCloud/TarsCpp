@@ -18,10 +18,12 @@
 #define __TC_MYSQL_H
 
 #include "util/tc_ex.h"
-#include "mysql.h"
+// #include "mysql.h"
 #include <map>
 #include <vector>
 #include <stdlib.h>
+
+class MYSQL;
 
 namespace tars
 {
@@ -33,7 +35,6 @@ namespace tars
 * 
 */           
 /////////////////////////////////////////////////
-
 
 /**
 * @brief 数据库异常类
