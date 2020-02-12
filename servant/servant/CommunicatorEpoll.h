@@ -247,27 +247,6 @@ protected:
      */
     ObjectProxyFactory *   _objectProxyFactory;
 
-    // /*
-    //  * 异步线程数组
-    //  */
-    // //异步线程(跨通信器共享)
-    // vector<AsyncProcThread*> _asyncThread;//[MAX_THREAD_NUM];
-
-    // /*
-    //  * 异步队列的统计上报的对象
-    //  */
-    // PropertyReport *       _reportAsyncQueue;
-
-    // /*
-    //  * 异步线程数目
-    //  */
-    // size_t                 _asyncThreadNum;
-
-    /*
-     * 分发给异步线程的索引seq
-     */
-    // size_t                 _asyncSeq;
-
     /*
      * 网络线程的id号
      */

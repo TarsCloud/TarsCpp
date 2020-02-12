@@ -27,7 +27,7 @@ using namespace tars;
 
 Communicator* _comm;
 
-static string http2Obj = "Test.HttpServer.http2Obj@tcp -h 127.0.0.1 -p 8082";
+static string http2Obj = "TestApp.Http2Server.http2Obj@tcp -h 127.0.0.1 -p 8082";
 
 struct Param
 {

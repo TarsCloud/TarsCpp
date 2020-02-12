@@ -15,7 +15,9 @@ sleep 2
 
 echo "client: ./bin/CustomClient"
 
-./bin/CustomClient 5
+./bin/CustomClient --count=10000 --thread=2 --call=sync --netthread=1 --buffersize=100
+
+./bin/CustomClient --count=10000 --thread=2 --call=async --netthread=1 --buffersize=100
 
 killall -2 CustomServer
 

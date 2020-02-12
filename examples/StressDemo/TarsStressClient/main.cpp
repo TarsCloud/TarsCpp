@@ -38,7 +38,7 @@ private:
 Test1::Test1(const string &sStr)
 {
 //    _comm.setProperty("locator","tars.tarsregistry.QueryObj@tcp -h 172.27.194.147 -p 17890 -t 50000");
-    _comm.setProperty("locator","tars.tarsregistry.QueryObj@tcp -h 10.120.129.226 -p 17890 -t 10000");
+//    _comm.setProperty("locator","tars.tarsregistry.QueryObj@tcp -h 10.120.129.226 -p 17890 -t 10000");
     _comm.setProperty("stat", "tars.tarsstat.StatObj");
     _comm.stringToProxy(sStr, prx);
 }

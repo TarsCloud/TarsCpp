@@ -86,7 +86,7 @@ const char * TC_NetWorkBuffer::mergeBuffers()
     return NULL;
 }
 
-void TC_NetWorkBuffer::getBuffers(char *buffer, size_t length) const
+size_t TC_NetWorkBuffer::getBuffers(char *buffer, size_t length) const
 {
 	assert(length <= getBufferLength());
 
@@ -95,7 +95,7 @@ void TC_NetWorkBuffer::getBuffers(char *buffer, size_t length) const
 	size_t left = length;
 	size_t pos = 0;
 
-	while(it != _bufferList.end() || left == 0)
+	while(it != _bufferList.end() && left != 0)
 	{
 		size_t len = std::min(left, (*it)->length());
 
@@ -106,6 +106,8 @@ void TC_NetWorkBuffer::getBuffers(char *buffer, size_t length) const
 
 		++it;
 	}
+
+	return pos;
 }
 
 string TC_NetWorkBuffer::getBuffersString() const
@@ -121,9 +123,17 @@ string TC_NetWorkBuffer::getBuffersString() const
 vector<char> TC_NetWorkBuffer::getBuffers() const
 {
     vector<char> buffer;
-    buffer.resize(_length);
 
-	getBuffers(&buffer[0], _length);
+    if(_bufferList.size() == 1)
+    {
+	    (*_bufferList.begin())->swap(buffer);
+    }
+    else
+    {
+	    buffer.resize(_length);
+
+	    getBuffers(&buffer[0], _length);
+    }
 
 	return buffer;
 }
@@ -140,7 +150,7 @@ bool TC_NetWorkBuffer::getHeader(size_t len, std::string &buffer) const
         return true;
     }
 
-    buffer.reserve(len);
+    buffer.resize(len);
 
 	getBuffers(&buffer[0], len);
 //
@@ -183,7 +193,7 @@ bool TC_NetWorkBuffer::getHeader(size_t len, std::vector<char> &buffer) const
         return true;
     }
 
-    buffer.reserve(len);
+    buffer.resize(len);
 
 	getBuffers(&buffer[0], len);
 //
@@ -306,12 +316,12 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::checkHttp()
 
 TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseHttp(TC_NetWorkBuffer&in, vector<char> &out)
 {
-    cout << "parseHttp" << endl;
     TC_NetWorkBuffer::PACKET_TYPE b = in.checkHttp();
 
     if (b == PACKET_FULL)
     {
         out = in.getBuffers();
+
         in.clearBuffers();
     }
 

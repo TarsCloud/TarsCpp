@@ -15,7 +15,7 @@ jobs:
     - name: git
       run: git submodule update --init --recursive
     - name: configure
-      run: mkdir build;cd build;cmake .. -A X64
+      run: mkdir build;cd build; cmake --version; cmake .. -A X64
     - name: make
       run: cd build; cmake --build . --config release --target run-all
 

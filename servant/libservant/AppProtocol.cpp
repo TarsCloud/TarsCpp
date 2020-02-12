@@ -65,7 +65,7 @@ vector<char> ProxyProtocol::tarsRequest(RequestPacket& request, Transceiver *)
 
 vector<char> ProxyProtocol::http1Request(tars::RequestPacket& request, Transceiver *trans)
 {
-    request.iRequestId = trans->getAdapterProxy()->getId();
+	request.iRequestId = trans->getAdapterProxy()->getId();
 
     TC_HttpRequest httpRequest;
 

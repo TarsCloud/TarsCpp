@@ -31,7 +31,7 @@ using namespace tup;
 
 Communicator* _comm;
 
-static string httpObj = "Test.HttpServer.httpObj@tcp -h 127.0.0.1 -p 8081";
+static string httpObj = "TestApp.HttpServer.httpObj@tcp -h 127.0.0.1 -p 8081";
 
 struct Param
 {
@@ -62,8 +62,7 @@ void httpCall(int excut_num)
     {
         TC_HttpResponse stHttpRsp;
 
-        // iRet = doRequest(stHttpReq, tcpClient1, stHttpRsp, 3000);  
-        iRet = stHttpReq.doRequest(stHttpRsp, 3000);  
+        iRet = stHttpReq.doRequest(stHttpRsp, 3000);
         
         if (iRet != 0)
         {
@@ -125,8 +124,7 @@ void syncRpc(int c)
 
         try
         {
-
-		    param.servantPrx->http_call("GET", "/", header, "helloworld", rheader, rbody);
+	        param.servantPrx->http1_call("GET", "/", header, "helloworld", rheader, rbody);
         }
         catch(exception& e)
         {
@@ -162,7 +160,7 @@ int main(int argc, char *argv[])
 
         _comm = new Communicator();
 
-        // TarsRollLogger::getInstance()->logger()->setLogLevel(6);
+//         TarsRollLogger::getInstance()->logger()->setLogLevel(6);
 
         _comm->setProperty("sendqueuelimit", "1000000");
         _comm->setProperty("asyncqueuecap", "1000000");

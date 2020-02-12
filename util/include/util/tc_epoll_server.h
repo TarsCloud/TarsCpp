@@ -131,11 +131,13 @@ public:
 	class SendContext
 	{
 	public:
-		SendContext(const shared_ptr<RecvContext> &context, char cmd) : _context(context), _cmd(cmd) {}
+		SendContext(const shared_ptr<RecvContext> &context, char cmd) : _context(context), _cmd(cmd)
+		{
+			_sbuffer = std::make_shared<TC_NetWorkBuffer::Buffer>();
+		}
 
 		const shared_ptr<RecvContext> &getRecvContext() { return _context; }
 		const shared_ptr<TC_NetWorkBuffer::Buffer> & buffer()       { return _sbuffer; }
-//		const vector<char> &buffer()  const     { return _sbuffer; }
 		char cmd() const        { return _cmd; }
 		uint32_t uid() const    { return _context->uid(); }
 		int fd() const          { return _context->fd(); }
@@ -179,7 +181,7 @@ public:
 		shared_ptr<SendContext> createSendContext()  { return std::make_shared<SendContext>(shared_from_this(), 's'); }
 		shared_ptr<SendContext> createCloseContext() { return std::make_shared<SendContext>(shared_from_this(), 'c'); }
 
-		int64_t         _recvUS;
+//		int64_t         _recvUS;
 
 	protected:
 		uint32_t        _uid;            /**连接标示*/

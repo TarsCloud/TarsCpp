@@ -13,7 +13,7 @@ add_definitions(-DTARS_HTTP2=${TARS_HTTP2})
 set(TARS_PROTOBUF 0)
 add_definitions(-DTARS_PROTOBUF=${TARS_PROTOBUF})
 set(TARS_ZLIB 0)
-add_definitions(-TARS_ZLIB=${TARS_ZLIB})
+add_definitions(-DTARS_ZLIB=${TARS_ZLIB})
 
 # list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 set(CMAKE_VERBOSE_MAKEFILE off)

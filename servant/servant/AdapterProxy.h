@@ -51,6 +51,12 @@ public:
     ~AdapterProxy();
 
     /**
+     * clone
+     * @return
+     */
+//	AdapterProxy *clone();
+
+    /**
      * 调用server端对象方法
      */
     int invoke(ReqMessage * msg);
@@ -65,7 +71,6 @@ public:
      * server端的响应包返回
      */
     void finishInvoke(shared_ptr<ResponsePacket> &rsp);
-    // void finishInvoke(ResponsePacket &rsp);
 
     /**
      * 端口是否有效,当连接全部失效时返回false
@@ -73,7 +78,6 @@ public:
      * @onlyCheck: 只判断是否已经连接上 
      * @return bool
      */
-    // bool checkActive(bool bForceConnect = false, bool onlyCheck = false);
     bool checkActive(bool bForceConnect = false);
 
     /**
@@ -89,7 +93,6 @@ public:
     /**
      * 处理stat
      */
-    // void doStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg);
     void mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg);
     /**
      * 处理采样

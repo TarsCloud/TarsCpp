@@ -355,8 +355,9 @@ int Transceiver::doRequest()
 int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff, bool forceSend)
 {
     //空数据 直接返回成功
-    if(buff->empty())
-        return eRetOk;
+    if(buff->empty()) {
+	    return eRetOk;
+    }
 
     if(eConnected != _connStatus)
     {
@@ -376,14 +377,16 @@ int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff, b
 
     //buf不为空, 表示之前的数据还没发送完, 直接返回失败
     //等buffer可写了,epoll会通知写事件
-    if(!_sendBuffer.empty())
-        return eRetError;
+    if(!_sendBuffer.empty()) {
+	    return eRetError;
+    }
 
     int iRet = this->send(buff->buffer(), (uint32_t)buff->length(), 0);
 
     //失败，直接返回
-    if(iRet<0)
-        return eRetError;
+    if(iRet<0) {
+	    return eRetError;
+    }
 
     //没有全部发送完,写buffer 返回成功
     if(iRet < (int)buff->length())
@@ -446,8 +449,6 @@ int TcpTransceiver::doResponse()
 
     int recvCount = 0;
 
-    shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
-
 	do
     {
 	    char buff[BUFFER_SIZE] = {0x00};
@@ -463,7 +464,9 @@ int TcpTransceiver::doResponse()
 			    TC_NetWorkBuffer::PACKET_TYPE ret;
 			    do
 		        {
-				    ret = _adapterProxy->getObjProxy()->getProxyProtocol().responseFunc(_recvBuffer, *rsp.get());
+			        shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
+
+			        ret = _adapterProxy->getObjProxy()->getProxyProtocol().responseFunc(_recvBuffer, *rsp.get());
 
 				    if (ret == TC_NetWorkBuffer::PACKET_ERR) {
 					    TLOGERROR( "[TARS][tcp doResponse," << _adapterProxy->getObjProxy()->name() << ",fd:" << _fd << "," << _ep.desc() << ",tcp recv decode error" << endl);
@@ -472,15 +475,13 @@ int TcpTransceiver::doResponse()
 				    }
 				    else if (ret == TC_NetWorkBuffer::PACKET_FULL) {
 	                    _adapterProxy->finishInvoke(rsp);
-
-                        rsp = std::make_shared<ResponsePacket>();
 				    }
 				    else {
 					    break;
 				    }
 
 			    }
-			    while (ret == TC_NetWorkBuffer::PACKET_FULL);
+			    while (ret == TC_NetWorkBuffer::PACKET_FULL && !_recvBuffer.empty());
 
 			    //接收的数据小于buffer大小, 内核会再次通知你
 			    if(iRet < BUFFER_SIZE)
@@ -650,9 +651,9 @@ int TcpTransceiver::send(const void* buf, uint32_t len, uint32_t flag)
 
 	if (iRet < 0 && !TC_Socket::isPending())
     {
-        TLOGTARS("[TARS][tcp send," << _adapterProxy->getObjProxy()->name() << ",fd:" << _fd << "," << _ep.desc() 
-            << ",fail! errno:" << TC_Exception::getSystemCode() << "," 
-            << TC_Exception::parseError(TC_Exception::getSystemCode()) << ",close]" << endl);
+        TLOGTARS("[TARS][tcp send," << _adapterProxy->getObjProxy()->name() << ", fd:" << _fd << "," << _ep.desc()
+            << ", fail! errno:" << TC_Exception::getSystemCode() << ", "
+            << TC_Exception::parseError(TC_Exception::getSystemCode()) << ", close]" << endl);
 
         close();
 
@@ -665,8 +666,8 @@ int TcpTransceiver::send(const void* buf, uint32_t len, uint32_t flag)
         _adapterProxy->getObjProxy()->getCommunicatorEpoll()->modFd(_fd, &_fdInfo, EPOLLIN | EPOLLOUT);        
     }
 #endif    
-    TLOGTARS("[TARS][tcp send," << _adapterProxy->getObjProxy()->name() << ",fd:" << _fd << "," 
-        << _ep.desc() << ",len:" << iRet << "]" << endl);
+    TLOGTARS("[TARS][tcp send," << _adapterProxy->getObjProxy()->name() << ", fd:" << _fd << ","
+        << _ep.desc() << ", len:" << iRet << "]" << endl);
 
     return iRet;
 }

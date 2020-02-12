@@ -310,8 +310,6 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<
 	//先预留4个字节长度
 	os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
 
-    // TarsOutputStream<BufferWriter> os;
-
     if (_request.iVersion != TUPVERSION)
     {
         ResponsePacket response;
@@ -378,9 +376,9 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<
         response.writeTo(os);
     }
 
-	assert(send->buffer()->length() >= 4);
+	assert(os.getLength() >= 4);
 
-	iHeaderLen = htonl((int)(send->buffer()->length()));
+	iHeaderLen = htonl((int)(os.getLength()));
 
 	memcpy(os.getByteBuffer().data(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
 

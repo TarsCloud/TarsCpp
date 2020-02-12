@@ -300,6 +300,8 @@ int main(int argc, char *argv[])
 
 	    _comm->setProperty("netthread", TC_Common::tostr(param.netthread));
 
+//        TarsRollLogger::getInstance()->logger()->setLogLevel(6);
+
 	    param.pPrx = _comm->stringToProxy<HelloPrx>(helloObj);
 
 	    param.pPrx->tars_connect_timeout(5000);

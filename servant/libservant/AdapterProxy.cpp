@@ -86,6 +86,13 @@ AdapterProxy::~AdapterProxy()
 {
 }
 
+//AdapterProxy *AdapterProxy::clone()
+//{
+//	AdapterProxy *adapterProxy =  new AdapterProxy(_objectProxy, _endpoint, _communicator);
+//	adapterProxy->checkActive(true);
+//	return adapterProxy;
+//}
+
 string AdapterProxy::getSlaveName(const string& sSlaveName)
 {
     string::size_type pos = sSlaveName.find(".");
@@ -164,7 +171,9 @@ int AdapterProxy::invoke(ReqMessage * msg)
 
     msg->sReqData->setBuffer(_objectProxy->getProxyProtocol().requestFunc(msg->request, _trans.get()));
 
-    //链表是空的, 则直接发送当前这条数据, 如果链表非空或者发送失败了, 则放到队列中, 等待下次发送
+//	TLOGERROR("[TARS][AdapterProxy::invoke insert timeout queue fail, queue size:" << _timeoutQueue->size() << ", id:" << msg->request.iRequestId << ", obj:" <<_objectProxy->name() << ", desc:" << _endpoint.desc() <<endl);
+
+	//链表是空的, 则直接发送当前这条数据, 如果链表非空或者发送失败了, 则放到队列中, 等待下次发送
     if(_timeoutQueue->sendListEmpty() && _trans->sendRequest(msg->sReqData) != Transceiver::eRetError)
     {
         TLOGTARS("[TARS][AdapterProxy::invoke push (send) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id:" << msg->request.iRequestId << endl);
@@ -185,7 +194,7 @@ int AdapterProxy::invoke(ReqMessage * msg)
         bool bFlag = _timeoutQueue->push(msg, msg->request.iRequestId, msg->request.iTimeout + msg->iBeginTime);
         if(!bFlag)
         {
-            TLOGERROR("[TARS][AdapterProxy::invoke fail1 : insert timeout queue fail,queue size:" << _timeoutQueue->size() << ",id:" << msg->request.iRequestId << ", objname:" <<_objectProxy->name() << ",desc:" << _endpoint.desc() <<endl);
+            TLOGERROR("[TARS][AdapterProxy::invoke fail1: insert timeout queue fail, queue size:" << _timeoutQueue->size() << ", id:" << msg->request.iRequestId << ", obj:" <<_objectProxy->name() << ", desc:" << _endpoint.desc() <<endl);
             msg->eStatus = ReqMessage::REQ_EXC;
 
             finishInvoke(msg);
@@ -201,7 +210,7 @@ int AdapterProxy::invoke(ReqMessage * msg)
         bool bFlag = _timeoutQueue->push(msg,msg->request.iRequestId, msg->request.iTimeout+msg->iBeginTime, false);
         if(!bFlag)
         {
-            TLOGERROR("[TARS][AdapterProxy::invoke fail2 : insert timeout queue fail,queue size:" << _timeoutQueue->size() << "," <<_objectProxy->name() << ", " << _endpoint.desc() <<endl);
+            TLOGERROR("[TARS][AdapterProxy::invoke fail2: insert timeout queue fail, queue size:" << _timeoutQueue->size() << ", id:" << msg->request.iRequestId << ", obj:" <<_objectProxy->name() << ", desc:" << _endpoint.desc() <<endl);
             
             msg->eStatus = ReqMessage::REQ_EXC;
 
@@ -221,11 +230,6 @@ int AdapterProxy::invoke(ReqMessage * msg)
 
 void AdapterProxy::doInvoke()
 {
-    if(_timeoutQueue->sendListEmpty())
-    {
-        return ;
-    }
-
     while(!_timeoutQueue->sendListEmpty())
     {
         ReqMessage * msg = NULL;
@@ -480,7 +484,6 @@ void AdapterProxy::setInactive()
     TLOGTARS("[TARS][AdapterProxy::setInactive objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",inactive" << endl);
 }
 
-// void AdapterProxy::finishInvoke(ResponsePacket & rsp)
 void AdapterProxy::finishInvoke(shared_ptr<ResponsePacket> & rsp)
 {
     TLOGTARS("[TARS][AdapterProxy::finishInvoke(ResponsePacket) objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() 

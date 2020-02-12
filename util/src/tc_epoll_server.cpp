@@ -910,10 +910,8 @@ int TC_EpollServer::Connection::recvTcp()
 {
     int recvCount = 0;
 
-    static int totalRecv = 0;
 	while (true)
     {
-	    // vector<char> buffer(BUFFER_SIZE);
 	    char buffer[BUFFER_SIZE] = {0x00};
 
 	    int iBytesReceived = _sock.recv((void *)buffer, BUFFER_SIZE);
@@ -940,7 +938,7 @@ int TC_EpollServer::Connection::recvTcp()
         }
         else
         {
-            totalRecv += iBytesReceived;
+//            totalRecv += iBytesReceived;
             _recvBuffer.addBuffer(buffer, iBytesReceived);
 
             //字符串太长时, 强制解析协议

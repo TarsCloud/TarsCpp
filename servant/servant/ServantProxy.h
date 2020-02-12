@@ -619,21 +619,32 @@ public:
                                 const ServantProxyCallbackPtr& callback,
                                 bool bCoro = false);
 
+
+	/**
+	 * http1同步远程调用
+	 */
+	void http1_call(const std::string& method,
+	               const std::string& uri,
+	               const std::map<std::string, std::string>& headers,
+	               const std::string& body,
+	               std::map<std::string, std::string>& rheaders,
+	               std::string& rbody);
+
     /**
-     * http1 or 2协议同步远程调用
+     * http2协议同步远程调用
      */
-    void http_call(const std::string& method,
-                   const std::string& uri,
-                   const std::map<std::string, std::string>& headers,
-                   const std::string& body,
-                   std::map<std::string, std::string>& rheaders,
-                   std::string& rbody);
+    void http2_call(const std::string& method,
+                    const std::string& uri,
+                    const std::map<std::string, std::string>& headers,
+                    const std::string& body,
+                    std::map<std::string, std::string>& rheaders,
+                    std::string& rbody);
     /**
      * http2协议异步远程调用
      */
-    void http_call_async(const std::map<std::string, std::string>& headers,
-                         const std::string& body,
-                         const HttpCallbackPtr &cb);
+    void http2_call_async(const std::map<std::string, std::string>& headers,
+                          const std::string& body,
+                          const HttpCallbackPtr &cb);
 
     /**
      * 在RequestPacket中的context设置主调信息标识

@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install
-      run: sudo apt-get install -y bison flex
+      run: sudo apt-get install -y bison flex cmake; cmake --version
     - name: git
       run: git submodule update --init --recursive
     - name: configure

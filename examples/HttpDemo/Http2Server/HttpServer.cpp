@@ -15,7 +15,6 @@
  */
 
 #include "HttpServer.h"
-#include "HttpImp.h"
 #include "Http2Imp.h"
 #include "util/tc_http2.h"
 
@@ -46,9 +45,7 @@ HttpServer::initialize()
     //initialize application here:
     //...
 
-    addServant<HttpImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj");
     addServant<Http2Imp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".Http2Obj");
-    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",&TC_NetWorkBuffer::parseHttp);
     addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".Http2Obj", &parseHttp2);
 }
 /////////////////////////////////////////////////////////////////

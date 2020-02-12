@@ -41,7 +41,7 @@ Test1::Test1()
 {
     // _comm.setProperty("locator", "tars.tarsregistry.QueryObj@tcp -h 10.208.139.242 -p 17890 -t 10000");
     // _comm.setProperty("stat", "tars.tarsstat.StatObj");
-    _prx = _comm.stringToProxy<BServantPrx>("Test.BServer.BServantObj@tcp -h 127.0.0.1 -p 9100");
+    _prx = _comm.stringToProxy<BServantPrx>("TestApp.BServer.BServantObj@tcp -h 127.0.0.1 -p 9100");
 }
 
 Test1::~Test1()

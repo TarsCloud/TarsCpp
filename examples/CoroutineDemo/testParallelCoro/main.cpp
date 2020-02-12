@@ -78,7 +78,7 @@ TestCoroutine::TestCoroutine(int iNum)
 : _num(iNum)
 {
 	// _comm.setProperty("locator", "tars.tarsregistry.QueryObj@tcp -h 10.208.139.242 -p 17890 -t 10000");
-    _prx = _comm.stringToProxy<BServantPrx>("Test.BServer.BServantObj@tcp -h 127.0.0.1 -p 9100");
+    _prx = _comm.stringToProxy<BServantPrx>("TestApp.BServer.BServantObj@tcp -h 127.0.0.1 -p 9100");
 	// _comm.stringToProxy(_sObj, _prx);
 }
 

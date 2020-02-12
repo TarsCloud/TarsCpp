@@ -216,21 +216,6 @@ void QueryEpBase::setObjName(const string & sObjName)
     } 
 }
 
-// bool isRealEndpoint(const string & s, const string & s1)
-// {
-//     if (s1.empty())
-//         return true;
-
-//     const string delim = " \t\n\r";
-//     string::size_type beg;
-//     string::size_type end = 0;
-
-//     beg = s1.find_first_not_of(delim, end);
-//     if (s1[beg] != 't' && s1[beg] != 'u' && s1[beg] != 's')
-//         return false;
-//     return true;
-// }
-
 vector<string> QueryEpBase::sepEndpoint(const string& sEndpoints)
 {
 	vector<string>  vEndpoints;
@@ -809,6 +794,7 @@ void EndpointManager::doNotify()
 
 bool EndpointManager::selectAdapterProxy(ReqMessage * msg,AdapterProxy * & pAdapterProxy)
 {
+
     pAdapterProxy = NULL;
     //刷新主控
     refreshReg(E_DEFAULT,"");
@@ -1086,8 +1072,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
                 {
                     return thisHash[hash];
                 }
-                if(!thisHash[hash]->isConnTimeout() &&
-                   !thisHash[hash]->isConnExc())
+                if(!thisHash[hash]->isConnTimeout() && !thisHash[hash]->isConnExc())
                 {
                     conn.push_back(thisHash[hash]);
                 }

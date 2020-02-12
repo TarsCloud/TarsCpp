@@ -24,7 +24,7 @@ int CustomServantImp::doRequest(tars::TarsCurrentPtr current, vector<char>& resp
 	const vector<char>& request = current->getRequestBuffer();
 	response = request;
 
-	cout << "doRequest: requestId:" << current->getRequestId() << ", funcName:" << current->getFuncName() << endl;
+//	cout << "doRequest: requestId:" << current->getRequestId() << ", funcName:" << current->getFuncName() << endl;
 	return 0;
 }
 

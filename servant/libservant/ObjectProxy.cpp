@@ -167,7 +167,9 @@ void ObjectProxy::invoke(ReqMessage * msg)
         return ;
     }
 
-    msg->adapter = pAdapterProxy;
+//	pAdapterProxy = pAdapterProxy->clone();
+
+	msg->adapter = pAdapterProxy;
     pAdapterProxy->invoke(msg);
 }
 
@@ -200,15 +202,13 @@ void ObjectProxy::doInvoke()
             return;
         }
 
+//	    pAdapterProxy = pAdapterProxy->clone();
+
         msg->adapter = pAdapterProxy;
+
         pAdapterProxy->invoke(msg);
     }
 }
-
-// const vector<AdapterProxy*> & ObjectProxy::getAdapters() const
-// {
-//     return _endpointManger->getAdapters();
-// }
 
 void ObjectProxy::doInvokeException(ReqMessage * msg)
 {

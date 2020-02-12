@@ -61,8 +61,16 @@ public:
 
         void swap(vector<char> &buff, size_t pos = 0)
         {
+	    	if(_pos != 0)
+		    {
+	    	    buff.resize(length());
+	    	    memcpy(&buff[0], buffer(), length());
+		    }
+	        else
+            {
+			    buff.swap(_buffer);
+		    }
 	        _pos = pos;
-        	buff.swap(_buffer);
         }
 
         void clear()
@@ -98,6 +106,8 @@ public:
         const char *buffer() const { return _buffer.data() + _pos; }
 
         size_t length() const { return _buffer.size() - _pos; }
+
+        size_t pos() const { return _pos; }
 
         void add(uint32_t ret)
         {
@@ -335,7 +345,7 @@ public:
 
 protected:
 
-	void getBuffers(char *buffer, size_t length) const;
+	size_t getBuffers(char *buffer, size_t length) const;
 
     template<typename T>
     T getValue() const

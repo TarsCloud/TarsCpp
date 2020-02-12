@@ -6,6 +6,24 @@ using namespace std;
 using namespace tars;
 
 
+Communicator* _comm;
+
+static string sObjName = "TestApp.CustomServer.CustomServantObj@tcp -h 127.0.0.1 -t 60000 -p 9400";
+
+struct Param
+{
+	int count;
+	string call;
+	int thread;
+	int buffersize;
+	int netthread;
+
+	ServantPrx servantPrx;
+};
+
+Param param;
+std::atomic<int> callback_count(0);
+
 //The response packet decoding function decodes the data received from the server according to the specific format and resolves it to theResponsePacket
 static TC_NetWorkBuffer::PACKET_TYPE customResponse(TC_NetWorkBuffer &in, ResponsePacket& rsp)
 {
@@ -85,9 +103,10 @@ public:
 		}
 		else
 		{
-			cout << "succ:" << msg->response->sBuffer.data() << endl;
+//			cout << "succ:" << string(msg->response->sBuffer.data(), msg->response->sBuffer.size()) << endl;
 		}
 
+		++callback_count;
 		return msg->response->iRet;
 	}
 
@@ -95,40 +114,151 @@ public:
 
 typedef tars::TC_AutoPtr<CustomCallBack> CustomCallBackPtr;
 
-int main(int argc,char**argv)
+
+void syncCall(int c)
 {
-    try
-    {
-        Communicator comm;
-	    string sObjName = "TestApp.CustomServer.CustomServantObj@tcp -h 127.0.0.1 -t 60000 -p 9400";
+	string buffer(param.buffersize, 'a');
 
-        ServantPrx prx = comm.stringToProxy<ServantPrx>(sObjName);
+	int64_t t = TC_Common::now2us();
+	//发起远程调用
+	for (int i = 0; i < c; ++i)
+	{
+		string r;
 
-        ProxyProtocol prot;
-        prot.requestFunc = customRequest;
-        prot.responseFunc = customResponse;
+		try
+		{
+			ResponsePacket rsp;
+			param.servantPrx->rpc_call(param.servantPrx->tars_gen_requestid(), "doCustomFunc", buffer.c_str(), buffer.length(), rsp);
+		}
+		catch(exception& e)
+		{
+			cout << "exception:" << e.what() << endl;
+		}
+		++callback_count;
+	}
 
-        prx->tars_set_protocol(prot);
+	int64_t cost = TC_Common::now2us() - t;
+	cout << "syncCall total:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
+}
 
-        string buf = "helloword";
 
-        ResponsePacket rsp;
-		prx->rpc_call(prx->tars_gen_requestid(), "doCustomFunc", buf.c_str(), buf.length(), rsp);
+void asyncCall(int c)
+{
+	int64_t t = TC_Common::now2us();
 
-        cout << "sync response buffer:" << rsp.sBuffer.data() << endl;
+	string buffer(param.buffersize, 'a');
 
-		CustomCallBackPtr cb = new CustomCallBack();
-		prx->rpc_call_async(prx->tars_gen_requestid(), "doCustomFunc", buf.c_str(), buf.length(), cb);
+	//发起远程调用
+	for (int i = 0; i < c; ++i)
+	{
+		try
+		{
+			CustomCallBackPtr cb = new CustomCallBack();
+			param.servantPrx->rpc_call_async(param.servantPrx->tars_gen_requestid(), "doCustomFunc", buffer.c_str(), buffer.length(), cb);
+		}
+		catch(exception& e)
+		{
+			cout << "exception:" << e.what() << endl;
+		}
+	}
 
-		TC_Common::sleep(2000);
-    }
-    catch(std::exception&e)
-    {
-        cerr<<"std::exception:"<<e.what()<<endl;
-    }
-    catch(...)
-    {
-        cerr<<"unknown exception"<<endl;
-    }
-    return 0;
+	int64_t cost = TC_Common::now2us() - t;
+	cout << "asyncCall send:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
+}
+
+int main(int argc, char *argv[])
+{
+	try
+	{
+		if (argc < 6)
+		{
+			cout << "Usage:" << argv[0] << "--count=1000 --call=[sync|async] --thread=1 --buffersize=1000 --netthread=1" << endl;
+
+			return 0;
+		}
+
+		TC_Option option;
+		option.decode(argc, argv);
+
+		param.count = TC_Common::strto<int>(option.getValue("count"));
+		if(param.count <= 0) param.count = 1000;
+		param.buffersize = TC_Common::strto<int>(option.getValue("buffersize"));
+		if(param.buffersize <= 0) param.buffersize = 1000;
+		param.call = option.getValue("call");
+		if(param.call.empty()) param.call = "sync";
+		param.thread = TC_Common::strto<int>(option.getValue("thread"));
+		if(param.thread <= 0) param.thread = 1;
+		param.netthread = TC_Common::strto<int>(option.getValue("netthread"));
+		if(param.netthread <= 0) param.netthread = 1;
+
+		_comm = new Communicator();
+		_comm->setProperty("sendqueuelimit", "1000000");
+		_comm->setProperty("asyncqueuecap", "1000000");
+		_comm->setProperty("netthread", TC_Common::tostr(param.netthread));
+
+		param.servantPrx = _comm->stringToProxy<ServantPrx>(sObjName);
+
+//        TarsRollLogger::getInstance()->logger()->setLogLevel(6);
+		ProxyProtocol prot;
+		prot.requestFunc = customRequest;
+		prot.responseFunc = customResponse;
+
+		param.servantPrx->tars_set_protocol(prot);
+
+		param.servantPrx->tars_connect_timeout(5000);
+		param.servantPrx->tars_async_timeout(60*1000);
+
+		int64_t start = TC_Common::now2us();
+
+		std::function<void(int)> func;
+
+		if (param.call == "sync")
+		{
+			func = syncCall;
+		}
+		else if (param.call == "async")
+		{
+			func = asyncCall;
+		}
+		else
+		{
+			cout << "no func, exits" << endl;
+			exit(0);
+		}
+
+		vector<std::thread*> vt;
+		for(int i = 0 ; i< param.thread; i++)
+		{
+			vt.push_back(new std::thread(func, param.count));
+		}
+
+		std::thread print([&]{while(callback_count != param.count * param.thread) {
+			cout << param.call << ": ----------finish count:" << callback_count << endl;
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		};});
+
+		for(size_t i = 0 ; i< vt.size(); i++)
+		{
+			vt[i]->join();
+			delete vt[i];
+		}
+
+		cout << "(pid:" << std::this_thread::get_id() << ")"
+		     << "(count:" << param.count << ")"
+		     << "(use ms:" << (TC_Common::now2us() - start)/1000 << ")"
+		     << endl;
+
+		while(callback_count != param.count * param.thread) {
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+		print.join();
+		cout << "----------finish count:" << callback_count << endl;
+	}
+	catch(exception &ex)
+	{
+		cout << ex.what() << endl;
+	}
+	cout << "main return." << endl;
+
+	return 0;
 }
