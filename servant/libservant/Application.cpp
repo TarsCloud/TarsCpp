@@ -85,11 +85,7 @@ size_t      ServerConfig::CoroutineMemSize; //协程占用内存空间的最大�
 uint32_t    ServerConfig::CoroutineStackSize;   //每个协程的栈大小(默认128k)
 bool        ServerConfig::ManualListen = false;     //手工启动监听端口
 bool        ServerConfig::MergeNetImp = false;     //合并网络和处理线程
-
-// static string outfill(const string& s, char c = ' ', int n = 29)
-// {
-//     return (s + string(abs(n - (int)s.length()), c));
-// }
+bool        ServerConfig::OpenSSL = false;
 
 #define OUT_LINE        (TC_Common::outfill("", '-', 50))
 #define OUT_LINE_LONG   (TC_Common::outfill("", '=', 50))
@@ -829,7 +825,8 @@ void Application::initializeClient()
     //输出
     outClient(cout);
 #if TARS_SSL
-    try {
+	if(_conf.hasDomainVector("/tars/application/clientssl"))
+    {
         string path = _conf.get("/tars/application/clientssl/<path>", "./");
         if (path.empty() || path[path.length() - 1] != '/')
             path += "/";
@@ -840,12 +837,15 @@ void Application::initializeClient()
         string key = path + _conf.get("/tars/application/clientssl/<key>");
         if (key == path) key.clear();
 
-        if (!TC_SSLManager::getInstance()->addCtx("client", ca, cert, key, false))
-            cout << "failed add client cert " << ca << endl;
+        if (!TC_SSLManager::getInstance()->addCtx("client", ca, cert, key, false)) {
+	        cout << "failed add client cert " << ca << endl;
+	        exit(-1);
+        }
         else
-            cout << "succ add client cert " << ca << endl;
-    }
-    catch(...) {
+        {
+	        cout << TC_Common::outfill("CA")                << ca << endl;
+	        cout << "succ add client cert " << ca  << endl;
+        }
     }
 #endif
 }
@@ -1115,10 +1115,6 @@ void Application::initializeServer()
 
         lsPtr->setProtocol(AppProtocol::parse);
 
-        // lsPtr->setHandleGroupName("AdminAdapter");
-
-        // lsPtr->setHandleNum(1);
-
         lsPtr->setHandle<ServantHandle>(1);
 
         _epollServer->bind(lsPtr);
@@ -1142,22 +1138,30 @@ void Application::initializeServer()
     }
 
 #if TARS_SSL
-    try {
-        string path = _conf.get("/tars/application/serverssl/<path>", "./");
-        if (path.empty() || path[path.length() - 1] != '/')
-            path += "/";
+    if(_conf.hasDomainVector("/tars/application/serverssl"))
+    {
+	    string path = _conf.get("/tars/application/serverssl/<path>", "./");
+	    if (path.empty() || path[path.length() - 1] != '/')
+		    path += "/";
 
-        string ca = path + _conf.get("/tars/application/serverssl/<ca>");
-        if (ca == path) ca.clear();
-        string cert = path + _conf.get("/tars/application/serverssl/<cert>");
-        string key = path + _conf.get("/tars/application/serverssl/<key>");
-        bool verifyClient = (_conf.get("/tars/application/serverssl/<verifyclient>", "0") == "0") ? false : true;
+	    string ca = path + _conf.get("/tars/application/serverssl/<ca>");
+	    if (ca == path) ca.clear();
+	    string cert = path + _conf.get("/tars/application/serverssl/<cert>");
+	    string key = path + _conf.get("/tars/application/serverssl/<key>");
+	    bool verifyClient = (_conf.get("/tars/application/serverssl/<verifyclient>", "0") == "0") ? false : true;
 
-        if (!TC_SSLManager::getInstance()->addCtx("server", ca, cert, key, verifyClient))
-            cout << "failed add server cert " << ca << endl;
-        else
-            cout << "succ add server cert " << ca << ", verifyClient " << verifyClient << endl;
-    } catch(...) {
+	    if (!TC_SSLManager::getInstance()->addCtx("server", ca, cert, key, verifyClient)) {
+		    cout << "failed parse cert " << cert << endl;
+		    exit(-1);
+	    }
+	    else {
+		    cout << TC_Common::outfill("CA")                << ca << endl;
+		    cout << TC_Common::outfill("CERT")              << cert << endl;
+		    cout << TC_Common::outfill("KEY")               << key << endl;
+		    cout << TC_Common::outfill("verifyClient")      << verifyClient << endl;
+
+		    cout << "succ add server cert " << ca << ", verifyClient " << verifyClient << endl;
+	    }
     }
 #endif
 }

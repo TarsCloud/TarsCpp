@@ -121,6 +121,8 @@ struct ServerConfig
     static uint32_t    CoroutineStackSize;    //每个协程的栈大小(默认128k)
     static bool        ManualListen;               //是否启用手工端口监听
 	static bool        MergeNetImp;                //网络线程和IMP线程合并(以网络线程个数为准)
+	static bool        OpenSSL;                //is open ssl
+
 };
 
 class PropertyReport;

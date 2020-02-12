@@ -52,11 +52,7 @@ TC_SSLManager::~TC_SSLManager()
     EVP_cleanup();
 }
 
-bool TC_SSLManager::addCtx(const std::string& name,
-                        const std::string& cafile, 
-                        const std::string& certfile, 
-                        const std::string& keyfile,
-                        bool verifyClient)
+bool TC_SSLManager::addCtx(const std::string& name, const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient)
 {
     if (_ctxSet.count(name))
         return false;

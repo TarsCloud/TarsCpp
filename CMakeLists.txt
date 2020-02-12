@@ -1,6 +1,6 @@
+cmake_minimum_required(VERSION 3.2)
 
-
-cmake_minimum_required(VERSION 2.8)
+project(tars_cpp)
 
 set(TARS_VERSION "2.0.0")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
@@ -9,14 +9,6 @@ add_definitions(-DTARS_SSL=${TARS_SSL})
 set(TARS_HTTP2 1)
 add_definitions(-DTARS_HTTP2=${TARS_HTTP2})
 set(TARS_PROTOBUF 1)
-
-if(TARS_HTTP2)
-cmake_minimum_required(VERSION 3.0)
-project(tars_cpp)
-else()
-cmake_minimum_required(VERSION 2.8)
-project(tars_cpp)
-endif()
 
 # list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 set(CMAKE_VERBOSE_MAKEFILE off)
