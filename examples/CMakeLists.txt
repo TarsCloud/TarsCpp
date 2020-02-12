@@ -20,6 +20,14 @@ if(WIN32)
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-http.bat
         COMMENT "call run http")
 
+if(TARS_HTTP2)
+    add_custom_target(run-http2
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS Http2Server Http2Client
+        COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-http2.bat
+        COMMENT "call run http2")
+endif()
+
     add_custom_target(run-co
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro
@@ -60,6 +68,14 @@ else(WIN32)
         DEPENDS HttpServer HttpClient
         COMMAND sh ../examples/scripts/run-http.sh
         COMMENT "call run http")
+
+if(TARS_HTTP2)
+    add_custom_target(run-http2
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS Http2Server Http2Client
+        COMMAND sh ../examples/scripts/run-http2.sh
+        COMMENT "call run http2")
+endif()
 
     add_custom_target(run-co
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

@@ -306,6 +306,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::checkHttp()
 
 TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseHttp(TC_NetWorkBuffer&in, vector<char> &out)
 {
+    cout << "parseHttp" << endl;
     TC_NetWorkBuffer::PACKET_TYPE b = in.checkHttp();
 
     if (b == PACKET_FULL)

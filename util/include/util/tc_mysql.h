@@ -23,7 +23,9 @@
 #include <vector>
 #include <stdlib.h>
 
-class MYSQL;
+struct st_mysql;
+
+typedef struct st_mysql MYSQL;
 
 namespace tars
 {

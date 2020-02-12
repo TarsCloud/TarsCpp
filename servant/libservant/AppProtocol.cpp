@@ -62,47 +62,6 @@ vector<char> ProxyProtocol::tarsRequest(RequestPacket& request, Transceiver *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-#if TARS_HTTP2
-
-#define MAKE_NV(NAME, VALUE, VALUELEN)                                         \
-      {                                                                            \
-              (uint8_t *)NAME, (uint8_t *)VALUE, sizeof(NAME) - 1, VALUELEN,             \
-                  NGHTTP2_NV_FLAG_NONE                                                   \
-            }
-
-#define MAKE_NV2(NAME, VALUE)                                                  \
-      {                                                                            \
-              (uint8_t *)NAME, (uint8_t *)VALUE, sizeof(NAME) - 1, sizeof(VALUE) - 1,    \
-                  NGHTTP2_NV_FLAG_NONE                                                   \
-            }
-
-#define MAKE_STRING_NV(NAME, VALUE) {(uint8_t*)(NAME.data()), (uint8_t*)(VALUE.data()), NAME.size(), VALUE.size(), NGHTTP2_NV_FLAG_NONE};
-
-// nghttp2读取请求包体，准备发送
-static ssize_t reqbody_read_callback(nghttp2_session *session, int32_t stream_id,
-                                     uint8_t *buf, size_t length,
-                                     uint32_t *data_flags,
-                                     nghttp2_data_source *source,
-                                     void *user_data)
-{
-    std::vector<char>* body = (std::vector<char>* )source->ptr;
-    // cout << "reqbody_read_callback:" << body->size() << endl;
-
-    if (body->empty())
-    {
-        *data_flags |= NGHTTP2_DATA_FLAG_EOF;
-        return 0;
-    }
-
-    ssize_t len = length > body->size() ? body->size() : length;
-    memcpy(buf, body->data(), len);
-        
-    vector<char>::iterator end = body->begin();
-    std::advance(end, len);
-    body->erase(body->begin(), end);
-
-    return len;
-}
 
 vector<char> ProxyProtocol::http1Request(tars::RequestPacket& request, Transceiver *trans)
 {
@@ -162,6 +121,48 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
     }
 
     return TC_NetWorkBuffer::PACKET_LESS;
+}
+
+#if TARS_HTTP2
+
+#define MAKE_NV(NAME, VALUE, VALUELEN)                                         \
+      {                                                                            \
+              (uint8_t *)NAME, (uint8_t *)VALUE, sizeof(NAME) - 1, VALUELEN,             \
+                  NGHTTP2_NV_FLAG_NONE                                                   \
+            }
+
+#define MAKE_NV2(NAME, VALUE)                                                  \
+      {                                                                            \
+              (uint8_t *)NAME, (uint8_t *)VALUE, sizeof(NAME) - 1, sizeof(VALUE) - 1,    \
+                  NGHTTP2_NV_FLAG_NONE                                                   \
+            }
+
+#define MAKE_STRING_NV(NAME, VALUE) {(uint8_t*)(NAME.data()), (uint8_t*)(VALUE.data()), NAME.size(), VALUE.size(), NGHTTP2_NV_FLAG_NONE};
+
+// nghttp2读取请求包体，准备发送
+static ssize_t reqbody_read_callback(nghttp2_session *session, int32_t stream_id,
+                                     uint8_t *buf, size_t length,
+                                     uint32_t *data_flags,
+                                     nghttp2_data_source *source,
+                                     void *user_data)
+{
+    std::vector<char>* body = (std::vector<char>* )source->ptr;
+    // cout << "reqbody_read_callback:" << body->size() << endl;
+
+    if (body->empty())
+    {
+        *data_flags |= NGHTTP2_DATA_FLAG_EOF;
+        return 0;
+    }
+
+    ssize_t len = length > body->size() ? body->size() : length;
+    memcpy(buf, body->data(), len);
+        
+    vector<char>::iterator end = body->begin();
+    std::advance(end, len);
+    body->erase(body->begin(), end);
+
+    return len;
 }
 
 // ENCODE function, called by network thread

@@ -138,9 +138,10 @@ public:
      */
     ProxyProtocol() : requestFunc(streamRequest) {}
 
-#if TARS_HTTP2
     static vector<char> http1Request(tars::RequestPacket& request, Transceiver *);
     static TC_NetWorkBuffer::PACKET_TYPE http1Response(TC_NetWorkBuffer &in, ResponsePacket& done);
+
+#if TARS_HTTP2
 
     // ENCODE function, called by network thread
     static vector<char> http2Request(tars::RequestPacket& request, Transceiver *);

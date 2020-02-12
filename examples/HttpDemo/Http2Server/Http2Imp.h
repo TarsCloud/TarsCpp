@@ -17,9 +17,13 @@
 #ifndef _Http2Imp_H_
 #define _Http2Imp_H_
 
+#include <unordered_map>
 #include "servant/Application.h"
 #include "util/tc_spin_lock.h"
 #include "util/tc_http2.h"
+
+using namespace tars;
+using namespace std;
 
 /**
  *
