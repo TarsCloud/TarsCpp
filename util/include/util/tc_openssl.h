@@ -22,10 +22,12 @@
 #include <string>
 #include <vector>
 #include "util/tc_network_buffer.h"
-#include "util/tc_sslmgr.h"
 
 struct ssl_st;
 typedef struct ssl_st SSL;
+
+struct bio_st;
+typedef struct bio_st BIO;
 
 namespace tars
 {
@@ -33,34 +35,33 @@ namespace tars
 /////////////////////////////////////////////////
 /** 
  *@file   tc_openssl.h
- *@brief  OpenSsl封装
+ *@brief  OpenSsl wrapper
  * 
  */
 /////////////////////////////////////////////////
 
 /** 
- *@brief  OpenSsl封装
+ *@brief  OpenSsl wrapper
  */
 class TC_OpenSSL
 {
 public:
-   /**
-    * @brief 构造函数. 
-    */
-    TC_OpenSSL();
 
    /**
-    * @brief 析构函数. 
+    * @brief constructor.
+    */
+    TC_OpenSSL(SSL* ssl);
+
+   /**
+    * @brief deconstructor.
     */
     ~TC_OpenSSL();
 
-//	static SSL* newSSL(const std::string& ctxName);
 	static void getMemData(BIO* bio, TC_NetWorkBuffer& buf);
-//	static void getSSLHead(const char* data, char& type, unsigned short& ver, unsigned short& len)
 	static int doSSLRead(SSL* ssl, TC_NetWorkBuffer& out);
 private:
    /**
-    * @brief 禁止复制
+    * @brief deny
     */
     TC_OpenSSL(const TC_OpenSSL& );
     void operator=(const TC_OpenSSL& );
@@ -68,69 +69,84 @@ private:
 public:
 
     /** 
-     * @brief 释放SSL 
+     * @brief release SSL
      */
-    void Release();
+    void release();
 
     /** 
-     * @brief 初始化SSL
+     * @brief init SSL
      */
-    void Init(SSL* ssl, bool isServer);
+    void init(bool isServer);
 
     /**
-     * @brief  握手是否完成 
-     * @return 握手是否完成 
+     * @brief  is handshake finish
+     * @return true: is handshake finish
      */
-    bool IsHandshaked() const;
+    bool isHandshaked() const;
 
     /**
-     * @brief  当前接收缓冲区
+     * get error message
+     * @return
      */
-    TC_NetWorkBuffer * RecvBuffer() { return &_plainBuf; }
+	string getErrMsg() const;
+
+	/**
+     * @brief  get recv buffer
+     */
+    TC_NetWorkBuffer * recvBuffer() { return &_plainBuf; }
 
     /** 
-     * @brief 握手 
-     * @return 需要发送的握手数据 
+     * @brief handshake
+     * @return 0: succ, !=0: fail
      */
-    int DoHandshake(TC_NetWorkBuffer &out, const void* data = NULL, size_t size = 0);
+    int doHandshake(TC_NetWorkBuffer &out, const void* data = NULL, size_t size = 0);
 
     /** 
-     * @brief 发送数据前加密 
-     * @param data  数据的指针 
-     * @param size  数据的大小 
-     * @return 加密后的数据 
+     * @brief encode data before send
+     * @param data, data pointer
+     * @param size, data size
+     * @param out, out buffer
+     * @return 0: succ, !=0: fail
      */
-    int Write(const char* data, size_t size, TC_NetWorkBuffer &out);
+    int write(const char* data, size_t size, TC_NetWorkBuffer &out);
 
     /** 
-     * @brief 接收数据后解密 
-     * @param data  数据的指针 
-     * @param size  数据的大小 
-     * @param out   需要发送的数据 
-     * @return 解密后的数据 
+     * @brief decode data before parse protocol
+     * @param data  data pointer
+     * @param size  data size
+     * @param out   out buffer
+     * @return 0: succ, !=0: fail
      */
-    int Read(const void* data, size_t size, TC_NetWorkBuffer &out);
+    int read(const void* data, size_t size, TC_NetWorkBuffer &out);
 
+    friend class TC_SSLManager;
 private:
+
     /**
      * ssl handle
      */
     SSL* _ssl;
 
     /**
-     * 是否握手完成了
+     * is handeshake succ
      */
     bool _bHandshaked;
 
     /**
-     * 是否服务端
+     * server/client
      */
     bool _isServer;
 
+	/**
+ 	* ssl error code
+ 	*/
+    int  _err;
+
     /**
-     * 收到的数据解密后
+     * recv buff
      */
     TC_NetWorkBuffer _plainBuf;
+
 };
 
 } // end namespace tars

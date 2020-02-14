@@ -278,7 +278,7 @@ protected:
 
 protected:
 #if TARS_SSL
-    std::unique_ptr<TC_OpenSSL> _openssl;
+    std::shared_ptr<TC_OpenSSL> _openssl;
 #endif
 
 #if TARS_HTTP2
@@ -287,8 +287,6 @@ protected:
     /*
      * 发送buffer
      */
-//    shared_ptr<TC_NetWorkBuffer::Buffer> _sendBuffer;
-
 	TC_NetWorkBuffer _sendBuffer;
 
 	/*

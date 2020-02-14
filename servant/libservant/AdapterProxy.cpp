@@ -238,14 +238,13 @@ void AdapterProxy::doInvoke()
 
         int iRet = _trans->sendRequest(msg->sReqData);
 
-        TLOGTARS("[TARS][AdapterProxy::doInvoke sendRequest objname:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id:" << msg->request.iRequestId << ",ret:" << iRet << endl);
-
         //发送失败 返回
         if(iRet == Transceiver::eRetError)
         {
-            TLOGTARS("[TARS][AdapterProxy::doInvoke fail,errono:" << iRet << endl);
+            TLOGTARS("[TARS][AdapterProxy::doInvoke sendRequest failed, obj:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id:" << msg->request.iRequestId << ", ret:" << iRet << endl);
             return;
         }
+	    TLOGTARS("[TARS][AdapterProxy::doInvoke sendRequest obj:" << _objectProxy->name() << ",desc:" << _endpoint.desc() << ",id:" << msg->request.iRequestId << ",ret:" << iRet << endl);
 
         //请求发送成功了 处理采样
         //...

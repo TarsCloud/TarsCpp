@@ -114,15 +114,21 @@ struct ServerConfig
     static std::string Config;              //配置中心地址
     static std::string Notify;              //信息通知中心
     static std::string ConfigFile;          //框架配置文件路径
+    static bool        CloseCout;
     static int         ReportFlow;          //是否服务端上报所有接口stat流量 0不上报 1上报(用于非tars协议服务流量统计)
     static int         IsCheckSet;          //是否对按照set规则调用进行合法性检查 0,不检查，1检查
     static bool        OpenCoroutine;        //是否启用协程处理方式
     static size_t      CoroutineMemSize;    //协程占用内存空间的最大大小
     static uint32_t    CoroutineStackSize;    //每个协程的栈大小(默认128k)
-    static bool        ManualListen;               //是否启用手工端口监听
+	static int         NetThread;               //servernet thread
+	static bool        ManualListen;               //是否启用手工端口监听
 	static bool        MergeNetImp;                //网络线程和IMP线程合并(以网络线程个数为准)
-	static bool        OpenSSL;                //is open ssl
-
+#if TARS_SSL
+	static std::string CA;
+	static std::string Cert;
+	static std::string Key;
+	static bool VerifyClient;
+#endif
 };
 
 class PropertyReport;

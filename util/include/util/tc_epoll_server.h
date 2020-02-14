@@ -28,15 +28,8 @@
 #include "util/tc_thread.h"
 #include "util/tc_clientsocket.h"
 #include "util/tc_logger.h"
-// #include "util/tc_shm.h"
 #include "util/tc_common.h"
-// #include "util/tc_mem_queue.h"
-// #include "util/tc_squeue.h"
-// #include "util/tc_mmap.h"
-// #include "util/tc_fifo.h"
 #include "util/tc_network_buffer.h"
-// #include "util/tc_buffer.h"
-// #include "util/tc_buffer_pool.h"
 #include "util/tc_cas_queue.h"
 
 using namespace std;
@@ -71,13 +64,6 @@ public:
     /**
      * 定义协议解析的返回值
      */
-    // enum
-    // {
-    //     PACKET_LESS = 0,
-    //     PACKET_FULL = 1,
-    //     PACKET_ERR  = -1,
-    // };
-
     enum EM_CLOSE_T
     {
         EM_CLIENT_CLOSE = 0,         //客户端主动关闭
@@ -85,14 +71,6 @@ public:
         EM_SERVER_TIMEOUT_CLOSE = 2  //连接超时了，服务端主动关闭
     };
 
-    //定义事件类型
-    // enum
-    // {
-    //     ET_LISTEN = 1,
-    //     ET_CLOSE  = 2,
-    //     ET_NOTIFY = 3,
-    //     ET_NET    = 0,
-    // };
     enum
     {
         MIN_EMPTY_CONN_TIMEOUT  = 2*1000,    /*空链接超时时间(ms)*/
@@ -482,13 +460,6 @@ public:
 			TC_ThreadLock   _monitor;
 		};
 
-        // BindAdapter()
-        // {
-        //     _pReportQueue = NULL;
-        //     _pReportConRate = NULL;
-        //     _pReportTimeoutNum = NULL;
-        // }
-
         /**
          * 构造函数
          */
@@ -877,16 +848,6 @@ public:
          */
         void setOnClose(const close_functor& f) { _closeFunc = f; } 
 
-        /**  
-         * 注册协议解析器 
-         */
-        // void setConnProtocol(const TC_NetWorkBuffer::protocol_functor& cpf, int iHeaderLen = 0, const header_filter_functor& hf = echo_header_filter);
-
-        /**  
-         * 获取协议解析器 
-         * @return protocol_functor& 
-         */
-        // const TC_NetWorkBuffer::protocol_functor& getConnProtocol() { return _cpf; }
         /**
          * 注册鉴权包裹函数
          * @param apwf
@@ -915,7 +876,6 @@ public:
 
     protected:
         friend class TC_EpollServer;
-        // friend class NetThread;
 
         /**
          * 服务
@@ -926,11 +886,6 @@ public:
 		 * 加锁
 		 */
 		mutable std::mutex		_mutex;
-
-        /**
-         * Adapter所用的HandleGroup
-         */
-        // HandleGroupPtr  _handleGroup;
 
 		/**
 		 * Adapter所用的HandleGroup
@@ -1004,11 +959,6 @@ public:
 		atomic<size_t>  _iBufferSize{0};
 
         /**
-         * 接收的数据队列
-         */
-        // recv_queue      _rbuffer;
-
-        /**
          * 队列最大容量
          */
         int             _iQueueCapacity;
@@ -1056,8 +1006,6 @@ public:
         //连接关闭的回调函数 
         close_functor           _closeFunc;
 
-        // 协议解析
-        // TC_NetWorkBuffer::protocol_functor   _cpf;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1233,7 +1181,7 @@ public:
          * @param o
          * @return int: <0:协议错误, 0:没有一个完整的包, 1:收到至少一个包
          */
-        int parseProtocol();
+        int parseProtocol(TC_NetWorkBuffer &rbuf);
 
         /**
          * 增加数据到队列中
@@ -1340,7 +1288,7 @@ public:
         */
         bool                _authInit;
 #if TARS_SSL
-        std::unique_ptr<TC_OpenSSL> _openssl;
+        std::shared_ptr<TC_OpenSSL> _openssl;
 #endif
     };
     ////////////////////////////////////////////////////////////////////////////

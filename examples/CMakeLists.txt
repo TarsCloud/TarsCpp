@@ -3,6 +3,12 @@ add_subdirectory(UtilDemo)
 add_subdirectory(CoroutineDemo)
 add_subdirectory(HttpDemo)
 add_subdirectory(CustomDemo)
+add_subdirectory(AuthDemo)
+
+if(TARS_SSL)
+add_subdirectory(SSLDemo)
+endif()
+
 add_subdirectory(PushDemo)
 add_subdirectory(QuickStartDemo)
 add_subdirectory(StressDemo)
@@ -20,13 +26,27 @@ if(WIN32)
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-http.bat
         COMMENT "call run http")
 
-if(TARS_HTTP2)
+    add_custom_target(run-auth
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            DEPENDS AuthServer AuthClient
+            COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-auth.bat
+            COMMENT "call run auth")
+
+    if(TARS_HTTP2)
     add_custom_target(run-http2
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS Http2Server Http2Client
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-http2.bat
         COMMENT "call run http2")
-endif()
+    endif()
+
+    if(TARS_SSL)
+    add_custom_target(run-ssl
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            DEPENDS SSLServer SSLClient
+            COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-ssl.bat
+            COMMENT "call run ssl")
+    endif()
 
     add_custom_target(run-co
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -55,6 +75,11 @@ endif()
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-push.bat
         COMMENT "call run all ${CMAKE_BINARY_DIR}")
 
+    add_custom_target(run-kill
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-kill.bat
+            COMMENT "call run kill")
+
 else(WIN32)
 
     add_custom_target(run-quick-start
@@ -69,13 +94,27 @@ else(WIN32)
         COMMAND sh ../examples/scripts/run-http.sh
         COMMENT "call run http")
 
-if(TARS_HTTP2)
+    add_custom_target(run-auth
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            DEPENDS AuthServer AuthClient
+            COMMAND sh ../examples/scripts/run-auth.sh
+            COMMENT "call run auth")
+
+    if(TARS_HTTP2)
     add_custom_target(run-http2
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS Http2Server Http2Client
         COMMAND sh ../examples/scripts/run-http2.sh
         COMMENT "call run http2")
-endif()
+    endif()
+
+    if(TARS_SSL)
+    add_custom_target(run-ssl
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS SSLServer SSLClient
+        COMMAND sh ../examples/scripts/run-ssl.sh
+        COMMENT "call run ssl")
+    endif()
 
     add_custom_target(run-co
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -103,4 +142,9 @@ endif()
         COMMAND sh ../examples/scripts/run-co.sh
         COMMAND sh ../examples/scripts/run-push.sh
         COMMENT "call run all")
+
+    add_custom_target(run-kill
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND sh ../examples/scripts/run-kill.sh
+            COMMENT "call run kill")
 endif(WIN32)

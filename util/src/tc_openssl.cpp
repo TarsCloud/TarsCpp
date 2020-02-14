@@ -20,26 +20,29 @@
 #include <openssl/err.h>
 
 #include "util/tc_openssl.h"
-//#include "util/tc_buffer.h"
 
 
 namespace tars
 {
 
-TC_OpenSSL::TC_OpenSSL()
-: _ssl(NULL)
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+TC_OpenSSL::TC_OpenSSL(SSL* ssl)
+: _ssl(ssl)
 , _bHandshaked(false)
 , _isServer(false)
+, _err(0)
 , _plainBuf(NULL)
 {
 }
 
 TC_OpenSSL::~TC_OpenSSL()
 {
-    Release();
+	release();
 }
 
-void TC_OpenSSL::Release()
+void TC_OpenSSL::release()
 {
     if (_ssl)
     {
@@ -47,29 +50,51 @@ void TC_OpenSSL::Release()
         _ssl = NULL;
     }
     _bHandshaked = false;
-//    _err = 0;
+    _err = 0;
 }
 
-void TC_OpenSSL::Init(SSL* ssl, bool isServer)
+void TC_OpenSSL::init(bool isServer)
 {
-    assert (_ssl == NULL);
-    _ssl = ssl;
     _bHandshaked = false;
     _isServer = isServer;
-//    _err = 0;
+    _err = 0;
 }
 
-bool TC_OpenSSL::IsHandshaked() const
+std::string TC_OpenSSL::getErrMsg() const
+{
+	std::shared_ptr<BIO> bio( BIO_new( BIO_s_mem() ), BIO_free );
+	ERR_print_errors(bio.get());
+	string buffer;
+	buffer.resize(255);
+
+	unsigned int startPos = 0;
+	unsigned int bytesRead = 0;
+	while (true)
+	{
+		int ret = BIO_read(bio.get(), &buffer[startPos], static_cast<int>(buffer.size()-startPos));
+		if (ret > 0)
+		{
+			bytesRead += ret;
+		}
+		if (bytesRead < buffer.size())
+		{
+			break;
+		}
+		startPos = static_cast<unsigned int>(buffer.size());
+		buffer.resize( 2*buffer.size() );
+	}
+
+	buffer.resize(bytesRead);
+	return buffer;
+}
+
+bool TC_OpenSSL::isHandshaked() const
 {
     return _bHandshaked;
 }
 
-//bool TC_OpenSSL::HasError() const
-//{
-//    return _err != 0;
-//}
 
-int TC_OpenSSL::DoHandshake(TC_NetWorkBuffer &out, const void* data, size_t size)
+int TC_OpenSSL::doHandshake(TC_NetWorkBuffer &out, const void* data, size_t size)
 {
     assert (!_bHandshaked);
     assert (_ssl);
@@ -83,14 +108,15 @@ int TC_OpenSSL::DoHandshake(TC_NetWorkBuffer &out, const void* data, size_t size
     ERR_clear_error(); 
     int ret = _isServer ? SSL_accept(_ssl) : SSL_connect(_ssl);
 
-	int err = 0;
+	_err = 0;
 
 	if (ret <= 0)
     {
-	    err = SSL_get_error(_ssl, ret);
-        if (err != SSL_ERROR_WANT_READ)
+	    _err = SSL_get_error(_ssl, ret);
+
+	    if (_err != SSL_ERROR_WANT_READ)
         {
-            return err;
+            return _err;
         }
     }
 
@@ -99,21 +125,12 @@ int TC_OpenSSL::DoHandshake(TC_NetWorkBuffer &out, const void* data, size_t size
         _bHandshaked = true;
     }
 
-    // the encrypted data from write buffer
-//	vector<char> out;
-//    TC_Buffer outdata;
     getMemData(SSL_get_wbio(_ssl), out);
-//    if (!outdata.IsEmpty())
-//    {
-//        out.assign(outdata.ReadAddr(), outdata.ReadableSize());
-//    }
-
-//    return out;
 
 	return 0;
 }
 
-int TC_OpenSSL::Write(const char* data, size_t size, TC_NetWorkBuffer &out)
+int TC_OpenSSL::write(const char* data, size_t size, TC_NetWorkBuffer &out)
 {
     if (!_bHandshaked)
     {
@@ -127,29 +144,28 @@ int TC_OpenSSL::Write(const char* data, size_t size, TC_NetWorkBuffer &out)
     int ret = SSL_write(_ssl, data, size); 
     if (ret <= 0) 
     {
-        return SSL_get_error(_ssl, ret);
+	    _err = SSL_get_error(_ssl, ret);
+	    return _err;
     }
-//    _err = 0;
+    _err = 0;
 
-//    TC_Buffer toSend;
     getMemData(SSL_get_wbio(_ssl), out);
-    return 0;
-//    return std::string(toSend.ReadAddr(), toSend.ReadableSize());
+    return _err;
 }
 
-int TC_OpenSSL::Read(const void* data, size_t size, TC_NetWorkBuffer &out)
+int TC_OpenSSL::read(const void* data, size_t size, TC_NetWorkBuffer &out)
 {
     bool usedData = false;
     if (!_bHandshaked)
     {
         usedData = true;
         _plainBuf.clearBuffers();
-	    int ret = DoHandshake(out, data, size);
+	    int ret = doHandshake(out, data, size);
 
         if (ret != 0)
-            return false;
+            return ret;
 
-        if (_bHandshaked)
+//        if (_bHandshaked)
             ; // TODO onHandshake
     }
 
@@ -162,7 +178,8 @@ int TC_OpenSSL::Read(const void* data, size_t size, TC_NetWorkBuffer &out)
             BIO_write(SSL_get_rbio(_ssl), data, size);
         }
 
-	    if (!doSSLRead(_ssl, _plainBuf))
+	    _err = doSSLRead(_ssl, _plainBuf);
+		if(_err != 0)
 	    {
 		    return SSL_ERROR_SSL;
 	    }
@@ -170,23 +187,6 @@ int TC_OpenSSL::Read(const void* data, size_t size, TC_NetWorkBuffer &out)
 
     return 0;
 }
-//
-//SSL* TC_OpenSSL::newSSL(const std::string& ctxName)
-//{
-//	SSL_CTX* ctx = TC_SSLManager::getInstance()->GetCtx(ctxName);
-//	if (!ctx)
-//		return NULL;
-//
-//	SSL* ssl = SSL_new(ctx);
-//
-//	SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER); // allow retry ssl-write with different args
-//	SSL_set_bio(ssl, BIO_new(BIO_s_mem()), BIO_new(BIO_s_mem()));
-//
-//	BIO_set_mem_eof_return(SSL_get_rbio(ssl), -1);
-//	BIO_set_mem_eof_return(SSL_get_wbio(ssl), -1);
-//
-//	return ssl;
-//}
 
 void TC_OpenSSL::getMemData(BIO* bio, TC_NetWorkBuffer& buf)
 {
@@ -200,16 +200,6 @@ void TC_OpenSSL::getMemData(BIO* bio, TC_NetWorkBuffer& buf)
 		buf.addBuffer(data, bytes);
 	}
 }
-//
-//void TC_OpenSSL::getSSLHead(const char* data, char& type, unsigned short& ver, unsigned short& len)
-//{
-//	type = data[0];
-//	ver = *(unsigned short*)(data + 1);
-//	len = *(unsigned short*)(data + 3);
-//
-//	ver = ntohs(ver);
-//	len = ntohs(len);
-//}
 
 int TC_OpenSSL::doSSLRead(SSL* ssl, TC_NetWorkBuffer& out)
 {

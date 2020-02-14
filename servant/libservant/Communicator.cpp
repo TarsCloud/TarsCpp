@@ -15,6 +15,10 @@
  */
 
 #include "util/tc_file.h"
+#if TARS_SSL
+#include "util/tc_sslmgr.h"
+#endif
+
 #include "servant/Communicator.h"
 #include "servant/StatReport.h"
 #include "servant/TarsLogger.h"
@@ -80,8 +84,7 @@ void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_
     conf.getDomainMap(domain, _properties);
 
     string defaultValue = "dft";
-    if ((defaultValue == getProperty("enableset", defaultValue))
-            || (defaultValue == getProperty("setdivision", defaultValue)))
+    if ((defaultValue == getProperty("enableset", defaultValue)) || (defaultValue == getProperty("setdivision", defaultValue)))
     {
         _properties["enableset"] = conf.get("/tars/application<enableset>", "n");
         _properties["setdivision"] = conf.get("/tars/application<setdivision>", "NULL");
@@ -159,6 +162,7 @@ void Communicator::initClientConfig()
         assert(_traceManager != NULL);
     }
 #endif
+
 }
 
 void Communicator::setProperty(const map<string, string>& properties)
@@ -257,6 +261,24 @@ void Communicator::initialize()
         return;
 
     _initialized = true;
+
+
+#if TARS_SSL
+
+	string ca   = getProperty("ca");
+	string cert = getProperty("cert");
+	string key  = getProperty("key");
+
+	if(!ca.empty()) {
+		bool flag = TC_SSLManager::getInstance()->addCtx("client", ca, cert, key, false);
+
+		if(!flag)
+		{
+			TLOGERROR("[TARS]load client ssl error, ca:" << ca << endl);
+			exit(-1);
+		}
+	}
+#endif
 
     _servantProxyFactory = new ServantProxyFactory(this);
 
@@ -383,12 +405,6 @@ void Communicator::pushAsyncThreadQueue(ReqMessage * msg)
 {
     //先不考虑每个线程队列数目不一致的情况
     _asyncThread[(++_asyncSeq)%_asyncThreadNum]->push_back(msg);
-    // _asyncSeq ++;
-
-    // if(_asyncSeq == _asyncThreadNum)
-    // {
-    //     _asyncSeq = 0;
-    // }
 }
 
 void Communicator::terminate()

@@ -17,8 +17,7 @@
 #if TARS_SSL
 
 #include "util/tc_sslmgr.h"
-// #include "util/tc_buffer.h"
-// #include <arpa/inet.h>
+#include "util/tc_openssl.h"
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
@@ -27,23 +26,17 @@ namespace tars
 
 TC_SSLManager::TC_SSLManager()
 {
+
+	(void)SSL_library_init();
+	OpenSSL_add_all_algorithms();
+
+	ERR_load_ERR_strings();
+	SSL_load_error_strings();
 }
-
-void TC_SSLManager::GlobalInit()
-{
-    (void)SSL_library_init();
-    OpenSSL_add_all_algorithms();
-
-    ERR_load_ERR_strings();
-    SSL_load_error_strings();
-}
-
 
 TC_SSLManager::~TC_SSLManager()
 { 
-    for (CTX_MAP::iterator it(_ctxSet.begin());
-                           it != _ctxSet.end();
-                           ++ it)
+    for (CTX_MAP::iterator it(_ctxSet.begin()); it != _ctxSet.end(); ++ it)
     {
         SSL_CTX_free(it->second);
     }
@@ -52,45 +45,68 @@ TC_SSLManager::~TC_SSLManager()
     EVP_cleanup();
 }
 
-bool TC_SSLManager::addCtx(const std::string& name, const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient)
+SSL* TC_SSLManager::newSSL(SSL_CTX *ctx)
 {
-    if (_ctxSet.count(name))
-        return false;
-    
-    SSL_CTX* ctx = SSL_CTX_new(SSLv23_method());
-    if (!ctx)
-        return false;
+	SSL* ssl = SSL_new(ctx);
+
+	SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER); // allow retry ssl-write with different args
+	SSL_set_bio(ssl, BIO_new(BIO_s_mem()), BIO_new(BIO_s_mem()));
+
+	BIO_set_mem_eof_return(SSL_get_rbio(ssl), -1);
+	BIO_set_mem_eof_return(SSL_get_wbio(ssl), -1);
+
+	return ssl;
+}
+
+SSL_CTX *TC_SSLManager::newCtx(const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient)
+{
+	SSL_CTX* ctx = SSL_CTX_new(SSLv23_method());
+	if (!ctx)
+		return NULL;
 
 #define RETURN_IF_FAIL(call) \
     if ((call) <= 0) { \
         ERR_print_errors_fp(stderr); \
-        return false;\
+        return NULL;\
     }
 
-    if (verifyClient)
-        SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-    else
-        SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+	if (verifyClient)
+		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+	else
+		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
 
-    SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_OFF);
-    SSL_CTX_clear_options(ctx, SSL_OP_LEGACY_SERVER_CONNECT);
-    SSL_CTX_clear_options(ctx, SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION); 
+	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_OFF);
+	SSL_CTX_clear_options(ctx, SSL_OP_LEGACY_SERVER_CONNECT);
+	SSL_CTX_clear_options(ctx, SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);
 
-    RETURN_IF_FAIL (SSL_CTX_set_session_id_context(ctx, (const unsigned char*)ctx, sizeof ctx));
-    if (!cafile.empty())
-        RETURN_IF_FAIL (SSL_CTX_load_verify_locations(ctx, cafile.data(), NULL));
+	RETURN_IF_FAIL (SSL_CTX_set_session_id_context(ctx, (const unsigned char*)ctx, sizeof ctx));
+	if (!cafile.empty())
+		RETURN_IF_FAIL (SSL_CTX_load_verify_locations(ctx, cafile.data(), NULL));
 
-    // 客户端可以不提供证书的
-    if (!certfile.empty()) 
-        RETURN_IF_FAIL (SSL_CTX_use_certificate_file(ctx, certfile.data(), SSL_FILETYPE_PEM));
+	// 客户端可以不提供证书的
+	if (!certfile.empty())
+		RETURN_IF_FAIL (SSL_CTX_use_certificate_file(ctx, certfile.data(), SSL_FILETYPE_PEM));
 
-    if (!keyfile.empty()) 
-    { 
-        RETURN_IF_FAIL (SSL_CTX_use_PrivateKey_file(ctx, keyfile.data(), SSL_FILETYPE_PEM)); 
-        RETURN_IF_FAIL (SSL_CTX_check_private_key(ctx)); 
-    }
+	if (!keyfile.empty())
+	{
+		RETURN_IF_FAIL (SSL_CTX_use_PrivateKey_file(ctx, keyfile.data(), SSL_FILETYPE_PEM));
+		RETURN_IF_FAIL (SSL_CTX_check_private_key(ctx));
+	}
 
 #undef RETURN_IF_FAIL
+
+	return ctx;
+}
+
+bool TC_SSLManager::addCtx(const std::string& name, const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient)
+{
+    if (_ctxSet.count(name))
+        return false;
+
+	SSL_CTX* ctx = newCtx(cafile, certfile, keyfile, verifyClient);
+
+    if (!ctx)
+        return false;
 
     return _ctxSet.insert(std::make_pair(name, ctx)).second;
 }
@@ -101,78 +117,16 @@ SSL_CTX* TC_SSLManager::getCtx(const std::string& name) const
     return it == _ctxSet.end() ? NULL: it->second;
 }
 
-SSL* TC_SSLManager::newSSL(const std::string& ctxName)
+shared_ptr<TC_OpenSSL> TC_SSLManager::newSSL(const std::string& ctxName)
 {
-    SSL_CTX* ctx = TC_SSLManager::getInstance()->getCtx(ctxName);
+    SSL_CTX* ctx = getCtx(ctxName);
     if (!ctx)
-        return NULL;
+        return shared_ptr<TC_OpenSSL>();
 
-    SSL* ssl = SSL_new(ctx);
+	SSL *p = newSSL(ctx);
 
-    SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER); // allow retry ssl-write with different args
-    SSL_set_bio(ssl, BIO_new(BIO_s_mem()), BIO_new(BIO_s_mem()));
-
-    BIO_set_mem_eof_return(SSL_get_rbio(ssl), -1);
-    BIO_set_mem_eof_return(SSL_get_wbio(ssl), -1);
-
-    return ssl;
+	return std::make_shared<TC_OpenSSL>(p);
 }
-//
-//void GetMemData(BIO* bio, TC_NetWorkBuffer& buf)
-//{
-//	while (true)
-//	{
-//		char data[8*1024];
-//		int bytes = BIO_read(bio, data, sizeof(data));
-//		if (bytes <= 0)
-//		    return;
-//
-//		buf.addBuffer(data, bytes);
-//	}
-//}
-//
-//void GetSSLHead(const char* data, char& type, unsigned short& ver, unsigned short& len)
-//{
-//    type = data[0];
-//    ver = *(unsigned short*)(data + 1);
-//    len = *(unsigned short*)(data + 3);
-//
-//    ver = ntohs(ver);
-//    len = ntohs(len);
-//}
-//
-//bool DoSSLRead(SSL* ssl, std::string& out)
-//{
-//    while (true)
-//    {
-//        char plainBuf[32 * 1024];
-//
-//        ERR_clear_error();
-//        int bytes = SSL_read(ssl, plainBuf, sizeof plainBuf);
-//        if (bytes > 0)
-//        {
-//            out.append(plainBuf, bytes);
-//        }
-//        else
-//        {
-//            int err = SSL_get_error(ssl, bytes);
-//
-//            // when peer issued renegotiation, here will demand us to send handshake data.
-//            // write to mem bio will always success, only need to check whether has data to send.
-//            //assert (err != SSL_ERROR_WANT_WRITE);
-//
-//            if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_ZERO_RETURN)
-//            {
-//                printf("DoSSLRead err %d\n", err);
-//                return false;
-//            }
-//
-//            break;
-//        }
-//    }
-//
-//    return true;
-//}
 
 } // end namespace tars
 

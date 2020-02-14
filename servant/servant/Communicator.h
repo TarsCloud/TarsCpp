@@ -34,6 +34,9 @@
 #endif
 
 #define CONFIG_ROOT_PATH "/tars/application/client"
+//
+//struct ssl_ctx_st;
+//typedef struct ssl_ctx_st SSL_CTX;
 
 namespace tars
 {
@@ -341,6 +344,9 @@ protected:
      */
     size_t                 _asyncSeq;
 
+//#if TARS_SSL
+//	shared_ptr<TC_OpenSSL>  _ctx;
+//#endif
 #ifdef _USE_OPENTRACKING
 public:
     struct TraceManager:public TC_HandleBase{

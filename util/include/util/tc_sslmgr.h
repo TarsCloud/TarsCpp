@@ -21,21 +21,14 @@
 
 #include <map>
 #include <string>
-// #include "util/tc_buffer.h"
 #include "util/tc_network_buffer.h"
 #include "util/tc_singleton.h"
 
-struct bio_st;
-typedef struct bio_st BIO;
-
-struct ssl_st; 
+struct ssl_st;
 typedef struct ssl_st SSL;
 
 struct ssl_ctx_st;
 typedef struct ssl_ctx_st SSL_CTX;
-
-struct ssl_method_st;
-typedef struct ssl_method_st SSL_METHOD;
 
 namespace tars
 {
@@ -43,42 +36,53 @@ namespace tars
 /////////////////////////////////////////////////
 /** 
  *@file   tc_sslmgr.h
- *@brief  SSL_CTX集合
+ *@brief  manager ssl, not thread safe!!
  */
 /////////////////////////////////////////////////
 
-static const size_t kSSLHeadSize = 5;
-
- // new ssl conn
- // fetch data from mem bio
-// void GetMemData(BIO* bio, TC_NetWorkBuffer& buf);
- // fetch ssl head info
-// void GetSSLHead(const char* data, char& type, unsigned short& ver, unsigned short& len);
- // read from ssl
-// bool DoSSLRead(SSL*, std::string& out);
+class TC_OpenSSL;
 
 class TC_SSLManager : public TC_Singleton<TC_SSLManager>
 {
 public:
-    static void GlobalInit();
-
+	/**
+	 * @brief constructor.
+	 */
     TC_SSLManager();
 
+	/**
+ 	* @brief deconstructor.
+ 	*/
     ~TC_SSLManager();
 
-	SSL* newSSL(const std::string& ctxName);
+	/**
+	 * @brief new ssl
+	 */
+	shared_ptr<TC_OpenSSL> newSSL(const std::string& ctxName);
 
-    bool addCtx(const std::string& name,
+	/**
+	 * @brief add ctx
+	 * @param name: ctx name
+	 * @param cafile: peer cafile
+	 * @param certfile: cert cafile
+	 * @param keyfile: key file
+	 * @param verifyClient: if verfy client
+	 */
+	bool addCtx(const std::string& name,
                 const std::string& cafile, 
                 const std::string& certfile, 
                 const std::string& keyfile,
                 bool verifyClient);
 
-    SSL_CTX* getCtx(const std::string& name) const;
+protected:
+	SSL_CTX* getCtx(const std::string& name) const;
+	SSL* newSSL(SSL_CTX *ctx);
+	SSL_CTX *newCtx(const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient);
 
 private:
 
     typedef std::map<std::string, SSL_CTX*> CTX_MAP;
+
     CTX_MAP _ctxSet;
 };
 
