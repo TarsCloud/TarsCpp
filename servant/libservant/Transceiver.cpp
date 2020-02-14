@@ -533,6 +533,10 @@ int TcpTransceiver::doResponse()
 
 			    rbuf = _openssl->recvBuffer();
 		    }
+		    else
+		    {
+			    rbuf->addBuffer(buff, iRet);
+		    }
 #else
 		    rbuf->addBuffer(buff, iRet);
 #endif
@@ -916,11 +920,7 @@ int UdpTransceiver::doResponse()
     }
     while (recv > 0);
 
-//	_adapterProxy->getObjProxy()->getCommunicatorEpoll()->modFd(_fd, &_fdInfo, EPOLLIN | EPOLLOUT);
-
-//    cout << "----------------------- recv:" << recv << ", errno:" << strerror(errno)<< endl;
     return 0;
-//    return done.empty()?0:1;
 }
 
 int UdpTransceiver::send(const void* buf, uint32_t len, uint32_t flag)

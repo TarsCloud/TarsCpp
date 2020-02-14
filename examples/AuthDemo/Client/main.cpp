@@ -25,7 +25,7 @@ using namespace TestApp;
 
 Communicator* _comm;
 
-static string helloObj = "TestApp.AuthServer.AuthObj@ssl -h 127.0.0.1 -p 9016";
+static string helloObj = "TestApp.AuthServer.AuthObj@ssl -h 127.0.0.1 -p 9016 -e 1";
 
 struct Param
 {

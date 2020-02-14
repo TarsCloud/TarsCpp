@@ -34,6 +34,14 @@ public:
 
     typedef D queue_type;
 
+	/**
+	 * @brief 从头部获取数据, 没有数据则等待.
+	 *
+	 * @param t
+	 * @return bool: true, 获取了数据, false, 无数据
+	 */
+	T front();
+
     /**
      * @brief 从头部获取数据, 没有数据则等待.
      *
@@ -41,6 +49,13 @@ public:
      * @return bool: true, 获取了数据, false, 无数据
      */
     bool pop_front(T& t);
+
+	/**
+	 * @brief 从头部获取数据, 没有数据则等待.
+	 *
+	 * @return bool: true, 获取了数据, false, 无数据
+	 */
+	bool pop_front();
 
     /**
 	 * @brief 放数据到队列后端. 
@@ -118,6 +133,13 @@ protected:
 	TC_SpinLock         _mutex;
 };
 
+template<typename T, typename D> T TC_CasQueue<T, D>::front()
+{
+	TC_LockT<TC_SpinLock> lock (_mutex);
+
+	return  _queue.front();
+}
+
 template<typename T, typename D> bool TC_CasQueue<T, D>::pop_front(T& t)
 {
     TC_LockT<TC_SpinLock> lock (_mutex);
@@ -132,6 +154,22 @@ template<typename T, typename D> bool TC_CasQueue<T, D>::pop_front(T& t)
     --_size;
 
     return true;
+}
+
+
+template<typename T, typename D> bool TC_CasQueue<T, D>::pop_front()
+{
+	TC_LockT<TC_SpinLock> lock (_mutex);
+	if (_queue.empty())
+	{
+		return false;
+	}
+
+	_queue.pop_front();
+	assert(_size > 0);
+	--_size;
+
+	return true;
 }
 
 template<typename T, typename D> void TC_CasQueue<T, D>::push_back(const T& t)

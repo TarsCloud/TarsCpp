@@ -73,6 +73,7 @@ if(WIN32)
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-http.bat
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-co.bat
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-push.bat
+        COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-auth.bat
         COMMENT "call run all ${CMAKE_BINARY_DIR}")
 
     add_custom_target(run-kill
@@ -136,11 +137,12 @@ else(WIN32)
 
     add_custom_target(run-all
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        DEPENDS run-quick-start run-http run-co run-push
+        DEPENDS run-quick-start run-http run-co run-push run-auth
         COMMAND sh ../examples/scripts/run-quick-start.sh
         COMMAND sh ../examples/scripts/run-http.sh
         COMMAND sh ../examples/scripts/run-co.sh
         COMMAND sh ../examples/scripts/run-push.sh
+        COMMAND sh ../examples/scripts/run-auth.sh
         COMMENT "call run all")
 
     add_custom_target(run-kill

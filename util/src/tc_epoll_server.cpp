@@ -837,7 +837,6 @@ int TC_EpollServer::Connection::parseProtocol(TC_NetWorkBuffer &rbuf)
             TC_NetWorkBuffer::PACKET_TYPE b = _pBindAdapter->getProtocol()(rbuf, ro);
             if(b == TC_NetWorkBuffer::PACKET_LESS)
             {
-                //包不完全
                 break;
             }
             else if(b == TC_NetWorkBuffer::PACKET_FULL)
@@ -890,7 +889,7 @@ int TC_EpollServer::Connection::recvTcp()
 
 	    if (iBytesReceived < 0)
         {
-            if (TC_Socket::isPending())//errno == EAGAIN)
+            if (TC_Socket::isPending())
             {
                 //没有数据了
                 break;
@@ -910,14 +909,9 @@ int TC_EpollServer::Connection::recvTcp()
         }
         else
         {
-
-
 #if TARS_SSL
 		    if (_pBindAdapter->getEndpoint().isSSL())
 		    {
-//			    const char * data = _recvBuffer.mergeBuffers();
-//			    cout << "parseProtocol:" << _recvBuffer.getBufferLength() << endl;
-
 			    int ret = _openssl->read(buffer, iBytesReceived, _sendBuffer);
 			    if (ret != 0)
 			    {
@@ -934,9 +928,15 @@ int TC_EpollServer::Connection::recvTcp()
 				    rbuf = _openssl->recvBuffer();
 			    }
 		    }
+		    else
+		    {
+			    rbuf->addBuffer(buffer, iBytesReceived);
+		    }
+
 #else
 		    rbuf->addBuffer(buffer, iBytesReceived);
 #endif
+
             //字符串太长时, 强制解析协议
             if (rbuf->getBufferLength() > 8192) {
                 parseProtocol(*rbuf);
@@ -1070,10 +1070,21 @@ int TC_EpollServer::Connection::sendBuffer()
 
 int TC_EpollServer::Connection::sendTcp(const shared_ptr<SendContext> &sc)
 {
-    //tcp的, 将buffer放到队列末尾
-    if (!sc->buffer()->empty()) {
-	    _sendBuffer.addBuffer(sc->buffer());
-    }
+	if(!sc->buffer()->empty())
+	{
+		if (getBindAdapter()->getEndpoint().isSSL())
+		{
+			assert(_openssl->isHandshaked());
+
+			int ret = _openssl->write(sc->buffer()->buffer(), sc->buffer()->length(), _sendBuffer);
+			if (ret != 0)
+				return -1; // should not happen
+		}
+		else
+		{
+			_sendBuffer.addBuffer(sc->buffer());
+		}
+	}
 
     return sendBuffer();
 }
@@ -1302,7 +1313,6 @@ vector<TC_EpollServer::ConnStatus> TC_EpollServer::ConnectionList::getConnStatus
     vector<TC_EpollServer::ConnStatus> v;
 
 	TC_LockT<TC_SpinLock> lock(_mutex);
-    // TC_ThreadLock::Lock lock(*this);
 
     for(size_t i = 1; i <= _total; i++)
     {
@@ -1569,11 +1579,9 @@ void TC_EpollServer::NetThread::close(const shared_ptr<RecvContext> &data)
     _notify.notify();
 }
 
-// int64_t us;
 void TC_EpollServer::NetThread::send(const shared_ptr<SendContext> &data)
 {
     if(_threadId == std::this_thread::get_id()) {
-//    	assert(false);
 	    //发送包线程和网络线程是同一个线程,直接发送即可
 	    Connection *cPtr = getConnectionPtr(data->uid());
 	    if(cPtr)
@@ -1597,65 +1605,52 @@ void TC_EpollServer::NetThread::processPipe()
 {
 	_notifySignal = false;
 
-	shared_ptr<SendContext> sc;
-	while(_sbuffer.pop_front(sc))
+	while(!_sbuffer.empty())
     {
+	    shared_ptr<SendContext> sc = _sbuffer.front();
+
 	    Connection *cPtr = getConnectionPtr(sc->uid());
 
-	    if (!cPtr)
-	    {
-	    	continue;
+	    if (cPtr) {
+		    switch (sc->cmd()) {
+			    case 'c': {
+				    if (cPtr->setClose()) {
+					    delConnection(cPtr, true, EM_SERVER_CLOSE);
+				    }
+				    break;
+			    }
+			    case 's': {
+				    int ret = 0;
+#if TARS_SSL
+				    if (cPtr->getBindAdapter()->getEndpoint().isSSL()) {
+					    if (!cPtr->_openssl->isHandshaked()) {
+							return;
+					    }
+//
+//	                ret = cPtr->_openssl->write(sc->buffer()->buffer(), sc->buffer()->length(), cPtr->_sendBuffer);
+//	                if (ret != 0)
+//		                break; // should not happen
+//
+//		            cPtr->sendBuffer();
+				    }
+				    ret = cPtr->send(sc);
+#else
+				    ret = cPtr->send(sc);
+#endif
+				    if (ret < 0) {
+					    delConnection(cPtr, true, (ret == -1) ? EM_CLIENT_CLOSE : EM_SERVER_CLOSE);
+				    }
+				    else {
+					    _list.refresh(sc->uid(), cPtr->getTimeout() + TNOW);
+				    }
+				    break;
+			    }
+			    default:
+				    assert(false);
+		    }
 	    }
 
-        switch(sc->cmd())
-        {
-        case 'c':
-            {
-                if(cPtr->setClose())
-                {
-                    delConnection(cPtr,true,EM_SERVER_CLOSE);
-                }
-                break;
-            }
-        case 's':
-            {
-            	int ret = 0;
-#if TARS_SSL
-                if (cPtr->getBindAdapter()->getEndpoint().isSSL() && cPtr->_openssl->isHandshaked())
-                {
-//                    std::string out = cPtr->_openssl->Write((*it)->buffer.data(), (*it)->buffer.size());
-//                    if (cPtr->_openssl->HasError())
-//                        break; // should not happen
-//
-//                    (*it)->buffer = out;
-
-	                ret = cPtr->_openssl->write(sc->buffer()->buffer(), sc->buffer()->length(), cPtr->_sendBuffer);
-	                if (ret != 0)
-		                break; // should not happen
-
-		            cPtr->sendBuffer();
-//	                (*it)->buffer = out;
-                }
-                else
-                {
-	                ret = cPtr->send(sc);
-                }
-#else
-                ret = cPtr->send(sc);
-#endif
-                if(ret < 0)
-                {
-                    delConnection(cPtr,true,(ret==-1)?EM_CLIENT_CLOSE:EM_SERVER_CLOSE);
-                }
-                else
-                {
-                    _list.refresh(sc->uid(), cPtr->getTimeout() + TNOW);
-                }
-                break;
-            }
-        default:
-            assert(false);
-        }
+	    _sbuffer.pop_front();
     }
 }
 
