@@ -83,64 +83,59 @@ bool TC_GZip::compress(const char *src, size_t length, vector<char>& buffer)
     return true;
 }
 
-//bool TC_GZip::uncompress(const char *src, size_t length, vector<char>& buffer)
+bool TC_GZip::uncompress(const char *src, size_t length, TC_GZip::Output* o)
+{
+	z_stream strm;
 
-//
-//bool TC_GZip::uncompress(const char *src, size_t length, vector<char> &buffer)
-//{
-//    buffer.clear();
-//
-//    z_stream strm;
-//
-//    /* allocate inflate state */
-//    strm.zalloc   = Z_NULL;
-//    strm.zfree    = Z_NULL;
-//    strm.opaque   = Z_NULL;
-//    strm.avail_in = 0;
-//    strm.next_in  = Z_NULL;
-//
-//    int ret = inflateInit2(&strm, 47);
-//
-//    if (ret != Z_OK)
-//    {
-//        return false;
-//    }
-//
-//    strm.avail_in = length;
-//    strm.next_in  = (unsigned char*)src;
-//
-//    static size_t CHUNK = 1024*256;
-//    unsigned char *out  = new unsigned char[CHUNK];
-//
-//    /* run inflate() on input until output buffer not full */
-//    do
-//    {
-//        strm.avail_out = CHUNK;
-//        strm.next_out  = out;
-//
-//        ret = inflate(&strm, Z_NO_FLUSH);
-//
-//        assert(ret != Z_STREAM_ERROR); /* state not clobbered */
-//        switch (ret)
-//        {
-//        case Z_NEED_DICT:
-//                ret = Z_DATA_ERROR;     /* and fall through */
-//        case Z_DATA_ERROR:
-//        case Z_MEM_ERROR:
-//                inflateEnd(&strm);
-//                delete[] out;
-//                return false;
-//        }
-//        buffer.insert(buffer.end(), (char*)out, (char*)out + CHUNK - strm.avail_out);
-//
-//    } while (strm.avail_out == 0);
-//
-//    /* clean up and return */
-//    inflateEnd(&strm);
-//    delete[] out;
-//
-//    return(ret == Z_STREAM_END);
-//}
+	/* allocate inflate state */
+	strm.zalloc   = Z_NULL;
+	strm.zfree    = Z_NULL;
+	strm.opaque   = Z_NULL;
+	strm.avail_in = 0;
+	strm.next_in  = Z_NULL;
+
+	int ret = inflateInit2(&strm, 47);
+
+	if (ret != Z_OK)
+	{
+		return false;
+	}
+
+	strm.avail_in = length;
+	strm.next_in  = (unsigned char *)src;
+
+	static size_t CHUNK = 1024 * 256;
+	unsigned char *out  = new unsigned char[CHUNK];
+
+	/* run inflate() on input until output buffer not full */
+	do
+	{
+		strm.avail_out = CHUNK;
+		strm.next_out  = out;
+
+		ret = inflate(&strm, Z_NO_FLUSH);
+
+		assert(ret != Z_STREAM_ERROR); /* state not clobbered */
+		switch (ret)
+		{
+			case Z_NEED_DICT:
+				ret = Z_DATA_ERROR;     /* and fall through */
+			case Z_DATA_ERROR:
+			case Z_MEM_ERROR:
+				inflateEnd(&strm);
+				delete[] out;
+				return false;
+		}
+		(*o)((char *)out, CHUNK - strm.avail_out);
+	}
+	while (strm.avail_out == 0);
+
+	/* clean up and return */
+	inflateEnd(&strm);
+	delete[] out;
+
+	return (ret == Z_STREAM_END);
+}
 
 }
 

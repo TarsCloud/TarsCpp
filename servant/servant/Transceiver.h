@@ -119,7 +119,7 @@ public:
      * 如果fd缓冲区已满,返回错误
      * 如果数据发送一半，缓冲区满了,返回成功
      */
-	int sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &pData, bool forceSend = false);
+	int sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &pData);
 
     /*
      * 处理请求，判断Send BufferCache是否有完整的包
@@ -215,7 +215,7 @@ public:
     /**
      * 设置鉴权状态
      */
-    void setAuthState(int newstate) { _authState = newstate; }
+    void setAuthState(tars::AUTH_STATE newstate) { _authState = newstate; }
 
     /*
      * 获取鉴权状态
@@ -273,8 +273,8 @@ protected:
 
     /* 
      * 鉴权状态 
-     */ 
-    int                      _authState;
+     */
+    AUTH_STATE              _authState;
 
 protected:
 #if TARS_SSL

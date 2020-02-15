@@ -40,7 +40,7 @@
 // #include <sys/resource.h>
 
 #if TARS_SSL
-#include "util/tc_sslmgr.h"
+#include "util/tc_openssl.h"
 #endif
 
 
@@ -622,6 +622,7 @@ void Application::main(const TC_Option &option)
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
         TC_Common::ignorePipe();
 #endif
+
         //解析配置文件
         parseConfig(option);
 
@@ -885,6 +886,39 @@ void Application::addServantOnClose(const string& servant, const TC_EpollServer:
     getEpollServer()->getBindAdapter(adapterName)->setOnClose(cf);
 }
 
+void Application::outServer(ostream &os)
+{
+	os << TC_Common::outfill("Application(app)")            << ServerConfig::Application << endl;
+	os << TC_Common::outfill("ServerName(server)")          << ServerConfig::ServerName << endl;
+	os << TC_Common::outfill("BasePath(basepath)")          << ServerConfig::BasePath << endl;
+	os << TC_Common::outfill("DataPath(datapath)")          << ServerConfig::DataPath << endl;
+	os << TC_Common::outfill("LocalIp(localip)")            << ServerConfig::LocalIp << endl;
+	os << TC_Common::outfill("Local(local)")                << ServerConfig::Local << endl;
+	os << TC_Common::outfill("LogPath(logpath)")            << ServerConfig::LogPath << endl;
+	os << TC_Common::outfill("LogSize(logsize)")            << ServerConfig::LogSize << endl;
+	os << TC_Common::outfill("LogNum(lognum)")              << ServerConfig::LogNum << endl;
+	os << TC_Common::outfill("LogLevel(loglevel)")          << ServerConfig::LogLevel << endl;
+	os << TC_Common::outfill("Log(log)")                    << ServerConfig::Log << endl;
+	os << TC_Common::outfill("Node(node)")                  << ServerConfig::Node << endl;
+	os << TC_Common::outfill("Config(config)")              << ServerConfig::Config << endl;
+	os << TC_Common::outfill("Notify(notify)")              << ServerConfig::Notify << endl;
+	os << TC_Common::outfill("OpenCoroutine(opencoroutine)")      << ServerConfig::OpenCoroutine << endl;
+	os << TC_Common::outfill("CoroutineMemSize(coroutinememsize)")   << ServerConfig::CoroutineMemSize << endl;
+	os << TC_Common::outfill("CoroutineStackSize(coroutinestack)") << ServerConfig::CoroutineStackSize << endl;
+	os << TC_Common::outfill("CloseCout(closecout)")          << ServerConfig::CloseCout << endl;
+	os << TC_Common::outfill("NetThread(netthread)")          << ServerConfig::NetThread << endl;
+	os << TC_Common::outfill("ManualListen(manuallisten)")       << ServerConfig::ManualListen << endl;
+	os << TC_Common::outfill("MergeNetImp(mergenetimp)")       << ServerConfig::MergeNetImp << endl;
+	os << TC_Common::outfill("ReportFlow")         << ServerConfig::ReportFlow<< endl;
+#if TARS_SSL
+	cout << TC_Common::outfill("Ca")                << ServerConfig::CA << endl;
+	cout << TC_Common::outfill("Cert")              << ServerConfig::Cert << endl;
+	cout << TC_Common::outfill("Key")               << ServerConfig::Key << endl;
+	cout << TC_Common::outfill("VerifyClient")      << ServerConfig::VerifyClient << endl;
+#endif
+
+}
+
 
 void Application::initializeServer()
 {
@@ -956,12 +990,13 @@ void Application::initializeServer()
 	ServerConfig::Key               = _conf.get("/tars/application/server<key>");
 	ServerConfig::VerifyClient      = _conf.get("/tars/application/server<verifyclient>","0")=="0"?false:true;
 
-	bool flag = TC_SSLManager::getInstance()->addCtx("server", ServerConfig::CA, ServerConfig::Cert, ServerConfig::Key, ServerConfig::VerifyClient);
+	if(!ServerConfig::Cert.empty()) {
+		_ctx = TC_OpenSSL::newCtx(ServerConfig::CA, ServerConfig::Cert, ServerConfig::Key, ServerConfig::VerifyClient);
 
-	if(!flag)
-	{
-		TLOGERROR("[TARS]load server ssl error, ca:" << ServerConfig::CA << endl);
-		exit(-1);
+		if (!_ctx) {
+			TLOGERROR("[TARS]load server ssl error, ca:" << ServerConfig::CA << endl);
+			exit(-1);
+		}
 	}
 #endif
 
@@ -1071,7 +1106,9 @@ void Application::initializeServer()
 
         TC_EpollServer::BindAdapterPtr lsPtr = new TC_EpollServer::BindAdapter(_epollServer.get());
 
-        lsPtr->setName("AdminAdapter");
+	    setAdapter(lsPtr, "AdminAdapter");
+
+//        lsPtr->setName("AdminAdapter");
 
         lsPtr->setEndpoint(ServerConfig::Local);
 
@@ -1104,35 +1141,44 @@ void Application::initializeServer()
 
 }
 
-void Application::outServer(ostream &os)
+void Application::setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const string &name)
 {
-    os << TC_Common::outfill("Application(app)")            << ServerConfig::Application << endl;
-    os << TC_Common::outfill("ServerName(server)")          << ServerConfig::ServerName << endl;
-    os << TC_Common::outfill("BasePath(basepath)")          << ServerConfig::BasePath << endl;
-    os << TC_Common::outfill("DataPath(datapath)")          << ServerConfig::DataPath << endl;
-    os << TC_Common::outfill("LocalIp(localip)")            << ServerConfig::LocalIp << endl;
-    os << TC_Common::outfill("Local(local)")                << ServerConfig::Local << endl;
-    os << TC_Common::outfill("LogPath(logpath)")            << ServerConfig::LogPath << endl;
-    os << TC_Common::outfill("LogSize(logsize)")            << ServerConfig::LogSize << endl;
-    os << TC_Common::outfill("LogNum(lognum)")              << ServerConfig::LogNum << endl;
-	os << TC_Common::outfill("LogLevel(loglevel)")          << ServerConfig::LogLevel << endl;
-    os << TC_Common::outfill("Log(log)")                    << ServerConfig::Log << endl;
-    os << TC_Common::outfill("Node(node)")                  << ServerConfig::Node << endl;
-    os << TC_Common::outfill("Config(config)")              << ServerConfig::Config << endl;
-    os << TC_Common::outfill("Notify(notify)")              << ServerConfig::Notify << endl;
-    os << TC_Common::outfill("OpenCoroutine(opencoroutine)")      << ServerConfig::OpenCoroutine << endl;
-    os << TC_Common::outfill("CoroutineMemSize(coroutinememsize)")   << ServerConfig::CoroutineMemSize << endl;
-    os << TC_Common::outfill("CoroutineStackSize(coroutinestack)") << ServerConfig::CoroutineStackSize << endl;
-    os << TC_Common::outfill("CloseCout(closecout)")          << ServerConfig::CloseCout << endl;
-    os << TC_Common::outfill("NetThread(netthread)")          << ServerConfig::NetThread << endl;
-    os << TC_Common::outfill("ManualListen(manuallisten)")       << ServerConfig::ManualListen << endl;
-	os << TC_Common::outfill("MergeNetImp(mergenetimp)")       << ServerConfig::MergeNetImp << endl;
-	os << TC_Common::outfill("ReportFlow")         << ServerConfig::ReportFlow<< endl;
+	adapter->setName(name);
+
+	// 设置该obj的鉴权账号密码，只要一组就够了
+	{
+		std::string accKey      = _conf.get("/tars/application/server/" + name + "<accesskey>");
+		std::string secretKey   = _conf.get("/tars/application/server/" + name + "<secretkey>");
+
+		if (!accKey.empty())
+			adapter->setAkSk(accKey, secretKey);
+
+		adapter->setAuthProcessWrapper(&tars::processAuth);
+	}
+
 #if TARS_SSL
-	cout << TC_Common::outfill("Ca")                << ServerConfig::CA << endl;
-	cout << TC_Common::outfill("Cert")              << ServerConfig::Cert << endl;
-	cout << TC_Common::outfill("Key")               << ServerConfig::Key << endl;
-	cout << TC_Common::outfill("VerifyClient")      << ServerConfig::VerifyClient << endl;
+	string cert = _conf.get("/tars/application/server/" + name + "<cert>");
+
+	if (!cert.empty())
+	{
+		string ca = _conf.get("/tars/application/server/" + name + "<ca>");
+		string key = _conf.get("/tars/application/server/" + name + "<key>");
+		bool verifyClient =
+			_conf.get("/tars/application/server/" + name + "<verifyclient>", "0") == "0" ? false : true;
+
+		shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx(ca, cert, key, verifyClient);
+
+		if (!ctx) {
+			TLOGERROR("[TARS]load server ssl error, cert:" << cert << endl);
+			exit(-1);
+		}
+
+		adapter->setSSLCtx(ctx);
+	}
+	else
+	{
+		adapter->setSSLCtx(_ctx);
+	}
 #endif
 
 }
@@ -1159,16 +1205,8 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
 
             TC_EpollServer::BindAdapterPtr bindAdapter = new TC_EpollServer::BindAdapter(_epollServer.get());
 
-            // 设置该obj的鉴权账号密码，只要一组就够了
-            {
-                std::string accKey = _conf.get("/tars/application/server/" + adapterName[i] + "<accesskey>");
-                std::string secretKey = _conf.get("/tars/application/server/" + adapterName[i] + "<secretkey>");
-
-                if (!accKey.empty())
-                    bindAdapter->setAkSk(accKey, secretKey);
-
-                bindAdapter->setAuthProcessWrapper(&tars::processAuth);
-            }
+            //init auth & ssl
+	        setAdapter(bindAdapter, adapterName[i]);
 
             string sLastPath = "/tars/application/server/" + adapterName[i];
             TC_Endpoint ep;
@@ -1203,7 +1241,6 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
 
             bindAdapter->setHandle<ServantHandle>(TC_Common::strto<int>(_conf.get(sLastPath + "<threads>", "0")));
 
-            // bindAdapter->setBackPacketBuffLimit(iBackPacketBuffLimit);
             if(ServerConfig::ManualListen) {
                 //手工监听
                 bindAdapter->enableManualListen();

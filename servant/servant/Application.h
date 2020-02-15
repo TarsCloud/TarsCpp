@@ -34,6 +34,10 @@
 #include "servant/TarsConfig.h"
 #include "servant/TarsNotify.h"
 
+#if TARS_SSL
+#include "util/tc_openssl.h"
+#endif
+
 namespace tars
 {
 //////////////////////////////////////////////////////////////////////
@@ -351,13 +355,6 @@ protected:
 protected:
 
     /**
-     * 为Adapter绑定对应的handle类型
-     * 缺省实现是ServantHandle类型
-     * @param adapter
-     */
-    // virtual void setHandle(TC_EpollServer::BindAdapterPtr& adapter);
-
-    /**
      * 添加Servant
      * @param T
      * @param id
@@ -373,13 +370,6 @@ protected:
      * @param servant
      */
     void addServantProtocol(const string& servant, const TC_NetWorkBuffer::protocol_functor& protocol);
-
-    /**
-     * 非tars协议server，设置Servant的协议解析器,带有连接信息
-     * @param protocol
-     * @param servant
-     */
-    // void addServantConnProtocol(const string& servant, const TC_NetWorkBuffer::protocol_functor& protocol);
 
     /**
      *设置Servant的连接断开回调
@@ -424,10 +414,6 @@ protected:
     /**
      * 解析配置文件
      */
-    // void parseConfig(int argc, char *argv[]);
-    /**
-     * 解析配置文件
-     */
     void parseConfig(const TC_Option &op);
 
      /**
@@ -436,9 +422,15 @@ protected:
     TC_EpollServer::BindAdapter::EOrder parseOrder(const string &s);
 
     /**
-     * 绑定server配置的Adapter和对象
+     * bind server adapter
      */
     void bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters);
+
+    /**
+     * set adapter
+     * @param adapter
+     */
+	void setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const string &name);
 
     /**
      * @param servant
@@ -461,26 +453,28 @@ protected:
      */
      string setDivision(void);
 
-     /*
-     * 等待服务退出
-     */
-    //  void waitForQuit();
-
 protected:
     /**
-     * 配置文件
+     * config
      */
     static TC_Config           _conf;
 
     /**
-     * 服务
+     * epoll server
      */
     static TC_EpollServerPtr   _epollServer;
 
     /**
-     * 通信器
+     * communicator
      */
     static CommunicatorPtr     _communicator;
+
+#if TARS_SSL
+    /**
+     * ssl ctx
+     */
+	shared_ptr<TC_OpenSSL::CTX> _ctx;
+#endif
 
     PropertyReport * _pReportQueue;
     PropertyReport * _pReportConRate;

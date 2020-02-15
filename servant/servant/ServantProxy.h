@@ -22,11 +22,13 @@
 #include "servant/Message.h"
 #include "servant/AppProtocol.h"
 #include "servant/TarsCurrent.h"
-#include "servant/EndpointInfo.h"
+//#include "servant/EndpointInfo.h"
 #include "servant/CommunicatorEpoll.h"
 
 namespace tars
 {
+
+class EndpointInfo;
 
 /////////////////////////////////////////////////////////////////////////
 /*

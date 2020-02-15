@@ -5,14 +5,15 @@ project(tars_cpp)
 set(TARS_VERSION "2.0.0")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 set(TARS_MYSQL 1)
-add_definitions(-DTARS_MYSQL=${TARS_MYSQL})
-set(TARS_SSL 1)
-add_definitions(-DTARS_SSL=${TARS_SSL})
+set(TARS_SSL 0)
 set(TARS_HTTP2 0)
-add_definitions(-DTARS_HTTP2=${TARS_HTTP2})
 set(TARS_PROTOBUF 0)
-add_definitions(-DTARS_PROTOBUF=${TARS_PROTOBUF})
 set(TARS_ZLIB 0)
+
+add_definitions(-DTARS_MYSQL=${TARS_MYSQL})
+add_definitions(-DTARS_SSL=${TARS_SSL})
+add_definitions(-DTARS_HTTP2=${TARS_HTTP2})
+add_definitions(-DTARS_PROTOBUF=${TARS_PROTOBUF})
 add_definitions(-DTARS_ZLIB=${TARS_ZLIB})
 
 # list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
@@ -29,7 +30,6 @@ IF (CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release")
 ENDIF()
 
-message("CMAKE_BUILD_TYPE TYPE = " ${CMAKE_BUILD_TYPE})
 
 #编译的可执行程序输出目录
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -43,16 +43,19 @@ add_definitions(-D_USE_OPENTRACKING=${_USE_OPENTRACKING})
 endif()
 
 #-------------------------------------------------------------
+
+if("${INSTALL_PREFIX}" STREQUAL "")
 IF (UNIX)
 set(INSTALL_PREFIX "/usr/local/tars/cpp")
 ELSE()
 set(INSTALL_PREFIX "c:\\tars\\cpp")
 ENDIF()
-
 set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
+endif()
+
 
 #-------------------------------------------------------------
-set(APP_LIBRARIES)
+#set(APP_LIBRARIES)
 set(OPEN_MYSQL "OFF")
 set(OPEN_NGHTTP2 "OFF")
 set(OPEN_SSL "OFF")
@@ -100,6 +103,8 @@ if(TARS_SSL)
     link_directories(${SSL_DIR_LIB})
 endif()
 
+#-------------------------------------------------------------
+
 set(LIB_MYSQL)
 set(LIB_NGHTTP2)
 set(LIB_SSL)
@@ -146,30 +151,33 @@ if(TARS_PROTOBUF)
 endif()    
 ENDIF()
 
-if(TARS_MYSQL)
-link_libraries(${LIB_MYSQL})
-endif()
-if(TARS_ZLIB)
-link_libraries(${LIB_ZLIB})
-endif()
 
-if(TARS_HTTP2)
-    list(APPEND APP_LIBRARIES ${LIB_PROTOBUF})
-endif()
+#-------------------------------------------------------------
 
-if(TARS_PROTOBUF)
-    list(APPEND APP_LIBRARIES ${LIB_NGHTTP2})
-endif()
+
+#if(TARS_MYSQL)
+#link_libraries(${LIB_MYSQL})
+#endif()
+#if(TARS_ZLIB)
+#link_libraries(${LIB_ZLIB})
+#endif()
+#
+#if(TARS_HTTP2)
+#    list(APPEND APP_LIBRARIES ${LIB_PROTOBUF})
+#endif()
+#
+#if(TARS_PROTOBUF)
+#    list(APPEND APP_LIBRARIES ${LIB_NGHTTP2})
+#endif()
 
 if(TARS_SSL)
-    list(APPEND APP_LIBRARIES ${LIB_SSL})
-    list(APPEND APP_LIBRARIES ${LIB_CRYPTO})
+    link_libraries(${LIB_SSL} ${LIB_CRYPTO})
 endif()
 
-list(LENGTH APP_LIBRARIES RET)
-if(${RET} GREATER 0)
-    link_libraries(${APP_LIBRARIES})
-endif()
+#list(LENGTH APP_LIBRARIES RET)
+#if(${RET} GREATER 0)
+#    link_libraries(${APP_LIBRARIES})
+#endif()
 
 include(ExternalProject)
 
@@ -197,7 +205,7 @@ ExternalProject_Add(${LIB_MYSQL}
         CONFIGURE_COMMAND cmake . -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
         SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
         BUILD_IN_SOURCE 1
-        BUILD_COMMAND make -j4 mysqlclient
+        BUILD_COMMAND make mysqlclient
         LOG_CONFIGURE 1
         LOG_BUILD 1
         INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
@@ -231,7 +239,7 @@ ExternalProject_Add(${LIB_NGHTTP2}
     BUILD_IN_SOURCE 1
     LOG_BUILD 1
     LOG_CONFIGURE 1
-    BUILD_COMMAND make -j4
+    BUILD_COMMAND make
     INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
     URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
     )
@@ -240,17 +248,18 @@ endif()
 if(TARS_SSL)
 ExternalProject_Add(${LIB_SSL}
     DEPENDS ${LIB_ZLIB}
-    URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
+    URL http://cdn.tarsyun.com/src/openssl-1.1.1c.tar.gz
     PREFIX    ${CMAKE_BINARY_DIR}
     INSTALL_DIR ${CMAKE_SOURCE_DIR}
-    CONFIGURE_COMMAND ./config --with-zlib-lib=${CMAKE_BINARY_DIR}/src/z-lib --with-zlib-include=${CMAKE_BINARY_DIR}/src/z-lib no-shared
+    CONFIGURE_COMMAND ./config
     SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make -j4
+    BUILD_COMMAND make
     LOG_CONFIGURE 1
     LOG_BUILD 1
     INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
-    URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
+    #URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
+    URL_MD5 15e21da6efe8aa0e0768ffd8cd37a5f6
     )
 endif()
 
@@ -261,6 +270,7 @@ IF (APPLE)
 link_libraries(iconv)
 ENDIF(APPLE)
 
+set(PLATFORM)
 IF (UNIX)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11  -Wno-deprecated -fno-strict-aliasing -Wno-overloaded-virtual")
@@ -269,8 +279,9 @@ IF (UNIX)
     set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Wall -g")
     set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O2 -Wall -fno-strict-aliasing")
 
+    set(PLATFORM "linux")
     IF(APPLE)
-        message("mac.....")
+        set(PLATFORM "mac")
         SET(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
         SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
         SET(CMAKE_C_ARCHIVE_FINISH   "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
@@ -278,7 +289,7 @@ IF (UNIX)
     ENDIF(APPLE)
 
 ELSEIF (WIN32)
-    message("window.....")
+    set(PLATFORM "window")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4101 /wd4244 /wd4996 /wd4091 /wd4503 /wd4819 /wd4200 /wd4800")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj " )
 
@@ -299,6 +310,23 @@ ENDIF()
 IF(WIN32)
 include_directories(${CMAKE_SOURCE_DIR}/util/src/epoll_windows)
 ENDIF()
+
+message("----------------------------------------------------")
+
+message("CMAKE_BUILD_TYPE:          ${CMAKE_BUILD_TYPE}")
+message("PLATFORM:                  ${PLATFORM}")
+message("INSTALL_PREFIX:            ${INSTALL_PREFIX}")
+
+#-------------------------------------------------------------
+
+message("----------------------------------------------------")
+message("OPEN_MYSQL:                ${OPEN_MYSQL}")
+message("OPEN_NGHTTP2:              ${OPEN_NGHTTP2}")
+message("OPEN_SSL:                  ${OPEN_SSL}")
+message("OPEN_ZLIB:                 ${OPEN_ZLIB}")
+message("OPEN_PROTOBUF:             ${OPEN_PROTOBUF}")
+
+#-------------------------------------------------------------
 
 include("${CMAKE_SOURCE_DIR}/cmake/BuildTarsServer.cmake")
 

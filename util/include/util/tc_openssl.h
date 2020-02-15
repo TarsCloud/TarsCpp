@@ -29,6 +29,9 @@ typedef struct ssl_st SSL;
 struct bio_st;
 typedef struct bio_st BIO;
 
+struct ssl_ctx_st;
+typedef struct ssl_ctx_st SSL_CTX;
+
 namespace tars
 {
 
@@ -57,15 +60,47 @@ public:
     */
     ~TC_OpenSSL();
 
+    /**
+     * ctx wrapper
+     */
+    struct CTX
+    {
+	    CTX(SSL_CTX *x) : ctx(x) {}
+	    SSL_CTX *ctx;
+    };
+
+	/**
+     * new ssl ctx
+     * @param cafile
+     * @param certfile
+     * @param keyfile
+     * @param verifyClient
+     * @return
+     */
+	static shared_ptr<CTX> newCtx(const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient);
+
+	/**
+	 * new ssl
+	 * @param ctx
+	 * @return
+	 */
+	static shared_ptr<TC_OpenSSL> newSSL(const std::shared_ptr<TC_OpenSSL::CTX> &ctx);
+
 	static void getMemData(BIO* bio, TC_NetWorkBuffer& buf);
 	static int doSSLRead(SSL* ssl, TC_NetWorkBuffer& out);
-private:
+
+protected:
    /**
     * @brief deny
     */
     TC_OpenSSL(const TC_OpenSSL& );
     void operator=(const TC_OpenSSL& );
 
+	/**
+	 * init openssl
+	 */
+	static void initialize();
+	static bool _initialize;
 public:
 
     /** 
@@ -119,7 +154,19 @@ public:
      */
     int read(const void* data, size_t size, TC_NetWorkBuffer &out);
 
-    friend class TC_SSLManager;
+    /**
+     * set read buffer size
+     * @param size
+     */
+	void setReadBufferSize(size_t size);
+
+	/**
+	 * set write buffer size
+	 * @param size
+	 */
+	void setWriteBufferSize(size_t size);
+
+	friend class TC_SSLManager;
 private:
 
     /**

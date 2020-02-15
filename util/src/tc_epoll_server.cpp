@@ -19,7 +19,7 @@
 #include "util/tc_common.h"
 #include "util/tc_network_buffer.h"
 #include "util/tc_timeprovider.h"
-#include "util/tc_sslmgr.h"
+//#include "util/tc_sslmgr.h"
 
 #include <cassert>
 #include <iostream>
@@ -807,7 +807,7 @@ void TC_EpollServer::Connection::insertRecvQueue(const shared_ptr<TC_EpollServer
 
 int TC_EpollServer::Connection::parseProtocol(TC_NetWorkBuffer &rbuf)
 {
-    try
+	try
     {
         while (!rbuf.empty())
         {
@@ -845,7 +845,7 @@ int TC_EpollServer::Connection::parseProtocol(TC_NetWorkBuffer &rbuf)
 
 	            recv->buffer().swap(ro);
 
-                if (_pBindAdapter->_authWrapper && _pBindAdapter->_authWrapper(this, recv))
+	            if (_pBindAdapter->_authWrapper && _pBindAdapter->_authWrapper(this, recv))
                     continue;
 
                 //收到完整的包才算
@@ -915,7 +915,7 @@ int TC_EpollServer::Connection::recvTcp()
 			    int ret = _openssl->read(buffer, iBytesReceived, _sendBuffer);
 			    if (ret != 0)
 			    {
-				    _pBindAdapter->getEpollServer()->error("[TARS][SSL_read failed: " + _openssl->getErrMsg());
+				    _pBindAdapter->getEpollServer()->error("[SSL_read failed: " + _openssl->getErrMsg());
 				    return -1;
 			    }
 			    else
@@ -937,7 +937,7 @@ int TC_EpollServer::Connection::recvTcp()
 		    rbuf->addBuffer(buffer, iBytesReceived);
 #endif
 
-            //字符串太长时, 强制解析协议
+		    //字符串太长时, 强制解析协议
             if (rbuf->getBufferLength() > 8192) {
                 parseProtocol(*rbuf);
             }
@@ -1072,15 +1072,20 @@ int TC_EpollServer::Connection::sendTcp(const shared_ptr<SendContext> &sc)
 {
 	if(!sc->buffer()->empty())
 	{
+#if TARS_SSL
 		if (getBindAdapter()->getEndpoint().isSSL())
 		{
 			assert(_openssl->isHandshaked());
 
 			int ret = _openssl->write(sc->buffer()->buffer(), sc->buffer()->length(), _sendBuffer);
-			if (ret != 0)
+			if (ret != 0) {
+				_pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] sendTcp [" + _ip + ":" + TC_Common::tostr(_port) + "] error:" + _openssl->getErrMsg());
+
 				return -1; // should not happen
+			}
 		}
 		else
+#endif
 		{
 			_sendBuffer.addBuffer(sc->buffer());
 		}
@@ -1399,6 +1404,11 @@ void TC_EpollServer::NetThread::info(const string &s)
     _epollServer->info(s);
 }
 
+void TC_EpollServer::NetThread::tars(const string &s)
+{
+	_epollServer->tars(s);
+}
+
 void TC_EpollServer::NetThread::error(const string &s)
 {
     _epollServer->error(s);
@@ -1478,7 +1488,7 @@ void TC_EpollServer::NetThread::addTcpConnection(TC_EpollServer::Connection *cPt
         cPtr->getBindAdapter()->getEpollServer()->info("[TARS][addTcpConnection ssl connection");
 
         // 分配ssl对象, ctxName 放在obj proxy里
-	    cPtr->_openssl = TC_SSLManager::getInstance()->newSSL("server");
+	    cPtr->_openssl = TC_OpenSSL::newSSL(cPtr->getBindAdapter()->_ctx);
         if (!cPtr->_openssl)
         {
             cPtr->getBindAdapter()->getEpollServer()->error("[TARS][SSL_accept not find server cert");
@@ -1487,6 +1497,8 @@ void TC_EpollServer::NetThread::addTcpConnection(TC_EpollServer::Connection *cPt
         }
 
 	    cPtr->_openssl->init(true);
+	    cPtr->_openssl->setReadBufferSize(1024 * 8);
+	    cPtr->_openssl->setWriteBufferSize(1024 * 8);
 
         int ret = cPtr->_openssl->doHandshake(cPtr->_sendBuffer);
         if (ret != 0)
@@ -1626,12 +1638,6 @@ void TC_EpollServer::NetThread::processPipe()
 					    if (!cPtr->_openssl->isHandshaked()) {
 							return;
 					    }
-//
-//	                ret = cPtr->_openssl->write(sc->buffer()->buffer(), sc->buffer()->length(), cPtr->_sendBuffer);
-//	                if (ret != 0)
-//		                break; // should not happen
-//
-//		            cPtr->sendBuffer();
 				    }
 				    ret = cPtr->send(sc);
 #else
@@ -2257,6 +2263,14 @@ void TC_EpollServer::info(const string &s)
     {
         _pLocalLogger->info() << "[TARS]" << s << endl;
     }
+}
+
+void TC_EpollServer::tars(const string &s)
+{
+	if(_pLocalLogger)
+	{
+		_pLocalLogger->tars() << "[TARS]" << s << endl;
+	}
 }
 
 void TC_EpollServer::error(const string &s)

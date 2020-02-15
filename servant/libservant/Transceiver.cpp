@@ -24,7 +24,6 @@
 
 #if TARS_SSL
 #include "util/tc_openssl.h"
-#include "util/tc_sslmgr.h"
 #endif
 
 #if TARS_HTTP2
@@ -99,7 +98,6 @@ void Transceiver::connect()
     if (_ep.type() == EndpointInfo::UDP)
     {
         fd = NetworkUtil::createSocket(true, false, _ep.isIPv6());
-        // NetworkUtil::setBlock(fd, false);
         _connStatus = eConnected;
 
         _adapterProxy->getObjProxy()->getCommunicatorEpoll()->addFd(fd, &_fdInfo, EPOLLIN | EPOLLOUT);
@@ -107,7 +105,6 @@ void Transceiver::connect()
     else
     {
         fd = NetworkUtil::createSocket(false, false, _ep.isIPv6());
-        // NetworkUtil::setBlock(fd, false);
 
         _adapterProxy->getObjProxy()->getCommunicatorEpoll()->addFd(fd, &_fdInfo, EPOLLIN | EPOLLOUT);
 
@@ -126,7 +123,7 @@ void Transceiver::connect()
 
     _fd = fd;
 
-    TLOGTARS("[TARS][Transceiver::connect objname:" << _adapterProxy->getObjProxy()->name() 
+    TLOGTARS("[TARS][Transceiver::connect obj:" << _adapterProxy->getObjProxy()->name()
         << ",connect:" << _ep.desc() << ",fd:" << _fd << "]" << endl);
 
     // //设置网络qos的dscp标志
@@ -170,8 +167,7 @@ void Transceiver::onConnect()
 #if TARS_SSL
     if (isSSL())
     {
-        // 分配ssl对象
-	    _openssl = TC_SSLManager::getInstance()->newSSL("client");
+	    _openssl = _adapterProxy->getObjProxy()->getCommunicatorEpoll()->getCommunicator()->newClientSSL(_adapterProxy->getObjProxy()->getServantProxy()->tars_name());
         if (!_openssl)
         {
             ObjectProxy* obj = _adapterProxy->getObjProxy();
@@ -181,6 +177,10 @@ void Transceiver::onConnect()
         }
 
 	    _openssl->init(false);
+
+	    _openssl->setReadBufferSize(1024 * 8);
+	    _openssl->setWriteBufferSize(1024 * 8);
+
         int ret = _openssl->doHandshake(_sendBuffer);
         if (ret != 0)
         {
@@ -192,7 +192,7 @@ void Transceiver::onConnect()
         // send the encrypt data from write buffer
         if (!_sendBuffer.empty())
         {
-	        TLOGTARS("[TARS][Transceiver::onConnect doRequest handshake:" << _openssl->isHandshaked() << ", length:" << _sendBuffer.getBufferLength() << endl);
+	        TLOGTARS("[TARS][Transceiver::onConnect  handshake:" << _openssl->isHandshaked() << ", send handshake len:" << _sendBuffer.getBufferLength() << endl);
 
 	        doRequest();
         }
@@ -207,7 +207,7 @@ void Transceiver::doAuthReq()
 {
     ObjectProxy* obj = _adapterProxy->getObjProxy();
 
-    TLOGTARS("[TARS][onConnect:" << obj->name() << " auth type is " << _adapterProxy->endpoint().authType() << endl);
+    TLOGTARS("[TARS][Transceiver::doAuthReq obj:" << obj->name() << ", auth type:" << etos(_adapterProxy->endpoint().authType()) << endl);
 
     if (_adapterProxy->endpoint().authType() == AUTH_TYPENONE)
     {
@@ -217,9 +217,9 @@ void Transceiver::doAuthReq()
     else
     {
         BasicAuthInfo basic;
-        basic.sObjName = obj->name();
-        basic.sAccessKey = obj->getAccessKey();
-        basic.sSecretKey = obj->getSecretKey();
+        basic.sObjName      = obj->name();
+        basic.sAccessKey    = obj->getCommunicatorEpoll()->getCommunicator()->getServantProperty(obj->name(), "accesskey");
+        basic.sSecretKey    = obj->getCommunicatorEpoll()->getCommunicator()->getServantProperty(obj->name(), "secretkey");
 
         this->sendAuthData(basic);
     }
@@ -232,9 +232,9 @@ void Transceiver::finishInvoke(shared_ptr<ResponsePacket> &rsp)
 		std::string ret(rsp->sBuffer.begin(), rsp->sBuffer.end());
 		tars::AUTH_STATE tmp = AUTH_SUCC;
 		tars::stoe(ret, tmp);
-		int newstate = tmp;
+		tars::AUTH_STATE newstate = tmp;
 
-		TLOGTARS("[TARS]AdapterProxy::finishInvoke from state " << _authState << " to " << newstate << endl);
+		TLOGTARS("[TARS]Transceiver::finishInvoke state: " << etos(_authState) << " -> " << etos(newstate) << endl);
 		setAuthState(newstate);
 
 		if (newstate == AUTH_SUCC)
@@ -244,7 +244,7 @@ void Transceiver::finishInvoke(shared_ptr<ResponsePacket> &rsp)
 		}
 		else
 		{
-			TLOGERROR("newstate is " << newstate << ", error close!\n");
+			TLOGERROR("[TARS]Transceiver::finishInvoke newstate: " << etos(newstate) << ", error close!\n");
 			close();
 		}
 
@@ -264,19 +264,36 @@ bool Transceiver::sendAuthData(const BasicAuthInfo& info)
 
     const int kAuthType = 0x40;
     RequestPacket request;
-    request.sFuncName = "tarsInnerAuthServer";
-    request.sServantName = "authServant";
-    request.iVersion = TARSVERSION;
-    request.iRequestId = 0;
-    request.cPacketType = TARSNORMAL;
-    request.iMessageType = kAuthType;
+    request.sFuncName       = "tarsInnerAuthServer";
+    request.sServantName    = "authServant";
+    request.iVersion        = TARSVERSION;
+    request.iRequestId      = 1;
+    request.cPacketType     = TARSNORMAL;
+    request.iMessageType    = kAuthType;
     request.sBuffer.assign(out.begin(), out.end());
 
-    _sendBuffer.addBuffer(objPrx->getProxyProtocol().requestFunc(request, this));
+#if TARS_SSL
+    if(this->isSSL()) {
+	    vector<char> buff = objPrx->getProxyProtocol().requestFunc(request, this);
 
-    // _sendBuffer.addBuffer(toSend);
+	    int ret = _openssl->write(buff.data(), (uint32_t) buff.size(), _sendBuffer);
+	    if(ret != 0)
+	    {
+		    TLOGERROR("[TARS][Transceiver::sendAuthData ssl write failed, obj:" << _adapterProxy->getObjProxy()->name() << ", error:" << _openssl->getErrMsg() << endl);
+		    return false;
+	    }
+    }
+    else {
+	    _sendBuffer.addBuffer(objPrx->getProxyProtocol().requestFunc(request, this));
+    }
 
-//    if (sendRequest(_sendBuffer, true) == eRetError)
+#else
+	_sendBuffer.addBuffer(objPrx->getProxyProtocol().requestFunc(request, this));
+
+#endif
+
+	TLOGTARS("[TARS][sendAuthData:" << objPrx->name() << " len: " << _sendBuffer.getBufferLength() << endl);
+
 	int ret = doRequest();
 	if (ret != 0)
     {
@@ -371,7 +388,7 @@ int Transceiver::doRequest()
     return 0;
 }
 
-int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff, bool forceSend)
+int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff)
 {
     //空数据 直接返回成功
     if(buff->empty()) {
@@ -383,14 +400,13 @@ int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff, b
         return eRetError;
     }
 
-    if (!forceSend && _authState != AUTH_SUCC && !isSSL())
+    if (_authState != AUTH_SUCC)
     {
-//#if TARS_SSL
-//        if (isSSL() && !_openssl)
-//            return eRetError;
-//#endif
-        ObjectProxy* obj = _adapterProxy->getObjProxy();
-        TLOGTARS("[TARS][Transceiver::sendRequest failed, need auth for " << obj->name() << endl);
+#if TARS_SSL
+        if (isSSL() && !_openssl)
+            return eRetError;
+#endif
+        TLOGTARS("[TARS][Transceiver::sendRequest failed, obj:" << _adapterProxy->getObjProxy()->name() << ", need auth." << endl);
         return eRetError; // 需要鉴权但还没通过，不能发送非认证消息
     }
 
@@ -405,10 +421,16 @@ int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff, b
 	if (isSSL())
 	{
 		if(!_openssl->isHandshaked()) {
+			TLOGTARS("[TARS][Transceiver::sendRequest failed, obj:" << _adapterProxy->getObjProxy()->name() << ", ssl need handshake." << endl);
 			return eRetError;
 		}
 
-		_openssl->write(buff->buffer(), (uint32_t) buff->length(), _sendBuffer);
+		int ret = _openssl->write(buff->buffer(), (uint32_t) buff->length(), _sendBuffer);
+		if(ret != 0)
+		{
+			TLOGERROR("[TARS][Transceiver::sendRequest ssl write failed, obj:" << _adapterProxy->getObjProxy()->name() << ", error:" << _openssl->getErrMsg() << endl);
+			return eRetError;
+		}
 
 		size_t length = _sendBuffer.getBufferLength();
 
@@ -512,24 +534,27 @@ int TcpTransceiver::doResponse()
 #if TARS_SSL
 		    if (isSSL())
 		    {
-			    const bool preNotHandshake = !_openssl->isHandshaked();
+			    const bool preHandshake = _openssl->isHandshaked();
 			    int ret = _openssl->read(buff, iRet, _sendBuffer);
 		        if (ret != 0)
 			    {
-				    TLOGERROR("[TARS][SSL_connect handshake failed: " << _adapterProxy->getObjProxy()->name() << ", info:" << _openssl->getErrMsg() << endl);
+				    TLOGERROR("[TARS][Transceiver::doResponse SSL_read handshake failed: " << _adapterProxy->getObjProxy()->name() << ", info:" << _openssl->getErrMsg() << endl);
 				    close();
 				    return -1;
 			    }
-			    else
+			    else if(!_sendBuffer.empty())
 			    {
-					doRequest();
+				    TLOGTARS("[TARS][Transceiver::doResponse SSL_read prehandshake:" << preHandshake << ", handshake:" << _openssl->isHandshaked() << ", send handshake:" << _sendBuffer.getBufferLength() << endl);
+
+				    doRequest();
 			    }
 
 			    if (!_openssl->isHandshaked())
 				    return 0;
 
-			    if (preNotHandshake)
+			    if (!preHandshake) {
 				    doAuthReq();
+			    }
 
 			    rbuf = _openssl->recvBuffer();
 		    }
@@ -545,7 +570,8 @@ int TcpTransceiver::doResponse()
 		    try
 		    {
 			    TC_NetWorkBuffer::PACKET_TYPE ret;
-			    do
+
+			    while(!rbuf->empty())
 		        {
 			        shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
 
@@ -562,9 +588,7 @@ int TcpTransceiver::doResponse()
 				    else {
 					    break;
 				    }
-
 			    }
-			    while (ret == TC_NetWorkBuffer::PACKET_FULL && !rbuf->empty());
 
 			    //接收的数据小于buffer大小, 内核会再次通知你
 			    if(iRet < BUFFER_SIZE)
@@ -820,7 +844,7 @@ int TcpTransceiver::recv(void* buf, uint32_t len, uint32_t flag)
 	if (iRet == 0 || (iRet < 0 && !TC_Socket::isPending()))
     {
         TLOGTARS("[TARS][tcp recv, " << _adapterProxy->getObjProxy()->name()
-                << ",fd:" << _fd << ", " << _ep.desc() <<",ret " << iRet
+                << ",fd:" << _fd << ", " << _ep.desc() <<", ret:" << iRet
                 << ", fail! errno:" << TC_Exception::getSystemCode() << "," << TC_Exception::parseError(TC_Exception::getSystemCode()) << ",close]" << endl);
 
         close();
@@ -835,7 +859,7 @@ int TcpTransceiver::recv(void* buf, uint32_t len, uint32_t flag)
     }
 #endif   
     TLOGTARS("[TARS][tcp recv," << _adapterProxy->getObjProxy()->name()
-            << ",fd:" << _fd << "," << _ep.desc() << ",ret:" << iRet << "]" << endl);
+            << ",fd:" << _fd << "," << _ep.desc() << ", len:" << iRet << "]" << endl);
 
     return iRet;
 }

@@ -257,24 +257,29 @@ ServantProxy::ServantProxy(Communicator * pCommunicator, ObjectProxy ** ppObject
         _minTimeout = 1;
     }
     // get AK/SK
-    const TC_Config& conf = Application::getConfig();
-    vector<string> adapterNames;
-             
-    if (conf.getDomainVector("/tars/application/client", adapterNames))
-    {
-        auto it = std::find(adapterNames.begin(), adapterNames.end(), tars_name());
-        if (it != adapterNames.end())
-        {
-            string accessKey = conf.get("/tars/application/client/" + *it + "<accesskey>");
-            string secretKey = conf.get("/tars/application/client/" + *it + "<secretkey>");
+//    const TC_Config& conf = Application::getConfig();
+//    vector<string> adapterNames;
+//
+//    cout << "accessKey:" << conf.get("/tars/application/client/TestApp.AuthServer.AuthObj<accessKey>") << ", obj:" << tars_name() << endl;
+//
+//    if (conf.getDomainVector("/tars/application/client", adapterNames))
+//    {
+//    	cout << TC_Common::tostr(adapterNames.begin(), adapterNames.end()) << ", " << tars_name() << endl;
+//        auto it = std::find(adapterNames.begin(), adapterNames.end(), tars_name());
+//        if (it != adapterNames.end())
+//        {
+//            string accessKey = conf.get("/tars/application/client/" + *it + "<accesskey>");
+//            string secretKey = conf.get("/tars/application/client/" + *it + "<secretkey>");
+//
+//            cout << "accessKey:" << accessKey << ", secretKey:" << secretKey << endl;
 
-            for(size_t i = 0;i < _objectProxyNum; ++i)
-            {
-               _objectProxy[i]->setAccessKey(accessKey);
-               _objectProxy[i]->setSecretKey(secretKey);
-            }
-        }
-    }
+//        for(size_t i = 0;i < _objectProxyNum; ++i)
+//        {
+//           _objectProxy[i]->setAccessKey(pCommunicator->getServantProperty(tars_name(), "accesskey"));
+//           _objectProxy[i]->setSecretKey(pCommunicator->getServantProperty(tars_name(), "secretkey"));
+//        }
+//        }
+//    }
 }
 
 ServantProxy::~ServantProxy()

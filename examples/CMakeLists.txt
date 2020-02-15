@@ -66,15 +66,28 @@ if(WIN32)
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-push.bat
         COMMENT "call run push")
 
+    if(TARS_SSL)
     add_custom_target(run-all
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        DEPENDS QuickStartDemo QuickStartDemoClient HttpServer HttpClient CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro PushServer PushClient
+        DEPENDS QuickStartDemo QuickStartDemoClient HttpServer HttpClient AuthServer AuthClient  SSLServer SSLClient CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro PushServer PushClient
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-quick-start.bat
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-http.bat
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-co.bat
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-push.bat
         COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-auth.bat
+        COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-ssl.bat
         COMMENT "call run all ${CMAKE_BINARY_DIR}")
+    else()
+    add_custom_target(run-all
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            DEPENDS QuickStartDemo QuickStartDemoClient HttpServer HttpClient AuthServer AuthClient CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro PushServer PushClient
+            COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-quick-start.bat
+            COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-http.bat
+            COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-co.bat
+            COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-push.bat
+            COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-auth.bat
+            COMMENT "call run all ${CMAKE_BINARY_DIR}")
+    endif()
 
     add_custom_target(run-kill
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -135,15 +148,28 @@ else(WIN32)
         COMMAND sh ../examples/scripts/run-push.sh
         COMMENT "call run push")
 
+    if(TARS_SSL)
     add_custom_target(run-all
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        DEPENDS run-quick-start run-http run-co run-push run-auth
+        DEPENDS QuickStartDemo QuickStartDemoClient HttpServer HttpClient AuthServer AuthClient  SSLServer SSLClient CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro PushServer PushClient
         COMMAND sh ../examples/scripts/run-quick-start.sh
         COMMAND sh ../examples/scripts/run-http.sh
         COMMAND sh ../examples/scripts/run-co.sh
         COMMAND sh ../examples/scripts/run-push.sh
         COMMAND sh ../examples/scripts/run-auth.sh
+        COMMAND sh ../examples/scripts/run-ssl.sh
         COMMENT "call run all")
+    else()
+    add_custom_target(run-all
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            DEPENDS QuickStartDemo QuickStartDemoClient HttpServer HttpClient AuthServer AuthClient CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro PushServer PushClient
+            COMMAND sh ../examples/scripts/run-quick-start.sh
+            COMMAND sh ../examples/scripts/run-http.sh
+            COMMAND sh ../examples/scripts/run-co.sh
+            COMMAND sh ../examples/scripts/run-push.sh
+            COMMAND sh ../examples/scripts/run-auth.sh
+            COMMENT "call run all")
+    endif()
 
     add_custom_target(run-kill
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

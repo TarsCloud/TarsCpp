@@ -29,7 +29,9 @@ SSLServer::initialize()
     //...
 
     addServant<SSLImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".SSLObj");
+	addServant<SSLImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".SSL1Obj");
 	addServant<SSLImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".SSL2Obj");
+	addServant<SSLImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".SSL3Obj");
 }
 /////////////////////////////////////////////////////////////////
 void

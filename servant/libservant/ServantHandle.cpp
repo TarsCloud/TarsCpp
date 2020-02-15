@@ -67,192 +67,58 @@ ServantHandle::~ServantHandle()
 
 void ServantHandle::run()
 {
-    initialize();
+	try
+	{
+		initialize();
 
-    if(!ServerConfig::OpenCoroutine)
-    {
-        handleImp();
-    }
-    else
-    {
-        unsigned int iThreadNum = getEpollServer()->getLogicThreadNum();
+		if (!ServerConfig::OpenCoroutine) {
+			handleImp();
+		}
+		else {
+			unsigned int iThreadNum = getEpollServer()->getLogicThreadNum();
 
-        size_t iCoroutineNum = (ServerConfig::CoroutineMemSize > ServerConfig::CoroutineStackSize) ? (ServerConfig::CoroutineMemSize / (ServerConfig::CoroutineStackSize * iThreadNum) ) : 1;
-        if(iCoroutineNum < 1)
-            iCoroutineNum = 1;
+			size_t iCoroutineNum =
+				(ServerConfig::CoroutineMemSize > ServerConfig::CoroutineStackSize) ? (ServerConfig::CoroutineMemSize
+					/ (ServerConfig::CoroutineStackSize * iThreadNum)) : 1;
+			if (iCoroutineNum < 1)
+				iCoroutineNum = 1;
 
-        startHandle();
+			startHandle();
 
-        _coroSched = new CoroutineScheduler();
-        _coroSched->init(iCoroutineNum, ServerConfig::CoroutineStackSize);
-        _coroSched->setHandle(this);
+			_coroSched = new CoroutineScheduler();
+			_coroSched->init(iCoroutineNum, ServerConfig::CoroutineStackSize);
+			_coroSched->setHandle(this);
 
-        _coroSched->createCoroutine(std::bind(&ServantHandle::handleRequest, this));
+			_coroSched->createCoroutine(std::bind(&ServantHandle::handleRequest, this));
 
-        ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
+			ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
 
-        assert(pSptd != NULL);
+			assert(pSptd != NULL);
 
-        pSptd->_sched = _coroSched;
+			pSptd->_sched = _coroSched;
 
-        while (!getEpollServer()->isTerminate())
-        {
-            _coroSched->tars_run();
-        }
+			while (!getEpollServer()->isTerminate()) {
+				_coroSched->tars_run();
+			}
 
-        _coroSched->terminate();
+			_coroSched->terminate();
 
-        _coroSched->destroy();
+			_coroSched->destroy();
 
-        stopHandle();
-    }
+			stopHandle();
+		}
+	}
+	catch(exception &ex)
+	{
+		TLOGERROR("[TARS]ServantHandle::run exception error:" << ex.what() << endl);
+		cerr << "[TARS]ServantHandle::run exception error:" << ex.what() << endl;
+	}
+	catch(...)
+	{
+		TLOGERROR("[TARS]ServantHandle::run unknown exception error." << endl);
+		cerr << "[TARS]ServantHandle::run unknown exception error." << endl;
+	}
 }
-
-// void ServantHandle::handleRequest()
-// {
-//     bool bYield = false;
-//     while (!getEpollServer()->isTerminate())
-//     {
-//         bool bServerReqEmpty = false;
-
-//         {
-//             TC_ThreadLock::Lock lock(_handleGroup->monitor);
-
-//             if (allAdapterIsEmpty() && allFilterIsEmpty())
-//             {
-//                 if(_coroSched->getResponseCoroSize() > 0)
-//                 {
-//                     bServerReqEmpty = true;
-//                 }
-//                 else
-//                 {
-//                     _handleGroup->monitor.timedWait(3000);
-//                 }
-//             }
-//         }
-
-//         //上报心跳
-//         heartbeat();
-
-//         //为了实现所有主逻辑的单线程化,在每次循环中给业务处理自有消息的机会
-//         handleAsyncResponse();
-
-//         handleCustomMessage(true);
-
-//         if(bServerReqEmpty)
-//         {
-//             _coroSched->yield();
-
-//             continue;
-//         }
-        
-//         bYield = false;
-
-//         TC_EpollServer::tagRecvData* recv = NULL;
-
-//         map<string, TC_EpollServer::BindAdapterPtr>& adapters = _handleGroup->adapters;
-
-//         for (map<string, TC_EpollServer::BindAdapterPtr>::iterator it = adapters.begin(); it != adapters.end(); ++it)
-//         {
-//             TC_EpollServer::BindAdapterPtr& adapter = it->second;
-
-//             try
-//             {
-//                 bool bFlag = true;
-//                 int    iLoop = 100;
-//                 while(bFlag && iLoop > 0)
-//                 {
-//                     --iLoop;
-
-//                     if(adapter->waitForRecvQueue(recv, 0))
-//                     {
-//                         bYield = true;
-
-//                         //上报心跳
-//                         heartbeat();
-
-//                         //为了实现所有主逻辑的单线程化,在每次循环中给业务处理自有消息的机会
-//                            handleAsyncResponse();
-
-//                         TC_EpollServer::tagRecvData& stRecvData = *recv;
-
-//                         int64_t now = TNOWMS;
-
-//                         stRecvData.adapter = adapter;
-
-//                         //数据已超载 overload
-//                         if (stRecvData.isOverload)
-//                         {
-//                             handleOverload(stRecvData);
-//                             delete recv;
-//                             recv = NULL;
-//                         }
-//                         //关闭连接的通知消息
-//                         else if (stRecvData.isClosed)
-//                         {
-//                             handleClose(stRecvData);
-//                             delete recv;
-//                             recv = NULL;
-//                         }
-//                         //数据在队列中已经超时了
-//                         else if ( (now - stRecvData.recvTimeStamp) > (int64_t)adapter->getQueueTimeout())
-//                         {
-//                             handleTimeout(stRecvData);
-//                             delete recv;
-//                             recv = NULL;
-//                         }
-//                         else
-//                         {
-//                             uint32_t iRet = _coroSched->createCoroutine(std::bind(&ServantHandle::handleRecvData, this, recv));
-//                             if(iRet == 0)
-//                             {
-//                                 handleOverload(stRecvData);
-//                                 delete recv;
-//                                 recv = NULL;
-//                             }
-//                         }
-//                         handleCustomMessage(false);
-//                     }
-//                     else
-//                     {
-//                         bFlag = false;
-//                         bYield = false;
-//                     }
-//                 }
-
-//                 if(iLoop == 0)
-//                     bYield = false;
-//             }
-//             catch (exception &ex)
-//             {
-//                 if(recv)
-//                 {
-//                     close(recv->uid, recv->fd);
-//                     delete recv;
-//                     recv = NULL;
-//                 }
-
-//                 getEpollServer()->error("[Handle::handleImp] error:" + string(ex.what()));
-//             }
-//             catch (...)
-//             {
-//                 if(recv)
-//                 {
-//                     close(recv->uid, recv->fd);
-//                     delete recv;
-//                     recv = NULL;
-//                 }
-
-//                 getEpollServer()->error("[Handle::handleImp] unknown error");
-//             }
-//         }
-
-//         if(!bYield)
-//         {
-//             _coroSched->yield();
-//         }
-//     }
-// }
 
 
 void ServantHandle::handleRequest()
@@ -472,24 +338,6 @@ bool ServantHandle::allFilterIsEmpty()
 
 void ServantHandle::initialize()
 {
-    // map<string, TC_EpollServer::BindAdapterPtr>::iterator adpit;
-
-    // map<string, TC_EpollServer::BindAdapterPtr>& adapters = _handleGroup->adapters;
-
-    // for (adpit = adapters.begin(); adpit != adapters.end(); ++adpit)
-    // {
-    //     ServantPtr servant = ServantHelperManager::getInstance()->create(adpit->first);
-
-    //     if (servant)
-    //     {
-    //         _servants[servant->getName()] = servant;
-    //     }
-    //     else
-    //     {
-    //         TLOGERROR("[TARS]ServantHandle initialize createServant ret null, for adapter `" + adpit->first + "`" << endl);
-    //     }
-    // }
-
     ServantPtr servant = ServantHelperManager::getInstance()->create(_bindAdapter->getName());
 
     if (servant)
@@ -499,6 +347,8 @@ void ServantHandle::initialize()
     else
     {
         TLOGERROR("[TAF]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl);
+	    cerr << "[TAF]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl;
+	    exit(-1);
     }
 
     map<string, ServantPtr>::iterator it = _servants.begin();

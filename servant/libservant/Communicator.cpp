@@ -15,9 +15,6 @@
  */
 
 #include "util/tc_file.h"
-#if TARS_SSL
-#include "util/tc_sslmgr.h"
-#endif
 
 #include "servant/Communicator.h"
 #include "servant/StatReport.h"
@@ -77,6 +74,60 @@ bool Communicator::isTerminating()
     return _terminating;
 }
 
+map<string, string> Communicator::getServantProperty(const string &sObj)
+{
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+	auto it = _objInfo.find(sObj);
+	if(it != _objInfo.end())
+	{
+		return it->second;
+	}
+
+	return map<string, string>();
+}
+
+void Communicator::setServantProperty(const string &sObj, const string& name, const string& value)
+{
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+	_objInfo[sObj][name] = value;
+}
+
+string Communicator::getServantProperty(const string &sObj, const string& name)
+{
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+	auto it = _objInfo.find(sObj);
+	if(it != _objInfo.end())
+	{
+		auto vit = it->second.find(name);
+
+		if(vit != it->second.end())
+		{
+			return vit->second;
+		}
+	}
+
+	return "";
+}
+
+#if TARS_SSL
+shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string & objName)
+{
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+	auto it = _objCtx.find(objName);
+	if(it != _objCtx.end())
+	{
+		return TC_OpenSSL::newSSL(it->second);
+	}
+
+	return TC_OpenSSL::newSSL(_ctx);
+}
+
+#endif
+
 void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_ROOT_PATH*/)
 {
     TC_LockT<TC_ThreadRecMutex> lock(*this);
@@ -89,6 +140,35 @@ void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_
         _properties["enableset"] = conf.get("/tars/application<enableset>", "n");
         _properties["setdivision"] = conf.get("/tars/application<setdivision>", "NULL");
     }
+
+	vector<string> auths;
+
+	if (conf.getDomainVector("/tars/application/client", auths))
+	{
+		for(size_t i = 0; i < auths.size(); i++)
+		{
+			map<string, string> &data = _objInfo[auths[i]];
+			data["accesskey"] = conf.get("/tars/application/client/" + auths[i] + "<accesskey>");
+			data["secretkey"] = conf.get("/tars/application/client/" + auths[i] + "<secretkey>");
+			data["ca"]        = conf.get("/tars/application/client/" + auths[i] + "<ca>");
+			data["cert"]      = conf.get("/tars/application/client/" + auths[i] + "<cert>");
+			data["key"]       = conf.get("/tars/application/client/" + auths[i] + "<key>");
+#if TARS_SSL
+
+			if(!data["ca"].empty())
+			{
+				shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx( data["ca"], data["cert"], data["key"], false);
+				if(!ctx)
+				{
+					TLOGERROR("[TARS]load obj:" << auths[i] << ", ssl error, ca:" << data["ca"] << endl);
+					exit(-1);
+				}
+
+				_objCtx[auths[i]] = ctx;
+			}
+#endif
+		}
+	}
 
     initClientConfig();
 }
@@ -262,7 +342,6 @@ void Communicator::initialize()
 
     _initialized = true;
 
-
 #if TARS_SSL
 
 	string ca   = getProperty("ca");
@@ -270,9 +349,9 @@ void Communicator::initialize()
 	string key  = getProperty("key");
 
 	if(!ca.empty()) {
-		bool flag = TC_SSLManager::getInstance()->addCtx("client", ca, cert, key, false);
+		_ctx = TC_OpenSSL::newCtx(ca, cert, key, false);
 
-		if(!flag)
+		if(!_ctx)
 		{
 			TLOGERROR("[TARS]load client ssl error, ca:" << ca << endl);
 			exit(-1);

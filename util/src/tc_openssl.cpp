@@ -25,7 +25,7 @@
 namespace tars
 {
 
-
+bool TC_OpenSSL::_initialize = false;
 //////////////////////////////////////////////////////////////////////////////////////////
 
 TC_OpenSSL::TC_OpenSSL(SSL* ssl)
@@ -88,11 +88,20 @@ std::string TC_OpenSSL::getErrMsg() const
 	return buffer;
 }
 
+void TC_OpenSSL::setReadBufferSize(size_t size)
+{
+	BIO_set_read_buffer_size(SSL_get_rbio(_ssl), size);
+}
+
+void TC_OpenSSL::setWriteBufferSize(size_t size)
+{
+	BIO_set_write_buffer_size(SSL_get_rbio(_ssl), size);
+}
+
 bool TC_OpenSSL::isHandshaked() const
 {
     return _bHandshaked;
 }
-
 
 int TC_OpenSSL::doHandshake(TC_NetWorkBuffer &out, const void* data, size_t size)
 {
@@ -233,6 +242,77 @@ int TC_OpenSSL::doSSLRead(SSL* ssl, TC_NetWorkBuffer& out)
 
 	return 0;
 }
+
+void TC_OpenSSL::initialize()
+{
+	if(!_initialize)
+	{
+		_initialize = true;
+		(void) SSL_library_init();
+		OpenSSL_add_all_algorithms();
+
+		ERR_load_ERR_strings();
+		SSL_load_error_strings();
+	}
+}
+
+shared_ptr<TC_OpenSSL::CTX> TC_OpenSSL::newCtx(const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient)
+{
+	initialize();
+
+	SSL_CTX* ctx = SSL_CTX_new(SSLv23_method());
+	if (!ctx)
+		return NULL;
+
+#define RETURN_IF_FAIL(call) \
+    if ((call) <= 0) { \
+        ERR_print_errors_fp(stderr); \
+        return NULL;\
+    }
+
+	if (verifyClient)
+		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+	else
+		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+
+	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_OFF);
+	SSL_CTX_clear_options(ctx, SSL_OP_LEGACY_SERVER_CONNECT);
+	SSL_CTX_clear_options(ctx, SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);
+
+	RETURN_IF_FAIL (SSL_CTX_set_session_id_context(ctx, (const unsigned char*)ctx, sizeof ctx));
+	if (!cafile.empty())
+		RETURN_IF_FAIL (SSL_CTX_load_verify_locations(ctx, cafile.data(), NULL));
+
+	// 客户端可以不提供证书的
+	if (!certfile.empty())
+		RETURN_IF_FAIL (SSL_CTX_use_certificate_file(ctx, certfile.data(), SSL_FILETYPE_PEM));
+
+	if (!keyfile.empty())
+	{
+		RETURN_IF_FAIL (SSL_CTX_use_PrivateKey_file(ctx, keyfile.data(), SSL_FILETYPE_PEM));
+		RETURN_IF_FAIL (SSL_CTX_check_private_key(ctx));
+	}
+
+#undef RETURN_IF_FAIL
+
+	return std::make_shared<TC_OpenSSL::CTX>(ctx);
+}
+
+shared_ptr<TC_OpenSSL> TC_OpenSSL::newSSL(const std::shared_ptr<TC_OpenSSL::CTX> &ctx)
+{
+	initialize();
+
+	SSL* ssl = SSL_new(ctx->ctx);
+
+	SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER); // allow retry ssl-write with different args
+	SSL_set_bio(ssl, BIO_new(BIO_s_mem()), BIO_new(BIO_s_mem()));
+
+	BIO_set_mem_eof_return(SSL_get_rbio(ssl), -1);
+	BIO_set_mem_eof_return(SSL_get_wbio(ssl), -1);
+
+	return std::make_shared<TC_OpenSSL>(ssl);
+}
+
 
 } // end namespace tars
 

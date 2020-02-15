@@ -26,6 +26,9 @@ using namespace TestApp;
 Communicator* _comm;
 
 static string helloObj = "TestApp.SSLServer.SSLObj@ssl -h 127.0.0.1 -p 9005";
+static string hello1Obj = "TestApp.SSLServer.SSL1Obj@ssl -h 127.0.0.1 -p 9006";
+static string hello2Obj = "TestApp.SSLServer.SSL2Obj@ssl -h 127.0.0.1 -p 9007";
+static string hello3Obj = "TestApp.SSLServer.SSL3Obj@ssl -h 127.0.0.1 -p 9008 -e 1";
 
 struct Param
 {
@@ -84,7 +87,7 @@ void syncCall(int c)
 
         try
         {
-		    param.pPrx->testHello(buffer, r);
+	        param.pPrx->testHello(buffer, r);
         }
         catch(exception& e)
         {
@@ -118,11 +121,15 @@ void asyncCall(int c)
 		{
 			cout << "exception:" << e.what() << endl;
 		}
+
+		if(i % 1000 == 0)
+			TC_Common::msleep(100);
 	}
 
 	int64_t cost = TC_Common::now2us() - t;
 	cout << "asyncCall send:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -130,7 +137,7 @@ int main(int argc, char *argv[])
     {
         if (argc < 6)
         {
-	        cout << "Usage:" << argv[0] << "--config=conf --count=1000 --call=[sync|async] --thread=1 --buffersize=1000 --netthread=1" << endl;
+	        cout << "Usage:" << argv[0] << "--config=conf --count=1000 --call=[sync|async|sync1|async1|sync2|async2] --thread=1 --buffersize=1000 --netthread=1" << endl;
 
 	        return 0;
         }
@@ -162,12 +169,6 @@ int main(int argc, char *argv[])
 
 	    _comm->setProperty("netthread", TC_Common::tostr(param.netthread));
 
-	    param.pPrx = _comm->stringToProxy<HelloPrx>(helloObj);
-
-	    param.pPrx->tars_connect_timeout(5000);
-        param.pPrx->tars_async_timeout(60*1000);
-        param.pPrx->tars_ping();
-
         int64_t start = TC_Common::now2us();
 
         std::function<void(int)> func;
@@ -175,16 +176,51 @@ int main(int argc, char *argv[])
         if (param.call == "sync")
         {
             func = syncCall;
+	        param.pPrx = _comm->stringToProxy<HelloPrx>(helloObj);
         }
         else if (param.call == "async")
         {
             func = asyncCall;
+	        param.pPrx = _comm->stringToProxy<HelloPrx>(helloObj);
+        }
+	    else if (param.call == "sync1")
+	    {
+		    func = syncCall;
+		    param.pPrx = _comm->stringToProxy<HelloPrx>(hello1Obj);
+	    }
+	    else if (param.call == "async1")
+	    {
+		    func = asyncCall;
+		    param.pPrx = _comm->stringToProxy<HelloPrx>(hello1Obj);
+	    }
+        else if (param.call == "sync2")
+        {
+	        func = syncCall;
+	        param.pPrx = _comm->stringToProxy<HelloPrx>(hello2Obj);
+        }
+        else if (param.call == "async2")
+        {
+	        func = asyncCall;
+	        param.pPrx = _comm->stringToProxy<HelloPrx>(hello2Obj);
+        }
+        else if (param.call == "sync3")
+        {
+	        func = syncCall;
+	        param.pPrx = _comm->stringToProxy<HelloPrx>(hello3Obj);
+        }
+        else if (param.call == "async3")
+        {
+	        func = asyncCall;
+	        param.pPrx = _comm->stringToProxy<HelloPrx>(hello3Obj);
         }
         else
         {
-        	cout << "no func, exits" << endl;
+        	cout << "no func, exits:" << param.call << endl;
         	exit(0);
         }
+
+	    param.pPrx->tars_connect_timeout(5000);
+	    param.pPrx->tars_async_timeout(60*1000);
 
 	    vector<std::thread*> vt;
         for(int i = 0 ; i< param.thread; i++)
@@ -193,7 +229,7 @@ int main(int argc, char *argv[])
         }
 
         std::thread print([&]{while(callback_count != param.count * param.thread) {
-	        cout << param.call << ": ----------finish count:" << callback_count << endl;
+	        cout << "SSL:" << param.call << ": ----------finish count:" << callback_count << endl;
 	        std::this_thread::sleep_for(std::chrono::seconds(1));
         };});
 

@@ -6,8 +6,6 @@ ENDIF()
 
 aux_source_directory(. DIR_SRCS)
 
-message("CMAKE_SYSTEM_NAME:${CMAKE_SYSTEM_NAME}, CMAKE_SYSTEM_PROCESSOR:${CMAKE_SYSTEM_PROCESSOR}, CMAKE_CXX_COMPILER_ID:${CMAKE_CXX_COMPILER_ID}")
-
 macro(cpu CPU_STR)
     set(CPU_STR "combined")
 
@@ -167,7 +165,19 @@ endmacro ()
 
 get_asm(JUMP_SRC MAKE_SRC)
 
-message("ABI_STR:${ABI_STR}, BF_STR:${BF_STR}, CPU_STR:${CPU_STR}, JUMP_SRC:${JUMP_SRC}, MAKE_SRC:${MAKE_SRC}, CMAKE_C_SIZEOF_DATA_PTR:${CMAKE_C_SIZEOF_DATA_PTR}")
+
+message("----------------------------------------------------")
+message("CMAKE_SYSTEM_NAME:         ${CMAKE_SYSTEM_NAME}")
+message("CMAKE_SYSTEM_PROCESSOR:    ${CMAKE_SYSTEM_PROCESSOR}")
+message("CMAKE_CXX_COMPILER_ID:     ${CMAKE_CXX_COMPILER_ID}")
+message("ABI_STR:                   ${ABI_STR}")
+message("BF_STR:                    ${BF_STR}")
+message("CPU_STR:                   ${CPU_STR}")
+message("JUMP_SRC:                  ${JUMP_SRC}")
+message("MAKE_SRC:                  ${MAKE_SRC}")
+message("CMAKE_C_SIZEOF_DATA_PTR:   ${CMAKE_C_SIZEOF_DATA_PTR}")
+message("----------------------------------------------------")
+
 
 list(APPEND DIR_SRCS ${JUMP_SRC})
 list(APPEND DIR_SRCS ${MAKE_SRC})

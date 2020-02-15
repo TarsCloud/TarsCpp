@@ -28,7 +28,7 @@ EndpointInfo::EndpointInfo()
 , _type(TCP)
 , _weight(-1)
 , _weighttype(0)
-, _authType(0)
+, _authType(AUTH_TYPENONE)
 , _isIPv6(false)
 , _addressSucc(false)
 {
@@ -45,7 +45,7 @@ EndpointInfo::EndpointInfo(const string& host, uint16_t port, EndpointInfo::ETyp
 , _setDivision(setDivision)
 , _weight(weight)
 , _weighttype(weighttype)
-, _authType(authType)
+, _authType((AUTH_TYPE)authType)
 , _addressSucc(false)
 {
     _isIPv6 = TC_Socket::addressIsIPv6(host);

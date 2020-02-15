@@ -32,14 +32,14 @@
 #include "util/tc_network_buffer.h"
 #include "util/tc_cas_queue.h"
 
+#if TARS_SSL
+#include "util/tc_openssl.h"
+#endif
+
 using namespace std;
 
 namespace tars
 {
-
-#if TARS_SSL
-    class TC_OpenSSL;
-#endif
 
 /////////////////////////////////////////////////
 /**
@@ -860,6 +860,10 @@ public:
 
         std::string getSk(const std::string& ak) const { return (_accessKey == ak) ? _secretKey : ""; }
 
+#if TARS_SSL
+        void setSSLCtx(const shared_ptr<TC_OpenSSL::CTX> &ctx) { _ctx = ctx; }
+#endif
+
 	private:
 		/**
 		 * 获取等待的队列锁
@@ -1002,7 +1006,14 @@ public:
          */
         std::string              _accessKey;
         std::string              _secretKey;
-        
+
+#if TARS_SSL
+
+        /**
+         * ssl ctx
+         */
+	    shared_ptr<TC_OpenSSL::CTX> _ctx;
+#endif
         //连接关闭的回调函数 
         close_functor           _closeFunc;
 
@@ -1528,6 +1539,12 @@ public:
          */
         void info(const string &s);
 
+	    /**
+		 * TARS日志
+		 * @param s
+		 */
+	    void tars(const string &s);
+
         /**
          * 记录错误日志
          * @param s
@@ -1904,6 +1921,12 @@ public:
      * @param s
      */
     void error(const string &s);
+
+	/**
+	 * tars日志
+	 * @param s
+	 */
+	void tars(const string &s);
 
     /**
      * 获取网络线程的数目

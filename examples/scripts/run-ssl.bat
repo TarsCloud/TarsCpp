@@ -15,6 +15,9 @@ echo "client: .\\bin\\Release\\SSLClient.exe"
 .\\bin\\Release\\SSLClient.exe --count=10000 --thread=2 --call=sync  --buffersize=1000 --netthread=1
 .\\bin\\Release\\SSLClient.exe --count=10000 --thread=2 --call=async  --buffersize=1000 --netthread=1
 
+.\\bin\\Release\\SSLClient.exe --count=10000 --thread=2 --call=syncauth  --buffersize=1000 --netthread=1
+.\\bin\\Release\\SSLClient.exe --count=10000 --thread=2 --call=asyncauth  --buffersize=1000 --netthread=1
+
 sleep 1
 
 killall -9 SSLServer.exe

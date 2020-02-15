@@ -25,7 +25,7 @@ using namespace TestApp;
 
 Communicator* _comm;
 
-static string helloObj = "TestApp.AuthServer.AuthObj@ssl -h 127.0.0.1 -p 9016 -e 1";
+static string helloObj = "TestApp.AuthServer.AuthObj@tcp -h 127.0.0.1 -p 9016 -e 1";
 
 struct Param
 {
@@ -84,7 +84,6 @@ void syncCall(int c)
 
         try
         {
-
 		    param.pPrx->testHello(buffer, r);
         }
         catch(exception& e)
@@ -97,7 +96,6 @@ void syncCall(int c)
     int64_t cost = TC_Common::now2us() - t;
     cout << "syncCall total:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
 }
-
 
 void asyncCall(int c)
 {
@@ -155,7 +153,7 @@ int main(int argc, char *argv[])
         conf.parseFile(option.getValue("config"));
 	    _comm->setProperty(conf);
 
-        TarsRollLogger::getInstance()->logger()->setLogLevel(6);
+//        TarsRollLogger::getInstance()->logger()->setLogLevel(6);
 
         _comm->setProperty("sendqueuelimit", "1000000");
         _comm->setProperty("asyncqueuecap", "1000000");
@@ -193,7 +191,7 @@ int main(int argc, char *argv[])
         }
 
         std::thread print([&]{while(callback_count != param.count * param.thread) {
-	        cout << param.call << ": ----------finish count:" << callback_count << endl;
+	        cout << "Auth:" << param.call << " : ----------finish count:" << callback_count << endl;
 	        std::this_thread::sleep_for(std::chrono::seconds(1));
         };});
 
@@ -212,7 +210,7 @@ int main(int argc, char *argv[])
 		    std::this_thread::sleep_for(std::chrono::seconds(1));
 	    }
 	    print.join();
-	    cout << "----------finish count:" << callback_count << endl;
+	    cout << "Auth:" << param.call << " ----------finish count:" << callback_count << endl;
     }
     catch(exception &ex)
     {

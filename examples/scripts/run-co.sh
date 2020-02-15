@@ -25,9 +25,9 @@ sleep 1
 
 echo "client: ./bin/CoroutineDemoClient"
 
-./bin/CoroutineDemoClient 2 10000 0
+./bin/CoroutineDemoClient --count=10000 --call=serial --thread=2 --buffersize=100 --netthread=2
 
-./bin/CoroutineDemoClient 2 10000 1
+./bin/CoroutineDemoClient --count=10000 --call=parallel --thread=2 --buffersize=100 --netthread=2
 
 ./bin/testCoro 1000
 
