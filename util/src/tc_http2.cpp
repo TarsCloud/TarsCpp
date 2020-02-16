@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <iostream>
 #include "util/tc_http2.h"
+#include "nghttp2/nghttp2.h"
 
 namespace tars
 {

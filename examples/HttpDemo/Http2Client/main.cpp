@@ -57,7 +57,7 @@ void syncRpc2(int c)
 
         try
         {
-		    param.servant2Prx->http_call("GET", "/", header, "helloworld", rheader, rbody);
+		    param.servant2Prx->http_call("POST", "/", header, "helloworld", rheader, rbody);
         }
         catch(exception& e)
         {
@@ -69,6 +69,43 @@ void syncRpc2(int c)
     int64_t cost = TC_Common::now2us() - t;
     cout << "syncRpc2 total:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
 }
+
+
+struct TestHttpCallback : public HttpCallback
+{
+	TestHttpCallback(int64_t t, int i, int c) : start(t), cur(i), count(c)
+	{
+
+	}
+
+	virtual int onHttpResponse(const std::map<std::string, std::string>& requestHeaders ,
+	                           const std::map<std::string, std::string>& responseHeaders ,
+	                           const std::vector<char>& rspBody)
+	{
+		callback_count++;
+
+		if(cur == count-1)
+		{
+			int64_t cost = TC_Common::now2us() - start;
+			cout << "onHttpResponse count:" << count << ", " << cost << " us, avg:" << 1.*cost/count << "us" << endl;
+		}
+
+		return 0;
+	}
+	virtual int onHttpResponseException(const std::map<std::string, std::string>& requestHeaders,
+	                                    int expCode)
+	{
+		cout << "onHttpResponseException expCode:" << expCode  << endl;
+
+		callback_count++;
+
+		return 0;
+	}
+
+	int64_t start;
+	int     cur;
+	int     count;
+};
 
 void asyncRpc2(int c)
 {
@@ -112,7 +149,7 @@ int main(int argc, char *argv[])
     {
         if (argc < 4)
         {
-	        cout << "Usage:" << argv[0] << "--count=1000 --call=[synchttp2|asynchttp2] --thread=1" << endl;
+	        cout << "Usage:" << argv[0] << "--count=1000 --call=[sync|async] --thread=1" << endl;
 
 	        return 0;
         }
@@ -149,11 +186,11 @@ int main(int argc, char *argv[])
 
         std::function<void(int)> func;
 
-        if (param.call == "synchttp2")
+        if (param.call == "sync")
         {
             func = syncRpc2;
         }
-        else if(param.call == "asynchttp2")
+        else if(param.call == "async")
         {
         	func = asyncRpc2;
         }

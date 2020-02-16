@@ -571,7 +571,7 @@ int TcpTransceiver::doResponse()
 		    {
 			    TC_NetWorkBuffer::PACKET_TYPE ret;
 
-			    while(!rbuf->empty())
+			    do
 		        {
 			        shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
 
@@ -588,7 +588,7 @@ int TcpTransceiver::doResponse()
 				    else {
 					    break;
 				    }
-			    }
+			    }while(true);
 
 			    //接收的数据小于buffer大小, 内核会再次通知你
 			    if(iRet < BUFFER_SIZE)

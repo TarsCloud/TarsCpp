@@ -124,7 +124,7 @@ void syncRpc(int c)
 
         try
         {
-	        param.servantPrx->http1_call("GET", "/", header, "helloworld", rheader, rbody);
+	        param.servantPrx->http_call("GET", "/", header, "helloworld", rheader, rbody);
         }
         catch(exception& e)
         {

@@ -65,7 +65,9 @@ int Http2Imp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 
         for(size_t i = 0; i < vtReqid.size(); i++)
         {
-            session->doResponse(vtReqid[i], rsp, buffer);
+        	vector<char> data;
+            session->doResponse(vtReqid[i], rsp, data);
+	        buffer.insert(buffer.end(), data.begin(), data.end());
         }
     }
     else

@@ -25,7 +25,7 @@
 
 #if TARS_HTTP2
 #include "util/tc_http2.h"
-// #include "util/tc_http2clientmgr.h"
+#include "nghttp2/nghttp2.h"
 #endif
 
 namespace tars

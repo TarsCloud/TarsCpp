@@ -1,12 +1,14 @@
 ﻿#ifndef __TC_HTTP2_H__
 #define __TC_HTTP2_H__
 
-#if TARS_HTTP2
+//#if TARS_HTTP2
 
 #include "util/tc_http.h"
 #include "util/tc_spin_lock.h"
 #include "util/tc_network_buffer.h"
-#include "nghttp2/nghttp2.h"
+//#include "nghttp2/nghttp2.h"
+
+typedef struct nghttp2_session nghttp2_session;
 
 namespace tars
 {
@@ -188,6 +190,6 @@ private:
 
 }
 
-#endif
+//#endif
 
 #endif

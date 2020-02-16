@@ -833,39 +833,39 @@ void ServantProxy::rpc_call_async(uint32_t iRequestId,
 
     invoke(msg, bCoro);
 }
+//
+//
+//void ServantProxy::http1_call(const std::string& method,
+//                              const std::string& uri,
+//                              const std::map<std::string, std::string>& headers,
+//                              const std::string& body,
+//                              std::map<std::string, std::string>& rheaders,
+//                              std::string& rbody)
+//{
+//	ReqMessage* msg = new ReqMessage();
+//
+//	msg->init(ReqMessage::SYNC_CALL, NULL, "");
+//
+//	msg->bFromRpc = true;
+//	msg->request.sServantName = uri;
+//	msg->request.sFuncName = method;
+//	msg->request.iRequestId = this->tars_gen_requestid();
+//
+//	// 使用下面两个字段保存头部和包体
+//	msg->request.context = headers;
+//
+//	msg->request.sBuffer.assign(body.begin(), body.end());
+//
+//	invoke(msg);
+//
+//	rheaders.swap(msg->response->status);
+//	rbody.assign(msg->response->sBuffer.begin(), msg->response->sBuffer.end());
+//
+//	delete msg;
+//	msg = NULL;
+//}
 
-
-void ServantProxy::http1_call(const std::string& method,
-                              const std::string& uri,
-                              const std::map<std::string, std::string>& headers,
-                              const std::string& body,
-                              std::map<std::string, std::string>& rheaders,
-                              std::string& rbody)
-{
-	ReqMessage* msg = new ReqMessage();
-
-	msg->init(ReqMessage::SYNC_CALL, NULL, "");
-
-	msg->bFromRpc = true;
-	msg->request.sServantName = uri;
-	msg->request.sFuncName = method;
-	msg->request.iRequestId = this->tars_gen_requestid();
-
-	// 使用下面两个字段保存头部和包体
-	msg->request.context = headers;
-
-	msg->request.sBuffer.assign(body.begin(), body.end());
-
-	invoke(msg);
-
-	rheaders.swap(msg->response->status);
-	rbody.assign(msg->response->sBuffer.begin(), msg->response->sBuffer.end());
-
-	delete msg;
-	msg = NULL;
-}
-
-void ServantProxy::http2_call(const std::string& method,
+void ServantProxy::http_call(const std::string& method,
                               const std::string& uri,
                               const std::map<std::string, std::string>& headers,
                               const std::string& body,
@@ -893,7 +893,7 @@ void ServantProxy::http2_call(const std::string& method,
     msg = NULL;
 }
 
-void ServantProxy::http2_call_async(const std::map<std::string, std::string>& headers,
+void ServantProxy::http_call_async(const std::map<std::string, std::string>& headers,
                                     const std::string& body,
                                     const HttpCallbackPtr &cb)
 {
