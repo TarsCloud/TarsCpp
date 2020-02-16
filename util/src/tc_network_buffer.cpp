@@ -68,12 +68,11 @@ const char * TC_NetWorkBuffer::mergeBuffers()
     //merge to one buffer
     if(_bufferList.size() > 1)
     {
-        vector<char> buffer = getBuffers();
+	    std::list<std::shared_ptr<Buffer>> bufferList;
 
-        _bufferList.clear();
+	    bufferList.push_back(std::make_shared<Buffer>(getBuffers()));
 
-	    addBuffer(buffer);
-//        _bufferList.push_back(buffer);
+        _bufferList.swap(bufferList);
     }
 
     assert(_bufferList.size() <= 1);
@@ -124,16 +123,9 @@ vector<char> TC_NetWorkBuffer::getBuffers() const
 {
     vector<char> buffer;
 
-    if(_bufferList.size() == 1)
-    {
-	    (*_bufferList.begin())->swap(buffer);
-    }
-    else
-    {
-	    buffer.resize(_length);
+    buffer.resize(_length);
 
-	    getBuffers(&buffer[0], _length);
-    }
+	getBuffers(&buffer[0], _length);
 
 	return buffer;
 }

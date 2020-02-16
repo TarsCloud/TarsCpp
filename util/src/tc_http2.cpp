@@ -251,6 +251,8 @@ TC_NetWorkBuffer::PACKET_TYPE TC_Http2Server::parse(TC_NetWorkBuffer&in, vector<
         nghttp2_settings_entry iv[2] = {{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 1000},
                                         {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 100*1024*1024}};
         nghttp2_submit_settings(_session, NGHTTP2_FLAG_NONE, iv, sizeof(iv)/sizeof(nghttp2_settings_entry));
+
+	    nghttp2_session_send(_session);
     }
 
     in.mergeBuffers();
