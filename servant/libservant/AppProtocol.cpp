@@ -237,8 +237,10 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
     // cout << "nghttp2_session_send, id:" << request.iRequestId << ", buff size:" << session->_buffer().size() << endl;
 
     vector<char> out;
-    out.swap(session->sendBuffer());
-    
+//    out.swap(session->buffer());
+
+	session->swap(out);
+
     return out;
 }
 
@@ -253,7 +255,7 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in,
 
 		((Transceiver*)(in.getConnection()))->getSendBuffer()->setContextData(session, [=]{delete session;});
 
-		session->settings();
+		session->settings(3000);
 	}
 
 //	cout << "http2Response:" << std::this_thread::get_id() << ", " << session << ", " << in.getBufferLength() << endl;

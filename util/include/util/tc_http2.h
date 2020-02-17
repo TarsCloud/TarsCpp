@@ -1,18 +1,66 @@
 ﻿#ifndef __TC_HTTP2_H__
 #define __TC_HTTP2_H__
 
-//#if TARS_HTTP2
-
 #include "util/tc_http.h"
 #include "util/tc_spin_lock.h"
 #include "util/tc_network_buffer.h"
-//#include "nghttp2/nghttp2.h"
 
 typedef struct nghttp2_session nghttp2_session;
 
 namespace tars
 {
 
+class TC_Http2
+{
+public:
+	TC_Http2();
+
+	virtual ~TC_Http2();
+
+	/**
+	 * @brief setting
+	 */
+	int settings(unsigned int maxCurrentStreams = 2000);
+
+	/**
+	 * @brief  buffer
+	 */
+	vector<char>& buffer() { return _buff; }
+
+	/**
+	 * buffer
+	 * @return
+	 */
+	const vector<char>& buffer() const { return _buff; }
+
+	/**
+	 * swap buff
+	 * @param buff
+	 */
+	void swap(vector<char> &buff) { _buff.swap(buff); }
+
+	/**
+	 * @brief  session
+	 */
+	nghttp2_session* session() const { return _session; }
+
+protected:
+	/**
+	 * error code
+	 */
+	int                 _err = 0;
+
+	/**
+	 * session
+	 */
+	nghttp2_session*    _session;
+
+	/**
+	 * data buff
+	 */
+	vector<char>        _buff;
+
+};
 class TC_Http2Server
 {
 public:
@@ -116,7 +164,7 @@ protected:
 
 /////////////////////////////////////////////////////////////////////////////////
 
-class TC_Http2Client
+class TC_Http2Client : public TC_Http2
 {
 public:
 
@@ -142,19 +190,19 @@ public:
     ~TC_Http2Client();
 public:
 
-    /** 
-     * @brief HTTP2握手+setting
-     */
-    int settings(unsigned int maxCurrentStreams = 2000);
-    /** 
-     * @brief  当前缓冲区
-     */
-    vector<char>& sendBuffer() { return _sendBuf; }
-
-    /** 
-     * @brief  session
-     */
-    nghttp2_session* session() const { return _session; }
+//    /**
+//     * @brief HTTP2握手+setting
+//     */
+//    int settings(unsigned int maxCurrentStreams = 2000);
+//    /**
+//     * @brief  当前缓冲区
+//     */
+//    vector<char>& sendBuffer() { return _sendBuf; }
+//
+//    /**
+//     * @brief  session
+//     */
+//    nghttp2_session* session() const { return _session; }
 
     /** 
      * @brief response
@@ -167,15 +215,15 @@ public:
     std::unordered_map<int, Http2Response> &doneResponses() { return _doneResponses; }
 
 private:
-    /**
-     * session
-     */
-    nghttp2_session* _session;
-
-    /**
-     * 发送缓存区，由send callback填充
-     */
-    vector<char> _sendBuf;
+//    /**
+//     * session
+//     */
+//    nghttp2_session* _session;
+//
+//    /**
+//     * 发送缓存区，由send callback填充
+//     */
+//    vector<char> _sendBuf;
 
     /**
      * 收到的响应

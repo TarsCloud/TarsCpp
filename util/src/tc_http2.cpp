@@ -25,6 +25,37 @@
 namespace tars
 {
 
+TC_Http2::TC_Http2() : _session(NULL)
+{
+
+}
+
+TC_Http2::~TC_Http2()
+{
+	if(_session)
+	{
+		nghttp2_session_del(_session);
+		_session = NULL;
+	}
+}
+
+int TC_Http2::settings(unsigned int maxCurrentStreams)
+{
+	nghttp2_settings_entry iv[2] = {
+		{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, maxCurrentStreams},
+		{NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 100 * 1024 * 1024},
+	};
+
+	/* 24 bytes magic string also will be sent*/
+	nghttp2_submit_settings(_session,
+	                        NGHTTP2_FLAG_NONE,
+	                        iv,
+	                        sizeof(iv)/sizeof(iv[0]));
+	int rv = nghttp2_session_send(_session);
+	return rv;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 namespace server
 {
 
@@ -253,7 +284,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_Http2Server::parse(TC_NetWorkBuffer&in, vector<
     {
         _bNewCon = false;
 
-        nghttp2_settings_entry iv[2] = {{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 2000},
+        nghttp2_settings_entry iv[2] = {{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 3000},
                                         {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 100*1024*1024}};
         nghttp2_submit_settings(_session, NGHTTP2_FLAG_NONE, iv, sizeof(iv)/sizeof(nghttp2_settings_entry));
 
@@ -542,7 +573,7 @@ namespace client
 static ssize_t send_callback(nghttp2_session* session, const uint8_t* data, size_t length, int flags, void* user_data)
 {
     TC_Http2Client* nghttp2 = (TC_Http2Client* )user_data;
-    nghttp2->sendBuffer().insert(nghttp2->sendBuffer().end(), (const char*)data, (const char*)data + length);
+    nghttp2->buffer().insert(nghttp2->buffer().end(), (const char*)data, (const char*)data + length);
 
     return length;
 }
@@ -652,7 +683,6 @@ static int on_stream_close_callback(nghttp2_session* session, int32_t stream_id,
 }
 
 TC_Http2Client::TC_Http2Client()
-: _session(NULL)
 {
     nghttp2_session_callbacks* callbacks;
     nghttp2_session_callbacks_new(&callbacks);
@@ -670,23 +700,7 @@ TC_Http2Client::TC_Http2Client()
 
 TC_Http2Client::~TC_Http2Client()
 {
-    nghttp2_session_del(_session);
-}
-
-int TC_Http2Client::settings(unsigned int maxCurrentStreams)
-{
-    nghttp2_settings_entry iv[2] = { 
-                                        {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, maxCurrentStreams},
-                                        {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 100 * 1024 * 1024},
-                                   };
-
-    /* 24 bytes magic string also will be sent*/
-    nghttp2_submit_settings(_session,
-                                     NGHTTP2_FLAG_NONE,
-                                     iv,
-                                     sizeof(iv)/sizeof(iv[0]));
-    int rv = nghttp2_session_send(_session);
-    return rv;
+//    nghttp2_session_del(_session);
 }
 
 // void TC_Http2Client::onNegotiateDone(bool succ)
