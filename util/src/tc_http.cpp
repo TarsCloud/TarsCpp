@@ -708,6 +708,14 @@ void TC_Http::reset()
     _bIsChunked = false;
 }
 
+void TC_Http::getHeaders(map<string, string> &header)
+{
+	for(auto it = _headers.begin(); it != _headers.end(); ++it)
+	{
+		header.insert(map<string, string>::value_type(it->first, it->second));
+	}
+}
+
 /********************* TC_HttpCookie ***********************/
 
 bool TC_HttpCookie::matchDomain(const string &sCookieDomain, const string &sDomain)

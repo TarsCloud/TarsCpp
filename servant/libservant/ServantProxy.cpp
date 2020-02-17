@@ -893,7 +893,9 @@ void ServantProxy::http_call(const std::string& method,
     msg = NULL;
 }
 
-void ServantProxy::http_call_async(const std::map<std::string, std::string>& headers,
+void ServantProxy::http_call_async(const std::string& method,
+                                   const std::string& uri,
+                                   const std::map<std::string, std::string>& headers,
                                     const std::string& body,
                                     const HttpCallbackPtr &cb)
 {
@@ -902,6 +904,8 @@ void ServantProxy::http_call_async(const std::map<std::string, std::string>& hea
     msg->init(ReqMessage::ASYNC_CALL, NULL, "");
 
     msg->bFromRpc = true;
+	msg->request.sServantName = uri;
+	msg->request.sFuncName = method;
     // 使用下面两个字段保存头部和包体
     msg->request.context = headers;
     msg->request.sBuffer.assign(body.begin(), body.end());

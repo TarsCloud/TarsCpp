@@ -380,7 +380,7 @@ public:
 
     /**
      * @brief  删除头部.
-     *  
+     *
      * @param sHeader:头部信息
      */
     void eraseHeader(const string &sHeader) { _headers.erase(sHeader); }
@@ -489,12 +489,12 @@ public:
      */
     void setHeaderMulti(const string &sHeadName, const string &sHeadValue) 
     {
-        _headers.insert(multimap<string, string>::value_type(sHeadName, sHeadValue)); 
+        _headers.insert(multimap<string, string>::value_type(sHeadName, sHeadValue));
     }
 
     /**
      * @brief  获取头(重复的也提取).
-     *  
+     *
      * @param sHeadName  header的名字
      * @return           vector<string>header的值
      */
@@ -534,6 +534,23 @@ public:
      */
     string &getContent() { return _content; }
 
+    /**
+     * append content
+     * @param append
+     * @param bUpdateContentLength
+     */
+    void appendContent(const char *buff, size_t len, bool bUpdateContentLength = false)
+    {
+	    _content.append(buff, len);
+
+	    if(bUpdateContentLength)
+	    {
+		    eraseHeader("Content-Length");
+		    if(_content.length() > 0)
+			    setContentLength(_content.length());
+	    }
+    }
+
 	/**
      * @brief 设置http body(默认不修改content-length).
      *  
@@ -572,12 +589,18 @@ public:
      *
      * @return http_header_type&
      */
-     const http_header_type& getHeaders() const{return _headers;}
+    const http_header_type& getHeaders() const{return _headers;}
+
+	/**
+	 * get headers
+	 * @param header
+	 */
+	void getHeaders(map<string, string> &header);
 
      /**
       * @brief 重置
       */
-     void reset();
+    void reset();
 
     /**
      * @brief 读取一行.
@@ -945,7 +968,7 @@ public:
 
     /**
      * @brief 获取Set-Cookie.
-     * 
+     *
      * @return vector<string>
      */
     vector<string> getSetCookie() const;

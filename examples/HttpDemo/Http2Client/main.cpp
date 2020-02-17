@@ -112,8 +112,6 @@ void asyncRpc2(int c)
 	int64_t t = TC_Common::now2us();
 
     std::map<std::string, std::string> header;
-    header[":path"] = "/";
-    header[":method"] = "POST";
     header[":authority"] = "domain.com";
     header[":scheme"] = "http";
 
@@ -124,7 +122,7 @@ void asyncRpc2(int c)
 
 		try
 		{
-			param.servant2Prx->http_call_async(header, "helloworld", p);
+			param.servant2Prx->http_call_async("POST", "/", header, "helloworld", p);
 		}
 		catch(exception& e)
 		{

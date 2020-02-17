@@ -644,7 +644,9 @@ public:
     /**
      * http2协议异步远程调用
      */
-    void http_call_async(const std::map<std::string, std::string>& headers,
+    void http_call_async(const std::string& method,
+                         const std::string& uri,
+                         const std::map<std::string, std::string>& headers,
                           const std::string& body,
                           const HttpCallbackPtr &cb);
 

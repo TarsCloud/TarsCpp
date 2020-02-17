@@ -169,8 +169,6 @@ static ssize_t reqbody_read_callback(nghttp2_session *session, int32_t stream_id
 // ENCODE function, called by network thread
 vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *trans)
 {
-//	std::lock_guard<std::mutex> l(m);
-
     TC_Http2Client* session = (TC_Http2Client*)trans->getSendBuffer()->getContextData();
 	if(session == NULL)
 	{
@@ -208,7 +206,6 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
         data.read_callback = reqbody_read_callback;
     }
 
-// cout << "pData:" << pData << ", " << data.read_callback << endl;
     int32_t sid = nghttp2_submit_request(session->session(),
                                          NULL,
                                          nva.data(),
@@ -230,15 +227,8 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
         TLOGERROR("[TARS]http2Request::Fatal error: nghttp2_session_send return: " << nghttp2_strerror(rv) << ", " << std::this_thread::get_id() << ", session:" << session << endl);
         return vector<char>();
     }
-//    else
-//    {
-//    	cout << "send" << endl;
-//    }
-    // cout << "nghttp2_session_send, id:" << request.iRequestId << ", buff size:" << session->_buffer().size() << endl;
 
     vector<char> out;
-//    out.swap(session->buffer());
-
 	session->swap(out);
 
     return out;
@@ -246,8 +236,6 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
 
 TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in, ResponsePacket& rsp)
 {
-//	std::lock_guard<std::mutex> l(m);
-
 	TC_Http2Client* session = (TC_Http2Client*)((Transceiver*)(in.getConnection()))->getSendBuffer()->getContextData();
 	if(session == NULL)
 	{
@@ -273,7 +261,6 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in,
 
         pair<const char*, size_t> buffer = in.getBufferPointer();
 
-//        cout << "size:" << buffer.second << endl;
         int readlen = nghttp2_session_mem_recv(session->session(), (const uint8_t*)buffer.first, buffer.second);
         if (readlen < 0)
         {
@@ -286,16 +273,13 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in,
 
     if(session->doneResponses().empty())
     {
-//    	cout << "doneResponses empty" << endl;
         return TC_NetWorkBuffer::PACKET_LESS;
     }
 
 	it = session->doneResponses().begin();
-    rsp.iRequestId  = it->second.streamId;
-    rsp.status      = it->second.headers;
-    rsp.sBuffer.swap(it->second.body);
-
-//	cout << "http2Response id:" << it->second.streamId << endl;
+    rsp.iRequestId  = it->first;
+    it->second->getHeaders(rsp.status);
+    rsp.sBuffer.assign(it->second->getContent().begin(), it->second->getContent().end());
 
 	session->doneResponses().erase(it);
 

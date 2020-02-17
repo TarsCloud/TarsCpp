@@ -29,7 +29,6 @@ TC_NetWorkBuffer::PACKET_TYPE parseHttp2(TC_NetWorkBuffer&in, vector<char> &out)
     if(sessionPtr == NULL)
     {
     	shared_ptr<TC_Http2Server> session(new TC_Http2Server());
-//        in.setContextData(session, [=]{delete session;});
 	    in.setContextData(session.get());
 
 	    session->settings(3000);
@@ -40,11 +39,7 @@ TC_NetWorkBuffer::PACKET_TYPE parseHttp2(TC_NetWorkBuffer&in, vector<char> &out)
 	    sessionPtr = session.get();
     }
 
-	TC_NetWorkBuffer::PACKET_TYPE flag = sessionPtr->parse(in, out);
-
-//	cout << "parseHttp2:" << session << ", out size:" << out.size() << endl;
-
-	return flag;
+	return sessionPtr->parse(in, out);
 }
 
 

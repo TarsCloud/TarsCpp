@@ -23,6 +23,9 @@ public:
 	 */
 	virtual ~TC_Http2();
 
+	/**
+	 * data pack
+	 */
 	struct DataPack
 	{
 		DataPack(const char *data, size_t length) : _dataBuf(data), _length(length) {}
@@ -94,16 +97,24 @@ class TC_Http2Server : public TC_Http2
 {
 public:
 
+	/**
+	 * constructor
+	 */
     TC_Http2Server();
 
+    /**
+     * deconstructor
+     */
     ~TC_Http2Server();
 
+    /**
+     * context
+     */
     struct Http2Context
     {
-//	    Http2Context(int32_t id) : reqId(id) {}
+	    Http2Context(int32_t id) : reqId(id) {}
 
 	    int32_t         reqId;
-	    bool            bFinish = false;
 	    TC_HttpRequest  request;
 	    TC_HttpResponse response;
     };
@@ -111,10 +122,10 @@ public:
 	/**
 	 * parse all request
 	 * @param request
-	 * @param unordered_map<int32_t, std::shared_ptr<TC_HttpRequest>>
+	 * @param vector<std::shared_ptr<TC_HttpRequest>>
 	 * @return
 	 */
-	void decodeRequest(vector<Http2Context> &contexts);
+	vector<shared_ptr<Http2Context>> decodeRequest();
 
 	/**
 	 *
@@ -123,7 +134,7 @@ public:
 	 * @param out
 	 * @return
 	 */
-	int encodeResponse(const Http2Context &context, vector<char> &out);
+	int encodeResponse(const shared_ptr<Http2Context> &context, vector<char> &out);
 
     /**
      * http2
@@ -133,7 +144,6 @@ public:
      */
     TC_NetWorkBuffer::PACKET_TYPE parse(TC_NetWorkBuffer&in, vector<char> &out);
 
-
     void onHeaderCallback(int32_t streamId);
     void onHeaderCallback(int32_t streamId, const string &skey, const string &svalue);
     void onFrameRecvCallback(int32_t streamId);
@@ -142,28 +152,20 @@ public:
 
 protected:
 
-	Http2Context &getContext(int32_t streamId);
+	shared_ptr<Http2Context> getContext(int32_t streamId);
+
 	void deleteContext(int32_t streamId);
 
 protected:
 
-//	TC_SpinLock _contextLock;
-//	TC_ThreadMutex _contextLock;
+	TC_ThreadMutex _nghttpLock;
 
-//    TC_SpinLock reqLock_;
-//    unordered_map<int32_t, RequestPack> _mReq;
+	unordered_map<int32_t, shared_ptr<Http2Context>>  _context;
 
-//	unordered_map<int32_t, RequestPack> _mReq;
-//	unordered_map<int32_t, std::shared_ptr<Http2Context>>  _context;
-	unordered_map<int32_t, Http2Context>  _context;
-
-	vector<Http2Context>  _contextFinished;
+	vector<shared_ptr<Http2Context>>  _contextFinished;
 
     vector<char> _reqout;
 
-    bool _bNewCon;
-
-	TC_ThreadMutex _nghttpLock;
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -172,72 +174,37 @@ class TC_Http2Client : public TC_Http2
 {
 public:
 
-    enum ResponseState
-    {
-        ResponseNone,
-        ResponseHeadersDone,
-        ResponseBodyDone,
-    };
-
-    struct Http2Response
-    {
-        int streamId;
-        std::map<std::string, std::string> headers;
-        vector<char> body;
-        ResponseState state;
-
-        void swap(Http2Response& other);
-    };
-
+	/**
+	 * constructor
+	 */
     TC_Http2Client();
 
+    /**
+     * deconstructor
+     */
     ~TC_Http2Client();
-public:
 
-//    /**
-//     * @brief HTTP2握手+setting
-//     */
-//    int settings(unsigned int maxCurrentStreams = 2000);
-//    /**
-//     * @brief  当前缓冲区
-//     */
-//    vector<char>& sendBuffer() { return _sendBuf; }
-//
-//    /**
-//     * @brief  session
-//     */
-//    nghttp2_session* session() const { return _session; }
-
-    /** 
+    /**
      * @brief response
      */
-    std::unordered_map<int, Http2Response> &responses() { return _responses; }
+    std::unordered_map<int, shared_ptr<TC_HttpResponse>> &responses() { return _responses; }
 
     /** 
      * @brief response finished
      */
-    std::unordered_map<int, Http2Response> &doneResponses() { return _doneResponses; }
+    std::unordered_map<int, shared_ptr<TC_HttpResponse>> &doneResponses() { return _doneResponses; }
 
 private:
-//    /**
-//     * session
-//     */
-//    nghttp2_session* _session;
-//
-//    /**
-//     * 发送缓存区，由send callback填充
-//     */
-//    vector<char> _sendBuf;
 
     /**
      * 收到的响应
      */
-    std::unordered_map<int, Http2Response> _responses;
+    std::unordered_map<int, shared_ptr<TC_HttpResponse>> _responses;
 
     /**
      * 收到的完整响应
      */
-    std::unordered_map<int, Http2Response> _doneResponses;
+    std::unordered_map<int, shared_ptr<TC_HttpResponse>> _doneResponses;
 };
 
 }
