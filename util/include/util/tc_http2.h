@@ -13,9 +13,24 @@ namespace tars
 class TC_Http2
 {
 public:
+	/**
+	 * constructor
+	 */
 	TC_Http2();
 
+	/**
+	 * deconstructor
+	 */
 	virtual ~TC_Http2();
+
+	struct DataPack
+	{
+		DataPack(const char *data, size_t length) : _dataBuf(data), _length(length) {}
+
+		const char* _dataBuf;
+		size_t      _length;
+		size_t      _readPos = 0;
+	};
 
 	/**
 	 * @brief setting
@@ -40,9 +55,21 @@ public:
 	void swap(vector<char> &buff) { _buff.swap(buff); }
 
 	/**
+	 * insert buff
+	 * @param buff
+	 */
+	void insertBuff(const char *buff, size_t length) { _buff.insert(_buff.end(), buff, buff + length); }
+
+	/**
 	 * @brief  session
 	 */
 	nghttp2_session* session() const { return _session; }
+
+	/**
+	 *
+	 * @return
+	 */
+	const char *getErrMsg();
 
 protected:
 	/**
@@ -61,41 +88,42 @@ protected:
 	vector<char>        _buff;
 
 };
-class TC_Http2Server
+
+
+class TC_Http2Server : public TC_Http2
 {
 public:
-
-    enum Req_Type
-    {
-        REQUEST_GET,
-        REQUEST_POST,
-        REQUEST_OPTIONS,
-        REQUEST_HEAD,
-        REQUEST_PUT,
-        REQUEST_DELETE
-    } ;
-
-    struct Http2Response
-    {
-        int status;
-        string about;
-        TC_Http::http_header_type header;
-        string body;
-    };
-
-    typedef std::function<void(const Req_Type reqtype, const string &requri, const TC_Http::http_header_type &reqHeader, const string &reqBody, Http2Response &rsp)> RequestFunc; 
 
     TC_Http2Server();
 
     ~TC_Http2Server();
 
-    /**
-     * get all http2 request id
-     * @param in
-     * @param out
-     * @return
-     */
-    static int doRequest(const vector<char> &request, vector<int32_t>& vtReqid);
+    struct Http2Context
+    {
+//	    Http2Context(int32_t id) : reqId(id) {}
+
+	    int32_t         reqId;
+	    bool            bFinish = false;
+	    TC_HttpRequest  request;
+	    TC_HttpResponse response;
+    };
+
+	/**
+	 * parse all request
+	 * @param request
+	 * @param unordered_map<int32_t, std::shared_ptr<TC_HttpRequest>>
+	 * @return
+	 */
+	void decodeRequest(vector<Http2Context> &contexts);
+
+	/**
+	 *
+	 * @param reqid
+	 * @param response
+	 * @param out
+	 * @return
+	 */
+	int encodeResponse(const Http2Context &context, vector<char> &out);
 
     /**
      * http2
@@ -105,61 +133,37 @@ public:
      */
     TC_NetWorkBuffer::PACKET_TYPE parse(TC_NetWorkBuffer&in, vector<char> &out);
 
-    int doResponse(int32_t reqid, const Http2Response &response, vector<char>& out);
 
-    int doRequest(const vector<char> &request, RequestFunc func, vector<char>& response);
-
-    int getMethod(int32_t reqid, Req_Type &method);
-
-    int getUri(int32_t reqid, string &uri);
-
-    int getHeader(int32_t reqid, TC_Http::http_header_type &header);
-
-    int getBody(int32_t reqid, string &body);
-
-    void appendResponseBuf(const char *buff, size_t length);
     void onHeaderCallback(int32_t streamId);
     void onHeaderCallback(int32_t streamId, const string &skey, const string &svalue);
     void onFrameRecvCallback(int32_t streamId);
     void onDataChunkRecvCallback(int32_t streamId, const char *data, size_t len);
     void onStreamCloseCallback(int32_t streamId);
 
-    struct DataPack
-    {
-        DataPack(){}
+protected:
 
-        DataPack(const string &data, int pos):dataBuf(data), readPos(pos){}
-
-        string        dataBuf;
-        unsigned int  readPos;
-    };
+	Http2Context &getContext(int32_t streamId);
+	void deleteContext(int32_t streamId);
 
 protected:
-    struct RequestPack
-    {
-        RequestPack():streamId(0), bFinish(false){}
 
-        Req_Type method;
-        string uri;
-        TC_Http::http_header_type header;
-        string body;
-        int32_t streamId;
-        bool bFinish;
-    };
+//	TC_SpinLock _contextLock;
+//	TC_ThreadMutex _contextLock;
 
-    TC_SpinLock _responseBufLock;
-    vector<char> _responseBuf;
+//    TC_SpinLock reqLock_;
+//    unordered_map<int32_t, RequestPack> _mReq;
 
-    TC_SpinLock reqLock_;
-    unordered_map<int32_t, RequestPack> _mReq;
+//	unordered_map<int32_t, RequestPack> _mReq;
+//	unordered_map<int32_t, std::shared_ptr<Http2Context>>  _context;
+	unordered_map<int32_t, Http2Context>  _context;
+
+	vector<Http2Context>  _contextFinished;
 
     vector<char> _reqout;
 
-    nghttp2_session *_session;
-
     bool _bNewCon;
 
-    TC_SpinLock _nghttpLock;
+	TC_ThreadMutex _nghttpLock;
 };
 
 /////////////////////////////////////////////////////////////////////////////////

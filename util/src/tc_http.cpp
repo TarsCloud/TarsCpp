@@ -2093,6 +2093,58 @@ void TC_HttpRequest::getHostPort(string &sDomain, uint32_t &iPort)
     iPort   = TC_Common::strto<uint32_t>(_httpURL.getPort());
 }
 
+void TC_HttpRequest::setMethod(const char * sMethod)
+{
+	//解析请求类型
+	if(TC_Port::strcasecmp(sMethod, "GET") ==0)    //if(sMethod == "GET")
+	{
+		_requestType = REQUEST_GET;
+	}
+	else if(TC_Port::strcasecmp(sMethod, "POST") ==0)    //else if(sMethod == "POST")
+	{
+		_requestType = REQUEST_POST;
+	}
+	else if(TC_Port::strcasecmp(sMethod, "PUT") ==0)
+	{
+		_requestType = REQUEST_PUT;
+	}
+	else if(TC_Port::strcasecmp(sMethod, "PATCH") ==0)
+	{
+		_requestType = REQUEST_PATCH;
+	}
+	else if(TC_Port::strcasecmp(sMethod, "OPTIONS") ==0)    //else if(sMethod == "OPTIONS")
+	{
+		_requestType = REQUEST_OPTIONS;
+	}
+	else if(TC_Port::strcasecmp(sMethod, "HEAD") == 0)
+	{
+		_requestType = REQUEST_HEAD;
+	}
+	else if(TC_Port::strcasecmp(sMethod, "DELETE") == 0)
+	{
+		_requestType = REQUEST_DELETE;
+	}
+	else
+	{
+		throw TC_HttpRequest_Exception("[TC_HttpRequest::setMethod] http request command error: " + string(sMethod));
+	}
+}
+
+void TC_HttpRequest::setPath(const char *path)
+{
+	_httpURL._sPath = path;
+}
+
+void TC_HttpRequest::setDomain(const char * sDomain)
+{
+	_httpURL._sDomain = sDomain;
+}
+
+void TC_HttpRequest::setScheme(const char * sScheme)
+{
+	_httpURL._sScheme = sScheme;
+}
+
 int TC_HttpRequest::doRequest(TC_HttpResponse &stHttpRsp, int iTimeout)
 {
     //只支持短连接模式

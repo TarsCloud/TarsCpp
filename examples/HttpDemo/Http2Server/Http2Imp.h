@@ -57,7 +57,7 @@ public:
      */    
     int doClose(TarsCurrentPtr current);
 
-    static TC_Http2Server *getHttp2(uint32_t uid)
+    static shared_ptr<TC_Http2Server> getHttp2(uint32_t uid)
     {
         TC_LockT<TC_SpinLock> lock(_mutex);
 
@@ -70,7 +70,7 @@ public:
         return NULL;
     }
 
-    static void addHttp2(uint32_t uid, TC_Http2Server* ptr)
+    static void addHttp2(uint32_t uid, const shared_ptr<TC_Http2Server> &ptr)
     {
         TC_LockT<TC_SpinLock> lock(_mutex);
 
@@ -93,7 +93,7 @@ protected:
 
     static TC_SpinLock _mutex;
 
-    static unordered_map<int32_t, TC_Http2Server*> _http2;
+    static unordered_map<int32_t, shared_ptr<TC_Http2Server>> _http2;
 };
 /////////////////////////////////////////////////////
 #endif

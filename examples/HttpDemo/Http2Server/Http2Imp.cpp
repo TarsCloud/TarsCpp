@@ -21,7 +21,7 @@ using namespace std;
 
 TC_SpinLock Http2Imp::_mutex;
 
-unordered_map<int32_t, TC_Http2Server*> Http2Imp::_http2;
+unordered_map<int32_t, shared_ptr<TC_Http2Server>> Http2Imp::_http2;
 
 //////////////////////////////////////////////////////
 void Http2Imp::initialize()
@@ -36,52 +36,77 @@ void Http2Imp::destroy()
     //destroy servant here:
     //...
 }
-
-void doRequestFunc(const TC_Http2Server::Req_Type reqtype, const string &requri, const TC_Http::http_header_type &reqHeader, const string &reqBody, TC_Http2Server::Http2Response &rsp)
-{
-    rsp.status = 200;
-    rsp.about  = "OK";
-    rsp.body   = "response helloworld 2";
-}
+//
+//void doRequestFunc(const TC_Http2Server::Req_Type reqtype, const string &requri, const TC_Http::http_header_type &reqHeader, const string &reqBody, TC_Http2Server::Http2Response &rsp)
+//{
+//    rsp.status = 200;
+//    rsp.about  = "OK";
+//    rsp.body   = "response helloworld 2";
+//}
 
 int Http2Imp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 {
+    shared_ptr<TC_Http2Server> session = getHttp2(current->getUId());
 
-    TC_Http2Server* session = getHttp2(current->getUId());
+//    cout << "doRequest:" << session << ", buffer size:" << current->getRequestBuffer().size() << endl;
 
-    static bool flag = true;
-    if(flag)
-    {
-        //method 1:
-        vector<int32_t> vtReqid;
-        TC_Http2Server::doRequest(current->getRequestBuffer(), vtReqid);
+	vector<TC_Http2Server::Http2Context> contexts;
 
-    // cout << "doRequest size:" << vtReqid.size() << endl;
+	session->decodeRequest(contexts);
 
-        TC_Http2Server::Http2Response rsp;
-        rsp.status = 200;
-        rsp.about  = "OK";
-        rsp.body   = "response helloworld 1";
+//	cout << "doRequest context size:" << contexts.size() << endl;
 
-        for(size_t i = 0; i < vtReqid.size(); i++)
-        {
-        	string rbody;
-        	session->getBody(vtReqid[i], rbody);
+	for(size_t i = 0; i< contexts.size(); ++i)
+	{
+		TC_Http2Server::Http2Context & context = contexts[i];
+		vector<char> data;
 
-//        	cout << vtReqid[i] << ", " << rbody << endl;
+		context.response.setHeader("X-Header", "TARS");
+		context.response.setResponse(200, "OK", context.request.getContent());
 
-        	vector<char> data;
-            session->doResponse(vtReqid[i], rsp, data);
-	        buffer.insert(buffer.end(), data.begin(), data.end());
+		int ret = session->encodeResponse(context, data);
+		if(ret != 0)
+		{
+			cout << "encodeResponse error:" << session->getErrMsg() << endl;
+		}
+		buffer.insert(buffer.end(), data.begin(), data.end());
+	}
 
+//	cout << "doRequest buffer size:" << buffer.size() << endl;
 
-        }
-    }
-    else
-    {
-        //method 2:
-        session->doRequest(current->getRequestBuffer(), doRequestFunc, buffer);
-    }
+//    static bool flag = true;
+//    if(flag)
+//    {
+//        //method 1:
+//        vector<int32_t> vtReqid;
+//        TC_Http2Server::doRequest(current->getRequestBuffer(), vtReqid);
+//
+//    // cout << "doRequest size:" << vtReqid.size() << endl;
+//
+//        TC_Http2Server::Http2Response rsp;
+//        rsp.status = 200;
+//        rsp.about  = "OK";
+//        rsp.body   = "response helloworld 1";
+//
+//        for(size_t i = 0; i < vtReqid.size(); i++)
+//        {
+//        	string rbody;
+//        	session->getBody(vtReqid[i], rbody);
+//
+////        	cout << vtReqid[i] << ", " << rbody << endl;
+//
+//        	vector<char> data;
+//            session->doResponse(vtReqid[i], rsp, data);
+//	        buffer.insert(buffer.end(), data.begin(), data.end());
+//
+//
+//        }
+//    }
+//    else
+//    {
+//        //method 2:
+//        session->doRequest(current->getRequestBuffer(), doRequestFunc, buffer);
+//    }
 
     // flag = !flag;
 
@@ -90,6 +115,7 @@ int Http2Imp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 
 int Http2Imp::doClose(TarsCurrentPtr current)
 {
+	cout << "doClose" << endl;
     delHttp2(current->getUId());
 
     return 0;

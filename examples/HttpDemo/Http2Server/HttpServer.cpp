@@ -24,18 +24,27 @@ HttpServer g_app;
 
 TC_NetWorkBuffer::PACKET_TYPE parseHttp2(TC_NetWorkBuffer&in, vector<char> &out)
 {
-    TC_Http2Server*session = (TC_Http2Server*)(in.getContextData());
+    TC_Http2Server*sessionPtr = (TC_Http2Server*)(in.getContextData());
 
-    if(session == NULL)
+    if(sessionPtr == NULL)
     {
-        session = new TC_Http2Server();
-        in.setContextData(session, [=]{delete session;});
+    	shared_ptr<TC_Http2Server> session(new TC_Http2Server());
+//        in.setContextData(session, [=]{delete session;});
+	    in.setContextData(session.get());
+
+	    session->settings(3000);
 
         TC_EpollServer::Connection *connection = (TC_EpollServer::Connection *)in.getConnection();
         Http2Imp::addHttp2(connection->getId(), session);
+
+	    sessionPtr = session.get();
     }
 
-    return session->parse(in, out);
+	TC_NetWorkBuffer::PACKET_TYPE flag = sessionPtr->parse(in, out);
+
+//	cout << "parseHttp2:" << session << ", out size:" << out.size() << endl;
+
+	return flag;
 }
 
 

@@ -88,6 +88,9 @@ struct TC_HttpRequest_Exception : public TC_Http_Exception
     ~TC_HttpRequest_Exception() throw(){};
 };
 
+class TC_HttpRequest;
+class TC_HttpResponse;
+
 /**   
  * @brief  简单的URL解析类.
  *  
@@ -279,6 +282,8 @@ public:
     void specialize();
 
 protected:
+	friend class TC_HttpRequest;
+
     /**
      * @brief  换成URL.
      * 
@@ -524,6 +529,12 @@ public:
     const string &getContent() const { return _content; }
 
     /**
+     * @brief get body
+     * @return http body
+     */
+    string &getContent() { return _content; }
+
+	/**
      * @brief 设置http body(默认不修改content-length).
      *  
      * @param content               http body内容
@@ -1156,9 +1167,39 @@ public:
     int doRequest(TC_HttpResponse &stHttpRep, int iTimeout = 3000);
 
     /**
-     * @brief 请求类型.
+     * @brief get request type
      */
     int requestType() const { return _requestType ; }
+
+	/**
+	 * @brief set request type
+	 */
+	void setRequestType(int requestType) {  _requestType = requestType ; }
+
+	/**
+	 * set method
+	 * @param
+	 * @return method invalid, throw exception
+	 */
+	void setMethod(const char * sMethod);
+
+	/**
+	 * set method
+	 * @param
+	 */
+	void setPath(const char * sPath);
+
+	/**
+	 * set domain
+	 * @param
+	 */
+	void setDomain(const char * sDomain);
+
+	/**
+	 * set schema
+	 * @param
+	 */
+	void setScheme(const char * sScheme);
 
     /**
      * @brief 是否是GET请求.
