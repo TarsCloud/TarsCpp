@@ -21,9 +21,7 @@
 #include "servant/NetworkUtil.h"
 #include "servant/CommunicatorEpoll.h"
 #include "servant/AuthLogic.h"
-// #include "util/tc_buffer.h"
 #include <list>
-//#include <sys/uio.h>
 
 using namespace std;
 
@@ -32,10 +30,6 @@ namespace tars
 #if TARS_SSL
     class TC_OpenSSL;
 #endif
-
-#if TARS_HTTP2
-    class TC_Http2Client;
-#endif   
 
 class AdapterProxy;
 
@@ -120,6 +114,18 @@ public:
      * 如果数据发送一半，缓冲区满了,返回成功
      */
 	int sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &pData);
+
+	/**
+	 * send buffer
+	 * @return
+	 */
+	TC_NetWorkBuffer *getSendBuffer() { return &_sendBuffer; }
+
+	/**
+	 * recv buffer
+	 * @return
+	 */
+	TC_NetWorkBuffer *getRecvBuffer() { return &_recvBuffer; }
 
     /*
      * 处理请求，判断Send BufferCache是否有完整的包
@@ -227,9 +233,6 @@ public:
      */
     bool sendAuthData(const BasicAuthInfo& );
 
-#if TARS_HTTP2
-    TC_Http2Client* getHttp2Client();
-#endif    
 protected:
     /** 
      ** 物理连接成功回调
@@ -281,9 +284,6 @@ protected:
     std::shared_ptr<TC_OpenSSL> _openssl;
 #endif
 
-#if TARS_HTTP2
-    TC_Http2Client*          _http2Client = NULL;
-#endif
     /*
      * 发送buffer
      */

@@ -877,7 +877,9 @@ int TC_EpollServer::Connection::parseProtocol(TC_NetWorkBuffer &rbuf)
 
 int TC_EpollServer::Connection::recvTcp()
 {
-    int recvCount = 0;
+	static std::atomic<int> totalRecv{0};
+
+	int recvCount = 0;
 
 	TC_NetWorkBuffer *rbuf = &_recvBuffer;
 
@@ -909,6 +911,8 @@ int TC_EpollServer::Connection::recvTcp()
         }
         else
         {
+//	        cout << "totalRecv:" << totalRecv << endl;
+
 #if TARS_SSL
 		    if (_pBindAdapter->getEndpoint().isSSL())
 		    {
@@ -1024,6 +1028,7 @@ int TC_EpollServer::Connection::recv()
 
 int TC_EpollServer::Connection::sendBuffer()
 {
+	static std::atomic<int> totalSend{0};
 	while(!_sendBuffer.empty())
 	{
 		pair<const char*, size_t> data = _sendBuffer.getBufferPointer();
@@ -1045,6 +1050,9 @@ int TC_EpollServer::Connection::sendBuffer()
 			}
 		}
 
+		totalSend += iBytesSent;
+
+//		cout << "totalSend:" << totalSend << endl;
 		if(iBytesSent > 0)
 		{
 			_sendBuffer.moveHeader(iBytesSent);

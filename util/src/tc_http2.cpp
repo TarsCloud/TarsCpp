@@ -35,6 +35,11 @@ static ssize_t str_read_callback(nghttp2_session *session, int32_t stream_id,
                                   void *user_data) 
 {
     TC_Http2Server::DataPack *dataPack = (TC_Http2Server::DataPack*)(source->ptr);
+	if(dataPack->readPos == dataPack->dataBuf.size())
+	{
+		*data_flags |= NGHTTP2_DATA_FLAG_EOF;
+		return 0;
+	}
     size_t size = std::min(dataPack->dataBuf.size() - dataPack->readPos, length);
 
     memcpy(buf, dataPack->dataBuf.c_str() + dataPack->readPos, size);
@@ -248,7 +253,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_Http2Server::parse(TC_NetWorkBuffer&in, vector<
     {
         _bNewCon = false;
 
-        nghttp2_settings_entry iv[2] = {{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 1000},
+        nghttp2_settings_entry iv[2] = {{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 2000},
                                         {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 100*1024*1024}};
         nghttp2_submit_settings(_session, NGHTTP2_FLAG_NONE, iv, sizeof(iv)/sizeof(nghttp2_settings_entry));
 
@@ -259,11 +264,13 @@ TC_NetWorkBuffer::PACKET_TYPE TC_Http2Server::parse(TC_NetWorkBuffer&in, vector<
 
     auto buff = in.getBufferPointer();
 
-    int readlen = nghttp2_session_mem_recv(_session, (uint8_t *)buff.first, buff.second); 
+	int readlen;
 
-    // vector<char> buff = in.getBuffers();
+	{
+		TC_LockT<TC_SpinLock> lock2(_nghttpLock);
 
-    // int readlen = nghttp2_session_mem_recv(_session, (uint8_t *)buff.data(), buff.size()); 
+		readlen = nghttp2_session_mem_recv(_session, (uint8_t *) buff.first, buff.second);
+	}
 
     if(readlen < 0)
     {
@@ -273,12 +280,13 @@ TC_NetWorkBuffer::PACKET_TYPE TC_Http2Server::parse(TC_NetWorkBuffer&in, vector<
     {
         in.moveHeader(readlen);
 
-        if (_reqout.empty())
+	    TC_LockT<TC_SpinLock> lock1(reqLock_);
+
+	    if (_reqout.empty())
         {
             return TC_NetWorkBuffer::PACKET_LESS;
         }
 
-        // out.insert(out.end(), _reqout.begin(), _reqout.end());
         out.swap(_reqout);
         _reqout.clear();
     }
@@ -340,13 +348,17 @@ int TC_Http2Server::doResponse(int32_t reqid, const Http2Response &response, vec
         TC_LockT<TC_SpinLock> lock(_nghttpLock);
 
         ret = nghttp2_submit_response(_session, reqid, hdrs, response.header.size()+1, &data_prd);
-        if (ret != 0) 
-            return -1;
+        if (ret != 0) {
+        	cout << "nghttp2_submit_response error" << endl;
+	        return -1;
+        }
 
         while (nghttp2_session_want_write(_session)) {
             ret = nghttp2_session_send(_session);
-            if (ret != 0) 
-                return -1;
+            if (ret != 0) {
+	            cout << "nghttp2_session_send error" << endl;
+	            return -1;
+            }
         }
     }
 
@@ -429,20 +441,26 @@ int TC_Http2Server::doRequest(const vector<char> &request, TC_Http2Server::Reque
             TC_LockT<TC_SpinLock> lock(_nghttpLock);
 
             int ret = nghttp2_submit_response(_session, ptr->streamId, hdrs, rsp.header.size()+1, &data_prd);
-            if (ret != 0) 
+            if (ret != 0)
+            {
+	            cout << "nghttp2_submit_response error:" << nghttp2_strerror(ret) << endl;
+            }
                 ;//TLOGERROR("Fatal error: %s", nghttp2_strerror(ret));
 
             while (nghttp2_session_want_write(_session)) {
                 ret = nghttp2_session_send(_session);
-                if (ret != 0) 
+                if (ret != 0)
+                {
+	                cout << "nghttp2_submit_response error:" << nghttp2_strerror(ret) << endl;
+                }
                     ;//TLOGERROR("Fatal error: %s", nghttp2_strerror(ret));
             }
         }
 
         {
             TC_LockT<TC_SpinLock> lock(_responseBufLock);
-            response.swap(_responseBuf);
-            _responseBuf.clear();
+            response.insert(response.begin(), _responseBuf.begin(), _responseBuf.end());
+	        _responseBuf.clear();
         }
 
         delete [] hdrs;
@@ -659,15 +677,15 @@ int TC_Http2Client::settings(unsigned int maxCurrentStreams)
 {
     nghttp2_settings_entry iv[2] = { 
                                         {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, maxCurrentStreams},
-                                        {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 1024 * 1024 * 1024},
+                                        {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 100 * 1024 * 1024},
                                    };
 
     /* 24 bytes magic string also will be sent*/
-    int rv = nghttp2_submit_settings(_session,
+    nghttp2_submit_settings(_session,
                                      NGHTTP2_FLAG_NONE,
                                      iv,
                                      sizeof(iv)/sizeof(iv[0]));
-    rv = nghttp2_session_send(_session);
+    int rv = nghttp2_session_send(_session);
     return rv;
 }
 

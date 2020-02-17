@@ -14,25 +14,20 @@
  * specific language governing permissions and limitations under the License.
  */
 
-//#include <sys/uio.h>
 #include "servant/Transceiver.h"
 #include "servant/AdapterProxy.h"
 #include "servant/Application.h"
 #include "servant/TarsLogger.h"
 #include "servant/AuthLogic.h"
-//#include "servant/Auth.h"
 
 #if TARS_SSL
 #include "util/tc_openssl.h"
 #endif
 
-#if TARS_HTTP2
-#include "util/tc_http2.h"
-#endif
 namespace tars
 {
 
-static const int BUFFER_SIZE = 10 * 1024;
+static const int BUFFER_SIZE = 16 * 1024;
 
 ///////////////////////////////////////////////////////////////////////
 Transceiver::Transceiver(AdapterProxy * pAdapterProxy,const EndpointInfo &ep)
@@ -317,14 +312,6 @@ void Transceiver::close()
     }
 #endif
 
-#if TARS_HTTP2
-    if(_http2Client)
-    {
-        delete _http2Client;
-        _http2Client = NULL;
-    }
-#endif
-
     _adapterProxy->getObjProxy()->getCommunicatorEpoll()->delFd(_fd,&_fdInfo,EPOLLIN|EPOLLOUT);
 
     NetworkUtil::closeSocketNoThrow(_fd);
@@ -341,21 +328,6 @@ void Transceiver::close()
 
     TLOGTARS("[TARS][trans close:"<< _adapterProxy->getObjProxy()->name()<< "," << _ep.desc() << "]" << endl);
 }
-
-#if TARS_HTTP2
-TC_Http2Client* Transceiver::getHttp2Client() 
-{ 
-    if(_http2Client == NULL)
-    {
-        _http2Client = new TC_Http2Client();
-        _http2Client->settings();
-    }
-
-    return _http2Client; 
-}
-
-#endif 
-
 
 int Transceiver::doRequest()
 {
@@ -470,6 +442,11 @@ int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff)
 	    return eRetError;
     }
 
+	static std::atomic<int> totalSend{0};
+	totalSend += iRet;
+
+//	cout << "totalSend:" << totalSend << endl;
+
     //没有全部发送完,写buffer 返回成功
     if(iRet < (int)buff->length())
     {
@@ -524,12 +501,18 @@ int TcpTransceiver::doResponse()
 
     int recvCount = 0;
 
+	static std::atomic<int> totalRecv{0};
+
 	do
     {
 	    char buff[BUFFER_SIZE] = {0x00};
 
 	    if ((iRet = this->recv(buff, BUFFER_SIZE, 0)) > 0)
 	    {
+		    totalRecv += iRet;
+
+//		    cout << "totalRecv:" << totalRecv << endl;
+
 		    TC_NetWorkBuffer *rbuf = &_recvBuffer;
 #if TARS_SSL
 		    if (isSSL())

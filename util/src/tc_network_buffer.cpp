@@ -9,14 +9,6 @@ using namespace std;
 namespace tars
 {
 
-//void TC_NetWorkBuffer::addSwapBuffer(vector<char>& buff)
-//{
-//	_length += buff.size();
-//
-//	_bufferList.push_back(std::make_shared<Buffervector<char>());
-//	_bufferList.back().swap(buff);
-//}
-
 void TC_NetWorkBuffer::addBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> & buff)
 {
 	_bufferList.push_back(buff);
@@ -145,30 +137,6 @@ bool TC_NetWorkBuffer::getHeader(size_t len, std::string &buffer) const
     buffer.resize(len);
 
 	getBuffers(&buffer[0], len);
-//
-//    auto it = _bufferList.begin();
-//
-//    size_t left = len;
-//
-//    while(it != _bufferList.end())
-//    {
-//        if((*it)->length() >= left)
-//        {
-//            //当前buffer足够
-//            buffer.append((*it)->buffer(), left);
-//            return true;
-//        }
-//        else
-//        {
-//            //当前buffer不够
-//            buffer.append((*it)->buffer(), (*it)->length());
-//            left = left - (*it)->length();
-//        }
-//
-//        ++it;
-//    }
-
-//    assert(buffer.length() == len);
 
     return true;
 }
@@ -188,30 +156,6 @@ bool TC_NetWorkBuffer::getHeader(size_t len, std::vector<char> &buffer) const
     buffer.resize(len);
 
 	getBuffers(&buffer[0], len);
-//
-//	auto it = _bufferList.begin();
-//
-//    size_t left = len;
-//
-//    while(it != _bufferList.end())
-//    {
-//	    if((*it)->length() >= left)
-//        {
-//            //当前buffer足够
-//            buffer.insert(buffer.end(), (*it)->buffer(), (*it)->buffer() + left);
-//            return true;
-//        }
-//        else
-//        {
-//            //当前buffer不够
-//            buffer.insert(buffer.end(), (*it)->buffer(), (*it)->buffer() + (*it)->length());
-//	        left = left - (*it)->length();
-//        }
-//
-//        ++it;
-//    }
-//
-//    assert(buffer.size() == len);
 
     return true;
 }

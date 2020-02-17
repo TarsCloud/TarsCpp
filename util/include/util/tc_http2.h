@@ -145,7 +145,7 @@ public:
     /** 
      * @brief HTTP2握手+setting
      */
-    int settings(unsigned int maxCurrentStreams = 1000);
+    int settings(unsigned int maxCurrentStreams = 2000);
     /** 
      * @brief  当前缓冲区
      */

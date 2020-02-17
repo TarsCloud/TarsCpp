@@ -113,7 +113,7 @@ void asyncRpc2(int c)
 
     std::map<std::string, std::string> header;
     header[":path"] = "/";
-    header[":method"] = "GET";
+    header[":method"] = "POST";
     header[":authority"] = "domain.com";
     header[":scheme"] = "http";
 
@@ -131,12 +131,10 @@ void asyncRpc2(int c)
 			cout << "exception:" << e.what() << endl;
 		}
 
-        TC_Common::msleep(10);
-
-        // while(i-callback_count > 0 )
-        // {
-        //     TC_Common::msleep(100);
-        // }
+        if(i % 500 == 0)
+        {
+            TC_Common::msleep(100);
+        }
 	}
 
 	int64_t cost = TC_Common::now2us() - t;
