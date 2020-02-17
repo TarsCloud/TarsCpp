@@ -185,6 +185,22 @@ public:
     ~TC_Http2Client();
 
     /**
+     * parse response
+     * @param in
+     */
+    TC_NetWorkBuffer::PACKET_TYPE parseResponse(TC_NetWorkBuffer &in, pair<int, shared_ptr<TC_HttpResponse>> &out);
+
+    /**
+     * submit, get net buffer to send
+     * @param method
+     * @param path
+     * @param header
+     * @param buff
+     * @return
+     */
+    int submit(const string &method, const string &path, const map<string, string> &header, const vector<char> &buff);
+
+    /**
      * @brief response
      */
     std::unordered_map<int, shared_ptr<TC_HttpResponse>> &responses() { return _responses; }

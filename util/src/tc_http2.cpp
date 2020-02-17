@@ -494,6 +494,20 @@ static int on_stream_close_callback(nghttp2_session* session, int32_t stream_id,
 
 }
 
+#define MAKE_NV(NAME, VALUE, VALUELEN)                                         \
+      {                                                                            \
+              (uint8_t *)NAME, (uint8_t *)VALUE, sizeof(NAME) - 1, VALUELEN,             \
+                  NGHTTP2_NV_FLAG_NONE                                                   \
+            }
+
+#define MAKE_NV2(NAME, VALUE)                                                  \
+      {                                                                            \
+              (uint8_t *)NAME, (uint8_t *)VALUE, sizeof(NAME) - 1, sizeof(VALUE) - 1,    \
+                  NGHTTP2_NV_FLAG_NONE                                                   \
+            }
+
+#define MAKE_STRING_NV(NAME, VALUE) {(uint8_t*)(NAME.data()), (uint8_t*)(VALUE.data()), NAME.size(), VALUE.size(), NGHTTP2_NV_FLAG_NONE};
+
 TC_Http2Client::TC_Http2Client()
 {
     nghttp2_session_callbacks* callbacks;
@@ -512,6 +526,97 @@ TC_Http2Client::TC_Http2Client()
 
 TC_Http2Client::~TC_Http2Client()
 {
+}
+
+int TC_Http2Client::submit(const string &method, const string &path, const map<string, string> &header, const vector<char> &buff)
+{
+	std::vector<nghttp2_nv> nva;
+
+//	const std::string method(":method");
+	nghttp2_nv nv1 = MAKE_STRING_NV(string(":method"), method);
+	if (!method.empty()) {
+		nva.push_back(nv1);
+	}
+
+//	const std::string path(":path");
+	nghttp2_nv nv2 = MAKE_STRING_NV(string(":path"), path);
+	if (!path.empty())
+		nva.push_back(nv2);
+
+	for (std::map<std::string, std::string>::const_iterator it(header.begin()); it != header.end(); ++ it)
+	{
+		nghttp2_nv nv = MAKE_STRING_NV(it->first, it->second);
+		nva.push_back(nv);
+	}
+
+	nghttp2_data_provider* pData = NULL;
+	nghttp2_data_provider data;
+
+	DataPack dataPack(buff.data(), buff.size());
+
+	if (!buff.empty())
+	{
+		pData = &data;
+		data.source.ptr = (void*)&dataPack;
+		data.read_callback = server::str_read_callback;
+	}
+
+	_err = nghttp2_submit_request(_session,
+	                                     NULL,
+	                                     nva.data(),
+	                                     nva.size(),
+	                                     pData,
+	                                     NULL);
+	if (_err < 0)
+	{
+		return _err;
+	}
+
+	int sid = _err;
+
+	int _err = nghttp2_session_send(_session);
+	if (_err != 0) {
+		return _err;
+	}
+
+	return sid;
+
+}
+
+TC_NetWorkBuffer::PACKET_TYPE TC_Http2Client::parseResponse(TC_NetWorkBuffer &in, pair<int, shared_ptr<TC_HttpResponse>> &out)
+{
+	if(_doneResponses.empty() && in.empty())
+	{
+		return TC_NetWorkBuffer::PACKET_LESS;
+	}
+
+	if(!in.empty())
+	{
+		//merge to one buffer
+		in.mergeBuffers();
+
+		pair<const char *, size_t> buffer = in.getBufferPointer();
+
+		int readlen = nghttp2_session_mem_recv(_session, (const uint8_t *) buffer.first, buffer.second);
+		if (readlen < 0) {
+			return TC_NetWorkBuffer::PACKET_ERR;
+		}
+
+		in.moveHeader(readlen);
+	}
+
+	if(_doneResponses.empty())
+	{
+		return TC_NetWorkBuffer::PACKET_LESS;
+	}
+
+	auto it = _doneResponses.begin();
+	out.first = it->first;
+	out.second = it->second;
+
+	_doneResponses.erase(it);
+	return TC_NetWorkBuffer::PACKET_FULL;
+
 }
 
 // void TC_Http2Client::onNegotiateDone(bool succ)
