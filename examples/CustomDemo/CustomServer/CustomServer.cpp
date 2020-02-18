@@ -27,7 +27,7 @@ static TC_NetWorkBuffer::PACKET_TYPE parse(TC_NetWorkBuffer &in, vector<char> &o
 
 	iHeaderLen = ntohl(iHeaderLen);
 
-	if (iHeaderLen > 100000 || iHeaderLen < sizeof(unsigned int))
+	if (iHeaderLen > 100000 || iHeaderLen < (int)sizeof(unsigned int))
 	{
 		throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
 	}

@@ -23,6 +23,7 @@
 #include <vector>
 #include <string.h>
 #include <cassert>
+#include <memory>
 
 using namespace std;
 
