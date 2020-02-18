@@ -12,8 +12,8 @@ sleep 3
 
 echo "client: .\\bin\\Release\\Http2Client.exe"
 
-.\\bin\\Release\\Http2Client.exe --count=10000 --thread=2 --call=synchttp2
-.\\bin\\Release\\Http2Client.exe --count=10000 --thread=2 --call=asynchttp2
+.\\bin\\Release\\Http2Client.exe --count=10000 --thread=2 --call=sync
+.\\bin\\Release\\Http2Client.exe --count=10000 --thread=2 --call=async
 
 sleep 1
 

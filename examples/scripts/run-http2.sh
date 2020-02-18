@@ -13,8 +13,8 @@ sleep 1
 
 echo "client: ./bin/Http2Client"
 
-./bin/Http2Client --count=10000 --thread=2 --call=asynchttp
-./bin/Http2Client --count=10000 --thread=2 --call=synchttp
+./bin/Http2Client --count=10000 --thread=2 --call=async
+./bin/Http2Client --count=10000 --thread=2 --call=sync
 
 sleep 1
 
