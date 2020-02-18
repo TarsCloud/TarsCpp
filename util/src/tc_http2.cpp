@@ -43,7 +43,7 @@ int TC_Http2::settings(unsigned int maxCurrentStreams)
 {
 	nghttp2_settings_entry iv[2] = {
 		{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, maxCurrentStreams},
-		{NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 100 * 1024 * 1024},
+		{NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 1024 * 1024},
 	};
 
 	/* 24 bytes magic string also will be sent*/
@@ -364,19 +364,6 @@ int TC_Http2Server::encodeResponse(const shared_ptr<TC_Http2Server::Http2Context
 	return 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////
-//
-//void TC_Http2Client::Http2Response::swap(Http2Response& other)
-//{
-//    if (this == &other)
-//        return;
-//
-//    std::swap(streamId, other.streamId);
-//    headers.swap(other.headers);
-//    body.swap(other.body);
-//    std::swap(state, other.state);
-//}
-
 ///////////////////////////////////////////////////////////////////////////////////////
 
 namespace client
@@ -384,7 +371,7 @@ namespace client
 static ssize_t send_callback(nghttp2_session* session, const uint8_t* data, size_t length, int flags, void* user_data)
 {
     TC_Http2Client* nghttp2 = (TC_Http2Client* )user_data;
-    nghttp2->buffer().insert(nghttp2->buffer().end(), (const char*)data, (const char*)data + length);
+    nghttp2->insertBuff((const char*)data, length);
 
     return length;
 }
@@ -397,9 +384,6 @@ static int on_begin_headers_callback(nghttp2_session* session, const nghttp2_fra
     {
         if (frame->headers.cat == NGHTTP2_HCAT_RESPONSE)
         {
-//            TC_HttpResponse rsp;
-//            rsp.streamId = frame->hd.stream_id;
-//            rsp.state = TC_Http2Client::ResponseNone;
             nghttp2->responses()[frame->hd.stream_id] = std::make_shared<TC_HttpResponse>();
         }
     }
@@ -449,7 +433,6 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
             if (frame->hd.flags & NGHTTP2_FLAG_END_HEADERS)
             {
             	;
-//                it->second.state = TC_Http2Client::ResponseHeadersDone;
             }
             return 0;
 
@@ -484,8 +467,6 @@ static int on_stream_close_callback(nghttp2_session* session, int32_t stream_id,
         return NGHTTP2_ERR_CALLBACK_FAILURE;
     }
 
-//    it->second.state = TC_Http2Client::ResponseBodyDone;
-
 	nghttp2->doneResponses()[stream_id] = it->second;
 	nghttp2->responses().erase(it);
 
@@ -494,19 +475,7 @@ static int on_stream_close_callback(nghttp2_session* session, int32_t stream_id,
 
 }
 
-#define MAKE_NV(NAME, VALUE, VALUELEN)                                         \
-      {                                                                            \
-              (uint8_t *)NAME, (uint8_t *)VALUE, sizeof(NAME) - 1, VALUELEN,             \
-                  NGHTTP2_NV_FLAG_NONE                                                   \
-            }
-
-#define MAKE_NV2(NAME, VALUE)                                                  \
-      {                                                                            \
-              (uint8_t *)NAME, (uint8_t *)VALUE, sizeof(NAME) - 1, sizeof(VALUE) - 1,    \
-                  NGHTTP2_NV_FLAG_NONE                                                   \
-            }
-
-#define MAKE_STRING_NV(NAME, VALUE) {(uint8_t*)(NAME.data()), (uint8_t*)(VALUE.data()), NAME.size(), VALUE.size(), NGHTTP2_NV_FLAG_NONE};
+#define MAKE_STRING_NV(NAME, VALUE) {(uint8_t*)(NAME.c_str()), (uint8_t*)(VALUE.c_str()), NAME.size(), VALUE.size(), NGHTTP2_NV_FLAG_NONE};
 
 TC_Http2Client::TC_Http2Client()
 {
@@ -532,14 +501,14 @@ int TC_Http2Client::submit(const string &method, const string &path, const map<s
 {
 	std::vector<nghttp2_nv> nva;
 
-//	const std::string method(":method");
-	nghttp2_nv nv1 = MAKE_STRING_NV(string(":method"), method);
+	const std::string smethod(":method");
+	nghttp2_nv nv1 = MAKE_STRING_NV(smethod, method);
 	if (!method.empty()) {
 		nva.push_back(nv1);
 	}
 
-//	const std::string path(":path");
-	nghttp2_nv nv2 = MAKE_STRING_NV(string(":path"), path);
+	const std::string spath(":path");
+	nghttp2_nv nv2 = MAKE_STRING_NV(spath, path);
 	if (!path.empty())
 		nva.push_back(nv2);
 
@@ -572,9 +541,9 @@ int TC_Http2Client::submit(const string &method, const string &path, const map<s
 		return _err;
 	}
 
-	int sid = _err;
-
-	int _err = nghttp2_session_send(_session);
+    int sid = _err;
+    
+	_err = nghttp2_session_send(_session);
 	if (_err != 0) {
 		return _err;
 	}

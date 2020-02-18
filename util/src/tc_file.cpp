@@ -414,29 +414,29 @@ string TC_File::load2str(const string &sFullFileName)
 {
 // #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     
-//     ifstream ifs(sFullFileName.c_str());
+    ifstream ifs(sFullFileName.c_str());
 
-//     return string(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
+    return string(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
 
 // #elif TARGET_PLATFORM_WINDOWS
-	std::ifstream::pos_type iLen = TC_File::getFileSize(sFullFileName);
-	FILE* fp = TC_Port::fopen(sFullFileName.c_str(), "rb");
-	// if (fopen_s(&fp, sFullFileName.c_str(), "rb") == 0)	
-    if(fp != NULL)
-	{
-		char* sBuffer = new char[iLen];
-		size_t l = fread(sBuffer, 1, iLen, fp);
-		fclose(fp);
-		if (l != iLen)
-		{
-			delete[] sBuffer;
-			return "";
-		}
-		std::string s(sBuffer, iLen);
-		delete[] sBuffer;
-		return s;
-	}
-	return "";
+	// std::ifstream::pos_type iLen = TC_File::getFileSize(sFullFileName);
+	// FILE* fp = TC_Port::fopen(sFullFileName.c_str(), "rb");
+	// // if (fopen_s(&fp, sFullFileName.c_str(), "rb") == 0)	
+    // if(fp != NULL)
+	// {
+	// 	char* sBuffer = new char[iLen];
+	// 	size_t l = fread(sBuffer, 1, iLen, fp);
+	// 	fclose(fp);
+	// 	if (l != iLen)
+	// 	{
+	// 		delete[] sBuffer;
+	// 		return "";
+	// 	}
+	// 	std::string s(sBuffer, iLen);
+	// 	delete[] sBuffer;
+	// 	return s;
+	// }
+	// return "";
 // #endif    
 }
 
@@ -461,7 +461,7 @@ bool TC_File::load2str(const string &sFullFileName, vector<char> &data)
 	// if (fopen_s(&fp, sFullFileName.c_str(), "rb") == 0)	
 	{
         data.resize(iLen);
-		size_t l = fread(data.data(), 1, iLen, fp);
+		int l = fread(data.data(), 1, iLen, fp);
 		fclose(fp);
 		if (l != iLen)
 		{

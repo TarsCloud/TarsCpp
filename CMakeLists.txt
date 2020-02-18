@@ -263,6 +263,7 @@ ExternalProject_Add(${LIB_HTTP2}
     BUILD_COMMAND make
     INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
     URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
+#    URL_MD5 9521689460b4a57912acd3f88f301a3a
     )
 endif()
 

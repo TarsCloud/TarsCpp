@@ -214,18 +214,19 @@ int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
     size_t iCode = (hashcode & 0xFFFFFFFFL);
 
     int low = 0;
-    size_t high = _vHashList.size();
+    int high = (int)_vHashList.size();
 
-    if(iCode <= _vHashList[0].iHashCode || iCode > _vHashList[high-1].iHashCode)
+    if(iCode <= (size_t)_vHashList[0].iHashCode || iCode > (size_t)_vHashList[high-1].iHashCode)
     {
         iIndex = _vHashList[0].iIndex;
         return 0;
     }
 
+
     while (low < high - 1)
     {
         int mid = (low + high) / 2;
-        if (_vHashList[mid].iHashCode > iCode)
+        if ((size_t)_vHashList[mid].iHashCode > iCode)
         {
             high = mid;
         }

@@ -128,7 +128,7 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
 
 		trans->getSendBuffer()->setContextData(session, [=]{delete session;});
 
-		session->settings();
+		session->settings(3000);
 	}
 
 	request.iRequestId = session->submit(request.sFuncName, request.sServantName, request.context, request.sBuffer);
@@ -147,14 +147,6 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
 TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in, ResponsePacket& rsp)
 {
 	TC_Http2Client* session = (TC_Http2Client*)((Transceiver*)(in.getConnection()))->getSendBuffer()->getContextData();
-	if(session == NULL)
-	{
-		session = new TC_Http2Client();
-
-		((Transceiver*)(in.getConnection()))->getSendBuffer()->setContextData(session, [=]{delete session;});
-
-		session->settings(3000);
-	}
 
 	pair<int, shared_ptr<TC_HttpResponse>> out;
 	TC_NetWorkBuffer::PACKET_TYPE flag = session->parseResponse(in, out);

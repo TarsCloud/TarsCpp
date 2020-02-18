@@ -48,6 +48,7 @@ void syncRpc2(int c)
     std::map<std::string, std::string> header;
     header[":authority"] = "domain.com";
     header[":scheme"] = "http";
+    // header[":method"] = "POST";
 
     std::map<std::string, std::string> rheader;
     //发起远程调用
