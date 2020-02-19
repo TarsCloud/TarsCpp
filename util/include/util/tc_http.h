@@ -67,7 +67,7 @@ namespace tars
 struct TC_Http_Exception : public TC_Exception
 {
     TC_Http_Exception(const string &sBuffer) : TC_Exception(sBuffer){};
-    ~TC_Http_Exception() throw(){};
+    ~TC_Http_Exception() {};
 };
 
 /**

@@ -49,7 +49,7 @@ namespace tars
 struct TC_Epoller_Exception : public TC_Exception
 {
    TC_Epoller_Exception(const string &buffer, int err) : TC_Exception(buffer, err) {};
-   ~TC_Epoller_Exception() throw() {};
+   ~TC_Epoller_Exception() {};
 };
 
 /**
