@@ -1,23 +1,27 @@
 #!/bin/bash
 
 echo "run-co.sh"
+EXE_PATH=$1
+SRC_PATH=$2
 
-killall -2 PushServer 
+echo ${EXE_PATH} ${SRC_PATH}
+
+killall -9 PushServer
 
 sleep 1
-echo "start server: ./bin/PushServer --config=../examples/PushDemo/PushServer/config.conf &"
+echo "start server: ${EXE_PATH}/PushServer --config=${SRC_PATH}/examples/PushDemo/PushServer/config.conf &"
 
-./bin/PushServer --config=../examples/PushDemo/PushServer/config.conf &
+${EXE_PATH}/PushServer --config=${SRC_PATH}/examples/PushDemo/PushServer/config.conf &
 
 sleep 2
 
 #-------------------------------------------------------------------------------------------------------
 
-echo "client: ./bin/PushClient"
+echo "client: ${EXE_PATH}/PushClient"
 
-./bin/PushClient 5
+${EXE_PATH}/PushClient 5
 
-killall -2 PushServer
+killall -9 PushServer
 
 
 

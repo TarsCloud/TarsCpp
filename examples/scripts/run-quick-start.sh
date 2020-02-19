@@ -1,33 +1,37 @@
 #!/bin/bash
 
 echo "run-quick-start.sh"
+EXE_PATH=$1
+SRC_PATH=$2
 
-killall -2 QuickStartDemo ProxyServer
+echo ${EXE_PATH} ${SRC_PATH}
+
+killall -9 QuickStartDemo ProxyServer
 
 sleep 1
-echo "start server: ./bin/QuickStartDemo --config=../examples/QuickStartDemo/HelloServer/Server/config.conf &"
+echo "start server: ${EXE_PATH}/QuickStartDemo --config=${SRC_PATH}/examples/QuickStartDemo/HelloServer/Server/config.conf &"
 
-./bin/QuickStartDemo --config=../examples/QuickStartDemo/HelloServer/Server/config.conf &
-./bin/ProxyServer --config=../examples/QuickStartDemo/ProxyServer/Server/config.conf &
+${EXE_PATH}/QuickStartDemo --config=${SRC_PATH}/examples/QuickStartDemo/HelloServer/Server/config.conf &
+${EXE_PATH}/ProxyServer --config=${SRC_PATH}/examples/QuickStartDemo/ProxyServer/Server/config.conf &
 
 sleep 2
 
-echo "client: ./bin/QuickStartDemoClient"
+echo "client: ${EXE_PATH}/QuickStartDemoClient"
 
-./bin/QuickStartDemoClient --count=100000 --call=sync --thread=2 --buffersize=100 --netthread=2
+${EXE_PATH}/QuickStartDemoClient --count=100000 --call=sync --thread=2 --buffersize=100 --netthread=2
 
-./bin/QuickStartDemoClient --count=100000 --call=async --thread=2 --buffersize=100 --netthread=2
+${EXE_PATH}/QuickStartDemoClient --count=100000 --call=async --thread=2 --buffersize=100 --netthread=2
 
-./bin/QuickStartDemoClient --count=100000 --call=synctup --thread=2 --buffersize=100 --netthread=2
+${EXE_PATH}/QuickStartDemoClient --count=100000 --call=synctup --thread=2 --buffersize=100 --netthread=2
 
-./bin/QuickStartDemoClient --count=100000 --call=asynctup --thread=2 --buffersize=100 --netthread=2
+${EXE_PATH}/QuickStartDemoClient --count=100000 --call=asynctup --thread=2 --buffersize=100 --netthread=2
 
-echo "client: ./bin/ProxyServerClient"
+echo "client: ${EXE_PATH}/ProxyServerClient"
 
-./bin/ProxyServerClient
+${EXE_PATH}/ProxyServerClient
 
 sleep 1
 
-killall -2 ProxyServer QuickStartDemo
+killall -9 ProxyServer QuickStartDemo
 
 

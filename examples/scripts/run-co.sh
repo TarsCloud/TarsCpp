@@ -2,42 +2,46 @@
 
 echo "run-co.sh"
 
+EXE_PATH=$1
+SRC_PATH=$2
+
+echo ${EXE_PATH} ${SRC_PATH}
 
 killall -2 CoroutineDemoAServer 
 sleep 1
 
-echo "start server: ./bin/CoroutineDemoAServer --config=../examples/CoroutineDemo/AServer/config.conf &"
+echo "start server: ${EXE_PATH}/CoroutineDemoAServer --config=${SRC_PATH}/examples/CoroutineDemo/AServer/config.conf &"
 
-./bin/CoroutineDemoAServer --config=../examples/CoroutineDemo/AServer/config.conf &
+${EXE_PATH}/CoroutineDemoAServer --config=${SRC_PATH}/examples/CoroutineDemo/AServer/config.conf &
 
 #-------------------------------------------------------------------------------------------------------
 
 killall -2 CoroutineDemoBServer 
 sleep 1
 
-echo "start server: ./bin/CoroutineDemoBServer --config=../examples/CoroutineDemo/BServer/config.conf &"
+echo "start server: ${EXE_PATH}/CoroutineDemoBServer --config=${SRC_PATH}/examples/CoroutineDemo/BServer/config.conf &"
 
-./bin/CoroutineDemoBServer --config=../examples/CoroutineDemo/BServer/config.conf &
+${EXE_PATH}/CoroutineDemoBServer --config=${SRC_PATH}/examples/CoroutineDemo/BServer/config.conf &
 
 
 #-------------------------------------------------------------------------------------------------------
 sleep 1
 
-echo "client: ./bin/CoroutineDemoClient"
+echo "client: ${EXE_PATH}/CoroutineDemoClient"
 
-./bin/CoroutineDemoClient --count=10000 --call=serial --thread=2 --buffersize=100 --netthread=2
+${EXE_PATH}/CoroutineDemoClient --count=10000 --call=serial --thread=2 --buffersize=100 --netthread=2
 
-./bin/CoroutineDemoClient --count=10000 --call=parallel --thread=2 --buffersize=100 --netthread=2
+${EXE_PATH}/CoroutineDemoClient --count=10000 --call=parallel --thread=2 --buffersize=100 --netthread=2
 
-./bin/testCoro 1000
+${EXE_PATH}/testCoro 1000
 
-./bin/testParallelCoro 1000
+${EXE_PATH}/testParallelCoro 1000
 
 #-------------------------------------------------------------------------------------------------------
 
 sleep 1
 
-killall -2 CoroutineDemoAServer 
-killall -2 CoroutineDemoBServer 
+killall -9 CoroutineDemoAServer
+killall -9 CoroutineDemoBServer
 
 
