@@ -1,22 +1,28 @@
 
 echo "run-http2.bat"
 
-killall -9 Http2Server.exe 
-sleep 1
+set EXE_PATH=%1
+set SRC_PATH=%2
 
-echo "start server: .\\bin\\Release\\Http2Server.exe --config=..\\examples\\HttpDemo\\Http2Server\\config.conf &"
+echo %EXE_PATH% %SRC_PATH%
 
-.\\bin\\Release\\Http2Server.exe --config=..\\examples\\HttpDemo\\Http2Server\\config.conf &
+taskkill /im Http2Server.exe /t /f
 
-sleep 3
+timeout /T 1
 
-echo "client: .\\bin\\Release\\Http2Client.exe"
+echo "start server: %EXE_PATH%\\Http2Server.exe --config=%SRC_PATH%\\examples\\HttpDemo\\Http2Server\\config.conf "
 
-.\\bin\\Release\\Http2Client.exe --count=10000 --thread=2 --call=sync
-.\\bin\\Release\\Http2Client.exe --count=10000 --thread=2 --call=async
+start /b %EXE_PATH%\\Http2Server.exe --config=%SRC_PATH%\\examples\\HttpDemo\\Http2Server\\config.conf
 
-sleep 1
+timeout /T 3
 
-killall -9 Http2Server.exe 
+echo "client: %EXE_PATH%\\Http2Client.exe"
+
+%EXE_PATH%\\Http2Client.exe --count=10000 --thread=2 --call=sync
+%EXE_PATH%\\Http2Client.exe --count=10000 --thread=2 --call=async
+
+timeout /T 1
+
+taskkill /im Http2Server.exe /t /f
 
 

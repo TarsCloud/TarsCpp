@@ -1,21 +1,26 @@
-#!/bin/sh
 
 echo "run-push.bat"
 
-killall -9 PushServer.exe 
-sleep 1
+set EXE_PATH=%1
+set SRC_PATH=%2
 
-echo "start server: .\\bin\\Release\\PushServer.exe --config=..\\examples\\PushDemo\\PushServer\\config.conf &"
+echo %EXE_PATH% %SRC_PATH%
 
-.\\bin\\Release\\PushServer.exe --config=..\\examples\\PushDemo\\PushServer\\config.conf &
+taskkill /im PushServer.exe /t /f
 
-sleep 3
+timeout /T 1
 
-#-------------------------------------------------------------------------------------------------------
+echo "start server: %EXE_PATH%\\PushServer.exe --config=%SRC_PATH%\\examples\\PushDemo\\PushServer\\config.conf"
 
-echo "client: .\\bin\\Release\\PushClient.exe"
+start /b %EXE_PATH%\\PushServer.exe --config=%SRC_PATH%\\examples\\PushDemo\\PushServer\\config.conf
 
-.\\bin\\Release\\PushClient.exe 5
+timeout /T 3
 
-killall -9 PushServer.exe
+::-------------------------------------------------------------------------------------------------------
+
+echo "client: %EXE_PATH%\\PushClient.exe"
+
+%EXE_PATH%\\PushClient.exe 5
+
+taskkill /im PushServer.exe /t /f
 

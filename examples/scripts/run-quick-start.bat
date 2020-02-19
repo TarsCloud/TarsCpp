@@ -1,34 +1,37 @@
 
 echo "run-quick-start.bat"
 
-killall -9 QuickStartDemo.exe 
-killall -9 roxyServer.exe
-sleep 1
+set EXE_PATH=%1
+set SRC_PATH=%2
 
-echo "start server: .\\bin\\Release\\QuickStartDemo.exe --config=..\\examples\\QuickStartDemo\\HelloServer\\Server\\config.conf &"
+echo %EXE_PATH% %SRC_PATH%
 
-.\\bin\\Release\\QuickStartDemo.exe --config=..\\examples\\QuickStartDemo\\HelloServer\\Server\\config.conf &
-.\\bin\\Release\\ProxyServer.exe --config=..\\examples\\QuickStartDemo\\ProxyServer\\Server\\config.conf &
+taskkill /im QuickStartDemo.exe /t /f
+taskkill /im ProxyServer.exe /t /f
+timeout /T 1
 
-sleep 3
+echo "start server: %EXE_PATH%\\QuickStartDemo.exe --config=%SRC_PATH%\\examples\\QuickStartDemo\\HelloServer\\Server\\config.conf "
 
-echo "client: .\\bin\\Release\\QuickStartDemoClient.exe"
+start /b %EXE_PATH%\\QuickStartDemo.exe --config=%SRC_PATH%\\examples\\QuickStartDemo\\HelloServer\\Server\\config.conf
+start /b %EXE_PATH%\\ProxyServer.exe --config=%SRC_PATH%\\examples\\QuickStartDemo\\ProxyServer\\Server\\config.conf
 
-.\\bin\\Release\\QuickStartDemoClient.exe --count=100000 --call=sync --thread=2 --buffersize=100 --netthread=2
+timeout /T 3
 
-.\\bin\\Release\\QuickStartDemoClient.exe --count=100000 --call=async --thread=2 --buffersize=100 --netthread=2
+echo "client: %EXE_PATH%\\QuickStartDemoClient.exe"
 
-.\\bin\\Release\\QuickStartDemoClient.exe --count=100000 --call=synctup --thread=2 --buffersize=100 --netthread=2
+%EXE_PATH%\\QuickStartDemoClient.exe --count=100000 --call=sync --thread=2 --buffersize=100 --netthread=2
 
-.\\bin\\Release\\QuickStartDemoClient.exe --count=100000 --call=asynctup --thread=2 --buffersize=100 --netthread=2
+%EXE_PATH%\\QuickStartDemoClient.exe --count=100000 --call=async --thread=2 --buffersize=100 --netthread=2
 
-echo "client: .\\bin\\Release\\ProxyServerClient.exe"
+%EXE_PATH%\\QuickStartDemoClient.exe --count=100000 --call=synctup --thread=2 --buffersize=100 --netthread=2
 
-.\\bin\\Release\\ProxyServerClient.exe
+%EXE_PATH%\\QuickStartDemoClient.exe --count=100000 --call=asynctup --thread=2 --buffersize=100 --netthread=2
 
-sleep 2
+echo "client: %EXE_PATH%\\ProxyServerClient.exe"
 
-killall -9 ProxyServer.exe
-killall -9 QuickStartDemo.exe
+%EXE_PATH%\\ProxyServerClient.exe
 
+timeout /T 1
 
+taskkill /im QuickStartDemo.exe /t /f
+taskkill /im ProxyServer.exe /t /f

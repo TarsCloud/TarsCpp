@@ -1,44 +1,49 @@
 
 echo "run-co.bat"
 
+set EXE_PATH=%1
+set SRC_PATH=%2
 
-killall -9 CoroutineDemoAServer.exe 
+echo %EXE_PATH% %SRC_PATH%
 
-sleep 1
+taskkill /im CoroutineDemoAServer.exe /t /f
 
-echo "start server: .\\bin\\Release\\CoroutineDemoAServer.exe --config=..\\examples\\CoroutineDemo\\AServer\\config.conf &"
+timeout /T 1
 
-.\\bin\\Release\\CoroutineDemoAServer.exe --config=..\\examples\\CoroutineDemo\\AServer\\config.conf &
+echo "start server: %EXE_PATH%\\CoroutineDemoAServer.exe --config=%SRC_PATH%\\examples\\CoroutineDemo\\AServer\\config.conf"
 
-#-------------------------------------------------------------------------------------------------------
+start /b %EXE_PATH%\\CoroutineDemoAServer.exe --config=%SRC_PATH%\\examples\\CoroutineDemo\\AServer\\config.conf
 
-killall -9 CoroutineDemoBServer.exe 
+::-------------------------------------------------------------------------------------------------------
 
-sleep 1
+taskkill /im CoroutineDemoBServer.exe /t /f
 
-echo "start server: .\\bin\\Release\\CoroutineDemoBServer.exe --config=..\\examples\\CoroutineDemo\\BServer\\config.conf &"
+timeout /T 1
 
-.\\bin\\Release\\CoroutineDemoBServer.exe --config=..\\examples\\CoroutineDemo\\BServer\\config.conf &
+echo "start server: %EXE_PATH%\\CoroutineDemoBServer.exe --config=%SRC_PATH%\\examples\\CoroutineDemo\\BServer\\config.conf "
+
+start /b %EXE_PATH%\\CoroutineDemoBServer.exe --config=%SRC_PATH%\\examples\\CoroutineDemo\\BServer\\config.conf
 
 
-#-------------------------------------------------------------------------------------------------------
-sleep 1
+::-------------------------------------------------------------------------------------------------------
+timeout /T 1
 
 echo "client: .\\bin\\CoroutineDemoClient"
 
-.\\bin\\Release\\CoroutineDemoClient.exe 2 10000 0
+%EXE_PATH%\\CoroutineDemoClient.exe 2 10000 0
 
-.\\bin\\Release\\CoroutineDemoClient.exe 2 10000 1
+%EXE_PATH%\\CoroutineDemoClient.exe 2 10000 1
 
-.\\bin\\Release\\testCoro.exe 1000
+%EXE_PATH%\\testCoro.exe 1000
 
-.\\bin\\Release\\testParallelCoro.exe 1000
+%EXE_PATH%\\testParallelCoro.exe 1000
 
-#-------------------------------------------------------------------------------------------------------
+::-------------------------------------------------------------------------------------------------------
 
-sleep 1
+timeout /T 1
 
-killall -9 CoroutineDemoAServer.exe 
-killall -9 CoroutineDemoBServer.exe 
+taskkill /im CoroutineDemoAServer.exe /t /f
+taskkill /im CoroutineDemoBServer.exe /t /f
+
 
 

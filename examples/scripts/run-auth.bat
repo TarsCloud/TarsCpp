@@ -1,27 +1,30 @@
 
 echo "run-auth.bat"
 
-EXE_PATH=$1
-SRC_PATH=$2
+set EXE_PATH=%1
+set SRC_PATH=%2
 
-echo ${EXE_PATH} ${SRC_PATH}
+echo %EXE_PATH% %SRC_PATH%
 
-killall -9 AuthServer.exe
-sleep 1
+taskkill /im AuthServer.exe /t /f
 
-echo "start server: .\\bin\\Release\\AuthServer.exe --config=..\\examples\\AuthDemo\\Server\\config.conf &"
+timeout /T 1
 
-.\\bin\\Release\\AuthServer.exe --config=..\\examples\\AuthDemo\\Server\\config.conf &
+echo "start server: %EXE_PATH%/AuthServer.exe --config=%SRC_PATH%/examples/AuthDemo/Server/config.conf"
 
-sleep 3
+start /b %EXE_PATH%\\AuthServer.exe --config=%SRC_PATH%\\examples\\AuthDemo\\Server\\config.conf
 
-echo "client: .\\bin\\Release\\SSLClient.exe"
+timeout /T 3
 
-.\\bin\\Release\\SSLClient.exe --count=10000 --thread=2 --call=sync  --buffersize=1000 --netthread=1
-.\\bin\\Release\\SSLClient.exe --count=10000 --thread=2 --call=async  --buffersize=1000 --netthread=1
+echo "client: ${EXE_PATH}/AuthClient.exe"
 
-sleep 1
+%EXE_PATH%\\AuthClient.exe --count=10000 --thread=2 --call=sync  --buffersize=1000 --netthread=1
+%EXE_PATH%\\AuthClient.exe --count=10000 --thread=2 --call=async  --buffersize=1000 --netthread=1
 
-killall -9 AuthServer.exe
+timeout /T 1
+
+taskkill /im AuthServer.exe /t /f
+
+
 
 

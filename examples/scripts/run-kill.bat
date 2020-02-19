@@ -14,4 +14,13 @@ taskkill /im QuickStartDemo.exe /f
 taskkill /im ProxyServer.exe /f
 taskkill /im busybox.exe /f
 
-
+taskkill /im HttpClient.exe /f
+taskkill /im Http2Client.exe /f
+taskkill /im AuthClient.exe /f
+taskkill /im SSLClient.exe /f
+taskkill /im CoroutineDemoClient.exe /f
+taskkill /im testCoro.exe /f
+taskkill /im testParallelCoro.exe /f
+taskkill /im CustomClient.exe /f
+taskkill /im PushClient.exe /f
+taskkill /im QuickStartDemoClient.exe /f
