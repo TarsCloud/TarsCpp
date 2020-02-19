@@ -21,9 +21,9 @@ if(WIN32)
         COMMENT "call quick start: ${CMAKE_BINARY_DIR}")
 
     add_custom_target(run-http
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS HttpServer HttpClient
-        COMMAND ../servant/script/busybox.exe bash ../examples/scripts/run-http.bat
+        COMMAND servant/script/busybox.exe bash examples/scripts/run-http.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
         COMMENT "call run http")
 
     add_custom_target(run-auth

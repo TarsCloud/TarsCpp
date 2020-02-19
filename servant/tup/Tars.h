@@ -1857,7 +1857,7 @@ namespace tars
                     throw TarsDecodeInvalidValue(ss);
                 }
                 TarsWriteToHead(*this, TarsHeadeString4, tag);
-                uint32_t n = (uint32_t)htonl(s.size());
+                uint32_t n = htonl((uint32_t)s.size());
                 TarsWriteUInt32TTypeBuf(*this, n, (*this)._len); 
                 //this->writeBuf(s.data(), s.size());
                 TarsWriteTypeBuf(*this, s.data(), s.size());
@@ -1865,7 +1865,7 @@ namespace tars
             else
             {
                 TarsWriteToHead(*this, TarsHeadeString1, tag);
-                uint8_t n = s.size();
+                uint8_t n = (uint8_t)s.size();
                 TarsWriteUInt8TTypeBuf(*this, n, (*this)._len); 
                 //this->writeBuf(s.data(), s.size());
                 TarsWriteTypeBuf(*this, s.data(), s.size());
@@ -1887,7 +1887,7 @@ namespace tars
             //DataHead h(DataHead::eMap, tag);
             //h.writeTo(*this);
             TarsWriteToHead(*this, TarsHeadeMap, tag);
-            Int32 n = m.size();
+            Int32 n = (Int32)m.size();
             write(n, 0);
             typedef typename std::map<K, V, Cmp, Alloc>::const_iterator IT;
             for (IT i = m.begin(); i != m.end(); ++i)
@@ -1930,7 +1930,7 @@ namespace tars
             //hh.writeTo(*this);
             TarsWriteToHead(*this, TarsHeadeSimpleList, tag);
             TarsWriteToHead(*this, TarsHeadeChar, 0);
-            Int32 n = v.size();
+            Int32 n = (Int32)v.size();
             write(n, 0);
             //writeBuf(&v[0], v.size());
             TarsWriteTypeBuf(*this, &v[0], v.size());
