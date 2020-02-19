@@ -309,7 +309,7 @@ public:
 
      * 设置include的tars文件全部从当前文件搜寻 
      */
-    void setUseCurrentPath(const bool & bEnable) { _bUseCurrentPath = bEnable; }
+    void setUseCurrentPath(bool bEnable) { _bUseCurrentPath = bEnable; }
 
     /**
      * 查找tars文件时,设置include路径
