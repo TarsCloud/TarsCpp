@@ -302,7 +302,6 @@ ELSE ()
 ENDIF (UNIX)
 
 #-------------------------------------------------------------
-
 IF(WIN32)
 #set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/tars2cpp.exe")
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp.exe")
@@ -322,7 +321,7 @@ message("----------------------------------------------------")
 message("CMAKE_BUILD_TYPE:          ${CMAKE_BUILD_TYPE}")
 message("PLATFORM:                  ${PLATFORM}")
 message("INSTALL_PREFIX:            ${INSTALL_PREFIX}")
-
+message("BIN:                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}") 
 #-------------------------------------------------------------
 
 message("----------------------------------------------------")

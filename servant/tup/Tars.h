@@ -617,7 +617,7 @@ namespace tars
         template<typename Alloc>
         void setBuffer(const std::vector<char,Alloc> &buf)
         {
-            _buf = &buf[0];
+            _buf = buf.data();
             _buf_len = buf.size();
             _cur = 0;
         }
@@ -694,7 +694,7 @@ namespace tars
         template<typename Alloc>
         void setMapBuffer(std::vector<char,Alloc> &buf)
         {
-            _buf_m = &buf[0];
+            _buf_m = buf.data();
             _buf_len_m = buf.size();
             _cur_m = 0;
         }
@@ -786,7 +786,7 @@ namespace tars
                 // os._buffer.reserve(len);
                 os._buffer.resize(len);
                 // cout << "_reserve:" << len << endl;
-                return &os._buffer[0];
+                return os._buffer.data();
 		    } ;
 #endif
         }
@@ -859,7 +859,7 @@ namespace tars
             //内存分配器
 	        _reserve = [](BufferWriterVector &os, size_t len) {
                 os._buffer.resize(len);
-                return &os._buffer[0];
+                return os._buffer.data();
 		    } ;
 #endif
         }
@@ -987,7 +987,7 @@ namespace tars
                 {
                     size_t len = 0;
                     TarsReadTypeBuf(*this, len, uint32_t);
-                    len = ntohl(len);
+                    len = ntohl((uint32_t)len);
                     TarsReadHeadSkip(*this, len);
                 }
                 break;
@@ -1933,7 +1933,7 @@ namespace tars
             Int32 n = (Int32)v.size();
             write(n, 0);
             //writeBuf(&v[0], v.size());
-            TarsWriteTypeBuf(*this, &v[0], v.size());
+            TarsWriteTypeBuf(*this, v.data(), v.size());
         }
 
         template<typename T>

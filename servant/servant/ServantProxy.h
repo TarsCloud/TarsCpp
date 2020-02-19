@@ -48,7 +48,7 @@ public:
     /**
      * 构造函数
      */
-    SeqManager(size_t iNum);
+    SeqManager(uint16_t iNum);
 
     /**
      * 获取seq
@@ -106,7 +106,7 @@ public:
      */
     ReqInfoQueue * _reqQueue[MAX_CLIENT_THREAD_NUM]; //队列数组
     bool           _queueInit;                       //是否初始化
-    size_t         _reqQNo;                          //请求事件通知的seq
+    uint16_t       _reqQNo;                          //请求事件通知的seq
     size_t         _netSeq;                          //轮训选择网络线程的偏移量
     int            _netThreadSeq;                     //网络线程发起的请求回到自己的网络线程来处理,其值为网络线程的id
 

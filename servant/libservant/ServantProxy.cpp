@@ -34,7 +34,7 @@ SeqManager* ServantProxyThreadData::_pSeq = new SeqManager(MAX_CLIENT_NOTIFYEVEN
 
 
 ///////////////////////////////////////////////////////////////
-SeqManager::SeqManager(size_t iNum)
+SeqManager::SeqManager(uint16_t iNum)
 {
     assert(iNum < MAX_UNSIGN_SHORT);
     assert(iNum > 0);

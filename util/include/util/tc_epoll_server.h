@@ -776,7 +776,7 @@ public:
 				_iHandleNum = _pEpollServer->_netThreadNum;
 			}
 
-			for (int32_t i = 0; i < _iHandleNum ; ++i)
+			for (size_t i = 0; i < _iHandleNum ; ++i)
 			{
 				HandlePtr handle = new T();
 

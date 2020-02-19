@@ -1,6 +1,11 @@
 
 echo "run-auth.bat"
 
+EXE_PATH=$1
+SRC_PATH=$2
+
+echo ${EXE_PATH} ${SRC_PATH}
+
 killall -9 AuthServer.exe
 sleep 1
 
