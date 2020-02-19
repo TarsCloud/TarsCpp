@@ -25,7 +25,7 @@ int DemoServantImp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 	// parse request header
     vector<char> v = current->getRequestBuffer();
     string sBuf;
-    sBuf.assign(&v[0], v.size());
+    sBuf.assign(v.data(), v.size());
     req.decode(sBuf);
 
     int ret = doRequest(req, rsp);

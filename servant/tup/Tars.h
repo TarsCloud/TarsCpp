@@ -783,10 +783,8 @@ namespace tars
 #ifndef GEN_PYTHON_MASK
 	        //内存分配器
 	        _reserve = [](BufferWriterString &os, size_t len) {
-                // os._buffer.reserve(len);
                 os._buffer.resize(len);
-                // cout << "_reserve:" << len << endl;
-                return os._buffer.data();
+                return (char*)os._buffer.data();
 		    } ;
 #endif
         }

@@ -90,14 +90,14 @@ int TestPushCallBack::onDispatch(ReqMessagePtr msg)
 	if(msg->request.sFuncName == "printResult")
 	{
 		string sRet;
-		sRet.assign(&(msg->response->sBuffer[0]), msg->response->sBuffer.size());
+		sRet.assign(msg->response->sBuffer.data(), msg->response->sBuffer.size());
 		printResult(msg->request.iRequestId, sRet);
 		return 0;
 	}
 	else if(msg->response->iRequestId == 0)
 	{
 		string sRet;
-		sRet.assign(&(msg->response->sBuffer[0]), msg->response->sBuffer.size());
+		sRet.assign(msg->response->sBuffer.data(), msg->response->sBuffer.size());
 		printPushInfo(sRet);
 		return 0;
 	}

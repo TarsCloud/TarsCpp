@@ -923,7 +923,7 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
 
     if (current->isResponse())
     {
-        current->sendResponse((const char*)(&buffer[0]), buffer.size());
+        current->sendResponse((const char*)buffer.data(), buffer.size());
     }
 }
 

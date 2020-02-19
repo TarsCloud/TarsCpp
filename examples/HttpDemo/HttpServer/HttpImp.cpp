@@ -38,7 +38,7 @@ int HttpImp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
     TC_HttpRequest request; 
     vector<char> v = current->getRequestBuffer();
     string sBuf;
-    sBuf.assign(&v[0],v.size());
+    sBuf.assign(v.data(),v.size());
 
     request.decode(sBuf);
     TC_HttpResponse rsp;
