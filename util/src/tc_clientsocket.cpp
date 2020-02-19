@@ -355,8 +355,9 @@ int TC_TCPClient::checkSocket()
                         }
                     }
                 }
-            }
 #endif
+
+            }
             //设置为阻塞模式
             _socket.setblock(true);
         }
