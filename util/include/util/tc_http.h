@@ -1191,6 +1191,12 @@ public:
      */
     int doRequest(TC_HttpResponse &stHttpRep, int iTimeout = 3000);
 
+    /**
+     * 复用socket
+     * @param client
+     * @param stHttpRsp
+     * @return
+     */
     int doRequest(TC_TCPClient &client, TC_HttpResponse& stHttpRsp);
 
     /**
