@@ -24,8 +24,6 @@
 using namespace tars;
 
 /**
- * ����tars����c++�ļ�
- * �����ṹ�ı�����Լ�����Proxy��Servant
  */
 class Tars2Php
 {
@@ -33,28 +31,27 @@ public:
 	Tars2Php();
 
     /**
-     * ����
+     *
      * @param file
      */
     void createFile(const string &file, const vector<string> &vsCoder);
 
 
     /**
-    * ���������ļ���Ŀ¼
+    *
     *
     */
     void setBaseDir(const std::string & sPath) { m_sBaseDir = sPath; }
 
 	/**
-	 * �����Ƿ���Ҫ���Ĭ��ֵ
+	 *
 	 */
 	void setCheckDefault(bool bCheck) { m_bCheckDefault = bCheck; }
 
-    //�����Ǳ�����Դ������
 protected:
 
     /**
-     * ����ĳ���͵Ľ���Դ��
+     *
      * @param pPtr
      *
      * @return string
@@ -62,18 +59,16 @@ protected:
     string writeTo(const TypeIdPtr &pPtr) const;
 
     /**
-     * ����ĳ���͵ı���Դ��
+     *
      * @param pPtr
      *
      * @return string
      */
     string readFrom(const TypeIdPtr &pPtr, bool bIsRequire = true) const;
 
-
-    //����������������Դ������
 protected:
     /**
-     * ����ĳ���͵��ַ�������Դ��
+     *
      * @param pPtr
      *
      * @return string
@@ -81,14 +76,13 @@ protected:
     string tostr(const TypePtr &pPtr) const;
 
     /**
-     * �����ڽ����͵��ַ���Դ��
      * @param pPtr
      *
      * @return string
      */
     string tostrBuiltin(const BuiltinPtr &pPtr) const;
     /**
-     * ����vector���ַ�������
+     *
      * @param pPtr
      *
      * @return string
@@ -96,7 +90,7 @@ protected:
     string tostrVector(const VectorPtr &pPtr) const;
 
     /**
-     * ����map���ַ�������
+     *
      * @param pPtr
      *
      * @return string
@@ -104,7 +98,7 @@ protected:
     string tostrMap(const MapPtr &pPtr) const;
 
     /**
-     * ����ĳ�ֽṹ�ķ�������
+     *
      * @param pPtr
      *
      * @return string
@@ -112,7 +106,7 @@ protected:
     string tostrStruct(const StructPtr &pPtr) const;
 
     /**
-     * ����ĳ��ö�ٵķ�������
+     *
      * @param pPtr
      *
      * @return string
@@ -120,7 +114,7 @@ protected:
     string tostrEnum(const EnumPtr &pPtr) const;
 
     /**
-     * ��ȡ�������������
+     *
      * @param pPtr
      *
      * @return string
@@ -129,7 +123,7 @@ protected:
     string toStrSuffix(const TypeIdPtr &pPtr) const;
 
     /**
-     * ��ȡ�������������
+     *
      * @param pPtr
      *
      * @return int
@@ -137,7 +131,7 @@ protected:
     int getSuffix(const TypeIdPtr &pPtr) const;
 
     /**
-     * �������ͱ����Ľ���Դ��
+     *
      * @param pPtr
      *
      * @return string
@@ -145,35 +139,32 @@ protected:
     string decode(const TypeIdPtr &pPtr) const;
 
     /**
-     * �������ͱ����ı���Դ��
+     *
      * @param pPtr
      *
      * @return string
      */
     string encode(const TypeIdPtr &pPtr) const;
 
-    //������h��cpp�ļ��ľ�������
 protected:
     /**
-     * ���ɽṹ��ͷ�ļ�����
+     *
      * @param pPtr
      *
      * @return string
      */
     string generatePHP(const StructPtr &pPtr, const string& namespaceId) const;
 
-
     /**
-     * �������ֿռ��ͷ�ļ�Դ��
+     *
      * @param pPtr
      *
      * @return string
      */
     string generatePHP(const NamespacePtr &pPtr) const;
 
-
     /**
-     * �������ֿռ��ͷ�ļ�Դ��
+     *
      * @param pPtr
      *
      * @return string

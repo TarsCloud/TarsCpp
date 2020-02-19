@@ -99,7 +99,6 @@ string Tars2OC::toAddtionalClassName(const TypePtr &pPtr) const
 	if (vPtr)
 	{
 		string s = "";
-		//vector<byte>�������Ӹ�����Ϣ����
 		if (toClassName(vPtr) == "list<char>")
 		{
 			s = "ONSData";
@@ -121,7 +120,6 @@ string Tars2OC::toAddtionalClassName(const TypePtr &pPtr) const
 		ostringstream osKeyLen;
 		{
 			int iLen = sKey.length();
-			//�涨���ܳ���99
 			assert(iLen <= 99 && iLen >=0);
 			char sLen[3];
 			snprintf(&sLen[0],3,"%.2d",iLen);
@@ -133,14 +131,12 @@ string Tars2OC::toAddtionalClassName(const TypePtr &pPtr) const
 	StructPtr sPtr = StructPtr::dynamicCast(pPtr);
 	if (sPtr)
 	{
-		//struct����Object����
 		return "O" + tostrStruct(sPtr);//TC_Common::replace(sPtr->getSid(), "::", "");
 	}
 
 	EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
 	if (ePtr)
 	{
-		//Enum����Object����
 		return "ONSNumber";
 	}
 
@@ -302,14 +298,14 @@ string Tars2OC::toTarsV2Procstr(const TypeIdPtr &pPtr) const
 
 	if (bPtr)
 	{
-		//��ͨ����ʹ��JV2_PROP_NM
+		//
 		s << "JV2_PROP_NM(" << getReqOptionType(pPtr) << "," << pPtr->getTag() <<","<< pPtr->getId() << ")";
 	}
 
 	VectorPtr vPtr = VectorPtr::dynamicCast(pPtr->getTypePtr());
 	if (vPtr)
 	{
-		//vector<byte>�������Ӹ�����Ϣ����
+		//vector<byte>
 		if (toClassName(vPtr) == "list<char>")
 		{
 			s << "JV2_PROP_NM(" << getReqOptionType(pPtr) << "," << pPtr->getTag() << "," << pPtr->getId() << ")";
@@ -369,7 +365,6 @@ string Tars2OC::tostrEnum(const EnumPtr &pPtr) const
 
 void Tars2OC::toIncludeName(const TypePtr &pPtr,map<string,int>& mReference) const
 {
-	//��������û�����������ṹ
 	BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
 	if (bPtr)
 	{
@@ -420,7 +415,6 @@ map<string,int> Tars2OC::getReferences(const StructPtr &pPtr, const string& name
     map<string,int> mTemp;
 	vector<TypeIdPtr>& vMember = pPtr->getAllMemberPtr();
 
-	//�鿴��Ա�����Ƿ����������Ľṹ��
 	for (size_t j = 0; j < vMember.size(); j++)
 	{
 		BuiltinPtr bPtr = BuiltinPtr::dynamicCast(vMember[j]->getTypePtr());
@@ -432,7 +426,7 @@ map<string,int> Tars2OC::getReferences(const StructPtr &pPtr, const string& name
 		VectorPtr vPtr = VectorPtr::dynamicCast(vMember[j]->getTypePtr());
 		if (vPtr)
 		{
-			//vector<byte>�������Ӹ�����Ϣ����
+			//vector<byte>
 			if (toClassName(vPtr) == "list<char>")
 			{
 				continue;
@@ -467,7 +461,6 @@ map<string,int> Tars2OC::getReferences(const StructPtr &pPtr, const string& name
 }
 bool Tars2OC::IsRetainType(const TypePtr &pPtr) const
 {
-	//����������retain,enum is NSInteger
 	BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(pPtr);
 	EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
 	if((bPtr && bPtr->kind() != Builtin::KindString) || ePtr)
@@ -539,7 +532,6 @@ string Tars2OC::generateH(const StructPtr &pPtr, const string& namespaceId) cons
     s << "@interface " << sStructName << " : TarsObjectV2"<< endl;
 	s << endl;
 
-    //�����Ա����
     vector<TypeIdPtr>& vMember = pPtr->getAllMemberPtr();
     for (size_t j = 0; j < vMember.size(); j++)
     {
@@ -570,7 +562,6 @@ string Tars2OC::writeInit(const vector<TypeIdPtr>& vMember) const
 	INC_TAB;
 	for (size_t j = 0; j < vMember.size(); j++)
 	{
-		//�������ͳ�ʼ��,��Ĭ��ֵ����˵string���Ͳų�ʼ��
 		BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(vMember[j]->getTypePtr());
 		if(bPtr)
 		{
@@ -595,10 +586,8 @@ string Tars2OC::writeInit(const vector<TypeIdPtr>& vMember) const
 			{
 				s <<TAB << getPropertyName(vMember[j]->getId()) << " = " << vMember[j]->def() << ";" << endl;
 			}
-			//��������Ļ������Ͳ��ó�ʼ����ϵͳ�ṩĬ��ֵ
 		}
 
-		//�Ƿ�require�ֶ�,����retain����
 		if(vMember[j]->isRequire() && IsRetainType(vMember[j]->getTypePtr()))
 		{
 			VectorPtr vPtr = VectorPtr::dynamicCast(vMember[j]->getTypePtr());
@@ -644,7 +633,7 @@ string Tars2OC::writedealloc(const vector<TypeIdPtr>& vMember) const
 	INC_TAB;
 	for (size_t j = 0; j < vMember.size(); j++)
 	{
-		//�������Ͳ���Ҫ=nil,NSString�Ƕ�������
+		//nil,NSString
 		if(IsRetainType(vMember[j]->getTypePtr()))
 		{
 			s <<TAB << getPropertyName(vMember[j]->getId()) << " = nil;" <<endl;
@@ -727,7 +716,7 @@ string Tars2OC::generateM(const EnumPtr &pPtr, const string& namespaceId) const
 
 	string sEnumPrefix = getNamePrix(namespaceId) + pPtr->getId();
 
-	string fileH = m_sBaseDir + "/" + sEnumPrefix + ".m";
+	string fileH = m_sBaseDir + FILE_SEP + sEnumPrefix + ".m";
 
 	s << g_parse->printHeaderRemark();
 
@@ -742,7 +731,6 @@ string Tars2OC::generateM(const EnumPtr &pPtr, const string& namespaceId) const
 
 	s << "@implementation " <<sEnumPrefix<<"Helper"<<endl;
 	s << endl;
-	//����ö��ת�ַ�������
 	s << "+ (NSString *)etos:(" << sEnumPrefix << ")e" << endl;
 	s << "{" << endl;
 
@@ -767,7 +755,6 @@ string Tars2OC::generateM(const EnumPtr &pPtr, const string& namespaceId) const
 
 	s << endl;
 
-	//�����ַ���תö�ٺ���
 	s << "+ (" << sEnumPrefix << ")stoe:(NSString *)s" << endl;
 	s << "{" << endl;
 
@@ -802,10 +789,9 @@ string Tars2OC::generateM(const StructPtr &pPtr, const string& namespaceId) cons
 
     ostringstream s;
 
-    string fileM = m_sBaseDir + "/" + sStructName + ".m";
+    string fileM = m_sBaseDir + FILE_SEP + sStructName + ".m";
 
     s << g_parse->printHeaderRemark();
-    //�����Ա����
     vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
 
     ////////////////////////////////////////////////////////////
@@ -858,7 +844,7 @@ string Tars2OC::generateH(const EnumPtr &pPtr, const string& namespaceId) const
 
 	string sEnumPrefix = getNamePrix(namespaceId) + pPtr->getId();
 
-	string fileH = m_sBaseDir + "/" + sEnumPrefix + ".h";
+	string fileH = m_sBaseDir + FILE_SEP + sEnumPrefix + ".h";
 
     s << g_parse->printHeaderRemark();
 
@@ -913,14 +899,12 @@ string Tars2OC::generate(const NamespacePtr &pPtr) const
     vector<StructPtr>&ss = pPtr->getAllStructPtr();
     vector<EnumPtr>&es = pPtr->getAllEnumPtr();
 
-	//�ȱ���ö������,���������ļ�
 	for (size_t i = 0; i < es.size(); i++)
 	{
 		generateH(es[i], pPtr->getId());
 		generateM(es[i], pPtr->getId());
 	}
 
-	//�����ṹ������,���������ļ�
 	for (size_t i = 0; i < ss.size(); i++)
 	{
 		generateH(ss[i], pPtr->getId());
@@ -929,8 +913,6 @@ string Tars2OC::generate(const NamespacePtr &pPtr) const
 
     return "";
 }
-
-
 
 /******************************Tars2OC***************************************/
 
@@ -943,8 +925,6 @@ void Tars2OC::generate(const ContextPtr &pPtr) const
     }
 }
 
-
-
 void Tars2OC::createFile(const string &file)
 {
     std::vector<ContextPtr> contexts = g_parse->getContexts();
@@ -953,7 +933,6 @@ void Tars2OC::createFile(const string &file)
         if (file == contexts[i]->getFileName())
         {
            generate(contexts[i]);
-          //generateM(contexts[i]);
         }
     }
 }

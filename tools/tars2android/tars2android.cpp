@@ -1383,7 +1383,7 @@ void Tars2Java::setBasePackage(const string& prefix)
 
 string Tars2Java::getFilePath(const string& ns) const
 {
-    return _baseDir + "/" + tars::TC_Common::replace(_packagePrefix, ".", "/") + "/" + ns + "/";
+    return _baseDir + FILE_SEP + tars::TC_Common::replace(_packagePrefix, ".", FILE_SEP) + FILE_SEP + ns + FILE_SEP;
 }
 
 // 增加的函数

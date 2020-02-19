@@ -2435,9 +2435,13 @@ string Tars2Cpp::generateH(const NamespacePtr& pPtr) const
 
 void Tars2Cpp::generateH(const ContextPtr &pPtr) const
 {
-    string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
-
-    string fileH    = _baseDir + "/" + n + ".h";
+	string n        = g_parse->getFileName(pPtr->getFileName());
+	string fileH    = g_parse->getAbsoluteFileName(_baseDir, g_parse->replaceFileName(n, "h"));
+	string fileCpp  = g_parse->getAbsoluteFileName(_baseDir, g_parse->replaceFileName(n, "cpp"));
+//
+//    string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
+//
+//    string fileH    = _baseDir + FILE_SEP + n + ".h";
 
     string define   = tars::TC_Common::upper("__" + n + "_h_");
 
@@ -2822,7 +2826,7 @@ StructPtr Tars2Cpp::findStruct(const ContextPtr& pPtr, const string& id)
 //     cout << "Interface:" << sInterface << endl;
 //     string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName())) + "Coder";
 
-//     string fileH    = _baseDir + "/" + n + ".h";
+//     string fileH    = _baseDir + FILE_SEP + n + ".h";
 
 //     string define   = tars::TC_Common::upper("__" + n + "_h_");
 

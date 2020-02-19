@@ -72,8 +72,6 @@ int main(int argc, char* argv[])
 
     Tars2Cs t2cs;
 
-
-    //���������ļ��ĸ�Ŀ¼
     if(option.getValue("dir") != "")
     {
         t2cs.setBaseDir(option.getValue("dir"));
@@ -93,7 +91,6 @@ int main(int argc, char* argv[])
         t2cs.setBasePackage("Com.QQ.");
     }
 
-    //�Ƿ����ɷ������,Ĭ�ϲ�����
     if(option.hasParam("with-servant"))
     {
         t2cs.setWithServant(true);
@@ -104,7 +101,6 @@ int main(int argc, char* argv[])
     }
 	try
 	{
-        //�Ƿ������tars��ͷ
         g_parse->setTars(option.hasParam("with-tars"));
 
 	    for(size_t i = 0; i < vTars.size(); i++)

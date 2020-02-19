@@ -321,6 +321,29 @@ public:
         _vIncludePath.insert(_vIncludePath.end(), v.begin(), v.end());
     }
 
+    /**
+     *
+     * @param fileName
+     * @return
+     */
+	string getFileName(const string &fileName);
+
+	/**
+	 * replace ext
+	 * @param fileName
+	 * @param ext
+	 * @return
+	 */
+	string replaceFileName(const string &fileName, const string &ext);
+
+	/**
+	 * get absolute filename
+	 * @param baseDir
+	 * @param fileName
+	 * @return
+	 */
+	string getAbsoluteFileName(const string &baseDir, const string &fileName);
+
 protected:
     /**
      * 添加名字空间

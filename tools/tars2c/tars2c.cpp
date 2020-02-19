@@ -671,9 +671,13 @@ string Tars2C::generateC(const NamespacePtr &pPtr) const
 
 void Tars2C::generateH(const ContextPtr &pPtr) const
 {
-    string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
+	string n        = g_parse->getFileName(pPtr->getFileName());
+	string fileH    = g_parse->getAbsoluteFileName(m_sBaseDir, g_parse->replaceFileName(n, "h"));
+	string fileCpp  = g_parse->getAbsoluteFileName(m_sBaseDir, g_parse->replaceFileName(n, "cpp"));
 
-    string fileH    = m_sBaseDir + "/" + n + ".h";
+//    string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
+//
+//    string fileH    = m_sBaseDir + FILE_SEP + n + ".h";
 
     string define   = tars::TC_Common::upper("__" + n + "_h_");
 
@@ -711,7 +715,7 @@ void Tars2C::generateH(const ContextPtr &pPtr) const
 void Tars2C::generateC(const ContextPtr &pPtr) const
 {
     string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
-    string fileC    = m_sBaseDir + "/" + n + ".c";
+    string fileC    = m_sBaseDir + FILE_SEP + n + ".c";
 
     string define   = tars::TC_Common::upper("__" + n + "_h_");
 

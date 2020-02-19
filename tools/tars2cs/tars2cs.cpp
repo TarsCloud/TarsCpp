@@ -49,7 +49,6 @@ string Tars2Cs::toTypeInit(const TypePtr &pPtr) const
     VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
     if (vPtr)
     {
-        //�������⴦��
         string sType;
         size_t iPosBegin, iPosEnd;
         sType = tostr(vPtr->getTypePtr());
@@ -57,7 +56,6 @@ string Tars2Cs::toTypeInit(const TypePtr &pPtr) const
         {
             sType = sType.substr(0, iPosBegin) +  sType.substr(iPosEnd+1);
         }
-        //[] (����)�������Ϊ[1]
         sType = tars::TC_Common::replace(sType, "[]" , "[1]");
         return "(" + tostr(vPtr->getTypePtr()) + "[]) new " + sType + "[1];";;
     }
@@ -186,7 +184,6 @@ string Tars2Cs::generateCs(const StructPtr &pPtr, const NamespacePtr &nPtr) cons
     s << TAB << "{" << endl;
     INC_TAB;
 
-    //�����Ա����set;get����
     for (size_t i = 0; i < member.size(); i++)
     {
         string sDefault;
@@ -419,6 +416,6 @@ void Tars2Cs::setBasePackage(const string &prefix)
 
 string Tars2Cs::getFilePath(const string &ns) const
 {
-    return _baseDir + "/" + tars::TC_Common::replace(_packagePrefix, ".", "/") + "/" + ns + "/";
+    return _baseDir + FILE_SEP + tars::TC_Common::replace(_packagePrefix, ".", FILE_SEP) + FILE_SEP + ns + FILE_SEP;
 }
 

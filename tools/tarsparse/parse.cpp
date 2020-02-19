@@ -72,20 +72,16 @@ void TarsParse::clear()
 
 void TarsParse::parse(const string& sFileName)
 {
-    cout << "parse:" << sFileName << "," << _bUseCurrentPath << "," << _bUseCurrentPathFirst << endl;
     if (_bUseCurrentPath)
     {
         std::string sTemp = sFileName;
         bool isExist = tars::TC_File::isFileExist(sFileName);
 
-        cout << "file exists:" << isExist << endl;
-             
         if (!isExist)
         {
             sTemp = tars::TC_File::extractFileName(sFileName);
         }
 
-        cout << "temp:" << sTemp << endl;
         clear();
 
         _contains.push(new Container(""));
@@ -134,8 +130,6 @@ void TarsParse::parse(const string& sFileName)
         {
             error("open file '" + sFileName + "' error :" + string(strerror(errno)));
         }
-
-        cout << "push:" << sFileName << endl;
 
         pushFile(sFileName);
 
@@ -606,4 +600,32 @@ string TarsParse::printHeaderRemark()
     return s.str();
 }
 
+string TarsParse::getFileName(const string &fileName)
+{
+	string tmpFileName = fileName;
+	string::size_type pos = tmpFileName.rfind('/');
+	if(pos != string::npos)
+	{
+		tmpFileName = tmpFileName.substr(pos + 1);
+	}
+	else
+	{
+		pos = tmpFileName.rfind('\\');
+		if(pos != string::npos)
+		{
+			tmpFileName = tmpFileName.substr(pos + 1);
+		}
+	}
 
+	return tars::TC_File::excludeFileExt(tmpFileName);
+}
+
+string TarsParse::replaceFileName(const string &fileName, const string &ext)
+{
+	return tars::TC_File::excludeFileExt(getFileName(fileName)) + "." + ext;
+}
+
+string TarsParse::getAbsoluteFileName(const string &baseDir, const string &fileName)
+{
+	return baseDir + FILE_SEP + fileName;
+}
