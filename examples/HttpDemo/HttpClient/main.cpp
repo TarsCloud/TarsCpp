@@ -31,7 +31,8 @@ using namespace tup;
 
 Communicator* _comm;
 
-static string httpObj = "TestApp.HttpServer.httpObj@tcp -h 127.0.0.1 -p 8081";
+//static string httpObj = "TestApp.HttpServer.httpObj@tcp -h 127.0.0.1 -p 8081";
+static string httpObj = "TestApp.HttpServer.httpObj@tcp -h 134.175.105.92 -p 8081";
 
 struct Param
 {
@@ -50,7 +51,7 @@ void httpCall(int excut_num)
 {
     int64_t _iTime = TC_TimeProvider::getInstance()->getNowMs();
 
-    string sServer1("http://127.0.0.1:8081/");
+    string sServer1("http://134.175.105.92:8081/");
 
     TC_HttpRequest stHttpReq;
     stHttpReq.setCacheControl("no-cache");
