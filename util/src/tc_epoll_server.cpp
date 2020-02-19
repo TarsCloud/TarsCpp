@@ -877,8 +877,6 @@ int TC_EpollServer::Connection::parseProtocol(TC_NetWorkBuffer &rbuf)
 
 int TC_EpollServer::Connection::recvTcp()
 {
-	static std::atomic<int> totalRecv{0};
-
 	int recvCount = 0;
 
 	TC_NetWorkBuffer *rbuf = &_recvBuffer;
@@ -893,6 +891,9 @@ int TC_EpollServer::Connection::recvTcp()
         {
             if (TC_Socket::isPending())
             {
+//#if TARGET_PLATFORM_WINDOWS
+//                _pBindAdapter->getNetThreadOfFd(_sock.getfd())->getEpoller()->mod(_sock.getfd(), getId(), EPOLLIN | EPOLLOUT);
+//#endif
                 //没有数据了
                 break;
             }
@@ -976,6 +977,9 @@ int TC_EpollServer::Connection::recvUdp()
         {
             if (TC_Socket::isPending())//errno == EAGAIN)
             {
+//#if TARGET_PLATFORM_WINDOWS
+//                _pBindAdapter->getNetThreadOfFd(_sock.getfd())->getEpoller()->mod(_sock.getfd(), getId(), EPOLLIN | EPOLLOUT);
+//#endif
                 //没有数据了
                 break;
             }
@@ -1028,7 +1032,6 @@ int TC_EpollServer::Connection::recv()
 
 int TC_EpollServer::Connection::sendBuffer()
 {
-	static std::atomic<int> totalSend{0};
 	while(!_sendBuffer.empty())
 	{
 		pair<const char*, size_t> data = _sendBuffer.getBufferPointer();
@@ -1041,6 +1044,10 @@ int TC_EpollServer::Connection::sendBuffer()
 		{
 			if (TC_Socket::isPending())
 			{
+//#if TARGET_PLATFORM_WINDOWS
+//                _pBindAdapter->getNetThreadOfFd(_sock.getfd())->getEpoller()->mod(_sock.getfd(), getId(), EPOLLIN | EPOLLOUT);
+//#endif
+
 				break;
 			}
 			else
@@ -1050,9 +1057,6 @@ int TC_EpollServer::Connection::sendBuffer()
 			}
 		}
 
-		totalSend += iBytesSent;
-
-//		cout << "totalSend:" << totalSend << endl;
 		if(iBytesSent > 0)
 		{
 			_sendBuffer.moveHeader(iBytesSent);
@@ -1106,11 +1110,15 @@ int TC_EpollServer::Connection::sendUdp(const shared_ptr<SendContext> &sc)
 {
     //udp的直接发送即可
     int iRet = _sock.sendto((const void *) sc->buffer()->buffer(), sc->buffer()->length(), sc->ip(), sc->port(), 0);
-    if (iRet < 0)
+    if (iRet < 0 && !TC_Socket::isPending())
     {
         _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send [" + _ip + ":" + TC_Common::tostr(_port) + "] error");
         return -1;
     }
+
+//#if TARGET_PLATFORM_WINDOWS
+//    _pBindAdapter->getNetThreadOfFd(_sock.getfd())->getEpoller()->mod(_sock.getfd(), getId(), EPOLLIN | EPOLLOUT);
+//#endif
     return 0;    
 }
 

@@ -315,12 +315,16 @@ int TC_TCPClient::checkSocket()
                 iRet = _socket.connectNoThrow(_ip, _port);
             }
 
+            int n = TC_Exception::getSystemCode();
             if(iRet < 0 && !TC_Socket::isInProgress())
             {
                 _socket.close();
                 return EM_CONNECT;
             }
+    //        printf("%d,   create socket1\n", std::this_thread::get_id());
             int iRetCode = _epoller->wait(_timeout);
+    //        printf("%d,   create socket2, %d\n", std::this_thread::get_id(), iRetCode);
+
             if (iRetCode < 0)
             {
                 _socket.close();
@@ -328,16 +332,17 @@ int TC_TCPClient::checkSocket()
             }
             else if (iRetCode == 0)
             {
+                cout << "create:" << TC_Exception::parseError(n)<< endl;
                 _socket.close();
                 return EM_TIMEOUT;
             }
             else
             {
+                /*
                 for(int i = 0; i < iRetCode; ++i)
                 {
                     const epoll_event& ev = _epoller->get(i);
                     if(TC_Epoller::errorEvent(ev))
-                    // if (ev.events & EPOLLERR || ev.events & EPOLLHUP)
                     {
                         _socket.close();
                         return EM_CONNECT;
@@ -346,7 +351,6 @@ int TC_TCPClient::checkSocket()
                     {
                         int iVal = 0;
                         socklen_t iLen = static_cast<socklen_t>(sizeof(int));
-                        // if (::getsockopt(_socket.getfd(), SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&iVal), &iLen) == -1 || iVal)
                         if(_socket.getSockOpt(SO_ERROR, reinterpret_cast<char*>(&iVal), iLen) == -1 || iVal)
                         {
                             _socket.close();
@@ -354,6 +358,7 @@ int TC_TCPClient::checkSocket()
                         }
                     }
                 }
+                */
             }
 
             //设置为阻塞模式
@@ -394,7 +399,12 @@ int TC_TCPClient::recv(char *sRecvBuffer, size_t &iRecvLen)
         return iRet;
     }
 
+    time_t us = TC_Common::now2us();
+ //   printf("%d,   create recv1\n", std::this_thread::get_id());
+
     int iRetCode = _epoller->wait(_timeout);
+//    printf("%d,   create recv2, %d\n", std::this_thread::get_id(), iRetCode);
+
     if (iRetCode < 0)
     {
         _socket.close();
@@ -402,6 +412,7 @@ int TC_TCPClient::recv(char *sRecvBuffer, size_t &iRecvLen)
     }
     else if (iRetCode == 0)
     {
+        cout << "recv:" << TC_Exception::parseError(TC_Exception::getSystemCode()) << ", " << _timeout << ",cost: " << TC_Common::now2us()-us << endl;
         _socket.close();
         return EM_TIMEOUT;
     }

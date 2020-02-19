@@ -171,8 +171,6 @@ int epoll_sock_data_t::submit()
         afd_events |= AFD_POLL_SEND | AFD_POLL_CONNECT;
     }
 
-    // cout << "submit sock_data, registered_events:" << _registered_events << endl;
-
     epoll_op_t* op = new epoll_op_t(this, afd_events);
 
     DWORD result = epoll__afd_poll(_peer_sock, &op->_poll_info, &op->_overlapped);
@@ -310,7 +308,6 @@ int epoll_port_data_t::epoll_add(SOCKET sock, struct epoll_event *ev)
     sock_data->_registered_events = ev->events | EPOLLERR | EPOLLHUP;
     sock_data->_user_data         = ev->data.u64;
 
-    // cout << "add:" << sock_data->_user_data << endl;
     return sock_data->submit();    
 }
 
@@ -420,14 +417,14 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
     {
         epoll_op_t *op = CONTAINING_RECORD(entries[i].lpOverlapped, epoll_op_t, _overlapped);
         epoll_sock_data_t *sock_data = op->_sock_data;
-
+        
         if (op->_generation < sock_data->_op_generation)
         {
-            /* This op has been superseded. */
-            // cout << "op superseded" << endl;
+     //       cout << "op superseded" << endl;
             delete op;
             continue;
         }
+        
 
         /* Dequeued the most recent op. Reset generation and submitted_events. */
         sock_data->_op_generation = 0;
@@ -476,7 +473,7 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
             continue;
         }
 
-        int registered_events = sock_data->_registered_events;
+ //       int registered_events = sock_data->_registered_events;
         int reported_events = 0;
         /* Convert afd events to epoll events. */
         if (afd_events & (AFD_POLL_RECEIVE | AFD_POLL_ACCEPT))
@@ -521,10 +518,10 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
         {
             struct epoll_event *ev = events + (num_events++);
             ev->data.u64           = sock_data->_user_data;
-            // cout << "report:" << (ev->data.u64 >> 32) << endl;
             ev->events             = reported_events;
         }
     }
+
     return num_events;
 }
 
@@ -597,18 +594,17 @@ int epoll_wait(epoll_t port_handle, struct epoll_event *events, int maxevents, i
 
     /* Compute how much overlapped entries can be dequeued at most. */
     DWORD max_entries = min(ARRAY_COUNT(entries), maxevents);
-    ULONG count;
-
-    // cout << "GetQueuedCompletionStatusEx begin" << endl;
+    ULONG count = 0;
 
     DWORD result = GetQueuedCompletionStatusEx(port_data->getHandle(), entries, max_entries, &count, gqcs_timeout, TRUE);
-    // cout << "GetQueuedCompletionStatusEx:" << result << ", " << count << endl;
 
     if (!result)
     {
         DWORD error = GetLastError();
         if (error == WAIT_TIMEOUT)
         {
+ //           printf("%d, GetQueuedCompletionStatusEx:%d\n", std::this_thread::get_id() , count);
+
             return 0;
         }
         else

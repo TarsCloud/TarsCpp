@@ -51,11 +51,16 @@ void httpCall(int excut_num)
 {
     int64_t _iTime = TC_TimeProvider::getInstance()->getNowMs();
 
-    string sServer1("http://134.175.105.92:8081/");
+  //  string sServer1("http://134.175.105.92:8081/");
+    string sServer1("http://127.0.0.1:8081/");
 
     TC_HttpRequest stHttpReq;
     stHttpReq.setCacheControl("no-cache");
-    stHttpReq.setGetRequest(sServer1);
+//    stHttpReq.setGetRequest(sServer1);
+
+    TC_TCPClient client ;
+ //   client.init("127.0.0.1", 8081, 3000);
+    client.init("127.0.0.1", 8082, 3000);
 
     int iRet = 0;
 
@@ -63,7 +68,9 @@ void httpCall(int excut_num)
     {
         TC_HttpResponse stHttpRsp;
 
+        stHttpReq.setPostRequest(sServer1, TC_Common::tostr(i), true);
         iRet = stHttpReq.doRequest(stHttpRsp, 3000);
+    //    iRet = stHttpReq.doRequest(client,stHttpRsp);
         
         if (iRet != 0)
         {
@@ -158,7 +165,7 @@ int main(int argc, char *argv[])
 	    if(param.call.empty()) param.call = "sync";
 	    param.thread = TC_Common::strto<int>(option.getValue("thread"));
 	    if(param.thread <= 0) param.thread = 1;
-
+/*
         _comm = new Communicator();
 
 //         TarsRollLogger::getInstance()->logger()->setLogLevel(6);
@@ -175,7 +182,7 @@ int main(int argc, char *argv[])
         proto.requestFunc = ProxyProtocol::http1Request;
         proto.responseFunc = ProxyProtocol::http1Response;
         param.servantPrx->tars_set_protocol(proto);
-
+        */
         int64_t start = TC_Common::now2us();
 
         std::function<void(int)> func;

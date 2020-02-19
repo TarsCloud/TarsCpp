@@ -2153,6 +2153,59 @@ void TC_HttpRequest::setScheme(const char * sScheme)
 	_httpURL._sScheme = sScheme;
 }
 
+int TC_HttpRequest::doRequest(TC_TCPClient& tcpClient, TC_HttpResponse& stHttpRsp)
+{
+    //只支持短连接模式
+    setConnection("close");
+
+    string sSendBuffer = encode();
+
+    int iRet = tcpClient.send(sSendBuffer.c_str(), sSendBuffer.length());
+    if (iRet != TC_ClientSocket::EM_SUCCESS)
+    {
+        return iRet;
+    }
+
+    stHttpRsp.reset();
+
+    string sBuffer;
+
+    char* sTmpBuffer = new char[10240];
+    size_t iRecvLen = 10240;
+
+    while (true)
+    {
+        iRecvLen = 10240;
+
+        iRet = tcpClient.recv(sTmpBuffer, iRecvLen);
+
+        if (iRet == TC_ClientSocket::EM_SUCCESS)
+            sBuffer.append(sTmpBuffer, iRecvLen);
+
+        switch (iRet)
+        {
+        case TC_ClientSocket::EM_SUCCESS:
+            if (stHttpRsp.incrementDecode(sBuffer))
+            {
+                delete[]sTmpBuffer;
+                return TC_ClientSocket::EM_SUCCESS;
+            }
+            continue;
+        case TC_ClientSocket::EM_CLOSE:
+            delete[]sTmpBuffer;
+            stHttpRsp.incrementDecode(sBuffer);
+            return TC_ClientSocket::EM_SUCCESS;
+        default:
+            delete[]sTmpBuffer;
+            return iRet;
+        }
+    }
+
+    assert(true);
+
+    return 0;
+
+}
 int TC_HttpRequest::doRequest(TC_HttpResponse &stHttpRsp, int iTimeout)
 {
     //只支持短连接模式
@@ -2166,6 +2219,10 @@ int TC_HttpRequest::doRequest(TC_HttpResponse &stHttpRsp, int iTimeout)
     getHostPort(sHost, iPort);
 
     TC_TCPClient tcpClient;
+//    if (_client == NULL)
+ //   {
+ //       _client = new TC_TCPClient();
+ //   }
     tcpClient.init(sHost, iPort, iTimeout);
 
     int iRet = tcpClient.send(sSendBuffer.c_str(), sSendBuffer.length());

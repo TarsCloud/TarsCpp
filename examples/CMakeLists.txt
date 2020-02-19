@@ -23,7 +23,7 @@ if(WIN32)
     add_custom_target(run-http
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS HttpServer HttpClient
-        COMMAND servant\\script\\busybox.exe bash examples\\scripts\\run-http.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
+        COMMAND examples\\scripts\\run-http.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
         COMMENT "call run http")
 
     add_custom_target(run-auth

@@ -88,6 +88,8 @@ struct TC_HttpRequest_Exception : public TC_Http_Exception
     ~TC_HttpRequest_Exception() throw(){};
 };
 
+class TC_TCPClient;
+
 class TC_HttpRequest;
 class TC_HttpResponse;
 
@@ -1019,7 +1021,7 @@ public:
     TC_HttpRequest()
     {
         TC_HttpRequest::reset();
-        setUserAgent("TC_Http");
+        setUserAgent("Tars-Http");
     }
 
     /**
@@ -1188,6 +1190,8 @@ public:
      *               <0失败, 具体值参见TC_ClientSocket声明
      */
     int doRequest(TC_HttpResponse &stHttpRep, int iTimeout = 3000);
+
+    int doRequest(TC_TCPClient &client, TC_HttpResponse& stHttpRsp);
 
     /**
      * @brief get request type
