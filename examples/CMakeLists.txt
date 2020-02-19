@@ -18,18 +18,21 @@ if(WIN32)
     add_custom_target(run-quick-start
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS QuickStartDemo QuickStartDemoClient
+            USES_TERMINAL
             COMMAND examples/scripts/run-quick-start.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
             COMMENT "call quick start")
 
     add_custom_target(run-http
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS HttpServer HttpClient
+            USES_TERMINAL
             COMMAND examples/scripts/run-http.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
             COMMENT "call run http")
 
     add_custom_target(run-auth
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS AuthServer AuthClient
+            USES_TERMINAL
             COMMAND examples/scripts/run-auth.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
             COMMENT "call run auth")
 
@@ -37,6 +40,7 @@ if(WIN32)
         add_custom_target(run-http2
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 DEPENDS Http2Server Http2Client
+                USES_TERMINAL
                 COMMAND examples/scripts/run-http2.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
                 COMMENT "call run http2")
     endif()
@@ -45,6 +49,7 @@ if(WIN32)
         add_custom_target(run-ssl
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 DEPENDS SSLServer SSLClient
+                USES_TERMINAL
                 COMMAND examples/scripts/run-ssl.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
                 COMMENT "call run ssl")
     endif()
@@ -52,18 +57,21 @@ if(WIN32)
     add_custom_target(run-co
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro
+            USES_TERMINAL
             COMMAND examples/scripts/run-co.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
             COMMENT "call run co")
 
     add_custom_target(run-custom
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS CustomServer CustomClient
+            USES_TERMINAL
             COMMAND examples/scripts/run-custom.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
             COMMENT "call run custom")
 
     add_custom_target(run-push
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS PushServer PushClient
+            USES_TERMINAL
             COMMAND examples/scripts/run-push.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
             COMMENT "call run push")
 
@@ -71,6 +79,7 @@ if(WIN32)
         add_custom_target(run-all
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 DEPENDS QuickStartDemo QuickStartDemoClient HttpServer HttpClient AuthServer AuthClient  SSLServer SSLClient CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro PushServer PushClient
+                USES_TERMINAL
                 COMMAND examples/scripts/run-quick-start.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
                 COMMAND examples/scripts/run-http.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
                 COMMAND examples/scripts/run-co.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
@@ -81,6 +90,7 @@ if(WIN32)
     else()
         add_custom_target(run-all
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                USES_TERMINAL
                 DEPENDS QuickStartDemo QuickStartDemoClient HttpServer HttpClient AuthServer AuthClient CoroutineDemoAServer CoroutineDemoBServer CoroutineDemoClient testCoro testParallelCoro PushServer PushClient
                 COMMAND examples/scripts/run-quick-start.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
                 COMMAND examples/scripts/run-http.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
@@ -93,6 +103,7 @@ if(WIN32)
 
     add_custom_target(run-kill
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            USES_TERMINAL
             COMMAND examples/scripts/run-kill.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CMAKE_SOURCE_DIR}
             COMMENT "call run kill")
 else(WIN32)
