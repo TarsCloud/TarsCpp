@@ -3,6 +3,7 @@
 //
 #include "util/tc_network_buffer.h"
 #include "util/tc_http.h"
+#include <cmath>
 
 using namespace std;
 
@@ -88,7 +89,7 @@ size_t TC_NetWorkBuffer::getBuffers(char *buffer, size_t length) const
 
 	while(it != _bufferList.end() && left != 0)
 	{
-		size_t len = std::min(left, (*it)->length());
+		size_t len = min(left, (*it)->length());
 
 		memcpy(buffer + pos, (*it)->buffer(), len);
 

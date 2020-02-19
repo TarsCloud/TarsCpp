@@ -14,6 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
+#if TARS_MYSQL
 #include "util/tc_mysql.h"
 #include "mysql.h"
 #include "errmsg.h"
@@ -498,3 +499,4 @@ TC_Mysql::MysqlRecord TC_Mysql::MysqlData::operator[](size_t i)
 
 }
 
+#endif

@@ -72,16 +72,20 @@ void TarsParse::clear()
 
 void TarsParse::parse(const string& sFileName)
 {
+    cout << "parse:" << sFileName << "," << _bUseCurrentPath << "," << _bUseCurrentPathFirst << endl;
     if (_bUseCurrentPath)
     {
         std::string sTemp = sFileName;
         bool isExist = tars::TC_File::isFileExist(sFileName);
 
+        cout << "file exists:" << isExist << endl;
+             
         if (!isExist)
         {
             sTemp = tars::TC_File::extractFileName(sFileName);
         }
 
+        cout << "temp:" << sTemp << endl;
         clear();
 
         _contains.push(new Container(""));
@@ -130,6 +134,8 @@ void TarsParse::parse(const string& sFileName)
         {
             error("open file '" + sFileName + "' error :" + string(strerror(errno)));
         }
+
+        cout << "push:" << sFileName << endl;
 
         pushFile(sFileName);
 

@@ -5,17 +5,11 @@ project(tars_cpp)
 set(TARS_VERSION "2.0.0")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 
-option(TARS_MYSQL "option for mysql" ON)
+option(TARS_MYSQL "option for mysql" OFF)
 option(TARS_SSL "option for ssl" OFF)
 option(TARS_HTTP2 "option for http2" OFF)
 option(TARS_PROTOBUF "option for protocol" OFF)
 option(TARS_ZLIB "option for zip" OFF)
-
-#set(TARS_MYSQL 1)
-#set(TARS_SSL 0)
-#set(TARS_HTTP2 0)
-#set(TARS_PROTOBUF 0)
-#set(TARS_ZLIB 0)
 
 if(TARS_MYSQL)
 add_definitions(-DTARS_MYSQL=1)
@@ -37,7 +31,6 @@ if(TARS_ZLIB)
 add_definitions(-DTARS_ZLIB=1)
 endif()
 
-# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 set(CMAKE_VERBOSE_MAKEFILE off)
 
 #for coverage statistics
@@ -76,16 +69,9 @@ endif()
 
 
 #-------------------------------------------------------------
-#set(APP_LIBRARIES)
-#set(OPEN_MYSQL "OFF")
-#set(OPEN_NGHTTP2 "OFF")
-#set(OPEN_SSL "OFF")
-#set(OPEN_ZLIB "OFF")
-#set(OPEN_PROTOBUF "OFF")
 
 set(THIRDPARTY_PATH "${CMAKE_BINARY_DIR}/src")
 if(TARS_MYSQL)
-#    set(OPEN_MYSQL "ON")
     set(MYSQL_DIR_INC "${THIRDPARTY_PATH}/mysql-lib/include")
     set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/mysql-lib/libmysql")
     include_directories(${MYSQL_DIR_INC})
@@ -93,7 +79,6 @@ if(TARS_MYSQL)
 endif()
 
 if(TARS_PROTOBUF)
-#    set(OPEN_PROTOBUF "ON")
     set(PROTOBUF_DIR_INC "${THIRDPARTY_PATH}/protobuf-lib/src")
     set(PROTOBUF_DIR_LIB "${THIRDPARTY_PATH}/protobuf-lib")
     include_directories(${PROTOBUF_DIR_INC})
@@ -101,7 +86,6 @@ if(TARS_PROTOBUF)
 endif()
 
 if(TARS_ZLIB)
-#    set(OPEN_ZLIB "ON")
     set(ZLIB_DIR_INC "${THIRDPARTY_PATH}/z-lib")
     set(ZLIB_DIR_LIB "${THIRDPARTY_PATH}/z-lib")
     include_directories(${ZLIB_DIR_INC})
@@ -109,7 +93,6 @@ if(TARS_ZLIB)
 endif()
 
 if(TARS_HTTP2)
-#    set(OPEN_NGHTTP2 "ON")
     set(NGHTTP2_DIR_INC "${THIRDPARTY_PATH}/nghttp2-lib/lib/includes/")
     set(NGHTTP2_DIR_LIB "${THIRDPARTY_PATH}/nghttp2-lib/lib")
     include_directories(${NGHTTP2_DIR_INC})
@@ -117,7 +100,6 @@ if(TARS_HTTP2)
 endif()
 
 if(TARS_SSL)
-#    set(OPEN_SSL "ON")
     set(SSL_DIR_INC "${THIRDPARTY_PATH}/openssl-lib/include/")
     set(SSL_DIR_LIB "${THIRDPARTY_PATH}/openssl-lib")
     include_directories(${SSL_DIR_INC})
@@ -322,7 +304,9 @@ ENDIF (UNIX)
 #-------------------------------------------------------------
 
 IF(WIN32)
-set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/tars2cpp.exe")
+#set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/tars2cpp.exe")
+set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp.exe")
+
 ELSE()
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
 ENDIF()

@@ -486,7 +486,6 @@ int TC_File::save2file(const string &sFullFileName, const char *sFileData, size_
 	{
 		return -1;
 	}
-
 // #if TARGET_PLATFORM_LINUX ||TARGET_PLATFORM_IOS
 // 	FILE *fp = fopen(sFullFileName.c_str(), "wb");
 // 	if (fp == NULL)
