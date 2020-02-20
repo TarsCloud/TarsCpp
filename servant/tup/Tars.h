@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -17,19 +17,23 @@
 #ifndef __TARS_H__
 #define __TARS_H__
 
-#include <netinet/in.h>
 #include <iostream>
 #include <cassert>
 #include <vector>
 #include <map>
 #include <string>
 #include <stdexcept>
+#include <functional>
 #include <stdint.h>
 #include <string.h>
 #include <limits.h>
 #include <stdio.h>
 
-
+#if defined _WIN32 || defined _WIN64
+#pragma comment(lib,"ws2_32.lib")
+#else
+#include <arpa/inet.h>
+#endif
 
 //支持iphone
 #ifdef __APPLE__
@@ -77,21 +81,18 @@
 //////////////////////////////////////////////////////////////////
 //// 保留接口版本Tars宏定义
 //编码相应的宏
+
 #define TarsReserveBuf(os, len) \
 do{ \
-    if((os)._reverse) \
+    if(tars_likely((os)._buf_len < (len))) \
     { \
-        if(tars_unlikely((os)._buf_len < (len))) \
-        { \
-            size_t len1 = (len)<<1; \
-            char * p = new char[(len1)]; \
-            memcpy(p, (os)._buf, (os)._len); \
-            delete[] (os)._buf; \
-            (os)._buf = p; \
-            (os)._buf_len = (len1); \
-        } \
+        size_t len1 = (len)<<1; \
+        if(len1<128) len1=128; \
+        (os)._buf = (os)._reserve(os, len1); \
+        (os)._buf_len = (len1); \
     } \
 }while(0)
+
 
 #define TarsWriteToHead(os, type, tag) \
 do { \
@@ -424,12 +425,13 @@ namespace tars
                 eSimpleList = 13,
             };
 
+        #pragma pack(1)
             struct helper
             {
                 uint8_t     type : 4;
                 uint8_t     tag  : 4;
-            }__attribute__((packed));
-
+            };
+        #pragma pack()
         public:
             DataHead() : _type(0), _tag(0) {}
             DataHead(uint8_t type, uint8_t tag) : _type(type), _tag(tag) {}
@@ -512,6 +514,11 @@ namespace tars
 /// 缓冲区读取器封装
     class BufferReader
     {
+    private:
+        BufferReader(const BufferReader&);
+
+        BufferReader& operator=(const BufferReader&);
+
     public:
         const char *        _buf;        ///< 缓冲区
         size_t              _buf_len;    ///< 缓冲区长度
@@ -610,7 +617,7 @@ namespace tars
         template<typename Alloc>
         void setBuffer(const std::vector<char,Alloc> &buf)
         {
-            _buf = &buf[0];
+            _buf = buf.data();
             _buf_len = buf.size();
             _cur = 0;
         }
@@ -687,7 +694,7 @@ namespace tars
         template<typename Alloc>
         void setMapBuffer(std::vector<char,Alloc> &buf)
         {
-            _buf_m = &buf[0];
+            _buf_m = buf.data();
             _buf_len_m = buf.size();
             _cur_m = 0;
         }
@@ -699,162 +706,201 @@ namespace tars
 
 //////////////////////////////////////////////////////////////////
 /// 缓冲区写入器封装
-    class BufferWriter
+     class BufferWriter
     {
-    public:
+    protected:
         char *  _buf;
         size_t  _len;
         size_t  _buf_len;
-        bool    _reverse;
+        std::function<char*(BufferWriter &, size_t)>  _reserve = BufferWriter::reserve;    //扩展空间
+
+        static char* reserve(BufferWriter &os, size_t len)
+        {
+            char * p = new char[(len)];
+            memcpy(p, (os)._buf, (os)._len);
+            delete[] (os)._buf;
+            return p;
+        }
+        
+    private:
+        BufferWriter(const BufferWriter & bw);
+        BufferWriter& operator=(const BufferWriter& buf);
 
     public:
-        BufferWriter(const BufferWriter & bw)
-        {
-            _buf = NULL;
-            _len = 0;
-            _buf_len = 0;
-            _reverse = true;
-
-            writeBuf(bw._buf, bw._len);
-            _len = bw._len;
-            //_buf_len    = bw._buf_len;
-        }
-
-        BufferWriter& operator=(const BufferWriter& buf)
-        {
-            _reverse = true;
-            writeBuf(buf._buf,buf._len);
-            _len = buf._len;
-            //_buf_len = buf._buf_len;
-            return *this;
-        }
-
         BufferWriter()
         : _buf(NULL)
         , _len(0)
         , _buf_len(0)
-        , _reverse(true)
         {}
         ~BufferWriter()
         {
             delete[] _buf;
         }
 
-        void reserve(size_t len)
-        {
-            if (tars_unlikely(_buf_len < len))
-            {
-                len <<= 1;
-                if(len<128)
-                    len=128;
-                char * p = new char[len];
-                memcpy(p, _buf, _len);
-                delete[] _buf;
-                _buf = p;
-                _buf_len = len;
-            }
-        }
         void reset() { _len = 0;}
-        void writeBuf(const void * buf, size_t len)
+        void writeBuf(const char * buf, size_t len)
         {
             TarsReserveBuf(*this, _len + len);
             memcpy(_buf + _len, buf, len);
             _len += len;
         }
-        //const std::vector<char> &getByteBuffer() const    { return _buf; }
-        std::vector<char> getByteBuffer() const             { return std::vector<char>(_buf, _buf + _len);}
-        const char * getBuffer() const                      { return _buf;}//{ return &_buf[0]; }
-        size_t getLength() const                            { return _len;}    //{ return _buf.size(); }
-        //void swap(std::vector<char>& v)                   { _buf.swap(v); }
-        void swap(std::vector<char>& v)
-        {
-            v.assign(_buf, _buf + _len);
-        }
+        std::vector<char> getByteBuffer() const      { return std::vector<char>(_buf, _buf + _len);}
+        const char * getBuffer() const               { return _buf;}//{ return &_buf[0]; }
+        size_t getLength() const                     { return _len;} //{ return _buf.size(); }
+        void swap(std::vector<char>& v)              { v.assign(_buf, _buf + _len); }
+        void swap(std::string& v)                    { v.assign(_buf, _len); }
         void swap(BufferWriter& buf)
         {
             std::swap(_buf, buf._buf);
             std::swap(_buf_len, buf._buf_len);
             std::swap(_len, buf._len);
-            std::swap(_reverse, buf._reverse);
         }
     };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// 预先设定缓存的封装器
-    class BufferWriterBuff
+/// 实际buffer是std::string
+/// 可以swap, 把buffer交换出来, 避免一次内存copy 
+    class BufferWriterString
     {
-    public:
+    protected:
+        mutable std::string _buffer;
         char *  _buf;
         size_t  _len;
         size_t  _buf_len;
-        bool    _reverse;
+	    std::function<char*(BufferWriterString &, size_t)>  _reserve;
+
     private:
-        BufferWriterBuff(const BufferWriterBuff&);
+        //不让copy 复制
+        BufferWriterString(const BufferWriterString&);
+        BufferWriterString& operator=(const BufferWriterString& buf);
+
     public:
-
-        BufferWriterBuff& operator=(const BufferWriterBuff& buf)
-        {
-            _reverse = false;
-            writeBuf(buf._buf, buf._len);
-            _len = buf._len;
-            _buf_len = buf._buf_len;
-            return *this;
-        }
-
-        BufferWriterBuff()
+        BufferWriterString()
         : _buf(NULL)
         , _len(0)
         , _buf_len(0)
-        , _reverse(false)
-        {}
-        ~BufferWriterBuff()
         {
-
+#ifndef GEN_PYTHON_MASK
+	        //内存分配器
+	        _reserve = [](BufferWriterString &os, size_t len) {
+                os._buffer.resize(len);
+                return (char*)os._buffer.data();
+		    } ;
+#endif
         }
 
-        void setBuffer(char * buffer, size_t size_buff)
+        ~BufferWriterString()
         {
-            _buf = buffer;
-            _len = 0;
-            _buf_len = size_buff;
-            _reverse = false;
         }
 
-        /*
-        void reserve(size_t len)
-        {
-            if(_buf_len < len)
-            {
-
-            }
-        }
-        */
         void reset() { _len = 0;}
 
-        void writeBuf(const void * buf, size_t len)
+        void writeBuf(const char * buf, size_t len)
         {
-            if (tars_unlikely(_buf_len < _len + len))
-            {
-                throw TarsNotEnoughBuff("not enough buffer");
-            }
-
+            TarsReserveBuf(*this, _len + len);
             memcpy(_buf + _len, buf, len);
             _len += len;
         }
 
-        std::vector<char> getByteBuffer() const      { return std::vector<char>(_buf, _buf + _len);}
-        const char * getBuffer() const               { return _buf;}
-        size_t getLength() const                     { return _len;}
+        const std::string &getByteBuffer()  const { _buffer.resize(_len); return _buffer;}
+	    std::string &getByteBuffer() { _buffer.resize(_len); return _buffer;}
+	    const char * getBuffer() const      { return _buf;}
+        size_t getLength() const            { return _len;}
+        void swap(std::string& v)
+        {
+            _buffer.resize(_len);
+            v.swap(_buffer);
+            _buf = NULL;
+            _buf_len = 0; 
+            _len = 0;
+        }
         void swap(std::vector<char>& v)
         {
-            v.assign(_buf, _buf + _len);
+            _buffer.resize(_len);
+            v.assign(_buffer.c_str(), _buffer.c_str() + _buffer.size());
+            _buf = NULL;
+            _buf_len = 0; 
+            _len = 0;
         }
-        void swap(BufferWriterBuff& buf)
+        void swap(BufferWriterString& buf)
         {
+            buf._buffer.swap(_buffer);
             std::swap(_buf, buf._buf);
             std::swap(_buf_len, buf._buf_len);
             std::swap(_len, buf._len);
-            std::swap(_reverse, buf._reverse);
+        }
+    };
+
+/// 实际buffer是std::vector<char>
+/// 可以swap, 把buffer交换出来, 避免一次内存copy 
+    class BufferWriterVector
+    {
+    protected:
+        mutable std::vector<char> _buffer;
+        char *  _buf;
+        size_t  _len;
+        size_t  _buf_len;
+	    std::function<char*(BufferWriterVector &, size_t)>  _reserve;
+
+    private:
+        //不让copy 复制
+        BufferWriterVector(const BufferWriterVector&);
+        BufferWriterVector& operator=(const BufferWriterVector& buf);
+
+    public:
+        BufferWriterVector()
+        : _buf(NULL)
+        , _len(0)
+        , _buf_len(0)
+        {
+#ifndef GEN_PYTHON_MASK
+            //内存分配器
+	        _reserve = [](BufferWriterVector &os, size_t len) {
+                os._buffer.resize(len);
+                return os._buffer.data();
+		    } ;
+#endif
+        }
+
+        ~BufferWriterVector()
+        {
+        }
+
+        void reset() { _len = 0;}
+
+        void writeBuf(const char * buf, size_t len)
+        {
+            TarsReserveBuf(*this, _len + len);
+            memcpy(_buf + _len, buf, len);
+            _len += len;
+        }
+
+        const std::vector<char> &getByteBuffer() const { _buffer.resize(_len); return _buffer;}
+	    std::vector<char> &getByteBuffer()  { _buffer.resize(_len); return _buffer;}
+	    const char * getBuffer() const      { return _buf;}
+        size_t getLength() const            { return _len;}
+        void swap(std::string& v)
+        {
+            _buffer.resize(_len);
+            v.assign(_buffer.data(), _buffer.size());
+            _buf = NULL;
+            _buf_len = 0; 
+            _len = 0;
+        }
+        void swap(std::vector<char>& v)
+        {
+            _buffer.resize(_len);
+            v.swap(_buffer);
+            _buf = NULL;
+            _buf_len = 0; 
+            _len = 0;
+        }
+        void swap(BufferWriterVector& buf)
+        {
+            buf._buffer.swap(_buffer);
+            std::swap(_buf, buf._buf);
+            std::swap(_buf_len, buf._buf_len);
+            std::swap(_len, buf._len);
         }
     };
 
@@ -939,7 +985,7 @@ namespace tars
                 {
                     size_t len = 0;
                     TarsReadTypeBuf(*this, len, uint32_t);
-                    len = ntohl(len);
+                    len = ntohl((uint32_t)len);
                     TarsReadHeadSkip(*this, len);
                 }
                 break;
@@ -1809,7 +1855,7 @@ namespace tars
                     throw TarsDecodeInvalidValue(ss);
                 }
                 TarsWriteToHead(*this, TarsHeadeString4, tag);
-                uint32_t n = htonl(s.size());
+                uint32_t n = htonl((uint32_t)s.size());
                 TarsWriteUInt32TTypeBuf(*this, n, (*this)._len); 
                 //this->writeBuf(s.data(), s.size());
                 TarsWriteTypeBuf(*this, s.data(), s.size());
@@ -1817,7 +1863,7 @@ namespace tars
             else
             {
                 TarsWriteToHead(*this, TarsHeadeString1, tag);
-                uint8_t n = s.size();
+                uint8_t n = (uint8_t)s.size();
                 TarsWriteUInt8TTypeBuf(*this, n, (*this)._len); 
                 //this->writeBuf(s.data(), s.size());
                 TarsWriteTypeBuf(*this, s.data(), s.size());
@@ -1839,7 +1885,7 @@ namespace tars
             //DataHead h(DataHead::eMap, tag);
             //h.writeTo(*this);
             TarsWriteToHead(*this, TarsHeadeMap, tag);
-            Int32 n = m.size();
+            Int32 n = (Int32)m.size();
             write(n, 0);
             typedef typename std::map<K, V, Cmp, Alloc>::const_iterator IT;
             for (IT i = m.begin(); i != m.end(); ++i)
@@ -1855,7 +1901,7 @@ namespace tars
             //DataHead h(DataHead::eList, tag);
             //h.writeTo(*this);
             TarsWriteToHead(*this, TarsHeadeList, tag);
-            Int32 n = v.size();
+            Int32 n = (Int32)v.size();
             write(n, 0);
             typedef typename std::vector<T, Alloc>::const_iterator IT;
             for (IT i = v.begin(); i != v.end(); ++i)
@@ -1882,10 +1928,10 @@ namespace tars
             //hh.writeTo(*this);
             TarsWriteToHead(*this, TarsHeadeSimpleList, tag);
             TarsWriteToHead(*this, TarsHeadeChar, 0);
-            Int32 n = v.size();
+            Int32 n = (Int32)v.size();
             write(n, 0);
             //writeBuf(&v[0], v.size());
-            TarsWriteTypeBuf(*this, &v[0], v.size());
+            TarsWriteTypeBuf(*this, v.data(), v.size());
         }
 
         template<typename T>

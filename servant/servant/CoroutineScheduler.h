@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,6 +22,7 @@
 #include <set>
 #include <deque>
 #include <map>
+#include "util/tc_platform.h"
 #include "util/tc_fcontext.h"
 #include "util/tc_thread_queue.h"
 #include "util/tc_monitor.h"
@@ -53,20 +54,38 @@ struct stack_context
 /**
  * 协程使用的栈内存分配器
  */
-class standard_stack_allocator
+// class standard_stack_allocator
+// {
+// public:
+//     static bool is_stack_unbound();
+
+//     static std::size_t default_stacksize();
+
+//     static std::size_t minimum_stacksize();
+
+//     static std::size_t maximum_stacksize();
+
+//     int allocate( stack_context &, std::size_t);
+
+//     void deallocate( stack_context &);
+// };
+
+
+struct stack_traits
 {
-public:
-    static bool is_stack_unbound();
+	static bool is_unbounded();
 
-    static std::size_t default_stacksize();
+	static std::size_t page_size();
 
-    static std::size_t minimum_stacksize();
+	static std::size_t default_size();
 
-    static std::size_t maximum_stacksize();
+	static std::size_t minimum_size();
 
-    int allocate( stack_context &, std::size_t);
+	static std::size_t maximum_size();
 
-    void deallocate( stack_context &);
+	static stack_context allocate(std::size_t);
+
+	static void deallocate( stack_context &);
 };
 
 /////////////////////////////////////////////
@@ -86,8 +105,8 @@ enum CORO_STATUS
 /*
  * 协程内部使用的函数
  */
-typedef void( * Func)(void *);
-
+// typedef void( * Func)(void *);
+typedef void( * Func)(void *, transfer_t);
 struct CoroutineFunc
 {
     Func    coroFunc;
@@ -185,16 +204,22 @@ public:
     }
 
 protected:
+	//协程的入口函数
+	static void corotineEntry(transfer_t q);
 
-    /**
-     * 协程的入口函数
-     */
-    static void corotineEntry(intptr_t q);
+	//在协程里执行实际逻辑的入口函数
+	static void corotineProc(void * args, transfer_t t);
 
-    /**
-     * 在协程里执行实际逻辑的入口函数
-     */
-    static void corotineProc(void * args);
+
+    // /**
+    //  * 协程的入口函数
+    //  */
+    // static void corotineEntry(intptr_t q);
+
+    // /**
+    //  * 在协程里执行实际逻辑的入口函数
+    //  */
+    // static void corotineProc(void * args);
 
 public:
     /**
@@ -260,8 +285,9 @@ public:
     /**
      * 获取协程所处的上下文
      */
-    inline fcontext_t* getCtx() { return (!_main ? _ctx_to : &_ctx_from); }
-
+    // inline fcontext_t* getCtx() { return (!_main ? _ctx_to : &_ctx_from); }
+	inline fcontext_t getCtx() { return _ctx; }
+	inline void setCtx(fcontext_t ctx) { _ctx = ctx; }
 public:
     /*
      * 双向链表指针
@@ -273,7 +299,7 @@ private:
     /*
      * 是否是主协程
      */
-    bool                        _main;
+    // bool                        _main;
 
     /*
      * 协程所属的调度器
@@ -298,12 +324,13 @@ private:
     /*
      * 创建协程后，协程所在的上下文
      */
-    fcontext_t*                    _ctx_to;
+	fcontext_t					_ctx;
+    // fcontext_t*                    _ctx_to;
 
     /*
      * 创建协程前的上下文
      */
-    fcontext_t                    _ctx_from;
+    // fcontext_t                    _ctx_from;
 
     /*
      * 协程初始化函数入口函数
@@ -372,7 +399,8 @@ public:
     /**
      * 协程切换
      */
-    void switchCoro(CoroutineInfo *from, CoroutineInfo *to);
+    // void switchCoro(CoroutineInfo *from, CoroutineInfo *to);
+	void switchCoro(CoroutineInfo *to);
 
     /**
      * 停止
@@ -428,6 +456,11 @@ public:
      * 调度器中的主协程
      */
     inline CoroutineInfo& getMainCoroutine() { return _mainCoro; }
+
+    /**
+     * 设置主协程
+     */
+	inline void setMainCtx(fcontext_t ctx) { _mainCoro.setCtx(ctx); }
 
     /**
      * 当前协程的标识Id
@@ -571,7 +604,7 @@ private:
     /*
      * 协程栈空间的内存分配器
      */
-    standard_stack_allocator _alloc;
+    // standard_stack_allocator _alloc;
 
     /*
      * 需要激活的协程队列，其他线程使用，用来激活等待结果的协程

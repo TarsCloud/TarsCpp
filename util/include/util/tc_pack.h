@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -17,11 +17,11 @@
 #ifndef __TC_PACK_H_
 #define __TC_PACK_H_
 
-#include <netinet/in.h>
+#include "util/tc_platform.h"
 #include <vector>
 #include <map>
 #include <string>
-#include <assert.h>
+#include <cassert>
 #include "util/tc_ex.h"
 
 namespace tars

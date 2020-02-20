@@ -1,82 +1,85 @@
-#include "TestRecvThread.h"
+﻿#include "TestRecvThread.h"
 #include <iostream>
-#include <arpa/inet.h>
+//#include <arpa/inet.h>
 
 /*
  响应包解码函数，根据特定格式解码从服务端收到的数据，解析为ResponsePacket
 */
-static size_t pushResponse(const char* recvBuffer, size_t length, list<ResponsePacket>& done)
+static TC_NetWorkBuffer::PACKET_TYPE pushResponse(TC_NetWorkBuffer &in, ResponsePacket& rsp)
 {
-	size_t pos = 0;
-    while (pos < length)
-    {
-        unsigned int len = length - pos;
-        if(len < sizeof(unsigned int))
-        {
-            break;
-        }
+	size_t len = sizeof(tars::Int32);
 
-        unsigned int iHeaderLen = ntohl(*(unsigned int*)(recvBuffer + pos));
+	if (in.getBufferLength() < len)
+	{
+		return TC_NetWorkBuffer::PACKET_LESS;
+	}
 
-        //做一下保护,长度大于M
-        if (iHeaderLen > 100000 || iHeaderLen < sizeof(unsigned int))
-        {
-            throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
-        }
+	string header;
+	in.getHeader(len, header);
 
-        //包没有接收全
-        if (len < iHeaderLen)
-        {
-            break;
-        }
-        else
-        {
-            ResponsePacket rsp;
-			rsp.iRequestId = ntohl(*((unsigned int *)(recvBuffer + pos + sizeof(unsigned int))));
-			rsp.sBuffer.resize(iHeaderLen - 2*sizeof(unsigned int));
-		  ::memcpy(&rsp.sBuffer[0], recvBuffer + pos + 2*sizeof(unsigned int), iHeaderLen - 2*sizeof(unsigned int));
+	assert(header.size() == len);
 
-			pos += iHeaderLen;
+	tars::Int32 iHeaderLen = 0;
 
-            done.push_back(rsp);
-        }
-    }
+	::memcpy(&iHeaderLen, header.c_str(), sizeof(tars::Int32));
 
-    return pos;
+	iHeaderLen = ntohl(iHeaderLen);
+
+	//做一下保护,长度大于M
+	if (iHeaderLen > 100000 || iHeaderLen < (int)sizeof(unsigned int))
+	{
+		throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
+	}
+
+	//包没有接收全
+	if (in.getBufferLength() < (uint32_t)iHeaderLen)
+	{
+		return TC_NetWorkBuffer::PACKET_LESS;
+	}
+
+	in.moveHeader(sizeof(iHeaderLen));
+
+	tars::Int32 iRequestId = 0;
+	string sRequestId;
+	in.getHeader(sizeof(iRequestId), sRequestId);
+	in.moveHeader(sizeof(iRequestId));
+
+	rsp.iRequestId = ntohl(*((unsigned int *)(sRequestId.c_str())));
+	len =  iHeaderLen - sizeof(iHeaderLen) - sizeof(iRequestId);
+	in.getHeader(len, rsp.sBuffer);
+	in.moveHeader(len);
+
+    return TC_NetWorkBuffer::PACKET_FULL;
 }
 /*
    请求包编码函数，本函数的打包格式为
-   整个包长度（字节）+iRequestId（字节）+包内容
+   整个包长度（4字节）+iRequestId（4字节）+包内容
 */
-static void pushRequest(const RequestPacket& request, string& buff)
+static vector<char> pushRequest(RequestPacket& request, Transceiver *)
 {
     unsigned int net_bufflength = htonl(request.sBuffer.size()+8);
     unsigned char * bufflengthptr = (unsigned char*)(&net_bufflength);
 
-    buff = "";
-    for (int i = 0; i<4; ++i)
-    {
-        buff += *bufflengthptr++;
-    }
+	vector<char> buffer;
+	buffer.resize(request.sBuffer.size()+8);
+
+	memcpy(buffer.data(), bufflengthptr, sizeof(unsigned int));
 
     unsigned int netrequestId = htonl(request.iRequestId);
     unsigned char * netrequestIdptr = (unsigned char*)(&netrequestId);
 
-    for (int i = 0; i<4; ++i)
-    {
-        buff += *netrequestIdptr++;
-    }
+	memcpy(buffer.data() + sizeof(unsigned int), netrequestIdptr, sizeof(unsigned int));
+	memcpy(buffer.data() + sizeof(unsigned int) * 2, request.sBuffer.data(), request.sBuffer.size());
 
-    string tmp;
-    tmp.assign((const char*)(&request.sBuffer[0]), request.sBuffer.size());
-    buff+=tmp;
+	return buffer;
+	// sbuff->addBuffer(buffer);
 }
 
 static void printResult(int iRequestId, const string &sResponseStr)
 {
-	cout << "request id: " << iRequestId << endl;
-	cout << "response str: " << sResponseStr << endl;
+	cout << "request id: " << iRequestId << ", response str: " << sResponseStr << endl;
 }
+
 static void printPushInfo(const string &sResponseStr)
 {
 	cout << "push message: " << sResponseStr << endl;
@@ -87,15 +90,14 @@ int TestPushCallBack::onDispatch(ReqMessagePtr msg)
 	if(msg->request.sFuncName == "printResult")
 	{
 		string sRet;
-		cout << "sBuffer: " << msg->response.sBuffer.size() << endl;
-		sRet.assign(&(msg->response.sBuffer[0]), msg->response.sBuffer.size());
+		sRet.assign(msg->response->sBuffer.data(), msg->response->sBuffer.size());
 		printResult(msg->request.iRequestId, sRet);
 		return 0;
 	}
-	else if(msg->response.iRequestId == 0)
+	else if(msg->response->iRequestId == 0)
 	{
 		string sRet;
-		sRet.assign(&(msg->response.sBuffer[0]), msg->response.sBuffer.size());
+		sRet.assign(msg->response->sBuffer.data(), msg->response->sBuffer.size());
 		printPushInfo(sRet);
 		return 0;
 	}
@@ -106,12 +108,11 @@ int TestPushCallBack::onDispatch(ReqMessagePtr msg)
 	return -3;
 }
 
-RecvThread::RecvThread():_bTerminate(false)
+RecvThread::RecvThread(int second):_second(second), _bTerminate(false)
 {
-	string sObjName = "Test.TestPushServer.TestPushServantObj";
-    string sObjHost = "tcp -h 10.120.129.226 -t 60000 -p 10099";
+	string sObjName = "TestApp.PushServer.TestPushServantObj@tcp -h 127.0.0.1 -t 60000 -p 9300";
 
-    _prx = _comm.stringToProxy<ServantPrx>(sObjName+"@"+sObjHost);
+    _prx = _comm.stringToProxy<ServantPrx>(sObjName);
 
 	ProxyProtocol prot;
     prot.requestFunc = pushRequest;
@@ -120,21 +121,14 @@ RecvThread::RecvThread():_bTerminate(false)
     _prx->tars_set_protocol(prot);
 }
 
-void RecvThread::terminate()
-{
-	_bTerminate = true;
-	{
-	    tars::TC_ThreadLock::Lock sync(*this);
-	    notifyAll();
-	}
-}
-
 void RecvThread::run(void)
 {
 	TestPushCallBackPtr cbPush = new TestPushCallBack();
 	_prx->tars_set_push_callback(cbPush);	
 
 	string buf("heartbeat");
+
+	time_t n = TNOW;
 
 	while(!_bTerminate)
 	{
@@ -154,9 +148,15 @@ void RecvThread::run(void)
 			}
 		}
 
+		if(TNOW - n >= _second)
+		{
+			_bTerminate = true;
+			break;
+		}
+
 		{
             TC_ThreadLock::Lock sync(*this);
-            timedWait(5000);
+            timedWait(500);
 		}
 	}
 }

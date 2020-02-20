@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -21,6 +21,7 @@
 #include "util/tc_autoptr.h"
 #include "util/tc_monitor.h"
 #include "util/tc_loop_queue.h"
+#include <util/tc_network_buffer.h>
 #include "servant/CoroutineScheduler.h"
 
 namespace tars
@@ -230,7 +231,9 @@ struct ReqMessage : public TC_HandleBase
         proxy          = NULL;
         pObjectProxy   = pObj;
 
-        sReqData.clear();
+	    response       = std::make_shared<ResponsePacket>();
+        // sReqData.clear();
+	    sReqData       = std::make_shared<TC_NetWorkBuffer::Buffer>();
         pMonitor       = NULL;
         bMonitorFin    = false;
 
@@ -261,9 +264,9 @@ struct ReqMessage : public TC_HandleBase
     ObjectProxy *               pObjectProxy;   //调用端的proxy对象
 
     RequestPacket               request;        //请求消息体
-    ResponsePacket              response;       //响应消息体
-
-    string                      sReqData;       //请求消息体
+    shared_ptr<ResponsePacket>      response;   //响应消息体
+    // string                      sReqData;       //请求消息体
+	shared_ptr<TC_NetWorkBuffer::Buffer> sReqData;       //请求消息体
 
     ReqMonitor *                pMonitor;        //用于同步的monitor
     bool                        bMonitorFin;    //同步请求timewait是否结束

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -3865,7 +3865,7 @@ void TC_Multi_HashMap::doRecover()
             {
                 *(uint64_t*)((char*)_pHead + _pstModifyHead->_stModifyData[i]._iModifyAddr) = _pstModifyHead->_stModifyData[i]._iModifyValue;
             }
-            //#if __WORDSIZE == 64
+            //#if __WORDSIZE == 64 || defined _WIN64
             else if(_pstModifyHead->_stModifyData[i]._cBytes == sizeof(uint32_t))
             {
                 *(uint32_t*)((char*)_pHead + _pstModifyHead->_stModifyData[i]._iModifyAddr) = (uint32_t)_pstModifyHead->_stModifyData[i]._iModifyValue;

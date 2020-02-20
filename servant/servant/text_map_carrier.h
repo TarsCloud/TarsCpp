@@ -1,4 +1,4 @@
-#ifndef LIGHTSTEP_TEXT_MAP_CARRIER
+﻿#ifndef LIGHTSTEP_TEXT_MAP_CARRIER
 #define LIGHTSTEP_TEXT_MAP_CARRIER
 
 #include <opentracing/propagation.h>

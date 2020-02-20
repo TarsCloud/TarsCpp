@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -15,12 +15,18 @@
  */
 
 #include "util/tc_mmap.h"
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 #include <sys/types.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#endif
+
 #include <cerrno>
 #include <cassert>
-#include <unistd.h>
+#include <iostream>
+#include "util/tc_file.h"
 
 namespace tars
 {
@@ -31,6 +37,10 @@ TC_Mmap::TC_Mmap(bool bOwner)
 , _iLength(0)
 , _bCreate(false)
 {
+#if TARGET_PLATFORM_WINDOWS    
+    _hFile = NULL;
+    _hMap  = NULL;
+#endif    
 }
 
 TC_Mmap::~TC_Mmap()
@@ -41,22 +51,6 @@ TC_Mmap::~TC_Mmap()
     }
 }
 
-void TC_Mmap::mmap(size_t length, int prot, int flags, int fd, off_t offset)
-{
-    if(_bOwner)
-    {
-        munmap();
-    }
-    _pAddr      = ::mmap(NULL, length, prot, flags, fd, offset);
-    if(_pAddr == (void*)-1)
-    {
-        _pAddr = NULL;
-        throw TC_Mmap_Exception("[TC_Mmap::mmap] mmap error", errno);
-    }
-    _iLength    = length;
-    _bCreate   = false;
-}
-
 void TC_Mmap::mmap(const char *file, size_t length)
 {
     assert(length > 0);
@@ -64,20 +58,59 @@ void TC_Mmap::mmap(const char *file, size_t length)
     {
         munmap();
     }
+#if TARGET_PLATFORM_WINDOWS
+    if(_hFile != NULL)
+    {
+        CloseHandle(_hFile);
+    }
+    if(_hMap != NULL)
+    {
+        CloseHandle(_hMap);
+    }
+    _hFile = CreateFile(file, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ| FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN|FILE_FLAG_WRITE_THROUGH|FILE_FLAG_NO_BUFFERING, NULL);
+    if(_hFile == INVALID_HANDLE_VALUE)
+    {
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
+    }
+
+	_hMap = CreateFileMapping(_hFile, NULL, PAGE_READWRITE, 0, length, NULL);
+
+    if (_hMap != NULL)
+    {
+		if (GetLastError() == ERROR_ALREADY_EXISTS)
+			_bCreate = false;
+		else
+			_bCreate = true;
+    }
+    else
+    {
+		TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
+    }
+
+    _pAddr = (char*)MapViewOfFile(_hMap, FILE_MAP_ALL_ACCESS, 0, 0, length);
+//	void *pAddr = MapViewOfFile(_hMap, FILE_MAP_ALL_ACCESS, 0, 0, length);
+
+	if (_pAddr == NULL)
+	{
+		CloseHandle(_hFile);
+		CloseHandle(_hMap);
+		TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
+	}
+#else
     //注意_bCreate的赋值位置:保证多线程用一个对象的时候也不会有问题
     int fd = open(file, O_CREAT|O_EXCL|O_RDWR, 0666);
     if(fd == -1)
     {
         if(errno != EEXIST)
         {
-            throw TC_Mmap_Exception("[TC_Mmap::mmap] fopen file '" + string(file) + "' error", errno);
+            TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
         }
         else
         {
             fd = open(file, O_CREAT|O_RDWR, 0666);
             if(fd == -1)
             {
-                throw TC_Mmap_Exception("[TC_Mmap::mmap] fopen file '" + string(file) + "' error", errno);
+                TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");
             }
             _bCreate = false;
         }
@@ -87,21 +120,33 @@ void TC_Mmap::mmap(const char *file, size_t length)
         _bCreate = true;
     }
 
-    lseek(fd, length-1, SEEK_SET);
-    write(fd,"\0",1);
+    if(_bCreate)
+    {
+        //避免空洞文件
+        lseek(fd, length-1, SEEK_SET);
+        write(fd,"\0",1);
+    }
 
-    _pAddr      = ::mmap(NULL, length, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    _pAddr      = static_cast<char*>(::mmap(NULL, length, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
     if(_pAddr == (void*)-1)
     {
         _pAddr = NULL;
         close(fd);
-        throw TC_Mmap_Exception("[TC_Mmap::mmap] mmap file '" + string(file) + "' error", errno);
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] mmap file '" + string(file) + "' error");
     }
-    _iLength    = length;
     if(fd != -1)
     {
        close(fd); 
     }
+#endif    
+
+    _iLength    = length;
+
+    if(_bCreate)
+    {
+        _pAddr[length-1] = '\0';
+    }
+
 }
 
 void TC_Mmap::munmap()
@@ -110,13 +155,26 @@ void TC_Mmap::munmap()
     {
         return;
     }
+#if TARGET_PLATFORM_WINDOWS
+	BOOL ret = FlushViewOfFile(_pAddr, 0);
+    if(!ret)
+    {
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::munmap] munmap error");
+    }
+    UnmapViewOfFile(_pAddr);
 
+    CloseHandle(_hFile);
+	_hFile = NULL;
+
+    CloseHandle(_hMap);
+    _hMap = NULL;
+#else   
     int ret = ::munmap(_pAddr, _iLength);
     if(ret == -1)
     {
-        throw TC_Mmap_Exception("[TC_Mmap::munmap] munmap error", errno);
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::munmap] munmap error");
     }
-
+#endif
     _pAddr      = NULL;
     _iLength    = 0;
     _bCreate   = false;
@@ -125,6 +183,9 @@ void TC_Mmap::munmap()
 void TC_Mmap::msync(bool bSync)
 {
     int ret = 0;
+#if TARGET_PLATFORM_WINDOWS  
+    FlushViewOfFile(_pAddr, _iLength);
+#else  
     if(bSync)
     {
         ret = ::msync(_pAddr, _iLength, MS_SYNC | MS_INVALIDATE);
@@ -133,11 +194,11 @@ void TC_Mmap::msync(bool bSync)
     {
         ret = ::msync(_pAddr, _iLength, MS_ASYNC | MS_INVALIDATE);
     }
+#endif    
     if(ret != 0)
     {
-        throw TC_Mmap_Exception("[TC_Mmap::msync] msync error", errno);
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::msync] msync error");
     }
 }
 
 }
-

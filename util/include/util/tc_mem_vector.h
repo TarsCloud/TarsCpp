@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -270,12 +270,15 @@ public:
     /**
     *  @brief 队列控制结构
     */
+#pragma pack(1) 
+
     struct tagMemQueueHead
     {
         size_t _iSize;          //内存大小
         size_t _iBlockCount;    //元素个数
         size_t _iBlockSize;     //区块大小
-    }__attribute__((packed));
+    };
+#pragma pack() 
 
 protected:
 

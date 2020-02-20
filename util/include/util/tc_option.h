@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -60,7 +60,7 @@ public:
      * @param sName  要判断的标识
      * @return bool 存在返回true，否则返回false
      */
-    bool hasParam(const string &sName);
+    bool hasParam(const string &sName) const;
 
     /**
      * @brief 获取某个--表示的参数，如果参数不存在或者参数值为空 , 
@@ -68,7 +68,21 @@ public:
      * @param sName   标识
      * @return string 标识的参数值
      */
-    string getValue(const string &sName);
+    string getValue(const string &sName) const;
+
+    /**
+     * @brief 获取所有--标识的参数.
+     *
+     * @return map<string,string> map类型的标识和参数值的对应关系
+     */
+    const map<string, string>& getMulti() const;
+
+    /**
+     * @brief 获取所有普通的参数, 例子中的abc, 
+     *        def，参数按照顺序在vector中
+     * @return vector<string> 顺序存放参数的vector
+     */
+    const vector<string>& getSingle() const;
 
     /**
      * @brief 获取所有--标识的参数.

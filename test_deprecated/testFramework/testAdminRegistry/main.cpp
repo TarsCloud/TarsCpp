@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
@@ -66,11 +66,11 @@ void Test1::th_dohandle(int excut_num)
         }
         catch(TC_Exception &e)
         {
-            cout << "pthread id: " << pthread_self() << "id: " << i << "exception: " << e.what() << endl;
+            cout << "pthread id: " << std::this_thread::get_id() << "id: " << i << "exception: " << e.what() << endl;
         }
         catch(...)
         {
-            cout << "pthread id: " << pthread_self() << "id: " << i << "unknown exception." << endl;
+            cout << "pthread id: " << std::this_thread::get_id() << "id: " << i << "unknown exception." << endl;
         }
     }
 }

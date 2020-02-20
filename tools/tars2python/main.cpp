@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,8 +22,8 @@
 void usage()
 {
 	cout << "Usage : tars2python [OPTION] tarsfile" << endl;
-	cout << "  --dir=DIRECTORY generate source file to DIRECTORY(Éú³ÉÎÄ¼þµ½Ä¿Â¼DIRECTORY,Ä¬ÈÏÎªµ±Ç°Ä¿Â¼)" << endl;
-    cout << "  --base-package=NAME              package prefix, default 'com.qq.'(packageÇ°×º£¬Î´Ö¸¶¨ÔòÄ¬ÈÏÎªcom.qq.)" << endl;
+	cout << "  --dir=DIRECTORY generate source file to DIRECTORY(create tars protocol file to DIRECTORY, default is current directory)" << endl;
+    cout << "  --base-package=NAME              package prefix, default 'com.qq.'" << endl;
 	cout << "  tars2python support type: bool byte short int long float double vector map" << endl;
 
     exit(0);

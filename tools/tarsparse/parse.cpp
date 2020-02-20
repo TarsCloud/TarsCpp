@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -600,4 +600,32 @@ string TarsParse::printHeaderRemark()
     return s.str();
 }
 
+string TarsParse::getFileName(const string &fileName)
+{
+	string tmpFileName = fileName;
+	string::size_type pos = tmpFileName.rfind('/');
+	if(pos != string::npos)
+	{
+		tmpFileName = tmpFileName.substr(pos + 1);
+	}
+	else
+	{
+		pos = tmpFileName.rfind('\\');
+		if(pos != string::npos)
+		{
+			tmpFileName = tmpFileName.substr(pos + 1);
+		}
+	}
 
+	return tars::TC_File::excludeFileExt(tmpFileName);
+}
+
+string TarsParse::replaceFileName(const string &fileName, const string &ext)
+{
+	return tars::TC_File::excludeFileExt(getFileName(fileName)) + "." + ext;
+}
+
+string TarsParse::getAbsoluteFileName(const string &baseDir, const string &fileName)
+{
+	return baseDir + FILE_SEP + fileName;
+}

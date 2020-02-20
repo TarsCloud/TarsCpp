@@ -1,4 +1,4 @@
-#include "servant/Application.h"
+﻿#include "servant/Application.h"
 #include "TestRecvThread.h"
 #include <iostream>
 
@@ -9,13 +9,17 @@ int main(int argc,char**argv)
 {
     try
     {
-		RecvThread thread;
+        int second = 5;
+        
+        if(argc > 1)
+            second = TC_Common::strto<int>(argv[1]);
+        
+        if(second <=0 )
+            second = 1;
+
+		RecvThread thread(second);
 		thread.start();
 
-		int c;
-		while((c = getchar()) != 'q');
-
-		thread.terminate();
 		thread.getThreadControl().join();
     }
     catch(std::exception&e)

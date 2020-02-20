@@ -1,25 +1,83 @@
-/**
- * Tencent is pleased to support the open source community by making Tars available.
- *
- * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
- *
- * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except 
- * in compliance with the License. You may obtain a copy of the License at
- *
- * https://opensource.org/licenses/BSD-3-Clause
- *
- * Unless required by applicable law or agreed to in writing, software distributed 
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
- * specific language governing permissions and limitations under the License.
- */
-
+﻿#include "util/tc_platform.h"
 #include "util/tc_pack.h"
+
 #include <iostream>
 #include <string.h>
 
+#if TARGET_PLATFORM_LINUX
+#include <arpa/inet.h>
+#endif
 namespace tars
 {
+
+#if TARGET_PLATFORM_WINDOWS
+#pragma comment(lib,"ws2_32.lib")
+#endif
+
+#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_WINDOWS
+#   ifndef __LITTLE_ENDIAN
+#       define __LITTLE_ENDIAN 1234
+#   endif
+#   ifndef __BIG_ENDIAN
+#       define __BIG_ENDIAN    4321
+#   endif
+#   ifndef __BYTE_ORDER
+#       define __BYTE_ORDER __LITTLE_ENDIAN
+#   endif
+#endif
+
+#if __BYTE_ORDER == __BIG_ENDIAN
+#   define pack_ntohll(x)    (x)
+#   define pack_htonll(x)    (x)
+#   define pack_ntohf(x)     (x)
+#   define pack_htonf(x)     (x)
+#   define pack_ntohd(x)     (x)
+#   define pack_htond(x)     (x)
+#else
+#   if __BYTE_ORDER == __LITTLE_ENDIAN
+#       define pack_ntohll(x)    pack_htonll(x)
+union pack_bswap_helper
+{
+    int64_t   i64;
+    int32_t   i32[2];
+};
+inline int64_t pack_htonll(int64_t x)
+{
+        pack_bswap_helper h;
+        h.i64 = x;
+        int64_t tmp = htonl(h.i32[1]);
+        h.i32[1] = htonl(h.i32[0]);
+        h.i32[0] = tmp;
+        return h.i64;
+}
+inline float pack_ntohf(float x)
+{
+    union {
+        float f;
+        int32_t i32;
+    } helper;
+
+    helper.f = x;
+    helper.i32 = htonl( helper.i32 );
+
+    return helper.f;
+}
+#       define pack_htonf(x)     pack_ntohf(x)
+inline double pack_ntohd(double x)
+{
+    union {
+        double d;
+        int64_t i64;
+    } helper;
+
+    helper.d = x;
+    helper.i64 = pack_htonll( helper.i64 );
+
+    return helper.d;
+}
+#       define pack_htond(x)     pack_ntohd(x)
+#   endif
+#endif
 
 TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (bool t)
 {
@@ -71,9 +129,7 @@ TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (long t)
 {
     if(sizeof(long) == 8)
     {
-        #if __BYTE_ORDER == __LITTLE_ENDIAN
-        t = __bswap_64(t);
-        #endif
+        t = pack_htonll(t);
     }
     else
     {
@@ -88,9 +144,7 @@ TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (unsigned long
 {
     if(sizeof(unsigned long) == 8)
     {
-        #if __BYTE_ORDER == __LITTLE_ENDIAN
-        t = __bswap_64(t);
-        #endif
+        t = pack_htonll(t);
     }
     else
     {
@@ -103,9 +157,7 @@ TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (unsigned long
 
 TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (long long t)
 {
-    #if __BYTE_ORDER == __LITTLE_ENDIAN
-    t = __bswap_64(t);
-    #endif
+    t = pack_htonll(t);
 
     _buffer.append((const char *)&t, sizeof(long long));
     return *this;
@@ -113,9 +165,7 @@ TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (long long t)
 
 TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (unsigned long long t)
 {
-    #if __BYTE_ORDER == __LITTLE_ENDIAN
-    t = __bswap_64(t);
-    #endif
+    t = pack_htonll(t);
 
     _buffer.append((const char *)&t, sizeof(unsigned long long));
 
@@ -124,12 +174,16 @@ TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (unsigned long
 
 TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (float t)
 {
+    t = pack_htonf(t);
+
     _buffer.append((const char *)&t, sizeof(float));
     return *this;
 }
 
 TC_PackIn::TC_PackInInner& TC_PackIn::TC_PackInInner::operator << (double t)
 {
+    t = pack_htond(t);
+
     _buffer.append((const char *)&t, sizeof(double));
     return *this;
 }
@@ -297,9 +351,7 @@ TC_PackOut& TC_PackOut::operator >> (long &t)
 
     if(sizeof(unsigned long) == 8)
     {
-        #if __BYTE_ORDER == __LITTLE_ENDIAN
-        t = __bswap_64(t);
-        #endif
+        t = pack_ntohll(t);
     }
     else
     {
@@ -323,9 +375,7 @@ TC_PackOut& TC_PackOut::operator >> (unsigned long &t)
 
     if(sizeof(unsigned long) == 8)
     {
-        #if __BYTE_ORDER == __LITTLE_ENDIAN
-        t = __bswap_64(t);
-        #endif
+        t = pack_ntohll(t);
     }
     else
     {
@@ -347,9 +397,7 @@ TC_PackOut& TC_PackOut::operator >> (long long &t)
 
     memcpy(&t, _pbuffer + _pos, len);
 
-    #if __BYTE_ORDER == __LITTLE_ENDIAN
-    t = __bswap_64(t);
-    #endif
+    t = pack_ntohll(t);
 
     _pos += len;
 
@@ -366,9 +414,7 @@ TC_PackOut& TC_PackOut::operator >> (unsigned long long &t)
 
     memcpy(&t, _pbuffer + _pos, len);
 
-    #if __BYTE_ORDER == __LITTLE_ENDIAN
-    t = __bswap_64(t);
-    #endif
+    t = pack_ntohll(t);
 
     _pos += len;
 
@@ -383,6 +429,9 @@ TC_PackOut& TC_PackOut::operator >> (float &f)
     }
 
     memcpy(&f, _pbuffer + _pos, sizeof(float));
+
+    f = pack_ntohf(f);
+
     _pos += sizeof(float);
 
     return *this;
@@ -396,6 +445,9 @@ TC_PackOut& TC_PackOut::operator >> (double &f)
     }
 
     memcpy(&f, _pbuffer + _pos, sizeof(double));
+
+    f = pack_ntohd(f);
+
     _pos += sizeof(double);
 
     return *this;

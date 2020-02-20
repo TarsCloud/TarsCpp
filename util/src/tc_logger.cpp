@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -13,298 +13,326 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
 #include "util/tc_logger.h"
-#include <functional>
 #include <iostream>
 #include <string.h>
+#include <mutex>
 
 namespace tars
 {
-    bool TC_LoggerRoll::_bDyeingFlag = false;
-    TC_ThreadMutex  TC_LoggerRoll::_mutexDyeing;
-    //set<pthread_t>  TC_LoggerRoll::_setThreadID;
-    hash_map<pthread_t, string>  TC_LoggerRoll::_mapThreadID;
-    const string TarsLogByDay::FORMAT = "%Y%m%d";
-    const string TarsLogByHour::FORMAT = "%Y%m%d%H";
-    const string TarsLogByMinute::FORMAT = "%Y%m%d%H%M";
 
-    void TC_LoggerRoll::setupThread(TC_LoggerThreadGroup *pThreadGroup)
-    {
-        assert(pThreadGroup != NULL);
+bool TC_LoggerRoll::_bDyeingFlag = false;
+//TC_ThreadMutex  TC_LoggerRoll::_mutexDyeing;
+TC_SpinLock TC_LoggerRoll::_mutexDyeing;
+unordered_map<size_t, string>  TC_LoggerRoll::_mapThreadID;
+const string TarsLogByDay::FORMAT = "%Y%m%d";
+const string TarsLogByHour::FORMAT = "%Y%m%d%H";
+const string TarsLogByMinute::FORMAT = "%Y%m%d%H%M";
 
-        unSetupThread();
+void TC_LoggerRoll::setupThread(TC_LoggerThreadGroup *pThreadGroup)
+{
+	assert(pThreadGroup != NULL);
 
-        TC_LockT<TC_ThreadMutex> lock(_mutex);
+	unSetupThread();
 
-        _pThreadGroup = pThreadGroup;
+	std::lock_guard<std::mutex> lock(_mutex);
 
-        TC_LoggerRollPtr self = this;
+	_pThreadGroup = pThreadGroup;
 
-        _pThreadGroup->registerLogger(self);
-    }
+	TC_LoggerRollPtr self = this;
 
-    void TC_LoggerRoll::unSetupThread()
-    {
-        TC_LockT<TC_ThreadMutex> lock(_mutex);
+	_pThreadGroup->registerLogger(self);
+}
 
-        if (_pThreadGroup != NULL)
-        {
-            _pThreadGroup->flush();
+void TC_LoggerRoll::unSetupThread()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
 
-            TC_LoggerRollPtr self = this;
+	if (_pThreadGroup != NULL)
+	{
+		_pThreadGroup->flush();
 
-            _pThreadGroup->unRegisterLogger(self);
+		TC_LoggerRollPtr self = this;
 
-            _pThreadGroup = NULL;
-        }
+		_pThreadGroup->unRegisterLogger(self);
 
-        flush();
-    }
+		_pThreadGroup = NULL;
+	}
 
-    void TC_LoggerRoll::write(const pair<int, string> &buffer)
-    {
-        pthread_t ThreadID = 0;
-        if (_bDyeingFlag)
-        {
-            TC_LockT<TC_ThreadMutex> lock(_mutexDyeing);
+	flush();
+}
 
-            pthread_t tmp = pthread_self();
-            //if (_setThreadID.count(tmp) == 1)
-            if (_mapThreadID.count(tmp) == 1)
-            {
-                ThreadID = tmp;
-            }
-        }
+void TC_LoggerRoll::write(const pair<std::size_t, string> &buffer)
+{
+	size_t ThreadID = 0;
+	if (_bDyeingFlag)
+	{
+		TC_LockT<TC_SpinLock> lock(_mutexDyeing);
 
-        if (_pThreadGroup)
-        {
-            _buffer.push_back(make_pair(ThreadID, buffer.second));
-        }
-        else
-        {
-            //同步记录日志
-            deque<pair<int, string> > ds;
-            ds.push_back(make_pair(ThreadID, buffer.second));
-            roll(ds);
-        }
-    }
+		if (_mapThreadID.find(TC_Thread::CURRENT_THREADID()) != _mapThreadID.end())
+		{
+			ThreadID = TC_Thread::CURRENT_THREADID();
+		}
+	}
 
-    void TC_LoggerRoll::flush()
-    {
-        TC_ThreadQueue<pair<int, string> >::queue_type qt;
-        _buffer.swap(qt);
+	if (_pThreadGroup)
+	{
+		_buffer.push_back(make_pair(ThreadID, buffer.second));
+	}
+	else
+	{
+		//同步记录日志
+		deque<pair<size_t, string> > ds;
+		ds.push_back(make_pair(ThreadID, buffer.second));
+		roll(ds);
+	}
+}
 
-        if (!qt.empty())
-        {
-            roll(qt);
-        }
-    }
+void TC_LoggerRoll::flush()
+{
+	TC_CasQueue<pair<size_t, string> >::queue_type qt;
+
+	_buffer.swap(qt);
+
+	if (!qt.empty())
+	{
+		roll(qt);
+	}
+}
 
 //////////////////////////////////////////////////////////////////
 //
-    TC_LoggerThreadGroup::TC_LoggerThreadGroup() : _bTerminate(false)
-    {
-    }
+TC_LoggerThreadGroup::TC_LoggerThreadGroup() : _bTerminate(false), _thread(NULL)
+{
+}
 
-    TC_LoggerThreadGroup::~TC_LoggerThreadGroup()
-    {
-        flush();
+TC_LoggerThreadGroup::~TC_LoggerThreadGroup()
+{
+	terminate();
+    /*挪到terminate函数中
+	flush();
 
+	{
+		std::lock_guard<std::mutex> guard(_mutex);
+		_bTerminate = true;
+		_cond.notify_all();
+	}
+
+	if(_thread)
+	{
+		_thread->join();
+		delete _thread;
+		_thread = NULL;
+	}
+    */
+}
+
+void TC_LoggerThreadGroup::start(size_t iThreadNum)
+{
+	if(_thread == NULL)
+	{
+		_thread = new std::thread(&TC_LoggerThreadGroup::run, this);
+	}
+}
+
+void TC_LoggerThreadGroup::registerLogger(TC_LoggerRollPtr &l)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	_logger.insert(l);
+}
+
+void TC_LoggerThreadGroup::unRegisterLogger(TC_LoggerRollPtr &l)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	_logger.erase(l);
+}
+
+void TC_LoggerThreadGroup::terminate()
+{
+	if (_bTerminate)
+		return;
+
+    flush();
+
+    {
+		std::unique_lock<std::mutex> lock(_mutex);
         _bTerminate = true;
-
-        {
-            Lock lock(*this);
-            notifyAll();
-        }
-
-        _tpool.stop();
-        _tpool.waitForAllDone();
+        _cond.notify_all();
     }
 
-    void TC_LoggerThreadGroup::start(size_t iThreadNum)
+    if (_thread)
     {
-        _tpool.init(iThreadNum);
-        _tpool.start();
-
-        auto func = std::bind(&TC_LoggerThreadGroup::run, this);
-        for (size_t i = 0; i < _tpool.getThreadNum(); i++)
-        {
-            _tpool.exec(func);
-        }
+        _thread->join();
+        delete _thread;
+        _thread = NULL;
     }
+}
 
-    void TC_LoggerThreadGroup::registerLogger(TC_LoggerRollPtr &l)
-    {
-        Lock lock(*this);
+void TC_LoggerThreadGroup::flush()
+{
+	logger_set logger;
 
-        _logger.insert(l);
-    }
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		logger = _logger;
+	}
 
-    void TC_LoggerThreadGroup::unRegisterLogger(TC_LoggerRollPtr &l)
-    {
-        Lock lock(*this);
+	logger_set::iterator it = logger.begin();
+	while (it != logger.end())
+	{
+		try
+		{
+			it->get()->flush();
+		}
+		catch(exception &ex)
+		{
+			cerr << "[TC_LoggerThreadGroup::flush] log flush error:" << ex.what() << endl;
+		}
+		catch (...)
+		{
+		}
+		++it;
+	}
+}
 
-        _logger.erase(l);
-    }
+void TC_LoggerThreadGroup::run()
+{
+	while (!_bTerminate)
+	{
+		//100ms
+		{
+			std::unique_lock<std::mutex> lock(_mutex);
+			_cond.wait_for(lock, std::chrono::milliseconds(100));
+		}
 
-    void TC_LoggerThreadGroup::flush()
-    {
-        logger_set logger;
-
-        {
-            Lock lock(*this);
-            logger = _logger;
-        }
-
-        logger_set::iterator it = logger.begin();
-        while (it != logger.end())
-        {
-            try
-            {
-                it->get()->flush();
-            }
-            catch (...)
-            {
-            }
-            ++it;
-        }
-    }
-
-    void TC_LoggerThreadGroup::run()
-    {
-        while (!_bTerminate)
-        {
-            //100ms
-            {
-                Lock lock(*this);
-                timedWait(100);
-            }
-
-            flush();
-        }
-    }
+		flush();
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 
-    LoggerBuffer::LoggerBuffer() : _buffer(NULL), _buffer_len(0)
-    {
-    }
+LoggerBuffer::LoggerBuffer() : _buffer(NULL), _buffer_len(0)
+{
+}
 
-    LoggerBuffer::LoggerBuffer(TC_LoggerRollPtr roll, size_t buffer_len) : _roll(roll), _buffer(NULL), _buffer_len(buffer_len)
-    {
-        //设置get buffer, 无效, 不适用
-        setg(NULL, NULL, NULL);
+LoggerBuffer::LoggerBuffer(TC_LoggerRollPtr roll, size_t buffer_len) : _roll(roll), _buffer(NULL), _buffer_len(buffer_len)
+{
+	//设置get buffer, 无效, 不适用
+	setg(NULL, NULL, NULL);
 
-        //设置put buffer
-        if (_roll)
-        {
-            //分配空间
-            _buffer = new char[_buffer_len];
-            setp(_buffer, _buffer + _buffer_len);
-        }
-        else
-        {
-            setp(NULL, NULL);
-            _buffer_len = 0;
-        }
-    }
+	//设置put buffer
+	if (_roll)
+	{
+		//分配空间
+		_buffer = new char[_buffer_len];
+		setp(_buffer, _buffer + _buffer_len);
+	}
+	else
+	{
+		setp(NULL, NULL);
+		_buffer_len = 0;
+	}
+}
 
-    LoggerBuffer::~LoggerBuffer()
-    {
-        sync();
-        if (_buffer)
-        {
-            delete[] _buffer;
-        }
-    }
+LoggerBuffer::~LoggerBuffer()
+{
+	sync();
+	if (_buffer)
+	{
+		delete[] _buffer;
+	}
+}
 
-    streamsize LoggerBuffer::xsputn(const char_type* s, streamsize n)
-    {
-        if (!_roll)
-        {
-            return n;
-        }
+streamsize LoggerBuffer::xsputn(const char_type* s, streamsize n)
+{
+	if (!_roll)
+	{
+		return n;
+	}
 
-        return std::basic_streambuf<char>::xsputn(s, n);
-    }
+	return std::basic_streambuf<char>::xsputn(s, n);
+}
 
-    void LoggerBuffer::reserve(std::streamsize n)
-    {
-        if (n <= _buffer_len)
-        {
-            return;
-        }
+void LoggerBuffer::reserve(std::streamsize n)
+{
+	if (n <= _buffer_len)
+	{
+		return;
+	}
 
-        //不超过最大大小
-        if (n > MAX_BUFFER_LENGTH)
-        {
-            n = MAX_BUFFER_LENGTH;
-        }
+	//不超过最大大小
+	if (n > MAX_BUFFER_LENGTH)
+	{
+		n = MAX_BUFFER_LENGTH;
+	}
 
-        int len = pptr() - pbase();
-        char_type * p = new char_type[n];
-        memcpy(p, _buffer, len);
-        delete[] _buffer;
-        _buffer     = p;
-        _buffer_len = n;
+	int64_t len = pptr() - pbase();
+	char_type * p = new char_type[n];
+	memcpy(p, _buffer, len);
+	delete[] _buffer;
+	_buffer     = p;
+	_buffer_len = n;
 
-        setp(_buffer, _buffer + _buffer_len);
+	setp(_buffer, _buffer + _buffer_len);
 
-        pbump(len);
+	pbump((int)len);
 
-        return;
-    }
+	return;
+}
 
-    std::basic_streambuf<char>::int_type LoggerBuffer::overflow(std::basic_streambuf<char>::int_type c)
-    {
-        if (!_roll)
-        {
-            return 0;
-        }
+std::basic_streambuf<char>::int_type LoggerBuffer::overflow(std::basic_streambuf<char>::int_type c)
+{
+	if (!_roll)
+	{
+		return 0;
+	}
 
-        if (_buffer_len >= MAX_BUFFER_LENGTH)
-        {
-            sync();
-        }
-        else
-        {
-            reserve(_buffer_len * 2);
-        }
+	if (_buffer_len >= MAX_BUFFER_LENGTH)
+	{
+		sync();
+	}
+	else
+	{
+		reserve(_buffer_len * 2);
+	}
 
-        if (std::char_traits<char_type>::eq_int_type(c,std::char_traits<char_type>::eof()) )
-        {
-            return std::char_traits<char_type>::not_eof(c);
-        }
-        else
-        {
-            return sputc(c);
-        }
-        return 0;
-    }
+	if (std::char_traits<char_type>::eq_int_type(c, std::char_traits<char_type>::eof()) )
+	{
+		return std::char_traits<char_type>::not_eof(c);
+	}
+	else
+	{
+		return sputc(c);
+	}
+	return 0;
+}
 
-    int LoggerBuffer::sync()
-    {
-        //有数据
-        if (pptr() > pbase())
-        {
-            std::streamsize len = pptr() - pbase();
+int LoggerBuffer::sync()
+{
+	//有数据
+	if (pptr() > pbase())
+	{
+		std::streamsize len = pptr() - pbase();
 
-            if (_roll)
-            {
-                //具体的写逻辑
-                _roll->write(make_pair(0, string(pbase(), len)));
-            }
+		if (_roll)
+		{
+			//具体的写逻辑
+			_roll->write(make_pair(TC_Thread::CURRENT_THREADID(), string(pbase(), len)));
+		}
 
-            //重新设置put缓冲区, pptr()重置到pbase()处
-            setp(pbase(), epptr());
-        }
-        return 0;
-    }
+		//重新设置put缓冲区, pptr()重置到pbase()处
+		setp(pbase(), epptr());
+	}
+	return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 //
 
 }
+
+
 
 

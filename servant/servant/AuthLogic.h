@@ -1,4 +1,5 @@
-#include "servant/Auth.h"
+﻿#include "servant/Auth.h"
+#include "util/tc_epoll_server.h"
 
 namespace tars
 {
@@ -6,7 +7,7 @@ namespace tars
 /**
  * server :默认鉴权逻辑
  */
-bool processAuth(void* c, const string& data);
+bool processAuth(TC_EpollServer::Connection *c, const shared_ptr<TC_EpollServer::RecvContext>& data);
 
 /**
  * server :默认鉴权逻辑

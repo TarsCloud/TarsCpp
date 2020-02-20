@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,40 +22,40 @@
 #include <string>
 
 /**
- * ¸ù¾İtarsÉú³ÉjavaÎÄ¼ş
- * °üÀ¨½á¹¹µÄ±à½âÂëÒÔ¼°Éú³ÉProxyºÍServant
+ * ï¿½ï¿½ï¿½ï¿½tarsï¿½ï¿½ï¿½ï¿½javaï¿½Ä¼ï¿½
+ * ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½Proxyï¿½ï¿½Servant
  */
 class Tars2Cs
 {
 public:
     /**
-     * ÉèÖÃ´úÂëÉú³ÉµÄ¸ùÄ¿Â¼
+     * ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÉµÄ¸ï¿½Ä¿Â¼
      * @param dir
      */
     void setBaseDir(const string &dir);
 
     /**
-     * ÉèÖÃ°üÇ°×º
+     * ï¿½ï¿½ï¿½Ã°ï¿½Ç°×º
      * @param prefix
      */
     void setBasePackage(const string &prefix);
 
     /**
-     * ÉèÖÃÊÇ·ñĞèÒª·şÎñ¶Ë´úÂë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ë´ï¿½ï¿½ï¿½
      */
     void setWithServant(bool bWithServant) { _bWithServant = bWithServant;}
 
     /**
-     * Éú³É
+     * ï¿½ï¿½ï¿½ï¿½
      * @param file
-     * @param isFramework ÊÇ·ñÊÇ¿ò¼Ü
+     * @param isFramework ï¿½Ç·ï¿½ï¿½Ç¿ï¿½ï¿½
      */
     void createFile(const string &file);
 
 protected:
     /**
-     * ¸ù¾İÃüÃû¿Õ¼ä»ñÈ¡ÎÄ¼şÂ·¾¶
-     * @param ns ÃüÃû¿Õ¼ä
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½È¡ï¿½Ä¼ï¿½Â·ï¿½ï¿½
+     * @param ns ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½
      *
      * @return string
      */
@@ -65,11 +65,11 @@ protected:
     string _baseDir;
     bool   _bWithServant;
 
-    //ÏÂÃæÊÇ±à½âÂëµÄÔ´ÂëÉú³É
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 protected:
 
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ½âÂëÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ÍµÄ½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -77,7 +77,7 @@ protected:
     string writeTo(const TypeIdPtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ±àÂëÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ÍµÄ±ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -92,11 +92,11 @@ protected:
      */
     string display(const TypeIdPtr &pPtr) const;
 
-    //ÏÂÃæÊÇÀàĞÍÃèÊöµÄÔ´ÂëÉú³É
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 protected:
 
     /*
-     * Éú³ÉÄ³ÀàĞÍµÄ³õÊ¼»¯×Ö·û´®
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ÍµÄ³ï¿½Ê¼ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -104,7 +104,7 @@ protected:
     string toTypeInit(const TypePtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ¶ÔÓ¦¶ÔÏóµÄ×Ö·û´®ÃèÊöÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ÍµÄ¶ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -112,12 +112,12 @@ protected:
     string toObjStr(const TypePtr &pPtr) const;
 
     /**
-     * ÅĞ¶ÏÊÇ·ñÊÇ¶ÔÏóÀàĞÍ
+     * ï¿½Ğ¶ï¿½ï¿½Ç·ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     bool isObjType(const TypePtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ×Ö·û´®ÃèÊöÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½Íµï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -125,14 +125,14 @@ protected:
     string tostr(const TypePtr &pPtr) const;
 
     /**
-     * Éú³ÉÄÚ½¨ÀàĞÍµÄ×Ö·û´®Ô´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
      */
     string tostrBuiltin(const BuiltinPtr &pPtr) const;
     /**
-     * Éú³ÉvectorµÄ×Ö·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½vectorï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -140,7 +140,7 @@ protected:
     string tostrVector(const VectorPtr &pPtr) const;
 
     /**
-     * Éú³ÉmapµÄ×Ö·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½mapï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -148,7 +148,7 @@ protected:
     string tostrMap(const MapPtr &pPtr, bool bNew = false) const;
 
     /**
-     * Éú³ÉÄ³ÖÖ½á¹¹µÄ·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½Ö½á¹¹ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -156,7 +156,7 @@ protected:
     string tostrStruct(const StructPtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÖÖÃ¶¾ÙµÄ·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½Ã¶ï¿½ÙµÄ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -164,7 +164,7 @@ protected:
     string tostrEnum(const EnumPtr &pPtr) const;
 
     /**
-     * Éú³ÉÀàĞÍ±äÁ¿µÄ½âÂëÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í±ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -172,17 +172,17 @@ protected:
     string decode(const TypeIdPtr &pPtr) const;
 
     /**
-     * Éú³ÉÀàĞÍ±äÁ¿µÄ±àÂëÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í±ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
      */
     string encode(const TypeIdPtr &pPtr) const;
 
-    //ÒÔÏÂÊÇhºÍjavaÎÄ¼şµÄ¾ßÌåÉú³É
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½hï¿½ï¿½javaï¿½Ä¼ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 protected:
     /**
-     * Éú³É½á¹¹µÄjavaÎÄ¼şÄÚÈİ
+     * ï¿½ï¿½ï¿½É½á¹¹ï¿½ï¿½javaï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -190,7 +190,7 @@ protected:
     string generateCs(const StructPtr &pPtr, const NamespacePtr &nPtr) const;
 
     /**
-     * Éú³ÉÈİÆ÷µÄjavaÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½javaÔ´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -198,7 +198,7 @@ protected:
     string generateCs(const ContainerPtr &pPtr) const;
 
     /**
-     * Éú³É²ÎÊıÉùÃ÷µÄjavaÎÄ¼şÄÚÈİ
+     * ï¿½ï¿½ï¿½É²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½javaï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -206,7 +206,7 @@ protected:
     string generateCs(const ParamDeclPtr &pPtr) const;
 
     /**
-     * Éú³ÉÃ¶¾ÙµÄÍ·ÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½Ùµï¿½Í·ï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -214,7 +214,7 @@ protected:
     string generateCs(const EnumPtr &pPtr, const NamespacePtr &nPtr) const;
 
     /**
-     * Éú³É³£Á¿javaÔ´Âë
+     * ï¿½ï¿½ï¿½É³ï¿½ï¿½ï¿½javaÔ´ï¿½ï¿½
      * @param pPtr
      * 
      * @return string
@@ -223,7 +223,7 @@ protected:
 
     void generateCs(const vector<EnumPtr> &es,const vector<ConstPtr> &cs,const NamespacePtr &nPtr) const;
     /**
-     * Éú³ÉÃû×Ö¿Õ¼äjavaÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½javaï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -231,7 +231,7 @@ protected:
     void generateCs(const NamespacePtr &pPtr) const;
 
     /**
-     * Éú³ÉÃ¿¸ötarsÎÄ¼şµÄjavaÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½tarsï¿½Ä¼ï¿½ï¿½ï¿½javaï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string

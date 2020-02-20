@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -23,6 +23,7 @@
 #include "servant/EndpointInfo.h"
 #include "servant/EndpointF.h"
 #include "servant/AppProtocol.h"
+#include "servant/StatReport.h"
 #include "servant/Global.h"
 #include "util/tc_timeout_queue_noid.h"
 
@@ -42,7 +43,7 @@ struct SocketOpt
 
     const void *optval;
 
-    socklen_t  optlen;
+    SOCKET_LEN_TYPE  optlen;
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -90,18 +91,13 @@ public:
      * 设置协议解析器
      * @return UserProtocol&
      */
-    void setProxyProtocol(const ProxyProtocol& protocol, const std::string& name = "tars");
+    void setProxyProtocol(const ProxyProtocol& protocol);
+
     /**
      * 获取协议解析器
      * @return ProxyProtocol&
      */
     ProxyProtocol& getProxyProtocol();
-
-    /**
-     * 获取协议名字
-     * @return ProxyProtocol&
-     */
-    const std::string& getProtoName() const;
 
     /**
      * 设置套接口选项
@@ -127,7 +123,9 @@ public:
     /**
      * 获取所有的adapter
      */
-    const vector<AdapterProxy*> & getAdapters() const;
+    // const vector<AdapterProxy*> & getAdapters() const;
+
+    void mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg);
 
     /**
      * 检查Obj的队列超时
@@ -162,7 +160,7 @@ public:
     /**
      * 判断此obj是否走按set规则调用流程，如果是直连方式，即使服务端是启用set的，也不认为是按set规则调用的
      */
-    bool IsInvokeBySet() const
+    bool isInvokeBySet() const
     {
         return _isInvokeBySet;
     }
@@ -173,21 +171,6 @@ public:
     const string& getInvokeSetName() const
     {
         return _invokeSetId;
-    }
-
-    /**
-     * 生成唯一Id
-     */
-    inline uint32_t generateId()
-    {
-        _id++;
-
-        if(_id == 0)
-        {
-            ++_id;
-        }
-
-        return _id;
     }
 
     /**
@@ -232,23 +215,6 @@ public:
         _servantProxy = pServantProxy;
     }
 
-    /**
-     * 设置AK
-     */
-    void setAccessKey(const string& k) { _accessKey = k; }
-    /**
-     * 设置SK
-     */
-    void setSecretKey(const string& k) { _secretKey = k; }
-    /**
-     * 获取AK
-     */
-    const string& getAccessKey() const  { return _accessKey; }
-    /**
-     * 获取SK
-     */
-    const string& getSecretKey() const  { return _secretKey; }
-
 protected:
 
     /**
@@ -278,11 +244,6 @@ private:
     bool                                  _isInvokeBySet;
 
     /*
-     * 生成请求的唯一id
-     */
-    uint32_t                              _id;
-
-    /*
      * 是否调用了tars_set_protocol设置过proxy的协议函数，
      * 设置过了就不在设置
      */
@@ -292,10 +253,6 @@ private:
      * 请求和响应的协议解析器
      */
     ProxyProtocol                         _proxyProtocol;
-    /*
-     * 协议名称
-     */
-    std::string                           _protoName;
 
     /*
      * 连接超时的时间
@@ -331,13 +288,6 @@ private:
      * ServantProxy
      */
     ServantProxy *                        _servantProxy;
-
-    /**
-     * AK/SK
-     */
-    std::string                           _accessKey;
-    std::string                           _secretKey;
-
 };
 ///////////////////////////////////////////////////////////////////////////////////
 }

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -38,7 +38,7 @@ private:
 Test1::Test1(const string &sStr)
 {
 //    _comm.setProperty("locator","tars.tarsregistry.QueryObj@tcp -h 172.27.194.147 -p 17890 -t 50000");
-    _comm.setProperty("locator","tars.tarsregistry.QueryObj@tcp -h 10.120.129.226 -p 17890 -t 10000");
+//    _comm.setProperty("locator","tars.tarsregistry.QueryObj@tcp -h 10.120.129.226 -p 17890 -t 10000");
     _comm.setProperty("stat", "tars.tarsstat.StatObj");
     _comm.stringToProxy(sStr, prx);
 }
@@ -72,17 +72,17 @@ void Test1::dohandle(int excut_num,int size)
 
             if(count == excut_num)
             {
-                cout << "pthread id: " << pthread_self() << " | " << TC_TimeProvider::getInstance()->getNowMs() - _iTime << endl;
+                cout << "pthread id: " << std::this_thread::get_id() << " | " << TC_TimeProvider::getInstance()->getNowMs() - _iTime << endl;
                 count = 0;
             }
         }
         catch(TC_Exception &e)
         {
-            cout << "pthread id: " << pthread_self() << "id: " << i << "exception: " << e.what() << endl;
+            cout << "pthread id: " << std::this_thread::get_id() << "id: " << i << "exception: " << e.what() << endl;
         }
         catch(...)
         {
-            cout << "pthread id: " << pthread_self() << "id: " << i << "unknown exception." << endl;
+            cout << "pthread id: " << std::this_thread::get_id() << "id: " << i << "unknown exception." << endl;
         }
     }
     cout << "succ:" << sum <<endl;

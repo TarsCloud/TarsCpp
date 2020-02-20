@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -13,7 +13,9 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
+#include "servant/CoroutineScheduler.h"
 
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/mman.h>
@@ -22,142 +24,222 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
 #include <assert.h>
+#include "util/tc_timeprovider.h"
 
-#include "servant/CoroutineScheduler.h"
 #include "servant/TarsLogger.h"
 #include "servant/ServantHandle.h"
 
 namespace tars 
 {
-////////////////////////////////////////////////////////
-std::size_t pagesize()
-{
-    static std::size_t size = ::sysconf( _SC_PAGESIZE);
+
+#if TARGET_PLATFORM_WINDOWS
+
+// x86_64
+// test x86_64 before i386 because icc might
+// define __i686__ for x86_64 too
+#if defined(__x86_64__) || defined(__x86_64) \
+    || defined(__amd64__) || defined(__amd64) \
+    || defined(_M_X64) || defined(_M_AMD64)
+
+// Windows seams not to provide a constant or function
+// telling the minimal stacksize
+# define MIN_STACKSIZE  8 * 1024
+#else
+# define MIN_STACKSIZE  4 * 1024
+#endif
+
+void system_info_( SYSTEM_INFO * si) {
+    ::GetSystemInfo( si);
+}
+
+SYSTEM_INFO system_info() {
+    static SYSTEM_INFO si;
+    static std::once_flag flag;
+    std::call_once( flag, static_cast< void(*)( SYSTEM_INFO *) >( system_info_), & si);
+    return si;
+}
+
+std::size_t pagesize() {
+    return static_cast< std::size_t >( system_info().dwPageSize);
+}
+
+// Windows seams not to provide a limit for the stacksize
+// libcoco uses 32k+4k bytes as minimum
+bool stack_traits::is_unbounded() {
+    return true;
+}
+
+std::size_t stack_traits::page_size() {
+    return pagesize();
+}
+
+std::size_t stack_traits::default_size() {
+    return 128 * 1024;
+}
+
+// because Windows seams not to provide a limit for minimum stacksize
+std::size_t stack_traits::minimum_size() {
+    return MIN_STACKSIZE;
+}
+
+// because Windows seams not to provide a limit for maximum stacksize
+// maximum_size() can never be called (pre-condition ! is_unbounded() )
+std::size_t stack_traits::maximum_size() {
+    assert( ! is_unbounded() );
+    return  1 * 1024 * 1024 * 1024; // 1GB
+}
+
+stack_context stack_traits::allocate(size_t size_) {
+	// calculate how many pages are required
+	const std::size_t pages(static_cast< std::size_t >( std::ceil( static_cast< float >( size_) / stack_traits::page_size() ) ) );
+	// add one page at bottom that will be used as guard-page
+	const std::size_t size__ = ( pages + 1) * stack_traits::page_size();
+
+	void * vp = ::VirtualAlloc( 0, size__, MEM_COMMIT, PAGE_READWRITE);
+	if ( ! vp) throw std::bad_alloc();
+
+	DWORD old_options;
+	const BOOL result = ::VirtualProtect(
+		vp, stack_traits::page_size(), PAGE_READWRITE | PAGE_GUARD /*PAGE_NOACCESS*/, & old_options);
+	assert( FALSE != result);
+
+	stack_context sctx;
+	sctx.size = size__;
+	sctx.sp = static_cast< char * >( vp) + sctx.size;
+	return sctx;
+}
+
+void stack_traits::deallocate( stack_context & sctx)  {
+	assert( sctx.sp);
+
+	void * vp = static_cast< char * >( sctx.sp) - sctx.size;
+	::VirtualFree( vp, 0, MEM_RELEASE);
+}
+
+#else
+
+// 128kb recommended stack size
+// # define MINSIGSTKSZ (131072) 
+
+void pagesize_( std::size_t * size)  {
+    // conform to POSIX.1-2001
+    * size = ::sysconf( _SC_PAGESIZE);
+}
+
+void stacksize_limit_( rlimit * limit)  {
+    // conforming to POSIX.1-2001
+    ::getrlimit( RLIMIT_STACK, limit);
+}
+
+std::size_t pagesize()  {
+    static std::size_t size = 0;
+    static std::once_flag flag;
+    std::call_once( flag, pagesize_, & size);
     return size;
 }
 
-rlimit stacksize_limit_()
-{
-    rlimit limit;
-
-    const int result = ::getrlimit( RLIMIT_STACK, & limit);
-    assert( 0 == result);
-
+rlimit stacksize_limit()  {
+    static rlimit limit;
+    static std::once_flag flag;
+    std::call_once( flag, stacksize_limit_, & limit);
     return limit;
 }
 
-rlimit stacksize_limit()
-{
-    static rlimit limit = stacksize_limit_();
-    return limit;
+bool stack_traits::is_unbounded() {
+    return RLIM_INFINITY == stacksize_limit().rlim_max;
 }
 
-std::size_t page_count( std::size_t stacksize)
-{
-    return static_cast< std::size_t >( std::ceil(static_cast< float >(stacksize) / pagesize() ) );
+std::size_t stack_traits::page_size() {
+    return pagesize();
 }
 
-bool standard_stack_allocator::is_stack_unbound()
-{ 
-    return RLIM_INFINITY == stacksize_limit().rlim_max; 
+std::size_t stack_traits::default_size() {
+	return 128 * 1024;    
 }
 
-std::size_t standard_stack_allocator::default_stacksize()
-{
-    std::size_t size = 8 * minimum_stacksize();
-    if ( is_stack_unbound() ) return size;
-
-    assert( maximum_stacksize() >= minimum_stacksize() );
-    return maximum_stacksize() == size ? size : (std::min)( size, maximum_stacksize() );
+std::size_t stack_traits::minimum_size() {
+    return MINSIGSTKSZ;
 }
 
-std::size_t standard_stack_allocator::minimum_stacksize()
-{ 
-    return 8 * 1024 + sizeof(fcontext_t) + 15; 
-}
-
-std::size_t standard_stack_allocator::maximum_stacksize()
-{
-    assert( ! is_stack_unbound() );
+std::size_t stack_traits::maximum_size() {
+    assert( ! is_unbounded() );
     return static_cast< std::size_t >( stacksize_limit().rlim_max);
 }
 
-int standard_stack_allocator::allocate( stack_context & ctx, std::size_t size)
-{
-    assert( minimum_stacksize() <= size);
-    assert( is_stack_unbound() || ( maximum_stacksize() >= size) );
+stack_context stack_traits::allocate(std::size_t size_) {
+	// calculate how many pages are required
+	const std::size_t pages(static_cast< std::size_t >( std::ceil( static_cast< float >( size_) / stack_traits::page_size() ) ) );
+	// add one page at bottom that will be used as guard-page
+	const std::size_t size__ = ( pages + 1) * stack_traits::page_size();
 
-    const std::size_t pages( page_count( size) + 1);
-    const std::size_t size_( pages * pagesize() );
-    assert( 0 < size && 0 < size_);
+	// conform to POSIX.4 (POSIX.1b-1993, _POSIX_C_SOURCE=199309L)
+#if defined(MAP_ANON)
+	void * vp = ::mmap( 0, size__, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+#else
+	void * vp = ::mmap( 0, size__, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif
+	if ( MAP_FAILED == vp) throw std::bad_alloc();
 
-    void * limit = ::mmap( 0, size_, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+	// conforming to POSIX.1-2001
+	const int result( ::mprotect( vp, stack_traits::page_size(), PROT_NONE) );
+	assert( 0 == result);
 
-    if (limit == (void *) -1)
-    {
-        TLOGERROR("[TARS][[standard_stack_allocator::allocate memory failed]" << endl);
-        return -1;
-    }
+	stack_context sctx;
+	sctx.size = size__;
+	sctx.sp = static_cast< char * >( vp) + sctx.size;
 
-    std::memset( limit, '\0', size_);
-
-    const int result( ::mprotect( limit, pagesize(), PROT_NONE) );
-    assert( 0 == result);
-
-    ctx.size = size_;
-    ctx.sp = static_cast< char * >( limit) + ctx.size;
-
-    return 0;
+	return sctx;
 }
 
-void standard_stack_allocator::deallocate( stack_context & ctx)
-{
-    assert( ctx.sp);
-    assert( minimum_stacksize() <= ctx.size);
-    assert( is_stack_unbound() || ( maximum_stacksize() >= ctx.size) );
+void stack_traits::deallocate(stack_context & sctx) {
+	assert( sctx.sp);
 
-    void * limit = static_cast< char * >( ctx.sp) - ctx.size;
-
-    ::munmap( limit, ctx.size);
+	void * vp = static_cast< char * >( sctx.sp) - sctx.size;
+	// conform to POSIX.4 (POSIX.1b-1993, _POSIX_C_SOURCE=199309L)
+	::munmap( vp, sctx.size);
 }
+
+#endif
 
 ////////////////////////////////////////////////////////
 CoroutineInfo::CoroutineInfo()
 : _prev(NULL)
 , _next(NULL)
-, _main(true)
+// , _main(true)
 , _scheduler(NULL)
 , _uid(0)
 , _eStatus(CORO_FREE)
-, _ctx_to(NULL)
+// , _ctx_to(NULL)
 {
 }
 
 CoroutineInfo::CoroutineInfo(CoroutineScheduler* scheduler)
 : _prev(NULL)
 , _next(NULL)
-, _main(false)
+// , _main(false)
 , _scheduler(scheduler)
 , _uid(0)
 , _eStatus(CORO_FREE)
-, _ctx_to(NULL)
+// , _ctx_to(NULL)
 {
 }
 
 CoroutineInfo::CoroutineInfo(CoroutineScheduler* scheduler, uint32_t iUid, stack_context stack_ctx)
 : _prev(NULL)
 , _next(NULL)
-, _main(false)
+// , _main(false)
 , _scheduler(scheduler)
 , _uid(iUid)
 , _eStatus(CORO_FREE)
 , _stack_ctx(stack_ctx)
-, _ctx_to(NULL)
+// , _ctx_to(NULL)
 {
 }
 
@@ -173,9 +255,16 @@ void CoroutineInfo::registerFunc(const std::function<void ()>& callback)
 
     _init_func.args = this;
 
-    _ctx_to = make_fcontext(_stack_ctx.sp, _stack_ctx.size, CoroutineInfo::corotineEntry);
+    // _ctx_to = make_fcontext(_stack_ctx.sp, _stack_ctx.size, CoroutineInfo::corotineEntry);
 
-    jump_fcontext(&_ctx_from, _ctx_to, (intptr_t)this, false);
+    // jump_fcontext(&_ctx_from, _ctx_to, (intptr_t)this, false);
+
+	fcontext_t ctx = make_fcontext(_stack_ctx.sp, _stack_ctx.size, CoroutineInfo::corotineEntry);
+
+	transfer_t tf = jump_fcontext(ctx, this);
+
+	//实际的ctx
+	this->setCtx(tf.fctx);
 }
 
 void CoroutineInfo::setStackContext(stack_context stack_ctx)
@@ -183,18 +272,20 @@ void CoroutineInfo::setStackContext(stack_context stack_ctx)
     _stack_ctx = stack_ctx;
 }
 
-void CoroutineInfo::corotineEntry(intptr_t q)
+void CoroutineInfo::corotineEntry(transfer_t tf)
 {
-    CoroutineInfo *coro = (CoroutineInfo*)q;
+    CoroutineInfo * coro = static_cast< CoroutineInfo * >(tf.data);
 
     Func    func = coro->_init_func.coroFunc;
     void*    args = coro->_init_func.args;
 
-    jump_fcontext(coro->_ctx_to, &(coro->_ctx_from), 0, false);
+    // jump_fcontext(coro->_ctx_to, &(coro->_ctx_from), 0, false);
+	transfer_t t = jump_fcontext(tf.fctx, NULL);
 
+	coro->_scheduler->setMainCtx(t.fctx);
     try
     {
-        func(args);
+        func(args, t);
     }
     catch(std::exception &ex)
     {
@@ -206,7 +297,7 @@ void CoroutineInfo::corotineEntry(intptr_t q)
     }
 }
 
-void CoroutineInfo::corotineProc(void * args)
+void CoroutineInfo::corotineProc(void * args, transfer_t t)
 {
     CoroutineInfo *coro = (CoroutineInfo*)args;
 
@@ -229,7 +320,8 @@ void CoroutineInfo::corotineProc(void * args)
     scheduler->decUsedSize();
     scheduler->moveToFreeList(coro);
 
-    scheduler->switchCoro(coro, &(scheduler->getMainCoroutine()));
+	scheduler->switchCoro(&(scheduler->getMainCoroutine()));
+    // scheduler->switchCoro(coro, &(scheduler->getMainCoroutine()));
     TLOGERROR("[TARS][CoroutineInfo::corotineProc no come." << endl);
 }
 
@@ -300,16 +392,18 @@ void CoroutineScheduler::init(uint32_t iPoolSize, size_t iStackSize)
     {
         CoroutineInfo *coro = new CoroutineInfo(this);
 
-        stack_context s_ctx;
-        int ret = _alloc.allocate(s_ctx, iStackSize);
-        if(ret != 0)
-        {
-            TLOGERROR("[TARS][CoroutineScheduler::init iPoolSize:" << iPoolSize << "|iStackSize:" << iStackSize << "|i:" << i << endl);
+        // stack_context s_ctx;
+        // int ret = _alloc.allocate(s_ctx, iStackSize);
+        // if(ret != 0)
+        // {
+        //     TLOGERROR("[TARS][CoroutineScheduler::init iPoolSize:" << iPoolSize << "|iStackSize:" << iStackSize << "|i:" << i << endl);
 
-            delete coro;
-            coro = NULL;
-            break;
-        }
+        //     delete coro;
+        //     coro = NULL;
+        //     break;
+        // }
+
+		stack_context s_ctx = stack_traits::allocate(iStackSize);
 
         coro->setStackContext(s_ctx);
 
@@ -355,16 +449,18 @@ int    CoroutineScheduler::increaseCoroPoolSize()
         coro->setUid(iId);
         coro->setStatus(CORO_FREE);
 
-        stack_context s_ctx;
-        int ret = _alloc.allocate(s_ctx, _stackSize);
-        if(ret != 0)
-        {
-            TLOGERROR("[TARS][CoroutineScheduler::increaseCoroPoolSize iPoolSize:" << _poolSize << "|iStackSize:" << _stackSize << "|i:" << i << endl);
+        // stack_context s_ctx;
+        // int ret = _alloc.allocate(s_ctx, _stackSize);
+        // if(ret != 0)
+        // {
+        //     TLOGERROR("[TARS][CoroutineScheduler::increaseCoroPoolSize iPoolSize:" << _poolSize << "|iStackSize:" << _stackSize << "|i:" << i << endl);
 
-            delete coro;
-            coro = NULL;
-            break;
-        }
+        //     delete coro;
+        //     coro = NULL;
+        //     break;
+        // }
+
+		stack_context s_ctx = stack_traits::allocate(_stackSize);
 
         coro->setStackContext(s_ctx);
 
@@ -441,7 +537,8 @@ void CoroutineScheduler::run()
 
                 assert(coro != NULL);
 
-                switchCoro(&_mainCoro, coro);
+                // switchCoro(&_mainCoro, coro);
+                switchCoro(coro);
 
                 --iLoop;
             }
@@ -454,7 +551,8 @@ void CoroutineScheduler::run()
 
             assert(coro != NULL);
 
-            switchCoro(&_mainCoro, coro);
+            // switchCoro(&_mainCoro, coro);
+            switchCoro(coro);
 
         }
 
@@ -484,7 +582,8 @@ void CoroutineScheduler::tars_run()
 
                 assert(coro != NULL);
 
-                switchCoro(&_mainCoro, coro);
+                // switchCoro(&_mainCoro, coro);
+                switchCoro(coro);
 
                 --iLoop;
             }
@@ -500,7 +599,8 @@ void CoroutineScheduler::tars_run()
 
                 assert(coro != NULL);
 
-                switchCoro(&_mainCoro, coro);
+                // switchCoro(&_mainCoro, coro);
+                switchCoro(coro);
 
                 --iLoop;
             }
@@ -517,7 +617,8 @@ void CoroutineScheduler::yield(bool bFlag)
     }
 
     moveToInactive(_currentCoro);
-    switchCoro(_currentCoro, &_mainCoro);
+    // switchCoro(_currentCoro, &_mainCoro);
+    switchCoro(&_mainCoro);
 }
 
 void CoroutineScheduler::sleep(int iSleepTime)
@@ -528,7 +629,8 @@ void CoroutineScheduler::sleep(int iSleepTime)
     _timeoutCoroId.insert(make_pair(iTimeout, _currentCoro->getUid()));
 
     moveToTimeout(_currentCoro);
-    switchCoro(_currentCoro, &_mainCoro);
+    // switchCoro(_currentCoro, &_mainCoro);
+    switchCoro(&_mainCoro);
 }
 
 void CoroutineScheduler::putbyself(uint32_t iCoroId)
@@ -661,11 +763,14 @@ uint32_t CoroutineScheduler::generateId()
     return _uniqId;
 }
 
-void CoroutineScheduler::switchCoro(CoroutineInfo *from, CoroutineInfo *to)
+// void CoroutineScheduler::switchCoro(CoroutineInfo *from, CoroutineInfo *to)
+void CoroutineScheduler::switchCoro(CoroutineInfo *to)
 {
     _currentCoro = to;
 
-    jump_fcontext(from->getCtx(), to->getCtx(), 0, false);
+    // jump_fcontext(from->getCtx(), to->getCtx(), 0, false);
+	transfer_t t = jump_fcontext(to->getCtx(), NULL);
+	to->setCtx(t.fctx);
 }
 
 void CoroutineScheduler::moveToActive(CoroutineInfo *coro, bool bFlag)
@@ -782,7 +887,7 @@ void CoroutineScheduler::destroy()
         {
             if(_all_coro[i])
             {
-                _alloc.deallocate(_all_coro[i]->getStackContext());
+                stack_traits::deallocate(_all_coro[i]->getStackContext());
             }
         }
         delete [] _all_coro;

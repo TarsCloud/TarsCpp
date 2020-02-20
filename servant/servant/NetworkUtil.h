@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -17,54 +17,70 @@
 #ifndef __TARS_NETWORK_UTIL_H_
 #define __TARS_NETWORK_UTIL_H_
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/select.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <net/if_arp.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <string>
-#include <vector>
+// #include <unistd.h>
+// #include <fcntl.h>
+// #include <sys/socket.h>
+// #include <sys/time.h>
+// #include <sys/select.h>
+// #include <sys/types.h>
+// #include <sys/ioctl.h>
+// #include <net/if.h>
+// #include <net/if_arp.h>
+// #include <netinet/in.h>
+// #include <netinet/tcp.h>
+// #include <arpa/inet.h>
+// #include <netdb.h>
+// #include <string>
+// #include <vector>
+
+
+#include "util/tc_socket.h"
+#if TARGET_PLATFORM_WINDOWS
+#include <WS2tcpip.h>
+#endif
+
 
 namespace tars
 {
 
 struct NetworkUtil
 {
-    static const int INVALID_SOCKET = -1;
-    static const int SOCKET_ERROR = -1;
-
-    static int createSocket(bool, bool isLocal = false, bool isIpv6 = false);
-
+    static int createSocket(bool udp, bool isLocal = false, bool isIpv6 = false);
     static void closeSocketNoThrow(int);
-
-    static void setBlock(int, bool);
-
-    static void setTcpNoDelay(int);
-
-    static void setKeepAlive(int);
-
-    static void doBind(int, struct sockaddr_in&);
-
-    static void doBind(int, const struct sockaddr *, socklen_t);
-
-    static bool doConnect(int, const struct sockaddr_in&);
-
-    static bool doConnect(int, const struct sockaddr *, socklen_t);
-
-    static void getAddress(const std::string&, int, struct sockaddr_in&);
-
-    static void getAddress(const std::string&, int, struct sockaddr_in6&);
-
+	static bool doConnect(int, const struct sockaddr *, socklen_t len);
     static std::string errorToString(int);
 };
+
+
+// struct NetworkUtil
+// {
+//     static const int INVALID_SOCKET = -1;
+//     static const int SOCKET_ERROR = -1;
+
+//     static int createSocket(bool, bool isLocal = false, bool isIpv6 = false);
+
+//     static void closeSocketNoThrow(int);
+
+//     static void setBlock(int, bool);
+
+//     static void setTcpNoDelay(int);
+
+//     static void setKeepAlive(int);
+
+//     static void doBind(int, struct sockaddr_in&);
+
+//     static void doBind(int, const struct sockaddr *, socklen_t);
+
+//     static bool doConnect(int, const struct sockaddr_in&);
+
+//     static bool doConnect(int, const struct sockaddr *, socklen_t);
+
+//     static void getAddress(const std::string&, int, struct sockaddr_in&);
+
+//     static void getAddress(const std::string&, int, struct sockaddr_in6&);
+
+//     static std::string errorToString(int);
+// };
 
 }
 #endif

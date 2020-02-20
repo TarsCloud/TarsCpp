@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -25,7 +25,7 @@
 #include "util/tc_epoll_server.h"
 #include "servant/Servant.h"
 #include "servant/StatReport.h"
-#include <ucontext.h>
+// #include <ucontext.h>
 #include "servant/CoroutineScheduler.h"
 #ifdef _USE_OPENTRACKING
 #include "opentracing/span.h"
@@ -78,7 +78,7 @@ protected:
     /**
      * 处理请求的协程函数
      */
-    virtual void handleRecvData(TC_EpollServer::tagRecvData *stRecvData);
+    virtual void handleRecvData(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
 protected:
     /**
@@ -90,25 +90,25 @@ protected:
      * 逻辑处理
      * @param stRecvData
      */
-    virtual void handle(const TC_EpollServer::tagRecvData &stRecvData);
+    virtual void handle(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * 超时处理
      * @param stRecvData
      */
-    virtual void handleTimeout(const TC_EpollServer::tagRecvData &stRecvData);
+    virtual void handleTimeout(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * overload 处理
      * @param stRecvData
      */
-    virtual void handleOverload(const TC_EpollServer::tagRecvData &stRecvData);
+    virtual void handleOverload(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * close 事件处理
      * @param stRecvData
      */
-    virtual void handleClose(const TC_EpollServer::tagRecvData &stRecvData);
+    virtual void handleClose(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * handleFilter拆分的第一部分，处理异步调用队列
@@ -137,14 +137,14 @@ protected:
      * @param stRecvData
      * @return TarsCurrent*
      */
-    TarsCurrentPtr createCurrent(const TC_EpollServer::tagRecvData &stRecvData);
+    TarsCurrentPtr createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * 创建闭连接时的关上下文
      * @param stRecvData
      * @return TarsCurrent*
      */
-    TarsCurrentPtr createCloseCurrent(const TC_EpollServer::tagRecvData &stRecvData);
+    TarsCurrentPtr createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * 处理Tars协议
@@ -202,7 +202,7 @@ protected:
     /**
      * 消息到达通知
      */
-    TC_ThreadLock           _monitor;
+    // TC_ThreadLock           _monitor;
 
     /**
      * 协程调度器

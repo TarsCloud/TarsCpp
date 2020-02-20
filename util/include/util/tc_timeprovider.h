@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -17,41 +17,38 @@
 #ifndef __TC_TIME_PROVIDER_H_
 #define __TC_TIME_PROVIDER_H_
 
-#include <string>
 #include <string.h>
-#include "util/tc_monitor.h"
+#include "util/tc_platform.h"
+#include "util/tc_common.h"
 #include "util/tc_thread.h"
 #include "util/tc_autoptr.h"
 
-#define rdtsc(low,high) \
-     __asm__ __volatile__("rdtsc" : "=a" (low), "=d" (high))
-
-#define TNOW     tars::TC_TimeProvider::getInstance()->getNow()
-#define TNOWMS   tars::TC_TimeProvider::getInstance()->getNowMs()
 
 namespace tars
 {
+#define TNOW     TC_TimeProvider::getInstance()->getNow()
+#define TNOWMS   TC_TimeProvider::getInstance()->getNowMs()
+
 /////////////////////////////////////////////////
 /**
  * @file tc_timeprovider.h
- * @brief 秒级、微妙级时间提供类. 
- * 
- */                    
+ * @brief 秒级、毫秒级时间提供类(linux有独立线程来获取时间, windows直接使用获取时间函数TC_Common::gettimeofday())
+ *
+ * @author jarodruan@upchina.com
+ */
 /////////////////////////////////////////////////
 class TC_TimeProvider;
-
-typedef TC_AutoPtr<TC_TimeProvider> TC_TimeProviderPtr;
 
 /**
  * @brief 提供秒级别的时间
  */
-class TC_TimeProvider : public TC_Thread, public TC_HandleBase
+class TC_TimeProvider
 {
 public:
 
     /**
-     * @brief 获取实例. 
-     *  
+     * @brief 获取实例.
+     *
      * @return TimeProvider&
      */
     static TC_TimeProvider* getInstance();
@@ -59,13 +56,13 @@ public:
     /**
      * @brief 构造函数
      */
-    TC_TimeProvider() : _terminate(false),_use_tsc(true),_cpu_cycle(0),_buf_idx(0)
+    TC_TimeProvider() : _use_tsc(true), _cpu_cycle(0), _buf_idx(0)
     {
-        memset(_t,0,sizeof(_t));
-        memset(_tsc,0,sizeof(_tsc));
+        memset(_t, 0, sizeof(_t));
+        memset(_tsc, 0, sizeof(_tsc));
 
         struct timeval tv;
-        ::gettimeofday(&tv, NULL);
+        TC_Common::gettimeofday(tv);
         _t[0] = tv;
         _t[1] = tv;
     }
@@ -73,7 +70,7 @@ public:
     /**
      * @brief 析构，停止线程
      */
-    ~TC_TimeProvider(); 
+    ~TC_TimeProvider();
 
     /**
      * @brief 获取时间.
@@ -85,61 +82,55 @@ public:
     /**
      * @brief 获取时间.
      *
-     * @para timeval 
-     * @return void 
+     * @para timeval
+     * @return void
      */
     void getNow(timeval * tv);
 
     /**
      * @brief 获取ms时间.
      *
-     * @para timeval 
-     * @return void 
+     * @para timeval
+     * @return void
      */
     int64_t getNowMs();
-    
-    /**
-     * @brief 获取cpu主频.
-     *  
-     * @return float cpu主频
-     */  
 
-    float cpuMHz();
-
-    /**
-     * @brief 运行
-     */
 protected:
-
-    virtual void run();
-
-    static TC_ThreadLock        g_tl;
-
-    static TC_TimeProviderPtr   g_tp;
-
-private:
-    void setTsc(timeval& tt);
-
-    void addTimeOffset(timeval& tt,const int &idx);
+	static TC_TimeProvider      *g_tp;
 
 protected:
 
-    bool    _terminate;
+	/**
+	* @brief 运行
+	*/
+	virtual void run();
 
-    bool    _use_tsc;
+    uint64_t GetCycleCount();
+
+	/**
+	* @brief 获取cpu主频.
+	*
+	* @return float cpu主频
+	*/
+	// double cpuMHz();
+
+	void setTsc(timeval& tt);
+
+	void addTimeOffset(timeval& tt, const int &idx);
 
 private:
-    float           _cpu_cycle; 
+    bool            _use_tsc;
+
+    double          _cpu_cycle;
 
     volatile int    _buf_idx;
 
     timeval         _t[2];
 
-    uint64_t        _tsc[2];  
+    uint64_t       _tsc[2];
 };
 
 }
 
 #endif
-
 

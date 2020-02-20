@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -309,7 +309,7 @@ public:
 
      * 设置include的tars文件全部从当前文件搜寻 
      */
-    void setUseCurrentPath(const bool & bEnable) { _bUseCurrentPath = bEnable; }
+    void setUseCurrentPath(bool bEnable) { _bUseCurrentPath = bEnable; }
 
     /**
      * 查找tars文件时,设置include路径
@@ -320,6 +320,29 @@ public:
 
         _vIncludePath.insert(_vIncludePath.end(), v.begin(), v.end());
     }
+
+    /**
+     *
+     * @param fileName
+     * @return
+     */
+	string getFileName(const string &fileName);
+
+	/**
+	 * replace ext
+	 * @param fileName
+	 * @param ext
+	 * @return
+	 */
+	string replaceFileName(const string &fileName, const string &ext);
+
+	/**
+	 * get absolute filename
+	 * @param baseDir
+	 * @param fileName
+	 * @return
+	 */
+	string getAbsoluteFileName(const string &baseDir, const string &fileName);
 
 protected:
     /**

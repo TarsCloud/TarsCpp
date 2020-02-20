@@ -17,7 +17,13 @@
 #ifndef __TARS_TYPE_H__
 #define __TARS_TYPE_H__
 
+#ifdef __linux__
 #include <netinet/in.h>
+#elif _WIN32
+#include <WinSock2.h>
+#endif
+
+// #include <netinet/in.h>
 #include <iostream>
 #include <cassert>
 #include <vector>
@@ -42,7 +48,7 @@ typedef unsigned char   UInt8;
 typedef unsigned short  UInt16;
 typedef unsigned int    UInt32;
 
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined _WIN64
 typedef long    Int64;
 #else
 typedef long long   Int64;
@@ -209,40 +215,5 @@ namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define DEFINE_TARS_COPY_STRUCT_1(x, y, s)               \
-    inline void tars_copy_struct_impl(x& a, const y& b)  { s; }  \
-    inline void tars_copy_struct_impl(y& a, const x& b)  { s; }  \
-    inline void tars_copy_struct(x& a, const y& b)  { tars_copy_struct_impl(a, b); }      \
-    inline void tars_copy_struct(y& a, const x& b)  { tars_copy_struct_impl(a, b); }
- 
-#define DEFINE_TARS_COPY_STRUCT(n, x, y)                 \
-    DEFINE_TARS_COPY_STRUCT_1(n::x, y, n##_##x##_TARS_COPY_STRUCT_HELPER)
-
-inline void tars_copy_struct(char& a, const unsigned char& b) { a = b; }
-inline void tars_copy_struct(unsigned char& a, const char& b) { a = b; }
-template<typename T> inline void tars_copy_struct(T& a, const T& b) { a = b; }
-
-template<typename T, typename U>
-inline void tars_copy_struct(std::vector<T>& a, const std::vector<U>& b, typename detail::disable_if<detail::is_same_type<T, U>, void ***>::type dummy = 0)
-{
-    a.resize(b.size());
-    for(size_t i = 0; i < a.size(); ++i)
-        tars_copy_struct_impl(a[i], b[i]);
-}
-
-template<typename K1, typename V1, typename K2, typename V2>
-inline void tars_copy_struct(std::map<K1, V1>& a, const std::map<K2, V2>& b, typename detail::disable_if<detail::is_same_type<std::map<K1, V1>, std::map<K2, V2> >, void ***>::type dummy = 0)
-{
-    a.clear();
-    std::pair<K1, V1> pr;
-    typedef typename std::map<K2, V2>::const_iterator IT;
-    IT ib = b.begin(), ie = b.end();
-    for(; ib != ie; ++ib){
-        tars_copy_struct_impl(pr.first, ib->first);
-        tars_copy_struct_impl(pr.second, ib->second);
-        a.insert(pr);
-    }
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 #endif

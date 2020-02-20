@@ -1,4 +1,4 @@
-#ifndef __TEST_PUSH_THREAD_H
+﻿#ifndef __TEST_PUSH_THREAD_H
 #define __TEST_PUSH_THREAD_H
 
 #include "servant/Application.h"
@@ -13,7 +13,7 @@ public:
 class PushInfoThread : public TC_Thread, public TC_ThreadLock
 {
 public:
-	PushInfoThread():_bTerminate(false),_tLastPushTime(0),_tInterval(10),_iId(0){}
+	PushInfoThread():_bTerminate(false), _iId(0){}
 
 	virtual void run();
 
@@ -23,8 +23,6 @@ public:
 
 private:
 	bool _bTerminate;
-	time_t _tLastPushTime;
-	time_t _tInterval;
 	unsigned int _iId;
 	string _sPushInfo;
 };

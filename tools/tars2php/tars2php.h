@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -24,8 +24,6 @@
 using namespace tars;
 
 /**
- * ¸ù¾İtarsÉú³Éc++ÎÄ¼ş
- * °üÀ¨½á¹¹µÄ±à½âÂëÒÔ¼°Éú³ÉProxyºÍServant
  */
 class Tars2Php
 {
@@ -33,28 +31,27 @@ public:
 	Tars2Php();
 
     /**
-     * Éú³É
+     *
      * @param file
      */
     void createFile(const string &file, const vector<string> &vsCoder);
 
 
     /**
-    * ÉèÖÃÉú³ÉÎÄ¼şµÄÄ¿Â¼
+    *
     *
     */
     void setBaseDir(const std::string & sPath) { m_sBaseDir = sPath; }
 
 	/**
-	 * ÉèÖÃÊÇ·ñĞèÒª´ò°üÄ¬ÈÏÖµ
+	 *
 	 */
 	void setCheckDefault(bool bCheck) { m_bCheckDefault = bCheck; }
 
-    //ÏÂÃæÊÇ±à½âÂëµÄÔ´ÂëÉú³É
 protected:
 
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ½âÂëÔ´Âë
+     *
      * @param pPtr
      *
      * @return string
@@ -62,18 +59,16 @@ protected:
     string writeTo(const TypeIdPtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ±àÂëÔ´Âë
+     *
      * @param pPtr
      *
      * @return string
      */
     string readFrom(const TypeIdPtr &pPtr, bool bIsRequire = true) const;
 
-
-    //ÏÂÃæÊÇÀàĞÍÃèÊöµÄÔ´ÂëÉú³É
 protected:
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ×Ö·û´®ÃèÊöÔ´Âë
+     *
      * @param pPtr
      *
      * @return string
@@ -81,14 +76,13 @@ protected:
     string tostr(const TypePtr &pPtr) const;
 
     /**
-     * Éú³ÉÄÚ½¨ÀàĞÍµÄ×Ö·û´®Ô´Âë
      * @param pPtr
      *
      * @return string
      */
     string tostrBuiltin(const BuiltinPtr &pPtr) const;
     /**
-     * Éú³ÉvectorµÄ×Ö·û´®ÃèÊö
+     *
      * @param pPtr
      *
      * @return string
@@ -96,7 +90,7 @@ protected:
     string tostrVector(const VectorPtr &pPtr) const;
 
     /**
-     * Éú³ÉmapµÄ×Ö·û´®ÃèÊö
+     *
      * @param pPtr
      *
      * @return string
@@ -104,7 +98,7 @@ protected:
     string tostrMap(const MapPtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÖÖ½á¹¹µÄ·û´®ÃèÊö
+     *
      * @param pPtr
      *
      * @return string
@@ -112,7 +106,7 @@ protected:
     string tostrStruct(const StructPtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÖÖÃ¶¾ÙµÄ·û´®ÃèÊö
+     *
      * @param pPtr
      *
      * @return string
@@ -120,7 +114,7 @@ protected:
     string tostrEnum(const EnumPtr &pPtr) const;
 
     /**
-     * »ñÈ¡¶¨³¤Êı×éµÄ×ø±ê
+     *
      * @param pPtr
      *
      * @return string
@@ -129,7 +123,7 @@ protected:
     string toStrSuffix(const TypeIdPtr &pPtr) const;
 
     /**
-     * »ñÈ¡¶¨³¤Êı×éµÄ×ø±ê
+     *
      * @param pPtr
      *
      * @return int
@@ -137,7 +131,7 @@ protected:
     int getSuffix(const TypeIdPtr &pPtr) const;
 
     /**
-     * Éú³ÉÀàĞÍ±äÁ¿µÄ½âÂëÔ´Âë
+     *
      * @param pPtr
      *
      * @return string
@@ -145,35 +139,32 @@ protected:
     string decode(const TypeIdPtr &pPtr) const;
 
     /**
-     * Éú³ÉÀàĞÍ±äÁ¿µÄ±àÂëÔ´Âë
+     *
      * @param pPtr
      *
      * @return string
      */
     string encode(const TypeIdPtr &pPtr) const;
 
-    //ÒÔÏÂÊÇhºÍcppÎÄ¼şµÄ¾ßÌåÉú³É
 protected:
     /**
-     * Éú³É½á¹¹µÄÍ·ÎÄ¼şÄÚÈİ
+     *
      * @param pPtr
      *
      * @return string
      */
     string generatePHP(const StructPtr &pPtr, const string& namespaceId) const;
 
-
     /**
-     * Éú³ÉÃû×Ö¿Õ¼äµÄÍ·ÎÄ¼şÔ´Âë
+     *
      * @param pPtr
      *
      * @return string
      */
     string generatePHP(const NamespacePtr &pPtr) const;
 
-
     /**
-     * Éú³ÉÃû×Ö¿Õ¼äµÄÍ·ÎÄ¼şÔ´Âë
+     *
      * @param pPtr
      *
      * @return string

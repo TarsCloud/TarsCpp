@@ -9,7 +9,7 @@ else()
 include_directories(${util_SOURCE_DIR}/include)
 endif()
 
-link_libraries(pthread)
+# link_libraries(pthread)
 
 #调用tars2cpp, 生成tars对应的文件
 macro(complice_tars OUT_DEPENDS_LIST HEADER TARS_DIR)
@@ -69,7 +69,6 @@ add_subdirectory(libservant)
 install(DIRECTORY servant DESTINATION include)
 install(DIRECTORY tup DESTINATION include)
 install(DIRECTORY jmem DESTINATION include)
-install(DIRECTORY promise DESTINATION include)
 install(DIRECTORY script DESTINATION .)
 install(DIRECTORY makefile DESTINATION .)
 

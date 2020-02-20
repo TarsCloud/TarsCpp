@@ -1,0 +1,22 @@
+name: C/C++ win
+
+on: 
+  push:
+    branches:
+    - "2.0"
+    - master
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: git
+      run: git submodule update --init --recursive
+    - name: configure
+      run: mkdir build;cd build; cmake --version; cmake .. -A X64
+    - name: make
+      run: cd build; cmake --build . --config release --target run-all
+

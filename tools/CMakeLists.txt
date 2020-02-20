@@ -31,19 +31,18 @@ macro(complice_lex OUT_DEPENDS_LEX_LIST)
 
         get_filename_component(NAME_WE ${FILE} NAME_WE)
 
-        # 生成tars文件
         set(LEX_IN ${FILE})
         set(LEX_CPP ${NAME_WE}.lex.cpp)
 
         add_custom_command(
                 OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${LEX_CPP}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                COMMAND flex ${LEX_IN}
-                COMMENT "flex ${LEX_IN}")
+                DEPENDS ${LEX_IN}
+                COMMAND flex --nounist ${LEX_IN}
+                COMMENT "flex --nounist ${LEX_IN}")
 
         list(APPEND DEPENDS_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${LEX_CPP})
 
-        #设置需要清除的文件
         get_filename_component(PATH ${FILE} PATH)
         list(APPEND CLEAN_LIST ${PATH}/${LEX_CPP})
 
@@ -73,12 +72,12 @@ macro(complice_yacc OUT_DEPENDS_YACC_LIST)
         add_custom_command(
                 OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${YACC_H}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                DEPENDS ${YACC_IN}
                 COMMAND bison  ${YACC_IN} -o ${YACC_CPP}
                 COMMENT "bison  ${YACC_IN}  -o ${YACC_CPP}")
 
         list(APPEND DEPENDS_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${YACC_H})
 
-        #设置需要清除的文件
         get_filename_component(PATH ${FILE} PATH)
         
         list(APPEND CLEAN_LIST ${PATH}/${YACC_H})
@@ -95,7 +94,10 @@ macro(complice_yacc OUT_DEPENDS_YACC_LIST)
 
 endmacro()
 
+IF(UNIX)
 add_subdirectory(tarsgrammar)
+ENDIF(UNIX)
+
 add_subdirectory(tarsparse)
 add_subdirectory(tars2cpp)
 add_subdirectory(tars2python)
@@ -106,7 +108,6 @@ add_subdirectory(tars2php)
 add_subdirectory(tars2android)
 add_subdirectory(tars2node)
 
-FIND_PACKAGE(Protobuf)
-IF(PROTOBUF_FOUND)
+IF(TARS_PROTOBUF)
     add_subdirectory(pb2tarscpp)
 ENDIF()

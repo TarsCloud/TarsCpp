@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,8 +22,8 @@
 void usage()
 {
     cout << "Usage : tars2c [OPTION] tarsfile" << endl;
-	cout << "  --dir=DIRECTORY       generate source file to DIRECTORY(Éú³ÉÎÄ¼þµ½Ä¿Â¼DIRECTORY,Ä¬ÈÏÎªµ±Ç°Ä¿Â¼)" << endl;
-    cout << "  --check-default<>     Èç¹ûoptional×Ö¶ÎÖµÎªÄ¬ÈÏÖµ£¬²»´ò°ü(Ä¬ÈÏ²»´ò°ü)(value:true or false)" << endl;
+	cout << "  --dir=DIRECTORY       generate source file to DIRECTORY(create tars protocol file to DIRECTORY, default is current directory)" << endl;
+    cout << "  --check-default<true, false>     optional field with default value not do package(default: true)" << endl;
     cout << "  tars2c support type: bool byte short int long float double vector map" << endl;
     exit(0);
 }
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     j2c.setCheckDefault(tars::TC_Common::lower(option.getValue("check-default")) == "false"?false:true);
     try
     {
-        //ÊÇ·ñ¿ÉÒÔÒÔtars¿ªÍ·
+        //ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tarsï¿½ï¿½Í·
         g_parse->setTars(option.hasParam("with-tars"));
         g_parse->setHeader(option.getValue("header"));
 

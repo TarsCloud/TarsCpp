@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -67,203 +67,163 @@ ServantHandle::~ServantHandle()
 
 void ServantHandle::run()
 {
-    initialize();
+	try
+	{
+		initialize();
 
-    if(!ServerConfig::OpenCoroutine)
-    {
-        handleImp();
-    }
-    else
-    {
-        unsigned int iThreadNum = getEpollServer()->getLogicThreadNum();
+		if (!ServerConfig::OpenCoroutine) {
+			handleImp();
+		}
+		else {
+			unsigned int iThreadNum = getEpollServer()->getLogicThreadNum();
 
-        size_t iCoroutineNum = (ServerConfig::CoroutineMemSize > ServerConfig::CoroutineStackSize) ? (ServerConfig::CoroutineMemSize / (ServerConfig::CoroutineStackSize * iThreadNum) ) : 1;
-        if(iCoroutineNum < 1)
-            iCoroutineNum = 1;
+			size_t iCoroutineNum =
+				(ServerConfig::CoroutineMemSize > ServerConfig::CoroutineStackSize) ? (ServerConfig::CoroutineMemSize
+					/ (ServerConfig::CoroutineStackSize * iThreadNum)) : 1;
+			if (iCoroutineNum < 1)
+				iCoroutineNum = 1;
 
-        startHandle();
+			startHandle();
 
-        _coroSched = new CoroutineScheduler();
-        _coroSched->init(iCoroutineNum, ServerConfig::CoroutineStackSize);
-        _coroSched->setHandle(this);
+			_coroSched = new CoroutineScheduler();
+			_coroSched->init(iCoroutineNum, ServerConfig::CoroutineStackSize);
+			_coroSched->setHandle(this);
 
-        _coroSched->createCoroutine(std::bind(&ServantHandle::handleRequest, this));
+			_coroSched->createCoroutine(std::bind(&ServantHandle::handleRequest, this));
 
-        ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
+			ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
 
-        assert(pSptd != NULL);
+			assert(pSptd != NULL);
 
-        pSptd->_sched = _coroSched;
+			pSptd->_sched = _coroSched;
 
-        while (!getEpollServer()->isTerminate())
-        {
-            _coroSched->tars_run();
-        }
+			while (!getEpollServer()->isTerminate()) {
+				_coroSched->tars_run();
+			}
 
-        _coroSched->terminate();
+			_coroSched->terminate();
 
-        _coroSched->destroy();
+			_coroSched->destroy();
 
-        stopHandle();
-    }
+			stopHandle();
+		}
+	}
+	catch(exception &ex)
+	{
+		TLOGERROR("[TARS]ServantHandle::run exception error:" << ex.what() << endl);
+		cerr << "[TARS]ServantHandle::run exception error:" << ex.what() << endl;
+	}
+	catch(...)
+	{
+		TLOGERROR("[TARS]ServantHandle::run unknown exception error." << endl);
+		cerr << "[TARS]ServantHandle::run unknown exception error." << endl;
+	}
 }
+
 
 void ServantHandle::handleRequest()
 {
     bool bYield = false;
     while (!getEpollServer()->isTerminate())
     {
-        bool bServerReqEmpty = false;
-
-        {
-            TC_ThreadLock::Lock lock(_handleGroup->monitor);
-
-            if (allAdapterIsEmpty() && allFilterIsEmpty())
-            {
-                if(_coroSched->getResponseCoroSize() > 0)
-                {
-                    bServerReqEmpty = true;
-                }
-                else
-                {
-                    _handleGroup->monitor.timedWait(3000);
-                }
-            }
-        }
+    	wait();
 
         //上报心跳
         heartbeat();
 
         //为了实现所有主逻辑的单线程化,在每次循环中给业务处理自有消息的机会
         handleAsyncResponse();
-
         handleCustomMessage(true);
 
-        if(bServerReqEmpty)
-        {
-            _coroSched->yield();
-
-            continue;
-        }
-        
         bYield = false;
 
-        TC_EpollServer::tagRecvData* recv = NULL;
-
-        map<string, TC_EpollServer::BindAdapterPtr>& adapters = _handleGroup->adapters;
-
-        for (map<string, TC_EpollServer::BindAdapterPtr>::iterator it = adapters.begin(); it != adapters.end(); ++it)
+	    shared_ptr<TC_EpollServer::RecvContext> data;
+        try
         {
-            TC_EpollServer::BindAdapterPtr& adapter = it->second;
-
-            try
+            bool bFlag = true;
+            int	iLoop = 100;
+            while (bFlag && iLoop > 0)
             {
-                bool bFlag = true;
-                int    iLoop = 100;
-                while(bFlag && iLoop > 0)
+                --iLoop;
+                if ((_coroSched->getFreeSize() > 0) && popRecvQueue(data))
                 {
-                    --iLoop;
+                    bYield = true;
 
-                    if(adapter->waitForRecvQueue(recv, 0))
+                    //上报心跳
+                    heartbeat();
+
+                    //为了实现所有主逻辑的单线程化,在每次循环中给业务处理自有消息的机会
+                    handleAsyncResponse();
+
+                    //数据已超载 overload
+                    if (data->isOverload())
                     {
-                        bYield = true;
-
-                        //上报心跳
-                        heartbeat();
-
-                        //为了实现所有主逻辑的单线程化,在每次循环中给业务处理自有消息的机会
-                           handleAsyncResponse();
-
-                        TC_EpollServer::tagRecvData& stRecvData = *recv;
-
-                        int64_t now = TNOWMS;
-
-                        stRecvData.adapter = adapter;
-
-                        //数据已超载 overload
-                        if (stRecvData.isOverload)
-                        {
-                            handleOverload(stRecvData);
-                            delete recv;
-                            recv = NULL;
-                        }
-                        //关闭连接的通知消息
-                        else if (stRecvData.isClosed)
-                        {
-                            handleClose(stRecvData);
-                            delete recv;
-                            recv = NULL;
-                        }
-                        //数据在队列中已经超时了
-                        else if ( (now - stRecvData.recvTimeStamp) > (int64_t)adapter->getQueueTimeout())
-                        {
-                            handleTimeout(stRecvData);
-                            delete recv;
-                            recv = NULL;
-                        }
-                        else
-                        {
-                            uint32_t iRet = _coroSched->createCoroutine(std::bind(&ServantHandle::handleRecvData, this, recv));
-                            if(iRet == 0)
-                            {
-                                handleOverload(stRecvData);
-                                delete recv;
-                                recv = NULL;
-                            }
-                        }
-                        handleCustomMessage(false);
+                        handleOverload(data);
+                    }
+                    //关闭连接的通知消息
+                    else if (data->isClosed())
+                    {
+                        handleClose(data);
+                    }
+                    //数据在队列中已经超时了
+                    else if ((TNOWMS - data->recvTimeStamp()) > (int64_t)_bindAdapter->getQueueTimeout())
+                    {
+                        handleTimeout(data);
                     }
                     else
                     {
-                        bFlag = false;
-                        bYield = false;
+                        uint32_t iRet = _coroSched->createCoroutine(std::bind(&ServantHandle::handleRecvData, this, data));
+                        if (iRet == 0)
+                        {
+                            handleOverload(data);
+                        }
                     }
+                    handleCustomMessage(false);
                 }
-
-                if(iLoop == 0)
+                else
+                {
+                    //_coroSched->yield();
+                    bFlag = false;
                     bYield = false;
-            }
-            catch (exception &ex)
-            {
-                if(recv)
-                {
-                    close(recv->uid, recv->fd);
-                    delete recv;
-                    recv = NULL;
                 }
-
-                getEpollServer()->error("[Handle::handleImp] error:" + string(ex.what()));
             }
-            catch (...)
-            {
-                if(recv)
-                {
-                    close(recv->uid, recv->fd);
-                    delete recv;
-                    recv = NULL;
-                }
 
-                getEpollServer()->error("[Handle::handleImp] unknown error");
-            }
+            if (iLoop == 0) bYield = false;
         }
+        catch (exception& ex)
+        {
+            if (data)
+            {
+                close(data);
+            }
 
-        if(!bYield)
+            getEpollServer()->error("[Handle::handleImp] error:" + string(ex.what()));
+        }
+        catch (...)
+        {
+            if (data)
+            {
+                close(data);
+            }
+
+            getEpollServer()->error("[Handle::handleImp] unknown error");
+        }
+        if (!bYield)
         {
             _coroSched->yield();
         }
     }
 }
 
-void ServantHandle::handleRecvData(TC_EpollServer::tagRecvData *stRecvData)
+// void ServantHandle::handleRecvData(TC_EpollServer::tagRecvData *stRecvData)
+void ServantHandle::handleRecvData(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
     try
     {
-        TarsCurrentPtr current = createCurrent(*stRecvData);
+        TarsCurrentPtr current = createCurrent(data);
 
         if (!current) 
         {
-            delete stRecvData;
-            stRecvData = NULL;
             return;
         }
 
@@ -284,9 +244,6 @@ void ServantHandle::handleRecvData(TC_EpollServer::tagRecvData *stRecvData)
     {
         TLOGERROR("[TARS]ServantHandle::handleRecvData unknown exception error" << endl);
     }
-
-    delete stRecvData;
-    stRecvData = NULL;
 }
 
 void ServantHandle::handleAsyncResponse()
@@ -301,7 +258,7 @@ void ServantHandle::handleAsyncResponse()
         {
             try
             {
-                if (resp->response.iRet == TARSSERVERSUCCESS)
+                if (resp->response->iRet == TARSSERVERSUCCESS)
                 {
                     it->second->doResponse(resp);
                 }
@@ -370,7 +327,7 @@ bool ServantHandle::allFilterIsEmpty()
 
     while (it != _servants.end())
     {
-        if (it->second->getResponseQueue().size() > 0)
+        if (!it->second->getResponseQueue().empty())
         {
             return false;
         }
@@ -381,22 +338,17 @@ bool ServantHandle::allFilterIsEmpty()
 
 void ServantHandle::initialize()
 {
-    map<string, TC_EpollServer::BindAdapterPtr>::iterator adpit;
+    ServantPtr servant = ServantHelperManager::getInstance()->create(_bindAdapter->getName());
 
-    map<string, TC_EpollServer::BindAdapterPtr>& adapters = _handleGroup->adapters;
-
-    for (adpit = adapters.begin(); adpit != adapters.end(); ++adpit)
+    if (servant)
     {
-        ServantPtr servant = ServantHelperManager::getInstance()->create(adpit->first);
-
-        if (servant)
-        {
-            _servants[servant->getName()] = servant;
-        }
-        else
-        {
-            TLOGERROR("[TARS]ServantHandle initialize createServant ret null, for adapter `" + adpit->first + "`" << endl);
-        }
+        _servants[servant->getName()] = servant;
+    }
+    else
+    {
+        TLOGERROR("[TAF]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl);
+	    cerr << "[TAF]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl;
+	    exit(-1);
     }
 
     map<string, ServantPtr>::iterator it = _servants.begin();
@@ -418,7 +370,7 @@ void ServantHandle::initialize()
 
             it->second->initialize();
 
-            TLOGINFO("[TARS][" << it->second->getName() << "] initialize" << endl);
+            TLOGTARS("[TARS][" << it->second->getName() << "] initialize" << endl);
         }
         catch(exception &ex)
         {
@@ -440,49 +392,74 @@ void ServantHandle::initialize()
     }
 }
 
+// void ServantHandle::heartbeat()
+// {
+//     time_t fcur = TNOW;
+
+//     map<string, TC_EpollServer::BindAdapterPtr>::iterator it;
+
+//     map<string, TC_EpollServer::BindAdapterPtr>& adapters = _handleGroup->adapters;
+
+//     for (it = adapters.begin(); it != adapters.end(); ++it)
+//     {
+//         if (abs(fcur - it->second->getHeartBeatTime()) > HEART_BEAT_INTERVAL)
+//         {
+//             it->second->setHeartBeatTime(fcur);
+
+//             TARS_KEEPALIVE(it->second->getName());
+
+//             //上报连接数 比率
+//             if (it->second->_pReportConRate)
+//             {
+//                 it->second->_pReportConRate->report(it->second->getNowConnection()*1000/it->second->getMaxConns());
+//             }
+
+//             //有队列, 且队列长度>0才上报
+//             if (it->second->_pReportQueue)
+//             {
+//                 it->second->_pReportQueue->report(it->second->getRecvBufferSize());
+//             }
+//         }
+//     }
+// }
+
+
 void ServantHandle::heartbeat()
 {
     time_t fcur = TNOW;
 
-    map<string, TC_EpollServer::BindAdapterPtr>::iterator it;
-
-    map<string, TC_EpollServer::BindAdapterPtr>& adapters = _handleGroup->adapters;
-
-    for (it = adapters.begin(); it != adapters.end(); ++it)
+    if (abs(fcur - _bindAdapter->getHeartBeatTime()) > HEART_BEAT_INTERVAL)
     {
-        if (abs(fcur - it->second->getHeartBeatTime()) > HEART_BEAT_INTERVAL)
+        _bindAdapter->setHeartBeatTime(fcur);
+
+        TARS_KEEPALIVE(_bindAdapter->getName());
+
+        //上报连接数 比率
+        if (_bindAdapter->_pReportConRate)
         {
-            it->second->setHeartBeatTime(fcur);
+            _bindAdapter->_pReportConRate->report((int)(_bindAdapter->getNowConnection() * 1000 / _bindAdapter->getMaxConns()));
+        }
 
-            TARS_KEEPALIVE(it->second->getName());
-
-            //上报连接数 比率
-            if (it->second->_pReportConRate)
-            {
-                it->second->_pReportConRate->report(it->second->getNowConnection()*1000/it->second->getMaxConns());
-            }
-
-            //有队列, 且队列长度>0才上报
-            if (it->second->_pReportQueue)
-            {
-                it->second->_pReportQueue->report(it->second->getRecvBufferSize());
-            }
+        //有队列, 且队列长度>0才上报
+        if (_bindAdapter->_pReportQueue)
+        {
+            _bindAdapter->_pReportQueue->report((int)_bindAdapter->getRecvBufferSize());
         }
     }
 }
 
-TarsCurrentPtr ServantHandle::createCurrent(const TC_EpollServer::tagRecvData &stRecvData)
+TarsCurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
     TarsCurrentPtr current = new TarsCurrent(this);
 
     try
     {
-        current->initialize(stRecvData, stRecvData.recvTimeStamp);
+        current->initialize(data);
     }
     catch (TarsDecodeException &ex)
     {
         TLOGERROR("[TARS]ServantHandle::handle request protocol decode error:" << ex.what() << endl);
-        close(stRecvData.uid, stRecvData.fd);
+        close(data);
         return NULL;
     }
 
@@ -492,19 +469,19 @@ TarsCurrentPtr ServantHandle::createCurrent(const TC_EpollServer::tagRecvData &s
         int64_t now = TNOWMS;
 
         //数据在队列中的时间超过了客户端等待的时间(TARS协议)
-        if (current->_request.iTimeout > 0 && (now - stRecvData.recvTimeStamp) > current->_request.iTimeout)
+        if (current->_request.iTimeout > 0 && (now - data->recvTimeStamp()) > current->_request.iTimeout)
         {
             //上报超时数目
-            if(stRecvData.adapter->_pReportTimeoutNum)
-                stRecvData.adapter->_pReportTimeoutNum->report(1);
+            if(data->adapter()->_pReportTimeoutNum)
+                data->adapter()->_pReportTimeoutNum->report(1);
 
             TLOGERROR("[TARS]ServantHandle::handle queue timeout:"
                          << current->_request.sServantName << "|"
                          << current->_request.sFuncName << "|"
-                         << stRecvData.recvTimeStamp << "|"
-                         << stRecvData.adapter->getQueueTimeout() << "|"
+                         << data->recvTimeStamp()  << "|"
+                         << data->adapter()->getQueueTimeout() << "|"
                          << current->_request.iTimeout << "|"
-                         << now << "|" << stRecvData.ip << ":" << stRecvData.port << endl);
+                         << now << "|" << data->ip() << ":" << data->port() << endl);
 
             current->sendResponse(TARSSERVERQUEUETIMEOUT);
 
@@ -515,29 +492,29 @@ TarsCurrentPtr ServantHandle::createCurrent(const TC_EpollServer::tagRecvData &s
     return current;
 }
 
-TarsCurrentPtr ServantHandle::createCloseCurrent(const TC_EpollServer::tagRecvData &stRecvData)
+TarsCurrentPtr ServantHandle::createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
     TarsCurrentPtr current = new TarsCurrent(this);
 
-    current->initializeClose(stRecvData);
+    current->initializeClose(data);
     current->setReportStat(false);
-    current->setCloseType(stRecvData.closeType);
+    current->setCloseType(data->closeType());
     return current;
 }
 
-void ServantHandle::handleClose(const TC_EpollServer::tagRecvData &stRecvData)
+void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TLOGINFO("[TARS]ServantHandle::handleClose,adapter:" << stRecvData.adapter->getName()
-                << ",peer:" << stRecvData.ip << ":" << stRecvData.port << endl);
+    TLOGTARS("[TARS]ServantHandle::handleClose,adapter:" << data->adapter()->getName()
+                << ",peer:" << data->ip() << ":" << data->port() << endl);
 
-    TarsCurrentPtr current = createCloseCurrent(stRecvData);
+    TarsCurrentPtr current = createCloseCurrent(data);
 
     map<string, ServantPtr>::iterator sit = _servants.find(current->getServantName());
 
     if (sit == _servants.end())
     {
-        TLOGERROR("[TARS]ServantHandle::handleClose,adapter:" << stRecvData.adapter->getName()
-                << ",peer:" << stRecvData.ip << ":" << stRecvData.port <<", " << current->getServantName() << " not found" << endl);
+        TLOGERROR("[TARS]ServantHandle::handleClose,adapter:" << data->adapter()->getName()
+                << ",peer:" << data->ip() << ":" << data->port()<<", " << current->getServantName() << " not found" << endl);
 
         return;
     }
@@ -562,20 +539,20 @@ void ServantHandle::handleClose(const TC_EpollServer::tagRecvData &stRecvData)
     }
 }
 
-void ServantHandle::handleTimeout(const TC_EpollServer::tagRecvData &stRecvData)
+void ServantHandle::handleTimeout(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = createCurrent(stRecvData);
+    TarsCurrentPtr current = createCurrent(data);
 
     if (!current) return;
 
     //上报超时数目
-    if(stRecvData.adapter->_pReportTimeoutNum)
-        stRecvData.adapter->_pReportTimeoutNum->report(1);
+    if(data->adapter()->_pReportTimeoutNum)
+        data->adapter()->_pReportTimeoutNum->report(1);
 
     TLOGERROR("[TARS]ServantHandle::handleTimeout adapter '"
-                 << stRecvData.adapter->getName()
-                 << "', recvtime:" << stRecvData.recvTimeStamp << "|"
-                 << ", timeout:" << stRecvData.adapter->getQueueTimeout()
+                 << data->adapter()->getName()
+                 << "', recvtime:" << data->recvTimeStamp() << "|"
+                 << ", timeout:" << data->adapter()->getQueueTimeout()
                  << ", id:" << current->getRequestId() << endl);
 
     if (current->getBindAdapter()->isTarsProtocol())
@@ -584,16 +561,16 @@ void ServantHandle::handleTimeout(const TC_EpollServer::tagRecvData &stRecvData)
     }
 }
 
-void ServantHandle::handleOverload(const TC_EpollServer::tagRecvData &stRecvData)
+void ServantHandle::handleOverload(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = createCurrent(stRecvData);
+    TarsCurrentPtr current = createCurrent(data);
 
     if (!current) return;
 
     TLOGERROR("[TARS]ServantHandle::handleOverload adapter '"
-                 << stRecvData.adapter->getName()
+                 << data->adapter()->getName()
                  << "',overload:-1,queue capacity:"
-                 << stRecvData.adapter->getQueueCapacity()
+                 << data->adapter()->getQueueCapacity()
                  << ",id:" << current->getRequestId() << endl);
 
     if (current->getBindAdapter()->isTarsProtocol())
@@ -602,9 +579,9 @@ void ServantHandle::handleOverload(const TC_EpollServer::tagRecvData &stRecvData
     }
 }
 
-void ServantHandle::handle(const TC_EpollServer::tagRecvData &stRecvData)
+void ServantHandle::handle(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = createCurrent(stRecvData);
+    TarsCurrentPtr current = createCurrent(data);
 
     if (!current) return;
 
@@ -640,10 +617,10 @@ void ServantHandle::processTracking(const TarsCurrentPtr &current)
     if (IS_MSG_TYPE(current->getMessageType(), tars::TARSMESSAGETYPETRACK))
     {
         map<string, string>::const_iterator trackinfoIter = current->getRequestStatus().find(ServantProxy::STATUS_TRACK_KEY);
-        TLOGINFO("[TARS] servant got a tracking request, message_type set" << current->getMessageType() << endl);
+        TLOGTARS("[TARS] servant got a tracking request, message_type set" << current->getMessageType() << endl);
         if (trackinfoIter != current->getRequestStatus().end())
         {
-            TLOGINFO("[TARS] servant got a tracking request, tracking key:" << trackinfoIter->second << endl);
+            TLOGTARS("[TARS] servant got a tracking request, tracking key:" << trackinfoIter->second << endl);
             string context = trackinfoIter->second;
             char szBuffer[context.size() + 1];
             memset(szBuffer, 0x00, context.size() + 1);
@@ -714,11 +691,11 @@ bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
 
     if (IS_MSG_TYPE(current->getMessageType(), tars::TARSMESSAGETYPEDYED))
     {
-        TLOGINFO("[TARS] servant got a dyeing request, message_type set" << current->getMessageType() << endl);
+        TLOGTARS("[TARS] servant got a dyeing request, message_type set" << current->getMessageType() << endl);
 
         if (dyeingIt != current->getRequestStatus().end())
         {
-            TLOGINFO("[TARS] servant got a dyeing request, dyeing key:" << dyeingIt->second << endl);
+            TLOGTARS("[TARS] servant got a dyeing request, dyeing key:" << dyeingIt->second << endl);
 
             dyeingKey = dyeingIt->second;
         }
@@ -733,7 +710,7 @@ bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
         if (dyeingKeyIt != current->getRequestStatus().end() &&
             ServantHelperManager::getInstance()->isDyeingReq(dyeingKeyIt->second, current->getServantName(), current->getFuncName()))
         {
-            TLOGINFO("[TARS] dyeing servant got a dyeing req, key:" << dyeingKeyIt->second << endl);
+            TLOGTARS("[TARS] dyeing servant got a dyeing req, key:" << dyeingKeyIt->second << endl);
 
             dyeingKey = dyeingKeyIt->second;
 
@@ -769,7 +746,7 @@ bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
 
         if (setIt != current->getRequestStatus().end())
         {
-            TLOGINFO("[TARS] servant got a setname request, setname key:" << setIt->second << endl);
+            TLOGTARS("[TARS] servant got a setname request, setname key:" << setIt->second << endl);
 
             sSetName = setIt->second;
 
@@ -826,7 +803,7 @@ bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
 
 void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
 {
-    TLOGINFO("[TARS]ServantHandle::handleTarsProtocol current:"
+    TLOGTARS("[TARS]ServantHandle::handleTarsProtocol current:"
                 << current->getIp() << "|"
                 << current->getPort() << "|"
                 << current->getMessageType() << "|"
@@ -869,7 +846,6 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     string sResultDesc = "";
 
     vector<char> buffer;
-
     try
     {
         //业务逻辑处理
@@ -920,7 +896,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
 
 void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
 {
-    TLOGINFO("[TARS]ServantHandle::handleNoTarsProtocol current:"
+    TLOGTARS("[TARS]ServantHandle::handleNoTarsProtocol current:"
         << current->getIp() << "|"
         << current->getPort() << "|"
         << current->getServantName() << endl);
@@ -947,7 +923,7 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
 
     if (current->isResponse())
     {
-        current->sendResponse((const char*)(&buffer[0]), buffer.size());
+        current->sendResponse((const char*)buffer.data(), buffer.size());
     }
 }
 

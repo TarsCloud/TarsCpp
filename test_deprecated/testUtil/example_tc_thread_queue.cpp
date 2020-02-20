@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
@@ -79,7 +79,7 @@ protected:
                 timeval t2;
                 gettimeofday(&t2, NULL);
                 _logger.debug() << "pop_front:" << t2.tv_usec - t1.tv_usec << endl;
-//                cout << pthread_self() << ":" << t << endl;
+//                cout << std::this_thread::get_id() << ":" << t << endl;
                 usleep(20 * 1000);
             }
 

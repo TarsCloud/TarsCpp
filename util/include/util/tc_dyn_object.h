@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -33,7 +33,7 @@ namespace tars
  * @brief 动态生成类
  */
 class TC_DYN_Object;
-class TC_DYN_RuntimeClass;
+struct TC_DYN_RuntimeClass;
 
 struct TC_DYN_RuntimeClass
 {

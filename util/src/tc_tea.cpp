@@ -1,728 +1,467 @@
-/**
- * Tencent is pleased to support the open source community by making Tars available.
- *
- * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
- *
- * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except 
- * in compliance with the License. You may obtain a copy of the License at
- *
- * https://opensource.org/licenses/BSD-3-Clause
- *
- * Unless required by applicable law or agreed to in writing, software distributed 
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
- * specific language governing permissions and limitations under the License.
- */
-
-#include "util/tc_tea.h"
-#include <arpa/inet.h>
+ï»¿#include "util/tc_tea.h"
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>
 
+#if TARGET_PLATFORM_LINUX
+#include <arpa/inet.h>
+#endif
+
+#if TARGET_PLATFORM_WINDOWS
+#pragma comment(lib,"ws2_32.lib")
+#endif
+
 namespace tars
 {
 
-vector<char> TC_Tea::encrypt(const char *key, const char *sIn, size_t iLength)
-{
-    size_t outlen = 16 + 2*iLength;
+#ifndef WORD32
+typedef unsigned int WORD32;
+#endif
 
-    vector<char> v;
+int oi_symmetry_encrypt2_len(int nInBufLen);
+void oi_symmetry_encrypt2(const char *pInBuf, int nInBufLen, const char *pKey, char *pOutBuf, size_t *pOutBufLen);
+bool oi_symmetry_decrypt2(const char *pInBuf, int nInBufLen, const char *pKey, char *pOutBuf, size_t *pOutBufLen);
 
-    v.resize(outlen);
-
-    oi_symmetry_encrypt(sIn, iLength, key, &v[0], &outlen);
-
-    v.resize(outlen);
-
-    return v;
-}
-
-vector<char> TC_Tea::decrypt(const char *key, const char *sIn, size_t iLength)
-{
-    size_t outlen = 2*iLength;
-
-    vector<char> v;
-
-    v.resize(outlen);
-
-    if (!oi_symmetry_decrypt(sIn, iLength, key, &v[0], &outlen))
-    {
-        throw TC_Tea_Exception("[TC_Tea::decrypt] decrypt error.");
-    }
-
-    v.resize(outlen);
-
-    return v;
-}
-
-vector<char> TC_Tea::encrypt2(const char *key, const char *sIn, size_t iLength)
+void TC_Tea::encrypt(const char *key, const char *sIn, size_t iLength, vector<char> &buffer)
 {
     size_t outlen = oi_symmetry_encrypt2_len(iLength);
 
-    vector<char> v;
-
-    v.resize(outlen);
-
-    oi_symmetry_encrypt2(sIn, iLength, key, &v[0], &outlen);
-
-    v.resize(outlen);
-
-    return v;
-}
-
-vector<char> TC_Tea::decrypt2(const char *key, const char *sIn, size_t iLength)
-{
-    size_t outlen = 2*iLength;
-
-    vector<char> v;
-
-    v.resize(outlen);
-
-    if (!oi_symmetry_decrypt2(sIn, iLength, key, &v[0], &outlen))
+    if (buffer.capacity() < outlen * 2)
     {
-        throw TC_Tea_Exception("[TC_Tea::decrypt] decrypt error.");
+        buffer.resize(outlen * 2); 
     }
 
-    v.resize(outlen);
+    oi_symmetry_encrypt2(sIn, iLength, key, buffer.data(), &outlen);
 
-    return v;
+    buffer.resize(outlen);
+}
+
+bool TC_Tea::decrypt(const char *key, const char *sIn, size_t iLength, vector<char> &buffer)
+{
+    size_t outlen = iLength;
+
+    if (buffer.capacity() < outlen * 2)
+    {
+        buffer.resize(outlen * 2); 
+    }
+
+    buffer.resize(outlen * 2);
+
+    if (!oi_symmetry_decrypt2(sIn, iLength, key, buffer.data(), &outlen))
+    {
+        return false;
+    }
+
+    buffer.resize(outlen);
+
+    return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-const uint32_t DELTA = 0x9e3779b9;
-
-#define SALT_LEN 2
-
-#define ZERO_LEN 7
-
-#define ROUNDS 16
-
-#define LOG_ROUNDS 4
-
-void TC_Tea::TeaEncryptECB(const char *pInBuf, const char *pKey, char *pOutBuf)
-{
-	uint32_t y, z;
-	uint32_t sum;
-	uint32_t k[4];
-	int i;
-
-	/*plain-text is TCP/IP-endian;*/
-
-	/*GetBlockBigEndian(in, y, z);*/
-	y = ntohl(*((uint32_t*)pInBuf));
-	z = ntohl(*((uint32_t*)(pInBuf+4)));
-	/*TCP/IP network byte order (which is big-endian).*/
-
-	for ( i = 0; i<4; i++)
-	{
-		/*now key is TCP/IP-endian;*/
-		k[i] = ntohl(*((uint32_t*)(pKey+i*4)));
-	}
-
-	sum = 0;
-	for (i=0; i<ROUNDS; i++)
-	{
-		sum += DELTA;
-		y += (z << 4) + (k[0] ^ z) + (sum ^ (z >> 5)) + k[1];
-		z += (y << 4) + (k[2] ^ y) + (sum ^ (y >> 5)) + k[3];
-	}
-
-	*((uint32_t*)pOutBuf) = htonl(y);
-	*((uint32_t*)(pOutBuf+4)) = htonl(z);
-
-	/*now encrypted buf is TCP/IP-endian;*/
-}
-
-void TC_Tea::TeaDecryptECB(const char *pInBuf, const char *pKey, char *pOutBuf)
-{
-	uint32_t y, z, sum;
-	uint32_t k[4];
-	int i;
-
-	/*now encrypted buf is TCP/IP-endian;*/
-	/*TCP/IP network byte order (which is big-endian).*/
-	y = ntohl(*((uint32_t*)pInBuf));
-	z = ntohl(*((uint32_t*)(pInBuf+4)));
-
-	for ( i=0; i<4; i++)
-	{
-		/*key is TCP/IP-endian;*/
-		k[i] = ntohl(*((uint32_t*)(pKey+i*4)));
-	}
-
-	sum = DELTA << LOG_ROUNDS;
-	for (i=0; i<ROUNDS; i++)
-	{
-		z -= (y << 4) + (k[2] ^ y) + (sum ^ (y >> 5)) + k[3];
-		y -= (z << 4) + (k[0] ^ z) + (sum ^ (z >> 5)) + k[1];
-		sum -= DELTA;
-	}
-
-	*((uint32_t*)pOutBuf) = htonl(y);
-	*((uint32_t*)(pOutBuf+4)) = htonl(z);
-
-	/*now plain-text is TCP/IP-endian;*/
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
 ///
 
-/*
-	ÊäÈë:pInBufÎªĞè¼ÓÃÜµÄÃ÷ÎÄ²¿·Ö(Body),nInBufLenÎªpInBuf³¤¶È;
-	Êä³ö:pOutBufÎªÃÜÎÄ¸ñÊ½,pOutBufLenÎªpOutBufµÄ³¤¶ÈÊÇ8byteµÄ±¶Êı;
-*/
-/*TEA¼ÓÃÜËã·¨,CBCÄ£Ê½*/
-/*ÃÜÎÄ¸ñÊ½:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
-void TC_Tea::oi_symmetry_encrypt(const char* pInBuf, size_t nInBufLen, const char* pKey, char* pOutBuf, size_t *pOutBufLen)
+
+const WORD32 DELTA = 0x9e3779b9;
+
+#define ROUNDS 16
+#define LOG_ROUNDS 4
+#define SALT_LEN 2
+#define ZERO_LEN 7
+
+/*pOutBufferã€pInBufferå‡ä¸º8byte, pKeyä¸º16byte*/
+void TeaEncryptECB(const char *pInBuf, const char *pKey, char *pOutBuf)
 {
-	size_t nPadSaltBodyZeroLen/*PadLen(1byte)+Salt+Body+ZeroµÄ³¤¶È*/;
-	size_t nPadlen;
-	char src_buf[8], zero_iv[8], *iv_buf;
-	size_t src_i, i, j;
+    WORD32 y, z;
+    WORD32 sum;
+    WORD32 k[4];
+    int i;
 
-	/*¸ù¾İBody³¤¶È¼ÆËãPadLen,×îĞ¡±ØĞè³¤¶È±ØĞèÎª8byteµÄÕûÊı±¶*/
-	nPadSaltBodyZeroLen = nInBufLen/*Body³¤¶È*/+1+SALT_LEN+ZERO_LEN/*PadLen(1byte)+Salt(2byte)+Zero(7byte)*/;
-	if((nPadlen=nPadSaltBodyZeroLen%8)) /*len=nSaltBodyZeroLen%8*/
-	{
-		/*Ä£8Óà0Ğè²¹0,Óà1²¹7,Óà2²¹6,...,Óà7²¹1*/
-		nPadlen=8-nPadlen;
-	}
+    /*plain-text is TCP/IP-endian;*/
 
-	/*srand( (unsigned)time( NULL ) ); ³õÊ¼»¯Ëæ»úÊı*/
-	/*¼ÓÃÜµÚÒ»¿éÊı¾İ(8byte),È¡Ç°Ãæ10byte*/
-	src_buf[0] = (((char)rand()) & 0x0f8)/*×îµÍÈıÎ»´æPadLen,ÇåÁã*/ | (char)nPadlen;
-	src_i = 1; /*src_iÖ¸Ïòsrc_bufÏÂÒ»¸öÎ»ÖÃ*/
+    /*GetBlockBigEndian(in, y, z);*/
+    y = ntohl(*((WORD32 *)pInBuf));
+    z = ntohl(*((WORD32 *)(pInBuf + 4)));
+    /*TCP/IP network byte order (which is big-endian).*/
 
-	while(nPadlen--)
-		src_buf[src_i++]=(char)rand(); /*Padding*/
+    for (i = 0; i < 4; i++)
+    {
+        /*now key is TCP/IP-endian;*/
+        k[i] = ntohl(*((WORD32 *)(pKey + i * 4)));
+    }
 
-	/*come here, i must <= 8*/
+    sum = 0;
+    for (i = 0; i < ROUNDS; i++)
+    {
+        sum += DELTA;
+        y += ((z << 4) + k[0]) ^ (z + sum) ^ ((z >> 5) + k[1]);
+        z += ((y << 4) + k[2]) ^ (y + sum) ^ ((y >> 5) + k[3]);
+    }
 
-	memset(zero_iv, 0, 8);
-	iv_buf = zero_iv; /*make iv*/
 
-	*pOutBufLen = 0; /*init OutBufLen*/
 
-	for (i=1;i<=SALT_LEN;) /*Salt(2byte)*/
-	{
-		if (src_i<8)
-		{
-			src_buf[src_i++]=(char)rand();
-			i++; /*i inc in here*/
-		}
+    *((WORD32 *)pOutBuf) = htonl(y);
+    *((WORD32 *)(pOutBuf + 4)) = htonl(z);
 
-		if (src_i==8)
-		{
-			/*src_i==8*/
 
-			for (j=0;j<8;j++) /*CBC XOR*/
-				src_buf[j]^=iv_buf[j];
-			/*pOutBuffer¡¢pInBuffer¾ùÎª8byte, pKeyÎª16byte*/
-			TeaEncryptECB(src_buf, pKey, pOutBuf);
-			src_i=0;
-			iv_buf=pOutBuf;
-			*pOutBufLen+=8;
-			pOutBuf+=8;
-		}
-	}
-
-	/*src_iÖ¸Ïòsrc_bufÏÂÒ»¸öÎ»ÖÃ*/
-
-	while(nInBufLen)
-	{
-		if (src_i<8)
-		{
-			src_buf[src_i++]=*(pInBuf++);
-			nInBufLen--;
-		}
-
-		if (src_i==8)
-		{
-			/*src_i==8*/
-
-			for (i=0;i<8;i++) /*CBC XOR*/
-				src_buf[i]^=iv_buf[i];
-			/*pOutBuffer¡¢pInBuffer¾ùÎª8byte, pKeyÎª16byte*/
-			TeaEncryptECB(src_buf, pKey, pOutBuf);
-			src_i=0;
-			iv_buf=pOutBuf;
-			*pOutBufLen+=8;
-			pOutBuf+=8;
-		}
-	}
-
-	/*src_iÖ¸Ïòsrc_bufÏÂÒ»¸öÎ»ÖÃ*/
-
-	for (i=1;i<=ZERO_LEN;)
-	{
-		if (src_i<8)
-		{
-			src_buf[src_i++]=0;
-			i++; /*i inc in here*/
-		}
-
-		if (src_i==8)
-		{
-			/*src_i==8*/
-
-			for (j=0;j<8;j++) /*CBC XOR*/
-				src_buf[j]^=iv_buf[j];
-			/*pOutBuffer¡¢pInBuffer¾ùÎª8byte, pKeyÎª16byte*/
-			TeaEncryptECB(src_buf, pKey, pOutBuf);
-			src_i=0;
-			iv_buf=pOutBuf;
-			*pOutBufLen+=8;
-			pOutBuf+=8;
-		}
-	}
+    /*now encrypted buf is TCP/IP-endian;*/
 }
 
-/*
-	ÊäÈë:pInBufÎªÃÜÎÄ¸ñÊ½,nInBufLenÎªpInBufµÄ³¤¶ÈÊÇ8byteµÄ±¶Êı;
-	Êä³ö:pOutBufÎªÃ÷ÎÄ(Body),pOutBufLenÎªpOutBufµÄ³¤¶È;
-	·µ»ØÖµ:Èç¹û¸ñÊ½ÕıÈ··µ»ØTRUE;
-*/
-/*TEA½âÃÜËã·¨,CBCÄ£Ê½*/
-/*ÃÜÎÄ¸ñÊ½:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
-bool TC_Tea::oi_symmetry_decrypt(const char* pInBuf, size_t nInBufLen, const char* pKey, char* pOutBuf, size_t *pOutBufLen)
+/*pOutBufferã€pInBufferå‡ä¸º8byte, pKeyä¸º16byte*/
+void TeaDecryptECB(const char *pInBuf, const char *pKey, char *pOutBuf)
 {
-	size_t nPadLen, nPlainLen;
-	char dest_buf[8];
-	const char *iv_buf;
-	size_t dest_i, i, j;
+    WORD32 y, z, sum;
+    WORD32 k[4];
+    int i;
 
-	if ((nInBufLen%8) || (nInBufLen<16)) return false;
+    /*now encrypted buf is TCP/IP-endian;*/
+    /*TCP/IP network byte order (which is big-endian).*/
+    y = ntohl(*((WORD32 *)pInBuf));
+    z = ntohl(*((WORD32 *)(pInBuf + 4)));
 
-	TeaDecryptECB(pInBuf, pKey, dest_buf);
+    for (i = 0; i < 4; i++)
+    {
+        /*key is TCP/IP-endian;*/
+        k[i] = ntohl(*((WORD32 *)(pKey + i * 4)));
+    }
 
-	nPadLen = dest_buf[0] & 0x7/*Ö»Òª×îµÍÈıÎ»*/;
+    sum = DELTA << LOG_ROUNDS;
+    for (i = 0; i < ROUNDS; i++)
+    {
+        z -= ((y << 4) + k[2]) ^ (y + sum) ^ ((y >> 5) + k[3]);
+        y -= ((z << 4) + k[0]) ^ (z + sum) ^ ((z >> 5) + k[1]);
+        sum -= DELTA;
+    }
 
-	/*ÃÜÎÄ¸ñÊ½:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
-	i = nInBufLen-1/*PadLen(1byte)*/-nPadLen-SALT_LEN-ZERO_LEN; /*Ã÷ÎÄ³¤¶È*/
-	if (*pOutBufLen<i) return false;
-	*pOutBufLen = i;
-	//here it should never success
-	//if (*pOutBufLen < 0) return false;
+    *((WORD32 *)pOutBuf) = htonl(y);
+    *((WORD32 *)(pOutBuf + 4)) = htonl(z);
 
-	iv_buf = pInBuf; /*init iv*/
-	nInBufLen -= 8;
-	pInBuf += 8;
-
-	dest_i=1; /*dest_iÖ¸Ïòdest_bufÏÂÒ»¸öÎ»ÖÃ*/
-
-	/*°ÑPaddingÂËµô*/
-	dest_i+=nPadLen;
-
-	/*dest_i must <=8*/
-
-	/*°ÑSaltÂËµô*/
-	for (i=1; i<=SALT_LEN;)
-	{
-		if (dest_i<8)
-		{
-			dest_i++;
-			i++;
-		}
-
-		if (dest_i==8)
-		{
-			/*dest_i==8*/
-			TeaDecryptECB(pInBuf, pKey, dest_buf);
-			for (j=0; j<8; j++)
-				dest_buf[j]^=iv_buf[j];
-
-			iv_buf = pInBuf;
-			nInBufLen -= 8;
-			pInBuf += 8;
-
-			dest_i=0; /*dest_iÖ¸Ïòdest_bufÏÂÒ»¸öÎ»ÖÃ*/
-		}
-	}
-
-	/*»¹Ô­Ã÷ÎÄ*/
-
-	nPlainLen=*pOutBufLen;
-	while (nPlainLen)
-	{
-		if (dest_i<8)
-		{
-			*(pOutBuf++)=dest_buf[dest_i++];
-			nPlainLen--;
-		}
-		else if (dest_i==8)
-		{
-			/*dest_i==8*/
-			TeaDecryptECB(pInBuf, pKey, dest_buf);
-			for (i=0; i<8; i++)
-				dest_buf[i]^=iv_buf[i];
-
-			iv_buf = pInBuf;
-			nInBufLen -= 8;
-			pInBuf += 8;
-
-			dest_i=0; /*dest_iÖ¸Ïòdest_bufÏÂÒ»¸öÎ»ÖÃ*/
-		}
-	}
-
-	/*Ğ£ÑéZero*/
-	for (i=1;i<=ZERO_LEN;)
-	{
-		if (dest_i<8)
-		{
-			if(dest_buf[dest_i++]) return false;
-			i++;
-		}
-		else if (dest_i==8)
-		{
-			/*dest_i==8*/
-			TeaDecryptECB(pInBuf, pKey, dest_buf);
-			for (j=0; j<8; j++)
-				dest_buf[j]^=iv_buf[j];
-
-			iv_buf = pInBuf;
-			nInBufLen -= 8;
-			pInBuf += 8;
-
-			dest_i=0; /*dest_iÖ¸Ïòdest_bufÏÂÒ»¸öÎ»ÖÃ*/
-		}
-	}
-
-	return true;
+    /*now plain-text is TCP/IP-endian;*/
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-
-/*TEA¼ÓÃÜËã·¨,CBCÄ£Ê½*/
-/*ÃÜÎÄ¸ñÊ½:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
-size_t TC_Tea::oi_symmetry_encrypt2_len(size_t nInBufLen)
+/*pKeyä¸º16byte*/
+/*
+    è¾“å…¥:nInBufLenä¸ºéœ€åŠ å¯†çš„æ˜æ–‡éƒ¨åˆ†(Body)é•¿åº¦;
+    è¾“å‡º:è¿”å›ä¸ºåŠ å¯†åçš„é•¿åº¦(æ˜¯8byteçš„å€æ•°);
+*/
+/*TEAåŠ å¯†ç®—æ³•,CBCæ¨¡å¼*/
+/*å¯†æ–‡æ ¼å¼:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
+int oi_symmetry_encrypt2_len(int nInBufLen)
 {
-	size_t nPadSaltBodyZeroLen/*PadLen(1byte)+Salt+Body+ZeroµÄ³¤¶È*/;
-	size_t nPadlen;
 
-	/*¸ù¾İBody³¤¶È¼ÆËãPadLen,×îĞ¡±ØĞè³¤¶È±ØĞèÎª8byteµÄÕûÊı±¶*/
-	nPadSaltBodyZeroLen = nInBufLen/*Body³¤¶È*/+1+SALT_LEN+ZERO_LEN/*PadLen(1byte)+Salt(2byte)+Zero(7byte)*/;
-	if((nPadlen=nPadSaltBodyZeroLen%8)) /*len=nSaltBodyZeroLen%8*/
-	{
-		/*Ä£8Óà0Ğè²¹0,Óà1²¹7,Óà2²¹6,...,Óà7²¹1*/
-		nPadlen=8-nPadlen;
-	}
+    int nPadSaltBodyZeroLen/*PadLen(1byte)+Salt+Body+Zeroçš„é•¿åº¦*/;
+    int nPadlen;
 
-	return nPadSaltBodyZeroLen+nPadlen;
+    /*æ ¹æ®Bodyé•¿åº¦è®¡ç®—PadLen,æœ€å°å¿…éœ€é•¿åº¦å¿…éœ€ä¸º8byteçš„æ•´æ•°å€*/
+    nPadSaltBodyZeroLen = nInBufLen/*Bodyé•¿åº¦*/ + 1 + SALT_LEN + ZERO_LEN/*PadLen(1byte)+Salt(2byte)+Zero(7byte)*/;
+    if ((nPadlen = nPadSaltBodyZeroLen % 8)) /*len=nSaltBodyZeroLen%8*/
+    {
+        /*æ¨¡8ä½™0éœ€è¡¥0,ä½™1è¡¥7,ä½™2è¡¥6,...,ä½™7è¡¥1*/
+        nPadlen = 8 - nPadlen;
+    }
+
+    return nPadSaltBodyZeroLen + nPadlen;
 }
 
-/*pKeyÎª16byte*/
+/*pKeyä¸º16byte*/
 /*
-	ÊäÈë:pInBufÎªĞè¼ÓÃÜµÄÃ÷ÎÄ²¿·Ö(Body),nInBufLenÎªpInBuf³¤¶È;
-	Êä³ö:pOutBufÎªÃÜÎÄ¸ñÊ½,pOutBufLenÎªpOutBufµÄ³¤¶ÈÊÇ8byteµÄ±¶Êı;
+    è¾“å…¥:pInBufä¸ºéœ€åŠ å¯†çš„æ˜æ–‡éƒ¨åˆ†(Body),nInBufLenä¸ºpInBufé•¿åº¦;
+    è¾“å‡º:pOutBufä¸ºå¯†æ–‡æ ¼å¼,pOutBufLenä¸ºpOutBufçš„é•¿åº¦æ˜¯8byteçš„å€æ•°;
 */
-/*TEA¼ÓÃÜËã·¨,CBCÄ£Ê½*/
-/*ÃÜÎÄ¸ñÊ½:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
-void TC_Tea::oi_symmetry_encrypt2(const char* pInBuf, size_t nInBufLen, const char* pKey, char* pOutBuf, size_t *pOutBufLen)
+/*TEAåŠ å¯†ç®—æ³•,CBCæ¨¡å¼*/
+/*å¯†æ–‡æ ¼å¼:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
+void oi_symmetry_encrypt2(const char *pInBuf, int nInBufLen, const char *pKey, char *pOutBuf, size_t *pOutBufLen)
 {
-	size_t nPadSaltBodyZeroLen/*PadLen(1byte)+Salt+Body+ZeroµÄ³¤¶È*/;
-	size_t nPadlen;
-	char src_buf[8], iv_plain[8], *iv_crypt;
-	size_t src_i, i, j;
 
-	/*¸ù¾İBody³¤¶È¼ÆËãPadLen,×îĞ¡±ØĞè³¤¶È±ØĞèÎª8byteµÄÕûÊı±¶*/
-	nPadSaltBodyZeroLen = nInBufLen/*Body³¤¶È*/+1+SALT_LEN+ZERO_LEN/*PadLen(1byte)+Salt(2byte)+Zero(7byte)*/;
-	if((nPadlen=nPadSaltBodyZeroLen%8)) /*len=nSaltBodyZeroLen%8*/
-	{
-		/*Ä£8Óà0Ğè²¹0,Óà1²¹7,Óà2²¹6,...,Óà7²¹1*/
-		nPadlen=8-nPadlen;
-	}
+    int nPadSaltBodyZeroLen/*PadLen(1byte)+Salt+Body+Zeroçš„é•¿åº¦*/;
+    int nPadlen;
+    char src_buf[8], iv_plain[8], *iv_crypt;
+    int src_i, i, j;
 
-	/*srand( (unsigned)time( NULL ) ); ³õÊ¼»¯Ëæ»úÊı*/
-	/*¼ÓÃÜµÚÒ»¿éÊı¾İ(8byte),È¡Ç°Ãæ10byte*/
-//	src_buf[0] = ((char)rand()) & 0x0f8/*×îµÍÈıÎ»´æPadLen,ÇåÁã*/ | (char)nPadlen;
-	src_buf[0] = (((char)rand()) & 0x0f8) | (char)nPadlen;
-	src_i = 1; /*src_iÖ¸Ïòsrc_bufÏÂÒ»¸öÎ»ÖÃ*/
+    /*æ ¹æ®Bodyé•¿åº¦è®¡ç®—PadLen,æœ€å°å¿…éœ€é•¿åº¦å¿…éœ€ä¸º8byteçš„æ•´æ•°å€*/
+    nPadSaltBodyZeroLen = nInBufLen/*Bodyé•¿åº¦*/ + 1 + SALT_LEN + ZERO_LEN/*PadLen(1byte)+Salt(2byte)+Zero(7byte)*/;
+    if ((nPadlen = nPadSaltBodyZeroLen % 8)) /*len=nSaltBodyZeroLen%8*/
+    {
+        /*æ¨¡8ä½™0éœ€è¡¥0,ä½™1è¡¥7,ä½™2è¡¥6,...,ä½™7è¡¥1*/
+        nPadlen = 8 - nPadlen;
+    }
 
-	while(nPadlen--)
-		src_buf[src_i++]=(char)rand(); /*Padding*/
+    /*srand( (unsigned)time( NULL ) ); åˆå§‹åŒ–éšæœºæ•°*/
+    /*åŠ å¯†ç¬¬ä¸€å—æ•°æ®(8byte),å–å‰é¢10byte*/
+    src_buf[0] = (((char)rand()) & 0x0f8)/*æœ€ä½ä¸‰ä½å­˜PadLen,æ¸…é›¶*/ | (char)nPadlen;
+    src_i = 1; /*src_iæŒ‡å‘src_bufä¸‹ä¸€ä¸ªä½ç½®*/
 
-	/*come here, src_i must <= 8*/
+    while (nPadlen--) src_buf[src_i++] = (char)rand(); /*Padding*/
 
-	for ( i=0; i<8; i++)
-		iv_plain[i] = 0;
-	iv_crypt = iv_plain; /*make zero iv*/
+    /*come here, src_i must <= 8*/
 
-	*pOutBufLen = 0; /*init OutBufLen*/
+    for (i = 0; i < 8; i++) iv_plain[i] = 0;
+    iv_crypt = iv_plain; /*make zero iv*/
 
-	for (i=1;i<=SALT_LEN;) /*Salt(2byte)*/
-	{
-		if (src_i<8)
-		{
-			src_buf[src_i++]=(char)rand();
-			i++; /*i inc in here*/
-		}
+    *pOutBufLen = 0; /*init OutBufLen*/
 
-		if (src_i==8)
-		{
-			/*src_i==8*/
+    for (i = 1; i <= SALT_LEN;) /*Salt(2byte)*/
+    {
+        if (src_i < 8)
+        {
+            src_buf[src_i++] = (char)rand();
+            i++; /*i inc in here*/
+        }
 
-			for (j=0;j<8;j++) /*¼ÓÃÜÇ°Òì»òÇ°8¸öbyteµÄÃÜÎÄ(iv_cryptÖ¸ÏòµÄ)*/
-				src_buf[j]^=iv_crypt[j];
+        if (src_i == 8)
+        {
+            /*src_i==8*/
 
-			/*pOutBuffer¡¢pInBuffer¾ùÎª8byte, pKeyÎª16byte*/
-			/*¼ÓÃÜ*/
-			TeaEncryptECB(src_buf, pKey, pOutBuf);
+            for (j = 0; j < 8; j++) /*åŠ å¯†å‰å¼‚æˆ–å‰8ä¸ªbyteçš„å¯†æ–‡(iv_cryptæŒ‡å‘çš„)*/
+                src_buf[j] ^= iv_crypt[j];
 
-			for (j=0;j<8;j++) /*¼ÓÃÜºóÒì»òÇ°8¸öbyteµÄÃ÷ÎÄ(iv_plainÖ¸ÏòµÄ)*/
-				pOutBuf[j]^=iv_plain[j];
+            /*pOutBufferã€pInBufferå‡ä¸º8byte, pKeyä¸º16byte*/
+            /*åŠ å¯†*/
+            TeaEncryptECB(src_buf, pKey, pOutBuf);
 
-			/*±£´æµ±Ç°µÄiv_plain*/
-			for (j=0;j<8;j++)
-				iv_plain[j]=src_buf[j];
+            for (j = 0; j < 8; j++) /*åŠ å¯†åå¼‚æˆ–å‰8ä¸ªbyteçš„æ˜æ–‡(iv_plainæŒ‡å‘çš„)*/
+                pOutBuf[j] ^= iv_plain[j];
 
-			/*¸üĞÂiv_crypt*/
-			src_i=0;
-			iv_crypt=pOutBuf;
-			*pOutBufLen+=8;
-			pOutBuf+=8;
-		}
-	}
+            /*ä¿å­˜å½“å‰çš„iv_plain*/
+            for (j = 0; j < 8; j++) iv_plain[j] = src_buf[j];
 
-	/*src_iÖ¸Ïòsrc_bufÏÂÒ»¸öÎ»ÖÃ*/
+            /*æ›´æ–°iv_crypt*/
+            src_i = 0;
+            iv_crypt = pOutBuf;
+            *pOutBufLen += 8;
+            pOutBuf += 8;
+        }
+    }
 
-	while(nInBufLen)
-	{
-		if (src_i<8)
-		{
-			src_buf[src_i++]=*(pInBuf++);
-			nInBufLen--;
-		}
+    /*src_iæŒ‡å‘src_bufä¸‹ä¸€ä¸ªä½ç½®*/
 
-		if (src_i==8)
-		{
-			/*src_i==8*/
+    while (nInBufLen)
+    {
+        if (src_i < 8)
+        {
+            src_buf[src_i++] = *(pInBuf++);
+            nInBufLen--;
+        }
 
-			for (j=0;j<8;j++) /*¼ÓÃÜÇ°Òì»òÇ°8¸öbyteµÄÃÜÎÄ(iv_cryptÖ¸ÏòµÄ)*/
-				src_buf[j]^=iv_crypt[j];
-			/*pOutBuffer¡¢pInBuffer¾ùÎª8byte, pKeyÎª16byte*/
-			TeaEncryptECB(src_buf, pKey, pOutBuf);
+        if (src_i == 8)
+        {
+            /*src_i==8*/
 
-			for (j=0;j<8;j++) /*¼ÓÃÜºóÒì»òÇ°8¸öbyteµÄÃ÷ÎÄ(iv_plainÖ¸ÏòµÄ)*/
-				pOutBuf[j]^=iv_plain[j];
+            for (j = 0; j < 8; j++) /*åŠ å¯†å‰å¼‚æˆ–å‰8ä¸ªbyteçš„å¯†æ–‡(iv_cryptæŒ‡å‘çš„)*/
+                src_buf[j] ^= iv_crypt[j];
+            /*pOutBufferã€pInBufferå‡ä¸º8byte, pKeyä¸º16byte*/
+            TeaEncryptECB(src_buf, pKey, pOutBuf);
 
-			/*±£´æµ±Ç°µÄiv_plain*/
-			for (j=0;j<8;j++)
-				iv_plain[j]=src_buf[j];
+            for (j = 0; j < 8; j++) /*åŠ å¯†åå¼‚æˆ–å‰8ä¸ªbyteçš„æ˜æ–‡(iv_plainæŒ‡å‘çš„)*/
+                pOutBuf[j] ^= iv_plain[j];
 
-			src_i=0;
-			iv_crypt=pOutBuf;
-			*pOutBufLen+=8;
-			pOutBuf+=8;
-		}
-	}
+            /*ä¿å­˜å½“å‰çš„iv_plain*/
+            for (j = 0; j < 8; j++) iv_plain[j] = src_buf[j];
 
-	/*src_iÖ¸Ïòsrc_bufÏÂÒ»¸öÎ»ÖÃ*/
+            src_i = 0;
+            iv_crypt = pOutBuf;
+            *pOutBufLen += 8;
+            pOutBuf += 8;
+        }
+    }
 
-	for (i=1;i<=ZERO_LEN;)
-	{
-		if (src_i<8)
-		{
-			src_buf[src_i++]=0;
-			i++; /*i inc in here*/
-		}
+    /*src_iæŒ‡å‘src_bufä¸‹ä¸€ä¸ªä½ç½®*/
 
-		if (src_i==8)
-		{
-			/*src_i==8*/
+    for (i = 1; i <= ZERO_LEN;)
+    {
+        if (src_i < 8)
+        {
+            src_buf[src_i++] = 0;
+            i++; /*i inc in here*/
+        }
 
-			for (j=0;j<8;j++) /*¼ÓÃÜÇ°Òì»òÇ°8¸öbyteµÄÃÜÎÄ(iv_cryptÖ¸ÏòµÄ)*/
-				src_buf[j]^=iv_crypt[j];
-			/*pOutBuffer¡¢pInBuffer¾ùÎª8byte, pKeyÎª16byte*/
-			TeaEncryptECB(src_buf, pKey, pOutBuf);
+        if (src_i == 8)
+        {
+            /*src_i==8*/
 
-			for (j=0;j<8;j++) /*¼ÓÃÜºóÒì»òÇ°8¸öbyteµÄÃ÷ÎÄ(iv_plainÖ¸ÏòµÄ)*/
-				pOutBuf[j]^=iv_plain[j];
+            for (j = 0; j < 8; j++) /*åŠ å¯†å‰å¼‚æˆ–å‰8ä¸ªbyteçš„å¯†æ–‡(iv_cryptæŒ‡å‘çš„)*/
+                src_buf[j] ^= iv_crypt[j];
+            /*pOutBufferã€pInBufferå‡ä¸º8byte, pKeyä¸º16byte*/
+            TeaEncryptECB(src_buf, pKey, pOutBuf);
 
-			/*±£´æµ±Ç°µÄiv_plain*/
-			for (j=0;j<8;j++)
-				iv_plain[j]=src_buf[j];
+            for (j = 0; j < 8; j++) /*åŠ å¯†åå¼‚æˆ–å‰8ä¸ªbyteçš„æ˜æ–‡(iv_plainæŒ‡å‘çš„)*/
+                pOutBuf[j] ^= iv_plain[j];
 
-			src_i=0;
-			iv_crypt=pOutBuf;
-			*pOutBufLen+=8;
-			pOutBuf+=8;
-		}
-	}
+            /*ä¿å­˜å½“å‰çš„iv_plain*/
+            for (j = 0; j < 8; j++) iv_plain[j] = src_buf[j];
+
+            src_i = 0;
+            iv_crypt = pOutBuf;
+            *pOutBufLen += 8;
+            pOutBuf += 8;
+        }
+    }
+
 }
 
+
+/*pKeyä¸º16byte*/
 /*
-	ÊäÈë:pInBufÎªÃÜÎÄ¸ñÊ½,nInBufLenÎªpInBufµÄ³¤¶ÈÊÇ8byteµÄ±¶Êı; *pOutBufLenÎª½ÓÊÕ»º³åÇøµÄ³¤¶È
-		ÌØ±ğ×¢Òâ*pOutBufLenÓ¦Ô¤ÖÃ½ÓÊÕ»º³åÇøµÄ³¤¶È!
-	Êä³ö:pOutBufÎªÃ÷ÎÄ(Body),pOutBufLenÎªpOutBufµÄ³¤¶È,ÖÁÉÙÓ¦Ô¤ÁônInBufLen-10;
-	·µ»ØÖµ:Èç¹û¸ñÊ½ÕıÈ··µ»ØTRUE;
+    è¾“å…¥:pInBufä¸ºå¯†æ–‡æ ¼å¼,nInBufLenä¸ºpInBufçš„é•¿åº¦æ˜¯8byteçš„å€æ•°; *pOutBufLenä¸ºæ¥æ”¶ç¼“å†²åŒºçš„é•¿åº¦
+        ç‰¹åˆ«æ³¨æ„*pOutBufLenåº”é¢„ç½®æ¥æ”¶ç¼“å†²åŒºçš„é•¿åº¦!
+    è¾“å‡º:pOutBufä¸ºæ˜æ–‡(Body),pOutBufLenä¸ºpOutBufçš„é•¿åº¦,è‡³å°‘åº”é¢„ç•™nInBufLen-10;
+    è¿”å›å€¼:å¦‚æœæ ¼å¼æ­£ç¡®è¿”å›true;
 */
-/*TEA½âÃÜËã·¨,CBCÄ£Ê½*/
-/*ÃÜÎÄ¸ñÊ½:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
-bool TC_Tea::oi_symmetry_decrypt2(const char* pInBuf, size_t nInBufLen, const char* pKey, char* pOutBuf, size_t *pOutBufLen)
+/*TEAè§£å¯†ç®—æ³•,CBCæ¨¡å¼*/
+/*å¯†æ–‡æ ¼å¼:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
+bool oi_symmetry_decrypt2(const char *pInBuf, int nInBufLen, const char *pKey, char *pOutBuf, size_t *pOutBufLen)
 {
-	size_t nPadLen, nPlainLen;
-	char dest_buf[8], zero_buf[8];
-	const char *iv_pre_crypt, *iv_cur_crypt;
-	size_t dest_i, i, j;
-	//const char *pInBufBoundary;
-	size_t nBufPos;
-	nBufPos = 0;
 
-	if ((nInBufLen%8) || (nInBufLen<16)) return false;
+    int nPadLen, nPlainLen;
+    char dest_buf[8], zero_buf[8];
+    const char *iv_pre_crypt, *iv_cur_crypt;
+    int dest_i, i, j;
+//    const char *pInBufBoundary;
+    int nBufPos;
+    nBufPos = 0;
 
-	TeaDecryptECB(pInBuf, pKey, dest_buf);
-
-	nPadLen = dest_buf[0] & 0x7/*Ö»Òª×îµÍÈıÎ»*/;
-
-	/*ÃÜÎÄ¸ñÊ½:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
-	i = nInBufLen-1/*PadLen(1byte)*/-nPadLen-SALT_LEN-ZERO_LEN; /*Ã÷ÎÄ³¤¶È*/
-
-	if ((*pOutBufLen<i)) return false;
-
-	*pOutBufLen = i;
-
-	//pInBufBoundary = pInBuf + nInBufLen; /*ÊäÈë»º³åÇøµÄ±ß½ç£¬ÏÂÃæ²»ÄÜpInBuf>=pInBufBoundary*/
-
-	for ( i=0; i<8; i++)
-		zero_buf[i] = 0;
-
-	iv_pre_crypt = zero_buf;
-	iv_cur_crypt = pInBuf; /*init iv*/
-
-	pInBuf += 8;
-	nBufPos += 8;
-
-	dest_i=1; /*dest_iÖ¸Ïòdest_bufÏÂÒ»¸öÎ»ÖÃ*/
-
-	/*°ÑPaddingÂËµô*/
-	dest_i+=nPadLen;
-
-	/*dest_i must <=8*/
-
-	/*°ÑSaltÂËµô*/
-	for (i=1; i<=SALT_LEN;)
-	{
-		if (dest_i<8)
-		{
-			dest_i++;
-			i++;
-		}
-		else if (dest_i==8)
-		{
-			/*½â¿ªÒ»¸öĞÂµÄ¼ÓÃÜ¿é*/
-
-			/*¸Ä±äÇ°Ò»¸ö¼ÓÃÜ¿éµÄÖ¸Õë*/
-			iv_pre_crypt = iv_cur_crypt;
-			iv_cur_crypt = pInBuf;
-
-			/*Òì»òÇ°Ò»¿éÃ÷ÎÄ(ÔÚdest_buf[]ÖĞ)*/
-			for (j=0; j<8; j++)
-			{
-				if( (nBufPos + j) >= nInBufLen)
-				{
-					return false;
-				}
-					
-				dest_buf[j]^=pInBuf[j];
-			}
-
-			/*dest_i==8*/
-			TeaDecryptECB(dest_buf, pKey, dest_buf);
-
-			/*ÔÚÈ¡³öµÄÊ±ºò²ÅÒì»òÇ°Ò»¿éÃÜÎÄ(iv_pre_crypt)*/
+    if ((nInBufLen % 8) || (nInBufLen < 16)) return false;
 
 
-			pInBuf += 8;
-			nBufPos += 8;
+    TeaDecryptECB(pInBuf, pKey, dest_buf);
 
-			dest_i=0; /*dest_iÖ¸Ïòdest_bufÏÂÒ»¸öÎ»ÖÃ*/
-		}
-	}
+    nPadLen = dest_buf[0] & 0x7/*åªè¦æœ€ä½ä¸‰ä½*/;
 
-	/*»¹Ô­Ã÷ÎÄ*/
+    /*å¯†æ–‡æ ¼å¼:PadLen(1byte)+Padding(var,0-7byte)+Salt(2byte)+Body(var byte)+Zero(7byte)*/
+    i = nInBufLen - 1/*PadLen(1byte)*/ - nPadLen - SALT_LEN - ZERO_LEN; /*æ˜æ–‡é•¿åº¦*/
+    if ((*pOutBufLen < (size_t)i) || (i < 0)) return false;
+    *pOutBufLen = i;
 
-	nPlainLen=*pOutBufLen;
-	while (nPlainLen)
-	{
-		if (dest_i<8)
-		{
-			*(pOutBuf++)=dest_buf[dest_i]^iv_pre_crypt[dest_i];
-			dest_i++;
-			nPlainLen--;
-		}
-		else if (dest_i==8)
-		{
-			/*dest_i==8*/
+//    pInBufBoundary = pInBuf + nInBufLen; /*è¾“å…¥ç¼“å†²åŒºçš„è¾¹ç•Œï¼Œä¸‹é¢ä¸èƒ½pInBuf>=pInBufBoundary*/
 
-			/*¸Ä±äÇ°Ò»¸ö¼ÓÃÜ¿éµÄÖ¸Õë*/
-			iv_pre_crypt = iv_cur_crypt;
-			iv_cur_crypt = pInBuf;
+    for (i = 0; i < 8; i++) zero_buf[i] = 0;
 
-			/*½â¿ªÒ»¸öĞÂµÄ¼ÓÃÜ¿é*/
+    iv_pre_crypt = zero_buf;
+    iv_cur_crypt = pInBuf; /*init iv*/
 
-			/*Òì»òÇ°Ò»¿éÃ÷ÎÄ(ÔÚdest_buf[]ÖĞ)*/
-			for (j=0; j<8; j++)
-			{
-				if( (nBufPos + j) >= nInBufLen)
-				{
-					return false;
-				}
-					
-				dest_buf[j]^=pInBuf[j];
-			}
+    pInBuf += 8;
+    nBufPos += 8;
 
-			TeaDecryptECB(dest_buf, pKey, dest_buf);
-
-			/*ÔÚÈ¡³öµÄÊ±ºò²ÅÒì»òÇ°Ò»¿éÃÜÎÄ(iv_pre_crypt)*/
+    dest_i = 1; /*dest_iæŒ‡å‘dest_bufä¸‹ä¸€ä¸ªä½ç½®*/
 
 
-			pInBuf += 8;
-			nBufPos += 8;
+    /*æŠŠPaddingæ»¤æ‰*/
+    dest_i += nPadLen;
 
-			dest_i=0; /*dest_iÖ¸Ïòdest_bufÏÂÒ»¸öÎ»ÖÃ*/
-		}
-	}
+    /*dest_i must <=8*/
 
-	/*Ğ£ÑéZero*/
-	for (i=1;i<=ZERO_LEN;)
-	{
-		if (dest_i<8)
-		{
-			if(dest_buf[dest_i]^iv_pre_crypt[dest_i]) return false;
-			dest_i++;
-			i++;
-		}
-		else if (dest_i==8)
-		{
-			/*¸Ä±äÇ°Ò»¸ö¼ÓÃÜ¿éµÄÖ¸Õë*/
-			iv_pre_crypt = iv_cur_crypt;
-			iv_cur_crypt = pInBuf;
+    /*æŠŠSaltæ»¤æ‰*/
+    for (i = 1; i <= SALT_LEN;)
+    {
+        if (dest_i < 8)
+        {
+            dest_i++;
+            i++;
+        }
+        else if (dest_i == 8)
+        {
+            /*è§£å¼€ä¸€ä¸ªæ–°çš„åŠ å¯†å—*/
 
-			/*½â¿ªÒ»¸öĞÂµÄ¼ÓÃÜ¿é*/
+            /*æ”¹å˜å‰ä¸€ä¸ªåŠ å¯†å—çš„æŒ‡é’ˆ*/
+            iv_pre_crypt = iv_cur_crypt;
+            iv_cur_crypt = pInBuf;
 
-			/*Òì»òÇ°Ò»¿éÃ÷ÎÄ(ÔÚdest_buf[]ÖĞ)*/
-			for (j=0; j<8; j++)
-			{
-				if( (nBufPos + j) >= nInBufLen)
-				{
-					return false;
-				}
-					
-				dest_buf[j]^=pInBuf[j];
-			}
+            /*å¼‚æˆ–å‰ä¸€å—æ˜æ–‡(åœ¨dest_buf[]ä¸­)*/
+            for (j = 0; j < 8; j++)
+            {
+                if ((nBufPos + j) >= nInBufLen) return false;
+                dest_buf[j] ^= pInBuf[j];
+            }
+            
+            /*dest_i==8*/
+            TeaDecryptECB(dest_buf, pKey, dest_buf);
 
-			TeaDecryptECB(dest_buf, pKey, dest_buf);
+            /*åœ¨å–å‡ºçš„æ—¶å€™æ‰å¼‚æˆ–å‰ä¸€å—å¯†æ–‡(iv_pre_crypt)*/
 
-			/*ÔÚÈ¡³öµÄÊ±ºò²ÅÒì»òÇ°Ò»¿éÃÜÎÄ(iv_pre_crypt)*/
 
-			pInBuf += 8;
-			nBufPos += 8;
-			dest_i=0; /*dest_iÖ¸Ïòdest_bufÏÂÒ»¸öÎ»ÖÃ*/
-		}
-	}
+            pInBuf += 8;
+            nBufPos += 8;
 
-	return true;
+            dest_i = 0; /*dest_iæŒ‡å‘dest_bufä¸‹ä¸€ä¸ªä½ç½®*/
+        }
+    }
+
+    /*è¿˜åŸæ˜æ–‡*/
+
+    nPlainLen = *pOutBufLen;
+    while (nPlainLen)
+    {
+        if (dest_i < 8)
+        {
+            *(pOutBuf++) = dest_buf[dest_i] ^ iv_pre_crypt[dest_i];
+            dest_i++;
+            nPlainLen--;
+        }
+        else if (dest_i == 8)
+        {
+            /*dest_i==8*/
+
+            /*æ”¹å˜å‰ä¸€ä¸ªåŠ å¯†å—çš„æŒ‡é’ˆ*/
+            iv_pre_crypt = iv_cur_crypt;
+            iv_cur_crypt = pInBuf;
+
+            /*è§£å¼€ä¸€ä¸ªæ–°çš„åŠ å¯†å—*/
+
+            /*å¼‚æˆ–å‰ä¸€å—æ˜æ–‡(åœ¨dest_buf[]ä¸­)*/
+            for (j = 0; j < 8; j++)
+            {
+                if ((nBufPos + j) >= nInBufLen) return false;
+                dest_buf[j] ^= pInBuf[j];
+            }
+
+            TeaDecryptECB(dest_buf, pKey, dest_buf);
+
+            /*åœ¨å–å‡ºçš„æ—¶å€™æ‰å¼‚æˆ–å‰ä¸€å—å¯†æ–‡(iv_pre_crypt)*/
+
+
+            pInBuf += 8;
+            nBufPos += 8;
+
+            dest_i = 0; /*dest_iæŒ‡å‘dest_bufä¸‹ä¸€ä¸ªä½ç½®*/
+        }
+    }
+
+    /*æ ¡éªŒZero*/
+    for (i = 1; i <= ZERO_LEN;)
+    {
+        if (dest_i < 8)
+        {
+            if (dest_buf[dest_i] ^ iv_pre_crypt[dest_i]) return false;
+            dest_i++;
+            i++;
+        }
+        else if (dest_i == 8)
+        {
+            /*æ”¹å˜å‰ä¸€ä¸ªåŠ å¯†å—çš„æŒ‡é’ˆ*/
+            iv_pre_crypt = iv_cur_crypt;
+            iv_cur_crypt = pInBuf;
+
+            /*è§£å¼€ä¸€ä¸ªæ–°çš„åŠ å¯†å—*/
+
+            /*å¼‚æˆ–å‰ä¸€å—æ˜æ–‡(åœ¨dest_buf[]ä¸­)*/
+            for (j = 0; j < 8; j++)
+            {
+                if ((nBufPos + j) >= nInBufLen) return false;
+                dest_buf[j] ^= pInBuf[j];
+            }
+
+            TeaDecryptECB(dest_buf, pKey, dest_buf);
+
+            /*åœ¨å–å‡ºçš„æ—¶å€™æ‰å¼‚æˆ–å‰ä¸€å—å¯†æ–‡(iv_pre_crypt)*/
+
+
+            pInBuf += 8;
+            nBufPos += 8;
+            dest_i = 0; /*dest_iæŒ‡å‘dest_bufä¸‹ä¸€ä¸ªä½ç½®*/
+        }
+
+    }
+
+    return true;
 }
 
 }

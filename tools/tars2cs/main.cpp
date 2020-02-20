@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,10 +22,10 @@ void usage()
     cout << "Usage : tars2cs [OPTION] tarsfile" << endl;
     cout << "  tars2cs support type: bool byte short int long float double vector map" << endl;
     cout << "supported [OPTION]:" << endl;
-    cout << "  --help                help,print this(°ïÖú)" << endl;
-    cout << "  --dir=DIRECTORY       generate java file to DIRECTORY(Éú³ÉÎÄ¼þµ½Ä¿Â¼DIRECTORY,Ä¬ÈÏÎªµ±Ç°Ä¿Â¼)" << endl;
-    cout << "  --base-package=NAME   package prefix, default 'com.qq.'(packageÇ°×º£¬Î´Ö¸¶¨ÔòÄ¬ÈÏÎªcom.qq.)" << endl;
-    cout << "  --with-servant        also generate servant class(Ò»²¢Éú³É·þÎñ¶Ë´úÂë£¬Î´Ö¸¶¨ÔòÄ¬ÈÏ²»Éú³É)" << endl;
+    cout << "  --help                help,print this" << endl;
+    cout << "  --dir=DIRECTORY       generate source file to DIRECTORY(create tars protocol file to DIRECTORY, default is current directory)" << endl;
+    cout << "  --base-package=NAME   package prefix, default 'com.qq.'" << endl;
+    cout << "  --with-servant        also generate servant class" << endl;
     cout << endl;
     exit(0);
 }
@@ -72,8 +72,6 @@ int main(int argc, char* argv[])
 
     Tars2Cs t2cs;
 
-
-    //ÉèÖÃÉú³ÉÎÄ¼þµÄ¸ùÄ¿Â¼
     if(option.getValue("dir") != "")
     {
         t2cs.setBaseDir(option.getValue("dir"));
@@ -83,7 +81,7 @@ int main(int argc, char* argv[])
         t2cs.setBaseDir(".");
     }
 
-    //°üÃûÇ°×º
+    //ï¿½ï¿½ï¿½ï¿½Ç°×º
     if(option.hasParam("base-package"))
     {
         t2cs.setBasePackage(option.getValue("base-package"));
@@ -93,7 +91,6 @@ int main(int argc, char* argv[])
         t2cs.setBasePackage("Com.QQ.");
     }
 
-    //ÊÇ·ñÉú³É·þÎñ¶ËÀà,Ä¬ÈÏ²»Éú³É
     if(option.hasParam("with-servant"))
     {
         t2cs.setWithServant(true);
@@ -104,7 +101,6 @@ int main(int argc, char* argv[])
     }
 	try
 	{
-        //ÊÇ·ñ¿ÉÒÔÒÔtars¿ªÍ·
         g_parse->setTars(option.hasParam("with-tars"));
 
 	    for(size_t i = 0; i < vTars.size(); i++)

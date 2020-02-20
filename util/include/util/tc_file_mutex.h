@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -16,6 +16,10 @@
 
 #ifndef __TC_FILE_MUTEX_H
 #define __TC_FILE_MUTEX_H
+
+#include "util/tc_platform.h"
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 
 #include <unistd.h>
 #include "util/tc_lock.h"
@@ -158,5 +162,6 @@ private:
 
 }
 
+#endif
 #endif
 

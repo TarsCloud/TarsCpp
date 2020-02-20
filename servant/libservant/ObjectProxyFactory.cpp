@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -53,7 +53,6 @@ ObjectProxy * ObjectProxyFactory::getObjectProxy(const string& sObjectProxyName,
     pObjectProxy->initialize();
 
     _objectProxys[tmpObjName] = pObjectProxy;
-    //_objectProxys.insert(make_pair<string,ObjectProxy*>(tmpObjName,pObjectProxy));
 
     _vObjectProxys.push_back(pObjectProxy);
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -20,6 +20,7 @@
 #include "util/tc_socket.h"
 #include <sstream>
 #include "util/tc_http.h"
+#include "util/tc_epoller.h"
 
 namespace tars
 {
@@ -252,12 +253,14 @@ public:
      */
     void setWeightType(unsigned int weighttype)              { _weighttype = weighttype; }
 
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     /**
      * @brief 是否是本地套接字
      *
      * @return bool
      */
     bool isUnixLocal() const            { return _port == 0; }
+#endif
 
     /**
      * @brief is ipv6 socket or not
@@ -385,12 +388,12 @@ public:
     /**
     *  @brief 构造函数
      */
-    TC_ClientSocket() : _port(0),_timeout(3000) {}
+    TC_ClientSocket();
 
     /**
      * @brief 析够函数
      */
-    virtual ~TC_ClientSocket(){}
+    virtual ~TC_ClientSocket();
 
     /**
     * @brief 构造函数
@@ -406,14 +409,7 @@ public:
     * @param iPort    端口, port为0时:表示本地套接字此时ip为文件路径
     * @param iTimeout 超时时间, 毫秒
     */
-    void init(const string &sIp, int iPort, int iTimeout)
-    {
-        _socket.close();
-        _ip         = sIp;
-        _port       = iPort;
-        _timeout    = iTimeout;
-        _isIPv6 = TC_Socket::addressIsIPv6(sIp);
-    }
+    void init(const string &sIp, int iPort, int iTimeout);
 
     /**
     * @brief 发送到服务器
@@ -447,30 +443,32 @@ public:
     };
 
 protected:
+	TC_Epoller*     _epoller = NULL;
+
     /**
      * 套接字句柄
      */
-    TC_Socket     _socket;
+    TC_Socket       _socket;
 
     /**
      * ip或文件路径
      */
-    string        _ip;
+    string          _ip;
 
     /**
      * 端口或-1:标示是本地套接字
      */
-    int         _port;
+    int             _port;
 
     /**
      * 超时时间, 毫秒
      */
-    int            _timeout;
+    int             _timeout;
 
     /**
      * _ip is ipv6 or not
      */
-    int        _isIPv6;
+    int             _isIPv6;
 };
 
 /**

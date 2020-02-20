@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -18,7 +18,7 @@
 #define __TC_AUTOPTR_H
 
 #include "util/tc_ex.h"
-#include "util/tc_atomic.h"
+// #include "util/tc_atomic.h"
 #include <atomic>
 #include <typeinfo> 
 
@@ -31,7 +31,7 @@ namespace tars
 struct TC_AutoPtrNull_Exception : public TC_Exception
 {
     TC_AutoPtrNull_Exception(const string &buffer) : TC_Exception(buffer){};
-    ~TC_AutoPtrNull_Exception() throw(){};
+    ~TC_AutoPtrNull_Exception() {};
 };
 
 /**

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -17,9 +17,12 @@
 #ifndef __TC_SHM_H__
 #define __TC_SHM_H__
 
+#include "util/tc_platform.h"
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/shm.h>
+#endif
 #include "util/tc_ex.h"
 
 namespace tars
@@ -28,7 +31,8 @@ namespace tars
 /** 
  * @file  tc_shm.h 
  * @brief  共享内存封装类. 
- * 
+ *  
+ * @author  jarodruan@tencent.com 
  */
 /////////////////////////////////////////////////
 
@@ -38,10 +42,16 @@ namespace tars
 */
 struct TC_Shm_Exception : public TC_Exception
 {
-    TC_Shm_Exception(const string &buffer) : TC_Exception(buffer){};
-    TC_Shm_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
-    ~TC_Shm_Exception() throw() {};
+   TC_Shm_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
+   ~TC_Shm_Exception() throw() {};
 };
+
+#if TARGET_PLATFORM_WINDOWS
+typedef int key_t;
+typedef HANDLE SHMID;
+#else
+typedef int SHMID;
+#endif
 
 /** 
 * @brief  共享内存连接类，说明: 
@@ -54,15 +64,15 @@ class TC_Shm
 public:
 
     /**
-    * @brief 构造函数.
-    *  
-    * @param bOwner  是否拥有共享内存,默认为false 
+	* @brief 构造函数.
+	*  
+	* @param bOwner  是否拥有共享内存,默认为false 
     */
-    TC_Shm(bool bOwner = false) : _bOwner(bOwner),_shmSize(0),_shmKey(0),_bCreate(true), _pshm(NULL),_shemID(-1) {}
+    TC_Shm(bool bOwner = false) : _bOwner(bOwner),_shmSize(0),_shmKey(0),_bCreate(true), _pshm(NULL) {}
 
     /**
-    * @brief 构造函数. 
-    *  
+	* @brief 构造函数. 
+	*  
     * @param iShmSize 共享内存大小
     * @param iKey     共享内存Key
     * @throws         TC_Shm_Exception
@@ -75,8 +85,8 @@ public:
     ~TC_Shm();
 
     /**
-    * @brief 初始化. 
-    *  
+	* @brief 初始化. 
+	*  
     * @param iShmSize   共享内存大小
     * @param iKey       共享内存Key
     * @param bOwner     是否拥有共享内存
@@ -85,52 +95,52 @@ public:
     */
     void init(size_t iShmSize, key_t iKey, bool bOwner = false);
 
-    /** 
-    * @brief 判断共享内存的类型，生成的共享内存,还是连接上的共享内存
-    * 如果是生成的共享内存,此时可以根据需要做初始化 
-    *  
+	/** 
+	* @brief 判断共享内存的类型，生成的共享内存,还是连接上的共享内存
+	* 如果是生成的共享内存,此时可以根据需要做初始化 
+	*  
     * @return  true,生成共享内存; false, 连接上的共享内存
     */
     bool iscreate()     {return _bCreate;}
 
     /**
-    * @brief  获取共享内存的指针.
-    *  
+	* @brief  获取共享内存的指针.
+	*  
     * @return   void* 共享内存指针
     */
     void *getPointer() {return _pshm;}
 
     /**
-    * @brief  获取共享内存Key.
-    *  
+	* @brief  获取共享内存Key.
+	*  
     * @return key_t* ,共享内存key
     */
     key_t getkey()  {return _shmKey;}
 
     /**
-    * @brief  获取共享内存ID.
-    * 
+	* @brief  获取共享内存ID.
+	* 
     * @return int ,共享内存Id
     */
-    int getid()     {return _shemID;}
+    SHMID getid()     {return _shemID;}
 
     /**
-    *  @brief  获取共享内存大小.
-    *  
+	*  @brief  获取共享内存大小.
+	*  
     * return size_t,共享内存大小
     */
     size_t size()   {return _shmSize;}
 
-    /** 
-    *  @brief 解除共享内存，在当前进程中解除共享内存
+	/** 
+	*  @brief 解除共享内存，在当前进程中解除共享内存
     * 共享内存在当前进程中无效
     * @return int
     */
     int detach();
 
-    /** 
-     *  @brief 删除共享内存.
-     * 
+	/** 
+	 *  @brief 删除共享内存.
+	 * 
      * 完全删除共享内存
      */
     int del();
@@ -165,7 +175,7 @@ protected:
     /**
     * 共享内存id
     */
-    int             _shemID;
+    SHMID             _shemID;
 
 };
 

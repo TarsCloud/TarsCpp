@@ -14,8 +14,10 @@ set(IDL_TYPE "Tars")
 set(PROTOCOL_NAME "Tup")
 
 # flag
+if(UNIX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O2 -Wall")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O2 -Wall")
+endif(UNIX)
 
 # define
 add_definitions(-DPARSER_VERSION="${PARSER_VERSION}")

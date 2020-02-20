@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -343,7 +343,7 @@ string Tars2C::generateH(const StructPtr &pPtr, const string& namespaceId) const
     s << TAB << "Int32 (*writeTo)( const "<<sStructName<<"*, TarsOutputStream *);" << endl;
     s << TAB << "Int32 (*readFrom)( "<<sStructName<<"*, TarsInputStream *);" << endl;
 
-    //¶¨Òå³ÉÔ±±äÁ¿
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½
     vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
     for (size_t j = 0; j < member.size(); j++)
     {
@@ -374,7 +374,7 @@ string Tars2C::generateC(const StructPtr &pPtr, const string& namespaceId) const
     ostringstream s;
     string sStructName = namespaceId + "_" + pPtr->getId();
 
-    //¶¨Òå³ÉÔ±±äÁ¿
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½
     vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
 
     ////////////////////////////////////////////////////////////
@@ -463,7 +463,7 @@ string Tars2C::generateC(const StructPtr &pPtr, const string& namespaceId) const
     for (size_t j = 0; j < member.size(); j++)
     {
         BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
-        //stringÖµÒª×ªÒå
+        //stringÖµÒª×ªï¿½ï¿½
         if (bPtr && bPtr->kind() == Builtin::KindString)
         {
             s << TAB << "this->" << member[j]->getId() << " = JString_new();" << endl;
@@ -537,7 +537,7 @@ string Tars2C::generateC(const StructPtr &pPtr, const string& namespaceId) const
     for (size_t j = 0; j < member.size(); j++)
     {
         BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
-        //stringÖµÒª×ªÒå
+        //stringÖµÒª×ªï¿½ï¿½
         if (bPtr && bPtr->kind() == Builtin::KindString)
         {
             if (member[j]->hasDefault())
@@ -671,9 +671,13 @@ string Tars2C::generateC(const NamespacePtr &pPtr) const
 
 void Tars2C::generateH(const ContextPtr &pPtr) const
 {
-    string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
+	string n        = g_parse->getFileName(pPtr->getFileName());
+	string fileH    = g_parse->getAbsoluteFileName(m_sBaseDir, g_parse->replaceFileName(n, "h"));
+	string fileCpp  = g_parse->getAbsoluteFileName(m_sBaseDir, g_parse->replaceFileName(n, "cpp"));
 
-    string fileH    = m_sBaseDir + "/" + n + ".h";
+//    string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
+//
+//    string fileH    = m_sBaseDir + FILE_SEP + n + ".h";
 
     string define   = tars::TC_Common::upper("__" + n + "_h_");
 
@@ -704,14 +708,14 @@ void Tars2C::generateH(const ContextPtr &pPtr) const
     s << endl;
     s << "#endif" << endl;
 
-    tars::TC_File::makeDirRecursive(m_sBaseDir, 0755);
+    tars::TC_File::makeDirRecursive(m_sBaseDir);
     tars::TC_File::save2file(fileH, s.str());
 }
 
 void Tars2C::generateC(const ContextPtr &pPtr) const
 {
     string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
-    string fileC    = m_sBaseDir + "/" + n + ".c";
+    string fileC    = m_sBaseDir + FILE_SEP + n + ".c";
 
     string define   = tars::TC_Common::upper("__" + n + "_h_");
 
@@ -731,7 +735,7 @@ void Tars2C::generateC(const ContextPtr &pPtr) const
 
     s << endl;
 
-    tars::TC_File::makeDirRecursive(m_sBaseDir, 0755);
+    tars::TC_File::makeDirRecursive(m_sBaseDir);
     tars::TC_File::save2file(fileC, s.str());
 
 }
@@ -754,7 +758,7 @@ StructPtr Tars2C::findStruct(const ContextPtr &pPtr,const string &id)
 {
     string sid = id;
 
-    //ÔÚµ±Ç°namespaceÖÐ²éÕÒ
+    //ï¿½Úµï¿½Ç°namespaceï¿½Ð²ï¿½ï¿½ï¿½
     vector<NamespacePtr> namespaces = pPtr->getNamespaces();
     for (size_t i = 0; i < namespaces.size(); i++)
     {

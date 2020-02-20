@@ -1,0 +1,26 @@
+name: C/C++ linux
+
+on: 
+  push:
+    branches:
+    - "2.0"
+    - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: install
+      run: sudo apt-get install -y bison flex cmake; cmake --version
+    - name: git
+      run: git submodule update --init --recursive
+    - name: configure
+      run: mkdir build;cd build;cmake ..
+    - name: make
+      run: cd build; make
+    - name: make run
+      run: cd build; make run-all
+

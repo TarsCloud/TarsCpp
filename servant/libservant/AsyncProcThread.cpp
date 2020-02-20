@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,10 +22,15 @@
 namespace tars
 {
 
-AsyncProcThread::AsyncProcThread(size_t iQueueCap)
-: _terminate(false)
+AsyncProcThread::AsyncProcThread(size_t iQueueCap, bool merge)
+: _terminate(false), _iQueueCap(iQueueCap), _merge(merge)
 {
-     _msgQueue = new ReqInfoQueue(iQueueCap);
+	 _msgQueue = new TC_CasQueue<ReqMessage*>();
+
+	 if(!_merge)
+	 {
+	 	start();
+     }
 }
 
 AsyncProcThread::~AsyncProcThread()
@@ -41,73 +46,133 @@ AsyncProcThread::~AsyncProcThread()
 
 void AsyncProcThread::terminate()
 {
-    Lock lock(*this);
+	if(!_merge) {
+        TC_ThreadLock::Lock lock(*this);
 
-    _terminate = true;
+        _terminate = true;
 
-    notifyAll();
+        notifyAll();
+    }
 }
 
 void AsyncProcThread::push_back(ReqMessage * msg)
 {
-    bool bFlag = _msgQueue->push_back(msg);
-    
-    {
-        TC_ThreadLock::Lock lock(*this);
-        notify();
-    }
+	if(_merge) {
+		//合并了, 直接回调
+		callback(msg);
+	}
+	else {
+		if(_msgQueue->size() >= _iQueueCap)
+		{
+			TLOGERROR("[TARS][AsyncProcThread::push_back] async_queue full:" << _msgQueue->size() << ">=" << _iQueueCap << endl);
+			delete msg;
+		}
+		else
+		{
+			_msgQueue->push_back(msg);
 
-    if(!bFlag)
-    {
-        TLOGERROR("[TARS][AsyncProcThread::push_back] async_queue full." << endl);
-        delete msg;
-        msg = NULL;
-    }
+			TC_ThreadLock::Lock lock(*this);
+			notify();
+		}
+	}
 }
+
 
 void AsyncProcThread::run()
 {
     while (!_terminate)
     {
-        ReqMessage * msg = NULL;
-
-        //异步请求回来的响应包处理
-        if(_msgQueue->empty())
-        {
-            TC_ThreadLock::Lock lock(*this);
-            timedWait(1000);
-        }
+        ReqMessage * msg;
 
         if (_msgQueue->pop_front(msg))
         {
-            //从回调对象把线程私有数据传递到回调线程中
-            ServantProxyThreadData * pServantProxyThreadData = ServantProxyThreadData::getData();
-            assert(pServantProxyThreadData != NULL);
-
-            //把染色的消息设置在线程私有数据里面
-            pServantProxyThreadData->_dyeing  = msg->bDyeing;
-            pServantProxyThreadData->_dyeingKey = msg->sDyeingKey;
-
-            if(msg->adapter)
-            {
-                   snprintf(pServantProxyThreadData->_szHost, sizeof(pServantProxyThreadData->_szHost), "%s", msg->adapter->endpoint().desc().c_str());
-            }
-
-            try
-            {
-                ReqMessagePtr msgPtr = msg;
-                msg->callback->onDispatch(msgPtr);
-            }
-            catch (exception& e)
-            {
-                TLOGERROR("[TARS][AsyncProcThread exception]:" << e.what() << endl);
-            }
-            catch (...)
-            {
-                TLOGERROR("[TARS][AsyncProcThread exception.]" << endl);
-            }
+	        callback(msg);
         }
+		else
+		{
+			TC_ThreadLock::Lock lock(*this);
+	        timedWait(1000);		
+		}
     }
 }
+
+
+void AsyncProcThread::callback(ReqMessage * msg)
+{
+	TLOGTARS("[TARS][AsyncProcThread::run] get one msg." << endl);
+
+	//从回调对象把线程私有数据传递到回调线程中
+	ServantProxyThreadData * pServantProxyThreadData = ServantProxyThreadData::getData();
+	assert(pServantProxyThreadData != NULL);
+
+	//把染色的消息设置在线程私有数据里面
+	pServantProxyThreadData->_dyeing  = msg->bDyeing;
+	pServantProxyThreadData->_dyeingKey = msg->sDyeingKey;
+
+	if(msg->adapter)
+	{
+		pServantProxyThreadData->_szHost = msg->adapter->endpoint().desc();
+	}
+
+	try
+	{
+		ReqMessagePtr msgPtr = msg;
+		msg->callback->onDispatch(msgPtr);
+	}
+	catch (exception& e)
+	{
+		TLOGERROR("[TARS][AsyncProcThread exception]:" << e.what() << endl);
+	}
+	catch (...)
+	{
+		TLOGERROR("[TARS][AsyncProcThread exception.]" << endl);
+	}
+}
+
+// void AsyncProcThread::run()
+// {
+//     while (!_terminate)
+//     {
+//         ReqMessage * msg = NULL;
+
+//         //异步请求回来的响应包处理
+//         if(_msgQueue->empty())
+//         {
+//             TC_ThreadLock::Lock lock(*this);
+//             timedWait(1000);
+//         }
+
+//         if (_msgQueue->pop_front(msg))
+//         {
+//             //从回调对象把线程私有数据传递到回调线程中
+//             ServantProxyThreadData * pServantProxyThreadData = ServantProxyThreadData::getData();
+//             assert(pServantProxyThreadData != NULL);
+
+//             //把染色的消息设置在线程私有数据里面
+//             pServantProxyThreadData->_dyeing  = msg->bDyeing;
+//             pServantProxyThreadData->_dyeingKey = msg->sDyeingKey;
+
+//             if(msg->adapter)
+//             {
+//                 //    snprintf(pServantProxyThreadData->_szHost, sizeof(pServantProxyThreadData->_szHost), "%s", msg->adapter->endpoint().desc().c_str());
+//                 pServantProxyThreadData->_szHost = msg->adapter->endpoint().desc();
+//             }
+
+//             try
+//             {
+//                 ReqMessagePtr msgPtr = msg;
+//                 msg->callback->onDispatch(msgPtr);
+//             }
+//             catch (exception& e)
+//             {
+//                 TLOGERROR("[TARS][AsyncProcThread exception]:" << e.what() << endl);
+//             }
+//             catch (...)
+//             {
+//                 TLOGERROR("[TARS][AsyncProcThread exception.]" << endl);
+//             }
+//         }
+//     }
+// }
 /////////////////////////////////////////////////////////////////////////
 }

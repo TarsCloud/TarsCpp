@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -15,130 +15,287 @@
  */
 
 #include "util/tc_timeprovider.h"
+#include <cmath>
 
 namespace tars
 {
 
-TC_ThreadLock TC_TimeProvider::g_tl;
-TC_TimeProviderPtr TC_TimeProvider::g_tp = NULL;
+
+TC_TimeProvider *TC_TimeProvider::g_tp = NULL;
 
 TC_TimeProvider* TC_TimeProvider::getInstance()
 {
-    if(!g_tp)
+    if (!g_tp)
     {
-        TC_ThreadLock::Lock lock(g_tl);
+        static std::mutex m;
+       	std::lock_guard<std::mutex> lock(m);
 
-        if(!g_tp)
+        // static TC_ThreadMutex mutex;
+
+        // TC_LockT<TC_ThreadMutex> lock(mutex);
+
+        if (!g_tp)
         {
             g_tp = new TC_TimeProvider();
-
-            g_tp->start();
+			std::thread t(&TC_TimeProvider::run, g_tp);
+			t.detach();
         }
     }
-    return g_tp.get();
+    return g_tp;
 }
 
-TC_TimeProvider::~TC_TimeProvider() 
-{ 
-    {
-        TC_ThreadLock::Lock lock(g_tl);
-        _terminate = true; 
-        g_tl.notify(); 
-    }
-
-    getThreadControl().join();
+TC_TimeProvider::~TC_TimeProvider()
+{
 }
 
-void TC_TimeProvider::getNow(timeval *tv)  
-{ 
+#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
+
+//直接从寄存器获取开机上电以来的周期(和主频有关系)
+//如果微处理器的主频是1MHZ的话，那么tsc就会在1秒内增加1000000
+uint64_t TC_TimeProvider::GetCycleCount()
+{
+    uint32_t high, low;
+    __asm__ __volatile__("rdtsc" : "=a" (low), "=d" (high));
+
+    uint64_t current_tsc    = ((uint64_t)high << 32) | low;
+    return current_tsc;
+}
+/*
+ #define rdtsc(low,high) \
+      __asm__ __volatile__("rdtsc" : "=a" (low), "=d" (high))
+          uint64_t current_tsc    = ((uint64_t)high << 32) | low;
+*/
+
+#else
+uint64_t TC_TimeProvider::GetCycleCount()
+{
+	LARGE_INTEGER tmp;
+	QueryPerformanceCounter(&tmp);
+	return tmp.QuadPart;
+}
+
+#endif
+
+void TC_TimeProvider::getNow(timeval *tv)
+{
+#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
+
     int idx = _buf_idx;
     *tv = _t[idx];
-
-    if(_cpu_cycle != 0 && _use_tsc)     //cpu-cycle在两个interval周期后采集完成
-    {    
-        addTimeOffset(*tv,idx); 
+    if(fabs(_cpu_cycle - 0) < 0.0001 && _use_tsc)
+    {
+        addTimeOffset(*tv, idx);
     }
     else
     {
-        ::gettimeofday(tv, NULL);
+        TC_Common::gettimeofday(*tv); 
     }
+#else
+	TC_Common::gettimeofday(*tv);
+#endif
 }
 
 int64_t TC_TimeProvider::getNowMs()
 {
     struct timeval tv;
     getNow(&tv);
-    return tv.tv_sec * (int64_t)1000 + tv.tv_usec/1000;
+
+    return tv.tv_sec * (int64_t)1000 + tv.tv_usec / 1000;
 }
 
 void TC_TimeProvider::run()
 {
-    while(!_terminate)
+    memset(_tsc, 0x00, sizeof(_tsc));
+
+    while (true)
     {
         timeval& tt = _t[!_buf_idx];
 
-        ::gettimeofday(&tt, NULL);
+        TC_Common::gettimeofday(tt);
 
-        setTsc(tt);  
+        setTsc(tt);
 
         _buf_idx = !_buf_idx;
 
-        TC_ThreadLock::Lock lock(g_tl);
-
-        g_tl.timedWait(800); //修改800时 需对应修改addTimeOffset中offset判读值
-
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
-float TC_TimeProvider::cpuMHz()
-{
-    if(_cpu_cycle != 0)
-        return 1.0/_cpu_cycle;
+// double TC_TimeProvider::cpuMHz()
+// {
+//     if (_cpu_cycle != 0)
+//         return 1.0 / _cpu_cycle;
 
-    return 0;
-}
+//     return 0;
+// }
 
 void TC_TimeProvider::setTsc(timeval& tt)
 {
-    uint32_t low    = 0;
-    uint32_t high   = 0;
-    rdtsc(low,high);
-    uint64_t current_tsc    = ((uint64_t)high << 32) | low;
+    uint64_t current_tsc = GetCycleCount();
 
-    uint64_t& last_tsc      = _tsc[!_buf_idx];
-    timeval& last_tt        = _t[_buf_idx];
+    uint64_t& last_tsc   = _tsc[!_buf_idx];
+    timeval& last_tt     = _t[_buf_idx];
 
-    if(_tsc[_buf_idx] == 0 || _tsc[!_buf_idx] == 0 )
+    static bool first = true;
+    if (first)
     {
+        //第一次进来
+        first = false;
         _cpu_cycle      = 0;
         last_tsc        = current_tsc;
     }
     else
     {
-        time_t sptime   = (tt.tv_sec -  last_tt.tv_sec)*1000*1000 + (tt.tv_usec - last_tt.tv_usec);  
-        _cpu_cycle      = (float)sptime/(current_tsc - _tsc[_buf_idx]); //us 
+        //计算两次之间的间隔(us)
+        time_t sptime   = (tt.tv_sec -  last_tt.tv_sec) * 1000 * 1000 + (tt.tv_usec - last_tt.tv_usec);
+
+        //时间间隔/cpu计数次数, 得到cpu一次的周期时间
+        _cpu_cycle      = (double)sptime / (current_tsc - _tsc[_buf_idx]);
+
         last_tsc        = current_tsc;
-    } 
+    }
 }
 
-void TC_TimeProvider::addTimeOffset(timeval& tt,const int &idx)
+void TC_TimeProvider::addTimeOffset(timeval& tt, const int &idx)
 {
-    uint32_t low    = 0;
-    uint32_t high   = 0;
-    rdtsc(low,high);
-    uint64_t current_tsc = ((uint64_t)high << 32) | low;
-    int64_t t =  (int64_t)(current_tsc - _tsc[idx]);
-    time_t offset =  (time_t)(t*_cpu_cycle);
-    if(t < -1000 || offset > 1000000)//毫秒级别
+    int64_t current_tsc = (int64_t)GetCycleCount();
+    int64_t t = (int64_t)(current_tsc - (int64_t)_tsc[idx]);
+
+    //根据cpu的技术次数*周期时间得到时间间隔(us)
+    time_t offset =  (t * _cpu_cycle);
+    //偏差超过1s就认为是有问题的!
+    if (t < -1000 || offset > 1000000) 
     {
-        //cerr<< "TC_TimeProvider add_time_offset error,correct it by use gettimeofday. current_tsc|"<<current_tsc<<"|last_tsc|"<<_tsc[idx]<<endl;
+        cerr<< "TC_TimeProvider add_time_offset error,correct it by use gettimeofday. offset:" << offset <<"|current_tsc:"<<current_tsc<<"|last_tsc:"<<_tsc[idx]<<"|t:" << t <<endl;
         _use_tsc = false;
-        ::gettimeofday(&tt, NULL);
+        TC_Common::gettimeofday(tt);
         return;
     }
+//	cout << "addTimeOffset:" << offset << ", " << _cpu_cycle << ", t:" << t << endl;
     tt.tv_usec += offset;
-    while (tt.tv_usec >= 1000000) { tt.tv_usec -= 1000000; tt.tv_sec++;} 
+    while (tt.tv_usec >= 1000000) { tt.tv_usec -= 1000000; tt.tv_sec++;}
 }
+
+// TC_ThreadLock TC_TimeProvider::g_tl;
+// TC_TimeProviderPtr TC_TimeProvider::g_tp = NULL;
+
+// TC_TimeProvider* TC_TimeProvider::getInstance()
+// {
+//     if(!g_tp)
+//     {
+//         TC_ThreadLock::Lock lock(g_tl);
+
+//         if(!g_tp)
+//         {
+//             g_tp = new TC_TimeProvider();
+
+//             g_tp->start();
+//         }
+//     }
+//     return g_tp.get();
+// }
+
+// TC_TimeProvider::~TC_TimeProvider() 
+// { 
+//     {
+//         TC_ThreadLock::Lock lock(g_tl);
+//         _terminate = true; 
+//         g_tl.notify(); 
+//     }
+
+//     getThreadControl().join();
+// }
+
+// void TC_TimeProvider::getNow(timeval *tv)  
+// { 
+//     int idx = _buf_idx;
+//     *tv = _t[idx];
+
+//     if(_cpu_cycle != 0 && _use_tsc)     //cpu-cycle在两个interval周期后采集完成
+//     {    
+//         addTimeOffset(*tv,idx); 
+//     }
+//     else
+//     {
+//         ::gettimeofday(tv, NULL);
+//     }
+// }
+
+// int64_t TC_TimeProvider::getNowMs()
+// {
+//     struct timeval tv;
+//     getNow(&tv);
+//     return tv.tv_sec * (int64_t)1000 + tv.tv_usec/1000;
+// }
+
+// void TC_TimeProvider::run()
+// {
+//     while(!_terminate)
+//     {
+//         timeval& tt = _t[!_buf_idx];
+
+//         ::gettimeofday(&tt, NULL);
+
+//         setTsc(tt);  
+
+//         _buf_idx = !_buf_idx;
+
+//         TC_ThreadLock::Lock lock(g_tl);
+
+//         g_tl.timedWait(800); //修改800时 需对应修改addTimeOffset中offset判读值
+
+//     }
+// }
+
+// float TC_TimeProvider::cpuMHz()
+// {
+//     if(_cpu_cycle != 0)
+//         return 1.0/_cpu_cycle;
+
+//     return 0;
+// }
+
+// void TC_TimeProvider::setTsc(timeval& tt)
+// {
+//     uint32_t low    = 0;
+//     uint32_t high   = 0;
+//     rdtsc(low,high);
+//     uint64_t current_tsc    = ((uint64_t)high << 32) | low;
+
+//     uint64_t& last_tsc      = _tsc[!_buf_idx];
+//     timeval& last_tt        = _t[_buf_idx];
+
+//     if(_tsc[_buf_idx] == 0 || _tsc[!_buf_idx] == 0 )
+//     {
+//         _cpu_cycle      = 0;
+//         last_tsc        = current_tsc;
+//     }
+//     else
+//     {
+//         time_t sptime   = (tt.tv_sec -  last_tt.tv_sec)*1000*1000 + (tt.tv_usec - last_tt.tv_usec);  
+//         _cpu_cycle      = (float)sptime/(current_tsc - _tsc[_buf_idx]); //us 
+//         last_tsc        = current_tsc;
+//     } 
+// }
+
+// void TC_TimeProvider::addTimeOffset(timeval& tt,const int &idx)
+// {
+//     uint32_t low    = 0;
+//     uint32_t high   = 0;
+//     rdtsc(low,high);
+//     uint64_t current_tsc = ((uint64_t)high << 32) | low;
+//     int64_t t =  (int64_t)(current_tsc - _tsc[idx]);
+//     time_t offset =  (time_t)(t*_cpu_cycle);
+//     if(t < -1000 || offset > 1000000)//毫秒级别
+//     {
+//         //cerr<< "TC_TimeProvider add_time_offset error,correct it by use gettimeofday. current_tsc|"<<current_tsc<<"|last_tsc|"<<_tsc[idx]<<endl;
+//         _use_tsc = false;
+//         ::gettimeofday(&tt, NULL);
+//         return;
+//     }
+//     tt.tv_usec += offset;
+//     while (tt.tv_usec >= 1000000) { tt.tv_usec -= 1000000; tt.tv_sec++;} 
+// }
 
 
 }

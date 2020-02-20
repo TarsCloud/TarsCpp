@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -14,7 +14,9 @@
  * specific language governing permissions and limitations under the License.
  */
 
+#if TARS_MYSQL
 #include "util/tc_mysql.h"
+#include "mysql.h"
 #include "errmsg.h"
 #include <sstream>
 #include <string.h>
@@ -497,3 +499,4 @@ TC_Mysql::MysqlRecord TC_Mysql::MysqlData::operator[](size_t i)
 
 }
 
+#endif

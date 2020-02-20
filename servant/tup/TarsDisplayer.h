@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -17,7 +17,7 @@
 #ifndef __TARS_DISPLAYER_H__
 #define __TARS_DISPLAYER_H__
 
-#include <netinet/in.h>
+//#include <netinet/in.h>
 #include <iostream>
 #include <cassert>
 #include <vector>

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -18,6 +18,7 @@
 #include <string.h>
 #include "util/tc_sem_mutex.h"
 
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 namespace tars
 {
 
@@ -206,5 +207,7 @@ bool TC_SemMutex::trywlock() const
     return true;
 }
 
+
 }
 
+#endif

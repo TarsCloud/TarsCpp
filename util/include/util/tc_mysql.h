@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -17,11 +17,15 @@
 #ifndef __TC_MYSQL_H
 #define __TC_MYSQL_H
 
-#include "mysql.h"
 #include "util/tc_ex.h"
+#include "mysql.h"
 #include <map>
 #include <vector>
 #include <stdlib.h>
+
+struct st_mysql;
+
+typedef struct st_mysql MYSQL;
 
 namespace tars
 {
@@ -33,7 +37,6 @@ namespace tars
 * 
 */           
 /////////////////////////////////////////////////
-
 
 /**
 * @brief 数据库异常类

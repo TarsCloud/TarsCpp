@@ -1,4 +1,4 @@
-#include "TestPushServer.h"
+﻿#include "TestPushServer.h"
 #include "TestPushServantImp.h"
 
 using namespace std;
@@ -7,36 +7,41 @@ TestPushServer g_app;
 
 /////////////////////////////////////////////////////////////////
 
-static int parse(string &in, string &out)
+static TC_NetWorkBuffer::PACKET_TYPE parse(TC_NetWorkBuffer &in, vector<char> &out)
 {
-    if(in.length() < sizeof(unsigned int))
-    {
-        return TC_EpollServer::PACKET_LESS;
-    }
+	size_t len = sizeof(tars::Int32);
 
-    unsigned int iHeaderLen;
+	if (in.getBufferLength() < len)
+	{
+		return TC_NetWorkBuffer::PACKET_LESS;
+	}
 
-    memcpy(&iHeaderLen, in.c_str(), sizeof(unsigned int));
+	string header;
+	in.getHeader(len, header);
 
-    iHeaderLen = ntohl(iHeaderLen);
+	assert(header.size() == len);
 
-    if(iHeaderLen < (unsigned int)(sizeof(unsigned int))|| iHeaderLen > 1000000)
-    {
-        return TC_EpollServer::PACKET_ERR;
-    }
+	tars::Int32 iHeaderLen = 0;
 
-    if((unsigned int)in.length() < iHeaderLen)
-    {
-        return TC_EpollServer::PACKET_LESS;
-    }
+	::memcpy(&iHeaderLen, header.c_str(), sizeof(tars::Int32));
 
-    out = in.substr(0, iHeaderLen);
+	iHeaderLen = ntohl(iHeaderLen);
 
-    in  = in.substr(iHeaderLen);
+	if (iHeaderLen > 100000 || iHeaderLen < sizeof(unsigned int))
+	{
+		throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
+	}
 
-    return TC_EpollServer::PACKET_FULL;
+	if (in.getBufferLength() < (uint32_t)iHeaderLen)
+	{
+		return TC_NetWorkBuffer::PACKET_LESS;
+	}
+
+	in.getHeader(iHeaderLen, out);
+    in.moveHeader(iHeaderLen);
+
+    return TC_NetWorkBuffer::PACKET_FULL;
 }
-
 
 void
 TestPushServer::initialize()
@@ -46,11 +51,11 @@ TestPushServer::initialize()
 
     addServant<TestPushServantImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".TestPushServantObj");
 
-    addServantProtocol("Test.TestPushServer.TestPushServantObj", parse);
+    addServantProtocol("TestApp.PushServer.TestPushServantObj", parse);
 
     pushThread.start();
-
 }
+
 /////////////////////////////////////////////////////////////////
 void
 TestPushServer::destroyApp()

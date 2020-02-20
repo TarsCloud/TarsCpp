@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -24,7 +24,7 @@
 using namespace tars;
 
 /**
- * ¸ù¾İtarsÉú³ÉhºÍmÎÄ¼ş
+ * ï¿½ï¿½ï¿½ï¿½tarsï¿½ï¿½ï¿½ï¿½hï¿½ï¿½mï¿½Ä¼ï¿½
  */
 class Tars2OC
 {
@@ -32,56 +32,56 @@ class Tars2OC
 public:
 
     /**
-     * Éú³É
+     * ï¿½ï¿½ï¿½ï¿½
      * @param file
      */
     void createFile(const string &file);
 
 
     /**
-    * ÉèÖÃÉú³ÉÎÄ¼şµÄÄ¿Â¼
+    * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ä¿Â¼
     *
     */
     void setBaseDir(const std::string & sPath) { m_sBaseDir = sPath; }
 
 
 	/**
-	 * ÉèÖÃÊÇ·ñ¼ì²éÄ¬ÈÏÖµ
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Öµ
 	 *
 	 * @param bCheck
 	 */
 	void setArc(const bool bArc) { m_bARC = bArc; }
 	/**
-	 * ÉèÖÃ¸÷¸ö³ÉÔ±ÊôĞÔÊÇ·ñ¼ÓÉÏÃû×Ö¿Õ¼äÇ°×º
+	 * ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½Ç°×º
 	 */
 	void setNeedNS(bool bNeed) { m_bNeedNS = bNeed;}
     /**
-	 * ÉèÖÃÓÃ»§×Ô¶¨ÒåÃû×Ö¿Õ¼ä
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½
 	 */
 	void setNS(const string& sNS) {m_sNamespace = sNS;}
-    //ÏÂÃæÊÇÀàĞÍÃèÊöµÄÔ´ÂëÉú³É
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 protected:
 	/**
-	 * »ñÈ¡Ã¶¾Ù»òÕß½á¹¹ÌåÃû×ÖÇ°×º×Ö·û´®
-	 * @param sTarsNS  tarsÎÄ¼şÖĞ¶¨ÒåµÄÃû×Ö¿Õ¼ä
-	 * @param bEnum ÊÇ·ñÊÇÃ¶¾ÙÀàĞÍ
+	 * ï¿½ï¿½È¡Ã¶ï¿½Ù»ï¿½ï¿½ß½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°×ºï¿½Ö·ï¿½ï¿½ï¿½
+	 * @param sTarsNS  tarsï¿½Ä¼ï¿½ï¿½Ğ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½
+	 * @param bEnum ï¿½Ç·ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	 *
-	 * @return ´¦ÀíºóµÄÇ°×º×Ö·û´®
+	 * @return ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°×ºï¿½Ö·ï¿½ï¿½ï¿½
 	 */
 	string getNamePrix(const string& sTarsNS) const;
 	
 	/**
-	 * »ñÈ¡·ûºÏ¹æ·¶µÄ³ÉÔ±Ãû³Æ
+	 * ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ï¹æ·¶ï¿½Ä³ï¿½Ô±ï¿½ï¿½ï¿½ï¿½
 	 */
 	string getPropertyName(const string& sId) const;
 
     /**
 	 *
-	 * »ñÈ¡×Ô¶¨ÒåsetterµÄÃû×Ö
+	 * ï¿½ï¿½È¡ï¿½Ô¶ï¿½ï¿½ï¿½setterï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	 */
 	string getSetterName(const string& sId) const;
     /**
-     * Éú³ÉÄ³ÀàĞÍµÄ×Ö·û´®ÃèÊöÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½Íµï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -89,14 +89,14 @@ protected:
     string tostr(const TypePtr &pPtr) const;
 
     /**
-     * Éú³ÉÄÚ½¨ÀàĞÍµÄ×Ö·û´®Ô´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
      */
     string tostrBuiltin(const BuiltinPtr &pPtr) const;
     /**
-     * Éú³ÉvectorµÄ×Ö·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½vectorï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -104,7 +104,7 @@ protected:
     string tostrVector(const VectorPtr &pPtr) const;
 
     /**
-     * Éú³ÉmapµÄ×Ö·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½mapï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -112,7 +112,7 @@ protected:
     string tostrMap(const MapPtr &pPtr) const;
 
     /**
-     * Éú³ÉÄ³ÖÖ½á¹¹µÄ·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½Ö½á¹¹ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -121,7 +121,7 @@ protected:
 
 
     /**
-     * Éú³ÉÄ³ÖÖÃ¶¾ÙµÄ·û´®ÃèÊö
+     * ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½Ã¶ï¿½ÙµÄ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -129,7 +129,7 @@ protected:
     string tostrEnum(const EnumPtr &pPtr) const;
 
 	/**
-	 * Éú³ÉOBJC °æ±¾2µÄÊôĞÔ¶¨Òå
+	 * ï¿½ï¿½ï¿½ï¿½OBJC ï¿½æ±¾2ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½
 	 * @param pPtr
 	 *
 	 * @return string
@@ -137,7 +137,7 @@ protected:
 	string toTarsV2Procstr(const TypeIdPtr &pPtr) const;
 
 	/**
-	 * Éú³ÉOBJC°æ±¾2µÄ¸½¼ÓĞÅÏ¢±àÂë
+	 * ï¿½ï¿½ï¿½ï¿½OBJCï¿½æ±¾2ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
 	 * @param pPtr
 	 *
 	 * @return string
@@ -145,7 +145,7 @@ protected:
 	string toAddtionalClassName(const TypePtr &pPtr) const;
 
 	/**
-	 * Éú³É½á¹¹ÌåÊôĞÔµÄsynthesize¶¨Òå
+	 * ï¿½ï¿½ï¿½É½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½synthesizeï¿½ï¿½ï¿½ï¿½
 	 * @param vMember
 	 *
 	 * @return string
@@ -153,7 +153,7 @@ protected:
     string writesynthesize(const vector<TypeIdPtr>& vMember) const;
 
 	/**
-	 * Éú³ÉInitializeº¯Êı
+	 * ï¿½ï¿½ï¿½ï¿½Initializeï¿½ï¿½ï¿½ï¿½
 	 * @param pPtr
 	 *
 	 * @return string
@@ -161,7 +161,7 @@ protected:
     string writeInitialize(const StructPtr &pPtr) const;
 
 	/**
-	 * Éú³É³õÊ¼»¯¶¨Òåº¯Êıinit
+	 * ï¿½ï¿½ï¿½É³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½åº¯ï¿½ï¿½init
 	 * @param vMember
 	 *
 	 * @return string
@@ -169,7 +169,7 @@ protected:
 	string writeInit(const vector<TypeIdPtr>& vMember) const;
 
 	/**
-	 * Éú³ÉÎö¹¹¶¨Òå
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	 * @param vMember
 	 *
 	 * @return string
@@ -177,7 +177,7 @@ protected:
 	string writedealloc(const vector<TypeIdPtr>& vMember) const;
 
 	/**
-	 * Éú³É½á¹¹Ãû³Æ¶¨Òå
+	 * ï¿½ï¿½ï¿½É½á¹¹ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½
 	 * @param pPtr
 	 *
 	 * @return string
@@ -185,7 +185,7 @@ protected:
 	string writeTarsType(const StructPtr &pPtr) const;
 
 	/**
-	 * Éú³ÉÀàĞÍ±êÊ¾·û
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í±ï¿½Ê¾ï¿½ï¿½
 	 * @param pPtr
 	 *
 	 * @return string
@@ -193,13 +193,13 @@ protected:
     string toClassName(const TypePtr &pPtr) const;
 protected:
     /**
-	 * »ñÈ¡tarsÖĞ¶¨ÒåµÄĞŞÊÎÀàĞÍ£¬requireºÍoptional
+	 * ï¿½ï¿½È¡tarsï¿½Ğ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½requireï¿½ï¿½optional
 	 * @param pPtr
 	 *
 	 */
 	string getReqOptionType(const TypeIdPtr &pPtr) const;
 	/**
-	 * ÅĞ¶ÏÀàĞÍÊÇ·ñÊôÓÚretainÀàĞÍ£¬stringºÍ¶ÔÏóÀàĞÍ¶¼ÊôÓÚretain
+	 * ï¿½Ğ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½retainï¿½ï¿½ï¿½Í£ï¿½stringï¿½Í¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½ï¿½ï¿½retain
 	 * @param pPtr
 	 *
 	 */
@@ -207,7 +207,7 @@ protected:
 
     bool isNumberType(const TypePtr &pPtr) const;
 	/**
-	 * »ñÈ¡½á¹¹ÌåÖĞÒÀÀµÆäËüÀàĞÍµÄ±êÊ¶·ûÃû³ÆºÍÀàĞÍ£¬Ä¿Ç°ÊÇ½á¹¹ÌåºÍÃ¶¾ÙÁ½ÖÖÀàĞÍ
+	 * ï¿½ï¿½È¡ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÍµÄ±ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½Æºï¿½ï¿½ï¿½ï¿½Í£ï¿½Ä¿Ç°ï¿½Ç½á¹¹ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	 *
 	 * @param pPtr
 	 * @param namespaceId
@@ -217,8 +217,8 @@ protected:
 	map<string,int> getReferences(const StructPtr &pPtr, const string& namespaceId="") const;
 
 	/**
-	 * »ñÈ¡³ÉÔ±¶ÔÏóÒÀÀµµÄÀàĞÍ±êÊ¶·ûÃû³Æ,
-	 * ÀıÈç, stHello hello;stHelloÎªÀàĞÍ±êÊ¶·ûÃû³Æ,ÀàĞÍÎª½á¹¹Ìå
+	 * ï¿½ï¿½È¡ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í±ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+	 * ï¿½ï¿½ï¿½ï¿½, stHello hello;stHelloÎªï¿½ï¿½ï¿½Í±ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½Îªï¿½á¹¹ï¿½ï¿½
 	 *
 	 * @param pPtr
 	 * @param mRefs
@@ -226,7 +226,7 @@ protected:
 	void toIncludeName(const TypePtr &pPtr,map<string,int>& mRefs) const;
 
     /**
-     * Éú³É½á¹¹µÄÍ·ÎÄ¼şÄÚÈİ
+     * ï¿½ï¿½ï¿½É½á¹¹ï¿½ï¿½Í·ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -234,7 +234,7 @@ protected:
     string generateH(const StructPtr &pPtr, const string& namespaceId) const;
 
     /**
-     * Éú³É½á¹¹µÄmÎÄ¼şÄÚÈİ
+     * ï¿½ï¿½ï¿½É½á¹¹ï¿½ï¿½mï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -242,14 +242,14 @@ protected:
     string generateM(const StructPtr &pPtr, const string& namespaceId) const;
 
     /**
-     * Éú³ÉÃ¶¾ÙµÄmÎÄ¼şÄÚÈİ
+     * ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½Ùµï¿½mï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param pPtr
      *
      * @return string
      */
 	string generateM(const EnumPtr &pPtr, const string& namespaceId) const;
     /**
-     * Éú³ÉÈİÆ÷µÄÍ·ÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -257,7 +257,7 @@ protected:
     string generateH(const ContainerPtr &pPtr) const;
 
     /**
-     * Éú³ÉÃ¶¾ÙµÄÍ·ÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½Ùµï¿½Í·ï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -265,7 +265,7 @@ protected:
     string generateH(const EnumPtr &pPtr, const string& namespaceId) const;
 
     /**
-     * Éú³ÉÃû×Ö¿Õ¼äµÄÍ·ÎÄ¼şºÍÊµÏÖÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½ï¿½Í·ï¿½Ä¼ï¿½ï¿½ï¿½Êµï¿½ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -273,7 +273,7 @@ protected:
     string generate(const NamespacePtr &pPtr) const;
 
     /**
-     * Éú³ÉÃû×Ö¿Õ¼ämÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½mï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -281,7 +281,7 @@ protected:
     string generateM(const NamespacePtr &pPtr) const;
 
     /**
-     * Éú³ÉÃû×Ö¿Õ¼äµÄÍ·ÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½ï¿½Í·ï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -289,7 +289,7 @@ protected:
     void generate(const ContextPtr &pPtr) const;
 
     /**
-     * Éú³ÉÃû×Ö¿Õ¼ämÎÄ¼şÔ´Âë
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½mï¿½Ä¼ï¿½Ô´ï¿½ï¿½
      * @param pPtr
      *
      * @return string
@@ -307,16 +307,16 @@ private:
     //<modulename,EM_TYPE>, 2:enum,1,stuct;
     mutable map<string,int> m_mIncludes;
 	/**
-	 * ÊÇ·ñÖ§³Öarc°æ±¾
+	 * ï¿½Ç·ï¿½Ö§ï¿½ï¿½arcï¿½æ±¾
 	 *
 	 */
 	bool m_bARC;
 	/**
-	 * ÊÇ·ñÖ§³ÖÌí¼ÓÃû×Ö¿Õ¼äÇ°×º
+	 * ï¿½Ç·ï¿½Ö§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½Ç°×º
 	 */
 	bool m_bNeedNS;
 	/**
-	 *ÓÃ»§×Ô¶¨ÒåµÄÃû×Ö¿Õ¼äÇ°×º£¬Èç¹û¸ÃÖµÎª¿Õ£¬Ä¬ÈÏÊÇÈ¡tarsÎÄ¼şÖĞ¶¨ÒåµÄÖµ
+	 *ï¿½Ã»ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿Õ¼ï¿½Ç°×ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÖµÎªï¿½Õ£ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½È¡tarsï¿½Ä¼ï¿½ï¿½Ğ¶ï¿½ï¿½ï¿½ï¿½Öµ
 	 */
 	string m_sNamespace;
 };

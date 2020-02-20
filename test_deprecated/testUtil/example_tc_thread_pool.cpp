@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
@@ -34,7 +34,7 @@ class MyThreadData : public TC_ThreadPool::ThreadData
 public:
     virtual ~MyThreadData()
     {
-        cout << pthread_self() << endl;
+        cout << std::this_thread::get_id() << endl;
     }
 
 public:
@@ -47,7 +47,7 @@ public:
 void threadInitialize()
 {
     MyThreadData *p = TC_ThreadPool::ThreadData::makeThreadData<MyThreadData>();
-    p->_idata = pthread_self();
+    p->_idata = std::this_thread::get_id();
     TC_ThreadPool::setThreadData(p);
 
     cout << p->_idata << endl;
@@ -61,9 +61,9 @@ void threadInitialize()
 void TestFunction3(const string &s, int i)
 {
     MyThreadData *p = (MyThreadData*)TC_ThreadPool::getThreadData();
-    assert(pthread_self() == p->_idata);
+    assert(std::this_thread::get_id() == p->_idata);
 
-//    cout << pthread_self() << " | TestFunction3('" << s << "', " << i << ")" << endl;
+//    cout << std::this_thread::get_id() << " | TestFunction3('" << s << "', " << i << ")" << endl;
 }
 
 /**

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -49,7 +49,7 @@ tars::Int32 StressImp::testStr(const std::string& in, std::string &out, tars::Ta
 
     if(_num == 100000)
     {
-        TLOGDEBUG("pthread id:"<<pthread_self()<<"|time(ms):"<<TC_TimeProvider::getInstance()->getNowMs()-_time<<endl);
+        TLOGDEBUG("pthread id:"<<std::this_thread::get_id()<<"|time(ms):"<<TC_TimeProvider::getInstance()->getNowMs()-_time<<endl);
         _time=TC_TimeProvider::getInstance()->getNowMs();
         _num=0;
     }

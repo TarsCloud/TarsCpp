@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -27,13 +27,13 @@ namespace tars
 /**
  * 异步回调后的处理线程
  */
-class AsyncProcThread : public TC_Thread, public TC_HandleBase, public TC_ThreadLock
+class AsyncProcThread : public TC_Thread, public TC_ThreadLock
 {
 public:
     /**
      * 构造函数
      */
-    AsyncProcThread(size_t iQueueCap = 10000);
+    AsyncProcThread(size_t iQueueCap, bool merge);
 
     /**
      * 析构函数
@@ -63,6 +63,8 @@ public:
         return _msgQueue->size();
     }
 
+protected:
+	void callback(ReqMessage * msg);
 private:
     /**
      * 是否需要退出
@@ -72,7 +74,17 @@ private:
     /**
      * 异步队列
      */
-    ReqInfoQueue *  _msgQueue;
+    TC_CasQueue<ReqMessage*> * _msgQueue;
+
+    /**
+     * 队列流量控制
+     */
+    size_t _iQueueCap;
+
+    /**
+     * 合并网络线程和回调线程
+     */
+    bool    _merge;
 };
 ///////////////////////////////////////////////////////
 }

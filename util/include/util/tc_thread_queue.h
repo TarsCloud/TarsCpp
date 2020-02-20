@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -13,14 +13,16 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
 #ifndef __TC_THREAD_QUEUE_H_
 #define __TC_THREAD_QUEUE_H_
 
 #include <deque>
 #include <vector>
 #include <cassert>
-#include "util/tc_monitor.h"
+#include <mutex>
+#include <condition_variable>
+
+using namespace std;
 
 namespace tars
 {
@@ -28,7 +30,8 @@ namespace tars
 /** 
  * @file tc_thread_queue.h
  * @brief 线程队列类.
- * 
+ *  
+ * @author jarodruan@upchina.com
  */
        
 /////////////////////////////////////////////////
@@ -36,7 +39,7 @@ namespace tars
  * @brief 线程安全队列
  */
 template<typename T, typename D = deque<T> >
-class TC_ThreadQueue : protected TC_ThreadLock
+class TC_ThreadQueue
 {
 public:
     TC_ThreadQueue():_size(0){};
@@ -49,12 +52,13 @@ public:
      * @brief 从头部获取数据, 没有数据则等待.
      *
      * @param t 
-     * @param millsecond   阻塞等待时间(ms) 
-     *                    0 表示不阻塞 
-     *                      -1 永久等待
+	 * @param millsecond(wait = true时才生效)  阻塞等待时间(ms)
+	 *                    0 表示不阻塞 
+     * 					 -1 永久等待
+     * @param wait, 是否wait
      * @return bool: true, 获取了数据, false, 无数据
      */
-    bool pop_front(T& t, size_t millsecond = 0);
+    bool pop_front(T& t, size_t millsecond = 0, bool wait = true);
 
     /**
      * @brief 通知等待在队列上面的线程都醒过来
@@ -62,43 +66,44 @@ public:
     void notifyT();
 
     /**
-     * @brief 放数据到队列后端. 
-     *  
+	 * @brief 放数据到队列后端. 
+	 *  
      * @param t
      */
-    void push_back(const T& t);
+    void push_back(const T& t, bool notify = true);
 
     /**
-     * @brief  放数据到队列后端. 
-     *  
+	 * @brief  放数据到队列后端. 
+	 *  
      * @param vt
      */
-    void push_back(const queue_type &qt);
-    
+    void push_back(const queue_type &qt, bool notify = true);
+
     /**
-     * @brief  放数据到队列前端. 
-     *  
+	 * @brief  放数据到队列前端. 
+	 *  
      * @param t
      */
-    void push_front(const T& t);
+    void push_front(const T& t, bool notify = true);
 
     /**
-     * @brief  放数据到队列前端. 
-     *  
+	 * @brief  放数据到队列前端. 
+	 *  
      * @param vt
      */
-    void push_front(const queue_type &qt);
+    void push_front(const queue_type &qt, bool notify = true);
 
     /**
-     * @brief  等到有数据才交换. 
-     *  
+	 * @brief  交换数据
+	 *  
      * @param q
-     * @param millsecond  阻塞等待时间(ms) 
-     *                   0 表示不阻塞 
-     *                      -1 如果为则永久等待
+	 * @param millsecond(wait = true时才生效)  阻塞等待时间(ms)
+	 *                   0 表示不阻塞 
+     * 					 -1 如果为则永久等待
+     * @param 是否等待有数据
      * @return 有数据返回true, 无数据返回false
      */
-    bool swap(queue_type &q, size_t millsecond = 0);
+    bool swap(queue_type &q, size_t millsecond = 0, bool wait = true);
 
     /**
      * @brief  队列大小.
@@ -120,6 +125,12 @@ public:
     bool empty() const;
 
 protected:
+	TC_ThreadQueue(const TC_ThreadQueue&) = delete;
+	TC_ThreadQueue(TC_ThreadQueue&&) = delete;
+	TC_ThreadQueue& operator=(const TC_ThreadQueue&) = delete;
+	TC_ThreadQueue& operator=(TC_ThreadQueue&&) = delete;
+
+protected:
     /**
      * 队列
      */
@@ -130,157 +141,228 @@ protected:
      */
     size_t              _size;
 
+    //条件变量
+	std::condition_variable _cond;
+
+	//锁
+    mutable std::mutex _mutex;
 };
 
-template<typename T, typename D> bool TC_ThreadQueue<T, D>::pop_front(T& t, size_t millsecond)
+template<typename T, typename D> bool TC_ThreadQueue<T, D>::pop_front(T& t, size_t millsecond, bool wait)
 {
-    Lock lock(*this);
+    if(wait) {
 
-    if (_queue.empty())
+        std::unique_lock<std::mutex> lock(_mutex);
+
+        if (_queue.empty()) {
+            if (millsecond == 0) {
+                return false;
+            }
+            if (millsecond == (size_t) -1) {
+                _cond.wait(lock);
+            }
+            else {
+                //超时了
+                if (_cond.wait_for(lock, std::chrono::milliseconds(millsecond)) == std::cv_status::timeout) {
+                    return false;
+                }
+            }
+        }
+
+        if (_queue.empty()) {
+            return false;
+        }
+
+        t = _queue.front();
+        _queue.pop_front();
+        assert(_size > 0);
+        --_size;
+
+        return true;
+    }
+    else
     {
-        if(millsecond == 0)
+        std::lock_guard<std::mutex> lock (_mutex);
+        if (_queue.empty())
         {
             return false;
         }
-        if(millsecond == (size_t)-1)
-        {
-            wait();
-        }
-        else
-        {
-            //超时了
-            if(!timedWait(millsecond))
-            {
-                return false;
-            }
-        }
+
+        t = _queue.front();
+        _queue.pop_front();
+        assert(_size > 0);
+        --_size;
+
+        return true;
     }
-
-    if (_queue.empty())
-    {
-        return false;
-    }
-
-    t = _queue.front();
-    _queue.pop_front();
-    assert(_size > 0);
-    --_size;
-
-
-    return true;
 }
+
 
 template<typename T, typename D> void TC_ThreadQueue<T, D>::notifyT()
 {
-    Lock lock(*this);
-    notifyAll();
+	std::unique_lock<std::mutex> lock(_mutex);
+	_cond.notify_all();
 }
 
-template<typename T, typename D> void TC_ThreadQueue<T, D>::push_back(const T& t)
+template<typename T, typename D> void TC_ThreadQueue<T, D>::push_back(const T& t, bool notify)
 {
-    Lock lock(*this);
+    if(notify) {
+        std::unique_lock<std::mutex> lock(_mutex);
 
-    notify();
-
-    _queue.push_back(t);
-    ++_size;
-}
-
-template<typename T, typename D> void TC_ThreadQueue<T, D>::push_back(const queue_type &qt)
-{
-    Lock lock(*this);
-
-    typename queue_type::const_iterator it = qt.begin();
-    typename queue_type::const_iterator itEnd = qt.end();
-    while(it != itEnd)
-    {
-        _queue.push_back(*it);
-        ++it;
+        _queue.push_back(t);
         ++_size;
-        notify();
+
+        _cond.notify_one();
+    }
+    else
+    {
+        std::lock_guard<std::mutex> lock (_mutex);
+        _queue.push_back(t);
+        ++_size;
     }
 }
 
-template<typename T, typename D> void TC_ThreadQueue<T, D>::push_front(const T& t)
+template<typename T, typename D> void TC_ThreadQueue<T, D>::push_back(const queue_type &qt, bool notify)
 {
-    Lock lock(*this);
+    if(notify) {
+        std::unique_lock<std::mutex> lock(_mutex);
 
-    notify();
-
-    _queue.push_front(t);
-
-    ++_size;
-}
-
-template<typename T, typename D> void TC_ThreadQueue<T, D>::push_front(const queue_type &qt)
-{
-    Lock lock(*this);
-
-    typename queue_type::const_iterator it = qt.begin();
-    typename queue_type::const_iterator itEnd = qt.end();
-    while(it != itEnd)
+        typename queue_type::const_iterator it = qt.begin();
+        typename queue_type::const_iterator itEnd = qt.end();
+        while (it != itEnd) {
+            _queue.push_back(*it);
+            ++it;
+            ++_size;
+        }
+        _cond.notify_all();
+    }
+    else
     {
-        _queue.push_front(*it);
-        ++it;
-        ++_size;
+        std::lock_guard<std::mutex> lock (_mutex);
 
-        notify();
+        typename queue_type::const_iterator it = qt.begin();
+        typename queue_type::const_iterator itEnd = qt.end();
+        while (it != itEnd) {
+            _queue.push_back(*it);
+            ++it;
+            ++_size;
+        }
     }
 }
 
-template<typename T, typename D> bool TC_ThreadQueue<T, D>::swap(queue_type &q, size_t millsecond)
+template<typename T, typename D> void TC_ThreadQueue<T, D>::push_front(const T& t, bool notify)
 {
-    Lock lock(*this);
+    if(notify) {
+        std::unique_lock<std::mutex> lock(_mutex);
 
-    if (_queue.empty())
+        _cond.notify_one();
+
+        _queue.push_front(t);
+
+        ++_size;
+    }
+    else
     {
-        if(millsecond == 0)
-        {
-            return false;
+        std::lock_guard<std::mutex> lock (_mutex);
+
+        _queue.push_front(t);
+
+        ++_size;
+    }
+}
+
+template<typename T, typename D> void TC_ThreadQueue<T, D>::push_front(const queue_type &qt, bool notify)
+{
+    if(notify) {
+        std::unique_lock<std::mutex> lock(_mutex);
+
+        typename queue_type::const_iterator it = qt.begin();
+        typename queue_type::const_iterator itEnd = qt.end();
+        while (it != itEnd) {
+            _queue.push_front(*it);
+            ++it;
+            ++_size;
+
         }
-        if(millsecond == (size_t)-1)
-        {
-            wait();
+
+        _cond.notify_all();
+    }
+    else
+    {
+        std::lock_guard<std::mutex> lock (_mutex);
+
+        typename queue_type::const_iterator it = qt.begin();
+        typename queue_type::const_iterator itEnd = qt.end();
+        while (it != itEnd) {
+            _queue.push_front(*it);
+            ++it;
+            ++_size;
+
         }
-        else
-        {
-            //超时了
-            if(!timedWait(millsecond))
-            {
+    }
+}
+
+template<typename T, typename D> bool TC_ThreadQueue<T, D>::swap(queue_type &q, size_t millsecond, bool wait)
+{
+    if(wait) {
+        std::unique_lock<std::mutex> lock(_mutex);
+
+        if (_queue.empty()) {
+            if (millsecond == 0) {
                 return false;
             }
+            if (millsecond == (size_t) -1) {
+                _cond.wait(lock);
+            }
+            else {
+                //超时了
+                if (_cond.wait_for(lock, std::chrono::milliseconds(millsecond)) == std::cv_status::timeout) {
+                    return false;
+                }
+            }
         }
-    }
 
-    if (_queue.empty())
+        if (_queue.empty()) {
+            return false;
+        }
+
+        q.swap(_queue);
+        _size = _queue.size();
+
+        return true;
+    }
+    else
     {
-        return false;
+        std::lock_guard<std::mutex> lock (_mutex);
+
+        if (_queue.empty()) {
+            return false;
+        }
+
+        q.swap(_queue);
+
+        _size = _queue.size();
+
+        return true;
     }
-
-    q.swap(_queue);
-    //_size = q.size();
-    _size = _queue.size();
-
-    return true;
 }
 
 template<typename T, typename D> size_t TC_ThreadQueue<T, D>::size() const
 {
-    Lock lock(*this);
-    //return _queue.size();
+	std::lock_guard<std::mutex> lock(_mutex);
     return _size;
 }
 
 template<typename T, typename D> void TC_ThreadQueue<T, D>::clear()
 {
-    Lock lock(*this);
+	std::lock_guard<std::mutex> lock(_mutex);
     _queue.clear();
     _size = 0;
 }
 
 template<typename T, typename D> bool TC_ThreadQueue<T, D>::empty() const
 {
-    Lock lock(*this);
+	std::lock_guard<std::mutex> lock(_mutex);
     return _queue.empty();
 }
 

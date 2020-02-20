@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -1117,7 +1117,7 @@ string Tars2Java::generateJava(const StructPtr& pPtr, const NamespacePtr& nPtr) 
 
 
     string fileJava  = getFilePath(nPtr->getId()) + pPtr->getId() + ".java";
-    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()), 0755);
+    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileJava, s.str());
 
     return s.str();
@@ -1288,7 +1288,7 @@ string Tars2Java::generateJava(const EnumPtr& pPtr, const NamespacePtr& nPtr) co
     s << TAB << "}" << endl;
 
     string fileJava  = getFilePath(nPtr->getId()) + pPtr->getId() + ".java";
-    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()), 0755);
+    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileJava, s.str());
 
 
@@ -1331,7 +1331,7 @@ void Tars2Java::generateJava(const ConstPtr& pPtr, const NamespacePtr& nPtr) con
     s << TAB << "}" << endl;
 
     string fileJava  = getFilePath(nPtr->getId()) + "/cnst/" + pPtr->getTypeIdPtr()->getId() + ".java";
-    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId() + "/cnst/"), 0755);
+    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId() + "/cnst/"));
     tars::TC_File::save2file(fileJava, s.str());
 
     return;
@@ -1383,7 +1383,7 @@ void Tars2Java::setBasePackage(const string& prefix)
 
 string Tars2Java::getFilePath(const string& ns) const
 {
-    return _baseDir + "/" + tars::TC_Common::replace(_packagePrefix, ".", "/") + "/" + ns + "/";
+    return _baseDir + FILE_SEP + tars::TC_Common::replace(_packagePrefix, ".", FILE_SEP) + FILE_SEP + ns + FILE_SEP;
 }
 
 // 增加的函数
@@ -2011,7 +2011,7 @@ string Tars2Java::generateAndroidStub(const InterfacePtr &pPtr, const NamespaceP
 
 
     string fileJava = getFilePath(nPtr->getId()) + pPtr->getId() + "Agent.java";
-    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()), 0755);
+    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileJava, s.str());
 
     return s.str();

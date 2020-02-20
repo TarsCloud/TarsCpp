@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -24,13 +24,13 @@ void usage()
 {
     cout << "Usage : tars2cpp [OPTION] tarsfile" << endl;
     // cout << "  --coder=Demo::interface1;Demo::interface2   create interface encode and decode api" << endl;
-    cout << "  --dir=DIRECTORY                             generate source file to DIRECTORY(生成文件到目录DIRECTORY,默认为当前目录)" << endl;
-    cout << "  --check-default=<true,false>                如果optional字段值为默认值不打包(默认打包)" << endl;
-    cout << "  --unjson                                    不生成json编解码" << endl;
-    cout << "  --os                                        只生成tars文件中结构体编解码的程序段" << endl;
-    cout << "  --include=\"dir1;dir2;dir3\"                设置tars文件搜索路径" << endl;
-    cout << "  --unknown                                   生成处理tars数据流中的unkown field的代码" << endl;
-    cout << "  --tarsMaster                                生成获取主调信息的选项" << endl;
+    cout << "  --dir=DIRECTORY                             generate source file to DIRECTORY(create tars protocol file to DIRECTORY, default is current directory)" << endl;
+    cout << "  --check-default=<true,false>                optional field with default value not do package(default: true)" << endl;
+    cout << "  --unjson                                    not json interface" << endl;
+    cout << "  --os                                        only create struct(not create interface) " << endl;
+    cout << "  --include=\"dir1;dir2;dir3\"                set search path of tars protocol" << endl;
+    // cout << "  --unknown                                   create unkown field" << endl;
+    cout << "  --tarsMaster                                create get registry info interface" << endl;
     cout << "  --currentPriority						   use current path first." << endl;
     cout << "  tars2cpp support type: bool byte short int long float double vector map" << endl;
     exit(0);
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
         g_parse->setHeader(option.getValue("header"));
         g_parse->setCurrentPriority(option.hasParam("currentPriority"));
 
-        t2c.setUnknownField(option.hasParam("unknown"));
+        // t2c.setUnknownField(option.hasParam("unknown"));
         for(size_t i = 0; i < vTars.size(); i++)
         {
 

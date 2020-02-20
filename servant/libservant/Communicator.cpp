@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -15,6 +15,7 @@
  */
 
 #include "util/tc_file.h"
+
 #include "servant/Communicator.h"
 #include "servant/StatReport.h"
 #include "servant/TarsLogger.h"
@@ -73,6 +74,60 @@ bool Communicator::isTerminating()
     return _terminating;
 }
 
+map<string, string> Communicator::getServantProperty(const string &sObj)
+{
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+	auto it = _objInfo.find(sObj);
+	if(it != _objInfo.end())
+	{
+		return it->second;
+	}
+
+	return map<string, string>();
+}
+
+void Communicator::setServantProperty(const string &sObj, const string& name, const string& value)
+{
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+	_objInfo[sObj][name] = value;
+}
+
+string Communicator::getServantProperty(const string &sObj, const string& name)
+{
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+	auto it = _objInfo.find(sObj);
+	if(it != _objInfo.end())
+	{
+		auto vit = it->second.find(name);
+
+		if(vit != it->second.end())
+		{
+			return vit->second;
+		}
+	}
+
+	return "";
+}
+
+#if TARS_SSL
+shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string & objName)
+{
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+	auto it = _objCtx.find(objName);
+	if(it != _objCtx.end())
+	{
+		return TC_OpenSSL::newSSL(it->second);
+	}
+
+	return TC_OpenSSL::newSSL(_ctx);
+}
+
+#endif
+
 void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_ROOT_PATH*/)
 {
     TC_LockT<TC_ThreadRecMutex> lock(*this);
@@ -80,12 +135,40 @@ void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_
     conf.getDomainMap(domain, _properties);
 
     string defaultValue = "dft";
-    if ((defaultValue == getProperty("enableset", defaultValue))
-            || (defaultValue == getProperty("setdivision", defaultValue)))
+    if ((defaultValue == getProperty("enableset", defaultValue)) || (defaultValue == getProperty("setdivision", defaultValue)))
     {
         _properties["enableset"] = conf.get("/tars/application<enableset>", "n");
         _properties["setdivision"] = conf.get("/tars/application<setdivision>", "NULL");
     }
+
+	vector<string> auths;
+
+	if (conf.getDomainVector("/tars/application/client", auths))
+	{
+		for(size_t i = 0; i < auths.size(); i++)
+		{
+			map<string, string> &data = _objInfo[auths[i]];
+			data["accesskey"] = conf.get("/tars/application/client/" + auths[i] + "<accesskey>");
+			data["secretkey"] = conf.get("/tars/application/client/" + auths[i] + "<secretkey>");
+			data["ca"]        = conf.get("/tars/application/client/" + auths[i] + "<ca>");
+			data["cert"]      = conf.get("/tars/application/client/" + auths[i] + "<cert>");
+			data["key"]       = conf.get("/tars/application/client/" + auths[i] + "<key>");
+#if TARS_SSL
+
+			if(!data["ca"].empty())
+			{
+				shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx( data["ca"], data["cert"], data["key"], false);
+				if(!ctx)
+				{
+					TLOGERROR("[TARS]load obj:" << auths[i] << ", ssl error, ca:" << data["ca"] << endl);
+					exit(-1);
+				}
+
+				_objCtx[auths[i]] = ctx;
+			}
+#endif
+		}
+	}
 
     initClientConfig();
 }
@@ -159,6 +242,7 @@ void Communicator::initClientConfig()
         assert(_traceManager != NULL);
     }
 #endif
+
 }
 
 void Communicator::setProperty(const map<string, string>& properties)
@@ -258,10 +342,25 @@ void Communicator::initialize()
 
     _initialized = true;
 
+#if TARS_SSL
+
+	string ca   = getProperty("ca");
+	string cert = getProperty("cert");
+	string key  = getProperty("key");
+
+	if(!ca.empty()) {
+		_ctx = TC_OpenSSL::newCtx(ca, cert, key, false);
+
+		if(!_ctx)
+		{
+			TLOGERROR("[TARS]load client ssl error, ca:" << ca << endl);
+			exit(-1);
+		}
+	}
+#endif
+
     _servantProxyFactory = new ServantProxyFactory(this);
 
-
-    //客户端网络线程
     _clientThreadNum = TC_Common::strto<size_t>(getProperty("netthread","1"));
 
     if(0 == _clientThreadNum)
@@ -273,6 +372,33 @@ void Communicator::initialize()
         _clientThreadNum = MAX_CLIENT_THREAD_NUM;
     }
 
+    //异步线程数
+    _asyncThreadNum = TC_Common::strto<size_t>(getProperty("asyncthread", "3"));
+
+    if(_asyncThreadNum == 0)
+    {
+        _asyncThreadNum = 3;
+    }
+
+    if(_asyncThreadNum > MAX_CLIENT_ASYNCTHREAD_NUM)
+    {
+        _asyncThreadNum = MAX_CLIENT_ASYNCTHREAD_NUM;
+    }
+
+	bool merge = TC_Common::strto<bool>(getProperty("mergenetasync", "0"));
+
+    //异步队列的大小
+    size_t iAsyncQueueCap = TC_Common::strto<size_t>(getProperty("asyncqueuecap", "100000"));
+    if(iAsyncQueueCap < 10000)
+    {
+        iAsyncQueueCap = 10000;
+    }
+
+    //第一个通信器才去启动回调线程
+    for (size_t i = 0; i < _asyncThreadNum; ++i) {
+        _asyncThread.push_back(new AsyncProcThread(iAsyncQueueCap, merge));
+    }
+
     //stat总是有对象, 保证getStat返回的对象总是有效
     _statReport = new StatReport(_clientThreadNum);
 
@@ -282,12 +408,17 @@ void Communicator::initialize()
         _communicatorEpoll[i]->start();
     }
 
+    //异步队列数目上报
+    string moduleName = getProperty("modulename", "");
+    if(!moduleName.empty())
+    {
+        _reportAsyncQueue= getStatReport()->createPropertyReport(moduleName + ".asyncqueue", PropertyReport::avg());
+    }
+
     //初始化统计上报接口
     string statObj = getProperty("stat", "");
 
     string propertyObj = getProperty("property", "");
-
-    string moduleName = getProperty("modulename", "");
 
     int iReportInterval = TC_Common::strto<int>(getProperty("report-interval", "60000"));
 
@@ -335,36 +466,89 @@ vector<TC_Endpoint> Communicator::getEndpoint4All(const string & objName)
     return pServantProxy->getEndpoint4All();
 }
 
+void Communicator::doStat()
+{
+    if(_reportAsyncQueue)
+    {
+        size_t n = 0;
+        for(size_t i = 0;i < _asyncThreadNum; ++i)
+        {
+            n = n + _asyncThread[i]->getSize();
+        }
+        _reportAsyncQueue->report(n);
+    }    
+
+}
+
+void Communicator::pushAsyncThreadQueue(ReqMessage * msg)
+{
+    //先不考虑每个线程队列数目不一致的情况
+    _asyncThread[(++_asyncSeq)%_asyncThreadNum]->push_back(msg);
+}
+
 void Communicator::terminate()
 {
     {
         TC_LockT<TC_ThreadRecMutex> lock(*this);
 
+        if (_terminating)
+            return;
+
         _terminating = true;
-    }
 
-    if(_initialized)
-    {
-        for(size_t i = 0; i < _clientThreadNum; ++i)
+        if(_initialized)
         {
-            _communicatorEpoll[i]->terminate();
-            _communicatorEpoll[i]->getThreadControl().join();
-            //delete _communicatorEpoll[i];
-            //_communicatorEpoll[i] = NULL;
-        }
+            for(size_t i = 0; i < _clientThreadNum; ++i)
+            {
+                _communicatorEpoll[i]->terminate();
+            }
 
-        if(_statReport)
-        {
-            if (_statReport->isAlive())
+            if(_statReport)
             {
                 _statReport->terminate();
-                _statReport->getThreadControl().join();
             }
-            delete _statReport;
-            _statReport = NULL;
+
+            for(size_t i = 0;i < _asyncThreadNum; ++i)
+            {
+                if(_asyncThread[i])
+                {
+                    if (_asyncThread[i]->isAlive())
+                    {
+                        _asyncThread[i]->terminate();
+                        _asyncThread[i]->getThreadControl().join();
+                    }
+
+                    delete _asyncThread[i];
+                    _asyncThread[i] = NULL;
+                }
+            }
+            _asyncThread.clear();
         }
     }
 
+    if (_initialized)
+    {
+        for (size_t i = 0; i < _clientThreadNum; ++i)
+        {
+            _communicatorEpoll[i]->getThreadControl().join();
+            delete _communicatorEpoll[i];
+            _communicatorEpoll[i] = NULL;
+        }
+
+        if (_statReport)
+        {
+            _statReport->getThreadControl().join();
+            delete _statReport;
+            _statReport = NULL;
+        }        
+
+        if(_servantProxyFactory)
+        {
+            delete _servantProxyFactory;
+            _servantProxyFactory = NULL; 
+        }
+    }
+        
 }
 
 ServantProxy * Communicator::getServantProxy(const string& objectName,const string& setName)
@@ -383,7 +567,7 @@ StatReport * Communicator::getStatReport()
 
 ServantProxyFactory* Communicator::servantProxyFactory()
 {
-    return _servantProxyFactory.get();
+    return _servantProxyFactory;
 }
 ///////////////////////////////////////////////////////////////
 }

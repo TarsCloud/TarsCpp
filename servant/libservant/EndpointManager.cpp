@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -50,7 +50,7 @@ QueryEpBase::QueryEpBase(Communicator * pComm, bool bFirstNetThread,bool bInterf
 
 void QueryEpBase::callback_findObjectById4All(tars::Int32 ret, const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectById4All _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[TARS][callback_findObjectById4All _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -66,7 +66,7 @@ void QueryEpBase::callback_findObjectById4All_exception(tars::Int32 ret)
 
 void QueryEpBase::callback_findObjectById4Any(tars::Int32 ret, const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectById4Any _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[TARS][callback_findObjectById4Any _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -82,7 +82,7 @@ void QueryEpBase::callback_findObjectById4Any_exception(tars::Int32 ret)
 
 void QueryEpBase::callback_findObjectByIdInSameGroup(tars::Int32 ret, const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectByIdInSameGroup _objName:" << _objName << "|ret:"<<ret
+    TLOGTARS("[TARS][callback_findObjectByIdInSameGroup _objName:" << _objName << "|ret:"<<ret
             << ",active:" << activeEp.size()
                << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -98,7 +98,7 @@ void QueryEpBase::callback_findObjectByIdInSameGroup_exception(tars::Int32 ret)
 
 void QueryEpBase::callback_findObjectByIdInSameSet( Int32 ret, const vector<tars::EndpointF> &activeEp, const vector<tars::EndpointF> & inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectByIdInSameSet _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[TARS][callback_findObjectByIdInSameSet _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -114,7 +114,7 @@ void QueryEpBase::callback_findObjectByIdInSameSet_exception( Int32 ret)
 
 void QueryEpBase::callback_findObjectByIdInSameStation( Int32 ret, const vector<tars::EndpointF> &activeEp, const vector<tars::EndpointF> &inactiveEp)
 {
-    TLOGINFO("[TARS][callback_findObjectByIdInSameStation _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[TARS][callback_findObjectByIdInSameStation _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -137,7 +137,7 @@ int QueryEpBase::setLocatorPrx(QueryFPrx prx)
 
 bool QueryEpBase::init(const string & sObjName,const string & sLocator,const string& setName)
 {
-    TLOGINFO("[TARS][QueryEpBase::init sObjName:" << sObjName << ",sLocator:" << sLocator << ",setName:" << setName << "]" << endl);
+    TLOGTARS("[TARS][QueryEpBase::init sObjName:" << sObjName << ",sLocator:" << sLocator << ",setName:" << setName << "]" << endl);
 
     _locator = sLocator;
 
@@ -216,19 +216,48 @@ void QueryEpBase::setObjName(const string & sObjName)
     } 
 }
 
-bool isRealEndpoint(const string & s, const string & s1)
+vector<string> QueryEpBase::sepEndpoint(const string& sEndpoints)
 {
-    if (s1.empty())
-        return true;
+	vector<string>  vEndpoints;
+	bool flag = false;
+	string::size_type startPos = 0;
+	string::size_type sepPos = 0;
+	for(string::size_type pos = 0; pos < sEndpoints.size(); pos++)
+	{
+		if(sEndpoints[pos] == ':' && !flag )
+		{
+			sepPos = pos;
+			flag = true;
+		}
+		else if(flag)
+		{
+			if(sEndpoints[pos] == ' ')
+			{
+				continue;
+			}
 
-    const string delim = " \t\n\r";
-    string::size_type beg;
-    string::size_type end = 0;
+			if(TC_Port::strncasecmp("tcp", (sEndpoints.c_str() + pos), 3) == 0 || TC_Port::strncasecmp("udp", (sEndpoints.c_str() + pos), 3) == 0)
+			{
+				string ep = TC_Common::trim(string(sEndpoints.c_str() + startPos, sepPos - startPos));
+				if(!ep.empty()) {
+					vEndpoints.push_back(ep);
+				}
+				startPos = pos;
+			}
 
-    beg = s1.find_first_not_of(delim, end);
-    if (s1[beg] != 't' && s1[beg] != 'u' && s1[beg] != 's')
-        return false;
-    return true;
+			flag = false;
+		}
+	}
+
+	string ep = sEndpoints.substr(startPos);
+
+	if(!ep.empty()) {
+		vEndpoints.push_back(ep);
+	}
+
+//	vEndpoints.push_back(sEndpoints.substr(startPos));
+
+	return vEndpoints;
 }
 
 void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & setEndpoints)
@@ -242,7 +271,8 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
     bool         bFirstWeightType = true;
     unsigned int iWeightType      = 0;
 
-    vector<string>  vEndpoints    = TC_Common::sepstr<string>(sEndpoints, ":", false, isRealEndpoint);
+    // vector<string>  vEndpoints    = TC_Common::sepstr<string>(sEndpoints, ":", false, isRealEndpoint);
+    vector<string>  vEndpoints = sepEndpoint(sEndpoints);
 
     for (size_t i = 0; i < vEndpoints.size(); ++i)
     {
@@ -341,7 +371,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
         //一定时间不回调就算超时了
         _requestTimeout = iNow + _timeoutInterval;
 
-        TLOGINFO("[TARS][QueryEpBase::refresh,"<<_objName<<"]"<<endl);
+        TLOGTARS("[TARS][QueryEpBase::refresh,"<<_objName<<"]"<<endl);
 
         //判断是同步调用还是异步调用
         //内部请求主控都是异步请求
@@ -642,7 +672,7 @@ void QueryEpBase::setEndPointToCache(bool bInactive)
         AppCache::getInstance()->set(objName,sEndpoints,sLocatorKey);
     }
 
-    TLOGINFO("[TARS][setEndPointToCache,obj:" << _objName << ",invokeSetId:" << _invokeSetId << ",endpoint:" << sEndpoints << "]" << endl);
+    TLOGTARS("[TARS][setEndPointToCache,obj:" << _objName << ",invokeSetId:" << _invokeSetId << ",endpoint:" << sEndpoints << "]" << endl);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -764,6 +794,7 @@ void EndpointManager::doNotify()
 
 bool EndpointManager::selectAdapterProxy(ReqMessage * msg,AdapterProxy * & pAdapterProxy)
 {
+
     pAdapterProxy = NULL;
     //刷新主控
     refreshReg(E_DEFAULT,"");
@@ -887,7 +918,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
 
         int64_t iEnd = TNOWMS;
 
-        TLOGINFO("[TARS][EndpointManager::getHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
+        TLOGTARS("[TARS][EndpointManager::getHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
     }
 
     if(vRouterCache.size() > 0)
@@ -994,7 +1025,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
 
         int64_t iEnd = TNOWMS;
 
-        TLOGINFO("[TARS][EndpointManager::getConHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
+        TLOGTARS("[TARS][EndpointManager::getConHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
     }
 
     if(_consistentHashWeight.size() > 0)
@@ -1041,8 +1072,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
                 {
                     return thisHash[hash];
                 }
-                if(!thisHash[hash]->isConnTimeout() &&
-                   !thisHash[hash]->isConnExc())
+                if(!thisHash[hash]->isConnTimeout() && !thisHash[hash]->isConnExc())
                 {
                     conn.push_back(thisHash[hash]);
                 }
@@ -1221,7 +1251,7 @@ void EndpointManager::updateHashProxyWeighted(bool bStatic)
             }
         }
         
-        TLOGINFO("[TARS]EndpointManager::updateHashProxyWeighted bStatic:" << bStatic << "|_objName:" << _objName << "|endpoint:" << vRegProxys[i]->endpoint().desc() << "|iWeight:" << vRegProxys[i]->getWeight() << "|iWeightR:" << iWeight << "|iIndex:" << vIndex[i] << endl);
+        TLOGTARS("[TARS]EndpointManager::updateHashProxyWeighted bStatic:" << bStatic << "|_objName:" << _objName << "|endpoint:" << vRegProxys[i]->endpoint().desc() << "|iWeight:" << vRegProxys[i]->getWeight() << "|iWeightR:" << iWeight << "|iIndex:" << vIndex[i] << endl);
     }
 
     for(size_t i = 0; i < iMaxRouterR; i++)
@@ -1384,7 +1414,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
 
         int64_t iEnd = TNOWMS;
 
-        TLOGINFO("[TARS][EndpointManager::getConHashProxyForNormal update _objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
+        TLOGTARS("[TARS][EndpointManager::getConHashProxyForNormal update _objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
     }
 
     if(_consistentHash.size() > 0)
@@ -1732,7 +1762,7 @@ void EndpointManager::dispatchEndpointCache(const vector<int> &vWeight)
             _staticRouterCache.push_back(i);
         }
         
-        TLOGINFO("[TARS]EndpointManager::dispatchEndpointCache _objName:" << _objName << "|endpoint:" << _activeWeightProxy[i]->endpoint().desc() << "|iWeightR:" << iWeight << endl);
+        TLOGTARS("[TARS]EndpointManager::dispatchEndpointCache _objName:" << _objName << "|endpoint:" << _activeWeightProxy[i]->endpoint().desc() << "|iWeightR:" << iWeight << endl);
     }
 
     for(size_t i = 0; i < iMaxRouterR; i++)
@@ -1781,8 +1811,8 @@ void EndpointThread::getEndpoints(vector<EndpointInfo> &activeEndPoint, vector<E
     }
 
     {
-    
-        TC_ThreadLock::Lock lock(_lock);
+        TC_LockT<TC_SpinLock> lock(_mutex);
+        // TC_ThreadLock::Lock lock(_mutex);
     
         refreshReg(_type,_name);
     
@@ -1801,7 +1831,7 @@ void EndpointThread::getTCEndpoints(vector<TC_Endpoint> &activeEndPoint, vector<
 
     {
     
-        TC_ThreadLock::Lock lock(_lock);
+        TC_LockT<TC_SpinLock> lock(_mutex);
     
         refreshReg(_type,_name);
     
@@ -1814,7 +1844,7 @@ void EndpointThread::notifyEndpoints(const set<EndpointInfo> & active, const set
 {
     if(!bSync)
     {
-        TC_ThreadLock::Lock lock(_lock);
+        TC_LockT<TC_SpinLock> lock(_mutex);
 
         update(active, inactive);
     }
@@ -1930,7 +1960,7 @@ void EndpointManagerThread::getTCEndpointByStation(const string sName, vector<TC
 
 EndpointThread * EndpointManagerThread::getEndpointThread(GetEndpointType type,const string & sName)
 {
-    TC_ThreadLock::Lock lock(_lock);
+    TC_LockT<TC_SpinLock> lock(_mutex);
 
     string sAllName = TC_Common::tostr((int)type) + ":" +  sName;
 

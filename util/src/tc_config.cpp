@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -633,6 +633,26 @@ vector<string> TC_Config::getDomainLine(const string &path) const
     }
 
     return v;
+}
+
+bool TC_Config::hasDomainVector(const string &path) const
+{
+	TC_ConfigDomain::DomainPath dp = TC_ConfigDomain::parseDomainName(path, false);
+
+	//根域, 特殊处理
+	if(dp._domains.empty())
+	{
+		return !_root.getSubDomain().empty();
+	}
+
+	const TC_ConfigDomain *pTcConfigDomain = searchTcConfigDomain(dp._domains);
+
+	if(pTcConfigDomain == NULL)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 bool TC_Config::getDomainVector(const string &path, vector<string> &vtDomains) const

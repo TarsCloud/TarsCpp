@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -49,7 +49,6 @@ string Tars2Cs::toTypeInit(const TypePtr &pPtr) const
     VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
     if (vPtr)
     {
-        //Êý×éÌØÊâ´¦Àí
         string sType;
         size_t iPosBegin, iPosEnd;
         sType = tostr(vPtr->getTypePtr());
@@ -57,7 +56,6 @@ string Tars2Cs::toTypeInit(const TypePtr &pPtr) const
         {
             sType = sType.substr(0, iPosBegin) +  sType.substr(iPosEnd+1);
         }
-        //[] (Êý×é)µÄÊý×é±äÎª[1]
         sType = tars::TC_Common::replace(sType, "[]" , "[1]");
         return "(" + tostr(vPtr->getTypePtr()) + "[]) new " + sType + "[1];";;
     }
@@ -186,7 +184,6 @@ string Tars2Cs::generateCs(const StructPtr &pPtr, const NamespacePtr &nPtr) cons
     s << TAB << "{" << endl;
     INC_TAB;
 
-    //¶¨Òå³ÉÔ±±äÁ¿set;getº¯Êý
     for (size_t i = 0; i < member.size(); i++)
     {
         string sDefault;
@@ -281,7 +278,7 @@ string Tars2Cs::generateCs(const StructPtr &pPtr, const NamespacePtr &nPtr) cons
     s << endl;
 
     string fileCs  = getFilePath(nPtr->getId()) + pPtr->getId() + ".cs";
-    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()), 0755);
+    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileCs, s.str());
 
     return s.str();
@@ -307,7 +304,6 @@ void Tars2Cs::generateCs(const vector<EnumPtr> &es,const vector<ConstPtr> &cs,co
         s << TAB << "class Const " << endl;
         s << TAB << "{" << endl;
         INC_TAB;
-        //-----------------constÀàÐÍ¿ªÊ¼------------------------------------
         for (size_t i = 0; i < cs.size(); i++)
         {
             if (cs[i]->getConstGrammarPtr()->t == ConstGrammar::STRING)
@@ -330,10 +326,8 @@ void Tars2Cs::generateCs(const vector<EnumPtr> &es,const vector<ConstPtr> &cs,co
         DEL_TAB;
         s << TAB << "}" << endl;
     }
-    //-----------------constÀàÐÍ½áÊø--------------------------------
     if (es.size()>0)
     {
-        //-----------------Ã¶¾ÙÀàÐÍ¿ªÊ¼---------------------------------
         for (size_t i = 0; i < es.size(); i++)
         {
             s << TAB << "public enum "<<es[i]->getId()<<endl;
@@ -354,12 +348,11 @@ void Tars2Cs::generateCs(const vector<EnumPtr> &es,const vector<ConstPtr> &cs,co
             s<< TAB <<"}"<<endl;
         }
     }
-    //-----------------Ã¶¾ÙÀàÐÍ½áÊø---------------------------------
     DEL_TAB;
     s << TAB << "}" << endl;
 
     string fileCs  = getFilePath(nPtr->getId()) + nPtr->getId()+"_const.cs";
-    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()), 0755);
+    tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileCs, s.str());
 
     return;
@@ -377,7 +370,7 @@ void Tars2Cs::generateCs(const NamespacePtr &pPtr) const
         generateCs(ss[i], pPtr);
     }
 
-    generateCs(es,cs,pPtr);//c#ÀïÃæµÄÃ¶¾Ù¡¢const¶¼·Åµ½Ò»Æð¡£
+    generateCs(es,cs,pPtr);
 
     return;
 }
@@ -423,6 +416,6 @@ void Tars2Cs::setBasePackage(const string &prefix)
 
 string Tars2Cs::getFilePath(const string &ns) const
 {
-    return _baseDir + "/" + tars::TC_Common::replace(_packagePrefix, ".", "/") + "/" + ns + "/";
+    return _baseDir + FILE_SEP + tars::TC_Common::replace(_packagePrefix, ".", FILE_SEP) + FILE_SEP + ns + FILE_SEP;
 }
 

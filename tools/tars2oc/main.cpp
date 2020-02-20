@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,10 +22,10 @@
 void usage()
 {
     cout << "Usage : tars2oc [OPTION] tarsfile" << endl;
-	cout << "  --dir=DIRECTORY       generate source file to DIRECTORY(Éú³ÉÎÄ¼þµ½Ä¿Â¼DIRECTORY,Ä¬ÈÏÎªµ±Ç°Ä¿Â¼)" << endl;
-    cout << "  --arc    ÊÇ·ñÖ§³Öarc°æ±¾" << endl;
-	cout << "  --nonamespace  ÉèÖÃ¸÷¸ö³ÉÔ±ÊôÐÔÊÇ·ñ¼ÓÉÏÃû×Ö¿Õ¼äÇ°×º,Ä¬ÈÏÊÇ¼ÓÉÏ" << endl;
-	cout << "  --with-namespace=NAME ×Ô¶¨Òå±äÁ¿ÃûÇ°×ºµÄÃû×Ö¿Õ¼ä" << endl;
+	cout << "  --dir=DIRECTORY       generate source file to DIRECTORY(create tars protocol file to DIRECTORY, default is current directory)" << endl;
+    cout << "  --arc    create arc" << endl;
+	cout << "  --nonamespace  no namespace" << endl;
+	cout << "  --with-namespace=NAME set namespace" << endl;
     cout << "  tars2oc support type: bool byte short int long float double vector map" << endl;
     exit(0);
 }
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         usage();
     }
 
-    //ÊÇ·ñ¿ÉÒÔÒÔtars¿ªÍ·
+    //????????tars???
     g_parse->setTars(option.hasParam("with-tars"));
     g_parse->setHeader(option.getValue("header"));
 

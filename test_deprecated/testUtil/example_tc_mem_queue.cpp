@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
@@ -41,12 +41,12 @@ void writeQueue()
         TC_LockT<TC_SemMutex> l(semLock);
         if(memQueue.push_back(TC_Common::tostr(i)))
         {
-            cout << pthread_self() << " | writeQueue OK " << i << ":" << memQueue.elementCount() << endl;
+            cout << std::this_thread::get_id() << " | writeQueue OK " << i << ":" << memQueue.elementCount() << endl;
             i--;
         }
         else
         {
-            cout << pthread_self() << " | writeQueue FULL " << i << endl;
+            cout << std::this_thread::get_id() << " | writeQueue FULL " << i << endl;
         }
     }
 }
@@ -59,11 +59,11 @@ void readQueue()
         TC_LockT<TC_SemMutex> l(semLock);
         if(memQueue.pop_front(s))
         {
-            cout << pthread_self() << " | readQueue OK " << s << endl;
+            cout << std::this_thread::get_id() << " | readQueue OK " << s << endl;
         }
         else
         {
-            cout << pthread_self() << " | readQueue EMPTY" << endl;
+            cout << std::this_thread::get_id() << " | readQueue EMPTY" << endl;
             sleep(1);
         }
     }

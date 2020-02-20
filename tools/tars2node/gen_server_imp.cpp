@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -118,6 +118,6 @@ void CodeGenerator::generateJSServerImp(const ContextPtr &cPtr)
 		str << generateJSServerImp(cPtr, namespaces[i]);
 	}
 
-    TC_File::makeDirRecursive(_sToPath, 0755);
+    TC_File::makeDirRecursive(_sToPath);
     makeUTF8File(sFileName, str.str());
 }

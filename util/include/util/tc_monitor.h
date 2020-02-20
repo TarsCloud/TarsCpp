@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -25,7 +25,9 @@ namespace tars
 /////////////////////////////////////////////////
 /** 
  * @file tc_monitor.h 
- * 
+ * @brief 锁监控器类.
+ *  
+ * @author jarodruan@upchina.com
  */           
 /////////////////////////////////////////////////
 /**
@@ -97,6 +99,8 @@ public:
      */
     void wait() const
     {
+        // _cond.wait(_mutex);
+
         notifyImpl(_nnotify);
 
         try
@@ -113,13 +117,15 @@ public:
     }
 
     /**
-     * @brief 等待时间,当前调用线程在锁上等待，直到超时或有事件通知
-     *  
-     * @param millsecond 等待时间
+	 * @brief 等待时间,当前调用线程在锁上等待，直到超时或有事件通知
+	 *  
+	 * @param millsecond 等待时间
      * @return           false:超时了, ture:有事件来了
      */
     bool timedWait(int millsecond) const
     {
+        // return _cond.timedWait(_mutex, millsecond);
+
         notifyImpl(_nnotify);
 
         bool rc;
@@ -139,14 +145,15 @@ public:
     }
 
     /**
-     * @brief 通知某一个线程醒来 
-     *  
-     * 通知等待在该锁上某一个线程醒过来 ,调用该函数之前必须加锁, 
-     *  
-     * 在解锁的时候才真正通知 
+	 * @brief 通知某一个线程醒来 
+	 *  
+	 * 通知等待在该锁上某一个线程醒过来 ,调用该函数之前必须加锁, 
+	 *  
+	 * 在解锁的时候才真正通知 
      */
     void notify()
     {
+        // _cond.signal();
         if(_nnotify != -1)
         {
             ++_nnotify;
@@ -154,21 +161,22 @@ public:
     }
 
     /**
-     * @brief 通知等待在该锁上的所有线程醒过来，
-     * 注意调用该函数时必须已经获得锁.
-     *  
-     * 该函数调用前之必须加锁, 在解锁的时候才真正通知 
+	 * @brief 通知等待在该锁上的所有线程醒过来，
+	 * 注意调用该函数时必须已经获得锁.
+	 *  
+	 * 该函数调用前之必须加锁, 在解锁的时候才真正通知 
      */
     void notifyAll()
     {
+        // _cond.broadcast();
         _nnotify = -1;
     }
 
 protected:
 
     /**
-     * @brief 通知实现. 
-     *  
+	 * @brief 通知实现. 
+	 *  
      * @param nnotify 上锁的次数
      */
     void notifyImpl(int nnotify) const
@@ -193,17 +201,17 @@ protected:
 
 private:
 
-     /** 
-      * @brief noncopyable
-      */
+	 /** 
+	  * @brief noncopyable
+	  */
     TC_Monitor(const TC_Monitor&);
     void operator=(const TC_Monitor&);
 
 protected:
 
-    /**
-     * 上锁的次数
-     */
+	/**
+	 * 上锁的次数
+	 */
     mutable int     _nnotify;
     mutable P       _cond;
     T               _mutex;

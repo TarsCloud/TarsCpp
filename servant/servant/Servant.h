@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -27,6 +27,7 @@ namespace tars
 {
 
 class BaseNotify;
+class Application;
 ////////////////////////////////////////////////////////////////////
 /**
  * 每个对象的基类
@@ -61,6 +62,18 @@ public:
      * @param handle 
      */
     void setHandle(TC_EpollServer::Handle* handle);
+
+    /**
+     * 设置全局的应用
+     * @param application
+     */
+    void setApplication(Application *application);
+
+    /**
+     * 获取应用
+     * @return
+     */
+    Application* getApplication() const;
 
     /**
      * 获取所属的Handle
@@ -167,6 +180,11 @@ protected:
     string _name;
 
     /**
+     * 应用
+     */
+    Application *_application;
+
+    /**
      * 所属的Handle
      */
     TC_EpollServer::Handle* _handle;
@@ -228,11 +246,12 @@ protected:
 //////////////////////////////////////////////////////////////////////
 
 //线程私有数据
-class CallbackThreadData : public TC_ThreadPool::ThreadData
+class CallbackThreadData //: public TC_ThreadPool::ThreadData
 {
 public:
-    static TC_ThreadMutex _mutex;  //全局的互斥锁
-    static pthread_key_t _key;   //私有线程数据key
+    static thread_local shared_ptr<CallbackThreadData> g_sp;
+    // static TC_ThreadMutex _mutex;  //全局的互斥锁
+    // static pthread_key_t _key;   //私有线程数据key
 
     /**
      * 构造函数
@@ -248,7 +267,7 @@ public:
      * 数据资源释放
      * @param p
      */
-    static void destructor(void* p);
+    // static void destructor(void* p);
 
     /**
      * 获取线程数据，没有的话会自动创建

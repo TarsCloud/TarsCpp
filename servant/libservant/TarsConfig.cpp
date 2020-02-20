@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -48,9 +48,9 @@ bool TarsRemoteConfig::addConfig(const string & sFileName, string &buffer, bool 
 
         string newFile = getRemoteFile(sFileName, bAppConfigOnly);
 
-        if (newFile.empty() || access(newFile.c_str(), R_OK) != 0)//拉取不到配置中心的配置文件
+        if (newFile.empty() || !TC_File::isFileExist(newFile))//拉取不到配置中心的配置文件
         {
-            if(access(sFullFileName.c_str(), R_OK) == 0) //获取本地配置成功，返回成功，但需要告警一下。
+            if(!TC_File::isFileExist(newFile)) //获取本地配置成功，返回成功，但需要告警一下。
             {
                 buffer = "[fail] get remote config:" + sFileName + "fail,use the local config.";
 
@@ -63,13 +63,13 @@ bool TarsRemoteConfig::addConfig(const string & sFileName, string &buffer, bool 
         {
             for (int i = _maxBakNum - 1; i >= 1; --i)
             {
-                if (access(index2file(sFullFileName, i).c_str(), F_OK) == 0)
+                if (TC_File::isFileExist(index2file(sFullFileName, i)))
                 {
                     localRename(index2file(sFullFileName, i), index2file(sFullFileName, i+1));
                 }
             }
 
-            if (access(sFullFileName.c_str(), F_OK) == 0)
+            if (TC_File::isFileExist(sFullFileName))
             {
                 localRename(sFullFileName, index2file(sFullFileName, 1));
             }
@@ -77,7 +77,8 @@ bool TarsRemoteConfig::addConfig(const string & sFileName, string &buffer, bool 
 
         localRename(newFile, sFullFileName);
 
-        assert(!access(sFullFileName.c_str(), R_OK));
+		assert(TC_File::isFileExist(sFullFileName));
+        //assert(!access(sFullFileName.c_str(), R_OK));
 
         buffer = "[succ] get remote config:" + sFileName;
 
@@ -167,6 +168,13 @@ string TarsRemoteConfig::index2file(const string & sFullFileName, int index)
 
 void TarsRemoteConfig::localRename(const string& oldFile, const string& newFile)
 {
+#if TARGET_PLATFORM_WINDOWS
+	//by goodenpei，windows下面先remove后rename，否则rename会失败
+	if (TC_File::isFileExist(oldFile) && TC_File::isFileExist(newFile))
+	{
+		::remove(newFile.c_str());
+	}
+#endif
     if (::rename(oldFile.c_str(), newFile.c_str()) != 0)
     {
         throw runtime_error("rename file error:" + oldFile + "->" + newFile);
@@ -179,7 +187,7 @@ string TarsRemoteConfig::recoverSysConfig(const string & sFullFileName)
     {
         for (int i = 1; i <= _maxBakNum; ++i)
         {
-            if (access(index2file(sFullFileName,i).c_str(), R_OK) == 0)
+            if (TC_File::isFileExist(index2file(sFullFileName, i)))
             {
                 localRename(index2file(sFullFileName, i), sFullFileName);
 

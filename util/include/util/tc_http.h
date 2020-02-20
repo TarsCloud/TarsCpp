@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -18,6 +18,7 @@
 #define __TC_HTTP_H_
 
 #include "util/tc_ex.h"
+#include "util/tc_port.h"
 #include "util/tc_common.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_thread.h"
@@ -66,7 +67,7 @@ namespace tars
 struct TC_Http_Exception : public TC_Exception
 {
     TC_Http_Exception(const string &sBuffer) : TC_Exception(sBuffer){};
-    ~TC_Http_Exception() throw(){};
+    ~TC_Http_Exception() {};
 };
 
 /**
@@ -86,6 +87,11 @@ struct TC_HttpRequest_Exception : public TC_Http_Exception
     TC_HttpRequest_Exception(const string &sBuffer) : TC_Http_Exception(sBuffer){};
     ~TC_HttpRequest_Exception() throw(){};
 };
+
+class TC_TCPClient;
+
+class TC_HttpRequest;
+class TC_HttpResponse;
 
 /**   
  * @brief  简单的URL解析类.
@@ -278,6 +284,8 @@ public:
     void specialize();
 
 protected:
+	friend class TC_HttpRequest;
+
     /**
      * @brief  换成URL.
      * 
@@ -359,7 +367,7 @@ public:
         bool operator()(const string &s1, const string &s2) const
         {
             //return TC_Common::upper(s1) < TC_Common::upper(s2);
-            if(strcasecmp(s1.c_str(), s2.c_str()) < 0)
+            if(TC_Port::strcasecmp(s1.c_str(), s2.c_str()) < 0)
             {
                 return true;
             }
@@ -374,7 +382,7 @@ public:
 
     /**
      * @brief  删除头部.
-     *  
+     *
      * @param sHeader:头部信息
      */
     void eraseHeader(const string &sHeader) { _headers.erase(sHeader); }
@@ -464,7 +472,7 @@ public:
         //Set-Cookie和Cookie可以有多个头
         const char * pStr1 = "SET-COOKIE";
         const char * pStr2 = "COOKIE";//原则上COOKIE只有一个，担心有兼容性问题，保留
-        if((strcasecmp(sHeadName.c_str(), pStr1) != 0) && (strcasecmp(sHeadName.c_str(), pStr2) != 0))
+        if((TC_Port::strcasecmp(sHeadName.c_str(), pStr1) != 0) && (TC_Port::strcasecmp(sHeadName.c_str(), pStr2) != 0))
         {
             _headers.erase(sHeadName);
         }
@@ -483,12 +491,12 @@ public:
      */
     void setHeaderMulti(const string &sHeadName, const string &sHeadValue) 
     {
-        _headers.insert(multimap<string, string>::value_type(sHeadName, sHeadValue)); 
+        _headers.insert(multimap<string, string>::value_type(sHeadName, sHeadValue));
     }
 
     /**
      * @brief  获取头(重复的也提取).
-     *  
+     *
      * @param sHeadName  header的名字
      * @return           vector<string>header的值
      */
@@ -520,9 +528,39 @@ public:
      *
      * @return http内容串
      */
-    string getContent() const { return _content; }
+    const string &getContent() const { return _content; }
 
     /**
+     * @brief get body
+     * @return http body
+     */
+    string &getContent() { return _content; }
+
+    /**
+     * @brief 请求body内容, 其他都不变
+     *
+     * @return
+     */
+    void clearContent() { _content.clear(); }
+
+    /**
+     * append content
+     * @param append
+     * @param bUpdateContentLength
+     */
+    void appendContent(const char *buff, size_t len, bool bUpdateContentLength = false)
+    {
+	    _content.append(buff, len);
+
+	    if(bUpdateContentLength)
+	    {
+		    eraseHeader("Content-Length");
+		    if(_content.length() > 0)
+			    setContentLength(_content.length());
+	    }
+    }
+
+	/**
      * @brief 设置http body(默认不修改content-length).
      *  
      * @param content               http body内容
@@ -560,12 +598,18 @@ public:
      *
      * @return http_header_type&
      */
-     const http_header_type& getHeaders() const{return _headers;}
+    const http_header_type& getHeaders() const{return _headers;}
+
+	/**
+	 * get headers
+	 * @param header
+	 */
+	void getHeaders(map<string, string> &header);
 
      /**
       * @brief 重置
       */
-     void reset();
+    void reset();
 
     /**
      * @brief 读取一行.
@@ -933,7 +977,7 @@ public:
 
     /**
      * @brief 获取Set-Cookie.
-     * 
+     *
      * @return vector<string>
      */
     vector<string> getSetCookie() const;
@@ -984,7 +1028,7 @@ public:
     TC_HttpRequest()
     {
         TC_HttpRequest::reset();
-        setUserAgent("TC_Http");
+        setUserAgent("Tars-Http");
     }
 
     /**
@@ -1155,9 +1199,47 @@ public:
     int doRequest(TC_HttpResponse &stHttpRep, int iTimeout = 3000);
 
     /**
-     * @brief 请求类型.
+     * 复用socket
+     * @param client
+     * @param stHttpRsp
+     * @return
+     */
+    int doRequest(TC_TCPClient &client, TC_HttpResponse& stHttpRsp);
+
+    /**
+     * @brief get request type
      */
     int requestType() const { return _requestType ; }
+
+	/**
+	 * @brief set request type
+	 */
+	void setRequestType(int requestType) {  _requestType = requestType ; }
+
+	/**
+	 * set method
+	 * @param
+	 * @return method invalid, throw exception
+	 */
+	void setMethod(const char * sMethod);
+
+	/**
+	 * set method
+	 * @param
+	 */
+	void setPath(const char * sPath);
+
+	/**
+	 * set domain
+	 * @param
+	 */
+	void setDomain(const char * sDomain);
+
+	/**
+	 * set schema
+	 * @param
+	 */
+	void setScheme(const char * sScheme);
 
     /**
      * @brief 是否是GET请求.

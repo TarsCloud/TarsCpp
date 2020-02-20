@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -44,8 +44,6 @@ string Tars2Php::readFrom(const TypeIdPtr &pPtr, bool bIsRequire) const
     return s.str();
 }
 
-
-/*******************************»ñÈ¡¶¨³¤Êý×é×ø±ê********************************/
 int Tars2Php::getSuffix(const TypeIdPtr &pPtr) const
 {
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
@@ -62,8 +60,6 @@ int Tars2Php::getSuffix(const TypeIdPtr &pPtr) const
 
     return -1;
 }
-
-/*******************************¶¨³¤Êý×é×ø±ê********************************/
 
 string Tars2Php::toStrSuffix(const TypeIdPtr &pPtr) const
 {
@@ -180,8 +176,7 @@ string Tars2Php::generatePHP(const StructPtr &pPtr, const string& namespaceId) c
     s << TAB << "class " << pPtr->getId() << " extends c_struct" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
-    //±äÁ¿ÉùÃ÷
-    for(size_t k = 0;k < member.size();k++) 
+    for(size_t k = 0;k < member.size();k++)
     {
         s<< TAB << "public $" <<member[k]->getId()<<";"<<endl;
     }
@@ -277,7 +272,7 @@ string Tars2Php::generatePHP(const NamespacePtr &pPtr) const
 void Tars2Php::generatePHP(const ContextPtr &pPtr) const
 {
     string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
-    string fileH    = m_sBaseDir + "/" + n + "_wup.php";
+    string fileH    = m_sBaseDir + FILE_SEP + n + "_wup.php";
 
     string define = "<?php";
 
@@ -299,14 +294,14 @@ void Tars2Php::generatePHP(const ContextPtr &pPtr) const
 
     s << "?>"<<endl;
 
-    tars::TC_File::makeDirRecursive(m_sBaseDir, 0755);
+    tars::TC_File::makeDirRecursive(m_sBaseDir);
     tars::TC_File::save2file(fileH, s.str());
 }
 
 void Tars2Php::generatePHP_Pdu(const ContextPtr &pPtr) const
 {
     string n        = tars::TC_File::excludeFileExt(tars::TC_File::extractFileName(pPtr->getFileName()));
-    string fileH    = m_sBaseDir + "/" + n + "_pdu.php";
+    string fileH    = m_sBaseDir + FILE_SEP + n + "_pdu.php";
 
     string define = "<?php";
 
@@ -325,7 +320,7 @@ void Tars2Php::generatePHP_Pdu(const ContextPtr &pPtr) const
     }
     s << "?>";
 
-    tars::TC_File::makeDirRecursive(m_sBaseDir, 0755);
+    tars::TC_File::makeDirRecursive(m_sBaseDir);
     tars::TC_File::save2file(fileH, s.str());
 }
 
@@ -336,7 +331,6 @@ void Tars2Php::createFile(const string &file, const vector<string> &vsCoder)
     {
         if(file == contexts[i]->getFileName())
         {
-			//tup°æ±¾µÄ
             generatePHP(contexts[i]);
         }
     }

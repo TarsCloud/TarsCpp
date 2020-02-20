@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -13,11 +13,15 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
+#include "util/tc_platform.h"
 #include "util/tc_cgi.h"
 #include "util/tc_common.h"
 #include "util/tc_http.h"
 #include <string.h>
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+extern char **environ;
+#endif
 
 namespace tars
 {
@@ -88,7 +92,9 @@ void TC_Cgi::setUpload(const string &sUploadFilePrefix, int iMaxUploadFiles, siz
 
 void TC_Cgi::parseCgi()
 {
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     char **env = environ;
+  
     while(*env != NULL)
     {
         string s(*env);
@@ -99,7 +105,26 @@ void TC_Cgi::parseCgi()
         }
         ++env;
     }
-
+#else
+    LPCSTR env; 
+    LPVOID lpvEnv; 
+     
+    // Get a pointer to the environment block. 
+    lpvEnv = GetEnvironmentStrings(); 
+     
+    // Variable strings are separated by NULL byte, and the block is 
+    // terminated by a NULL byte. 
+    for (env = (LPCSTR) lpvEnv; *env; env++) 
+    { 
+        string s(env);
+        string::size_type pos = s.find('=');
+        if(pos != string::npos)
+        {
+            _env[s.substr(0, pos)] = s.substr(pos + 1);
+        }
+        // ++env;
+    } 
+#endif  
     _is = &cin;
 
     readCgiInput(_mmpParams, _mpCookies);

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -28,7 +28,7 @@ void BServantImp::initialize()
 {
 	//initialize servant here:
 	//...
-	_pPrx = Application::getCommunicator()->stringToProxy<AServantPrx>("Test.AServer.AServantObj");
+	_pPrx = Application::getCommunicator()->stringToProxy<AServantPrx>("TestApp.AServer.AServantObj@tcp -h 127.0.0.1 -p 9000 -t 10000");
 }
 //////////////////////////////////////////////////////
 void BServantImp::destroy()

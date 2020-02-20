@@ -1,0 +1,26 @@
+name: C/C++ mac
+
+on: 
+  push:
+    branches:
+    - "2.0"
+    - master
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: install
+      run: brew install bison flex cmake;  cmake --version
+    - name: git
+      run: git submodule update --init --recursive
+    - name: configure
+      run: mkdir build;cd build;cmake ..
+    - name: make
+      run: cd build; make
+    - name: make run
+      run: cd build; make run-all
+

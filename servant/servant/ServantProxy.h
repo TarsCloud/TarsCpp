@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,11 +22,13 @@
 #include "servant/Message.h"
 #include "servant/AppProtocol.h"
 #include "servant/TarsCurrent.h"
-#include "servant/EndpointInfo.h"
+//#include "servant/EndpointInfo.h"
 #include "servant/CommunicatorEpoll.h"
 
 namespace tars
 {
+
+class EndpointInfo;
 
 /////////////////////////////////////////////////////////////////////////
 /*
@@ -46,7 +48,7 @@ public:
     /**
      * 构造函数
      */
-    SeqManager(size_t iNum);
+    SeqManager(uint16_t iNum);
 
     /**
      * 获取seq
@@ -66,18 +68,21 @@ private:
     uint16_t    _freeTail;
 
     SeqInfo  *  _p;
+
+    TC_SpinLock _mutex;
 };
 
 /////////////////////////////////////////////////////////////////////////
 /*
  * 线程私有数据
  */
-class ServantProxyThreadData : public TC_ThreadPool::ThreadData
+class ServantProxyThreadData
 {
 public:
-    static TC_ThreadMutex _mutex;  //全局的互斥锁
-    static pthread_key_t  _key;    //私有线程数据key
-    static SeqManager *   _pSeq;   //生成seq的管理类
+    static TC_SpinLock _mutex;
+    static SeqManager *_pSeq;
+
+    static thread_local shared_ptr<ServantProxyThreadData> g_sp;
 
     /**
      * 构造函数
@@ -88,12 +93,6 @@ public:
      * 析构函数
      */
     ~ServantProxyThreadData();
-
-    /**
-     * 数据资源释放
-     * @param p
-     */
-    static void destructor(void* p);
 
     /**
      * 获取线程数据，没有的话会自动创建
@@ -107,7 +106,7 @@ public:
      */
     ReqInfoQueue * _reqQueue[MAX_CLIENT_THREAD_NUM]; //队列数组
     bool           _queueInit;                       //是否初始化
-    size_t         _reqQNo;                          //请求事件通知的seq
+    uint16_t       _reqQNo;                          //请求事件通知的seq
     size_t         _netSeq;                          //轮训选择网络线程的偏移量
     int            _netThreadSeq;                     //网络线程发起的请求回到自己的网络线程来处理,其值为网络线程的id
 
@@ -133,20 +132,22 @@ public:
     /**
      * 保存调用后端服务的地址信息
      */
-    char           _szHost[64];                       //调用对端地址
-
-    /**
-     * ObjectProxy
-     */
-    size_t         _objectProxyNum;                  //ObjectProxy对象的个数，其个数由客户端的网络线程数决定，每个网络线程有一个ObjectProxy
-    ObjectProxy ** _objectProxy;                    //保存ObjectProxy对象的指针数组
+    string           _szHost;                       //调用对端地址
 
     /**
      * 协程调度
      */
     CoroutineScheduler*        _sched;                   //协程调度器
 
+    /**
+     * ObjectProxy
+     */
+    size_t         _objectProxyNum;                  //ObjectProxy对象的个数，其个数由客户端的网络线程数决定，每个网络线程有一个ObjectProxy
 
+    /**
+     *  objectProxy Pointer
+     */
+    shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
 #ifdef _USE_OPENTRACKING
     std::unordered_map<std::string, std::string> _trackInfoMap;
 #endif
@@ -175,17 +176,17 @@ public:
     /**
      * 增加调用协程接口请求的数目
      */
-    int incReqCount() { return _req_count.inc(); }
+    int incReqCount() { return (++_req_count); }
 
     /**
      * 判断协程并行请求数目是否都发送了
      */
-    bool checkAllReqSend() { return _num == _req_count.get(); }
+    bool checkAllReqSend() { return _num == _req_count; }
 
     /**
      * 判断协程并行请求是否都回来了
      */
-    bool checkAllReqReturn() { return _count.dec_and_test(); }
+    bool checkAllReqReturn() { return (--_count) == 0; }
 
     /**
      * 获取所有请求回来的响应
@@ -195,9 +196,8 @@ public:
         vector<ReqMessage*> vRet;
 
         {
-            TC_LockT<TC_ThreadMutex> lock(_mutex);
-            vRet = _vReqMessage;
-            _vReqMessage.clear();
+            TC_LockT<TC_SpinLock> lock(_mutex);
+            vRet.swap(_vReqMessage);
         }
 
         return vRet;
@@ -208,7 +208,7 @@ public:
      */
     void insert(ReqMessage* msg)
     {
-        TC_LockT<TC_ThreadMutex> lock(_mutex);
+        TC_LockT<TC_SpinLock> lock(_mutex);
         _vReqMessage.push_back(msg);
     }
 
@@ -221,17 +221,17 @@ protected:
     /**
      * 并行请求的响应还未回来的数目
      */
-    TC_Atomic                _count;
+    std::atomic<int>     _count;
 
     /**
      * 并行请求的已发送的数目
      */
-    TC_Atomic                _req_count;
+    std::atomic<int>      _req_count;
 
     /**
      * 互斥锁
      */
-    TC_ThreadMutex            _mutex;
+    TC_SpinLock            _mutex;
 
     /**
      * 请求的响应的容器
@@ -300,7 +300,7 @@ public:
      * @param msg
      * @return int
      */
-    virtual int onDispatch(ReqMessagePtr msg) = 0;
+    virtual int onDispatch(ReqMessagePtr ptr) = 0;
 
 protected:
 
@@ -320,12 +320,11 @@ protected:
      */
     tars::CoroParallelBasePtr _pPtr;
 };
-
+///////////////////////////////////////////////////////////////////////////////////////////////
 // for http
 class HttpCallback : public TC_HandleBase
 {
 public:
-    virtual ~HttpCallback() {}
     virtual int onHttpResponse(const std::map<std::string, std::string>& requestHeaders ,
                                const std::map<std::string, std::string>& responseHeaders ,
                                const std::vector<char>& rspBody) = 0;
@@ -333,18 +332,38 @@ public:
                                         int expCode) = 0;
 };
 
+typedef TC_AutoPtr<HttpCallback> HttpCallbackPtr;
+
 class HttpServantProxyCallback : virtual public ServantProxyCallback
 {
 public:
-    explicit
-    HttpServantProxyCallback(HttpCallback* cb);
+    explicit HttpServantProxyCallback(const HttpCallbackPtr& cb);
 
-    virtual int onDispatch(ReqMessagePtr msg);
+   /**
+     * 异步回调对象实现该方法，进行业务逻辑处理
+     * @param msg
+     * @return int
+     */
+    virtual int onDispatch(ReqMessagePtr ptr);
+
+    /**
+     * 异步回调对象实现该方法，进行业务逻辑处理
+     * @param msg
+     * @return void
+     */
+    virtual int onDispatchResponse(const RequestPacket &req, const ResponsePacket &rsp);
+
+    /**
+     * 异步回调对象实现该方法(异常)，进行业务逻辑处理
+     * @param msg
+     * @return void
+     */
+    virtual int onDispatchException(const RequestPacket &req, const ResponsePacket &rsp);
+
 
 private:
-    TC_AutoPtr<HttpCallback> _httpCb;
+    HttpCallbackPtr _httpCb;
 };
-
 
 //////////////////////////////////////////////////////////////////////////
 /**
@@ -457,6 +476,11 @@ public:
     void tars_ping();
 
     /**
+     * 异步ping, 不等回包
+     */
+	void tars_async_ping();
+
+    /**
      * 设置同步调用超时时间，对该proxy上所有方法都有效
      * @param msecond
      */
@@ -490,7 +514,7 @@ public:
      * 设置用户自定义协议
      * @param protocol
      */
-    void tars_set_protocol(const ProxyProtocol& protocol, const std::string& protoName = "tars");
+    void tars_set_protocol(const ProxyProtocol& protocol);
 
     /**
     *设置套接字选项
@@ -566,19 +590,18 @@ public:
     /**
      * TARS协议同步方法调用
      */
-    virtual void tars_invoke(char cPacketType,
+    virtual shared_ptr<ResponsePacket> tars_invoke(char cPacketType,
                             const string& sFuncName,
-                            const vector<char> &buf,
+                            tars::TarsOutputStream<tars::BufferWriterVector>& buf,
                             const map<string, string>& context,
-                            const map<string, string>& status,
-                            ResponsePacket& rep);
+                            const map<string, string>& status);
 
     /**
      * TARS协议异步方法调用
      */
     virtual void tars_invoke_async(char cPacketType,
                                   const string& sFuncName,
-                                  const vector<char> &buf,
+                                  tars::TarsOutputStream<tars::BufferWriterVector> &buf,
                                   const map<string, string>& context,
                                   const map<string, string>& status,
                                   const ServantProxyCallbackPtr& callback,
@@ -588,7 +611,7 @@ public:
      * 普通协议同步远程调用
      */
     virtual void rpc_call(uint32_t requestId, const string& sFuncName,
-                          const char* buff, uint32_t len, ResponsePacket& rsp);
+                          const char* buff, uint32_t len, ResponsePacket &rsp);
 
     /**
      * 普通协议异步调用
@@ -597,22 +620,35 @@ public:
                                 const char* buff, uint32_t len,
                                 const ServantProxyCallbackPtr& callback,
                                 bool bCoro = false);
+//
+//
+//	/**
+//	 * http1同步远程调用
+//	 */
+//	void http1_call(const std::string& method,
+//	               const std::string& uri,
+//	               const std::map<std::string, std::string>& headers,
+//	               const std::string& body,
+//	               std::map<std::string, std::string>& rheaders,
+//	               std::string& rbody);
 
     /**
-     * http1 or 2协议同步远程调用
+     * http2协议同步远程调用
      */
     void http_call(const std::string& method,
-                   const std::string& uri,
-                   const std::map<std::string, std::string>& headers,
-                   const std::string& body,
-                   std::map<std::string, std::string>& rheaders,
-                   std::string& rbody);
+                    const std::string& uri,
+                    const std::map<std::string, std::string>& headers,
+                    const std::string& body,
+                    std::map<std::string, std::string>& rheaders,
+                    std::string& rbody);
     /**
      * http2协议异步远程调用
      */
-    void http_call_async(const std::map<std::string, std::string>& headers,
-                         const std::string& body,
-                         HttpCallback* cb);
+    void http_call_async(const std::string& method,
+                         const std::string& uri,
+                         const std::map<std::string, std::string>& headers,
+                          const std::string& body,
+                          const HttpCallbackPtr &cb);
 
     /**
      * 在RequestPacket中的context设置主调信息标识
@@ -659,7 +695,8 @@ private:
     /**
      * 保存ObjectProxy对象的指针数组
      */
-    ObjectProxy **            _objectProxy;
+    ObjectProxy ** _objectProxy;                    //保存ObjectProxy对象的指针数组
+    shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
 
     /**
      * ObjectProxy对象的个数，其个数由客户端的网络线程数决定，
@@ -680,7 +717,7 @@ private:
     /**
      * 唯一id
      */
-    uint32_t                _id;
+    std::atomic<uint32_t>      _id;
 
     /**
      * 获取endpoint对象
@@ -691,11 +728,6 @@ private:
      * 是否在RequestPacket中的context设置主调信息
      */
     bool                    _masterFlag;
-
-    /**
-     *每个业务线程与每个客户端网络线程之间通信的请求队列大小
-     */
-    int                        _queueSize;
 
     /*
      *最小的超时时间

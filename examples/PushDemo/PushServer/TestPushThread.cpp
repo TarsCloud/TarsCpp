@@ -1,5 +1,5 @@
-#include "TestPushThread.h"
-#include <arpa/inet.h>
+﻿#include "TestPushThread.h"
+//#include <arpa/inet.h>
 
 map<string, TarsCurrentPtr> PushUser::pushUser;
 TC_ThreadMutex PushUser::mapMutex;
@@ -38,30 +38,21 @@ void PushInfoThread::setPushInfo(const string &sInfo)
 //定期向客户push消息
 void PushInfoThread::run(void)
 {
-	time_t iNow;
-
 	setPushInfo("hello world");
 
 	while (!_bTerminate)
 	{
-		iNow =  TC_TimeProvider::getInstance()->getNow();
-
-		if(iNow - _tLastPushTime > _tInterval)
+		(PushUser::mapMutex).lock();
+		for(map<string, TarsCurrentPtr>::iterator it = (PushUser::pushUser).begin(); it != (PushUser::pushUser).end(); ++it)
 		{
-			_tLastPushTime = iNow;
-
-			(PushUser::mapMutex).lock();
-			for(map<string, TarsCurrentPtr>::iterator it = (PushUser::pushUser).begin(); it != (PushUser::pushUser).end(); ++it)
-			{
-				(it->second)->sendResponse(_sPushInfo.c_str(), _sPushInfo.size());
-				LOG->debug() << "sendResponse: " << _sPushInfo.size() <<endl;
-			}
-			(PushUser::mapMutex).unlock();
+			(it->second)->sendResponse(_sPushInfo.c_str(), _sPushInfo.size());
+			LOG->debug() << "sendResponse: " << _sPushInfo.size() <<endl;
 		}
+		(PushUser::mapMutex).unlock();
 
 		{
             TC_ThreadLock::Lock sync(*this);
-            timedWait(1000);
+            timedWait(100);
 		}
 	}
 }

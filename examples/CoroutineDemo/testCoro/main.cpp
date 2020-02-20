@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -27,7 +27,7 @@ using namespace tars;
 class TestCoroutine : public Coroutine
 {
 public:
-	TestCoroutine(int iNum, const string &sObj);
+	TestCoroutine(int iNum);
 
 	~TestCoroutine() {}
 
@@ -35,17 +35,16 @@ public:
 
 private:
 	int _num;
-	string _sObj;
 	Communicator _comm;
 	BServantPrx _prx;
 };
 
-TestCoroutine::TestCoroutine(int iNum, const string &sObj)
+TestCoroutine::TestCoroutine(int iNum)
 : _num(iNum)
-, _sObj(sObj)
 {
-	_comm.setProperty("locator", "tars.tarsregistry.QueryObj@tcp -h 10.208.139.242 -p 17890 -t 10000");
-	_comm.stringToProxy(_sObj, _prx);
+	// _comm.setProperty("locator", "tars.tarsregistry.QueryObj@tcp -h 10.208.139.242 -p 17890 -t 10000");
+    _prx = _comm.stringToProxy<BServantPrx>("TestApp.BServer.BServantObj@tcp -h 127.0.0.1 -p 9100");
+	// _comm.stringToProxy(_sObj, _prx);
 }
 
 void TestCoroutine::handle()
@@ -85,18 +84,17 @@ void TestCoroutine::handle()
 
 int main(int argc,char ** argv)
 {
-	if(argc != 3)
+	if(argc != 2)
 	{
-		cout << "usage: " << argv[0] << " CallTimes sObj" << endl;
+		cout << "usage: " << argv[0] << " CallTimes " << endl;
 		return -1;
 	}
 
 	tars::Int32 iNum = TC_Common::strto<tars::Int32>(string(argv[1]));
 
-	string sObj = string(argv[2]);
+	TestCoroutine testCoro(iNum);
 
-	TestCoroutine testCoro(iNum, sObj);
-
+	//start 10 co
 	testCoro.setCoroInfo(10, 128, 128*1024);
 
 	testCoro.start();

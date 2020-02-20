@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -23,7 +23,7 @@
 #include <cassert>
 #include <functional>
 #include "util/tc_autoptr.h"
-#include "util/tc_monitor.h"
+// #include "util/tc_monitor.h"
 #include "util/tc_timeprovider.h"
 
 using namespace std;
@@ -33,7 +33,7 @@ namespace tars
 /////////////////////////////////////////////////
 /**
  * @file tc_timeout_queue_new.h
- * @brief 超时队列.
+ * @brief 超时队列, 没有锁, 非线程安全.
  *
  */
 /////////////////////////////////////////////////
@@ -76,7 +76,7 @@ public:
      * @param timeout 超时设定时间
      * @param size
      */
-    TC_TimeoutQueueNew(int timeout = 5*1000,size_t size = 100 ) : _uniqId(0)
+    TC_TimeoutQueueNew(int timeout = 5*1000, size_t size = 100 ) : _uniqId(0)
     {
         _data.reserve(size);
     }
@@ -224,11 +224,12 @@ template<typename T> bool TC_TimeoutQueueNew<T>::get(uint32_t uniqId, T & t, boo
 
 template<typename T> uint32_t TC_TimeoutQueueNew<T>::generateId()
 {
-    TC_LockT<TC_ThreadMutex> lock(*this);
+    uint32_t i = ++_uniqId;
+    if(i == 0) {
+        i = ++_uniqId;
+    }
 
-    while (++_uniqId == 0);
-
-    return _uniqId;
+    return i;
 }
 
 template<typename T> bool TC_TimeoutQueueNew<T>::push(T& ptr, uint32_t uniqId,int64_t timeout,bool hasSend)

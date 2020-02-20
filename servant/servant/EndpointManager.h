@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -17,6 +17,7 @@
 #ifndef __TARS_ENDPOINT_MANAGER_H_
 #define __TARS_ENDPOINT_MANAGER_H_
 
+#include "util/tc_spin_lock.h"
 #include "util/tc_consistent_hash_new.h"
 #include "servant/EndpointInfo.h"
 #include "servant/EndpointF.h"
@@ -153,7 +154,12 @@ private:
      * 如果是间接连接，则设置主控代理，并从缓存中加载相应的列表
      */
     void setObjName(const string & sObjName);
-    
+
+    /*
+     * 解析endpoint
+     */
+    vector<string> sepEndpoint(const string& sEndpoints);
+
     /*
      * 从sEndpoints提取ip列表信息
      */
@@ -357,7 +363,8 @@ private:
     /*
      * 根据hash值选取一个结点
      */
-    AdapterProxy* getHashProxy(int64_t hashCode, bool bConsistentHash = false);
+    AdapterProxy* getHashProxy(int64_t hashCode,  bool bConsistentHash = false);
+
 
     /*
      * 根据hash值按取模方式，从正常节点中选取一个结点
@@ -580,7 +587,8 @@ private:
     /*
      * 锁
      */
-    TC_ThreadLock            _lock;
+    // TC_ThreadLock            _mutex;
+    TC_SpinLock             _mutex;
 
 
     /*
@@ -675,7 +683,8 @@ private:
     /*
      * 锁
      */
-    TC_ThreadLock                  _lock;
+    // TC_ThreadLock                  _mutex;
+    TC_SpinLock                     _mutex;
 
     /*
      * 保存对象的map

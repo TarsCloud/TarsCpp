@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -51,6 +51,12 @@ public:
     ~AdapterProxy();
 
     /**
+     * clone
+     * @return
+     */
+//	AdapterProxy *clone();
+
+    /**
      * 调用server端对象方法
      */
     int invoke(ReqMessage * msg);
@@ -64,11 +70,12 @@ public:
     /**
      * server端的响应包返回
      */
-    void finishInvoke(ResponsePacket &rsp);
+    void finishInvoke(shared_ptr<ResponsePacket> &rsp);
 
     /**
      * 端口是否有效,当连接全部失效时返回false
      * @param bForceConnect : 是否强制发起连接,为true时不对状态进行判断就发起连接
+     * @onlyCheck: 只判断是否已经连接上 
      * @return bool
      */
     bool checkActive(bool bForceConnect = false);
@@ -86,8 +93,7 @@ public:
     /**
      * 处理stat
      */
-    void doStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg);
-
+    void mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg);
     /**
      * 处理采样
      */
@@ -332,7 +338,7 @@ private:
     map<int,std::unique_ptr<opentracing::Span>> _spanMap;
 #endif
     int                                    _id;
-    static  TC_Atomic                      _idGen;
+    static  atomic<int>                    _idGen;
 };
 ////////////////////////////////////////////////////////////////////
 }
