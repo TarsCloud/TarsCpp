@@ -5,11 +5,16 @@ project(tars_cpp)
 set(TARS_VERSION "2.0.0")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 
+if(WIN32)
 option(TARS_MYSQL "option for mysql" OFF)
+else()
+option(TARS_MYSQL "option for mysql" ON)
+endif()
+
 option(TARS_SSL "option for ssl" OFF)
 option(TARS_HTTP2 "option for http2" OFF)
 option(TARS_PROTOBUF "option for protocol" OFF)
-option(TARS_ZLIB "option for zip" OFF)
+#option(TARS_ZLIB "option for zip" OFF)
 
 if(TARS_MYSQL)
 add_definitions(-DTARS_MYSQL=1)
@@ -27,9 +32,9 @@ if(TARS_PROTOBUF)
 add_definitions(-DTARS_PROTOBUF=1)
 endif()
 
-if(TARS_ZLIB)
-add_definitions(-DTARS_ZLIB=1)
-endif()
+#if(TARS_ZLIB)
+#add_definitions(-DTARS_ZLIB=1)
+#endif()
 
 set(CMAKE_VERBOSE_MAKEFILE off)
 
@@ -85,12 +90,12 @@ if(TARS_PROTOBUF)
     link_directories(${PROTOBUF_DIR_LIB})
 endif()
 
-if(TARS_ZLIB)
-    set(ZLIB_DIR_INC "${THIRDPARTY_PATH}/z-lib")
-    set(ZLIB_DIR_LIB "${THIRDPARTY_PATH}/z-lib")
-    include_directories(${ZLIB_DIR_INC})
-    link_directories(${ZLIB_DIR_LIB})
-endif()
+#if(TARS_ZLIB)
+#    set(ZLIB_DIR_INC "${THIRDPARTY_PATH}/z-lib")
+#    set(ZLIB_DIR_LIB "${THIRDPARTY_PATH}/z-lib")
+#    include_directories(${ZLIB_DIR_INC})
+#    link_directories(${ZLIB_DIR_LIB})
+#endif()
 
 if(TARS_HTTP2)
     set(NGHTTP2_DIR_INC "${THIRDPARTY_PATH}/nghttp2-lib/lib/includes/")
@@ -112,43 +117,44 @@ set(LIB_MYSQL)
 set(LIB_HTTP2)
 set(LIB_SSL)
 set(LIB_CRYPTO)
-set(LIB_ZLIB)
+#set(LIB_ZLIB)
 set(LIB_PROTOBUF)
 
 IF (WIN32)
-if(TARS_MYSQL)
-    set(LIB_MYSQL "libmysql")
-endif()    
-if(TARS_HTTP2)
-    set(LIB_HTTP2 "libnghttp2_static")
-endif()    
-if(TARS_SSL)
-    set(LIB_SSL "libssl")
-    set(LIB_CRYPTO "libcrypto")
-endif()
-if(TARS_ZLIB)
-    set(LIB_ZLIB "libz")
-endif()
+    if(TARS_MYSQL)
+        set(LIB_MYSQL "libmysql")
+    endif()
+    if(TARS_HTTP2)
+        set(LIB_HTTP2 "libnghttp2_static")
+    endif()
+    if(TARS_SSL)
+        set(LIB_SSL "libssl")
+        set(LIB_CRYPTO "libcrypto")
+    endif()
+#if(TARS_ZLIB)
+#    set(LIB_ZLIB "libz")
+#endif()
 
-if(TARS_PROTOBUF)
-    set(LIB_PROTOBUF "libprotoc")
-endif()    
+#if(TARS_PROTOBUF)
+#    set(LIB_PROTOBUF "libprotoc")
+#endif()
 ELSE()
     link_libraries(pthread dl)
-if(TARS_MYSQL)
+    if(TARS_MYSQL)
     set(LIB_MYSQL "mysqlclient")
-endif()    
-if(TARS_HTTP2)
-    set(LIB_HTTP2 "nghttp2_static")
-endif()
+    endif()
 
-if(TARS_SSL)
-    set(LIB_SSL "ssl")
-    set(LIB_CRYPTO "crypto")
-endif()    
-if(TARS_ZLIB)
-    set(LIB_ZLIB "z")
-endif()    
+    if(TARS_HTTP2)
+    set(LIB_HTTP2 "nghttp2_static")
+    endif()
+#
+#if(TARS_SSL)
+#    set(LIB_SSL "ssl")
+#    set(LIB_CRYPTO "crypto")
+#endif()
+#if(TARS_ZLIB)
+#    set(LIB_ZLIB "z")
+#endif()
 if(TARS_PROTOBUF)
     set(LIB_PROTOBUF "protoc")
 endif()    
@@ -215,22 +221,22 @@ ExternalProject_Add(${LIB_MYSQL}
         URL_MD5 c537c08c1276abc79d76e8e562bbcea5
         )
 endif()
-
-if(TARS_ZLIB)
-ExternalProject_Add(${LIB_ZLIB}
-        URL http://cdn.tarsyun.com/src/zlib-1.2.11.tar.gz
-        PREFIX    ${CMAKE_BINARY_DIR}
-        INSTALL_DIR ${CMAKE_SOURCE_DIR}
-        CONFIGURE_COMMAND cmake .
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/src/z-lib
-        BUILD_IN_SOURCE 1
-        BUILD_COMMAND make zlibstatic
-        LOG_CONFIGURE 1
-        LOG_BUILD 1
-        INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
-        URL_MD5 1c9f62f0778697a09d36121ead88e08e
-        )
-endif()
+#
+#if(TARS_ZLIB)
+#ExternalProject_Add(${LIB_ZLIB}
+#        URL http://cdn.tarsyun.com/src/zlib-1.2.11.tar.gz
+#        PREFIX    ${CMAKE_BINARY_DIR}
+#        INSTALL_DIR ${CMAKE_SOURCE_DIR}
+#        CONFIGURE_COMMAND cmake .
+#        SOURCE_DIR ${CMAKE_BINARY_DIR}/src/z-lib
+#        BUILD_IN_SOURCE 1
+#        BUILD_COMMAND make zlibstatic
+#        LOG_CONFIGURE 1
+#        LOG_BUILD 1
+#        INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+#        URL_MD5 1c9f62f0778697a09d36121ead88e08e
+#        )
+#endif()
 
 if(TARS_HTTP2)
 ExternalProject_Add(${LIB_HTTP2}
@@ -303,9 +309,8 @@ ENDIF (UNIX)
 
 #-------------------------------------------------------------
 IF(WIN32)
-#set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/tars2cpp.exe")
-set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp.exe")
-
+set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/tars2cpp.exe")
+#set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp.exe")
 ELSE()
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
 ENDIF()
