@@ -115,7 +115,7 @@ public:
 	* @param iFlag     权限, 默认 S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP| S_IXGRP | S_IROTH |  S_IXOTH
 	* @return bool  true-创建成功 ，false-创建失败
 	*/
-	static bool makeDir(const string &sDirectoryPath);
+	static bool makeDir(const string &sDirectoryPath, mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 
 	/**
 	 *@brief 循环创建目录, 如果目录已经存在, 则也返回成功.
@@ -125,7 +125,7 @@ public:
 	 * @return           true-创建成功，false-创建失败
 	 */
 
-	static bool makeDirRecursive(const string &sDirectoryPath);	
+	static bool makeDirRecursive(const string &sDirectoryPath, mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 	
 	/**
 	 * @brief 删除一个文件或目录.

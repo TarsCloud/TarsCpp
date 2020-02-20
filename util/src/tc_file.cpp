@@ -62,13 +62,6 @@ bool TC_File::isAbsolute(const string &sFullFileName)
 
 bool TC_File::isFileExist(const string &sFullFileName, mode_t iFileType)
 {	
-// #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-// 	struct stat f_stat;
-//     if (lstat(sFullFileName.c_str(), &f_stat) == -1)
-// #elif TARGET_PLATFORM_WINDOWS	
-// 	struct _stat f_stat;
-// 	if (_stat(sFullFileName.c_str(), &f_stat) == -1)
-// #endif
 	TC_Port::stat_t f_stat;
     if (TC_Port::lstat(sFullFileName.c_str(), &f_stat) == -1)
     {		
@@ -194,19 +187,9 @@ string TC_File::getExePath()
 }
 #endif
     
-bool TC_File::makeDir(const string &sDirectoryPath)
+bool TC_File::makeDir(const string &sDirectoryPath, mode_t mode)
 {	
-
-// #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-// 	int iRetCode = mkdir(sDirectoryPath.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-// #elif TARGET_PLATFORM_WINDOWS
-// 	int iRetCode = _mkdir(sDirectoryPath.c_str());
-// #endif
-#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-	int iRetCode = TC_Port::mkdir(sDirectoryPath.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-#elif TARGET_PLATFORM_WINDOWS
-	int iRetCode = TC_Port::mkdir(sDirectoryPath.c_str(), 0);
-#endif
+	int iRetCode = TC_Port::mkdir(sDirectoryPath.c_str(), mode);
 
     if(iRetCode < 0 && errno == EEXIST)
     {		
@@ -215,7 +198,7 @@ bool TC_File::makeDir(const string &sDirectoryPath)
     return iRetCode == 0;
 }
 
-bool TC_File::makeDirRecursive(const string &sDirectoryPath)
+bool TC_File::makeDirRecursive(const string &sDirectoryPath, mode_t mode)
 {
     string simple = simplifyDirectory(sDirectoryPath);
 
@@ -233,7 +216,7 @@ bool TC_File::makeDirRecursive(const string &sDirectoryPath)
 				return false;
 			}
 #endif
-            return makeDir(s.c_str());
+            return makeDir(s.c_str(), mode);
         }
         else
         {
@@ -244,7 +227,7 @@ bool TC_File::makeDirRecursive(const string &sDirectoryPath)
 				continue;
 			}
 #endif
-            if(!makeDir(s.c_str())) return false;
+            if(!makeDir(s.c_str(), mode)) return false;
         }
     }
     return true;
@@ -269,11 +252,6 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
             if(path != FILE_SEP)
             {
                 if(TC_Port::rmdir(path.c_str()) == -1)
-// #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-//                 if(::rmdir(path.c_str()) == -1)
-// #elif TARGET_PLATFORM_WINDOWS
-// 				if (::_rmdir(path.c_str()) == -1)
-// #endif
                 {
                     return -1;
                 }
@@ -283,11 +261,6 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
         else
         {
             if(TC_Port::rmdir(path.c_str()) == -1)
-// #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-//             if(::rmdir(path.c_str()) == -1)
-// #elif TARGET_PLATFORM_WINDOWS
-// 			if (::_rmdir(path.c_str()) == -1)
-// #endif
             {
                 return -1;
             }
@@ -322,26 +295,22 @@ string TC_File::simplifyDirectory(const string& path)
     string::size_type pos;
 
     pos = 0;
-    // while((pos = result.find("//", pos)) != string::npos)
     while((pos = result.find(string(FILE_SEP) + FILE_SEP, pos)) != string::npos)
     {
         result.erase(pos, 1);
     }
 
     pos = 0;
-    // while((pos = result.find("/./", pos)) != string::npos)
     while((pos = result.find(string(FILE_SEP) + "." + FILE_SEP, pos)) != string::npos)
     {
         result.erase(pos, 2);
     }
 
-    // while(result.substr(0, 4) == "/../")
     while(result.substr(0, 4) == string(FILE_SEP) + ".." + FILE_SEP)
     {
         result.erase(0, 3);
     }
 
-    // string tmp = string(FILE_SEP) + ".." + FILE_SEP;
     if(result.find(string(FILE_SEP) + ".." + FILE_SEP) != string::npos)
     {
         bool ab = TC_File::isAbsolute(result);
@@ -381,7 +350,6 @@ string TC_File::simplifyDirectory(const string& path)
 #endif
     }
 
-    // if(result == "/.")
     if(result == string(FILE_SEP) + ".")
     {
        return result.substr(0, result.size() - 1);
@@ -412,66 +380,20 @@ string TC_File::simplifyDirectory(const string& path)
 
 string TC_File::load2str(const string &sFullFileName)
 {
-// #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-    
     ifstream ifs(sFullFileName.c_str());
 
     return string(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
-
-// #elif TARGET_PLATFORM_WINDOWS
-	// std::ifstream::pos_type iLen = TC_File::getFileSize(sFullFileName);
-	// FILE* fp = TC_Port::fopen(sFullFileName.c_str(), "rb");
-	// // if (fopen_s(&fp, sFullFileName.c_str(), "rb") == 0)	
-    // if(fp != NULL)
-	// {
-	// 	char* sBuffer = new char[iLen];
-	// 	size_t l = fread(sBuffer, 1, iLen, fp);
-	// 	fclose(fp);
-	// 	if (l != iLen)
-	// 	{
-	// 		delete[] sBuffer;
-	// 		return "";
-	// 	}
-	// 	std::string s(sBuffer, iLen);
-	// 	delete[] sBuffer;
-	// 	return s;
-	// }
-	// return "";
-// #endif    
 }
 
 bool TC_File::load2str(const string &sFullFileName, vector<char> &data)
 {
-// #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-//     ifstream ifs(sFullFileName.c_str());
-//     if(ifs.is_open())
-//     {
-//         data.assign(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
-//         return true;
-//     }
-//     return false;
-
-// #elif TARGET_PLATFORM_WINDOWS
-	std::ifstream::pos_type iLen = TC_File::getFileSize(sFullFileName);
-	FILE* fp = TC_Port::fopen(sFullFileName.c_str(), "rb");
-	// if (fopen_s(&fp, sFullFileName.c_str(), "rb") == 0)	
-    if(fp != NULL)
-
-	// FILE* fp;
-	// if (fopen_s(&fp, sFullFileName.c_str(), "rb") == 0)	
-	{
-        data.resize(iLen);
-		int l = fread(data.data(), 1, iLen, fp);
-		fclose(fp);
-		if (l != iLen)
-		{
-            return false;
-		}
-        return true;
-	}
-
-    return false;
-// #endif
+     ifstream ifs(sFullFileName.c_str());
+     if(ifs.is_open())
+     {
+         data.assign(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
+         return true;
+     }
+     return false;
 }
 
 void TC_File::save2file(const string &sFullFileName, const string &sFileData)
@@ -486,19 +408,6 @@ int TC_File::save2file(const string &sFullFileName, const char *sFileData, size_
 	{
 		return -1;
 	}
-// #if TARGET_PLATFORM_LINUX ||TARGET_PLATFORM_IOS
-// 	FILE *fp = fopen(sFullFileName.c_str(), "wb");
-// 	if (fp == NULL)
-// 	{
-// 		return -1;
-// 	}
-// #elif TARGET_PLATFORM_WINDOWS
-// 	FILE *fp;	
-// 	if (fopen_s(&fp, sFullFileName.c_str(), "wb") != 0)
-// 	{
-// 		return -1;
-// 	}
-// #endif
 
 	size_t ret = fwrite((void*)sFileData, 1, length, fp);
 	fclose(fp);
@@ -751,12 +660,6 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
         }
 
         TC_Port::chmod(sNewFile.c_str(),f_stat.st_mode);
-// #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-//         chmod(sNewFile.c_str(),f_stat.st_mode);
-// #elif TARGET_PLATFORM_WINDOWS
-// 		_chmod(sNewFile.c_str(), f_stat.st_mode);
-// #endif
-
     }
 }
 

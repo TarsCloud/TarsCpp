@@ -333,7 +333,7 @@ message("----------------------------------------------------")
 message("TARS_MYSQL:                ${TARS_MYSQL}")
 message("TARS_HTTP2:                ${TARS_HTTP2}")
 message("TARS_SSL:                  ${TARS_SSL}")
-message("TARS_ZLIB:                 ${TARS_ZLIB}")
+#message("TARS_ZLIB:                 ${TARS_ZLIB}")
 message("TARS_PROTOBUF:             ${TARS_PROTOBUF}")
 
 #-------------------------------------------------------------

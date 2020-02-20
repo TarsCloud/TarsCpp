@@ -138,7 +138,7 @@ int TC_Port::mkdir(const char *path, mode_t mode)
 #if TARGET_PLATFORM_WINDOWS
 	int iRetCode = ::_mkdir(path);
 #else
-	int iRetCode = ::mkdir(path, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+	int iRetCode = ::mkdir(path, mode);
 #endif
 	return iRetCode;
 }
