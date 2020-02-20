@@ -133,12 +133,12 @@ int TC_Port::lstat(const char * path, TC_Port::stat_t * buf)
 #endif
 }
 
-int TC_Port::mkdir(const char *path, mode_t mode)
+int TC_Port::mkdir(const char *path)
 {
 #if TARGET_PLATFORM_WINDOWS
 	int iRetCode = ::_mkdir(path);
 #else
-	int iRetCode = ::mkdir(path, mode);
+	int iRetCode = ::mkdir(path, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 #endif
 	return iRetCode;
 }

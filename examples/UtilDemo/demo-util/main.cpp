@@ -26,8 +26,6 @@ int main(int argc, char** argv)
 	}
 	catch (exception &ex)
 	{
-		cerr << "HttpServer::run ex:" << ex.what() << endl;
+		cerr << "main ex:" << ex.what() << endl;
 	}
-
-	cout << "HttpServer::run http server thread exit." << endl;
 }

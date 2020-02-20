@@ -187,9 +187,9 @@ string TC_File::getExePath()
 }
 #endif
     
-bool TC_File::makeDir(const string &sDirectoryPath, mode_t mode)
+bool TC_File::makeDir(const string &sDirectoryPath)
 {	
-	int iRetCode = TC_Port::mkdir(sDirectoryPath.c_str(), mode);
+	int iRetCode = TC_Port::mkdir(sDirectoryPath.c_str());
 
     if(iRetCode < 0 && errno == EEXIST)
     {		
@@ -198,7 +198,7 @@ bool TC_File::makeDir(const string &sDirectoryPath, mode_t mode)
     return iRetCode == 0;
 }
 
-bool TC_File::makeDirRecursive(const string &sDirectoryPath, mode_t mode)
+bool TC_File::makeDirRecursive(const string &sDirectoryPath)
 {
     string simple = simplifyDirectory(sDirectoryPath);
 
@@ -216,7 +216,7 @@ bool TC_File::makeDirRecursive(const string &sDirectoryPath, mode_t mode)
 				return false;
 			}
 #endif
-            return makeDir(s.c_str(), mode);
+            return makeDir(s.c_str());
         }
         else
         {
@@ -227,7 +227,7 @@ bool TC_File::makeDirRecursive(const string &sDirectoryPath, mode_t mode)
 				continue;
 			}
 #endif
-            if(!makeDir(s.c_str(), mode)) return false;
+            if(!makeDir(s.c_str())) return false;
         }
     }
     return true;

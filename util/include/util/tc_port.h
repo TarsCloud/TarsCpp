@@ -17,7 +17,7 @@
 
 typedef unsigned short mode_t;
 
-#define S_IFREG _S_IFREG			//表示为普通文件，为了跨平台，一律使用S_IFREG
+#define S_IFREG _S_IFREG		//表示为普通文件，为了跨平台，一律使用S_IFREG
 #define S_IFDIR _S_IFDIR			//表示为目录，为了跨平台，一律使用S_IFDIR
 
 #endif
@@ -55,7 +55,7 @@ public:
 #endif
     static int lstat(const char * path, stat_t * buf);
 
-    static int mkdir(const char *path, mode_t mode);
+    static int mkdir(const char *path);
 
     static int rmdir(const char *path);
 

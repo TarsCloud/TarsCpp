@@ -112,20 +112,18 @@ public:
 	* @brief 创建目录, 如果目录已经存在, 则也返回成功.
 	*
 	* @param sFullPath 要创建的目录名称
-	* @param iFlag     权限, 默认 S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP| S_IXGRP | S_IROTH |  S_IXOTH
 	* @return bool  true-创建成功 ，false-创建失败
 	*/
-	static bool makeDir(const string &sDirectoryPath, mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+	static bool makeDir(const string &sDirectoryPath);
 
 	/**
 	 *@brief 循环创建目录, 如果目录已经存在, 则也返回成功.
 	 *
 	 * @param sFullPath 要创建的目录名称
-	 * @param iFlag   权限, 默认 S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH |  S_IXOTH
 	 * @return           true-创建成功，false-创建失败
 	 */
 
-	static bool makeDirRecursive(const string &sDirectoryPath, mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+	static bool makeDirRecursive(const string &sDirectoryPath);
 	
 	/**
 	 * @brief 删除一个文件或目录.
