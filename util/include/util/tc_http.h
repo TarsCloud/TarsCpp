@@ -537,6 +537,13 @@ public:
     string &getContent() { return _content; }
 
     /**
+     * @brief 请求body内容, 其他都不变
+     *
+     * @return
+     */
+    void clearContent() { _content.clear(); }
+
+    /**
      * append content
      * @param append
      * @param bUpdateContentLength

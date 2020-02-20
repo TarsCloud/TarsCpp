@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - "2.0"
+    - master
 
 jobs:
   build:

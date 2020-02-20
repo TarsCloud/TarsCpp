@@ -80,3 +80,16 @@ macro(build_tars_server MODULE DEPS)
     add_custom_target(${MODULE}-tar DEPENDS ${MODULE-TGZ})
                 
 endmacro()
+
+#-----------------------------------------------------------------------
+
+include_directories(${PROJECT_SOURCE_DIR}/util/include)
+include_directories(${PROJECT_SOURCE_DIR}/servant)
+include_directories(${PROJECT_SOURCE_DIR}/servant/protocol)
+
+add_subdirectory(util)
+add_subdirectory(tools)
+add_subdirectory(servant)
+add_subdirectory(examples)
+
+#add_subdirectory(test_deprecated)
