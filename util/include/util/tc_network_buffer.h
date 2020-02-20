@@ -17,7 +17,7 @@
  * @file  tc_network_buffer.h
  * @brief  网络buffer缓冲类
  *
- * @author  jarodruan@upchina.com
+ * @author  ruanshudong@qq.com
  */
 /////////////////////////////////////////////////
 
@@ -95,7 +95,7 @@ public:
 	        _pos = pos;
         }
 
-        void setBuffer(const vector<char> &buff, int pos = 0)
+        void setBuffer(const vector<char> &buff, size_t pos = 0)
         {
 	        _buffer  = buff;
 	        _pos     = pos;
@@ -117,7 +117,7 @@ public:
 
     protected:
 	    vector<char>    _buffer;
-	    uint32_t        _pos = 0;
+	    size_t          _pos = 0;
 
     };
 

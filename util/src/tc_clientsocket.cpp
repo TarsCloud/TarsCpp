@@ -315,7 +315,6 @@ int TC_TCPClient::checkSocket()
                 iRet = _socket.connectNoThrow(_ip, _port);
             }
 
-            int n = TC_Exception::getSystemCode();
             if(iRet < 0 && !TC_Socket::isInProgress())
             {
                 _socket.close();
