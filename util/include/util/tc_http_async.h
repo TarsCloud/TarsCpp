@@ -38,7 +38,7 @@ namespace tars
 *     1 背后会启动唯一的网络线程
 *     2 目前只支持http短连接
 *     3 RequestCallback回调里面, onSucc和onFailed是对应的, 每次异步请求, onSucc/onFailed其中之一会被唯一响应
-* @author jarodruan@tencent.com
+* @author ruanshudong@qq.com
 */
 /////////////////////////////////////////////////
 
@@ -434,6 +434,7 @@ protected:
 
     bool                        _bindAddrSet;
 };
+
 }
 #endif
 

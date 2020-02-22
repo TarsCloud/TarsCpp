@@ -93,8 +93,33 @@ public:
     }
 
     /**
-     * @brief 释放. 
-     *  
+	 * @brief 释放. 
+	 *  
+     * @param t
+     */
+    static void destroy(T *t) 
+    { 
+        delete t; 
+    }
+};
+
+template<typename T>
+class CreateUsingNew1
+{
+public:
+    /**
+	 * @brief  创建.
+	 *  
+     * @return T*
+     */
+    static T* create() 
+    { 
+        return new T; 
+    }
+
+    /**
+	 * @brief 释放. 
+	 *  
      * @param t
      */
     static void destroy(T *t) 
@@ -194,14 +219,16 @@ struct NoDestroyLifetime
 template
 <
     typename T,
-    template<class> class CreatePolicy   = CreateUsingNew,
-    template<class> class LifetimePolicy = DefaultLifetime
+    template<typename> class CreatePolicy   = CreateUsingNew,
+    template<typename> class LifetimePolicy = DefaultLifetime
 >
 class TC_Singleton 
 {
 public:
     typedef T  instance_type;
     typedef volatile T volatile_type;
+ 
+    typedef CreatePolicy<T> TCreatePolicy;
 
     /**
      * @brief 获取实例
@@ -229,8 +256,6 @@ public:
         return (T*)_pInstance;
     }
     
-    virtual ~TC_Singleton(){}; 
-
 protected:
 
     static void destroySingleton()
@@ -248,6 +273,7 @@ protected:
 
 protected:
     TC_Singleton(){}
+    virtual ~TC_Singleton(){}; 
     TC_Singleton (const TC_Singleton &); 
     TC_Singleton &operator=(const TC_Singleton &);
 };

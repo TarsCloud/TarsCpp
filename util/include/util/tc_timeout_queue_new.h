@@ -21,9 +21,9 @@
 #include <unordered_map>
 #include <iostream>
 #include <cassert>
-#include <functional>
 #include "util/tc_autoptr.h"
-// #include "util/tc_monitor.h"
+#include "util/tc_monitor.h"
+// #include "util/tc_functor.h"
 #include "util/tc_timeprovider.h"
 
 using namespace std;
@@ -71,8 +71,8 @@ public:
         typename data_type::iterator dataIter;
     };
     /**
-     * @brief 超时队列，缺省5s超时.
-     *
+	 * @brief 超时队列，缺省5s超时.
+	 *
      * @param timeout 超时设定时间
      * @param size
      */
@@ -113,8 +113,8 @@ public:
     }
 
     /**
-     * @brief 获取指定id的数据.
-     *
+	 * @brief 获取指定id的数据.
+	 *
      * @param id 指定的数据的id
      * @param T 指定id的数据
      * @return bool get的结果
@@ -122,17 +122,17 @@ public:
     bool get(uint32_t uniqId, T & t,bool bErase = true);
 
     /**
-     * @brief 删除.
-     *
-     * @param uniqId 要删除的数据的id
+	 * @brief 删除.
+	 *
+	 * @param uniqId 要删除的数据的id
      * @param T     被删除的数据
      * @return bool 删除结果
      */
     bool erase(uint32_t uniqId, T & t);
 
     /**
-     * @brief 设置消息到队列尾端.
-     *
+	 * @brief 设置消息到队列尾端.
+	 *
      * @param ptr        要插入到队列尾端的消息
      * @param uniqId     序列号
      * @param timeout    超时时间
@@ -151,9 +151,9 @@ public:
     bool timeout(T & t);
 
     /**
-     * @brief 删除超时的数据，并用df对数据做处理
+	 * @brief 删除超时的数据，并用df对数据做处理
      */
-    void timeout(const data_functor &df);
+    void timeout(data_functor &df);
 
     /**
      * @brief 队列中的数据.
@@ -163,7 +163,7 @@ public:
     size_t size() const { return _data.size(); }
 
 protected:
-    uint32_t                        _uniqId;
+    atomic<uint32_t>                _uniqId;
     data_type                       _data;
     time_type                       _time;
     send_type                       _send;
@@ -296,7 +296,7 @@ template<typename T> bool TC_TimeoutQueueNew<T>::timeout(T & t)
     return true;
 }
 
-template<typename T> void TC_TimeoutQueueNew<T>::timeout(const data_functor& df)
+template<typename T> void TC_TimeoutQueueNew<T>::timeout(data_functor &df)
 {
     while(true)
     {

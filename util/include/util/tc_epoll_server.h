@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <list>
 #include <algorithm>
@@ -57,13 +58,10 @@ namespace tars
 
 class PropertyReport;
 
-class TC_EpollServer : public TC_ThreadLock, public TC_HandleBase
+class TC_EpollServer : public TC_HandleBase
 {
 public:
-    ////////////////////////////////////////////////////////////////////////////
-    /**
-     * 定义协议解析的返回值
-     */
+
     enum EM_CLOSE_T
     {
         EM_CLIENT_CLOSE = 0,         //客户端主动关闭
@@ -83,14 +81,11 @@ public:
         TCP_CONNECTION = 0,
         UDP_CONNECTION = 1,
     };
+
     /**
      * 定义协议解析接口的操作对象
      * 注意必须是线程安全的或是可以重入的
      */
-    // using protocol_functor = std::function<TC_NetWorkBuffer::PACKET_TYPE(string&, string&)>;
-    // using header_filter_functor = std::function<int (int, string&)>;
-    // using conn_protocol_functor = std::function<TC_NetWorkBuffer::PACKET_TYPE(string&, string&, void*)>;
-
 	typedef std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer::PACKET_TYPE, vector<char>&)> header_filter_functor;
 
     class NetThread;
@@ -102,6 +97,7 @@ public:
     typedef TC_AutoPtr<Handle> HandlePtr;
 
 	class RecvContext;
+
 	/**
 	 * 发送包的上下文
 	 * 由RecvContext创建出来
@@ -159,8 +155,6 @@ public:
 		shared_ptr<SendContext> createSendContext()  { return std::make_shared<SendContext>(shared_from_this(), 's'); }
 		shared_ptr<SendContext> createCloseContext() { return std::make_shared<SendContext>(shared_from_this(), 'c'); }
 
-//		int64_t         _recvUS;
-
 	protected:
 		uint32_t        _uid;            /**连接标示*/
 		string          _ip;             /**远程连接的ip*/
@@ -190,6 +184,7 @@ public:
         int             timeout;
         int             iLastRefreshTime;
     };
+
     ////////////////////////////////////////////////////////////////////////////
     /**
      * @brief 定义服务逻辑处理的接口
@@ -198,7 +193,7 @@ public:
     /**
      * 服务的逻辑处理代码
      */
-    class Handle : public TC_Thread, public TC_ThreadLock, public TC_HandleBase
+    class Handle : public TC_Thread, public TC_HandleBase
     {
     public:
         /**
@@ -222,6 +217,12 @@ public:
          * @return TC_EpollServer*
          */
         TC_EpollServer* getEpollServer();
+
+		/**
+		 * 获取adapter
+		 * @return
+		 */
+		BindAdapter *getBindAdapter() const { return _bindAdapter; }
 
 		/**
 		 * 获取Handle的索引(0~handle个数-1)
@@ -276,7 +277,7 @@ public:
         virtual void initialize() {};
 
         /**
-         * 唤醒HandleGroup中的handle线程
+         * 唤醒handle对应的处理线程
          */
         virtual void notifyFilter();
 
@@ -321,13 +322,10 @@ public:
 		virtual void handleOverload(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
         /**
-         * 处理Filter的消息
-         */
-        //virtual void handleFilter() {};
-        /**
          * 处理异步回调队列
          */
         virtual void handleAsyncResponse() {}
+
            /**
          * handleFilter拆分的第二部分，处理用户自有数据
          * 非游戏逻辑可忽略bExpectIdle参数
@@ -390,7 +388,6 @@ public:
          */
         TC_EpollServer  *_pEpollServer;
 
-
 		/**
 		 * handle对应的网路线程(网络线程和handle线程合并的情况下有效)
 		 */
@@ -411,10 +408,6 @@ public:
 		 */
 		uint32_t        _handleIndex;
 
-        /**
-         * 所属handle组
-         */
-        // HandleGroupPtr _handleGroup;
     };
 
     using close_functor = std::function<void (void*, EM_CLOSE_T )>;
@@ -422,7 +415,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     // 服务端口管理,监听socket信息
-    class BindAdapter : public TC_ThreadLock, public TC_HandleBase
+    class BindAdapter : public TC_HandleBase
     {
     public:
         /**
@@ -617,13 +610,13 @@ public:
          * 获取允许ip
          * @return vector<string>: ip列表
          */
-        vector<string> getAllow() const;
+        const vector<string> &getAllow() const;
 
          /**
          * 获取禁止ip
          * @return vector<string>: ip列表
          */
-        vector<string> getDeny() const;
+        const vector<string> &getDeny() const;
 
          /**
          * 获取allow deny次序
@@ -670,7 +663,7 @@ public:
          * 获取EpollServer
          * @return TC_EpollServer*
          */
-        TC_EpollServer* getEpollServer();
+        TC_EpollServer* getEpollServer() const  { return _pEpollServer; }
 
 		/**
 		 * 获取对应的网络线程
@@ -679,11 +672,6 @@ public:
 		 */
 		inline NetThread* getNetThreadOfFd(int fd) const { return _pEpollServer->getNetThreadOfFd(fd); }
 
-        /**
-         * 注册协议解析器
-         * @param pp
-         */
-        // void setProtocol(const protocol_functor& pf, int iHeaderLen = 0, const header_filter_functor& hf = echo_header_filter);
 		/**
 		 * 注册协议解析器
 		 * @param pp
@@ -744,12 +732,6 @@ public:
         int getHeaderFilterLen();
 
         /**
-         * 设置ServantHandle数目
-         * @param n
-         */
-        void setHandleNum(int n);
-
-        /**
          * 所属handle组的handle数(每个handle一个对象)
          * @return int
          */
@@ -776,7 +758,7 @@ public:
 				_iHandleNum = _pEpollServer->_netThreadNum;
 			}
 
-			for (size_t i = 0; i < _iHandleNum ; ++i)
+			for (int32_t i = 0; i < _iHandleNum ; ++i)
 			{
 				HandlePtr handle = new T();
 
@@ -801,15 +783,15 @@ public:
 			return _handles[index];
 		}
 
-        /**
-         * 设置服务端回包缓存的大小限制
-         */
-        void setBackPacketBuffLimit(size_t iLimitSize);
+        // /**
+        //  * 设置服务端回包缓存的大小限制
+        //  */
+        // void setBackPacketBuffLimit(size_t iLimitSize);
 
-        /**
-         * 获取服务端回包缓存的大小限制
-         */
-        size_t getBackPacketBuffLimit();
+        // /**
+        //  * 获取服务端回包缓存的大小限制
+        //  */
+        // size_t getBackPacketBuffLimit();
 
 
 		/**
@@ -874,22 +856,22 @@ public:
     public:
 
         //统计上报的对象
-        PropertyReport * _pReportQueue = NULL;
-        PropertyReport * _pReportConRate = NULL;
+        PropertyReport * _pReportQueue      = NULL;
+        PropertyReport * _pReportConRate    = NULL;
         PropertyReport * _pReportTimeoutNum = NULL;
 
     protected:
         friend class TC_EpollServer;
 
-        /**
-         * 服务
-         */
-        TC_EpollServer  *_pEpollServer;
-
 		/**
 		 * 加锁
 		 */
 		mutable std::mutex		_mutex;
+
+        /**
+         * 服务
+         */
+        TC_EpollServer  *_pEpollServer = NULL;
 
 		/**
 		 * Adapter所用的HandleGroup
@@ -910,6 +892,7 @@ public:
          * adapter的名字
          */
         string          _name;
+
         /**
          * 监听fd
          */
@@ -987,8 +970,8 @@ public:
          */
         string                  _protocolName;
 
-        //回包缓存限制大小
-        size_t                    _iBackPacketBuffLimit;
+        // 回包缓存限制大小
+        // size_t                    _iBackPacketBuffLimit;
 
 		//队列模式
 		bool _queueMode 		= false;
@@ -1187,10 +1170,10 @@ public:
 		* 接收Udp
 		*/
 		int recvUdp();
+
         /**
          * 解析协议
          * @param o
-         * @return int: <0:协议错误, 0:没有一个完整的包, 1:收到至少一个包
          */
         int parseProtocol(TC_NetWorkBuffer &rbuf);
 
@@ -1258,7 +1241,7 @@ public:
         /**
          * 接收数据buffer
          */
-        TC_NetWorkBuffer    _recvBuffer;
+        TC_NetWorkBuffer     _recvBuffer;
 
         /**
          * 发送数据buffer
@@ -1306,7 +1289,7 @@ public:
     /**
      * 带有时间链表的map
      */
-    class ConnectionList : public TC_ThreadLock
+    class ConnectionList
     {
     public:
         /**
@@ -1395,7 +1378,7 @@ public:
         /**
          * 服务
          */
-        NetThread                        *_pEpollServer;
+        NetThread                      *_pEpollServer;
 
         /**
          * 总计连接数
@@ -1432,6 +1415,7 @@ public:
          */
         uint32_t                        _iConnectionMagic;
     };
+
     ////////////////////////////////////////////////////////////////////////////
     class NetThread : public TC_Thread, public TC_HandleBase
     {
@@ -1456,12 +1440,6 @@ public:
 		int getIndex() const { return _threadIndex; }
 
         /**
-         * 绑定监听socket
-         * @param ls
-         */
-        // int bind(BindAdapterPtr &lsPtr);
-
-        /**
          * 网络线程执行函数
          */
         virtual void run();
@@ -1474,7 +1452,7 @@ public:
         /**
          * 生成epoll
          */
-        void createEpoll(uint32_t iIndex = 0);
+        void createEpoll(uint32_t maxAllConn);
 
         /**
          * 初始化udp监听
@@ -1531,31 +1509,25 @@ public:
          * 记录日志
          * @param s
          */
-        void debug(const string &s);
+        void debug(const string &s) const;
 
         /**
          * INFO日志
          * @param s
          */
-        void info(const string &s);
+        void info(const string &s) const;
 
 	    /**
 		 * TARS日志
 		 * @param s
 		 */
-	    void tars(const string &s);
+	    void tars(const string &s) const;
 
         /**
          * 记录错误日志
          * @param s
          */
-        void error(const string &s);
-
-		/**
-		 * tars日志
-		 * @param s
-		 */
-		void tars(const string &s) const;
+        void error(const string &s) const;
 
         /**
          * 是否启用防止空链接攻击的机制
@@ -1609,7 +1581,7 @@ public:
          * @param bEraseList 是否是超时连接的删除
          * @param closeType  关闭类型,0:表示客户端主动关闭；1:服务端主动关闭;2:连接超时服务端主动关闭
          */
-        void delConnection(Connection *cPtr, bool bEraseList = true,EM_CLOSE_T closeType=EM_CLIENT_CLOSE);
+        void delConnection(Connection *cPtr, bool bEraseList = true, EM_CLOSE_T closeType=EM_CLIENT_CLOSE);
 
         /**
          * 处理管道消息
@@ -1639,7 +1611,7 @@ public:
         /**
          * 服务
          */
-        TC_EpollServer            *_epollServer;
+        TC_EpollServer              *_epollServer;
 
 		/**
 		 * net线程的id
@@ -1661,11 +1633,6 @@ public:
          */
         bool                        _bTerminate;
 
-        /**
-         * handle是否已经启动
-         */
-        bool                        _handleStarted;
-
 		/**
 		 * 通知epoll
 		 */ 
@@ -1685,6 +1652,7 @@ public:
          *空连接检测机制开关
          */
         bool                         _bEmptyConnAttackCheck;
+
 
         /**
          * 空连接超时时间,单位是毫秒,默认值2s,
@@ -1726,11 +1694,6 @@ public:
     void setEmptyConnTimeout(int timeout);
 
     /**
-     *设置NetThread的内存池信息
-     */
-    // void setNetThreadBufferPoolInfo(size_t minBlock, size_t maxBlock, size_t maxBytes);
-
-    /**
      * 设置本地日志
      * @param plocalLogger
      */
@@ -1753,70 +1716,6 @@ public:
 	 * @return
 	 */
 	inline bool isMergeHandleNetThread() const { return _mergeHandleNetThread; }
-
-
-    // /**
-    //  * 绑定到一个已经有的handle组上
-    //  * @param groupName
-    //  * @param handleNum
-    //  * @param adapter
-    //  */
-    // void setHandleGroup(const string& groupName, BindAdapterPtr adapter)
-    // {
-    //     map<string, HandleGroupPtr>::iterator it = _handleGroups.find(groupName);
-
-    //     if (it != _handleGroups.end())
-    //     {
-    //         it->second->adapters[adapter->getName()] = adapter;
-    //         adapter->_handleGroup = it->second;
-    //     }
-    // }
-
-    // /**
-    //  * 创建一个handle对象组，如果已经存在则直接返回
-    //  * @param name
-    //  * @return HandlePtr
-    //  */
-    // template<class T> void setHandleGroup(const string& groupName, int32_t handleNum, BindAdapterPtr adapter)
-    // {
-    //     map<string, HandleGroupPtr>::iterator it = _handleGroups.find(groupName);
-
-    //     if (it == _handleGroups.end())
-    //     {
-    //         HandleGroupPtr hg = new HandleGroup();
-
-    //         hg->name = groupName;
-
-    //         adapter->_handleGroup = hg;
-
-    //         for (int32_t i = 0; i < handleNum; ++i)
-    //         {
-    //             HandlePtr handle = new T();
-
-    //             handle->setEpollServer(this);
-
-    //             handle->setHandleGroup(hg);
-
-    //             hg->handles.push_back(handle);
-    //         }
-
-    //         _handleGroups[groupName] = hg;
-
-    //         it = _handleGroups.find(groupName);
-    //     }
-    //     it->second->adapters[adapter->getName()] = adapter;
-
-    //     adapter->_handleGroup = it->second;
-    // }
-
-    // /**
-    //  * 选择网络线程
-    //  * @param fd
-    //  */
-    // NetThread* getNetThreadOfFd(int fd)
-    // {
-    //     return _netThreads[fd % _netThreads.size()];
-    // }
 
     /**
      * 绑定监听socket
@@ -1908,25 +1807,25 @@ public:
      * 记录日志
      * @param s
      */
-    void debug(const string &s);
+    void debug(const string &s) const;
 
     /**
      * INFO日志
      * @param s
      */
-    void info(const string &s);
+    void info(const string &s) const;
 
      /**
      * 记录错误日志
      * @param s
      */
-    void error(const string &s);
+    void error(const string &s) const;
 
 	/**
 	 * tars日志
 	 * @param s
 	 */
-	void tars(const string &s);
+	void tars(const string &s) const;
 
     /**
      * 获取网络线程的数目
@@ -1987,16 +1886,11 @@ protected:
 	void bind(const TC_Endpoint &ep, TC_Socket &s, bool manualListen);
 
 	static void applicationCallback(TC_EpollServer *epollServer);
-// public:
-
-    //统计服务端相应队列大小的上报的对象
-    // PropertyReport *            _pReportRspQueue;
-
 private:
     /**
      * 网络线程
      */
-    std::vector<NetThread*>        _netThreads;
+    std::vector<NetThread*>     _netThreads;
 
     /*
      * 网络线程数目
@@ -2027,11 +1921,11 @@ private:
 	 * 合并网络和业务线程
 	 */
 	bool                        _mergeHandleNetThread = false;
+
     /**
      * 本地循环日志
      */
     RollWrapperInterface        *_pLocalLogger;
-
 
 	/**
 	 *
@@ -2053,12 +1947,10 @@ private:
      */
     heartbeat_callback_functor _heartFunc;
 
-    /**
-     * 处理handle对象
-     */
-    // map<string, HandleGroupPtr> _handleGroups;
 };
+
 typedef TC_AutoPtr<TC_EpollServer> TC_EpollServerPtr;
+
 }
 
 #endif

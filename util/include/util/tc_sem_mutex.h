@@ -17,11 +17,15 @@
 #ifndef __TC_SEM_MUTEX_H
 #define __TC_SEM_MUTEX_H
 
+#include "util/tc_platform.h"
+
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#endif
+
 #include "util/tc_lock.h"
 
 namespace tars
@@ -37,13 +41,16 @@ namespace tars
 /**
 * @brief 信号量锁异常类
 */
-struct TC_SemMutex_Exception : public TC_Lock_Exception
+struct TC_SemMutex_Exception : public TC_Exception
 {
-    TC_SemMutex_Exception(const string &buffer) : TC_Lock_Exception(buffer){};
-    TC_SemMutex_Exception(const string &buffer, int err) : TC_Lock_Exception(buffer, err){};
+    TC_SemMutex_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
     ~TC_SemMutex_Exception() throw() {};
 };
 
+//锁名称统一用数字类型
+#if TARGET_PLATFORM_WINDOWS
+typedef int key_t;
+#endif
 /**
 * @brief 进程间锁, 提供两种锁机制:共享锁和排斥锁. 
 *  
@@ -60,8 +67,13 @@ public:
     TC_SemMutex();
 
     /**
-    * @brief 构造函数. 
-    *  
+     * @brief 析构函数
+     */
+    ~TC_SemMutex();
+
+    /**
+	* @brief 构造函数. 
+	*  
     * @param iKey, key
     * @throws TC_SemMutex_Exception
     */
@@ -95,14 +107,14 @@ public:
     * 
     *@return int
     */
-    int rlock() const;
+    void rlock() const;
 
     /**
     * @brief 解读锁. 
     *  
     * @return int
     */
-    int unrlock() const;
+    void unrlock() const;
 
     /**
     * @brief 尝试读锁. 
@@ -112,59 +124,75 @@ public:
     bool tryrlock() const;
 
     /**
-    * @brief 加写锁. 
-    *  
+	* @brief 加写锁. 
+	*  
     * @return int
     */
-    int wlock() const;
+    void wlock() const;
 
     /**
     * @brief 解写锁
     */
-    int unwlock() const;
+    void unwlock() const;
 
     /**
-    * @brief 尝试写锁. 
-    *  
+	* @brief 尝试写锁. 
+	*  
     * @throws TC_SemMutex_Exception
     * @return bool : 加锁成功则返回false, 否则返回false
     */
     bool trywlock() const;
 
     /**
-    * @brief 写锁. 
-    *  
+	* @brief 写锁. 
+	*  
     * @return int, 0 正确
     */
-    int lock() const        {return wlock();};
+    void lock() const        {wlock();};
 
     /**
     * @brief 解写锁
     */
-    int unlock() const      {return unwlock();};
+    void unlock() const      {unwlock();};
 
     /**
-    * @brief  尝试解锁. 
-    *  
+	* @brief  尝试解锁. 
+	*  
     * @throws TC_SemMutex_Exception
     * @return int, 0 正确
     */
     bool trylock() const    {return trywlock();};
 
+#if TARGET_PLATFORM_WINDOWS
 protected:
-    /**
+    void addWriter() const;
+    void removeWriter() const;
+    void unlockImp() const;
+    DWORD tryReadLockOnce() const ;
+protected:
+ 
+    mutable HANDLE   _mutex;  
+    mutable HANDLE   _readEvent;  
+    mutable HANDLE   _writeEvent;  
+    mutable unsigned _readers;  
+    mutable unsigned _writersWaiting;  
+    mutable unsigned _writers; 
+#else    
+   /**
      * 信号量ID
      */
     int _semID;
 
+#endif 
     /**
      * 信号量key
      */
     key_t _semKey;
+
 };
 
 }
 
 #endif
 
-#endif
+//#endif

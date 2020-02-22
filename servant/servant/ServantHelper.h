@@ -22,6 +22,7 @@
 #include <vector>
 #include "util/tc_autoptr.h"
 #include "util/tc_singleton.h"
+#include "util/tc_spin_lock.h"
 #include "servant/Servant.h"
 
 namespace tars
@@ -157,7 +158,7 @@ public:
     /**
      * 是否是已经被染色
      */
-    bool isDyeing() {return _isDyeing;}
+    bool isDyeing() const {return _isDyeing;}
 
 
 protected:

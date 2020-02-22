@@ -153,20 +153,22 @@ void TC_MD5::md5_process( MD5_CTX *ctx, const unsigned char data[64] )
 string TC_MD5::md5file(const string& fileFullName)
 {
     unsigned char sOutBuffer[16];
-    unsigned char buf[1024];
+    unsigned char buf[16*1024];
     FILE *f;
     size_t n;
     MD5_CTX context;
     if(( f = fopen( fileFullName.c_str(), "rb" )) == NULL )
-        return "";
+    {
+        TARS_THROW_EXCEPTION_SYSCODE(TC_MD5_Exception, "[TC_MD5::md5file] fopen '" + fileFullName + "', error");
+    }
+
     md5init(&context);
     while((n = fread( buf, 1, sizeof( buf ),f)) > 0 )
         md5update( &context, buf, (int)n );
     md5final (sOutBuffer, &context);
     fclose(f);
-    memset(&context, 0, sizeof(MD5_CTX));
-    string s((const char *)sOutBuffer, 16);
-    return bin2str((const void *)s.data(), s.length(), "");
+
+    return bin2str((const void *)sOutBuffer, sizeof(sOutBuffer), "");
 }
 
 void TC_MD5::md5update(MD5_CTX *ctx, unsigned char *input, unsigned int ilen )
@@ -273,26 +275,38 @@ void TC_MD5::md5_memset (POINTER output,int value,unsigned int len)
     }
 }
 
-string TC_MD5::md5bin(const string &sString)
+vector<char> TC_MD5::md5bin(const string &buffer)
 {
-    unsigned char sOutBuffer[16];
+    return md5bin(buffer.c_str(), buffer.size());
+}
+vector<char> TC_MD5::md5bin(const char *buffer, size_t length)
+{
+    vector<char> sOutBuffer;
+    sOutBuffer.resize(16);
+//    unsigned char sOutBuffer[16];
 
     MD5_CTX context;
     md5init (&context);
-    md5update (&context, (unsigned char*)sString.c_str(), sString.length());
-    md5final (sOutBuffer, &context);
+    md5update (&context, (unsigned char*)buffer, length);
+    md5final ((unsigned char*)&sOutBuffer[0], &context);
 
-    string sBinResult;
+    return sOutBuffer;
+//    string sBinResult;
 
-    sBinResult.assign((const char *)sOutBuffer, 16);
+//    sBinResult.assign((const char *)sOutBuffer, 16);
 
-    return sBinResult;
+//    return sBinResult;
 }
 
-string TC_MD5::md5str(const string &sString)
+string TC_MD5::md5str(const string &buffer)
 {
-    string s = md5bin(sString);
-    return bin2str((const void *)s.data(), s.length(), "");
+    return md5str(buffer.c_str(), buffer.size());
+}
+
+string TC_MD5::md5str(const char *buffer, size_t length)
+{
+    vector<char> s = md5bin(buffer, length);
+    return bin2str((const void *)s.data(), s.size(), "");
 }
 
 string TC_MD5::bin2str(const void *buf, size_t len, const string &sSep)

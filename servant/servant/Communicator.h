@@ -99,16 +99,17 @@ public:
      */
     ~Communicator();
 
-    /**
-     * 生成代理
-     * @param T
-     * @param objectName
-     * @param setName 指定set调用的setid
-     * @return T
-     */
-    template<class T> T stringToProxy(const string& objectName,const string& setName="")
-    {
-        T prx = NULL;
+public:
+   /**
+    * 生成代理
+    * @param T
+    * @param objectName
+    * @param setName 指定set调用的setid
+    * @return T
+    */
+   template<class T> T stringToProxy(const string& objectName, const string& setName = "")
+   {
+      T prx = NULL;
 
         stringToProxy<T>(objectName, prx,setName);
 
@@ -252,11 +253,6 @@ protected:
     bool isTerminating();
 
     /**
-     * 由Property初始化客户端配置
-     */
-    void initClientConfig();
-
-    /**
      * 获取对象代理生成器
      * @return ServantProxyFactoryPtr
      */
@@ -392,11 +388,8 @@ protected:
     /*
      * 分发给异步线程的索引seq
      */
-    size_t                 _asyncSeq;
+    size_t                 _asyncSeq = 0;
 
-//#if TARS_SSL
-//	shared_ptr<TC_OpenSSL>  _ctx;
-//#endif
 #ifdef _USE_OPENTRACKING
 public:
     struct TraceManager:public TC_HandleBase{

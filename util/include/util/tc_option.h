@@ -55,6 +55,14 @@ public:
     void decode(int argc, char *argv[]);
 
     /**
+	 * @brief 解码(和上面decode的区别是: 只有命令, 没有签名的argv[0])
+	 *  
+     * @param command 命令
+     *
+     */
+    void decode(const char *command);
+
+    /**
      * @brief 是否存在某个--标识的参数. 
      *  
      * @param sName  要判断的标识

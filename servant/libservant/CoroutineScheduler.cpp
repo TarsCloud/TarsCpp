@@ -756,11 +756,14 @@ void CoroutineScheduler::terminate()
 
 uint32_t CoroutineScheduler::generateId()
 {
-    while (++_uniqId < 1);
+    uint32_t i = ++_uniqId;
+    if(i == 0) {
+        i = ++_uniqId;
+    }
 
-    assert(_uniqId <= _poolSize);
+    assert(i <= _poolSize);
 
-    return _uniqId;
+    return i;
 }
 
 // void CoroutineScheduler::switchCoro(CoroutineInfo *from, CoroutineInfo *to)

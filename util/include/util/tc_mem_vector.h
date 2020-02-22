@@ -37,7 +37,6 @@ namespace tars
 struct TC_MemVectorException : public TC_Exception
 {
     TC_MemVectorException(const string &buffer) : TC_Exception(buffer){};
-    TC_MemVectorException(const string &buffer, int err) : TC_Exception(buffer, err){};
     ~TC_MemVectorException() throw(){};
 };
 
@@ -94,7 +93,7 @@ public:
 
     /**
      * @brief 计算需要的内存空间
-     * @param iCount  数据个数 
+	 * @param iCount  数据个数 
      * @return size_t  内存空间大小
      */
     static size_t calcMemSize(size_t iCount)
@@ -233,14 +232,14 @@ public:
      *
      * @return TC_MemVectorIterator
      */
-    TC_MemVectorIterator begin()    { return TC_MemVectorIterator(this, 0); }
+    TC_MemVectorIterator begin()	{ return TC_MemVectorIterator(this, 0); }
 
     /**
      *
      *
      * @return TC_MemVectorIterator
      */
-    TC_MemVectorIterator end()        { return TC_MemVectorIterator(this, _pHead->_iBlockCount); }
+    TC_MemVectorIterator end()		{ return TC_MemVectorIterator(this, _pHead->_iBlockCount); }
 
     /**
      * @brief 获取数据
@@ -251,8 +250,8 @@ public:
     {
         if(iIndex >= _pHead->_iBlockCount)
         {
-            ostringstream s;
-            s << string("[TC_MemVector::get] index beyond : index = ") << iIndex << " > " << _pHead->_iBlockCount;
+			ostringstream s;
+			s << string("[TC_MemVector::get] index beyond : index = ") << iIndex << " > " << _pHead->_iBlockCount;
 
             throw TC_MemVectorException(s.str());
         }
@@ -271,7 +270,6 @@ public:
     *  @brief 队列控制结构
     */
 #pragma pack(1) 
-
     struct tagMemQueueHead
     {
         size_t _iSize;          //内存大小

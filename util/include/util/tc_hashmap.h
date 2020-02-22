@@ -42,7 +42,6 @@ namespace tars
 struct TC_HashMap_Exception : public TC_Exception
 {
     TC_HashMap_Exception(const string &buffer) : TC_Exception(buffer){};
-    TC_HashMap_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
     ~TC_HashMap_Exception() throw(){};
 };
 
@@ -891,7 +890,7 @@ public:
          * 
          * @return int
          */
-        size_t getIndex() const { return _iIndex; }
+        int getIndex() const { return (int)_iIndex; }
 
         /**
          * @brief 下一个item
@@ -1018,7 +1017,6 @@ public:
      * @brief map头
      */
 #pragma pack(1) 
-
     struct tagMapHead
     {
         char   _cMaxVersion;        /**大版本*/
@@ -1749,13 +1747,13 @@ protected:
      * @brief  某hash链表数据个数+1
      * @param index
      */
-    void incListCount(uint32_t index) { update(&item(index)->_iListCount, item(index)->_iListCount+1); }
+    void incListCount(uint32_t index) { update(&item(index)->_iListCount, (uint32_t)item(index)->_iListCount+1); }
 
     /**
      * @brief  某hash链表数据个数+1
      * @param index
      */
-    void delListCount(size_t index) { update(&item(index)->_iListCount, item(index)->_iListCount-1); }
+    void delListCount(size_t index) { update(&item(index)->_iListCount, (uint32_t)item(index)->_iListCount-1); }
 
     /**
      * @brief 相对地址换成绝对地址

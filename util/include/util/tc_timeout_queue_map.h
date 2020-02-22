@@ -212,7 +212,7 @@ private:
     void delFromNoSend(uint16_t id);
 
 protected:
-    uint32_t                        _uniqId;
+    uint32_t    _uniqId;
 
     uint16_t    _dataSize;
 
@@ -314,7 +314,7 @@ template<typename T> uint32_t TC_TimeoutQueueMap<T>::generateId()
     {
         _freeTail = 0;
     }
-    //cerr<<"generateId:"<<id<<endl;
+    
     return id;
 }
 

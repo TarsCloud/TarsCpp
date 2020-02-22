@@ -46,8 +46,7 @@ namespace tars
 */
 struct TC_PackIn_Exception : public TC_Exception
 {
-    TC_PackIn_Exception(const string &buffer) : TC_Exception(buffer){};
-    TC_PackIn_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
+	TC_PackIn_Exception(const string &buffer) : TC_Exception(buffer){};
     ~TC_PackIn_Exception() throw(){};
 };
 
@@ -105,11 +104,10 @@ protected:
                  return;
             }
 
-            if(_nPos > _buffer.length())
-            {
-                assert(false);
-                //throw TC_PackIn_Exception("TC_PackIn cur has beyond error.");
-            }
+            // if(_nPos > _buffer.length())
+            // {
+            //     throw TC_PackIn_Exception("TC_PackIn cur has beyond error.");
+            // }
 
             if(_bInsert)
             {

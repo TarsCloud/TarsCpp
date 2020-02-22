@@ -64,6 +64,7 @@ TC_Thread::TC_Thread() : _running(false), _th(NULL)
 
 TC_Thread::~TC_Thread()
 {
+
     if(_th != NULL)
     {
         //如果资源没有被detach或者被join，则自己释放

@@ -15,9 +15,8 @@ namespace tars
 /**
  * @file tc_cas_queue.h
  * @brief 线程无锁
-#include <condition_variable>队列类.
  *  
- * @author jarodruan@upchina.com
+ * @author ruanshudong@qq.com
  */
        
 /////////////////////////////////////////////////

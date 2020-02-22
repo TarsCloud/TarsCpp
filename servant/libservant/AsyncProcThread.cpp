@@ -128,51 +128,5 @@ void AsyncProcThread::callback(ReqMessage * msg)
 		TLOGERROR("[TARS][AsyncProcThread exception.]" << endl);
 	}
 }
-
-// void AsyncProcThread::run()
-// {
-//     while (!_terminate)
-//     {
-//         ReqMessage * msg = NULL;
-
-//         //异步请求回来的响应包处理
-//         if(_msgQueue->empty())
-//         {
-//             TC_ThreadLock::Lock lock(*this);
-//             timedWait(1000);
-//         }
-
-//         if (_msgQueue->pop_front(msg))
-//         {
-//             //从回调对象把线程私有数据传递到回调线程中
-//             ServantProxyThreadData * pServantProxyThreadData = ServantProxyThreadData::getData();
-//             assert(pServantProxyThreadData != NULL);
-
-//             //把染色的消息设置在线程私有数据里面
-//             pServantProxyThreadData->_dyeing  = msg->bDyeing;
-//             pServantProxyThreadData->_dyeingKey = msg->sDyeingKey;
-
-//             if(msg->adapter)
-//             {
-//                 //    snprintf(pServantProxyThreadData->_szHost, sizeof(pServantProxyThreadData->_szHost), "%s", msg->adapter->endpoint().desc().c_str());
-//                 pServantProxyThreadData->_szHost = msg->adapter->endpoint().desc();
-//             }
-
-//             try
-//             {
-//                 ReqMessagePtr msgPtr = msg;
-//                 msg->callback->onDispatch(msgPtr);
-//             }
-//             catch (exception& e)
-//             {
-//                 TLOGERROR("[TARS][AsyncProcThread exception]:" << e.what() << endl);
-//             }
-//             catch (...)
-//             {
-//                 TLOGERROR("[TARS][AsyncProcThread exception.]" << endl);
-//             }
-//         }
-//     }
-// }
 /////////////////////////////////////////////////////////////////////////
 }

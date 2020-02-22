@@ -31,21 +31,10 @@ namespace tars
 /**
  * @file tc_thread_rwlock.h
  * @brief 读写锁
- * @author jarodruan@upchina.com
+ * @author ruanshudong@qq.com
  */
 
 /////////////////////////////////////////////////
-
-/**
- * @brief读写锁异常类
- */
-// struct TC_ThreadRW_Exception : public TC_Exception
-// {
-//     TC_ThreadRW_Exception(const string &buffer) : TC_Exception(buffer){};
-//     TC_ThreadRW_Exception(const string &buffer, bool err) : TC_Exception(buffer, err){};
-//     ~TC_ThreadRW_Exception() throw() {};
-// };
-
 
 class TC_ThreadRWLocker
 {

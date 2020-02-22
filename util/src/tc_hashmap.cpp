@@ -27,7 +27,7 @@ int TC_HashMap::Block::getBlockData(TC_HashMap::BlockData &data)
     data._synct = getSyncTime();
 
     string s;
-    int ret   = get(s);
+	int ret   = get(s);
 
     if(ret != TC_HashMap::RT_OK)
     {
@@ -59,238 +59,241 @@ int TC_HashMap::Block::getBlockData(TC_HashMap::BlockData &data)
 
 size_t TC_HashMap::Block::getLastBlockHead()
 {
-    size_t iHead = _iHead;
+	size_t iHead = _iHead;
 
-    while(getBlockHead(iHead)->_iBlockNext != 0)
-    {
-        iHead = getBlockHead(iHead)->_iBlockNext;
-    }
-    return iHead;
+	while(getBlockHead(iHead)->_iBlockNext != 0)
+	{
+		iHead = getBlockHead(iHead)->_iBlockNext;
+	}
+	return iHead;
 }
 
 int TC_HashMap::Block::get(void *pData, size_t &iDataLen)
 {
-    //没有下一个chunk, 一个chunk就可以装下数据了
-    if(!getBlockHead()->_bNextChunk)
-    {
-        memcpy(pData, getBlockHead()->_cData, min(getBlockHead()->_iDataLen, iDataLen));
-        iDataLen = getBlockHead()->_iDataLen;
-        return TC_HashMap::RT_OK;
-    }
-    else
-    {
-        size_t iUseSize = getBlockHead()->_iSize - sizeof(tagBlockHead);
-        size_t iCopyLen = min(iUseSize, iDataLen);
+	//没有下一个chunk, 一个chunk就可以装下数据了
+	if(!getBlockHead()->_bNextChunk)
+	{
+		memcpy(pData, getBlockHead()->_cData, min(getBlockHead()->_iDataLen, iDataLen));
+		iDataLen = getBlockHead()->_iDataLen;
+		return TC_HashMap::RT_OK;
+	}
+	else
+	{
+		size_t iUseSize = getBlockHead()->_iSize - sizeof(tagBlockHead);
+		size_t iCopyLen = min(iUseSize, iDataLen);
 
-        //copy到当前的block中
-        memcpy(pData, getBlockHead()->_cData, iCopyLen);
-        if (iDataLen < iUseSize)
-        {
-            return TC_HashMap::RT_NOTALL_ERR;   //copy数据不完全
-        }
+		//copy到当前的block中
+		memcpy(pData, getBlockHead()->_cData, iCopyLen);
+		if (iDataLen < iUseSize)
+		{
+			return TC_HashMap::RT_NOTALL_ERR;   //copy数据不完全
+		}
 
-        //已经copy长度
-        size_t iHasLen  = iCopyLen;
-        //最大剩余长度
-        size_t iLeftLen = iDataLen - iCopyLen;
+		//已经copy长度
+		size_t iHasLen  = iCopyLen;
+		//最大剩余长度
+		size_t iLeftLen = iDataLen - iCopyLen;
 
-        tagChunkHead *pChunk    = getChunkHead(getBlockHead()->_iNextChunk);
-        while(iHasLen < iDataLen)
-        {
+		tagChunkHead *pChunk    = getChunkHead(getBlockHead()->_iNextChunk);
+		while(iHasLen < iDataLen)
+		{
             iUseSize        = pChunk->_iSize - sizeof(tagChunkHead);
-            if(!pChunk->_bNextChunk)
-            {
-                //copy到当前的chunk中
-                size_t iCopyLen = min(pChunk->_iDataLen, iLeftLen);
-                memcpy((char*)pData + iHasLen, pChunk->_cData, iCopyLen);
-                iDataLen = iHasLen + iCopyLen;
+			if(!pChunk->_bNextChunk)
+			{
+				//copy到当前的chunk中
+				size_t iCopyLen = min(pChunk->_iDataLen, iLeftLen);
+				memcpy((char*)pData + iHasLen, pChunk->_cData, iCopyLen);
+				iDataLen = iHasLen + iCopyLen;
 
-                if(iLeftLen < pChunk->_iDataLen)
-                {
-                    return TC_HashMap::RT_NOTALL_ERR;       //copy不完全
-                }
+				if(iLeftLen < pChunk->_iDataLen)
+				{
+					return TC_HashMap::RT_NOTALL_ERR;       //copy不完全
+				}
 
-                return TC_HashMap::RT_OK;
-            }
-            else
-            {
-                size_t iCopyLen = min(iUseSize, iLeftLen);
-                //copy当前的chunk
-                memcpy((char*)pData + iHasLen, pChunk->_cData, iCopyLen);
-                if (iLeftLen <= iUseSize)
-                {
-                    iDataLen = iHasLen + iCopyLen;
-                    return TC_HashMap::RT_NOTALL_ERR;   //copy不完全
-                }
+				return TC_HashMap::RT_OK;
+			}
+			else
+			{
+				size_t iCopyLen = min(iUseSize, iLeftLen);
+				//copy当前的chunk
+				memcpy((char*)pData + iHasLen, pChunk->_cData, iCopyLen);
 
-                //copy当前chunk完全
-                iHasLen  += iCopyLen;
-                iLeftLen -= iCopyLen;
+				// 这里有bug， = 的时候正好可以，不能返回出错！
+				//if (iLeftLen <= iUseSize)
+				if (iLeftLen < iUseSize)
+				{
+					iDataLen = iHasLen + iCopyLen;
+					return TC_HashMap::RT_NOTALL_ERR;   //copy不完全
+				}
 
-                pChunk   =  getChunkHead(pChunk->_iNextChunk);
-            }
-        }
-    }
+				//copy当前chunk完全
+				iHasLen  += iCopyLen;
+				iLeftLen -= iCopyLen;
 
-    return TC_HashMap::RT_OK;
+				pChunk   =  getChunkHead(pChunk->_iNextChunk);
+			}
+		}
+	}
+
+	return TC_HashMap::RT_OK;
 }
 
 int TC_HashMap::Block::get(string &s)
 {
-    size_t iLen = getDataLen();
+	size_t iLen = getDataLen();
 
-    char *cData = new char[iLen];
-    size_t iGetLen = iLen;
-    int ret = get(cData, iGetLen);
-    if(ret == TC_HashMap::RT_OK)
-    {
-        s.assign(cData, iGetLen);
-    }
+	char *cData = new char[iLen];
+	size_t iGetLen = iLen;
+	int ret = get(cData, iGetLen);
+	if(ret == TC_HashMap::RT_OK)
+	{
+		s.assign(cData, iGetLen);
+	}
 
-    delete[] cData;
+	delete[] cData;
 
-    return ret;
+	return ret;
 }
 
 int TC_HashMap::Block::set(const void *pData, size_t iDataLen, bool bOnlyKey, vector<TC_HashMap::BlockData> &vtData)
 {
-    //首先分配刚刚够的长度, 不能多一个chunk, 也不能少一个chunk
-    int ret = allocate(iDataLen, vtData);
-    if(ret != TC_HashMap::RT_OK)
-    {
-        return ret;
-    }
+	//首先分配刚刚够的长度, 不能多一个chunk, 也不能少一个chunk
+	int ret = allocate(iDataLen, vtData);
+	if(ret != TC_HashMap::RT_OK)
+	{
+		return ret;
+	}
 
-    if(bOnlyKey)
-    {
-        //原始数据是脏数据
-        if(getBlockHead()->_bDirty)
-        {
-            _pMap->delDirtyCount();
-        }
+	if(bOnlyKey)
+	{
+		//原始数据是脏数据
+    	if(getBlockHead()->_bDirty)
+    	{
+    		_pMap->delDirtyCount();
+    	}
 
-        //数据被修改, 设置为脏数据
-        getBlockHead()->_bDirty     = false;
+    	//数据被修改, 设置为脏数据
+    	getBlockHead()->_bDirty     = false;
 
-        //原始数据不是OnlyKey数据
-        if(!getBlockHead()->_bOnlyKey)
-        {
-            _pMap->incOnlyKeyCount();
-        }
-    }
-    else
-    {
-        //原始数据不是脏数据
-        if(!getBlockHead()->_bDirty)
-        {
-            _pMap->incDirtyCount();
-        }
+		//原始数据不是OnlyKey数据
+		if(!getBlockHead()->_bOnlyKey)
+		{
+			_pMap->incOnlyKeyCount();
+		}
+	}
+	else
+	{
+    	//原始数据不是脏数据
+    	if(!getBlockHead()->_bDirty)
+    	{
+    		_pMap->incDirtyCount();
+    	}
 
-        //数据被修改, 设置为脏数据
-        getBlockHead()->_bDirty     = true;
+    	//数据被修改, 设置为脏数据
+    	getBlockHead()->_bDirty     = true;
 
-        //原始数据是OnlyKey数据
-        if(getBlockHead()->_bOnlyKey)
-        {
-            _pMap->delOnlyKeyCount();
-        }
-    }
+		//原始数据是OnlyKey数据
+		if(getBlockHead()->_bOnlyKey)
+		{
+			_pMap->delOnlyKeyCount();
+		}
+	}
 
     //设置是否只有Key
     getBlockHead()->_bOnlyKey   = bOnlyKey;
 
-    size_t iUseSize = getBlockHead()->_iSize - sizeof(tagBlockHead);
-    //没有下一个chunk, 一个chunk就可以装下数据了
-    if(!getBlockHead()->_bNextChunk)
-    {
-        memcpy(getBlockHead()->_cData, (char*)pData, iDataLen);
-        //先copy数据, 再复制数据长度
-        getBlockHead()->_iDataLen   = iDataLen;
-    }
-    else
-    {
-        //copy到当前的block中
-        memcpy(getBlockHead()->_cData, (char*)pData, iUseSize);
-        //剩余程度
-        size_t iLeftLen = iDataLen - iUseSize;
-        size_t iCopyLen = iUseSize;
+	size_t iUseSize = getBlockHead()->_iSize - sizeof(tagBlockHead);
+	//没有下一个chunk, 一个chunk就可以装下数据了
+	if(!getBlockHead()->_bNextChunk)
+	{
+		memcpy(getBlockHead()->_cData, (char*)pData, iDataLen);
+		//先copy数据, 再复制数据长度
+		getBlockHead()->_iDataLen   = iDataLen;
+	}
+	else
+	{
+		//copy到当前的block中
+		memcpy(getBlockHead()->_cData, (char*)pData, iUseSize);
+		//剩余程度
+		size_t iLeftLen = iDataLen - iUseSize;
+		size_t iCopyLen = iUseSize;
 
-        tagChunkHead *pChunk    = getChunkHead(getBlockHead()->_iNextChunk);
-        while(true)
-        {
+		tagChunkHead *pChunk    = getChunkHead(getBlockHead()->_iNextChunk);
+		while(true)
+		{
             //计算chunk的可用大小
             iUseSize                = pChunk->_iSize - sizeof(tagChunkHead);
 
-            if(!pChunk->_bNextChunk)
-            {
+			if(!pChunk->_bNextChunk)
+			{
                 assert(iUseSize >= iLeftLen);
-                //copy到当前的chunk中
-                memcpy(pChunk->_cData, (char*)pData + iCopyLen, iLeftLen);
-                //最后一个chunk, 才有数据长度, 先copy数据再赋值长度
-                pChunk->_iDataLen = iLeftLen;
-                iCopyLen += iLeftLen;
-                iLeftLen -= iLeftLen;
-                break;
-            }
-            else
-            {
-                //copy到当前的chunk中
-                memcpy(pChunk->_cData, (char*)pData + iCopyLen, iUseSize);
-                iCopyLen += iUseSize;
-                iLeftLen -= iUseSize;
+				//copy到当前的chunk中
+				memcpy(pChunk->_cData, (char*)pData + iCopyLen, iLeftLen);
+				//最后一个chunk, 才有数据长度, 先copy数据再赋值长度
+				pChunk->_iDataLen = iLeftLen;
+				iCopyLen += iLeftLen;
+				iLeftLen -= iLeftLen;
+				break;
+			}
+			else
+			{
+				//copy到当前的chunk中
+				memcpy(pChunk->_cData, (char*)pData + iCopyLen, iUseSize);
+				iCopyLen += iUseSize;
+				iLeftLen -= iUseSize;
 
-                pChunk   =  getChunkHead(pChunk->_iNextChunk);
-            }
-        }
+				pChunk   =  getChunkHead(pChunk->_iNextChunk);
+			}
+		}
         assert(iLeftLen == 0);
-    }
+	}
 
-    _pMap->doUpdate(true);
-    return TC_HashMap::RT_OK;
+	_pMap->doUpdate(true);
+	return TC_HashMap::RT_OK;
 }
 
 void TC_HashMap::Block::setDirty(bool b)
 {
-    if(getBlockHead()->_bDirty != b)
-    {
-        if (b)
-        {
-            _pMap->incDirtyCount();
-        }
-        else
-        {
-            _pMap->delDirtyCount();
-        }
-        _pMap->update(&getBlockHead()->_bDirty, b);
+	if(getBlockHead()->_bDirty != b)
+	{
+		if (b)
+		{
+			_pMap->incDirtyCount();
+		}
+		else
+		{
+			_pMap->delDirtyCount();
+		}
+		_pMap->update(&getBlockHead()->_bDirty, b);
         _pMap->doUpdate(true);
-    }
+	}
 }
 
 bool TC_HashMap::Block::nextBlock()
 {
-    _iHead = getBlockHead()->_iBlockNext;
+	_iHead = getBlockHead()->_iBlockNext;
 
-    return _iHead != 0;
+	return _iHead != 0;
 }
 
 bool TC_HashMap::Block::prevBlock()
 {
-    _iHead = getBlockHead()->_iBlockPrev;
+	_iHead = getBlockHead()->_iBlockPrev;
 
-    return _iHead != 0;
+	return _iHead != 0;
 }
 
 void TC_HashMap::Block::deallocate()
 {
-    vector<size_t> v;
-    v.push_back(_iHead);
+	vector<size_t> v;
+	v.push_back(_iHead);
 
-    if(getBlockHead()->_bNextChunk)
-    {
-        deallocate(getBlockHead()->_iNextChunk);
-    }
+	if(getBlockHead()->_bNextChunk)
+	{
+		deallocate(getBlockHead()->_iNextChunk);
+	}
 
-    _pMap->_pDataAllocator->deallocateMemBlock(v);
+	_pMap->_pDataAllocator->deallocateMemBlock(v);
 }
 
 void TC_HashMap::Block::makeNew(size_t index, size_t iAllocSize)
@@ -309,68 +312,68 @@ void TC_HashMap::Block::makeNew(size_t index, size_t iAllocSize)
     getBlockHead()->_bDirty         = true;
     getBlockHead()->_bOnlyKey       = false;
 
-    _pMap->incDirtyCount();
-    _pMap->incElementCount();
-    _pMap->incListCount(index);
+	_pMap->incDirtyCount();
+	_pMap->incElementCount();
+	_pMap->incListCount((uint32_t)index);
 
-    //挂在block链表上
-    if(_pMap->item(index)->_iBlockAddr == 0)
-    {
-        //当前hash桶没有元素
-        _pMap->update(&_pMap->item(index)->_iBlockAddr, _iHead);
-        _pMap->update(&getBlockHead()->_iBlockNext, (size_t)0);
-        _pMap->update(&getBlockHead()->_iBlockPrev, (size_t)0);
-    }
-    else
-    {
-        //当然hash桶有元素, 挂在桶开头
-        _pMap->update(&getBlockHead(_pMap->item(index)->_iBlockAddr)->_iBlockPrev, _iHead);
-        _pMap->update(&getBlockHead()->_iBlockNext, _pMap->item(index)->_iBlockAddr);
-        _pMap->update(&_pMap->item(index)->_iBlockAddr, _iHead);
-        _pMap->update(&getBlockHead()->_iBlockPrev, (size_t)0);
-    }
+	//挂在block链表上
+	if(_pMap->item(index)->_iBlockAddr == 0)
+	{
+		//当前hash桶没有元素
+		_pMap->update(&_pMap->item(index)->_iBlockAddr, _iHead);
+		_pMap->update(&getBlockHead()->_iBlockNext, (size_t)0);
+		_pMap->update(&getBlockHead()->_iBlockPrev, (size_t)0);
+	}
+	else
+	{
+		//当然hash桶有元素, 挂在桶开头
+		_pMap->update(&getBlockHead(_pMap->item(index)->_iBlockAddr)->_iBlockPrev, _iHead);
+		_pMap->update(&getBlockHead()->_iBlockNext, _pMap->item(index)->_iBlockAddr);
+		_pMap->update(&_pMap->item(index)->_iBlockAddr, _iHead);
+		_pMap->update(&getBlockHead()->_iBlockPrev, (size_t)0);
+	}
 
-    //挂在Set链表的头部
-    if(_pMap->_pHead->_iSetHead == 0)
-    {
-        assert(_pMap->_pHead->_iSetTail == 0);
-        _pMap->update(&_pMap->_pHead->_iSetHead, _iHead);
-        _pMap->update(&_pMap->_pHead->_iSetTail, _iHead);
-    }
-    else
-    {
+	//挂在Set链表的头部
+	if(_pMap->_pHead->_iSetHead == 0)
+	{
+		assert(_pMap->_pHead->_iSetTail == 0);
+		_pMap->update(&_pMap->_pHead->_iSetHead, _iHead);
+		_pMap->update(&_pMap->_pHead->_iSetTail, _iHead);
+	}
+	else
+	{
         assert(_pMap->_pHead->_iSetTail != 0);
-        _pMap->update(&getBlockHead()->_iSetNext, _pMap->_pHead->_iSetHead);
-        _pMap->update(&getBlockHead(_pMap->_pHead->_iSetHead)->_iSetPrev, _iHead);
-        _pMap->update(&_pMap->_pHead->_iSetHead, _iHead);
-    }
+		_pMap->update(&getBlockHead()->_iSetNext, _pMap->_pHead->_iSetHead);
+		_pMap->update(&getBlockHead(_pMap->_pHead->_iSetHead)->_iSetPrev, _iHead);
+		_pMap->update(&_pMap->_pHead->_iSetHead, _iHead);
+	}
 
     //挂在Get链表头部
-    if(_pMap->_pHead->_iGetHead == 0)
-    {
-        assert(_pMap->_pHead->_iGetTail == 0);
-        _pMap->update(&_pMap->_pHead->_iGetHead, _iHead);
-        _pMap->update(&_pMap->_pHead->_iGetTail, _iHead);
-    }
-    else
-    {
+	if(_pMap->_pHead->_iGetHead == 0)
+	{
+		assert(_pMap->_pHead->_iGetTail == 0);
+		_pMap->update(&_pMap->_pHead->_iGetHead, _iHead);
+		_pMap->update(&_pMap->_pHead->_iGetTail, _iHead);
+	}
+	else
+	{
         assert(_pMap->_pHead->_iGetTail != 0);
-        _pMap->update(&getBlockHead()->_iGetNext, _pMap->_pHead->_iGetHead);
-        _pMap->update(&getBlockHead(_pMap->_pHead->_iGetHead)->_iGetPrev, _iHead);
-        _pMap->update(&_pMap->_pHead->_iGetHead, _iHead);
-    }
+		_pMap->update(&getBlockHead()->_iGetNext, _pMap->_pHead->_iGetHead);
+		_pMap->update(&getBlockHead(_pMap->_pHead->_iGetHead)->_iGetPrev, _iHead);
+		_pMap->update(&_pMap->_pHead->_iGetHead, _iHead);
+	}
 
-    //一次写更新操作
-    _pMap->doUpdate(true);
+	//一次写更新操作
+	_pMap->doUpdate(true);
 }
 
 void TC_HashMap::Block::erase()
 {
-    //////////////////修改脏数据链表/////////////
-    if(_pMap->_pHead->_iDirtyTail == _iHead)
-    {
-        _pMap->update(&_pMap->_pHead->_iDirtyTail, getBlockHead()->_iSetPrev);
-    }
+	//////////////////修改脏数据链表/////////////
+	if(_pMap->_pHead->_iDirtyTail == _iHead)
+	{
+		_pMap->update(&_pMap->_pHead->_iDirtyTail, getBlockHead()->_iSetPrev);
+	}
 
     //////////////////修改回写数据链表/////////////
     if(_pMap->_pHead->_iSyncTail == _iHead)
@@ -384,120 +387,120 @@ void TC_HashMap::Block::erase()
         _pMap->update(&_pMap->_pHead->_iBackupTail, getBlockHead()->_iGetPrev);
     }
 
-    ////////////////////修改Set链表的数据//////////
+	////////////////////修改Set链表的数据//////////
     {
-        bool bHead = (_pMap->_pHead->_iSetHead == _iHead);
-        bool bTail = (_pMap->_pHead->_iSetTail == _iHead);
+    	bool bHead = (_pMap->_pHead->_iSetHead == _iHead);
+    	bool bTail = (_pMap->_pHead->_iSetTail == _iHead);
 
-        if(!bHead)
-        {
-            if(bTail)
-            {
-                assert(getBlockHead()->_iSetNext == 0);
-                //是尾部, 尾部指针指向上一个元素
-                _pMap->update(&_pMap->_pHead->_iSetTail, getBlockHead()->_iSetPrev);
-                _pMap->update(&getBlockHead(getBlockHead()->_iSetPrev)->_iSetNext, (size_t)0);
-            }
-            else
-            {
-                //不是头部也不是尾部
-                assert(getBlockHead()->_iSetNext != 0);
-                _pMap->update(&getBlockHead(getBlockHead()->_iSetPrev)->_iSetNext, getBlockHead()->_iSetNext);
-                _pMap->update(&getBlockHead(getBlockHead()->_iSetNext)->_iSetPrev, getBlockHead()->_iSetPrev);
-            }
-        }
-        else
-        {
-            if(bTail)
-            {
-                assert(getBlockHead()->_iSetNext == 0);
-                assert(getBlockHead()->_iSetPrev == 0);
-                //头部也是尾部, 指针都设置为0
-                _pMap->update(&_pMap->_pHead->_iSetHead, (size_t)0);
-                _pMap->update(&_pMap->_pHead->_iSetTail, (size_t)0);
-            }
-            else
-            {
-                //头部不是尾部, 头部指针指向下一个元素
-                assert(getBlockHead()->_iSetNext != 0);
-                _pMap->update(&_pMap->_pHead->_iSetHead, getBlockHead()->_iSetNext);
+    	if(!bHead)
+    	{
+    		if(bTail)
+    		{
+    			assert(getBlockHead()->_iSetNext == 0);
+    			//是尾部, 尾部指针指向上一个元素
+    			_pMap->update(&_pMap->_pHead->_iSetTail, getBlockHead()->_iSetPrev);
+    			_pMap->update(&getBlockHead(getBlockHead()->_iSetPrev)->_iSetNext, (size_t)0);
+    		}
+    		else
+    		{
+    			//不是头部也不是尾部
+    			assert(getBlockHead()->_iSetNext != 0);
+    			_pMap->update(&getBlockHead(getBlockHead()->_iSetPrev)->_iSetNext, getBlockHead()->_iSetNext);
+    			_pMap->update(&getBlockHead(getBlockHead()->_iSetNext)->_iSetPrev, getBlockHead()->_iSetPrev);
+    		}
+    	}
+    	else
+    	{
+    		if(bTail)
+    		{
+    			assert(getBlockHead()->_iSetNext == 0);
+    			assert(getBlockHead()->_iSetPrev == 0);
+    			//头部也是尾部, 指针都设置为0
+    			_pMap->update(&_pMap->_pHead->_iSetHead, (size_t)0);
+    			_pMap->update(&_pMap->_pHead->_iSetTail, (size_t)0);
+    		}
+    		else
+    		{
+    			//头部不是尾部, 头部指针指向下一个元素
+    			assert(getBlockHead()->_iSetNext != 0);
+    			_pMap->update(&_pMap->_pHead->_iSetHead, getBlockHead()->_iSetNext);
                 //下一个元素上指针为0
                 _pMap->update(&getBlockHead(getBlockHead()->_iSetNext)->_iSetPrev, (size_t)0);
-            }
-        }
+    		}
+    	}
     }
 
-    ////////////////////修改Get链表的数据//////////
-    //
+	////////////////////修改Get链表的数据//////////
+	//
     {
-        bool bHead = (_pMap->_pHead->_iGetHead == _iHead);
-        bool bTail = (_pMap->_pHead->_iGetTail == _iHead);
+    	bool bHead = (_pMap->_pHead->_iGetHead == _iHead);
+    	bool bTail = (_pMap->_pHead->_iGetTail == _iHead);
 
-        if(!bHead)
-        {
-            if(bTail)
-            {
-                assert(getBlockHead()->_iGetNext == 0);
-                //是尾部, 尾部指针指向上一个元素
-                _pMap->update(&_pMap->_pHead->_iGetTail, getBlockHead()->_iGetPrev);
-                _pMap->update(&getBlockHead(getBlockHead()->_iGetPrev)->_iGetNext, (size_t)0);
-            }
-            else
-            {
-                //不是头部也不是尾部
-                assert(getBlockHead()->_iGetNext != 0);
-                _pMap->update(&getBlockHead(getBlockHead()->_iGetPrev)->_iGetNext, getBlockHead()->_iGetNext);
-                _pMap->update(&getBlockHead(getBlockHead()->_iGetNext)->_iGetPrev, getBlockHead()->_iGetPrev);
-            }
-        }
-        else
-        {
-            if(bTail)
-            {
-                assert(getBlockHead()->_iGetNext == 0);
-                assert(getBlockHead()->_iGetPrev == 0);
-                //头部也是尾部, 指针都设置为0
-                _pMap->update(&_pMap->_pHead->_iGetHead, (size_t)0);
-                _pMap->update(&_pMap->_pHead->_iGetTail, (size_t)0);
-            }
-            else
-            {
-                //头部不是尾部, 头部指针指向下一个元素
-                assert(getBlockHead()->_iGetNext != 0);
-                _pMap->update(&_pMap->_pHead->_iGetHead, getBlockHead()->_iGetNext);
+    	if(!bHead)
+    	{
+    		if(bTail)
+    		{
+    			assert(getBlockHead()->_iGetNext == 0);
+    			//是尾部, 尾部指针指向上一个元素
+    			_pMap->update(&_pMap->_pHead->_iGetTail, getBlockHead()->_iGetPrev);
+    			_pMap->update(&getBlockHead(getBlockHead()->_iGetPrev)->_iGetNext, (size_t)0);
+    		}
+    		else
+    		{
+    			//不是头部也不是尾部
+    			assert(getBlockHead()->_iGetNext != 0);
+    			_pMap->update(&getBlockHead(getBlockHead()->_iGetPrev)->_iGetNext, getBlockHead()->_iGetNext);
+    			_pMap->update(&getBlockHead(getBlockHead()->_iGetNext)->_iGetPrev, getBlockHead()->_iGetPrev);
+    		}
+    	}
+    	else
+    	{
+    		if(bTail)
+    		{
+    			assert(getBlockHead()->_iGetNext == 0);
+    			assert(getBlockHead()->_iGetPrev == 0);
+    			//头部也是尾部, 指针都设置为0
+    			_pMap->update(&_pMap->_pHead->_iGetHead, (size_t)0);
+    			_pMap->update(&_pMap->_pHead->_iGetTail, (size_t)0);
+    		}
+    		else
+    		{
+    			//头部不是尾部, 头部指针指向下一个元素
+    			assert(getBlockHead()->_iGetNext != 0);
+    			_pMap->update(&_pMap->_pHead->_iGetHead, getBlockHead()->_iGetNext);
                 //下一个元素上指针为0
                 _pMap->update(&getBlockHead(getBlockHead()->_iGetNext)->_iGetPrev, (size_t)0);
-            }
-        }
+    		}
+    	}
     }
 
-    ///////////////////从block链表中去掉///////////
-    //
-    //上一个block指向下一个block
-    if(getBlockHead()->_iBlockPrev != 0)
-    {
-        _pMap->update(&getBlockHead(getBlockHead()->_iBlockPrev)->_iBlockNext, getBlockHead()->_iBlockNext);
-    }
+	///////////////////从block链表中去掉///////////
+	//
+	//上一个block指向下一个block
+	if(getBlockHead()->_iBlockPrev != 0)
+	{
+		_pMap->update(&getBlockHead(getBlockHead()->_iBlockPrev)->_iBlockNext, getBlockHead()->_iBlockNext);
+	}
 
-    //下一个block指向上一个
-    if(getBlockHead()->_iBlockNext != 0)
-    {
-        _pMap->update(&getBlockHead(getBlockHead()->_iBlockNext)->_iBlockPrev, getBlockHead()->_iBlockPrev);
-    }
+	//下一个block指向上一个
+	if(getBlockHead()->_iBlockNext != 0)
+	{
+		_pMap->update(&getBlockHead(getBlockHead()->_iBlockNext)->_iBlockPrev, getBlockHead()->_iBlockPrev);
+	}
 
-    //////////////////如果是hash头部, 需要修改hash索引数据指针//////
-    //
-    _pMap->delListCount(getBlockHead()->_iIndex);
-    if(getBlockHead()->_iBlockPrev == 0)
-    {
-        //如果是hash桶的头部, 则还需要处理
-        TC_HashMap::tagHashItem *pItem  = _pMap->item(getBlockHead()->_iIndex);
-        assert(pItem->_iBlockAddr == _iHead);
-        if(pItem->_iBlockAddr == _iHead)
-        {
-            _pMap->update(&pItem->_iBlockAddr, getBlockHead()->_iBlockNext);
-        }
-    }
+	//////////////////如果是hash头部, 需要修改hash索引数据指针//////
+	//
+	_pMap->delListCount(getBlockHead()->_iIndex);
+	if(getBlockHead()->_iBlockPrev == 0)
+	{
+		//如果是hash桶的头部, 则还需要处理
+		TC_HashMap::tagHashItem *pItem  = _pMap->item(getBlockHead()->_iIndex);
+		assert(pItem->_iBlockAddr == _iHead);
+		if(pItem->_iBlockAddr == _iHead)
+		{
+			_pMap->update(&pItem->_iBlockAddr, getBlockHead()->_iBlockNext);
+		}
+	}
 
     //////////////////脏数据///////////////////
     //
@@ -801,7 +804,7 @@ int TC_HashMap::Block::allocateChunk(size_t fn, vector<size_t> &chunks, vector<T
         }
 
         //设置分配的数据块的大小
-        getChunkHead(t)->_iSize = iAllocSize;
+        getChunkHead(t)->_iSize = (uint32_t)iAllocSize;
 
         chunks.push_back(t);
 
@@ -2515,7 +2518,7 @@ void TC_HashMap::doUpdate(bool bUpdate)
             {
                 *(size_t*)((char*)_pHead + _pstModifyHead->_stModifyData[i]._iModifyAddr) = _pstModifyHead->_stModifyData[i]._iModifyValue;
             }
-#if __WORDSIZE == 6|| defined _WIN644
+#if __WORDSIZE == 64 || defined _WIN64
             else if(_pstModifyHead->_stModifyData[i]._cBytes == sizeof(uint32_t))
             {
                 *(uint32_t*)((char*)_pHead + _pstModifyHead->_stModifyData[i]._iModifyAddr) = (uint32_t)_pstModifyHead->_stModifyData[i]._iModifyValue;

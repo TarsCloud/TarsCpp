@@ -22,46 +22,22 @@
 namespace tars
 {
 EndpointInfo::EndpointInfo()
-: _port(0)
-, _grid(0)
-, _qos(0)
-, _type(TCP)
-, _weight(-1)
-, _weighttype(0)
-, _authType(AUTH_TYPENONE)
-, _isIPv6(false)
-, _addressSucc(false)
 {
     _setDivision.clear();
-    memset(&_addr,0,sizeof(_addr));
+//    memset(&_addr,0,sizeof(struct sockaddr_in));
+	memset(&_addr,0,sizeof(_addr));
+    //7暂时写死 修改默认值一定要修改这个7
+//    memcpy(_host,"0.0.0.0",7);
+	//snprintf(_host, sizeof(_host), "%s", "0.0.0.0");
 }
 
-EndpointInfo::EndpointInfo(const string& host, uint16_t port, EndpointInfo::EType type, int32_t grid, const string & setDivision, int qos, int weight, unsigned int weighttype, int authType)
-: _host(host)
-, _port(port)
-, _grid(grid)
-, _qos(qos)
-, _type(type)
+
+EndpointInfo::EndpointInfo(const string& host, uint16_t port, TC_Endpoint::EType type, int32_t grid, const string & setDivision, int qos, int weight, unsigned int weighttype, int authType)
+: _ep(host, port, 60000, type, grid, qos, weight, weighttype, authType)
 , _setDivision(setDivision)
-, _weight(weight)
-, _weighttype(weighttype)
-, _authType((AUTH_TYPE)authType)
 , _addressSucc(false)
 {
-    _isIPv6 = TC_Socket::addressIsIPv6(host);
-    if(_weighttype == 0)
-    {
-        _weight = -1;
-    }
-    else
-    {
-        if(_weight == -1)
-        {    
-            _weight = 100;
-        }
 
-        _weight = (_weight > 100 ? 100 : _weight);
-    }
 
     _cmpDesc = createCompareDesc();
 
@@ -72,13 +48,13 @@ void EndpointInfo::parseAddress()
 {
     // try
     // {
-        if (_isIPv6)
+        if (isIPv6())
         {
-            TC_Socket::parseAddrWithPort(_host, _port, _addr.in6);
+            TC_Socket::parseAddrWithPort(_ep.getHost(), _ep.getPort(), _addr.in6);
         }
         else
         {
-            TC_Socket::parseAddrWithPort(_host, _port, _addr.in);
+            TC_Socket::parseAddrWithPort(_ep.getHost(), _ep.getPort(), _addr.in);
         }
     // }
     // catch (...)
@@ -89,43 +65,13 @@ void EndpointInfo::parseAddress()
 
 string EndpointInfo::createCompareDesc()
 {
-    ostringstream os;
-    if (_type == EndpointInfo::UDP) { os << "udp:"; }
-    if (_type == EndpointInfo::TCP) { os << "tcp:"; }
-    if (_type == EndpointInfo::SSL) { os << "ssl:"; }
-    os << _grid << ":" << _host << ":" << _port
-       << ":" << _setDivision << ":" << _qos << ":" << _weight << ":" << _weighttype << ":" << _authType;
+	return _ep.toString();
 
-    return os.str();
 }
 
 string EndpointInfo::createDesc() const
 {
-    ostringstream os;
-
-    if (_type == EndpointInfo::TCP)
-        os << "tcp";
-    else if (_type == EndpointInfo::UDP)
-        os << "udp";
-    else
-        os << "ssl";
-
-    os << " -h " << host();
-    os << " -p " << port();
-    if(0 != _grid)
-        os << " -g " << _grid;
-
-    if (!_setDivision.empty())
-    {
-        os << " -s " << _setDivision;
-    }
-
-    if(0 != _qos)
-        os << " -q " << _qos;
-    if(0 != _authType)
-		os << " -e " << _authType;
-
-    return os.str();
+	return _ep.toString();
 }
 
 bool EndpointInfo::operator == (const EndpointInfo& r) const
@@ -138,19 +84,25 @@ bool EndpointInfo::operator < (const EndpointInfo& r) const
     return (_cmpDesc < r._cmpDesc);
 }
 
-string EndpointInfo::host() const
+const string &EndpointInfo::host() const
 {
-    return string(_host);
+    return _ep.getHost();
 }
 
 int32_t EndpointInfo::grid() const
 {
-    return _grid;
+    return _ep.getGrid();
 }
+
 
 uint16_t EndpointInfo::port() const
 {
-    return _port;
+    return _ep.getPort();
+}
+
+bool EndpointInfo::isTcp() const
+{
+	return _ep.isTcp();
 }
 
 const struct sockaddr_in& EndpointInfo::addr() const
@@ -160,13 +112,13 @@ const struct sockaddr_in& EndpointInfo::addr() const
 
 const struct sockaddr * EndpointInfo::addrPtr() const
 {
-    return _isIPv6 ? (struct sockaddr *)&_addr.in6 : (struct sockaddr *)&_addr.in;
+	return _ep.isIPv6() ? (struct sockaddr *)&_addr.in6 : (struct sockaddr *)&_addr.in;
 }
-
-EndpointInfo::EType EndpointInfo::type() const
-{
-    return _type;
-}
+//
+//EndpointInfo::EType EndpointInfo::type() const
+//{
+//    return _type;
+//}
 
 const string& EndpointInfo::setDivision() const
 {

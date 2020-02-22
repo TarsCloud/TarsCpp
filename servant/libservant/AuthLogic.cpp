@@ -15,7 +15,7 @@
  */
 
 #include "util/tc_epoll_server.h"
-#include "util/tc_tea.h"
+#include "util/tc_des.h"
 #include "util/tc_sha.h"
 #include "util/tc_md5.h"
 #include "servant/Application.h"
@@ -169,18 +169,18 @@ int processAuthReqHelper(const BasicAuthPackage& pkg, const BasicAuthInfo& info)
             tmp[i] |= pt[i];
         }
 
-        tmpKey = TC_MD5::md5bin(tmp);
+        tmpKey = TC_MD5::md5str(tmp);
     }
 
     string secret1;
     {
-        vector<char> dec;
+//        vector<char> dec;
         try
         {
-            TC_Tea::decrypt(tmpKey.data(), pkg.sSignature.data(), pkg.sSignature.size(), dec);
-            secret1.assign(dec.begin(), dec.end());
+	        secret1 = TC_Des::decrypt3(tmpKey.data(), pkg.sSignature.data(), pkg.sSignature.size());
+//            secret1.assign(dec.begin(), dec.end());
         }
-        catch (const TC_Tea_Exception& )
+        catch (const TC_DES_Exception& )
         {
             return AUTH_DEC_FAIL;
         }
@@ -248,7 +248,7 @@ string defaultCreateAuthReq(const BasicAuthInfo& info /*, const string& hashMeth
     string secret2 = TC_SHA::sha1str(secret1.data(), secret1.size());
 
     // create tmpKey
-    string tmpKey;
+	string tmpKey;
     {
         string tmp = secret2;
         const char* pt = (const char* )&pkg.iTime;
@@ -256,16 +256,17 @@ string defaultCreateAuthReq(const BasicAuthInfo& info /*, const string& hashMeth
         {
             tmp[i] |= pt[i];
         }
-        // 保证key是16字节
-        tmpKey = TC_MD5::md5bin(tmp);
+        // 只用了前面24字节
+        tmpKey = TC_MD5::md5str(tmp);
     }
 
     // then use tmpKey to enc secret1, show server that I know secret1, ie, I know secret.
-    vector<char> secret1Enc;
+//    vector<char> secret1Enc;
     
-    TC_Tea::encrypt(tmpKey.data(), secret1.data(), secret1.size(), secret1Enc);
+//    TC_Tea::encrypt(tmpKey.data(), secret1.data(), secret1.size(), secret1Enc);
+	pkg.sSignature = TC_Des::encrypt3(tmpKey.data(), secret1.data(), secret1.size());
 
-    pkg.sSignature.assign(secret1Enc.begin(), secret1Enc.end());
+//	pkg.sSignature.assign(secret1Enc.begin(), secret1Enc.end());
     pkg.writeTo(os);
 
     return os.getByteBuffer();

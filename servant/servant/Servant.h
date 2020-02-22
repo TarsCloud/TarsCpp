@@ -19,6 +19,8 @@
 
 #include "util/tc_autoptr.h"
 #include "util/tc_epoll_server.h"
+#include "util/tc_thread_pool.h"
+#include "util/tc_cas_queue.h"
 #include "servant/ServantProxy.h"
 #include "servant/TarsCurrent.h"
 #include "servant/BaseNotify.h"
@@ -171,7 +173,7 @@ public:
      * 获得响应的数据队列
      * @return TC_ThreadQueue<ReqMessagePtr>& 
      */
-    TC_ThreadQueue<ReqMessagePtr>& getResponseQueue();
+    TC_CasQueue<ReqMessagePtr>& getResponseQueue();
 
 protected:
     /**
@@ -190,9 +192,11 @@ protected:
     TC_EpollServer::Handle* _handle;
 
     /**
-     * 异步响应队列
+     * 异步响应队列, 每个Servant一个队列, 这个用于在ServantImp中, 再异步发请求给其他服务
+     * 回调Callback使用ServantCallback时, 能保证响应包在Servant::doResponse中响应, 且和发送ServantImp是同一个线程
+     * 缺点就是Servant::onDispatch, 通知ServantImp时, 需要把所有线程都唤醒
      */
-    TC_ThreadQueue<ReqMessagePtr> _asyncResponseQueue;
+    TC_CasQueue<ReqMessagePtr> _asyncResponseQueue;
 };
 
 typedef TC_AutoPtr<Servant> ServantPtr;
@@ -219,6 +223,14 @@ public:
      */
     virtual int onDispatch(ReqMessagePtr msg);
 
+    /**
+     * 连接关闭
+     * @param msg 
+     * @return int 
+     */    
+    virtual void onClose()
+    {
+    }
     /**
      * 获得生成时所属的servant
      * @return const ServantPtr& 
@@ -250,8 +262,6 @@ class CallbackThreadData //: public TC_ThreadPool::ThreadData
 {
 public:
     static thread_local shared_ptr<CallbackThreadData> g_sp;
-    // static TC_ThreadMutex _mutex;  //全局的互斥锁
-    // static pthread_key_t _key;   //私有线程数据key
 
     /**
      * 构造函数

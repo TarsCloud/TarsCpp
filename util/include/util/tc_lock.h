@@ -40,7 +40,6 @@ namespace tars
 struct TC_Lock_Exception : public TC_Exception
 {
     TC_Lock_Exception(const string &buffer) : TC_Exception(buffer){};
-    TC_Lock_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
     ~TC_Lock_Exception() throw() {};
 };
 
@@ -125,9 +124,9 @@ public:
 protected:
 
     /**
-     * @brief 构造函数
-     * 用于锁尝试操作，与TC_LockT相似
-     *  
+	 * @brief 构造函数
+	 * 用于锁尝试操作，与TC_LockT相似
+	 *  
      */
     TC_LockT(const T& mutex, bool) : _mutex(mutex)
     {
@@ -172,8 +171,8 @@ class TC_EmptyMutex
 {
 public:
     /**
-    * @brief  写锁.
-    *  
+	* @brief  写锁.
+	*  
     * @return int, 0 正确
     */
     int lock()  const   {return 0;}
@@ -184,8 +183,8 @@ public:
     int unlock() const  {return 0;}
 
     /**
-    * @brief  尝试解锁. 
-    *  
+	* @brief  尝试解锁. 
+	*  
     * @return int, 0 正确
     */
     bool trylock() const {return true;}
@@ -201,40 +200,40 @@ class TC_RW_RLockT
 {
 public:
     /**
-     * @brief  构造函数，构造时枷锁
-     *
+	 * @brief  构造函数，构造时枷锁
+	 *
      * @param lock 锁对象
      */
-    TC_RW_RLockT(T& lock)
-        : _rwLock(lock),_acquired(false)
-    {
-        _rwLock.ReadLock();
-        _acquired = true;
-    }
+	TC_RW_RLockT(T& lock)
+		: _rwLock(lock),_acquired(false)
+	{
+		_rwLock.readLock();
+		_acquired = true;
+	}
 
     /**
-     * @brief 析构时解锁
+	 * @brief 析构时解锁
      */
-    ~TC_RW_RLockT()
-    {
-        if (_acquired)
-        {
-            _rwLock.Unlock();
-        }
-    }
+	~TC_RW_RLockT()
+	{
+		if (_acquired)
+		{
+			_rwLock.unReadLock();
+		}
+	}
 private:
-    /**
-     *锁对象
-     */
-    const T& _rwLock;
+	/**
+	 *锁对象
+	 */
+	const T& _rwLock;
 
     /**
      * 是否已经上锁
      */
     mutable bool _acquired;
 
-    TC_RW_RLockT(const TC_RW_RLockT&);
-    TC_RW_RLockT& operator=(const TC_RW_RLockT&);
+	TC_RW_RLockT(const TC_RW_RLockT&);
+	TC_RW_RLockT& operator=(const TC_RW_RLockT&);
 };
 
 template <typename T>
@@ -242,38 +241,38 @@ class TC_RW_WLockT
 {
 public:
     /**
-     * @brief  构造函数，构造时枷锁
-     *
+	 * @brief  构造函数，构造时枷锁
+	 *
      * @param lock 锁对象
      */
-    TC_RW_WLockT(T& lock)
-        : _rwLock(lock),_acquired(false)
-    {
-        _rwLock.WriteLock();
-        _acquired = true;
-    }
+	TC_RW_WLockT(T& lock)
+		: _rwLock(lock),_acquired(false)
+	{
+		_rwLock.writeLock();
+		_acquired = true;
+	}
     /**
-     * @brief 析构时解锁
+	 * @brief 析构时解锁
      */
-    ~TC_RW_WLockT()
-    {
-        if(_acquired)
-        {
-            _rwLock.Unlock();
-        }
-    }
+	~TC_RW_WLockT()
+	{
+		if(_acquired)
+		{
+			_rwLock.unWriteLock();
+		}
+	}
 private:
-    /**
-     *锁对象
-     */
-    const T& _rwLock;
+	/**
+	 *锁对象
+	 */
+	const T& _rwLock;
     /**
      * 是否已经上锁
      */
     mutable bool _acquired;
 
-    TC_RW_WLockT(const TC_RW_WLockT&);
-    TC_RW_WLockT& operator=(const TC_RW_WLockT&);
+	TC_RW_WLockT(const TC_RW_WLockT&);
+	TC_RW_WLockT& operator=(const TC_RW_WLockT&);
 };
 
 };

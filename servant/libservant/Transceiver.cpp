@@ -48,6 +48,8 @@ Transceiver::Transceiver(AdapterProxy * pAdapterProxy,const EndpointInfo &ep)
 Transceiver::~Transceiver()
 {
     close();
+
+
 }
 
 void Transceiver::checkTimeout()
@@ -63,7 +65,7 @@ void Transceiver::checkTimeout()
 
 bool Transceiver::isSSL() const 
 { 
-    return _adapterProxy->endpoint().type() == EndpointInfo::SSL; 
+    return _adapterProxy->endpoint().type() == TC_Endpoint::SSL;
 }
 
 void Transceiver::reconnect()
@@ -90,7 +92,7 @@ void Transceiver::connect()
     //每次连接前都重新解析一下地址, 避免dns变了!
     _ep.parseAddress();
 
-    if (_ep.type() == EndpointInfo::UDP)
+    if (_ep.type() == TC_Endpoint::UDP)
     {
         fd = NetworkUtil::createSocket(true, false, _ep.isIPv6());
         _connStatus = eConnected;
@@ -202,7 +204,7 @@ void Transceiver::doAuthReq()
 {
     ObjectProxy* obj = _adapterProxy->getObjProxy();
 
-    TLOGTARS("[TARS][Transceiver::doAuthReq obj:" << obj->name() << ", auth type:" << etos(_adapterProxy->endpoint().authType()) << endl);
+    TLOGTARS("[TARS][Transceiver::doAuthReq obj:" << obj->name() << ", auth type:" << etos((AUTH_TYPE)_adapterProxy->endpoint().authType()) << endl);
 
     if (_adapterProxy->endpoint().authType() == AUTH_TYPENONE)
     {
@@ -219,6 +221,102 @@ void Transceiver::doAuthReq()
         this->sendAuthData(basic);
     }
 }
+
+//
+//void Transceiver::sendRecv(ReqMessage *msg)//const shared_ptr<TC_NetWorkBuffer::SendBuffer> &sbuff, BasePacket &rsp, int timeout)
+//{
+//	if(_syncSock == NULL)
+//	{
+//		if(_ep.isTcp())
+//		{
+//			_syncSock = new TC_TCPClient(_ep.host(), _ep.port(), msg->request.iTimeout);
+//		}
+//		else
+//		{
+//			_syncSock = new TC_UDPClient(_ep.host(), _ep.port(), msg->request.iTimeout);
+//		}
+//	}
+//
+//	int iRet = _syncSock->send(msg->sReqData->buffer(), (uint32_t) msg->sReqData->length());
+//	if (iRet < 0)
+//	{
+//		msg->eStatus = ReqMessage::REQ_NET;
+//		msg->response->sResultDesc = "send failed ret:" + TC_Common::tostr(iRet);
+//		return;
+//	}
+//
+////	cout << _syncSock->getSocket()->getSendBufferSize() << ", " << _syncSock->getSocket()->getRecvBufferSize() << endl;
+//
+//	TC_NetWorkBuffer recvBuffer(NULL);
+//
+//	do
+//	{
+//		try
+//		{
+//			size_t iHeaderLen = BUFFER_SIZE;
+//            // char rbuff[BUFFER_SIZE] = {0x00};
+//			vector<char> rbuff(iHeaderLen);
+//
+//			iRet = _syncSock->recv(rbuff.data(), iHeaderLen);
+//			if(iRet < 0)
+//			{
+//                if (iRet == TC_ClientSocket::EM_TIMEOUT)
+//                {
+//                    msg->eStatus = ReqMessage::REQ_TIME;
+//                    msg->response->sResultDesc = "recv info timeout, ret:" + TC_Common::tostr(iRet);
+//                }
+//                else
+//                {
+//                    msg->eStatus = ReqMessage::REQ_NET;
+//                    msg->response->sResultDesc = "recv body failed, ret:" + TC_Common::tostr(iRet);
+//                }
+//				break;
+//			}
+//
+//            // recvBuffer.addBuffer(rbuff, iHeaderLen);
+//			rbuff.resize(iHeaderLen);
+//			recvBuffer.addSwapBuffer(rbuff);
+//
+//			TC_NetWorkBuffer::PACKET_TYPE ret = _pAdapterProxy->getObjProxy()->getProxyProtocol().responseFunc(recvBuffer, *msg->response.get());
+//
+//			if (ret == TC_NetWorkBuffer::PACKET_ERR)
+//			{
+//				TLOGERROR("[TAF][tcp doResponse," << _pAdapterProxy->getObjProxy()->name() << ",fd:" << _iFd << "," << _ep.desc() << ",tcp recv decode error" << endl);
+//				msg->eStatus = ReqMessage::REQ_NET;
+//				msg->response->sResultDesc = "recv packet decode failed";
+//
+//			}
+//			else if (ret == TC_NetWorkBuffer::PACKET_FULL) {
+//				msg->eStatus = ReqMessage::REQ_RSP;
+//			}
+//			else {
+//				continue;
+//			}
+//		}
+//		catch (exception & ex) {
+//			TLOGERROR(
+//				"[TAF][tcp doResponse," << _pAdapterProxy->getObjProxy()->name() << ",fd:" << _iFd << "," << _ep.desc() << ",tcp recv decode error:" << ex.what() << endl);
+//			msg->eStatus = ReqMessage::REQ_NET;
+//			msg->response->sResultDesc = "recv packet decode failed";
+//
+//			assert(msg->request.iRequestId == msg->response->iRequestId);
+//		}
+//		catch (...) {
+//			TLOGERROR(
+//				"[TAF][tcp doResponse," << _pAdapterProxy->getObjProxy()->name() << ",fd:" << _iFd << "," << _ep.desc() << ",tcp recv decode error." << endl);
+//			msg->eStatus = ReqMessage::REQ_NET;
+//			msg->response->sResultDesc = "recv packet decode failed";
+//		}
+//
+//		break;
+//	}while(true);
+//
+//	if(msg->eStatus != ReqMessage::REQ_RSP)
+//	{
+//		_syncSock->close();
+//	}
+//}
+
 
 void Transceiver::finishInvoke(shared_ptr<ResponsePacket> &rsp)
 {
@@ -303,7 +401,10 @@ bool Transceiver::sendAuthData(const BasicAuthInfo& info)
 void Transceiver::close()
 {
     if(!isValid()) return;
-
+//    if(_adapterProxy->getObjProxy()->getPushCallback())
+//    {
+//	    _adapterProxy->getObjProxy()->getPushCallback()->onClose();
+//    }
 #if TARS_SSL
     if (_openssl)
     {
@@ -442,11 +543,6 @@ int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff)
 	    return eRetError;
     }
 
-	static std::atomic<int> totalSend{0};
-	totalSend += iRet;
-
-//	cout << "totalSend:" << totalSend << endl;
-
     //没有全部发送完,写buffer 返回成功
     if(iRet < (int)buff->length())
     {
@@ -456,34 +552,6 @@ int Transceiver::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buff)
     }
 
     return eRetOk;
-
-// #if TARS_SSL
-//     // 握手数据已加密,直接发送，会话数据需加密
-//     std::string out;
-//     if (isSSL() && _openssl->isHandshaked())
-//     {
-//         out = _openssl->Write(pData, iSize);
-//         pData = out.data();
-//         iSize = out.size();
-//     }
-// #endif
-
-    // int iRet = this->send(pData,iSize,0);
-
-    // //失败，直接返回
-    // if(iRet < 0)
-    // {
-    //     return eRetError;
-    // }
-
-    // //没有全部发送完,写buffer 返回成功
-    // if(iRet < (int)iSize)
-    // {
-    //     _sendBuffer.PushData(pData+iRet,iSize-iRet);
-    //     return eRetFull;
-    // }
-
-    // return eRetOk;
 }
 
 //////////////////////////////////////////////////////////
@@ -500,18 +568,12 @@ int TcpTransceiver::doResponse()
 	int iRet = 0;
 
     int recvCount = 0;
-
-	static std::atomic<int> totalRecv{0};
-
 	do
     {
 	    char buff[BUFFER_SIZE] = {0x00};
 
 	    if ((iRet = this->recv(buff, BUFFER_SIZE, 0)) > 0)
 	    {
-		    totalRecv += iRet;
-
-//		    cout << "totalRecv:" << totalRecv << endl;
 
 		    TC_NetWorkBuffer *rbuf = &_recvBuffer;
 #if TARS_SSL
@@ -571,7 +633,9 @@ int TcpTransceiver::doResponse()
 				    else {
 					    break;
 				    }
-			    }while(true);
+
+			    }
+			    while (ret == TC_NetWorkBuffer::PACKET_FULL);
 
 			    //接收的数据小于buffer大小, 内核会再次通知你
 			    if(iRet < BUFFER_SIZE)
@@ -601,7 +665,7 @@ int TcpTransceiver::doResponse()
     }
     while (iRet>0);
 
-    TLOGTARS("[TARS][tcp doResponse, " << _adapterProxy->getObjProxy()->name() << ",fd:" << _fd << ", all recvbuf:" << _recvBuffer.getBufferLength() << "]" << endl);
+//    TLOGTARS("[TARS][tcp doResponse, " << _adapterProxy->getObjProxy()->name() << ",fd:" << _fd << ", all recvbuf:" << _recvBuffer.getBufferLength() << "]" << endl);
 
 	return 0;
 }

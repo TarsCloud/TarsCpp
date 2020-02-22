@@ -26,8 +26,6 @@ namespace tars
 {
 
 thread_local shared_ptr<CallbackThreadData> CallbackThreadData::g_sp;
-// TC_ThreadMutex CallbackThreadData::_mutex;
-// pthread_key_t CallbackThreadData::_key = 0;
 
 Servant::Servant():_handle(NULL)
 {
@@ -92,7 +90,7 @@ int Servant::dispatch(TarsCurrentPtr current, vector<char> &buffer)
     return ret;
 }
 
-TC_ThreadQueue<ReqMessagePtr>& Servant::getResponseQueue()
+TC_CasQueue<ReqMessagePtr>& Servant::getResponseQueue()
 {
     return _asyncResponseQueue;
 }
@@ -143,35 +141,6 @@ CallbackThreadData * CallbackThreadData::getData()
         g_sp.reset(new CallbackThreadData());
     }
     return g_sp.get();
-
-    // if(_key == 0)
-    // {
-    //     TC_LockT<TC_ThreadMutex> lock(_mutex);
-    //     if(_key == 0)
-    //     {
-    //         int iRet = ::pthread_key_create(&_key, CallbackThreadData::destructor);
-
-    //         if (iRet != 0)
-    //         {
-    //             TLOGERROR("[TARS][CallbackThreadData pthread_key_create fail:" << errno << ":" << strerror(errno) << "]" << endl);
-    //             return NULL;
-    //         }
-    //     }
-    // }
-
-    // CallbackThreadData * pCbtd = (CallbackThreadData*)pthread_getspecific(_key);
-
-    // if(!pCbtd)
-    // {
-    //     TC_LockT<TC_ThreadMutex> lock(_mutex);
-
-    //     pCbtd = new CallbackThreadData();
-
-    //     int iRet = pthread_setspecific(_key, (void *)pCbtd);
-
-    //     assert(iRet == 0);
-    // }
-    // return pCbtd;
 }
 
 

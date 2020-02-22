@@ -22,9 +22,65 @@
 #include <string.h>
 #include <cassert>
 
-
 namespace tars
 {
+
+bool TC_GZip::compress(const char *src, size_t length, string& buffer)
+{
+    z_stream stream;
+    stream.zalloc = Z_NULL;
+    stream.zfree  = Z_NULL;
+    stream.opaque = Z_NULL;
+
+    if (deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -MAX_WBITS, MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY) != Z_OK)
+    {
+        return false;
+    }
+
+    buffer.clear();
+
+    static char gz_simple_header[] = { '\037', '\213', '\010', '\000', '\000', '\000', '\000', '\000', '\002', '\377' };
+
+    size_t destLen   = sizeof(gz_simple_header) + length * 2;
+    char *out        = new char[destLen];
+
+    stream.next_out  = (Bytef *)out;
+    stream.avail_out = destLen;
+
+    stream.next_in   = (Bytef *)src;
+    stream.avail_in  = length;
+
+    memcpy(stream.next_out, gz_simple_header, sizeof(gz_simple_header));
+    stream.next_out  += sizeof(gz_simple_header);
+    stream.avail_out -= sizeof(gz_simple_header);
+
+    int r = deflate(&stream, Z_FINISH);
+    if (r != Z_STREAM_END)
+    {
+        delete[] out;
+        return false;
+    }
+
+    destLen = destLen - stream.avail_out;
+
+    uLong  crc = crc32(0, Z_NULL, 0);
+
+    crc = crc32(crc, (const Bytef *)src, length);
+
+    memcpy(out + destLen, &crc, 4);
+
+    memcpy(out + destLen + 4, &length, 4);
+
+    destLen += 8;
+
+    buffer.append(out, destLen);
+
+    delete[] out;
+
+    deflateEnd(&stream);
+
+    return true;
+}
 
 bool TC_GZip::compress(const char *src, size_t length, vector<char>& buffer)
 {

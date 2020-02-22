@@ -44,7 +44,6 @@ namespace tars
 struct TC_Multi_HashMap_Exception : public TC_Exception
 {
     TC_Multi_HashMap_Exception(const string &buffer) : TC_Exception(buffer){};
-    TC_Multi_HashMap_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
     ~TC_Multi_HashMap_Exception() throw(){};
 };
 
@@ -142,7 +141,7 @@ public:
             uint32_t    _iGetNext;        /**主key Get链的下一个主key*/
             uint32_t    _iGetPrev;        /**主key Get链的上一个主key*/
             uint32_t    _iBlockCount;    /**主key下数据个数*/
-            uint8_t        _iBitset;        /** 8个bit，用于标识不同的bool值，各bit的含义见BITWISE枚举定义*/
+            uint8_t     _iBitset;        /** 8个bit，用于标识不同的bool值，各bit的含义见BITWISE枚举定义*/
             union
             {
                 uint32_t    _iNextChunk;    /** 下一个Chunk块地址, _bNextChunk=true时有效*/
@@ -435,7 +434,6 @@ public:
          * @brief block数据头
          */
 #pragma pack(1) 
-
         struct tagBlockHead
         {
             uint32_t        _iSize;         /**block的容量大小*/
@@ -447,9 +445,9 @@ public:
             uint32_t        _iSetNext;      /**Set链上的上一个Block, 没有则为0*/
             uint32_t        _iSetPrev;      /**Set链上的上一个Block, 没有则为0*/
             uint32_t        _iMainKey;        /**指向所属主key头*/
-            time_t            _iSyncTime;     /**上次缓写时间*/
-            uint8_t            _iVersion;        /**数据版本，1为初始版本，0为保留*/
-            uint8_t            _iBitset;        /**8个bit，用于标识不同的bool值，各bit的含义见BITWISE枚举定义*/
+            time_t          _iSyncTime;     /**上次缓写时间*/
+            uint8_t         _iVersion;        /**数据版本，1为初始版本，0为保留*/
+            uint8_t         _iBitset;        /**8个bit，用于标识不同的bool值，各bit的含义见BITWISE枚举定义*/
             union
             {
                 uint32_t    _iNextChunk;    /**下一个Chunk块, _iBitwise中的NEXTCHUNK_BIT为1时有效*/
@@ -1434,15 +1432,15 @@ public:
         bool        _bReadOnly;          /**是否只读*/
         bool        _bAutoErase;         /**是否可以自动淘汰*/
         char        _cEraseMode;         /**淘汰方式:0x00:按照Get链淘汰, 0x01:按照Set链淘汰*/
-        size_t        _iMemSize;           /**内存大小*/
-        size_t        _iMinDataSize;       /**最小数据块大小*/
-        size_t        _iMaxDataSize;       /**最大数据块大小*/
-        float        _fFactor;            /**因子*/
-        float        _fHashRatio;         /**chunks个数/hash个数*/
-        float        _fMainKeyRatio;         /**chunks个数/主key hash个数*/
-        size_t        _iElementCount;      /**总元素个数*/
-        size_t        _iEraseCount;        /**每次淘汰个数*/
-        size_t        _iDirtyCount;        /**脏数据个数*/
+        size_t      _iMemSize;           /**内存大小*/
+        size_t      _iMinDataSize;       /**最小数据块大小*/
+        size_t      _iMaxDataSize;       /**最大数据块大小*/
+        float       _fFactor;            /**因子*/
+        float       _fHashRatio;         /**chunks个数/hash个数*/
+        float       _fMainKeyRatio;         /**chunks个数/主key hash个数*/
+        size_t      _iElementCount;      /**总元素个数*/
+        size_t      _iEraseCount;        /**每次淘汰个数*/
+        size_t      _iDirtyCount;        /**脏数据个数*/
         uint32_t    _iSetHead;           /**Set时间链表头部*/
         uint32_t    _iSetTail;           /**Set时间链表尾部*/
         uint32_t    _iGetHead;           /**Get时间链表头部*/
@@ -1450,14 +1448,14 @@ public:
         uint32_t    _iDirtyTail;         /**脏数据链尾部*/
         uint32_t    _iBackupTail;        /**热备指针*/
         uint32_t    _iSyncTail;          /**回写链表*/
-        time_t        _iSyncTime;          /**回写时间*/
-        size_t        _iUsedChunk;         /**已经使用的内存块*/
-        size_t        _iGetCount;          /**get次数*/
-        size_t        _iHitCount;          /**命中次数*/
-        size_t        _iMKOnlyKeyCount;     /**主key的onlykey个数*/
-        size_t        _iOnlyKeyCount;         /**主键的OnlyKey个数, 这个数通常为0*/
-        size_t        _iMaxBlockCount;     /**主key链下最大的记录数，这个数值要监控，不能太大，否则会导致查询变慢*/
-        size_t        _iReserve[4];        /**保留*/
+        time_t      _iSyncTime;          /**回写时间*/
+        size_t      _iUsedChunk;         /**已经使用的内存块*/
+        size_t      _iGetCount;          /**get次数*/
+        size_t      _iHitCount;          /**命中次数*/
+        size_t      _iMKOnlyKeyCount;     /**主key的onlykey个数*/
+        size_t      _iOnlyKeyCount;         /**主键的OnlyKey个数, 这个数通常为0*/
+        size_t      _iMaxBlockCount;     /**主key链下最大的记录数，这个数值要监控，不能太大，否则会导致查询变慢*/
+        size_t      _iReserve[4];        /**保留*/
     };
 
     /**

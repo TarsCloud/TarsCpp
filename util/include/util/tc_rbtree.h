@@ -42,7 +42,6 @@ namespace tars
 struct TC_RBTree_Exception : public TC_Exception
 {
     TC_RBTree_Exception(const string &buffer) : TC_Exception(buffer){};
-    TC_RBTree_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
     ~TC_RBTree_Exception() throw(){};
 };
  /**
@@ -67,6 +66,11 @@ class TC_RBTree
 public:
     struct RBTreeLockIterator;
     struct RBTreeIterator;
+
+    friend struct Block;
+    friend struct BlockAllocator;
+    friend struct RBTreeLockIterator;
+    friend struct RBTreeLockItem;
 
     /**
     * @brief 操作数据
@@ -1743,11 +1747,6 @@ public:
     string desc();
 
 protected:
-
-    friend class Block;
-    friend class BlockAllocator;
-    friend struct RBTreeLockIterator;
-    friend class RBTreeLockItem;
 
     //禁止copy构造
     TC_RBTree(const TC_RBTree &mcm);

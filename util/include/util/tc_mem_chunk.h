@@ -159,7 +159,6 @@ public:
      * @brief chunk头部
      */
 #pragma pack(1) 
-
     struct tagChunkHead
     {
         size_t  _iBlockSize;            /**区块大小*/
@@ -326,7 +325,6 @@ public:
      * @brief 头部内存块
      */
 #pragma pack(1) 
-
     struct tagChunkAllocatorHead
     {
         size_t  _iSize;
@@ -540,7 +538,6 @@ public:
      * @brief 头部内存块
      */
 #pragma pack(1) 
-
     struct tagChunkAllocatorHead
     {
         size_t  _iSize;             /**当前块大小*/

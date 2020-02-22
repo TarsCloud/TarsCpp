@@ -17,15 +17,13 @@
 #ifndef __TC_MYSQL_H
 #define __TC_MYSQL_H
 
-#include "util/tc_ex.h"
+#include "util/tc_platform.h"
 #include "mysql.h"
+#include "util/tc_ex.h"
 #include <map>
 #include <vector>
 #include <stdlib.h>
-
-struct st_mysql;
-
-typedef struct st_mysql MYSQL;
+#include <functional>
 
 namespace tars
 {
@@ -191,6 +189,13 @@ public:
     void init(const TC_DBConf& tcDBConf);
 
     /**
+    * @brief 读取mysql配置
+    *
+    * @return tcDBConf 
+    */
+    TC_DBConf getDBConf();
+
+    /**
     * @brief 连接数据库. 
     *  
     * @throws TC_Mysql_Exception
@@ -219,13 +224,13 @@ public:
     MYSQL *getMysql();
 
     /**
-    *  @brief 字符转义. 
+    *  @brief 字符转义, 需要连接到数据库,考虑了字符集
     *  
     * @param sFrom  源字符串
     * @param sTo    输出字符串
     * @return       输出字符串
     */
-    string escapeString(const string& sFrom);
+    string realEscapeString(const string& sFrom);
 
     /**
     * @brief 更新或者插入数据. 
@@ -301,6 +306,16 @@ public:
     MysqlData queryRecord(const string& sSql);
 
     /**
+    * @brief Query Record.
+    *
+    * @param sSql sql语句
+    * @param pdatafunc ，函数参数为map<string,string> ,key为column 名，value为数据
+    * @throws TC_Mysql_Exception
+    * @return MysqlData类型的数据，可以根据字段获取相关信息
+    */
+    size_t travelRecord(const string& sSql, const std::function<void(const map<string,string> &)> & pdatafunc);
+
+    /**
      * @brief 定义字段类型， 
      *  DB_INT:数字类型 
      *  DB_STR:字符串类型
@@ -338,6 +353,16 @@ public:
     size_t insertRecord(const string &sTableName, const map<string, pair<FT, string> > &mpColumns);
 
     /**
+    * @brief 插入记录(一次插入多条). 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns  列名/值对数组
+    * @throws           TC_Mysql_Exception
+    * @return           size_t 影响的行数
+    */    
+    size_t insertRecord(const string &sTableName, const map<string, pair<FT,vector<string>>> &mpColumns);
+
+    /**
     * @brief 替换记录. 
     *  
     * @param sTableName  表名
@@ -346,6 +371,16 @@ public:
     * @return            size_t 影响的行数
     */
     size_t replaceRecord(const string &sTableName, const map<string, pair<FT, string> > &mpColumns);
+
+   /**
+    * @brief 替换记录(一次替换多条). 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns   列名/值对数组
+    * @throws            TC_Mysql_Exception
+    * @return            size_t 影响的行数
+    */
+    size_t replaceRecord(const string &sTableName, const map<string, pair<FT, vector<string>>> &mpColumns);
 
     /**
     * @brief 删除记录.  
@@ -413,6 +448,15 @@ public:
     string buildInsertSQL(const string &sTableName, const map<string, pair<FT, string> > &mpColumns);
 
     /**
+    * @brief 构造Insert-SQL语句(一次插入多条). 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns  列名/值对
+    * @return           string insert-SQL语句
+    */    
+    string buildInsertSQL(const string &sTableName, const map<string, pair<FT, vector<string> >> &mpColumns);
+
+    /**
     * @brief 构造Replace-SQL语句. 
     *  
     * @param sTableName  表名
@@ -420,6 +464,15 @@ public:
     * @return           string insert-SQL语句
     */
     string buildReplaceSQL(const string &sTableName, const map<string, pair<FT, string> > &mpColumns);
+
+    /**
+    * @brief 构造Replace-SQL语句(一次替换多条). 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns 列名/值对
+    * @return           string insert-SQL语句
+    */    
+    string buildReplaceSQL(const string &sTableName, const map<string, pair<FT, vector<string> >> &mpColumns);
 
     /**
     * @brief 构造Update-SQL语句. 
@@ -443,6 +496,63 @@ public:
      * @return int
      */
      size_t getAffectedRows();
+
+
+    /**
+    *  @brief 字符转义, 不考虑字符集(有一定的风险). 
+    *  
+    * @param sFrom  源字符串
+    * @param sTo    输出字符串
+    * @return       输出字符串
+    */
+    static string escapeString(const string& sFrom);
+
+    /**
+    * @brief 构造Insert-SQL语句. 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns  列名/值对
+    * @return           string insert-SQL语句
+    */
+    static string buildInsertSQLNoSafe(const string &sTableName, const map<string, pair<FT, string> > &mpColumns);
+
+    /**
+    * @brief 构造Insert-SQL语句(批量). 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns  列名/值对
+    * @return           string insert-SQL语句
+    */    
+    static string buildInsertSQLNoSafe(const string &sTableName, const map<string, pair<FT, vector<string> >> &mpColumns);
+
+    /**
+    * @brief 构造Replace-SQL语句. 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns 列名/值对
+    * @return           string insert-SQL语句
+    */
+    static string buildReplaceSQLNoSafe(const string &sTableName, const map<string, pair<FT, string> > &mpColumns);
+
+    /**
+    * @brief 构造Replace-SQL语句(批量). 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns 列名/值对
+    * @return           string insert-SQL语句
+    */    
+    static string buildReplaceSQLNoSafe(const string &sTableName, const map<string, pair<FT, vector<string> >> &mpColumns);
+
+    /**
+    * @brief 构造Update-SQL语句. 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns   列名/值对
+    * @param sCondition  where子语句
+    * @return            string Update-SQL语句
+    */
+    static string buildUpdateSQLNoSafe(const string &sTableName,const map<string, pair<FT, string> > &mpColumns, const string &sCondition);
+
 protected:
     /**
     * @brief copy contructor，只申明,不定义,保证不被使用 
@@ -455,6 +565,17 @@ protected:
     */
     TC_Mysql &operator=(const TC_Mysql &tcMysql);
 
+    /**
+    * @brief 构造SQL语句(批量). 
+    *  
+    * @param sTableName  表名
+    * @param mpColumns  列名/值对
+    * @return           string insert-SQL语句
+    */   
+    string buildSQL(const string &sTableName, const string &command, const map<string, pair<FT, string> > &mpColumns);
+    string buildBatchSQL(const string &sTableName, const string &command, const map<string, pair<FT, vector<string> >> &mpColumns);
+    static string buildSQLNoSafe(const string &sTableName, const string &command, const map<string, pair<FT, string> > &mpColumns);
+    static string buildBatchSQLNoSafe(const string &sTableName, const string &command, const map<string, pair<FT, vector<string> >> &mpColumns);
 
 private:
 

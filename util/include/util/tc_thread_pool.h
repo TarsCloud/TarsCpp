@@ -20,7 +20,6 @@
 #include "util/tc_platform.h"
 #include "util/tc_thread.h"
 #include <future>
-#include <functional>
 #include <iostream>
 #include <queue>
 #include <set>

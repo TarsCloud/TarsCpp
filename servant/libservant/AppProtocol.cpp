@@ -30,6 +30,8 @@
 namespace tars
 {
 
+class Transceiver;
+
 vector<char> ProxyProtocol::tarsRequest(RequestPacket& request, Transceiver *)
 {
 	TarsOutputStream<BufferWriterVector> os;

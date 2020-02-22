@@ -24,7 +24,7 @@
 #include <map>
 #include "util/tc_platform.h"
 #include "util/tc_fcontext.h"
-#include "util/tc_thread_queue.h"
+#include "util/tc_cas_queue.h"
 #include "util/tc_monitor.h"
 #include <functional>
 #include "util/tc_thread.h"
@@ -210,17 +210,6 @@ protected:
 	//在协程里执行实际逻辑的入口函数
 	static void corotineProc(void * args, transfer_t t);
 
-
-    // /**
-    //  * 协程的入口函数
-    //  */
-    // static void corotineEntry(intptr_t q);
-
-    // /**
-    //  * 在协程里执行实际逻辑的入口函数
-    //  */
-    // static void corotineProc(void * args);
-
 public:
     /**
      * 构造函数
@@ -285,7 +274,6 @@ public:
     /**
      * 获取协程所处的上下文
      */
-    // inline fcontext_t* getCtx() { return (!_main ? _ctx_to : &_ctx_from); }
 	inline fcontext_t getCtx() { return _ctx; }
 	inline void setCtx(fcontext_t ctx) { _ctx = ctx; }
 public:
@@ -325,12 +313,6 @@ private:
      * 创建协程后，协程所在的上下文
      */
 	fcontext_t					_ctx;
-    // fcontext_t*                    _ctx_to;
-
-    /*
-     * 创建协程前的上下文
-     */
-    // fcontext_t                    _ctx_from;
 
     /*
      * 协程初始化函数入口函数
@@ -602,14 +584,9 @@ private:
     CoroutineInfo            _free;
 
     /*
-     * 协程栈空间的内存分配器
-     */
-    // standard_stack_allocator _alloc;
-
-    /*
      * 需要激活的协程队列，其他线程使用，用来激活等待结果的协程
      */
-    TC_ThreadQueue<uint32_t, deque<uint32_t> >    _activeCoroQueue;
+    TC_CasQueue<uint32_t, deque<uint32_t> >    _activeCoroQueue;
 
     /*
      * 锁通知

@@ -23,6 +23,7 @@ ObjectProxyFactory::ObjectProxyFactory(CommunicatorEpoll * pCommunicatorEpoll)
 : _communicatorEpoll(pCommunicatorEpoll)
 , _objNum(0)
 {
+//    memset(_vpObjectProxys,0,sizeof(_vpObjectProxys));
 }
 
 ObjectProxyFactory::~ObjectProxyFactory()

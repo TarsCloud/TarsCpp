@@ -119,7 +119,7 @@ int TC_HashMapCompact::Block::get(void *pData, uint32_t &iDataLen)
                 uint32_t iCopyLen = min(iUseSize, iLeftLen);
                 //copy当前的chunk
                 memcpy((char*)pData + iHasLen, pChunk->_cData, iCopyLen);
-                if (iLeftLen <= iUseSize)
+				if (iLeftLen < iUseSize)
                 {
                     iDataLen = iHasLen + iCopyLen;
                     return TC_HashMapCompact::RT_NOTALL_ERR;   //copy不完全
@@ -2675,17 +2675,17 @@ void TC_HashMapCompact::doUpdate()
 
 void TC_HashMapCompact::doUpdate2()
 {
-    if(_pstModifyHead->_cModifyStatus == 1)
-    {
-        for(size_t i=_pstModifyHead->_iNowIndex-1; i>=0; --i)
-        {
-            if(_pstModifyHead->_stModifyData[i]._cBytes == 0)
-            {
-                _pstModifyHead->_iNowIndex = i+1;
-                return;
-            }
-        }
-    }
+	if(_pstModifyHead->_cModifyStatus == 1)
+	{
+		for(int i=_pstModifyHead->_iNowIndex-1; i>=0; --i)
+		{
+			if(_pstModifyHead->_stModifyData[i]._cBytes == 0)
+			{
+				_pstModifyHead->_iNowIndex = i+1;
+				return;
+			}
+		}
+	}
 }
 
 void TC_HashMapCompact::doUpdate3()

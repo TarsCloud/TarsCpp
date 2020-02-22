@@ -21,11 +21,11 @@
 #include <string>
 #include <memory>
 #include <deque>
+#include "util/tc_platform.h"
 #include "util/tc_monitor.h"
 #include "util/tc_epoll_server.h"
 #include "servant/Servant.h"
 #include "servant/StatReport.h"
-// #include <ucontext.h>
 #include "servant/CoroutineScheduler.h"
 #ifdef _USE_OPENTRACKING
 #include "opentracing/span.h"
@@ -110,10 +110,11 @@ protected:
      */
     virtual void handleClose(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
-    /**
-     * handleFilter拆分的第一部分，处理异步调用队列
-     */
-    virtual void handleAsyncResponse();
+
+	/**
+	 * handleFilter拆分的第一部分，处理异步调用队列
+	 */
+	virtual void handleAsyncResponse();
 
     /**
      * handleFilter拆分的第二部分，处理用户自有数据
@@ -197,12 +198,8 @@ protected:
     /**
      * 处理对象
      */
-    map<string, ServantPtr> _servants;
+    unordered_map<string, ServantPtr> _servants;
 
-    /**
-     * 消息到达通知
-     */
-    // TC_ThreadLock           _monitor;
 
     /**
      * 协程调度器

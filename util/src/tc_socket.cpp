@@ -83,14 +83,14 @@ void TC_Socket::createSocket(int iSocketType, int iDomain)
         TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createSocket] create socket error");
         // throw TC_Socket_Exception("[TC_Socket::createSocket] create socket error! :" + string(strerror(errno)));
     } 
-    else
-    {
+	else 
+	{
         ignoreSigPipe();
     }
     
 }
 
-void TC_Socket::getPeerName(string &sPeerAddress, uint16_t &iPeerPort)
+void TC_Socket::getPeerName(string &sPeerAddress, uint16_t &iPeerPort) const
 {
     assert(_iDomain == AF_INET || _iDomain == AF_INET6);
 
@@ -115,9 +115,8 @@ void TC_Socket::getPeerName(string &sPathName) const
 
     struct sockaddr_un stSock;
     bzero(&stSock, sizeof(struct sockaddr_un));
-    socklen_t iSockLen = sizeof(stSock);
+    SOCKET_LEN_TYPE iSockLen = sizeof(stSock);
     getPeerName((struct sockaddr *)&stSock, iSockLen);
-
     sPathName = stSock.sun_path;
 }
 
@@ -127,7 +126,7 @@ void TC_Socket::getSockName(string &sPathName) const
 
     struct sockaddr_un stSock;
     bzero(&stSock, sizeof(struct sockaddr_un));
-    socklen_t iSockLen = sizeof(stSock);
+    SOCKET_LEN_TYPE iSockLen = sizeof(stSock);
     getSockName((struct sockaddr *)&stSock, iSockLen);
 
     sPathName = stSock.sun_path;
@@ -140,7 +139,7 @@ void TC_Socket::bind(const char *sPathName)
     unlink(sPathName);
 
     struct sockaddr_un stBindAddr;
-    bzero(&stBindAddr, sizeof(struct sockaddr_un));
+    memset(&stBindAddr, 0x00, sizeof(stBindAddr));
     stBindAddr.sun_family = _iDomain;
     strncpy(stBindAddr.sun_path, sPathName, sizeof(stBindAddr.sun_path));
 
@@ -161,7 +160,7 @@ int TC_Socket::connectNoThrow(const char *sPathName)
     assert(_iDomain == AF_LOCAL);
 
     struct sockaddr_un stServerAddr;
-    bzero(&stServerAddr, sizeof(struct sockaddr_un));
+    memset(&stServerAddr, 0x00, sizeof(stServerAddr));
     stServerAddr.sun_family = _iDomain;
     strncpy(stServerAddr.sun_path, sPathName, sizeof(stServerAddr.sun_path));
 
@@ -170,7 +169,7 @@ int TC_Socket::connectNoThrow(const char *sPathName)
 
 #endif
 
-void TC_Socket::getPeerName(struct sockaddr *pstPeerAddr, socklen_t &iPeerLen) const
+void TC_Socket::getPeerName(struct sockaddr *pstPeerAddr, SOCKET_LEN_TYPE &iPeerLen) const
 {
     if(getpeername(_sock, pstPeerAddr, &iPeerLen) < 0)
     {
@@ -195,7 +194,8 @@ void TC_Socket::getSockName(string &sSockAddress, uint16_t &iSockPort) const
     iSockPort = (AF_INET6 == _iDomain) ? ntohs(in6.sin6_port) : ntohs(in4.sin_port);
 }
 
-void TC_Socket::getSockName(struct sockaddr *pstSockAddr, socklen_t &iSockLen) const
+
+void TC_Socket::getSockName(struct sockaddr *pstSockAddr, SOCKET_LEN_TYPE &iSockLen) const
 {
     if(getsockname(_sock, pstSockAddr, &iSockLen) < 0)
     {
@@ -203,11 +203,11 @@ void TC_Socket::getSockName(struct sockaddr *pstSockAddr, socklen_t &iSockLen) c
     }
 }
 
-int TC_Socket::accept(TC_Socket &tcSock, struct sockaddr *pstSockAddr, socklen_t &iSockLen)
+SOCKET_TYPE TC_Socket::accept(TC_Socket &tcSock, struct sockaddr *pstSockAddr, SOCKET_LEN_TYPE &iSockLen)
 {
     assert(tcSock._sock == INVALID_SOCKET);
 
-    int ifd;
+    SOCKET_TYPE ifd;
 
     while ((ifd = ::accept(_sock, pstSockAddr, &iSockLen)) < 0 && errno == EINTR);
 
@@ -371,12 +371,12 @@ void TC_Socket::bind(const string &sServerAddr, int port)
     bind(bindAddr, len);
 }
 
-void TC_Socket::bind(struct sockaddr *pstBindAddr, socklen_t iAddrLen)
+
+void TC_Socket::bind(const struct sockaddr *pstBindAddr, SOCKET_LEN_TYPE iAddrLen)
 {
     //如果服务器终止后,服务器可以第二次快速启动而不用等待一段时间
     int iReuseAddr = 1;
 
-    //设置
     setSockOpt(SO_REUSEADDR, (const void *)&iReuseAddr, sizeof(int), SOL_SOCKET);
 
     if(::bind(_sock, pstBindAddr, iAddrLen) < 0)
@@ -444,8 +444,7 @@ void TC_Socket::connect(const string &sServerAddr, uint16_t port)
     }
 }
 
-
-int TC_Socket::connect(const struct sockaddr *pstServerAddr, socklen_t serverLen)
+int TC_Socket::connect(const struct sockaddr *pstServerAddr, SOCKET_LEN_TYPE serverLen)
 {
     return ::connect(_sock, pstServerAddr, serverLen);
 
@@ -461,12 +460,12 @@ void TC_Socket::listen(int iConnBackLog)
 
 int TC_Socket::recv(void *pvBuf, size_t iLen, int iFlag)
 {
-    return ::recv(_sock, (char*)pvBuf, iLen, iFlag);
+    return ::recv(_sock, (char*)pvBuf, (int)iLen, iFlag);
 }
 
 int TC_Socket::send(const void *pvBuf, size_t iLen, int iFlag)
 {
-    return ::send(_sock, (const char*)pvBuf, iLen, iFlag);
+    return ::send(_sock, (char*)pvBuf, (int)iLen, iFlag);
 }
 
 int TC_Socket::recvfrom(void *pvBuf, size_t iLen, string &sFromAddr, uint16_t &iFromPort, int iFlags)
@@ -489,9 +488,9 @@ int TC_Socket::recvfrom(void *pvBuf, size_t iLen, string &sFromAddr, uint16_t &i
     return iBytes;
 }
 
-int TC_Socket::recvfrom(void *pvBuf, size_t iLen, struct sockaddr *pstFromAddr, socklen_t &iFromLen, int iFlags)
+int TC_Socket::recvfrom(void *pvBuf, size_t iLen, struct sockaddr *pstFromAddr, SOCKET_LEN_TYPE &iFromLen, int iFlags)
 {
-    return ::recvfrom(_sock, (char*)pvBuf, iLen, iFlags, pstFromAddr, &iFromLen);
+    return ::recvfrom(_sock, (char*)pvBuf, (int)iLen, iFlags, pstFromAddr, &iFromLen);
 }
 
 int TC_Socket::sendto(const void *pvBuf, size_t iLen, const string &sToAddr, uint16_t port, int iFlags)
@@ -535,9 +534,9 @@ int TC_Socket::sendto(const void *pvBuf, size_t iLen, const string &sToAddr, uin
     return sendto(pvBuf, iLen, toAddr, len, iFlags);
 }
 
-int TC_Socket::sendto(const void *pvBuf, size_t iLen, struct sockaddr *pstToAddr, socklen_t iToLen, int iFlags)
+int TC_Socket::sendto(const void *pvBuf, size_t iLen, struct sockaddr *pstToAddr, SOCKET_LEN_TYPE iToLen, int iFlags)
 {
-    return ::sendto(_sock, (const char *)pvBuf, iLen, iFlags, pstToAddr, iToLen);
+    return ::sendto(_sock, (char*)pvBuf, (int)iLen, iFlags, pstToAddr, iToLen);
 }
 
 void TC_Socket::shutdown(int iHow)
@@ -555,12 +554,12 @@ void TC_Socket::setblock(bool bBlock)
     setblock(_sock, bBlock);
 }
 
-int TC_Socket::setSockOpt(int opt, const void *pvOptVal, socklen_t optLen, int level)
+int TC_Socket::setSockOpt(int opt, const void *pvOptVal, SOCKET_LEN_TYPE optLen, int level)
 {
     return setsockopt(_sock, level, opt, (const char*)pvOptVal, optLen);
 }
 
-int TC_Socket::getSockOpt(int opt, void *pvOptVal, socklen_t &optLen, int level)
+int TC_Socket::getSockOpt(int opt, void *pvOptVal, SOCKET_LEN_TYPE &optLen, int level) const
 {
     return getsockopt(_sock, level, opt, (char*)pvOptVal, &optLen);
 }
@@ -585,7 +584,9 @@ void TC_Socket::setCloseWait(int delay)
 
     if(setSockOpt(SO_LINGER, (const void *)&stLinger, sizeof(linger), SOL_SOCKET) == -1)
     {
-        throw TC_Socket_Exception("[TC_Socket::setCloseWait] error", errno);
+        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setCloseWait] error");
+
+        // throw TC_Socket_Exception("[TC_Socket::setCloseWait] error", TC_Exception::getSystemCode());
     }
 }
 
@@ -628,11 +629,11 @@ void TC_Socket::setSendBufferSize(int sz)
     }
 }
 
-int TC_Socket::getSendBufferSize()
+int TC_Socket::getSendBufferSize() const
 {
     int sz;
-    socklen_t len = sizeof(sz);
-    if(getSockOpt(SO_SNDBUF, (void*)&sz, len, SOL_SOCKET) == -1 || len != sizeof(sz))
+    SOCKET_LEN_TYPE len = sizeof(sz);
+    if (getSockOpt(SO_SNDBUF, (void*)&sz, len, SOL_SOCKET) == -1 || len != sizeof(sz))
     {
         TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getSendBufferSize] error");
     }
@@ -648,11 +649,11 @@ void TC_Socket::setRecvBufferSize(int sz)
     }
 }
 
-int TC_Socket::getRecvBufferSize()
+int TC_Socket::getRecvBufferSize() const
 {
     int sz;
-    socklen_t len = sizeof(sz);
-    if(getSockOpt(SO_RCVBUF, (void*)&sz, len, SOL_SOCKET) == -1 || len != sizeof(sz))
+    SOCKET_LEN_TYPE len = sizeof(sz);
+    if (getSockOpt(SO_RCVBUF, (void*)&sz, len, SOL_SOCKET) == -1 || len != sizeof(sz))
     {
         TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getRecvBufferSize] error");
     }
@@ -672,7 +673,7 @@ void TC_Socket::ignoreSigPipe() {
 #endif
 }
 
-void TC_Socket::setblock(int fd, bool bBlock)
+void TC_Socket::setblock(SOCKET_TYPE fd, bool bBlock)
 {
 #if TARGET_PLATFORM_LINUX||TARGET_PLATFORM_IOS
 

@@ -39,7 +39,7 @@ ServantHandle::ServantHandle()
 
 ServantHandle::~ServantHandle()
 {
-    map<string, ServantPtr>::iterator it = _servants.begin();
+    auto it = _servants.begin();
 
     while(it != _servants.end())
     {
@@ -71,17 +71,19 @@ void ServantHandle::run()
 	{
 		initialize();
 
-		if (!ServerConfig::OpenCoroutine) {
-			handleImp();
-		}
-		else {
-			unsigned int iThreadNum = getEpollServer()->getLogicThreadNum();
+	    if (!ServerConfig::OpenCoroutine)
+	    {
+	        handleImp();
+	    }
+	    else
+	    {        
+	        //by goodenpei, 判断是否启用顺序模式
+	        _bindAdapter->initThreadRecvQueue(getHandleIndex());
+        
+	        size_t iThreadNum = getEpollServer()->getLogicThreadNum();
 
-			size_t iCoroutineNum =
-				(ServerConfig::CoroutineMemSize > ServerConfig::CoroutineStackSize) ? (ServerConfig::CoroutineMemSize
-					/ (ServerConfig::CoroutineStackSize * iThreadNum)) : 1;
-			if (iCoroutineNum < 1)
-				iCoroutineNum = 1;
+	        size_t iCoroutineNum = (ServerConfig::CoroutineMemSize > ServerConfig::CoroutineStackSize) ? (ServerConfig::CoroutineMemSize / (ServerConfig::CoroutineStackSize * iThreadNum)) : 1;
+	        if (iCoroutineNum < 1) iCoroutineNum = 1;
 
 			startHandle();
 
@@ -97,7 +99,8 @@ void ServantHandle::run()
 
 			pSptd->_sched = _coroSched;
 
-			while (!getEpollServer()->isTerminate()) {
+			while (!getEpollServer()->isTerminate()) 
+			{
 				_coroSched->tars_run();
 			}
 
@@ -215,7 +218,6 @@ void ServantHandle::handleRequest()
     }
 }
 
-// void ServantHandle::handleRecvData(TC_EpollServer::tagRecvData *stRecvData)
 void ServantHandle::handleRecvData(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
     try
@@ -250,11 +252,11 @@ void ServantHandle::handleAsyncResponse()
 {
     ReqMessagePtr resp;
 
-    map<string, ServantPtr>::iterator it = _servants.begin();
+    auto it = _servants.begin();
 
     while (it != _servants.end())
     {
-        while (it->second->getResponseQueue().pop_front(resp, 0))
+        while (it->second->getResponseQueue().pop_front(resp))
         {
             try
             {
@@ -302,7 +304,7 @@ void ServantHandle::handleAsyncResponse()
 
 void ServantHandle::handleCustomMessage(bool bExpectIdle)
 {
-    for (map<string, ServantPtr>::iterator it = _servants.begin(); it != _servants.end(); it++)
+    for (auto it = _servants.begin(); it != _servants.end(); it++)
     {
         //业务处理附加的自有消息
         try
@@ -323,7 +325,7 @@ void ServantHandle::handleCustomMessage(bool bExpectIdle)
 
 bool ServantHandle::allFilterIsEmpty()
 {
-    map<string, ServantPtr>::iterator it = _servants.begin();
+    auto it = _servants.begin();
 
     while (it != _servants.end())
     {
@@ -351,7 +353,7 @@ void ServantHandle::initialize()
 	    exit(-1);
     }
 
-    map<string, ServantPtr>::iterator it = _servants.begin();
+    auto it = _servants.begin();
 
     if(it == _servants.end())
     {
@@ -391,38 +393,6 @@ void ServantHandle::initialize()
         ++it;
     }
 }
-
-// void ServantHandle::heartbeat()
-// {
-//     time_t fcur = TNOW;
-
-//     map<string, TC_EpollServer::BindAdapterPtr>::iterator it;
-
-//     map<string, TC_EpollServer::BindAdapterPtr>& adapters = _handleGroup->adapters;
-
-//     for (it = adapters.begin(); it != adapters.end(); ++it)
-//     {
-//         if (abs(fcur - it->second->getHeartBeatTime()) > HEART_BEAT_INTERVAL)
-//         {
-//             it->second->setHeartBeatTime(fcur);
-
-//             TARS_KEEPALIVE(it->second->getName());
-
-//             //上报连接数 比率
-//             if (it->second->_pReportConRate)
-//             {
-//                 it->second->_pReportConRate->report(it->second->getNowConnection()*1000/it->second->getMaxConns());
-//             }
-
-//             //有队列, 且队列长度>0才上报
-//             if (it->second->_pReportQueue)
-//             {
-//                 it->second->_pReportQueue->report(it->second->getRecvBufferSize());
-//             }
-//         }
-//     }
-// }
-
 
 void ServantHandle::heartbeat()
 {
@@ -509,7 +479,7 @@ void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &d
 
     TarsCurrentPtr current = createCloseCurrent(data);
 
-    map<string, ServantPtr>::iterator sit = _servants.find(current->getServantName());
+    auto sit = _servants.find(current->getServantName());
 
     if (sit == _servants.end())
     {
@@ -830,7 +800,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     //处理tracking信息
     processTracking(current);
 #endif
-    map<string, ServantPtr>::iterator sit = _servants.find(current->getServantName());
+    auto sit = _servants.find(current->getServantName());
 
     if (sit == _servants.end())
     {
@@ -901,7 +871,7 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
         << current->getPort() << "|"
         << current->getServantName() << endl);
 
-    map<string, ServantPtr>::iterator sit = _servants.find(current->getServantName());
+	auto sit = _servants.find(current->getServantName());
 
     assert(sit != _servants.end());
 

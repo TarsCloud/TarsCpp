@@ -226,7 +226,6 @@ public:
     */
     static string tm2str(const time_t &t, const string &sFormat = "%Y%m%d%H%M%S");
 
-
     /**
     * @brief  时间转换tm.
     *
@@ -324,7 +323,6 @@ public:
     template<typename T>
     static T strto(const string &sStr, const string &sDefault);
 
-    // typedef bool (*depthJudge)(const string& str1, const string& str2);
     /**
     * @brief  解析字符串,用分隔符号分隔,保存在vector里
     *
@@ -339,11 +337,10 @@ public:
     * @param sStr      输入字符串
     * @param sSep      分隔字符串(每个字符都算为分隔符)
     * @param withEmpty true代表空的也算一个元素, false时空的过滤
-    * @param depthJudge 对分割后的字符再次进行判断
     * @return          解析后的字符vector
     */
     template<typename T>
-    static vector<T> sepstr(const string &sStr, const string &sSep, bool withEmpty = false);//, depthJudge judge = nullptr);
+    static vector<T> sepstr(const string &sStr, const string &sSep, bool withEmpty = false);
 
     /**
     * @brief T型转换成字符串，只要T能够使用ostream对象用<<重载,即可以被该函数支持
@@ -351,7 +348,12 @@ public:
     * @return  转换后的字符串
     */
     template<typename T>
-    static string tostr(const T &t);
+    inline static string tostr(const T &t)
+    {
+        ostringstream sBuffer;
+        sBuffer << t;
+        return sBuffer.str();
+    }
 
     /**
      * @brief  vector转换成string.
@@ -405,7 +407,7 @@ public:
     * @param sSep    两个元素之间的分隔符
     * @return        转换后的字符串
     */
-    template <typename InputIter>
+    template<typename InputIter>
     static string tostr(InputIter iFirst, InputIter iLast, const string &sSep = "|");
 
     /**
@@ -466,7 +468,7 @@ public:
     * @param mSrcDest  map<原字符串,目的字符串>
     * @return string  替换后的字符串
     */
-    static string replace(const string &sString, const map<string,string>& mSrcDest);
+    static string replace(const string &sString, const map<string, string>& mSrcDest);
 
     /**
      * @brief 匹配以.分隔的字符串，pat中*则代表通配符，代表非空的任何字符串
@@ -701,7 +703,7 @@ namespace p
         {
             if(!sStr.empty())
             {
-                return atof(sStr.c_str());
+                return (float) atof(sStr.c_str());
             }
             return 0;
         }
@@ -770,7 +772,6 @@ T TC_Common::strto(const string &sStr, const string &sDefault)
     return strto<T>(s);
 }
 
-
 template<typename T>
 vector<T> TC_Common::sepstr(const string &sStr, const string &sSep, bool withEmpty)
 {
@@ -814,7 +815,6 @@ vector<T> TC_Common::sepstr(const string &sStr, const string &sSep, bool withEmp
     return vt;
 }
 
-
 template<>
 string TC_Common::tostr<bool>(const bool &t);
 
@@ -856,14 +856,6 @@ string TC_Common::tostr<long double>(const long double &t);
 
 template<>
 string TC_Common::tostr<std::string>(const std::string &t);
-
-template<typename T>
-string TC_Common::tostr(const T &t)
-{
-    ostringstream sBuffer;
-    sBuffer << t;
-    return sBuffer.str();
-}
 
 template<typename T>
 string TC_Common::tostr(const vector<T> &t)
@@ -939,7 +931,7 @@ string TC_Common::tostr(const pair<F, S> &itPair)
     return sBuffer;
 }
 
-template <typename InputIter>
+template<typename InputIter>
 string TC_Common::tostr(InputIter iFirst, InputIter iLast, const string &sSep)
 {
     string sBuffer;
@@ -962,7 +954,6 @@ string TC_Common::tostr(InputIter iFirst, InputIter iLast, const string &sSep)
 
     return sBuffer;
 }
-
 
 template<typename V,typename E>
 bool TC_Common::equal(const V& x, const V& y,E eps)

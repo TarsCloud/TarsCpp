@@ -439,8 +439,7 @@ void StatReport::doSample(const string& strSlaveName,
 
 int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
 {
-    if(msg.empty())
-        return 0;
+    if (msg.empty()) return 0;
     try
     {
        int iLen = 0;
@@ -759,6 +758,16 @@ void StatReport::run()
 {
     while(!_terminate)
     {
+        {
+            Lock lock(*this);
+
+            if (_terminate)
+                return;
+
+            timedWait(1000);
+
+        }
+
         try
         {
             time_t tNow = TNOW;
@@ -804,9 +813,6 @@ void StatReport::run()
                 _time = tNow;
             }
 
-            Lock lock(*this);
-
-            timedWait(1000);
         }
         catch ( exception& e )
         {

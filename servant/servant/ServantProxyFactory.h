@@ -27,7 +27,7 @@ namespace tars
 /**
  * 创建ServantProxy对象，每个object在进程空间只有一个ServantProxy实例
  */
-class ServantProxyFactory : public TC_HandleBase, public TC_ThreadRecMutex
+class ServantProxyFactory : public TC_ThreadRecMutex
 {
 public:
     /**

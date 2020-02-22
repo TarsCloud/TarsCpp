@@ -30,10 +30,7 @@ CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThre
 , _nextTime(0)
 , _nextStatTime(0)
 , _objectProxyFactory(NULL)
-// , _asyncThreadNum(3)
-// , _asyncSeq(0)
 , _netThreadSeq(netThreadSeq)
-// , _reportAsyncQueue(NULL)
 , _noSendQueueLimit(1000)
 , _timeoutCheckInterval(100)
 {
@@ -53,12 +50,6 @@ CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThre
         _noSendQueueLimit = 1000;
     }
 
-    // //epollwait的超时时间
-    // _waitTimeout = TC_Common::strto<int64_t>(pCommunicator->getProperty("epollwaittimeout", "100"));
-    // if(_waitTimeout < 1)
-    // {
-    //     _waitTimeout = 1;
-    // }
 
     //检查超时请求的时间间隔，单位:ms
     _timeoutCheckInterval = TC_Common::strto<int64_t>(pCommunicator->getProperty("timeoutcheckinterval", "100"));
@@ -72,55 +63,10 @@ CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThre
 		_notify[i] = NULL;
 	}
 
-	// if(isFirstNetThread()) {
-
-    //     //异步线程数
-    //     _asyncThreadNum = TC_Common::strto<size_t>(pCommunicator->getProperty("asyncthread", "3"));
-
-    //     if(_asyncThreadNum == 0)
-    //     {
-    //         _asyncThreadNum = 3;
-    //     }
-
-    //     if(_asyncThreadNum > MAX_CLIENT_ASYNCTHREAD_NUM)
-    //     {
-    //         _asyncThreadNum = MAX_CLIENT_ASYNCTHREAD_NUM;
-    //     }
-
-    // 	//第一个通信器才去启动回调线程
-	//     for (size_t i = 0; i < _asyncThreadNum; ++i) {
-	// 	    _asyncThread.push_back(new AsyncProcThread(iAsyncQueueCap, merge));
-	//     }
-
-	//     //异步队列数目上报
-	//     string moduleName = pCommunicator->getProperty("modulename", "");
-	//     if(!moduleName.empty())
-	//     {
-	// 	    PropertyReportPtr asyncQueuePtr = pCommunicator->getStatReport()->createPropertyReport(moduleName + ".asyncqueue", PropertyReport::avg());
-	// 	    _reportAsyncQueue = asyncQueuePtr.get();
-	//     }
-    // }
 }
 
 CommunicatorEpoll::~CommunicatorEpoll()
 {
-	// if(isFirstNetThread()) {
-    //     for(size_t i = 0;i < _asyncThreadNum; ++i)
-    //     {
-    //         if(_asyncThread[i])
-    //         {
-    //             if (_asyncThread[i]->isAlive())
-    //             {
-    //                 _asyncThread[i]->terminate();
-    //                 _asyncThread[i]->getThreadControl().join();
-    //             }
-
-    //             delete _asyncThread[i];
-    //             _asyncThread[i] = NULL;
-    //         }
-    //     }
-    // }
-
     for(size_t i = 0;i < MAX_CLIENT_NOTIFYEVENT_NUM;++i)
     {
         if(_notify[i])
@@ -413,16 +359,7 @@ void CommunicatorEpoll::doStat()
 	if(isFirstNetThread()) {
 
         _communicator->doStat();
-        // //异步队列长度上报
-        // if(_reportAsyncQueue)
-        // {
-        //     size_t n = 0;
-        //     for(size_t i = 0;i < _asyncThreadNum; ++i)
-        //     {
-        //         n = n + _asyncThread[i]->getSize();
-        //     }
-        //     _reportAsyncQueue->report(n);
-        // }
+
     }
 
     StatReport::MapStatMicMsg mStatMicMsg;
@@ -443,14 +380,7 @@ void CommunicatorEpoll::doStat()
 void CommunicatorEpoll::pushAsyncThreadQueue(ReqMessage * msg)
 {
     _communicator->pushAsyncThreadQueue(msg);
-    // //先不考虑每个线程队列数目不一致的情况
-    // _asyncThread[_asyncSeq]->push_back(msg);
-    // _asyncSeq ++;
 
-    // if(_asyncSeq == _asyncThreadNum)
-    // {
-    //     _asyncSeq = 0;
-    // }
 }
 
 void CommunicatorEpoll::run()
@@ -465,14 +395,10 @@ void CommunicatorEpoll::run()
     {
         try
         {
-            // int iTimeout = ((_waitTimeout < _timeoutCheckInterval) ? _waitTimeout : _timeoutCheckInterval);
-
+            //考虑到检测超时等的情况 这里就wait100ms吧
             int num = _ep.wait(100);
+			if (_terminate) break;
 
-            if(_terminate)
-            {
-                break;
-            }
 
             //先处理epoll的网络事件
             for (int i = 0; i < num; ++i)
@@ -481,10 +407,9 @@ void CommunicatorEpoll::run()
 
                 uint64_t data = TC_Epoller::getU64(ev);
 
-                if(data == 0)
-                {
-                    continue; //data非指针, 退出循环
-                }
+                if(data == 0) continue; //data非指针, 退出循环
+
+//	            int64_t ms = TNOWMS;
 
                 handle((FDInfo*)data, ev);
             }

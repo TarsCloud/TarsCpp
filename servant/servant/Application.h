@@ -23,8 +23,8 @@
 
 #include "util/tc_autoptr.h"
 #include "util/tc_config.h"
-#include "util/tc_epoll_server.h"
 #include "util/tc_option.h"
+#include "util/tc_epoll_server.h"
 #include "servant/BaseNotify.h"
 #include "servant/ServantHelper.h"
 #include "servant/ServantHandle.h"
@@ -144,13 +144,6 @@ class PropertyReport;
 class Application : public BaseNotify
 {
 public:
-
-    enum
-    {
-        REPORT_SEND_QUEUE_INTERVAL = 10, /**上报服务端发送队列大小的间隔时间**/
-    };
-
-public:
     /**
      * 应用构造
      */
@@ -201,6 +194,11 @@ public:
     static void terminate();
 
     /**
+     * 获取tarsservant框架的版本
+     */
+    static string getTarsVersion();
+
+    /**
      * 添加Config
      * @param filename
      */
@@ -216,6 +214,25 @@ public:
      * 手工监听所有端口(Admin的端口是提前就监听的)
      */
     void manualListen();
+
+    /**
+     * 添加Servant
+     * @param T
+     * @param id
+     */
+    template<typename T>
+    void addServant(const string &id)
+    {
+        ServantHelperManager::getInstance()->addServant<T>(id, this, true);
+
+    }
+
+    /**
+     * 非taf协议server，设置Servant的协议解析器
+     * @param protocol
+     * @param servant
+     */
+    void addServantProtocol(const string &servant, const TC_NetWorkBuffer::protocol_functor &protocol);
 
 protected:
     /**
@@ -355,24 +372,13 @@ protected:
 protected:
 
     /**
-     * 添加Servant
-     * @param T
-     * @param id
-     */
-    template<typename T> void addServant(const string &id)
-    {
-        ServantHelperManager::getInstance()->addServant<T>(id, this, true);
-    }
-
-    /**
-     * 非tars协议server，设置Servant的协议解析器
-     * @param protocol
-     * @param servant
-     */
-    void addServantProtocol(const string& servant, const TC_NetWorkBuffer::protocol_functor& protocol);
-
-    /**
-     *设置Servant的连接断开回调
+     *
+     *
+     * @param command
+     * @param params
+     * @param result
+     *
+     * @return bool
      */
     void addServantOnClose(const string& servant, const TC_EpollServer::close_functor& f);
 
@@ -424,13 +430,9 @@ protected:
     /**
      * bind server adapter
      */
-    void bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters);
+    void bindAdapter(vector<TC_EpollServer::BindAdapterPtr> &adapters);
 
-    /**
-     * set adapter
-     * @param adapter
-     */
-	void setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const string &name);
+    void setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const string &name);
 
     /**
      * @param servant

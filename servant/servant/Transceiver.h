@@ -22,6 +22,7 @@
 #include "servant/CommunicatorEpoll.h"
 #include "servant/AuthLogic.h"
 #include <list>
+#include <util/tc_network_buffer.h>
 
 using namespace std;
 
@@ -56,8 +57,11 @@ public:
     enum ReturnStatus
     {
         eRetError = -1,
-        eRetOk    = 0,
-        eRetFull  = 1,
+        eRetOk =0,
+        eRetFull=1,
+        eRetTimeout=2,
+	    eRetPacket=3,
+
     };
 
     /*
@@ -283,7 +287,9 @@ protected:
 #if TARS_SSL
     std::shared_ptr<TC_OpenSSL> _openssl;
 #endif
-
+	//同步调用的fd
+//	TC_ClientSocket *_syncSock = NULL;
+	
     /*
      * 发送buffer
      */
@@ -374,7 +380,6 @@ public:
      * @param flag
      * @return int
      */
-
     virtual int send(const void* buf, uint32_t len, uint32_t flag);
 
     /**
@@ -391,8 +396,7 @@ public:
      * @param done
      * @return int
      */
-    // virtual int doResponse(list<ResponsePacket>& done);
-    virtual int doResponse();
+	virtual int doResponse();
 
 private:
     /*

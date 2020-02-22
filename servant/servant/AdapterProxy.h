@@ -51,12 +51,6 @@ public:
     ~AdapterProxy();
 
     /**
-     * clone
-     * @return
-     */
-//	AdapterProxy *clone();
-
-    /**
      * 调用server端对象方法
      */
     int invoke(ReqMessage * msg);
@@ -78,7 +72,7 @@ public:
      * @onlyCheck: 只判断是否已经连接上 
      * @return bool
      */
-    bool checkActive(bool bForceConnect = false);
+    bool checkActive(bool bForceConnect = false, bool onlyCheck = false);
 
     /**
      * 记录连接是否异常

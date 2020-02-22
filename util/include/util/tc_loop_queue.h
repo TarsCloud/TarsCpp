@@ -33,16 +33,16 @@ namespace tars
  */
 /////////////////////////////////////////////////
 
-template<typename T, int Size=5>
+template<typename T>
 class TC_LoopQueue
 {
 public:
     typedef vector<T> queue_type;
 
-    TC_LoopQueue(uint32_t iSize=Size)
+    TC_LoopQueue(size_t iSize)
     {
         //做个保护 最多不能超过 1000000
-        assert(iSize<1000000);
+        // assert(iSize<1000000);
         _iBegin = 0;
         _iEnd = 0;
         _iCapacitySub = iSize;
@@ -56,7 +56,7 @@ public:
         //delete _p;
     }
 
-    bool push_back(const T &t,bool & bEmpty,uint32_t & iBegin,uint32_t & iEnd)
+    bool push_back(const T &t,bool & bEmpty, size_t & iBegin, size_t & iEnd)
     {
         bEmpty = false;
         //uint32_t iEnd = _iEnd;
@@ -90,7 +90,7 @@ public:
     bool push_back(const T &t,bool & bEmpty)
     {
         bEmpty = false;
-        uint32_t iEnd = _iEnd;
+        size_t iEnd = _iEnd;
         if((iEnd > _iBegin && iEnd - _iBegin < 2) ||
                 ( _iBegin > iEnd && _iBegin - iEnd > (_iCapacity-2) ) )
         {
@@ -128,7 +128,7 @@ public:
 
     bool push_back(const queue_type &vt)
     {
-        uint32_t iEnd=_iEnd;
+        size_t iEnd=_iEnd;
         if(vt.size()>(_iCapacity-1) ||
                 (iEnd>_iBegin && (iEnd-_iBegin)<(vt.size()+1)) ||
                 ( _iBegin>iEnd && (_iBegin-iEnd)>(_iCapacity-vt.size()-1) ) )
@@ -137,7 +137,7 @@ public:
         }
         else
         { 
-            for(uint32_t i=0;i<vt.size();i++)
+            for(size_t i=0;i<vt.size();i++)
             {
                 memcpy(_p+_iBegin,&vt[i],sizeof(T));
                 //*(_p+_iBegin) = vt[i];
@@ -199,29 +199,29 @@ public:
         return false;
     }
 
-    uint32_t size()
+	size_t size()
     {
-        uint32_t iBegin=_iBegin;
-        uint32_t iEnd=_iEnd;
+		size_t iBegin=_iBegin;
+		size_t iEnd=_iEnd;
         if(iBegin<iEnd)
             return iBegin+_iCapacity-iEnd;
         return iBegin-iEnd;
     }
 
-    uint32_t getCapacity()
+	size_t getCapacity()
     {
         return _iCapacity;
     }
 
 private:
     T * _p;
-    uint32_t _iCapacity;
-    uint32_t _iCapacitySub;
-    uint32_t _iBegin;
-    uint32_t _iEnd;
+    size_t _iCapacity;
+	size_t _iCapacitySub;
+	size_t _iBegin;
+	size_t _iEnd;
 };
 
 }
 
-#endif
+#endif   /* ----- #ifndef _TC_LOOP_QUEUE_H_ ----- */
 

@@ -13,7 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
+#include "util/tc_port.h"
 #include "servant/EndpointManager.h"
 #include "servant/ObjectProxy.h"
 #include "servant/TarsLogger.h"
@@ -48,7 +48,7 @@ QueryEpBase::QueryEpBase(Communicator * pComm, bool bFirstNetThread,bool bInterf
     setNoDelete(true);
 }
 
-void QueryEpBase::callback_findObjectById4All(tars::Int32 ret, const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp)
+void QueryEpBase::callback_findObjectById4All(Int32 ret, const vector<EndpointF>& activeEp, const vector<EndpointF>& inactiveEp)
 {
     TLOGTARS("[TARS][callback_findObjectById4All _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
@@ -57,14 +57,14 @@ void QueryEpBase::callback_findObjectById4All(tars::Int32 ret, const vector<tars
     doEndpoints(activeEp,inactiveEp,ret);
 }
 
-void QueryEpBase::callback_findObjectById4All_exception(tars::Int32 ret)
+void QueryEpBase::callback_findObjectById4All_exception(Int32 ret)
 {
     TLOGERROR("[TARS][callback_findObjectById4All_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
 
     doEndpointsExp(ret);
 }
 
-void QueryEpBase::callback_findObjectById4Any(tars::Int32 ret, const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp)
+void QueryEpBase::callback_findObjectById4Any(Int32 ret, const vector<EndpointF>& activeEp, const vector<EndpointF>& inactiveEp)
 {
     TLOGTARS("[TARS][callback_findObjectById4Any _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
@@ -73,14 +73,14 @@ void QueryEpBase::callback_findObjectById4Any(tars::Int32 ret, const vector<tars
     doEndpoints(activeEp,inactiveEp,ret);
 }
 
-void QueryEpBase::callback_findObjectById4Any_exception(tars::Int32 ret)
+void QueryEpBase::callback_findObjectById4Any_exception(Int32 ret)
 {
     TLOGERROR("[TARS][callback_findObjectById4Any_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
 
     doEndpointsExp(ret);
 }
 
-void QueryEpBase::callback_findObjectByIdInSameGroup(tars::Int32 ret, const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp)
+void QueryEpBase::callback_findObjectByIdInSameGroup(Int32 ret, const vector<EndpointF>& activeEp, const vector<EndpointF>& inactiveEp)
 {
     TLOGTARS("[TARS][callback_findObjectByIdInSameGroup _objName:" << _objName << "|ret:"<<ret
             << ",active:" << activeEp.size()
@@ -89,14 +89,14 @@ void QueryEpBase::callback_findObjectByIdInSameGroup(tars::Int32 ret, const vect
     doEndpoints(activeEp,inactiveEp,ret);
 }
 
-void QueryEpBase::callback_findObjectByIdInSameGroup_exception(tars::Int32 ret)
+void QueryEpBase::callback_findObjectByIdInSameGroup_exception(Int32 ret)
 {
     TLOGERROR("[TARS][callback_findObjectByIdInSameGroup_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
 
     doEndpointsExp(ret);
 }
 
-void QueryEpBase::callback_findObjectByIdInSameSet( Int32 ret, const vector<tars::EndpointF> &activeEp, const vector<tars::EndpointF> & inactiveEp)
+void QueryEpBase::callback_findObjectByIdInSameSet( Int32 ret, const vector<EndpointF> &activeEp, const vector<EndpointF> & inactiveEp)
 {
     TLOGTARS("[TARS][callback_findObjectByIdInSameSet _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
@@ -112,7 +112,7 @@ void QueryEpBase::callback_findObjectByIdInSameSet_exception( Int32 ret)
     doEndpointsExp(ret);
 }
 
-void QueryEpBase::callback_findObjectByIdInSameStation( Int32 ret, const vector<tars::EndpointF> &activeEp, const vector<tars::EndpointF> &inactiveEp)
+void QueryEpBase::callback_findObjectByIdInSameStation( Int32 ret, const vector<EndpointF> &activeEp, const vector<EndpointF> &inactiveEp)
 {
     TLOGTARS("[TARS][callback_findObjectByIdInSameStation _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
@@ -150,10 +150,10 @@ bool QueryEpBase::init(const string & sObjName,const string & sLocator,const str
 
 void QueryEpBase::setObjName(const string & sObjName)
 {
-    string sEndpoints("");
-    string sInactiveEndpoints("");
-
     string::size_type pos = sObjName.find_first_of('@');
+
+    string sEndpoints;
+    string sInactiveEndpoints;
 
     if (pos != string::npos)
     {
@@ -280,17 +280,18 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
         {
             TC_Endpoint ep(vEndpoints[i]);
 
-            EndpointInfo::EType type;
-            if (ep.isSSL())
-                type = EndpointInfo::SSL;
-            else if (ep.isTcp())
-                type = EndpointInfo::TCP;
-            else
-                type = EndpointInfo::UDP;
+//	        TC_Endpoint::EType type = ep.getType();
+//            if (ep.isSSL())
+//                type = TC_Endpoint::SSL;
+//            else if (ep.isTcp())
+//                type = TC_Endpoint::TCP;
+//            else
+//                type = TC_Endpoint::UDP;
 
             string sSetDivision;
 
             //解析set分组信息
+            if (!_direct)
             {
                 string sep = " -s ";
                 size_t pos = vEndpoints[i].rfind(sep);
@@ -320,7 +321,7 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
                 }
             }
 
-            EndpointInfo epi(ep.getHost(), ep.getPort(), type, ep.getGrid(), sSetDivision, ep.getQos(), ep.getWeight(), ep.getWeightType(), ep.getAuthType());
+            EndpointInfo epi(ep.getHost(), ep.getPort(), ep.getType(), ep.getGrid(), sSetDivision, ep.getQos(), ep.getWeight(), ep.getWeightType(), ep.getAuthType());
 
             setEndpoints.insert(epi);
         }
@@ -381,8 +382,8 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
         {
             if(bSync)
             {
-                vector<tars::EndpointF> activeEp;
-                vector<tars::EndpointF> inactiveEp;
+                vector<EndpointF> activeEp;
+                vector<EndpointF> inactiveEp;
                 int iRet = 0;
                 switch(type)
                 {
@@ -468,7 +469,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
     }
 }
 
-void QueryEpBase::doEndpoints(const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp, int iRet, bool bSync)
+void QueryEpBase::doEndpoints(const vector<EndpointF>& activeEp, const vector<EndpointF>& inactiveEp, int iRet, bool bSync)
 {
     if(iRet != 0)
     {
@@ -525,8 +526,8 @@ void QueryEpBase::doEndpoints(const vector<tars::EndpointF>& activeEp, const vec
 
 
         //  tars istcp意思和这里枚举值对应
-        EndpointInfo::EType type = EndpointInfo::EType(activeEp[i].istcp);
-        EndpointInfo ep(activeEp[i].host, activeEp[i].port, type, activeEp[i].grid, activeEp[i].setId, activeEp[i].qos, activeEp[i].weight, activeEp[i].weightType, activeEp[i].authType);
+//        EndpointInfo::EType type = EndpointInfo::EType(activeEp[i].istcp);
+        EndpointInfo ep(activeEp[i].host, activeEp[i].port, (TC_Endpoint::EType)activeEp[i].istcp, activeEp[i].grid, activeEp[i].setId, activeEp[i].qos, activeEp[i].weight, activeEp[i].weightType, activeEp[i].authType);
 
         activeEps.insert(ep);
     }
@@ -535,8 +536,8 @@ void QueryEpBase::doEndpoints(const vector<tars::EndpointF>& activeEp, const vec
     for (uint32_t i = 0; i < inactiveEp.size(); ++i)
     {
         //  tars istcp意思和这里枚举值对应
-        EndpointInfo::EType type = EndpointInfo::EType(inactiveEp[i].istcp);
-        EndpointInfo ep(inactiveEp[i].host, inactiveEp[i].port, type, inactiveEp[i].grid, inactiveEp[i].setId, inactiveEp[i].qos, inactiveEp[i].weight, inactiveEp[i].weightType, inactiveEp[i].authType);
+//        EndpointInfo::EType type = EndpointInfo::EType(inactiveEp[i].istcp);
+        EndpointInfo ep(inactiveEp[i].host, inactiveEp[i].port, (TC_Endpoint::EType)activeEp[i].istcp, inactiveEp[i].grid, inactiveEp[i].setId, inactiveEp[i].qos, inactiveEp[i].weight, inactiveEp[i].weightType, inactiveEp[i].authType);
 
         inactiveEps.insert(ep);
     }
@@ -792,23 +793,27 @@ void EndpointManager::doNotify()
     _objectProxy->doInvoke();
 }
 
-bool EndpointManager::selectAdapterProxy(ReqMessage * msg,AdapterProxy * & pAdapterProxy)
+bool EndpointManager::selectAdapterProxy(ReqMessage * msg,AdapterProxy * & pAdapterProxy, bool onlyCheck)
 {
 
     pAdapterProxy = NULL;
-    //刷新主控
-    refreshReg(E_DEFAULT,"");
 
-    //无效的数据 返回true
-    if(!_valid)
-    {
-        return true;
-    }
+	if(!onlyCheck) 
+	{
+	    //刷新主控
+	    refreshReg(E_DEFAULT,"");
+
+	    //无效的数据 返回true
+	    if(!_valid)
+	    {
+	        return true;
+	    }
+	}
 
     //如果有hash，则先使用hash策略
     if (msg->bHash)
     {
-        pAdapterProxy = getHashProxy(msg->iHashCode, msg->bConHash);
+        pAdapterProxy = getHashProxy(msg->iHashCode, msg->bConHash, onlyCheck);
 
         return false;
     }
@@ -820,18 +825,18 @@ bool EndpointManager::selectAdapterProxy(ReqMessage * msg,AdapterProxy * & pAdap
         if(_weightType == E_STATIC_WEIGHT || msg->eType == ReqMessage::ONE_WAY)
             bStaticWeighted = true;
 
-        pAdapterProxy = getWeightedProxy(bStaticWeighted);
+        pAdapterProxy = getWeightedProxy(bStaticWeighted, onlyCheck);
     }
     else
     {
         //普通轮询模式
-        pAdapterProxy = getNextValidProxy();
+        pAdapterProxy = getNextValidProxy(onlyCheck);
     }
 
     return false;
 }
 
-AdapterProxy * EndpointManager::getNextValidProxy()
+AdapterProxy * EndpointManager::getNextValidProxy(bool onlyCheck)
 {
     if (_activeProxys.empty())
     {
@@ -847,7 +852,7 @@ AdapterProxy * EndpointManager::getNextValidProxy()
         if(_lastRoundPosition >= _activeProxys.size())
             _lastRoundPosition = 0;
 
-        if(_activeProxys[_lastRoundPosition]->checkActive())
+        if(_activeProxys[_lastRoundPosition]->checkActive(false, onlyCheck))
         {
             return _activeProxys[_lastRoundPosition];
         }
@@ -857,52 +862,54 @@ AdapterProxy * EndpointManager::getNextValidProxy()
             conn.push_back(_activeProxys[_lastRoundPosition]);
     }
 
-    if(conn.size() > 0)
-    {
-        //都有问题, 随机选择一个没有connect超时或者链接异常的发送
-        AdapterProxy * adapterProxy = conn[((uint32_t)rand() % conn.size())];
+	if(!onlyCheck) {
+	    if(conn.size() > 0)
+	    {
+	        //都有问题, 随机选择一个没有connect超时或者链接异常的发送
+	        AdapterProxy * adapterProxy = conn[((uint32_t)rand() % conn.size())];
 
-        //该proxy可能已经被屏蔽,需重新连一次
-        adapterProxy->checkActive(true);
-        return adapterProxy;
-    }
+	        //该proxy可能已经被屏蔽,需重新连一次
+	        adapterProxy->checkActive(true, false);
+	        return adapterProxy;
+	    }
 
-    //所有adapter都有问题 选不到结点,随机找一个重试
-    AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
+	    //所有adapter都有问题 选不到结点,随机找一个重试
+	    AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
 
-    //该proxy可能已经被屏蔽,需重新连一次
-    adapterProxy->checkActive(true);
+	    //该proxy可能已经被屏蔽,需重新连一次
+	    adapterProxy->checkActive(true, false);
+	}
 
     return NULL;
 }
 
-AdapterProxy* EndpointManager::getHashProxy(int64_t hashCode, bool bConsistentHash)
+AdapterProxy* EndpointManager::getHashProxy(int64_t hashCode, bool bConsistentHash, bool onlyCheck)
 {
     if(_weightType == E_STATIC_WEIGHT)
     {
         if(bConsistentHash)
         {
-            return getConHashProxyForWeight(hashCode, true);
+            return getConHashProxyForWeight(hashCode, true, onlyCheck);
         }
         else
         {
-            return getHashProxyForWeight(hashCode, true, _hashStaticRouterCache);
+            return getHashProxyForWeight(hashCode, true, _hashStaticRouterCache, onlyCheck);
         }
     }
     else
     {
         if(bConsistentHash)
         {
-            return getConHashProxyForNormal(hashCode);
+            return getConHashProxyForNormal(hashCode, onlyCheck);
         }
         else
         {
-            return getHashProxyForNormal(hashCode);
+            return getHashProxyForNormal(hashCode, onlyCheck);
         }
     }
 }
 
-AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bStatic, vector<size_t> &vRouterCache)
+AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bStatic, vector<size_t> &vRouterCache, bool onlyCheck)
 {
     if(_vRegProxys.empty())
     {
@@ -965,7 +972,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
                     hash = hash % thisHash.size();
                 }
 
-                if (thisHash[hash]->checkActive())
+                if (thisHash[hash]->checkActive(false, onlyCheck))
                 {
                     return thisHash[hash];
                 }
@@ -978,38 +985,40 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
             }
             while(!thisHash.empty());
 
-            if(conn.size() > 0)
-            {
-                hash = ((int64_t)hashCode) % conn.size();
+			if(!onlyCheck) {
+	            if(conn.size() > 0)
+	            {
+	                hash = ((int64_t)hashCode) % conn.size();
 
-                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-                if(hash >= conn.size())
-                {
-                    hash = hash % conn.size();
-                }
+	                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
+	                if(hash >= conn.size())
+	                {
+	                    hash = hash % conn.size();
+	                }
 
-                //都有问题, 随机选择一个没有connect超时或者链接异常的发送
-                AdapterProxy *adapterProxy = conn[hash];
+	                //都有问题, 随机选择一个没有connect超时或者链接异常的发送
+	                AdapterProxy *adapterProxy = conn[hash];
 
-                //该proxy可能已经被屏蔽,需重新连一次
-                adapterProxy->checkActive(true);
-                return adapterProxy;
-            }
+	                //该proxy可能已经被屏蔽,需重新连一次
+	                adapterProxy->checkActive(true, false);
+	                return adapterProxy;
+	            }
 
-            //所有adapter都有问题 选不到结点,随机找一个重试
-            AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
-            //该proxy可能已经被屏蔽,需重新连一次
-            adapterProxy->checkActive(true);
+	            //所有adapter都有问题 选不到结点,随机找一个重试
+	            AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
+	            //该proxy可能已经被屏蔽,需重新连一次
+	            adapterProxy->checkActive(true, false);
+			}
 
             return NULL;
         }
     }
 
-    return getHashProxyForNormal(hashCode);
+    return getHashProxyForNormal(hashCode, onlyCheck);
 }
 
 
-AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool bStatic)
+AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool bStatic, bool onlyCheck)
 {
     if(_vRegProxys.empty())
     {
@@ -1107,7 +1116,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
         }
     }
 
-    return getHashProxyForNormal(hashCode);
+    return getHashProxyForNormal(hashCode, onlyCheck);
 }
 
 bool EndpointManager::checkHashStaticWeightChange(bool bStatic)
@@ -1312,7 +1321,7 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, vector<AdapterPro
     conHash.sortNode();
 }
 
-AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
+AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode, bool onlyCheck)
 {
     if(_vRegProxys.empty())
     {
@@ -1398,7 +1407,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
     }
 }
 
-AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
+AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode, bool onlyCheck)
 {
     if(_vRegProxys.empty())
     {
@@ -1497,15 +1506,15 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
         }
     }
 
-    return getHashProxyForNormal(hashCode);
+    return getHashProxyForNormal(hashCode, onlyCheck);
 }
 
-AdapterProxy* EndpointManager::getWeightedProxy(bool bStaticWeighted)
+AdapterProxy* EndpointManager::getWeightedProxy(bool bStaticWeighted, bool onlyCheck)
 {
-    return getWeightedForNormal(bStaticWeighted);
+    return getWeightedForNormal(bStaticWeighted, onlyCheck);
 }
 
-AdapterProxy* EndpointManager::getWeightedForNormal(bool bStaticWeighted)
+AdapterProxy* EndpointManager::getWeightedForNormal(bool bStaticWeighted, bool onlyCheck)
 {
     if (_activeProxys.empty())
     {

@@ -2,6 +2,7 @@
 #define __TC_MD5_H
 
 #include <string>
+#include "util/tc_ex.h"
 #include "util/tc_common.h"
 
 using namespace std;
@@ -41,6 +42,15 @@ namespace tars
 }
 #endif
 
+/**
+ * @brief md5异常. 
+ */
+struct TC_MD5_Exception : public TC_Exception
+{
+    TC_MD5_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
+    ~TC_MD5_Exception() throw(){};
+};
+
 class TC_MD5
 {
     typedef unsigned char *POINTER;
@@ -75,7 +85,8 @@ public:
     * @param sString  输入字符串
     * @return string 输出,16个字节的二进制数据
     */
-    static string md5bin(const string &sString);
+    static vector<char> md5bin(const string &sString);
+    static vector<char> md5bin(const char *buffer, size_t length);
 
     /**
     * @brief 对字符串进行md5处理 ，
@@ -83,12 +94,14 @@ public:
     * @param sString  输入字符串
     * @return string 输出,32个字符
     */
-    static string md5str (const string &sString);
+    static string md5str(const string &sString);
+    static string md5str (const char *buffer, size_t length);
 
     /**
      * @brief 对文件进行md5处理. 
      *  
      * @param fileName 要处理的文件名 
+     * @throw TC_MD5_Exception, 文件读取错误会抛出异常 
      * @return string  处理后的字符串
      */
     static string md5file(const string& fileName);

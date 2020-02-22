@@ -17,12 +17,12 @@
 #ifndef __TARS_ENDPOINT_MANAGER_H_
 #define __TARS_ENDPOINT_MANAGER_H_
 
-#include "util/tc_spin_lock.h"
-#include "util/tc_consistent_hash_new.h"
 #include "servant/EndpointInfo.h"
 #include "servant/EndpointF.h"
 #include "servant/QueryF.h"
 #include "servant/AppProtocol.h"
+#include "util/tc_spin_lock.h"
+#include "util/tc_consistent_hash_new.h"
 
 namespace tars
 {
@@ -343,7 +343,7 @@ public:
     /**
      * 根据请求策略从可用的服务列表选择一个服务节点
      */
-    bool selectAdapterProxy(ReqMessage * msg, AdapterProxy * & pAdapterProxy);
+    bool selectAdapterProxy(ReqMessage * msg, AdapterProxy * & pAdapterProxy, bool onlyCheck);
 
     /**
      * 获取所有的服务节点
@@ -358,33 +358,33 @@ private:
     /*
      * 轮询选取一个结点
      */
-    AdapterProxy * getNextValidProxy();
+    AdapterProxy * getNextValidProxy(bool onlyCheck);
 
     /*
      * 根据hash值选取一个结点
      */
-    AdapterProxy* getHashProxy(int64_t hashCode,  bool bConsistentHash = false);
+    AdapterProxy* getHashProxy(int64_t hashCode,  bool bConsistentHash = false, bool onlyCheck = false);
 
 
     /*
      * 根据hash值按取模方式，从正常节点中选取一个结点
      */
-    AdapterProxy* getHashProxyForNormal(int64_t hashCode);
+    AdapterProxy* getHashProxyForNormal(int64_t hashCode, bool onlyCheck);
 
     /*
      * 根据hash值按一致性hash方式，从正常节点中选取一个结点
      */
-    AdapterProxy* getConHashProxyForNormal(int64_t hashCode);
+    AdapterProxy* getConHashProxyForNormal(int64_t hashCode, bool onlyCheck);
 
     /*
      * 根据hash值按取模方式，从静态权重节点中选取一个结点
      */
-    AdapterProxy* getHashProxyForWeight(int64_t hashCode, bool bStatic, vector<size_t> &vRouterCache);
+    AdapterProxy* getHashProxyForWeight(int64_t hashCode, bool bStatic, vector<size_t> &vRouterCache, bool onlyCheck);
 
     /*
      * 根据hash值按一致性hash方式，从静态权重节点中选取一个结点
      */
-    AdapterProxy* getConHashProxyForWeight(int64_t hashCode, bool bStatic);
+    AdapterProxy* getConHashProxyForWeight(int64_t hashCode, bool bStatic, bool onlyCheck);
 
     /*
      * 判断静态权重节点是否有变化
@@ -409,12 +409,12 @@ private:
     /*
      * 根据后端服务的权重值选取一个结点
      */
-    AdapterProxy* getWeightedProxy(bool bStaticWeighted);
+    AdapterProxy* getWeightedProxy(bool bStaticWeighted, bool onlyCheck);
 
     /*
      * 根据后端服务的权重值选取一个结点
      */
-    AdapterProxy* getWeightedForNormal(bool bStaticWeighted);
+    AdapterProxy* getWeightedForNormal(bool bStaticWeighted, bool onlyCheck);
 
     /*
      * 根据各个节点的权重值，建立各个节点的调用数

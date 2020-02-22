@@ -67,6 +67,16 @@ ObjectProxy::~ObjectProxy()
 void ObjectProxy::initialize()
 {
 }
+//
+//ServantProxy * ObjectProxy::getServantProxy()
+//{
+//    return _pServantProxy;
+//}
+//
+//void ObjectProxy::setServantProxy(ServantProxy * pServantProxy)
+//{
+//    _pServantProxy = pServantProxy;
+//}
 
 int ObjectProxy::loadLocator()
 {
@@ -92,6 +102,22 @@ int ObjectProxy::loadLocator()
     return 0;
 }
 
+void ObjectProxy::setPushCallbacks(const ServantProxyCallbackPtr& cb)
+{
+    _pushCallback = cb;
+}
+
+ServantProxyCallbackPtr ObjectProxy::getPushCallback()
+{
+    return _pushCallback;
+}
+
+//
+//const string& ObjectProxy::name() const
+//{
+//    return _name;
+//}
+
 void ObjectProxy::setProxyProtocol(const ProxyProtocol& protocol)
 {
     if(_hasSetProtocol)
@@ -108,7 +134,8 @@ ProxyProtocol& ObjectProxy::getProxyProtocol()
     return _proxyProtocol;
 }
 
-void ObjectProxy::setSocketOpt(int level, int optname, const void *optval, socklen_t optlen)
+
+void ObjectProxy::setSocketOpt(int level, int optname, const void *optval, SOCKET_LEN_TYPE optlen)
 {
     SocketOpt socketOpt;
 
@@ -124,16 +151,24 @@ vector<SocketOpt>& ObjectProxy::getSocketOpt()
 {
     return _socketOpts;
 }
-
-void ObjectProxy::setPushCallbacks(const ServantProxyCallbackPtr& cb)
-{
-    _pushCallback = cb;
-}
-
-ServantProxyCallbackPtr ObjectProxy::getPushCallback()
-{
-    return _pushCallback;
-}
+//
+//bool ObjectProxy::invoke_sync(ReqMessage * msg)
+//{
+//	TLOGTAF("[TAF][ObjectProxy::invoke_sync, " << _name << ", begin]" << endl);
+//
+//	//选择一个远程服务的Adapter来调用
+//	AdapterProxy * pAdapterProxy = NULL;
+//	//选一个活的
+//	_endpointManger->selectAdapterProxy(msg, pAdapterProxy, true);
+//
+//	if(!pAdapterProxy)
+//	{
+//		return false;
+//	}
+//
+//	msg->adapter = pAdapterProxy;
+//	return pAdapterProxy->invoke_sync(msg);
+//}
 
 void ObjectProxy::invoke(ReqMessage * msg)
 {
@@ -141,7 +176,7 @@ void ObjectProxy::invoke(ReqMessage * msg)
 
     //选择一个远程服务的Adapter来调用
     AdapterProxy * pAdapterProxy = NULL;
-    bool bFirst = _endpointManger->selectAdapterProxy(msg, pAdapterProxy);
+    bool bFirst = _endpointManger->selectAdapterProxy(msg, pAdapterProxy, false);
 
     if(bFirst)
     {
@@ -167,8 +202,6 @@ void ObjectProxy::invoke(ReqMessage * msg)
         return ;
     }
 
-//	pAdapterProxy = pAdapterProxy->clone();
-
 	msg->adapter = pAdapterProxy;
     pAdapterProxy->invoke(msg);
 }
@@ -188,7 +221,7 @@ void ObjectProxy::doInvoke()
 
         //选择一个远程服务的Adapter来调用
         AdapterProxy * pAdapterProxy = NULL;
-        _endpointManger->selectAdapterProxy(msg,pAdapterProxy);
+        _endpointManger->selectAdapterProxy(msg,pAdapterProxy, false);
 
         if(!pAdapterProxy)
         {
@@ -201,8 +234,6 @@ void ObjectProxy::doInvoke()
 
             return;
         }
-
-//	    pAdapterProxy = pAdapterProxy->clone();
 
         msg->adapter = pAdapterProxy;
 
@@ -293,7 +324,7 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 
 void ObjectProxy::doTimeout()
 {
-//    TLOGTARS("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
+
     const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
     for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
     {

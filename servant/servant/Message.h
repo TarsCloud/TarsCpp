@@ -17,17 +17,17 @@
 #ifndef __TARS_MESSAGE_H_
 #define __TARS_MESSAGE_H_
 
-#include "servant/Global.h"
+#include <util/tc_network_buffer.h>
 #include "util/tc_autoptr.h"
 #include "util/tc_monitor.h"
 #include "util/tc_loop_queue.h"
-#include <util/tc_network_buffer.h>
 #include "servant/CoroutineScheduler.h"
+#include "servant/Global.h"
 
 namespace tars
 {
 
-/////////////////////////////////////////////////////////////////////////
+class  CoroutineScheduler;
 /**
  * 超时一定比率后进行节点屏蔽
  * 设置超时检查参数
@@ -221,7 +221,7 @@ struct ReqMessage : public TC_HandleBase
     /*
      * 初始化
      */
-    void init(CallType eCallType, ObjectProxy * pObj, const string & sFuncName)
+    void init(CallType eCallType)
     {
         eStatus        = ReqMessage::REQ_REQ;
         eType          = eCallType;
@@ -229,10 +229,9 @@ struct ReqMessage : public TC_HandleBase
 
         callback       = NULL;
         proxy          = NULL;
-        pObjectProxy   = pObj;
+        pObjectProxy   = NULL;
 
 	    response       = std::make_shared<ResponsePacket>();
-        // sReqData.clear();
 	    sReqData       = std::make_shared<TC_NetWorkBuffer::Buffer>();
         pMonitor       = NULL;
         bMonitorFin    = false;
@@ -269,7 +268,7 @@ struct ReqMessage : public TC_HandleBase
 	shared_ptr<TC_NetWorkBuffer::Buffer> sReqData;       //请求消息体
 
     ReqMonitor *                pMonitor;        //用于同步的monitor
-    bool                        bMonitorFin;    //同步请求timewait是否结束
+    volatile bool               bMonitorFin;    //同步请求timewait是否结束
 
     int64_t                     iBeginTime;     //请求时间
     int64_t                     iEndTime;       //完成时间
@@ -296,7 +295,7 @@ struct ReqMessage : public TC_HandleBase
 };
 
 typedef TC_AutoPtr<ReqMessage>          ReqMessagePtr;
-typedef TC_LoopQueue<ReqMessage*,1000>  ReqInfoQueue;
+typedef TC_LoopQueue<ReqMessage*>  ReqInfoQueue;
     
 #define HTTP2 "http2"
 

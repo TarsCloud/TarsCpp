@@ -76,6 +76,16 @@ public:
     static bool compress(const char *src, size_t length, vector<char>& buffer);
 
     /**
+    * @brief  对数据进行压缩
+    *  
+    * @param src         需要压缩的数据
+    * @param length      数据长度
+    * @param buffer      输出buffer
+    * @return bool       成功失败
+    */    
+    static bool compress(const char *src, size_t length, string& buffer);
+    
+    /**
     * @brief  对数据进行解压
     *  
     * @param src         需要解压的数据

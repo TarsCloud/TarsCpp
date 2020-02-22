@@ -17,7 +17,6 @@
 #ifndef _TC_THREAD_COND_H
 #define _TC_THREAD_COND_H
 
-
 #include <cerrno>
 #include <iostream>
 #include <condition_variable>

@@ -41,9 +41,9 @@ struct FDInfo
 {
     enum
     {
-        ET_C_TERMINATE = 0,
         ET_C_NOTIFY = 1,
         ET_C_NET    = 2,
+        ET_C_TERMINATE  = 3,
     };
 
     /**

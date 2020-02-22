@@ -2,9 +2,7 @@
 #ifndef __TC_SPIN_LOCK_H
 #define __TC_SPIN_LOCK_H
 
-//#include <mutex>
 #include <atomic>
-//#include <condition_variable>
 #include <memory>
 
 using namespace std;

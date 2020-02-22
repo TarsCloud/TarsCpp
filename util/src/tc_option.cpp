@@ -29,6 +29,24 @@ void TC_Option::decode(int argc, char *argv[])
     {
         v.push_back(argv[i]);
     }
+    for(size_t i = 0; i < v.size(); i++)
+    {
+        if(v[i].length() > 2 && v[i].substr(0,2) == "--")
+        {
+            parse(v[i]);
+        }
+        else
+        {
+            _vSingle.push_back(v[i]);
+        }
+    }
+}
+void TC_Option::decode(const char *command)
+{
+    _mParam.clear();
+    if(command == NULL)
+        return;
+    vector<string> v = TC_Common::sepstr<string>(command, " \t");
 
     for(size_t i = 0; i < v.size(); i++)
     {

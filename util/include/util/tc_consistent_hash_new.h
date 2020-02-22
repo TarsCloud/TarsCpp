@@ -38,7 +38,7 @@ enum TC_HashAlgorithmType
 class TC_HashAlgorithm : public TC_HandleBase
 {
 public:
-    virtual int32_t hash(const string & sKey) = 0;
+    virtual int32_t hash(const char *sKey, size_t length) = 0;
     virtual TC_HashAlgorithmType getHashType() = 0;
 
 protected:
@@ -54,7 +54,7 @@ typedef TC_AutoPtr<TC_HashAlgorithm> TC_HashAlgorithmPtr;
 class TC_KetamaHashAlg : public TC_HashAlgorithm
 {
 public:
-    virtual int32_t hash(const string & sKey);
+    virtual int32_t hash(const char *sKey, size_t length);
     virtual TC_HashAlgorithmType getHashType();
 };
 
@@ -64,7 +64,7 @@ public:
 class TC_DefaultHashAlg : public TC_HashAlgorithm
 {
 public:
-    virtual int32_t hash(const string & sKey);
+    virtual int32_t hash(const char *sKey, size_t length);
     virtual TC_HashAlgorithmType getHashType();
 };
 

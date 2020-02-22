@@ -1,30 +1,13 @@
-﻿/**
- * Tencent is pleased to support the open source community by making Tars available.
- *
- * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
- *
- * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except 
- * in compliance with the License. You may obtain a copy of the License at
- *
- * https://opensource.org/licenses/BSD-3-Clause
- *
- * Unless required by applicable law or agreed to in writing, software distributed 
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
- * specific language governing permissions and limitations under the License.
- */
+﻿
 
 #ifndef __TC_JSON_H
 #define __TC_JSON_H
 
 #include <string>
 #include <unordered_map>
-#include <map>
 #include <vector>
-#include <list>
 #include <assert.h>
 #include <stdio.h>
-#include <sstream>
 
 #include "util/tc_autoptr.h"
 
@@ -38,89 +21,18 @@ namespace tars
 */
 struct TC_Json_Exception : public TC_Exception
 {
-    TC_Json_Exception(const string &buffer) : TC_Exception(buffer){};
-    ~TC_Json_Exception() throw(){};
+	TC_Json_Exception(const string &buffer) : TC_Exception(buffer){};
+	~TC_Json_Exception() throw(){};
 };
 
 enum eJsonType
 {
-    eJsonTypeString,
-    eJsonTypeNum,
-    eJsonTypeObj,
-    eJsonTypeArray,
-    eJsonTypeBoolean,
-    eJsonTypeNull,
+	eJsonTypeString,
+	eJsonTypeNum,
+	eJsonTypeObj,
+	eJsonTypeArray,
+	eJsonTypeBoolean
 };
-
-/*
- * 分析json字符串用到的 读字符的类
- */
-class BufferJsonReader
-{
-    const char *        _buf;		///< 缓冲区
-    size_t              _buf_len;	///< 缓冲区长度
-    size_t              _cur;		///< 当前位置
-
-public:
-
-    BufferJsonReader () :_buf(NULL),_buf_len(0), _cur(0) {}
-
-    void reset() { _cur = 0;}
-
-    void setBuffer(const char * buf, size_t len)
-    {
-        _buf = buf;
-        _buf_len = len;
-        _cur = 0;
-    }
-
-    void setBuffer(const std::vector<char> &buf)
-    {
-        _buf = buf.data();
-        _buf_len = buf.size();
-        _cur = 0;
-    }
-
-    const size_t &getCur() const { return _cur; }
-
-    const char * getPoint() const { return _buf+_cur; }
-
-    const char &read() { check(); _cur ++; return *(_buf+_cur-1); }
-
-    const char &get() const { check(); return *(_buf+_cur); }
-
-    const char &getBack() const { assert(_cur>0); return *(_buf+_cur-1); }
-
-    void back() { assert(_cur>0); _cur--; }
-
-    void check() const
-    {
-        if (_cur + 1 > _buf_len)
-        {
-            char s[64];
-            snprintf(s, sizeof(s), "buffer overflow when peekBuf, over %u.", (uint32_t)_buf_len);
-            throw TC_Json_Exception(s);
-        }
-    }
-
-    bool hasEnd() const { return _cur >= _buf_len; }
-};
-
-class JsonValue;
-class JsonValueObj;
-class JsonValueArray;
-class JsonValueString;
-class JsonValueBoolean;
-class JsonValueNum;
-class JsonValueNull;
-
-typedef TC_AutoPtr<JsonValue> JsonValuePtr;
-typedef TC_AutoPtr<JsonValueObj> JsonValueObjPtr;
-typedef TC_AutoPtr<JsonValueNum> JsonValueNumPtr;
-typedef TC_AutoPtr<JsonValueArray> JsonValueArrayPtr;
-typedef TC_AutoPtr<JsonValueString> JsonValueStringPtr;
-typedef TC_AutoPtr<JsonValueBoolean> JsonValueBooleanPtr;
-typedef TC_AutoPtr<JsonValueNull> JsonValueNullPtr;
 
 /*
  * json类型的基类。没有任何意义
@@ -128,20 +40,12 @@ typedef TC_AutoPtr<JsonValueNull> JsonValueNullPtr;
 class JsonValue : public TC_HandleBase
 {
 public:
-    virtual eJsonType getType() const = 0;
-    virtual void write(ostream& ostr) const;
-    virtual void read(BufferJsonReader & reader, char c) = 0;
-    virtual ~JsonValue() { }
-
-public:
-    static JsonValuePtr createJsonValue(BufferJsonReader & reader);
-    static uint32_t getHex(BufferJsonReader & reader);
-    static bool isspace(char c);
-    static void writeString(const string &str, ostream& ostr);
-
-protected:
-    JsonValue(){};
+	virtual eJsonType getType()=0;
+	virtual ~JsonValue()
+	{
+	}
 };
+typedef TC_AutoPtr<JsonValue> JsonValuePtr;
 
 /*
  * json类型 string类型 例如"dd\ndfd"
@@ -149,21 +53,24 @@ protected:
 class JsonValueString : public JsonValue
 {
 public:
-    JsonValueString(const string & s):value(s)
-    {
-    }
-    JsonValueString()
-    {
-    }
+	JsonValueString(const string & s):value(s)
+	{
+	}
+	JsonValueString()
+	{
 
-    eJsonType getType() const { return eJsonTypeString; }
+	}
 
-    virtual void write(ostream& ostr) const;
-    virtual void read(BufferJsonReader & reader, char c);
-
-    virtual ~JsonValueString() { }
-    string value;
+	eJsonType getType()
+	{
+		return eJsonTypeString;
+	}
+	virtual ~JsonValueString()
+	{
+	}
+	string value;
 };
+typedef TC_AutoPtr<JsonValueString> JsonValueStringPtr;
 
 /*
  * json类型 number类型 例如 1.5e8
@@ -171,23 +78,24 @@ public:
 class JsonValueNum : public JsonValue
 {
 public:
-    JsonValueNum(double d,bool b=false):value(d),isInt(b)
-    {
-    }
-    JsonValueNum()
-    {
-        isInt=false;
+	JsonValueNum(double d,bool b=false):value(d),isInt(b)
+	{
+	}
+	JsonValueNum()
+	{
+		isInt=false;
 		value=0.0f;
-    }
-    eJsonType getType() const { return eJsonTypeNum; }
-    virtual void write(ostream& ostr) const;
-    virtual void read(BufferJsonReader & reader, char c);
-
-    virtual ~JsonValueNum(){}
+	}
+	eJsonType getType()
+	{
+		return eJsonTypeNum;
+	}
+	virtual ~JsonValueNum(){}
 public:
-    double value;
-    bool isInt;
+	double value;
+	bool isInt;
 };
+typedef TC_AutoPtr<JsonValueNum> JsonValueNumPtr;
 
 /*
  * json类型 object类型 例如 {"aa","bb"} 
@@ -195,14 +103,15 @@ public:
 class JsonValueObj: public JsonValue
 {
 public:
-    eJsonType getType() const { return eJsonTypeObj; }
-    virtual void write(ostream& ostr) const;
-    virtual void read(BufferJsonReader & reader, char c);
-    const JsonValuePtr &get(const char *name);
-    virtual ~JsonValueObj();
+	eJsonType getType()
+	{
+		return eJsonTypeObj;
+	}
+	virtual ~JsonValueObj(){}
 public:
-    unordered_map<string, JsonValuePtr> value;
+	unordered_map<string,JsonValuePtr> value;
 };
+typedef TC_AutoPtr<JsonValueObj> JsonValueObjPtr;
 
 /*
  * json类型 array类型 例如 ["aa","bb"] 
@@ -210,14 +119,19 @@ public:
 class JsonValueArray: public JsonValue
 {
 public:
-    eJsonType getType() const { return eJsonTypeArray; }
-    void push_back(const JsonValuePtr & p) { value.push_back(p); }
-    virtual void write(ostream& ostr) const;
-    virtual void read(BufferJsonReader & reader, char c = 0);
-    virtual ~JsonValueArray();
+	eJsonType getType()
+	{
+		return eJsonTypeArray;
+	}
+	void push_back(JsonValuePtr & p)
+	{
+		value.push_back(p);
+	}
+	virtual ~JsonValueArray(){}
 public:
-    vector<JsonValuePtr> value;
+	vector<JsonValuePtr> value;
 };
+typedef TC_AutoPtr<JsonValueArray> JsonValueArrayPtr;
 
 /*
  * json类型 boolean类型 例如 true 
@@ -225,29 +139,98 @@ public:
 class JsonValueBoolean : public JsonValue
 {
 public:
-    eJsonType getType() const { return eJsonTypeBoolean; }
-    bool getValue() const { return value; }
-    virtual void write(ostream& ostr) const;
-    virtual void read(BufferJsonReader & reader,char c);
-    virtual ~JsonValueBoolean(){}
+	eJsonType getType()
+	{
+		return eJsonTypeBoolean;
+	}
+	bool getValue()
+	{
+		return value;
+	}
+	virtual ~JsonValueBoolean(){}
 public:
-    bool value;
+	bool value;
 };
+typedef TC_AutoPtr<JsonValueBoolean> JsonValueBooleanPtr;
 
 /*
- * json类型 null类型 例如"dd\ndfd"
+ * 分析json字符串用到的 读字符的类
  */
-class JsonValueNull : public JsonValue
+class BufferJsonReader
 {
+	const char *        _buf;		///< 缓冲区
+	size_t              _buf_len;	///< 缓冲区长度
+	size_t              _cur;		///< 当前位置
+
 public:
-    JsonValueNull() { }
 
-    eJsonType getType() const { return eJsonTypeNull; }
+	BufferJsonReader () :_buf(NULL),_buf_len(0), _cur(0) {}
 
-    virtual void write(ostream& ostr) const;
-    virtual void read(BufferJsonReader & reader, char c);
+	void reset() { _cur = 0;}
 
-    virtual ~JsonValueNull() { }
+	void setBuffer(const char * buf, size_t len)
+	{
+		_buf = buf;
+		_buf_len = len;
+		_cur = 0;
+	}
+
+	void setBuffer(const std::vector<char> &buf)
+	{
+		_buf = buf.data();
+		_buf_len = buf.size();
+		_cur = 0;
+	}
+
+	size_t getCur()
+	{
+		return _cur;
+	}
+
+	const char * getPoint()
+	{
+		return _buf+_cur;
+	}
+
+	char read()
+	{
+		check();
+		_cur ++;
+		return *(_buf+_cur-1);
+	}
+
+	char get()
+	{
+		check();
+		return *(_buf+_cur);
+	}
+
+	char getBack()
+	{
+		assert(_cur>0);
+		return *(_buf+_cur-1);
+	}
+
+	void back()
+	{
+		assert(_cur>0);
+		_cur--;
+	}
+
+	void check()
+	{
+		if (_cur + 1 > _buf_len)
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "buffer overflow when peekBuf, over %u.", (uint32_t)_buf_len);
+			throw TC_Json_Exception(s);
+		}
+	}
+
+	bool hasEnd()
+	{
+		return _cur >= _buf_len;
+	}
 };
 
 /*
@@ -256,15 +239,71 @@ public:
 class TC_Json
 {
 public:
-    //json类型到字符串的转换
-    static string writeValue(const JsonValuePtr &p);
-    
-    //解析成智能指针
-    static JsonValuePtr getValue(const string & str);
+	//json类型到字符串的转换
+	static string writeValue(const JsonValuePtr & p);
+	static void writeValue(const JsonValuePtr & p, string& ostr);
 
+	//json字符串到json结构的转换
+	static JsonValuePtr getValue(const string & str);
+private:
+	//string 类型到json字符串
+	static void writeString(const JsonValueStringPtr & p, string& ostr);
+	static void writeString(const string & s, string& ostr);
+
+	//num 类型到json字符串
+	static void writeNum(const JsonValueNumPtr & p, string& ostr);
+
+	//obj 类型到json字符串
+	static void writeObj(const JsonValueObjPtr & p, string& ostr);
+
+	//array 类型到json字符串
+	static void writeArray(const JsonValueArrayPtr & p, string& ostr);
+
+	//boolean 类型到json字符串
+	static void writeBoolean(const JsonValueBooleanPtr & p, string& ostr);
+
+	//读取json的value类型 也就是所有的json类型 如果不符合规范会抛异常
+	static JsonValuePtr getValue(BufferJsonReader & reader);
+	//读取json的object 如果不符合规范会抛异常
+	static JsonValueObjPtr getObj(BufferJsonReader & reader);
+	//读取json的array(数组) 如果不符合规范会抛异常
+	static JsonValueArrayPtr getArray(BufferJsonReader & reader);
+	//读取json的string 如 "dfdf" 如果不符合规范会抛异常
+	static JsonValueStringPtr getString(BufferJsonReader & reader,char head='\"');
+	//读取json的数字 如 -213.56 如果不符合规范会抛异常
+	static JsonValueNumPtr getNum(BufferJsonReader & reader,char head);
+	//读取json的boolean值  如 true false 如果不符合规范会抛异常
+	static JsonValueBooleanPtr getBoolean(BufferJsonReader & reader,char c);
+	//读取json的 null 如果不符合规范会抛异常
+	static JsonValuePtr getNull(BufferJsonReader & reader,char c);
+	//获取16进制形式的值 如\u003f 如果不符合规范会抛异常
+	static uint32_t getHex(BufferJsonReader & reader);
+	//判断一个字符是否符合json定义的空白字符
+	static bool isspace(char c);
 };
 
+
+class TC_JsonWriteOstream
+{
+public:
+	static void writeValue(const JsonValuePtr & p, ostream& ostr);
+private:
+	//string 类型到json字符串
+	static void writeString(const JsonValueStringPtr & p, ostream& ostr);
+	static void writeString(const string & s, ostream& ostr);
+
+	//num 类型到json字符串
+	static void writeNum(const JsonValueNumPtr & p, ostream& ostr);
+
+	//obj 类型到json字符串
+	static void writeObj(const JsonValueObjPtr & p, ostream& ostr);
+
+	//array 类型到json字符串
+	static void writeArray(const JsonValueArrayPtr & p, ostream& ostr);
+
+	//boolean 类型到json字符串
+	static void writeBoolean(const JsonValueBooleanPtr & p, ostream& ostr);
+};
 }
 
 #endif
-

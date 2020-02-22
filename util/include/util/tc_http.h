@@ -76,7 +76,7 @@ struct TC_Http_Exception : public TC_Exception
 struct TC_HttpResponse_Exception : public TC_Http_Exception
 {
     TC_HttpResponse_Exception(const string &sBuffer) : TC_Http_Exception(sBuffer){};
-    ~TC_HttpResponse_Exception() throw(){};
+    ~TC_HttpResponse_Exception() {};
 };
 
 /**
@@ -85,11 +85,10 @@ struct TC_HttpResponse_Exception : public TC_Http_Exception
 struct TC_HttpRequest_Exception : public TC_Http_Exception
 {
     TC_HttpRequest_Exception(const string &sBuffer) : TC_Http_Exception(sBuffer){};
-    ~TC_HttpRequest_Exception() throw(){};
+    ~TC_HttpRequest_Exception() {};
 };
 
 class TC_TCPClient;
-
 class TC_HttpRequest;
 class TC_HttpResponse;
 
@@ -294,14 +293,6 @@ protected:
     string toURL();
 
     /**
-     * @brief 获取段.
-     *  
-     * @param frag 
-     * @return string
-     */
-    //string getFragment(const string& frag) const;
-
-    /**
      * @brief  类型到字符串的转换
      * 
      * @return string：转换后的字符串
@@ -364,18 +355,7 @@ public:
      */
     struct CmpCase
     {
-        bool operator()(const string &s1, const string &s2) const
-        {
-            //return TC_Common::upper(s1) < TC_Common::upper(s2);
-            if(TC_Port::strcasecmp(s1.c_str(), s2.c_str()) < 0)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        bool operator()(const string &s1, const string &s2) const;
     };
 
     typedef multimap<string, string, CmpCase> http_header_type;
@@ -467,21 +447,7 @@ public:
      * @param sHeadName  header的名字
      * @param sHeadValue header的值
      */
-    void setHeader(const string &sHeadName, const string &sHeadValue) 
-    {
-        //Set-Cookie和Cookie可以有多个头
-        const char * pStr1 = "SET-COOKIE";
-        const char * pStr2 = "COOKIE";//原则上COOKIE只有一个，担心有兼容性问题，保留
-        if((TC_Port::strcasecmp(sHeadName.c_str(), pStr1) != 0) && (TC_Port::strcasecmp(sHeadName.c_str(), pStr2) != 0))
-        {
-            _headers.erase(sHeadName);
-        }
-       /* if(TC_Common::upper(sHeadName) != "SET-COOKIE" && TC_Common::upper(sHeadName) != "COOKIE")
-        {
-            _headers.erase(sHeadName);
-        }*/
-        _headers.insert(multimap<string, string>::value_type(sHeadName, sHeadValue)); 
-    }
+    void setHeader(const string &sHeadName, const string &sHeadValue);
 
     /**
      * @brief  设置header，常用的值请使用已经有的get/set方法设
@@ -759,7 +725,7 @@ public:
      * 
      * @return list<Cookie>&
      */
-    list<Cookie> getAllCookie();
+    const list<Cookie>& getAllCookie();
 
     /**
      * @brief  删除过期的Cookie，仅仅存在与当前回话的Cookie不删除
@@ -991,6 +957,13 @@ public:
     void parseResponseHeader(const char* szBuffer);
 
 protected:
+    /**
+     * 添加内容, 增量解析用到
+     * @param sBuffer
+     */
+    void addContent(const string &sBuffer);
+
+protected:
 
     /**
      * 应答状态
@@ -1016,6 +989,12 @@ protected:
      * 临时的content length
      */
     size_t  _iTmpContentLength;
+
+    /**
+     * 接收到数据的长度
+     */
+    size_t  _iRecvContentLength;
+
 };
 
 /********************* TC_HttpRequest ***********************/
@@ -1124,6 +1103,7 @@ public:
      *                     (注意, 是在encode的时候创建的)
      */
     void setRequest(const string& method, const string &sUrl, const std::string& body = "", bool bNewCreateHost = false);
+    
     /**
      * @brief 设置Get请求包.
      *  

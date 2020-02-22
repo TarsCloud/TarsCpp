@@ -106,8 +106,8 @@ namespace tars
         int next_size = 0;
         for (size_t c = 1; c < kNumClasses; c++) 
         {
-            const int max_size_in_class = class_to_size_[c];
-            for (int s = next_size; s <= max_size_in_class; s += kAlignment) 
+			const size_t max_size_in_class = class_to_size_[c];
+			for (size_t s = next_size; s <= max_size_in_class; s += kAlignment) 
             {
                 class_array_[ClassIndex(s)] = c;
             }

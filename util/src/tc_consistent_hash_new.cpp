@@ -23,10 +23,10 @@ using namespace tars;
 namespace tars
 {
 
-int32_t TC_KetamaHashAlg::hash(const string & sKey)
+int32_t TC_KetamaHashAlg::hash(const char *sKey, size_t length)
 {
-    string sMd5 = TC_MD5::md5bin(sKey);
-    const char *p = (const char *) sMd5.c_str();
+    vector<char> sMd5 = TC_MD5::md5bin(sKey, length);
+    const char *p = (const char *) sMd5.data();
 
     int32_t hash = ((int32_t)(p[3] & 0xFF) << 24)
         | ((int32_t)(p[2] & 0xFF) << 16)
@@ -41,10 +41,10 @@ TC_HashAlgorithmType TC_KetamaHashAlg::getHashType()
     return E_TC_CONHASH_KETAMAHASH;
 }
 
-int32_t TC_DefaultHashAlg::hash(const string & sKey)
+int32_t TC_DefaultHashAlg::hash(const char *sKey, size_t length)
 {
-    string sMd5 = TC_MD5::md5bin(sKey);
-    const char *p = (const char *) sMd5.c_str();
+    vector<char> sMd5 = TC_MD5::md5bin(sKey, length);
+    const char *p = (const char *) sMd5.data();
 
     int32_t hash = (*(int*)(p)) ^ (*(int*)(p+4)) ^ (*(int*)(p+8)) ^ (*(int*)(p+12));
 
@@ -165,8 +165,8 @@ int TC_ConsistentHashNew::addNode(const string & node, unsigned int index, int w
         // TODO: 其中KEMATA 为参考memcached client 的hash 算法，default 为原有的hash 算法，测试结论在表格里有
         if (_ptrHashAlg->getHashType() == E_TC_CONHASH_KETAMAHASH)
         {
-            string sMd5 = TC_MD5::md5bin(virtualNode);
-            char *p = (char *) sMd5.c_str();
+            vector<char> sMd5 = TC_MD5::md5bin(virtualNode);
+            char *p = (char *) sMd5.data();
 
             for (int i = 0; i < 4; i++)
             {
@@ -180,7 +180,7 @@ int TC_ConsistentHashNew::addNode(const string & node, unsigned int index, int w
         }
         else
         {
-            stItem.iHashCode = _ptrHashAlg->hash(virtualNode);
+            stItem.iHashCode = _ptrHashAlg->hash(virtualNode.c_str(), virtualNode.length());
             _vHashList.push_back(stItem);
         }
     }
@@ -196,7 +196,8 @@ int TC_ConsistentHashNew::getIndex(const string & key, unsigned int & iIndex)
         return -1;
     }
 
-    int32_t iCode = _ptrHashAlg->hash(TC_MD5::md5bin(key));
+    vector<char> data = TC_MD5::md5bin(key);
+    int32_t iCode = _ptrHashAlg->hash(data.data(), data.size());
 
     return getIndex(iCode, iIndex);
 }

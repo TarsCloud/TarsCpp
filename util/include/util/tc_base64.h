@@ -56,6 +56,17 @@ public:
     static string decode(const string &data);
 
     /**
+    * @brief  对字符串进行base64编码. 
+    *  
+    * @param buffer       buffer指针
+    * @param length       长度
+    * @param bChangeLine  是否需要在最终编码数据加入换行符 ，
+    *                     (RFC中建议每76个字符后加入回车换行，默认为不添加换行
+    * @return string      编码后的数据
+    */
+    static string encode(const char *buffer, size_t length, bool bChangeLine = false);
+
+    /**
     * @brief  对字符串进行base64编码 . 
     *  
     * @param pSrc        需要编码的数据
@@ -65,7 +76,7 @@ public:
     *                    RFC中建议每76个字符后加入回车换行，默认为不添加换行
     * @return            编码后的字符串的长度
     */
-    static int encode(const unsigned char* pSrc, int nSrcLen, char* pDst, bool bChangeLine = false);
+    static int encode(const unsigned char* pSrc, size_t nSrcLen, char* pDst, bool bChangeLine = false);
     
     /**
     * @brief  对字符串进行base64解码. 
@@ -75,7 +86,7 @@ public:
     * @param pDst   解码后的数据
     * @return       解码后的字符串的长度
     */    
-    static int decode(const char* pSrc, int nSrcLen, unsigned char* pDst);
+    static int decode(const char* pSrc, size_t nSrcLen, unsigned char* pDst);
     
 protected:
 

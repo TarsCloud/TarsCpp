@@ -100,9 +100,9 @@ public:
     ProxyProtocol& getProxyProtocol();
 
     /**
-     * 设置套接口选项
-     */
-    void setSocketOpt(int level, int optname, const void *optval, socklen_t optlen);
+    *设置套接口选项
+    */
+    void setSocketOpt(int level, int optname, const void *optval, SOCKET_LEN_TYPE optlen);
 
     /**
      * 获取套接字选项

@@ -64,6 +64,15 @@ public:
     * @param pAddr 指令队列空间的指针
     */
     void connect(void *pAddr, size_t iSize);
+    
+    /**
+     * @author goodenpei
+     * 2016-09-12
+     * @brief 取第一个数据
+     * @param sOut   输出的数据快
+     * @return       bool,true:正确, false: 错误,无数据输出,队列空
+     */
+    bool front(string &sOut);
 
     /**
     * @brief 弹出数据
@@ -151,7 +160,6 @@ protected:
     *  @brief 队列控制结构
     */
 #pragma pack(1) 
-
     struct CONTROL_BLOCK
     {
         size_t iMemSize;            /**内存大小*/

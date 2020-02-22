@@ -44,7 +44,6 @@ namespace tars
 struct TC_HashMapCompact_Exception : public TC_Exception
 {
     TC_HashMapCompact_Exception(const string &buffer) : TC_Exception(buffer){};
-    TC_HashMapCompact_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
     ~TC_HashMapCompact_Exception() throw(){};
 };
 
@@ -110,7 +109,7 @@ public:
             uint32_t    _iGetPrev;      /**Get链上的上一个Block*/
             uint32_t    _iSyncTime;     /**上次缓写时间*/
             uint32_t    _iExpireTime;    /** 数据过期的绝对时间，由设置或更新数据时提供，0表示不关心此时间*/
-            uint8_t        _iVersion;        /** 数据版本，1为初始版本，0为保留*/
+            uint8_t     _iVersion;        /** 数据版本，1为初始版本，0为保留*/
             bool        _bDirty;        /**是否是脏数据*/
             bool        _bOnlyKey;      /**是否只有key, 没有内容*/
             bool        _bNextChunk;    /**是否有下一个chunk*/
@@ -1073,9 +1072,8 @@ public:
         uint32_t    _iBackupTail;        //热备指针
         uint32_t    _iSyncTail;          //回写链表
         uint32_t    _iOnlyKeyCount;        // OnlyKey个数
-        bool         _bInit;                 //是否已经完成初始化
+        bool        _bInit;                 //是否已经完成初始化
         char        _cReserve[15];          //保留
-        //uint32_t    _iReserve[4];       //保留
     };
 
     /**
@@ -1107,7 +1105,6 @@ public:
         uint32_t _iListCount;     /**链表个数*/
     };
 #pragma pack() 
-
     /**
      * @brief 64位操作系统用基数版本号, 32位操作系统用64位版本号
      *  */
@@ -1179,7 +1176,7 @@ public:
     /**
      * @brief 定义hash处理器
       */
-    using hash_functor = std::function<size_t (const string& )>;
+    typedef std::function<size_t(const string &)> hash_functor;
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     //map的接口定义

@@ -166,7 +166,6 @@ namespace tars
         void deallocate(void *pAddr);
 
 #pragma pack(1) 
-
         struct tagSpanAlloc
         {
             size_t  _iSpanSize;            /**span区块大小*/
@@ -663,7 +662,6 @@ namespace tars
          * 头部内存块
          */
 #pragma pack(1) 
-
         struct tagChunkAllocatorHead
         {
             bool   _bProtectedArea;

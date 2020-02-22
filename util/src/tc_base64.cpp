@@ -54,7 +54,7 @@ string TC_Base64::encode(const string &data, bool bChangeLine/* = false*/)
     pDst = new char[iBufSize];
     if(pDst == NULL)
         return "";   
-    int iDstLen = encode((unsigned char*)data.c_str(), data.size(), pDst, bChangeLine);
+    size_t iDstLen = encode((unsigned char*)data.c_str(), (int)data.size(), pDst, bChangeLine);
     string ret(pDst,iDstLen);
     delete [] pDst;
     return ret;
@@ -68,21 +68,37 @@ string TC_Base64::decode(const string &data)
     pDst = new unsigned char[data.size()];
     if(pDst == NULL)
         return "";
-    int iDstLen = decode(data.c_str(), data.size(), pDst);
+    size_t iDstLen = decode(data.c_str(), data.size(), pDst);
     string ret((char*)pDst,iDstLen);
     delete [] pDst;
     return ret;
 }
 
-int TC_Base64::encode(const unsigned char* pSrc, int nSrcLen, char* pDst, bool bChangeLine/* = false*/)
+string TC_Base64::encode(const char *buffer, size_t length, bool bChangeLine)
+{
+    if(buffer == NULL || length == 0)
+        return "";    
+    //设原始串长度为a,结果串中算上回车换行及'/0',最终长度为(a/3+1)*4+(a/3+1)*4*2/76+1,约为1.369*a+6
+    char *pDst = NULL;
+    int iBufSize = (int)(length*1.4) + 6;
+    pDst = new char[iBufSize];
+    if(pDst == NULL)
+        return "";   
+    size_t iDstLen = encode((unsigned char*)buffer, length, pDst, bChangeLine);
+    string ret(pDst,iDstLen);
+    delete [] pDst;
+    return ret;
+}
+
+int TC_Base64::encode(const unsigned char* pSrc, size_t nSrcLen, char* pDst, bool bChangeLine/* = false*/)
 {
     unsigned char c1, c2, c3;   
     int nDstLen = 0;             
     int nLineLen = 0;         
-    int nDiv = nSrcLen / 3;      
-    int nMod = nSrcLen % 3;    
+    size_t nDiv = nSrcLen / 3;      
+    size_t nMod = nSrcLen % 3;    
     // 每次取3个字节，编码成4个字符
-    for (int i = 0; i < nDiv; i ++)
+    for (size_t i = 0; i < nDiv; i ++)
     {
         c1 = *pSrc++;
         c2 = *pSrc++;
@@ -131,11 +147,11 @@ int TC_Base64::encode(const unsigned char* pSrc, int nSrcLen, char* pDst, bool b
 }
 
  
-int  TC_Base64::decode(const char* pSrc, int nSrcLen, unsigned char* pDst)
+int  TC_Base64::decode(const char* pSrc, size_t nSrcLen, unsigned char* pDst)
 {
     int nDstLen;            // 输出的字符计数 
-    int nValue;             // 解码用到的整数
-    int i; 
+    size_t nValue;          // 解码用到的整数
+    size_t i; 
     i = 0;
     nDstLen = 0;
  
@@ -150,7 +166,7 @@ int  TC_Base64::decode(const char* pSrc, int nSrcLen, unsigned char* pDst)
 
             nValue = DeBase64Tab[int(*pSrc++)] << 18;         
             nValue += DeBase64Tab[int(*pSrc++)] << 12;
-            *pDst++ = (nValue & 0x00ff0000) >> 16;
+            *pDst++ = (unsigned char)((nValue & 0x00ff0000) >> 16);
             nDstLen++; 
             if (*pSrc != '=')
             {                

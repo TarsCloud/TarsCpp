@@ -36,9 +36,6 @@
 #endif
 
 
-// #include <signal.h>
-// #include <sys/resource.h>
-
 #if TARS_SSL
 #include "util/tc_openssl.h"
 #endif
@@ -76,11 +73,11 @@ std::string ServerConfig::Notify;           //信息通知中心
 std::string ServerConfig::LogPath;          //logpath
 int         ServerConfig::LogSize;          //log大小(字节)
 int         ServerConfig::LogNum;           //log个数()
-std::string ServerConfig::LogLevel;            //log日志级别
+std::string ServerConfig::LogLevel;         //log日志级别
 std::string ServerConfig::ConfigFile;       //框架配置文件路径
-int         ServerConfig::ReportFlow;       //是否服务端上报所有接口stat流量 0不上报 1上报 (用于非tars协议服务流量统计)
-int         ServerConfig::IsCheckSet;       //是否对按照set规则调用进行合法性检查 0,不检查，1检查
-bool        ServerConfig::OpenCoroutine;    //是否启用协程处理方式
+int         ServerConfig::ReportFlow = 1;       //是否服务端上报所有接口stat流量 0不上报 1上报 (用于非taf协议服务流量统计)
+int         ServerConfig::IsCheckSet = 1;       //是否对按照set规则调用进行合法性检查 0,不检查，1检查
+bool        ServerConfig::OpenCoroutine = false;    //是否启用协程处理方式
 size_t      ServerConfig::CoroutineMemSize; //协程占用内存空间的最大大小
 uint32_t    ServerConfig::CoroutineStackSize;   //每个协程的栈大小(默认128k)
 bool        ServerConfig::ManualListen = false;     //手工启动监听端口
@@ -108,7 +105,6 @@ PropertyReportPtr g_pReportRspQueue;
 /**上报服务端发送队列大小的间隔时间**/
 #define REPORT_SEND_QUEUE_INTERVAL 10
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 Application::Application()
 {
@@ -124,6 +120,11 @@ Application::~Application()
 #if TARGET_PLATFORM_WINDOWS    
     WSACleanup();
 #endif
+}
+
+string Application::getTarsVersion()
+{
+    return TARS_VERSION;
 }
 
 TC_Config& Application::getConfig()
@@ -173,6 +174,16 @@ void reportRspQueue(TC_EpollServer *epollServer)
 void heartBeatFunc(const string& adapterName)
 {
     TARS_KEEPALIVE(adapterName);
+}
+
+void Application::manualListen()
+{
+    vector<TC_EpollServer::BindAdapterPtr> v = getEpollServer()->getBindAdapters();
+
+    for(auto &b : v)
+    {
+        b->manualListen();
+    }
 }
 
 void Application::waitForShutdown()
@@ -712,8 +723,8 @@ void Application::main(const TC_Option &option)
         //设置服务的core limit
         TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_CLOSE_CORE, Application::cmdCloseCoreDump);
 
-        //重新加载locator信息
-        TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_RELOAD_LOCATOR, Application::cmdReloadLocator);
+        //设置是否标准输出
+        TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_CLOSE_COUT, Application::cmdCloseCout);
 
         //上报版本
         TARS_REPORTVERSION(TARS_VERSION);
@@ -855,6 +866,7 @@ string Application::toDefault(const string &s, const string &sDefault)
     }
     return s;
 }
+
 string Application::setDivision()
 {
     bool bEnableSet = TC_Common::lower(_conf.get("/tars/application<enableset>", "n"))=="y"?true:false;;
@@ -939,6 +951,9 @@ void Application::initializeServer()
         exe = _conf.get("/tars/application/server<localip>");
     }
 
+    ServerConfig::ServerName        = toDefault(_conf.get("/tars/application/server<server>"), exe);
+
+
 #if TARGET_PLATFORM_WINDOWS    
     ServerConfig::BasePath          = TC_File::simplifyDirectory(_conf.get("/tars/application/server<basepath.win>")) + FILE_SEP;
     if (ServerConfig::BasePath == FILE_SEP)
@@ -964,7 +979,6 @@ void Application::initializeServer()
 
 #endif
     ServerConfig::TarsPath           = TC_File::simplifyDirectory(ServerConfig::LogPath + FILE_SEP + ".." + FILE_SEP) + FILE_SEP;
-    ServerConfig::ServerName        = toDefault(_conf.get("/tars/application/server<server>"), exe);
 
     ServerConfig::LogSize           = TC_Common::toSize(toDefault(_conf.get("/tars/application/server<logsize>"), "52428800"), 52428800);
     ServerConfig::LogNum            = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<lognum>"), "10"));
@@ -976,9 +990,9 @@ void Application::initializeServer()
     ServerConfig::Notify            = _conf.get("/tars/application/server<notify>");
     ServerConfig::ReportFlow        = _conf.get("/tars/application/server<reportflow>")=="0"?0:1;
     ServerConfig::IsCheckSet        = _conf.get("/tars/application/server<checkset>","1")=="0"?0:1;
-    ServerConfig::OpenCoroutine        = TC_Common::strto<bool>(toDefault(_conf.get("/tars/application/server<opencoroutine>"), "0"));
-    ServerConfig::CoroutineMemSize    =  TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinememsize>"), "1073741824"), 1073741824);
-    ServerConfig::CoroutineStackSize    = TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinestack>"), "131072"), 131072);
+    ServerConfig::OpenCoroutine     = TC_Common::strto<bool>(toDefault(_conf.get("/tars/application/server<opencoroutine>"), "0"));
+    ServerConfig::CoroutineMemSize  =  TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinememsize>"), "1073741824"), 1073741824);
+    ServerConfig::CoroutineStackSize= (uint32_t)TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinestack>"), "131072"), 131072);
     ServerConfig::ManualListen      = _conf.get("/tars/application/server<manuallisten>", "0") == "0" ? false : true;
 	ServerConfig::MergeNetImp       = _conf.get("/tars/application/server<mergenetimp>", "0") == "0" ? false : true;
 	ServerConfig::NetThread         = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<nethread>"), "1"));
@@ -1021,23 +1035,20 @@ void Application::initializeServer()
     //输出信息
     outServer(cout);
 
-    string sNetThread = _conf.get("/tars/application/server<netthread>", "1");
-    unsigned int iNetThreadNum = TC_Common::strto<unsigned int>(sNetThread);
-
-    if(iNetThreadNum < 1)
+    if(ServerConfig::NetThread < 1)
     {    
-        iNetThreadNum = 1;
+        ServerConfig::NetThread = 1;
         cout << OUT_LINE << "\nwarning:netThreadNum < 1." << endl;
     }
 
     //网络线程的配置数目不能15个
-    if(iNetThreadNum > 15)
+    if(ServerConfig::NetThread > 15)
     {    
-        iNetThreadNum = 15;
+        ServerConfig::NetThread = 15;
         cout << OUT_LINE << "\nwarning:netThreadNum > 15." << endl;
     }
 
-    _epollServer = new TC_EpollServer(iNetThreadNum);
+    _epollServer = new TC_EpollServer(ServerConfig::NetThread);
 
     //初始化服务是否对空链接进行超时检查
     bool bEnable = (_conf.get("/tars/application/server<emptyconcheck>","0")=="1")?true:false;
@@ -1107,8 +1118,6 @@ void Application::initializeServer()
         TC_EpollServer::BindAdapterPtr lsPtr = new TC_EpollServer::BindAdapter(_epollServer.get());
 
 	    setAdapter(lsPtr, "AdminAdapter");
-
-//        lsPtr->setName("AdminAdapter");
 
         lsPtr->setEndpoint(ServerConfig::Local);
 
@@ -1279,6 +1288,7 @@ void Application::checkServantNameValid(const string& servant, const string& sPr
 
         cout << os.str() << endl;
 
+
         exit(-1);
     }
 }
@@ -1297,7 +1307,6 @@ void Application::outAdapter(ostream &os, const string &v, TC_EpollServer::BindA
     // os << outfill("queuesize")        << lsPtr->getRecvBufferSize() << endl;
     os << TC_Common::outfill("connections")      << lsPtr->getNowConnection() << endl;
     os << TC_Common::outfill("protocol")         << lsPtr->getProtocolName() << endl;
-    // os << TC_Common::outfill("handlegroup")      << lsPtr->getHandleGroupName() << endl;
     os << TC_Common::outfill("handlethread")     << lsPtr->getHandleNum() << endl;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////

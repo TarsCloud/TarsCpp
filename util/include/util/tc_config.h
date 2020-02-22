@@ -63,7 +63,6 @@ struct TC_Config_Exception : public TC_Exception
 struct TC_ConfigNoParam_Exception : public TC_Exception
 {
     TC_ConfigNoParam_Exception(const string &buffer) : TC_Exception(buffer){};
-    TC_ConfigNoParam_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
     ~TC_ConfigNoParam_Exception() throw(){};
 };
 
@@ -239,7 +238,6 @@ public:
         return new TC_ConfigDomain(*this); 
     }
 
-protected:
     /**
      * @brief 转义. 
      *  
@@ -316,28 +314,17 @@ protected:
  * 例如：
  
  *  <Main>
- 
  *  <Domain>
- 
  *      Name = Value
- 
  *  </Domain>
- 
  *   <Domain1>
- 
  *       Name = Value
- 
  *   </Domain1>
- 
  *  </Main>
  
  *  获取参数:conf["/Main/Domain<Name>"] 获取域Map:
- 
  *   getDomainMap("/Main/Domain", m); m得到Name/Value对
- 
- * 获取域Vector: getDomainVector("/Main", v); v得到Domain列表
- 
-   可以增加域或域下面的值对
+ * 获取域Vector: getDomainVector("/Main", v); v得到Domain列表 可以增加域或域下面的值对
  
  */
 class TC_Config
@@ -390,7 +377,7 @@ public:
     * @return      配置项对应的值 
     *  @throws     TC_Config_Exception 
     */
-    string operator[](const string &sName);
+    string operator[](const string &sName) const;
 
     /**
      * @brief 获取值, 注意如果没有不抛出异常,返回空字符串. 
@@ -399,6 +386,12 @@ public:
      * @return     配置项对应的值
      */
     string get(const string &sName, const string &sDefault="") const;
+
+    /**
+	 * @brief 设置值. 
+	 * @param sName 参数名称,  例如: /Main/Domain<Param>
+     */
+    void set(const string &sName, const string &value);
 
     /**
     * @brief GetDomainParamMap获取域下面的参数值对. 

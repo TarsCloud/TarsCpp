@@ -52,7 +52,7 @@ namespace tars
  */
 struct TC_SHA_Exception : public TC_Exception
 {
-    TC_SHA_Exception(const string &buffer, int err) : TC_Exception(buffer, err){};
+    TC_SHA_Exception(const string &buffer, bool err) : TC_Exception(buffer, err){};
     ~TC_SHA_Exception() throw(){};
 };
 

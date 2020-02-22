@@ -19,6 +19,8 @@
 
 #include "servant/Message.h"
 #include "servant/Global.h"
+#include "util/tc_cas_queue.h"
+#include "util/tc_thread_queue.h"
 
 namespace tars
 {

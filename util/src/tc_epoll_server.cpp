@@ -52,7 +52,7 @@ static const int BUFFER_SIZE = 8 * 1024;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // handle的实现
-TC_EpollServer::Handle::Handle()
+TC_EpollServer::Handle::Handle() 
 : _pEpollServer(NULL)
 , _iWaitTime(100)
 {
@@ -305,7 +305,6 @@ TC_EpollServer::BindAdapter::BindAdapter(TC_EpollServer *pEpollServer)
 , _iHeaderLen(0)
 , _iHeartBeatTime(0)
 , _protocolName("tars")
-, _iBackPacketBuffLimit(0)
 {
 }
 
@@ -317,14 +316,16 @@ TC_EpollServer::BindAdapter::~BindAdapter()
 
 void TC_EpollServer::BindAdapter::setProtocolName(const string& name)
 {
-    TC_ThreadLock::Lock lock(*this);
+	std::lock_guard<std::mutex> lock (_mutex);
 
     _protocolName = name;
 }
 
 const string& TC_EpollServer::BindAdapter::getProtocolName()
 {
-    return _protocolName;
+	std::lock_guard<std::mutex> lock (_mutex);
+
+	return _protocolName;
 }
 
 bool TC_EpollServer::BindAdapter::isTarsProtocol()
@@ -334,26 +335,26 @@ bool TC_EpollServer::BindAdapter::isTarsProtocol()
 
 bool TC_EpollServer::BindAdapter::isIpAllow(const string& ip) const
 {
-    TC_ThreadLock::Lock lock(*this);
+	std::lock_guard<std::mutex> lock (_mutex);
 
     if(_eOrder == ALLOW_DENY)
     {
-        if(TC_Common::matchPeriod(ip,_vtAllow))
+        if(TC_Common::matchPeriod(ip, _vtAllow))
         {
             return true;
         }
-        if(TC_Common::matchPeriod(ip,_vtDeny))
+        if(TC_Common::matchPeriod(ip, _vtDeny))
         {
             return false;
         }
     }
     else
     {
-        if(TC_Common::matchPeriod(ip,_vtDeny))
+        if(TC_Common::matchPeriod(ip, _vtDeny))
         {
             return false;
         }
-        if(TC_Common::matchPeriod(ip,_vtAllow))
+        if(TC_Common::matchPeriod(ip, _vtAllow))
         {
             return true;
         }
@@ -465,12 +466,6 @@ size_t TC_EpollServer::BindAdapter::getRecvBufferSize() const
     return _iBufferSize;
 }
 
-TC_EpollServer* TC_EpollServer::BindAdapter::getEpollServer()
-{
-    return _pEpollServer;
-}
-
-
 TC_NetWorkBuffer::PACKET_TYPE TC_EpollServer::BindAdapter::echo_protocol(TC_NetWorkBuffer &r, vector<char> &o)
 {
     o = r.getBuffers();
@@ -487,24 +482,19 @@ TC_NetWorkBuffer::PACKET_TYPE TC_EpollServer::BindAdapter::echo_header_filter(TC
 
 void TC_EpollServer::BindAdapter::setName(const string &name)
 {
-    TC_ThreadLock::Lock lock(*this);
-
+    std::lock_guard<std::mutex> lock (_mutex);
     _name = name;
 }
 
 string TC_EpollServer::BindAdapter::getName() const
 {
+    std::lock_guard<std::mutex> lock (_mutex);
     return _name;
 }
 
 int TC_EpollServer::BindAdapter::getHandleNum()
 {
     return _iHandleNum;
-}
-
-void TC_EpollServer::BindAdapter::setHandleNum(int n)
-{
-    _iHandleNum = n;
 }
 
 int TC_EpollServer::BindAdapter::getQueueCapacity() const
@@ -519,22 +509,17 @@ void TC_EpollServer::BindAdapter::setQueueCapacity(int n)
 
 int TC_EpollServer::BindAdapter::isOverloadorDiscard()
 {
-    // int iRecvBufferSize = _rbuffer.size();
     int iRecvBufferSize = _iBufferSize;
 
-    if(iRecvBufferSize <= (_iQueueCapacity / 2))//未过载
+    if(iRecvBufferSize > (int)(_iQueueCapacity / 5.*4) && (iRecvBufferSize < _iQueueCapacity) && (_iQueueCapacity > 0)) //overload
     {
-        return 0;
-    }
-    else if(iRecvBufferSize > (_iQueueCapacity / 2) && (iRecvBufferSize < _iQueueCapacity) && (_iQueueCapacity > 0))//overload
-    {
+    	//超过队列4/5开始认为过载
         return -1;
     }
-    else//队列满需要丢弃接受的数据包
+    else if(iRecvBufferSize > (int)(_iQueueCapacity) && _iQueueCapacity > 0)//队列满需要丢弃接受的数据包
     {
         return -2;
     }
-
     return 0;
 }
 
@@ -558,7 +543,6 @@ int TC_EpollServer::BindAdapter::getQueueTimeout() const
 void TC_EpollServer::BindAdapter::setEndpoint(const string &str)
 {
     std::lock_guard<std::mutex> lock (_mutex);
-    // TC_ThreadLock::Lock lock(*this);
 
     _ep.parse(str);
 }
@@ -569,7 +553,7 @@ TC_Endpoint TC_EpollServer::BindAdapter::getEndpoint() const
     return _ep;
 }
 
-TC_Socket& TC_EpollServer::BindAdapter::getSocket()
+TC_Socket &TC_EpollServer::BindAdapter::getSocket()
 {
     return _s;
 }
@@ -618,33 +602,29 @@ TC_EpollServer::BindAdapter::EOrder TC_EpollServer::BindAdapter::getOrder() cons
     return _eOrder;
 }
 
-vector<string> TC_EpollServer::BindAdapter::getAllow() const
+const vector<string> &TC_EpollServer::BindAdapter::getAllow() const
 {
-    std::lock_guard<std::mutex> lock (_mutex);
-
     return _vtAllow;
 }
 
-vector<string> TC_EpollServer::BindAdapter::getDeny() const
+const vector<string> &TC_EpollServer::BindAdapter::getDeny() const
 {
-    std::lock_guard<std::mutex> lock (_mutex);
-
     return _vtDeny;
 }
 
 bool TC_EpollServer::BindAdapter::isLimitMaxConnection() const
 {
-    return (_iCurConns + 1 > _iMaxConns) || (_iCurConns + 1 > ((int)((uint32_t)1 << 22) -1));
+    return (_iCurConns + 1 > (size_t)_iMaxConns) || (_iCurConns + 1 > (int)((uint32_t)1 << 22) - 1);
 }
 
 void TC_EpollServer::BindAdapter::decreaseNowConnection()
 {
-    _iCurConns++;
+    --_iCurConns;
 }
 
 void TC_EpollServer::BindAdapter::increaseNowConnection()
 {
-    _iCurConns--;
+    ++_iCurConns;
 }
 
 int TC_EpollServer::BindAdapter::getNowConnection() const
@@ -656,7 +636,6 @@ vector<TC_EpollServer::ConnStatus> TC_EpollServer::BindAdapter::getConnStatus()
 {
     return _pEpollServer->getConnStatus(_s.getfd());
 }
-
 
 void TC_EpollServer::BindAdapter::setProtocol(const TC_NetWorkBuffer::protocol_functor &pf, int iHeaderLen, const TC_EpollServer::header_filter_functor &hf)
 {
@@ -682,19 +661,18 @@ int TC_EpollServer::BindAdapter::getHeaderFilterLen()
     return _iHeaderLen;
 }
 
-void TC_EpollServer::BindAdapter::setBackPacketBuffLimit(size_t iLimitSize)
-{
-    _iBackPacketBuffLimit = iLimitSize;
-}
+// void TC_EpollServer::BindAdapter::setBackPacketBuffLimit(size_t iLimitSize)
+// {
+//     _iBackPacketBuffLimit = iLimitSize;
+// }
 
-size_t TC_EpollServer::BindAdapter::getBackPacketBuffLimit()
-{
-    return _iBackPacketBuffLimit;
-}
+// size_t TC_EpollServer::BindAdapter::getBackPacketBuffLimit()
+// {
+//     return _iBackPacketBuffLimit;
+// }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 服务连接
-
 TC_EpollServer::Connection::Connection(TC_EpollServer::BindAdapter *pBindAdapter, int lfd, int timeout, int fd, const string& ip, uint16_t port)
 : _pBindAdapter(pBindAdapter)
 , _uid(0)
@@ -708,10 +686,14 @@ TC_EpollServer::Connection::Connection(TC_EpollServer::BindAdapter *pBindAdapter
 , _bClose(false)
 , _enType(EM_TCP)
 , _bEmptyConn(true)
+, _pRecvBuffer(NULL)
+, _nRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
 
 {
     assert(fd != -1);
+
     _iLastRefreshTime = TNOW;
+
     _sock.init(fd, true, pBindAdapter->_ep.isIPv6() ? AF_INET6 : AF_INET);
 }
 
@@ -727,21 +709,23 @@ TC_EpollServer::Connection::Connection(BindAdapter *pBindAdapter, int fd)
 , _bClose(false)
 , _enType(EM_UDP)
 , _bEmptyConn(false) /*udp is always false*/
+, _pRecvBuffer(NULL)
+, _nRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
 
 {
     _iLastRefreshTime = TNOW;
+
     _sock.init(fd, false, pBindAdapter->_ep.isIPv6() ? AF_INET6 : AF_INET);
 }
 
 TC_EpollServer::Connection::~Connection()
 {
-    if(_pRecvBuffer)
+    if (_pRecvBuffer)
     {
         delete _pRecvBuffer;
         _pRecvBuffer = NULL;
     }
     
-    // clearSlices(_sendBuffer);
     if (isTcp())
     {
         assert(!_sock.isValid());
@@ -759,8 +743,6 @@ void TC_EpollServer::Connection::tryInitAuthState(int initState)
 
 void TC_EpollServer::Connection::close()
 {
-    if(isTcp())
-    {
 #if TARS_SSL
         if (_openssl)
         {
@@ -768,10 +750,10 @@ void TC_EpollServer::Connection::close()
             _openssl.reset();
         }
 #endif
-        if(_sock.isValid())
-        {
-            _sock.close();
-        }
+
+    if (isTcp() && _sock.isValid())
+    {
+        _sock.close();
     }
 }
 
@@ -814,7 +796,7 @@ int TC_EpollServer::Connection::parseProtocol(TC_NetWorkBuffer &rbuf)
             //需要过滤首包包头
             if(_iHeaderLen > 0)
             {
-                if(rbuf.getBufferLength() >= (unsigned) _iHeaderLen)
+                if(rbuf.getBufferLength() >= (unsigned)_iHeaderLen)
                 {
                     vector<char> header;
 	                rbuf.getHeader(_iHeaderLen, header);
@@ -835,6 +817,7 @@ int TC_EpollServer::Connection::parseProtocol(TC_NetWorkBuffer &rbuf)
             vector<char> ro;
 
             TC_NetWorkBuffer::PACKET_TYPE b = _pBindAdapter->getProtocol()(rbuf, ro);
+
             if(b == TC_NetWorkBuffer::PACKET_LESS)
             {
                 break;
@@ -856,8 +839,8 @@ int TC_EpollServer::Connection::parseProtocol(TC_NetWorkBuffer &rbuf)
             }
             else
             {
-                _pBindAdapter->getEpollServer()->error("recv [" + _ip + ":" + TC_Common::tostr(_port) + "],packet error.");
-                return -1;                      //协议解析错误
+                _pBindAdapter->getEpollServer()->error("recv [" + _ip + ":" + TC_Common::tostr(_port) + "], packet parse error.");
+                return -1; //协议解析错误
             }
         }
     }
@@ -891,9 +874,6 @@ int TC_EpollServer::Connection::recvTcp()
         {
             if (TC_Socket::isPending())
             {
-//#if TARGET_PLATFORM_WINDOWS
-//                _pBindAdapter->getNetThreadOfFd(_sock.getfd())->getEpoller()->mod(_sock.getfd(), getId(), EPOLLIN | EPOLLOUT);
-//#endif
                 //没有数据了
                 break;
             }
@@ -912,7 +892,6 @@ int TC_EpollServer::Connection::recvTcp()
         }
         else
         {
-//	        cout << "totalRecv:" << totalRecv << endl;
 
 #if TARS_SSL
 		    if (_pBindAdapter->getEndpoint().isSSL())
@@ -977,9 +956,6 @@ int TC_EpollServer::Connection::recvUdp()
         {
             if (TC_Socket::isPending())//errno == EAGAIN)
             {
-//#if TARGET_PLATFORM_WINDOWS
-//                _pBindAdapter->getNetThreadOfFd(_sock.getfd())->getEpoller()->mod(_sock.getfd(), getId(), EPOLLIN | EPOLLOUT);
-//#endif
                 //没有数据了
                 break;
             }
@@ -1044,10 +1020,6 @@ int TC_EpollServer::Connection::sendBuffer()
 		{
 			if (TC_Socket::isPending())
 			{
-//#if TARGET_PLATFORM_WINDOWS
-//                _pBindAdapter->getNetThreadOfFd(_sock.getfd())->getEpoller()->mod(_sock.getfd(), getId(), EPOLLIN | EPOLLOUT);
-//#endif
-
 				break;
 			}
 			else
@@ -1110,15 +1082,12 @@ int TC_EpollServer::Connection::sendUdp(const shared_ptr<SendContext> &sc)
 {
     //udp的直接发送即可
     int iRet = _sock.sendto((const void *) sc->buffer()->buffer(), sc->buffer()->length(), sc->ip(), sc->port(), 0);
-    if (iRet < 0 && !TC_Socket::isPending())
+    if (iRet < 0)
     {
         _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send [" + _ip + ":" + TC_Common::tostr(_port) + "] error");
         return -1;
     }
 
-//#if TARGET_PLATFORM_WINDOWS
-//    _pBindAdapter->getNetThreadOfFd(_sock.getfd())->getEpoller()->mod(_sock.getfd(), getId(), EPOLLIN | EPOLLOUT);
-//#endif
     return 0;    
 }
 
@@ -1155,12 +1124,12 @@ bool TC_EpollServer::Connection::setClose()
 ////////////////////////////////////////////////////////////////
 //
 TC_EpollServer::ConnectionList::ConnectionList(TC_EpollServer::NetThread *pEpollServer)
-:_pEpollServer(pEpollServer)
-,_total(0)
-,_free_size(0)
-,_vConn(NULL)
-,_lastTimeoutTime(0)
-,_iConnectionMagic(0)
+: _pEpollServer(pEpollServer)
+, _total(0)
+, _free_size(0)
+, _vConn(NULL)
+, _lastTimeoutTime(0)
+, _iConnectionMagic(0)
 {
 }
 
@@ -1170,10 +1139,10 @@ void TC_EpollServer::ConnectionList::init(uint32_t size, uint32_t iIndex)
 
     _total = size;
 
-    _free_size  = 0;
+    _free_size = 0;
 
     //初始化链接链表
-    if(_vConn) delete[] _vConn;
+    if (_vConn) delete[] _vConn;
 
     //分配total+1个空间(多分配一个空间, 第一个空间其实无效)
     _vConn = new list_data[_total+1];
@@ -1193,7 +1162,7 @@ void TC_EpollServer::ConnectionList::init(uint32_t size, uint32_t iIndex)
 
 uint32_t TC_EpollServer::ConnectionList::getUniqId()
 {
-    TC_ThreadLock::Lock lock(*this);
+	TC_LockT<TC_SpinLock> lock(_mutex);
 
     uint32_t uid = _free.front();
 
@@ -1218,7 +1187,7 @@ TC_EpollServer::Connection* TC_EpollServer::ConnectionList::get(uint32_t uid)
 
 void TC_EpollServer::ConnectionList::add(Connection *cPtr, time_t iTimeOutStamp)
 {
-    TC_LockT<TC_SpinLock> lock(_mutex);
+	TC_LockT<TC_SpinLock> lock(_mutex);
 
     uint32_t muid = cPtr->getId();
     uint32_t magi = muid & (0xFFFFFFFF << 22);
@@ -1231,7 +1200,7 @@ void TC_EpollServer::ConnectionList::add(Connection *cPtr, time_t iTimeOutStamp)
 
 void TC_EpollServer::ConnectionList::refresh(uint32_t uid, time_t iTimeOutStamp)
 {
-    TC_LockT<TC_SpinLock> lock(_mutex);
+	TC_LockT<TC_SpinLock> lock(_mutex);
 
     uint32_t magi = uid & (0xFFFFFFFF << 22);
     uid           = uid & (0x7FFFFFFF >> 9);
@@ -1261,7 +1230,6 @@ void TC_EpollServer::ConnectionList::checkTimeout(time_t iCurTime)
     _lastTimeoutTime = iCurTime;
 
 	TC_LockT<TC_SpinLock> lock(_mutex);
-    // TC_ThreadLock::Lock lock(*this);
 
     multimap<time_t, uint32_t>::iterator it = _tl.begin();
 
@@ -1284,12 +1252,11 @@ void TC_EpollServer::ConnectionList::checkTimeout(time_t iCurTime)
         }
 
         //超时关闭
-        _pEpollServer->delConnection(_vConn[uid].first, false,EM_SERVER_TIMEOUT_CLOSE);
+        _pEpollServer->delConnection(_vConn[uid].first, false, EM_SERVER_TIMEOUT_CLOSE);
 
         //从链表中删除
         _del(uid);
     }
-
 
     if(_pEpollServer->isEmptyConnCheck())
     {
@@ -1304,7 +1271,7 @@ void TC_EpollServer::ConnectionList::checkTimeout(time_t iCurTime)
                 //获取空连接的超时时间点
                 time_t iEmptyTimeout = (it->first - _vConn[uid].first->getTimeout()) + (_pEpollServer->getEmptyConnTimeout()/1000);
 
-                 //已经检查到当前时间点了, 后续不用在检查了
+                //已经检查到当前时间点了, 后续不用在检查了
                 if(iEmptyTimeout > iCurTime)
                 {
                     break;
@@ -1318,7 +1285,7 @@ void TC_EpollServer::ConnectionList::checkTimeout(time_t iCurTime)
                 }
 
                 //超时关闭
-                _pEpollServer->delConnection(_vConn[uid].first, false,EM_SERVER_TIMEOUT_CLOSE);
+                _pEpollServer->delConnection(_vConn[uid].first, false, EM_SERVER_TIMEOUT_CLOSE);
 
                 //从链表中删除
                 _del(uid);
@@ -1342,11 +1309,11 @@ vector<TC_EpollServer::ConnStatus> TC_EpollServer::ConnectionList::getConnStatus
         {
             TC_EpollServer::ConnStatus cs;
 
-            cs.iLastRefreshTime    = _vConn[i].first->_iLastRefreshTime;
-            cs.ip                  = _vConn[i].first->getIp();
-            cs.port                = _vConn[i].first->getPort();
-            cs.timeout             = _vConn[i].first->getTimeout();
-            cs.uid                 = _vConn[i].first->getId();
+            cs.iLastRefreshTime = _vConn[i].first->_iLastRefreshTime;
+            cs.ip               = _vConn[i].first->getIp();
+            cs.port             = _vConn[i].first->getPort();
+            cs.timeout          = _vConn[i].first->getTimeout();
+            cs.uid              = _vConn[i].first->getId();
 
             v.push_back(cs);
         }
@@ -1390,11 +1357,10 @@ size_t TC_EpollServer::ConnectionList::size()
 }
 
 //////////////////////////////NetThread//////////////////////////////////
-TC_EpollServer::NetThread::NetThread(TC_EpollServer *epollServer, int index)
+TC_EpollServer::NetThread::NetThread(TC_EpollServer *epollServer, int threadIndex)
 : _epollServer(epollServer)
-, _threadIndex(index)
+, _threadIndex(threadIndex)
 , _bTerminate(false)
-, _handleStarted(false)
 , _list(this)
 , _bEmptyConnAttackCheck(false)
 , _iEmptyCheckTimeout(MIN_EMPTY_CONN_TIMEOUT)
@@ -1410,47 +1376,47 @@ TC_EpollServer::NetThread::~NetThread()
 {
 }
 
-void TC_EpollServer::NetThread::debug(const string &s)
+void TC_EpollServer::NetThread::debug(const string &s) const
 {
     _epollServer->debug(s);
 }
 
-void TC_EpollServer::NetThread::info(const string &s)
+void TC_EpollServer::NetThread::info(const string &s) const
 {
     _epollServer->info(s);
 }
 
-void TC_EpollServer::NetThread::tars(const string &s)
+void TC_EpollServer::NetThread::tars(const string &s) const
 {
 	_epollServer->tars(s);
 }
 
-void TC_EpollServer::NetThread::error(const string &s)
+void TC_EpollServer::NetThread::error(const string &s) const
 {
     _epollServer->error(s);
 }
 
 void TC_EpollServer::NetThread::enAntiEmptyConnAttack(bool bEnable)
 {
-    _bEmptyConnAttackCheck  = bEnable;
+    _bEmptyConnAttackCheck = bEnable;
 }
 
 void TC_EpollServer::NetThread::setEmptyConnTimeout(int timeout)
 {
-    _iEmptyCheckTimeout = (timeout>=MIN_EMPTY_CONN_TIMEOUT)?timeout:MIN_EMPTY_CONN_TIMEOUT;
+    _iEmptyCheckTimeout = (timeout >= MIN_EMPTY_CONN_TIMEOUT) ? timeout : MIN_EMPTY_CONN_TIMEOUT;
 }
 
 void TC_EpollServer::NetThread::setUdpRecvBufferSize(size_t nSize)
 {
-    _nUdpRecvBufferSize = (nSize >= 8192 && nSize <=DEFAULT_RECV_BUFFERSIZE)?nSize:DEFAULT_RECV_BUFFERSIZE;
+    _nUdpRecvBufferSize = (nSize >= 8192 && nSize <= DEFAULT_RECV_BUFFERSIZE) ? nSize : DEFAULT_RECV_BUFFERSIZE;
 }
 
 bool TC_EpollServer::NetThread::isEmptyConnCheck() const
 {
-    return  _bEmptyConnAttackCheck;
+    return _bEmptyConnAttackCheck;
 }
 
-int  TC_EpollServer::NetThread::getEmptyConnTimeout() const
+int TC_EpollServer::NetThread::getEmptyConnTimeout() const
 {
     return _iEmptyCheckTimeout;
 }
@@ -1531,7 +1497,7 @@ void TC_EpollServer::NetThread::addTcpConnection(TC_EpollServer::Connection *cPt
         }
     }
 #endif
-    //注意epoll add必须放在最后, 否则可能导致执行完, 才调用上面语句
+	//注意epoll add必须放在最后, 否则可能导致执行完, 才调用上面语句
     _epoller.add(cPtr->getfd(), cPtr->getId(), EPOLLIN | EPOLLOUT);
 }
 
@@ -1551,7 +1517,7 @@ vector<TC_EpollServer::ConnStatus> TC_EpollServer::NetThread::getConnStatus(int 
     return _list.getConnStatus(lfd);
 }
 
-void TC_EpollServer::NetThread::delConnection(TC_EpollServer::Connection *cPtr, bool bEraseList,EM_CLOSE_T closeType)
+void TC_EpollServer::NetThread::delConnection(TC_EpollServer::Connection *cPtr, bool bEraseList, EM_CLOSE_T closeType)
 {
     //如果是TCP的连接才真正的关闭连接
     if (cPtr->getListenfd() != -1)
@@ -1559,7 +1525,7 @@ void TC_EpollServer::NetThread::delConnection(TC_EpollServer::Connection *cPtr, 
         //false的情况,是超时被主动删除
         if(!bEraseList)
         {
-            info("timeout [" + cPtr->getIp() + ":" + TC_Common::tostr(cPtr->getPort()) + "] del from list");
+            tars("timeout [" + cPtr->getIp() + ":" + TC_Common::tostr(cPtr->getPort()) + "] del from list");
         }
 
         uint32_t uid = cPtr->getId();
@@ -1635,44 +1601,50 @@ void TC_EpollServer::NetThread::processPipe()
 
 	while(!_sbuffer.empty())
     {
-	    shared_ptr<SendContext> sc = _sbuffer.front();
-
+        shared_ptr<SendContext> sc = _sbuffer.front();
 	    Connection *cPtr = getConnectionPtr(sc->uid());
 
-	    if (cPtr) {
-		    switch (sc->cmd()) {
-			    case 'c': {
-				    if (cPtr->setClose()) {
-					    delConnection(cPtr, true, EM_SERVER_CLOSE);
-				    }
-				    break;
-			    }
-			    case 's': {
-				    int ret = 0;
-#if TARS_SSL
-				    if (cPtr->getBindAdapter()->getEndpoint().isSSL()) {
-					    if (!cPtr->_openssl->isHandshaked()) {
-							return;
-					    }
-				    }
-				    ret = cPtr->send(sc);
-#else
-				    ret = cPtr->send(sc);
-#endif
-				    if (ret < 0) {
-					    delConnection(cPtr, true, (ret == -1) ? EM_CLIENT_CLOSE : EM_SERVER_CLOSE);
-				    }
-				    else {
-					    _list.refresh(sc->uid(), cPtr->getTimeout() + TNOW);
-				    }
-				    break;
-			    }
-			    default:
-				    assert(false);
-		    }
+	    if (!cPtr)
+	    {
+	    	continue;
 	    }
-
-	    _sbuffer.pop_front();
+        switch (sc->cmd())
+        {
+            case 'c':
+            {
+                if (cPtr->setClose())
+                {
+                    delConnection(cPtr, true, EM_SERVER_CLOSE);
+                }
+                break;
+            }
+            case 's':
+            {
+                int ret = 0;
+#if TARS_SSL
+                if (cPtr->getBindAdapter()->getEndpoint().isSSL()) {
+                    if (!cPtr->_openssl->isHandshaked()) {
+                        return;
+                    }
+                }
+                ret = cPtr->send(sc);
+#else
+                ret = cPtr->send(sc);
+#endif
+                if (ret < 0)
+                {
+                    delConnection(cPtr, true, (ret == -1) ? EM_CLIENT_CLOSE : EM_SERVER_CLOSE);
+                }
+                else
+                {
+                    _list.refresh(sc->uid(), cPtr->getTimeout() + TNOW);
+                }
+                break;
+            }
+            default:
+                assert(false);
+        }
+        _sbuffer.pop_front();
     }
 }
 
@@ -1697,7 +1669,6 @@ void TC_EpollServer::NetThread::processNet(const epoll_event &ev)
     if (TC_Epoller::readEvent(ev))
     {
 	    int ret = cPtr->recv();
-
 	    if (ret < 0)
         {
             delConnection(cPtr, true, EM_CLIENT_CLOSE);
@@ -1735,7 +1706,7 @@ void TC_EpollServer::NetThread::run()
 	    }
     }
 
-    //循环监听网路连接请求
+	//循环监听网路连接请求
     while(!_bTerminate)
     {
         _list.checkTimeout(TNOW);
@@ -1783,6 +1754,7 @@ void TC_EpollServer::NetThread::run()
         }
     }
 }
+
 size_t TC_EpollServer::NetThread::getSendRspSize()
 {
     return _sbuffer.size();
@@ -1792,7 +1764,7 @@ TC_EpollServer::TC_EpollServer(unsigned int iNetThreadNum)
 : _netThreadNum(iNetThreadNum)
 , _bTerminate(false)
 , _handleStarted(false)
-, _pLocalLogger(NULL)
+, _pLocalLogger(NULL) 
 {
 #if TARGET_PLATFORM_WINDOWS    
     WSADATA wsadata;
@@ -1816,7 +1788,7 @@ TC_EpollServer::TC_EpollServer(unsigned int iNetThreadNum)
 	_notify.init(&_epoller);
 	_notify.add(_notify.notifyFd());
 
-    for (size_t i = 0; i < _netThreadNum; ++i)
+	for (size_t i = 0; i < _netThreadNum; ++i)
     {
         TC_EpollServer::NetThread* netThreads = new TC_EpollServer::NetThread(this, i);
         _netThreads.push_back(netThreads);
@@ -1853,7 +1825,6 @@ TC_EpollServer::~TC_EpollServer()
 void TC_EpollServer::applicationCallback(TC_EpollServer *epollServer)
 {
 }
-
 
 bool TC_EpollServer::accept(int fd, int domain)
 {
@@ -1946,7 +1917,7 @@ void TC_EpollServer::waitForShutdown()
 
     while (!_bTerminate)
     {
-        int iEvNum = _epoller.wait(1000);
+        int iEvNum = _epoller.wait(300);
 
         if (_bTerminate)
             break;
@@ -2002,7 +1973,7 @@ void TC_EpollServer::waitForShutdown()
             }
             catch (...)
             {
-                error("run exception");
+                error("TC_EpollServer::waitForShutdown unknown error");
             }
         }
     }
@@ -2048,7 +2019,6 @@ void TC_EpollServer::setEmptyConnTimeout(int timeout)
         _netThreads[i]->setEmptyConnTimeout(timeout);
     }
 }
-
 
 void TC_EpollServer::bind(const TC_Endpoint &ep, TC_Socket &s, bool manualListen)
 {
@@ -2124,7 +2094,7 @@ int TC_EpollServer::bind(BindAdapterPtr &lsPtr)
 	return s.getfd();
 }
 
-void TC_EpollServer::addConnection(TC_EpollServer::Connection * cPtr, int fd, TC_EpollServer::CONN_TYPE iType)
+void TC_EpollServer::addConnection(TC_EpollServer::Connection *cPtr, int fd, TC_EpollServer::CONN_TYPE iType)
 {
     TC_EpollServer::NetThread* netThread = getNetThreadOfFd(fd);
 
@@ -2265,7 +2235,7 @@ void TC_EpollServer::send(const shared_ptr<SendContext> &data)
     netThread->send(data);
 }
 
-void TC_EpollServer::debug(const string &s)
+void TC_EpollServer::debug(const string &s) const
 {
     if(_pLocalLogger)
     {
@@ -2273,7 +2243,7 @@ void TC_EpollServer::debug(const string &s)
     }
 }
 
-void TC_EpollServer::info(const string &s)
+void TC_EpollServer::info(const string &s) const
 {
     if(_pLocalLogger)
     {
@@ -2281,7 +2251,7 @@ void TC_EpollServer::info(const string &s)
     }
 }
 
-void TC_EpollServer::tars(const string &s)
+void TC_EpollServer::tars(const string &s) const
 {
 	if(_pLocalLogger)
 	{
@@ -2289,7 +2259,7 @@ void TC_EpollServer::tars(const string &s)
 	}
 }
 
-void TC_EpollServer::error(const string &s)
+void TC_EpollServer::error(const string &s) const
 {
     if(_pLocalLogger)
     {
@@ -2310,7 +2280,6 @@ vector<TC_EpollServer::ConnStatus> TC_EpollServer::getConnStatus(int lfd)
     }
     return vConnStatus;
 }
-
 
 unordered_map<int, TC_EpollServer::BindAdapterPtr> TC_EpollServer::getListenSocketInfo()
 {

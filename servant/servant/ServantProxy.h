@@ -198,6 +198,7 @@ public:
         {
             TC_LockT<TC_SpinLock> lock(_mutex);
             vRet.swap(_vReqMessage);
+			_vReqMessage.clear();
         }
 
         return vRet;
@@ -278,7 +279,7 @@ public:
     /**
      * 获取coro并行请求的共享智能指针
      */
-    virtual const tars::CoroParallelBasePtr& getCoroParallelBasePtr() { return _pPtr; }
+    virtual const CoroParallelBasePtr& getCoroParallelBasePtr() { return _pPtr; }
 
     /**
      * 异步请求是否在网络线程处理
@@ -519,7 +520,7 @@ public:
     /**
     *设置套接字选项
     */
-    void tars_set_sockopt(int level, int optname, const void *optval, socklen_t optlen);
+    void tars_set_sockopt(int level, int optname, const void *optval, SOCKET_LEN_TYPE optlen);
 
     /**
      * 设置超时检查参数
@@ -545,7 +546,13 @@ public:
      */
     virtual ServantProxy* tars_consistent_hash(int64_t key);
 
-    /**
+//    /**
+//     * 直接同步调用
+//     * @return
+//     */
+//	virtual ServantProxy* taf_direct();
+
+	/**
      * 清除当前的Hash数据
      * 空函数 为了兼容以前的
      * @param key
@@ -587,25 +594,6 @@ public:
      */
     virtual void tars_set_push_callback(const ServantProxyCallbackPtr& cb);
 
-    /**
-     * TARS协议同步方法调用
-     */
-    virtual shared_ptr<ResponsePacket> tars_invoke(char cPacketType,
-                            const string& sFuncName,
-                            tars::TarsOutputStream<tars::BufferWriterVector>& buf,
-                            const map<string, string>& context,
-                            const map<string, string>& status);
-
-    /**
-     * TARS协议异步方法调用
-     */
-    virtual void tars_invoke_async(char cPacketType,
-                                  const string& sFuncName,
-                                  tars::TarsOutputStream<tars::BufferWriterVector> &buf,
-                                  const map<string, string>& context,
-                                  const map<string, string>& status,
-                                  const ServantProxyCallbackPtr& callback,
-                                  bool bCoro = false);
 
     /**
      * 普通协议同步远程调用
@@ -655,6 +643,25 @@ public:
      */
     virtual void tars_setMasterFlag(bool bMasterFlag) {_masterFlag = bMasterFlag;}
 
+    /**
+     * TARS协议同步方法调用
+     */
+    virtual shared_ptr<ResponsePacket> tars_invoke(char cPacketType,
+                            const string& sFuncName,
+                            tars::TarsOutputStream<tars::BufferWriterVector>& buf,
+                            const map<string, string>& context,
+                            const map<string, string>& status);
+
+    /**
+     * TARS协议异步方法调用
+     */
+    virtual void tars_invoke_async(char cPacketType,
+                                  const string& sFuncName,
+                                  tars::TarsOutputStream<tars::BufferWriterVector> &buf,
+                                  const map<string, string>& context,
+                                  const map<string, string>& status,
+                                  const ServantProxyCallbackPtr& callback,
+                                  bool bCoro = false);
 
 private:
     /**
@@ -662,16 +669,26 @@ private:
      * @param req
      * @return int
      */
-    void invoke(ReqMessage * msg, bool bCoroAsync = false);
+    void invoke(ReqMessage *msg, bool bCoroAsync = false);
 
-    /**
-     * 远程方法调用返回
-     * @param req
-     * @return int
-     */
-    void finished(ReqMessage * msg);
+//    /**
+//     * invoke 异步
+//     * @param msg
+//     * @param pSptd
+//     * @param pReqQ
+//     * @param bCoroAsync
+//     */
+//    void invoke_async(ReqMessage *msg, ServantProxyThreadData *pSptd,  ReqInfoQueue *pReqQ, bool bCoroAsync);
 
-    /**
+//    /**
+//     * invoke 同步
+//     * @param msg
+//     * @param pSptd
+//     * @param pReqQ
+//     */
+//	void invoke_sync(ReqMessage *msg, ServantProxyThreadData *pSptd,  ReqInfoQueue *pReqQ);
+
+	/**
      * 选取一个网络线程对应的信息
      * @param pSptd
      * @return void
