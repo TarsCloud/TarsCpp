@@ -54,12 +54,32 @@ TC_TimeProvider::~TC_TimeProvider()
 //如果微处理器的主频是1MHZ的话，那么tsc就会在1秒内增加1000000
 uint64_t TC_TimeProvider::GetCycleCount()
 {
+//__inline __attribute__((always_inline)) uint64_t rdtsc() {
+#if defined(__i386__)
+    int64_t ret;
+    __asm__ volatile ("rdtsc" : "=A" (ret) );
+    return ret;
+#elif defined(__x86_64__) || defined(__amd64__)
+    uint32_t lo, hi;
+    __asm__ __volatile__("rdtsc" : "=a" (lo), "=d" (hi));
+    return (((uint64_t)hi << 32) | lo);
+#elif defined(__aarch64__)
+uint64_t cntvct;
+    asm volatile ("isb; mrs %0, cntvct_el0; isb; " : "=r" (cntvct) :: "memory");
+    return cntvct;
+#else
+#warning No high-precision counter available for your OS/arch
+    return 0;
+#endif
+/*
     uint32_t high, low;
     __asm__ __volatile__("rdtsc" : "=a" (low), "=d" (high));
 
     uint64_t current_tsc    = ((uint64_t)high << 32) | low;
     return current_tsc;
+*/
 }
+
 /*
  #define rdtsc(low,high) \
       __asm__ __volatile__("rdtsc" : "=a" (low), "=d" (high))
