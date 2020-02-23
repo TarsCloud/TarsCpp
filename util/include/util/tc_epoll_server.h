@@ -207,16 +207,10 @@ public:
         virtual ~Handle();
 
         /**
-         * 设置服务
-         * @param pEpollServer
-         */
-        void setEpollServer(TC_EpollServer *pEpollServer);
-
-        /**
          * 获取服务
          * @return TC_EpollServer*
          */
-        TC_EpollServer* getEpollServer();
+		TC_EpollServer* getEpollServer() const { return _pEpollServer; };
 
 		/**
 		 * 获取adapter
@@ -348,11 +342,17 @@ public:
          */
         virtual bool allAdapterIsEmpty();
 
-        /**
-         * 是否所有的servant都没有resp消息待处理
-         * @return bool
-         */
-        virtual bool allFilterIsEmpty();
+		/**
+		 * 是否所有的servant都没有resp消息待处理
+		 * @return bool
+		 */
+		virtual bool allFilterIsEmpty();
+
+		/**
+		 * 设置服务
+		 * @param pEpollServer
+		 */
+		void setEpollServer(TC_EpollServer *pEpollServer);
 
 		/**
 		 * 设置Adapter

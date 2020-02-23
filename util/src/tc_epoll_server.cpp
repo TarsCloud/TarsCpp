@@ -117,11 +117,6 @@ void TC_EpollServer::Handle::setEpollServer(TC_EpollServer *pEpollServer)
     _pEpollServer = pEpollServer;
 }
 
-TC_EpollServer* TC_EpollServer::Handle::getEpollServer()
-{
-    return _pEpollServer;
-}
-
 void TC_EpollServer::Handle::setBindAdapter(BindAdapter*  bindAdapter)
 {
     _bindAdapter = bindAdapter;
