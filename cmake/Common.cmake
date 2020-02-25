@@ -1,19 +1,8 @@
 
-if("${TARS_CPP_COMMON}" STREQUAL "")
-
-set(TARS_CPP_COMMON "1")
-
 set(TARS_VERSION "2.0.0")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 
-
 set(CMAKE_VERBOSE_MAKEFILE off)
-
-#for coverage statistics
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O2 -Wall -Wno-deprecated -fprofile-arcs -ftest-coverage")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O2 -Wall -Wno-deprecated -fprofile-arcs -ftest-coverage")
-
-#set(CMAKE_BUILD_TYPE "Debug")
 
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "set build type to release default")
 IF (CMAKE_BUILD_TYPE STREQUAL "")
@@ -35,60 +24,26 @@ endif()
 #-------------------------------------------------------------
 
 if("${INSTALL_PREFIX}" STREQUAL "")
-IF (UNIX)
-set(INSTALL_PREFIX "/usr/local/tars/cpp")
-ELSE()
-set(INSTALL_PREFIX "c:\\tars\\cpp")
-ENDIF()
-set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
+    IF (UNIX)
+        set(INSTALL_PREFIX "/usr/local/tars/cpp")
+    ELSE()
+        set(INSTALL_PREFIX "c:\\tars\\cpp")
+    ENDIF()
+
+    set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
 endif()
-
-#-------------------------------------------------------------
-
-set(LIB_MYSQL)
-set(LIB_HTTP2)
-set(LIB_SSL)
-set(LIB_CRYPTO)
-#set(LIB_ZLIB)
-set(LIB_PROTOBUF)
-
-IF (WIN32)
-    if(TARS_MYSQL)
-        set(LIB_MYSQL "libmysql")
-    endif()
-    if(TARS_HTTP2)
-        set(LIB_HTTP2 "libnghttp2_static")
-    endif()
-    if(TARS_SSL)
-        set(LIB_SSL "libssl")
-        set(LIB_CRYPTO "libcrypto")
-    endif()
-ELSE()
-    link_libraries(pthread dl)
-    if(TARS_MYSQL)
-        set(LIB_MYSQL "mysqlclient")
-    endif()
-
-    if(TARS_HTTP2)
-        set(LIB_HTTP2 "nghttp2_static")
-    endif()
-    
-    if(TARS_SSL)
-        set(LIB_SSL "ssl")
-        set(LIB_CRYPTO "crypto")
-    endif()
-
-    if(TARS_PROTOBUF)
-        set(LIB_PROTOBUF "protoc")
-    endif()    
-ENDIF()
-
-include("${PROJECT_SOURCE_DIR}/cmake/Thirdparty.cmake")
 
 #-------------------------------------------------------------
 IF (APPLE)
 link_libraries(iconv)
 ENDIF(APPLE)
+
+IF (WIN32)
+ELSE()
+    link_libraries(pthread dl)
+ENDIF()
+
+#-------------------------------------------------------------
 
 set(PLATFORM)
 IF (UNIX)
@@ -124,12 +79,6 @@ ELSE()
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
 ENDIF()
 
-#-------------------------------------------------------------
-
-IF(WIN32)
-include_directories(${CMAKE_SOURCE_DIR}/util/src/epoll_windows)
-ENDIF()
-
 message("----------------------------------------------------")
 
 message("CMAKE_SOURCE_DIR:          ${CMAKE_SOURCE_DIR}")
@@ -142,10 +91,3 @@ message("BIN:                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message("TARS2CPP:                  ${TARS2CPP}") 
 #-------------------------------------------------------------
 
-message("----------------------------------------------------")
-message("TARS_MYSQL:                ${TARS_MYSQL}")
-message("TARS_HTTP2:                ${TARS_HTTP2}")
-message("TARS_SSL:                  ${TARS_SSL}")
-message("TARS_PROTOBUF:             ${TARS_PROTOBUF}")
-
-endif()

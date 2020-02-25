@@ -1,15 +1,13 @@
 
 macro(build_tars_server MODULE DEPS)
 
+    project(${MODULE})
+
     include_directories(./)
 
     aux_source_directory(. DIR_SRCS)
 
-    # message("MODULE: ${MODULE}, DIR_SRCS:${DIR_SRCS}")
-
     FILE(GLOB TARS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.tars")
-
-    # message("TARS_LIST:${TARS_LIST}")
 
     set(TARS_LIST_DEPENDS)
 
@@ -24,8 +22,6 @@ macro(build_tars_server MODULE DEPS)
             set(CUR_TARS_GEN ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H})
             LIST(APPEND TARS_LIST_DEPENDS ${CUR_TARS_GEN})
             
-            # message("TARS_H:${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H}")
-
             add_custom_command(OUTPUT ${CUR_TARS_GEN}
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                     DEPENDS ${TARS2CPP} 
@@ -47,8 +43,7 @@ macro(build_tars_server MODULE DEPS)
 
     else(TARS_LIST)
         add_executable(${MODULE} ${DIR_SRCS})
-
-    endif (TARS_LIST)
+    endif(TARS_LIST)
 
     if("${DEPS}" STREQUAL "")
         add_dependencies(${MODULE} tarsservant tarsutil)
@@ -57,7 +52,14 @@ macro(build_tars_server MODULE DEPS)
         add_dependencies(${MODULE} ${DEP_LIST} tarsservant tarsutil)
     endif()
 
-    target_link_libraries(${MODULE} tarsservant tarsutil)
+    # message(${LIB_SSL} ${LIB_CRYPTO})
+    target_link_libraries(${MODULE} tarsservant tarsutil ${LIB_SSL} ${LIB_CRYPTO} )
+
+    # if(TARS_SSL)
+    #     link_libraries(tarsservant tarsutil ${LIB_SSL} ${LIB_CRYPTO} )
+    # else()
+    #     link_libraries(tarsservant tarsutil)
+    # endif()
         
     SET(MODULE-TGZ "${CMAKE_BINARY_DIR}/${MODULE}.tgz")
     SET(RUN_DEPLOY_COMMAND_FILE "${PROJECT_BINARY_DIR}/run-deploy-${MODULE}.cmake")
@@ -82,14 +84,3 @@ macro(build_tars_server MODULE DEPS)
 endmacro()
 
 #-----------------------------------------------------------------------
-
-include_directories(${PROJECT_SOURCE_DIR}/util/include)
-include_directories(${PROJECT_SOURCE_DIR}/servant)
-include_directories(${PROJECT_SOURCE_DIR}/servant/protocol)
-
-add_subdirectory(util)
-add_subdirectory(tools)
-add_subdirectory(servant)
-add_subdirectory(examples)
-
-#add_subdirectory(test_deprecated)
