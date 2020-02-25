@@ -11,6 +11,7 @@ option(TARS_PROTOBUF "option for protocol" OFF)
 
 if(TARS_MYSQL)
 add_definitions(-DTARS_MYSQL=1)
+set(TARS_SSL ON)
 endif()
 
 if(TARS_SSL)
@@ -71,6 +72,58 @@ if(TARS_PROTOBUF)
 
 endif()
 
+
+if(TARS_SSL)
+    set(SSL_DIR_INC "${THIRDPARTY_PATH}/openssl-lib/include/")
+    set(SSL_DIR_LIB "${THIRDPARTY_PATH}/openssl-lib")
+    include_directories(${SSL_DIR_INC})
+    link_directories(${SSL_DIR_LIB})
+
+    if(WIN32)
+        set(LIB_SSL "libssl")
+        set(LIB_CRYPTO "libcrypto")
+
+        ExternalProject_Add(ADD_${LIB_SSL}
+            DEPENDS ${LIB_ZLIB}
+            URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
+            PREFIX    ${CMAKE_BINARY_DIR}
+            INSTALL_DIR ${CMAKE_SOURCE_DIR}
+            CONFIGURE_COMMAND  perl Configure --prefix=${CMAKE_BINARY_DIR}/src/openssl VC-WIN64A no-asm no-shared
+            SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
+            BUILD_IN_SOURCE 1
+            BUILD_COMMAND nmake
+            LOG_CONFIGURE 1
+            LOG_BUILD 1
+            INSTALL_COMMAND nmake install
+            URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
+            )
+ 
+    else()
+        set(LIB_SSL "ssl")
+        set(LIB_CRYPTO "crypto")
+
+        ExternalProject_Add(ADD_${LIB_SSL}
+            DEPENDS ${LIB_ZLIB}
+            URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
+            PREFIX    ${CMAKE_BINARY_DIR}
+            INSTALL_DIR ${CMAKE_SOURCE_DIR}
+            CONFIGURE_COMMAND ./config --prefix=${CMAKE_BINARY_DIR}/src/openssl
+            SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
+            BUILD_IN_SOURCE 1
+            BUILD_COMMAND make
+            LOG_CONFIGURE 1
+            LOG_BUILD 1
+            INSTALL_COMMAND make install
+            URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
+            )
+    
+    endif()
+
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl DESTINATION include)
+ 
+    add_dependencies(thirdparty ADD_${LIB_SSL})
+endif()
+
 if(TARS_MYSQL)
     set(MYSQL_DIR_INC "${THIRDPARTY_PATH}/mysql-lib/include")
     set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/mysql-lib/libmysql")
@@ -80,17 +133,19 @@ if(TARS_MYSQL)
     if(WIN32)
         set(LIB_MYSQL "libmysql")
         ExternalProject_Add(ADD_${LIB_MYSQL}
-                URL http://cdn.tarsyun.com/src/mysql-5.6.28.zip
+                URL http://cdn.tarsyun.com/src/mysql-5.6.46.zip
+                DEPENDS ADD_${LIB_SSL}
                 PREFIX    ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake . -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
+                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release -DWITH_SSL=${CMAKE_BINARY_DIR}/src/openssl
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND cmake --build . --config release --target mysqlclient
+                BUILD_COMMAND cmake --build . --config ${CMAKE_BUILD_TYPE} --target mysqlclient
                 LOG_CONFIGURE 1
                 LOG_BUILD 1
-                INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
-                URL_MD5 17d927c8ed638a17ffbc00b662b3e4a0
+                INSTALL_COMMAND ${CMAKE_COMMAND} -E copy  ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql
+             #   INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${LIB_MYSQL}.dll ${CMAKE_BINARY_DIR}/src/mysql/lib
+                URL_MD5 851be8973981979041ad422f7e5f693a
                 )
     else()
         set(LIB_MYSQL "mysqlclient")
@@ -104,7 +159,7 @@ if(TARS_MYSQL)
                 BUILD_COMMAND make mysqlclient
                 LOG_CONFIGURE 1
                 LOG_BUILD 1
-                INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+                INSTALL_COMMAND ${CMAKE_COMMAND} -E copy  ${CMAKE_BINARY_DIR}/src/mysql-lib/include/mysql ${CMAKE_BINARY_DIR}/src/mysql
                 URL_MD5 c537c08c1276abc79d76e8e562bbcea5
                 #URL_MD5 9d225528742c882d5b1e4a40b0877690
                 )
@@ -168,60 +223,6 @@ if(TARS_HTTP2)
     add_dependencies(thirdparty ADD_${LIB_HTTP2})
 endif()
 
-if(TARS_SSL)
-    set(SSL_DIR_INC "${THIRDPARTY_PATH}/openssl-lib/include/")
-    set(SSL_DIR_LIB "${THIRDPARTY_PATH}/openssl-lib")
-    include_directories(${SSL_DIR_INC})
-    link_directories(${SSL_DIR_LIB})
-
-    if(WIN32)
-        set(LIB_SSL "libssl")
-        set(LIB_CRYPTO "libcrypto")
-
-        ExternalProject_Add(ADD_${LIB_SSL}
-            DEPENDS ${LIB_ZLIB}
-            URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
-            PREFIX    ${CMAKE_BINARY_DIR}
-            INSTALL_DIR ${CMAKE_SOURCE_DIR}
-            CONFIGURE_COMMAND ./config
-            SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
-            BUILD_IN_SOURCE 1
-            BUILD_COMMAND cmake --build . --config release
-            LOG_CONFIGURE 1
-            LOG_BUILD 1
-            INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
-            URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
-            )
- 
-    else()
-        set(LIB_SSL "ssl")
-        set(LIB_CRYPTO "crypto")
-
-        ExternalProject_Add(ADD_${LIB_SSL}
-            DEPENDS ${LIB_ZLIB}
-            URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
-            PREFIX    ${CMAKE_BINARY_DIR}
-            INSTALL_DIR ${CMAKE_SOURCE_DIR}
-            CONFIGURE_COMMAND ./config
-            SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
-            BUILD_IN_SOURCE 1
-            BUILD_COMMAND make
-            LOG_CONFIGURE 1
-            LOG_BUILD 1
-            INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
-            URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
-            )
-    
-    endif()
-
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl-lib/include/openssl DESTINATION include)
-    INSTALL(FILES 
-        ${CMAKE_BINARY_DIR}/src/openssl-lib/lib${LIB_SSL}.a 
-        ${CMAKE_BINARY_DIR}/src/openssl-lib/lib${LIB_CRYPTO}.a 
-        DESTINATION lib)
-
-    add_dependencies(thirdparty ADD_${LIB_SSL})
-endif()
 
 message("----------------------------------------------------")
 message("TARS_MYSQL:                ${TARS_MYSQL}")
