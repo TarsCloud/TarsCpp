@@ -16,11 +16,12 @@
 
 #include <errno.h>
 #include <string.h>
+#include "util/tc_common.h"
 #include "util/tc_sem_mutex.h"
 
-#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 namespace tars
 {
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 
 TC_SemMutex::TC_SemMutex():_semID(-1),_semKey(-1)
 {

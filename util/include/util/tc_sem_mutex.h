@@ -177,13 +177,12 @@ protected:
     mutable unsigned _readers;  
     mutable unsigned _writersWaiting;  
     mutable unsigned _writers; 
-#else    
+#endif 
    /**
      * 信号量ID
      */
     int _semID;
 
-#endif 
     /**
      * 信号量key
      */
