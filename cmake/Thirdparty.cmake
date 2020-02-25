@@ -42,6 +42,7 @@ add_custom_target(thirdparty)
 
 include(ExternalProject)
 
+
 if(TARS_PROTOBUF)
     set(PROTOBUF_DIR_INC "${THIRDPARTY_PATH}/protobuf-lib/src")
     set(PROTOBUF_DIR_LIB "${THIRDPARTY_PATH}/protobuf-lib")
@@ -64,7 +65,7 @@ if(TARS_PROTOBUF)
         BUILD_COMMAND make -j4 libprotoc
         LOG_CONFIGURE 1
         LOG_BUILD 1
-        INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+        INSTALL_COMMAND cmake -E echo "install"
         URL_MD5 fb59398329002c98d4d92238324c4187
         )
 
@@ -78,6 +79,7 @@ if(TARS_SSL)
     set(SSL_DIR_LIB "${THIRDPARTY_PATH}/openssl-lib")
     include_directories(${SSL_DIR_INC})
     link_directories(${SSL_DIR_LIB})
+
 
     if(WIN32)
         set(LIB_SSL "libssl")
@@ -94,7 +96,7 @@ if(TARS_SSL)
             BUILD_COMMAND nmake
             LOG_CONFIGURE 1
             LOG_BUILD 1
-            INSTALL_COMMAND nmake install
+            INSTALL_COMMAND cmake -P ${RUN_SSL_INSTALL_FILE}
             URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
             )
  
@@ -119,6 +121,13 @@ if(TARS_SSL)
     
     endif()
 
+    SET(RUN_SSL_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-ssl-install.cmake")
+    FILE(WRITE ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/openssl)\n")
+    FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
+    FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/${LIB_SSL}.lib ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
+    FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/${LIB_CRYPTO}.lib ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
+    FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/include/openssl ${CMAKE_BINARY_DIR}/src/openssl)\n")
+
     INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl DESTINATION include)
  
     add_dependencies(thirdparty ADD_${LIB_SSL})
@@ -132,6 +141,13 @@ if(TARS_MYSQL)
 
     if(WIN32)
         set(LIB_MYSQL "libmysql")
+        SET(RUN_MYSQL_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-mysql-install.cmake")
+        FILE(WRITE ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${LIB_MYSQL}.dll ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${LIB_MYSQL}.lib ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql)\n")
+        
         ExternalProject_Add(ADD_${LIB_MYSQL}
                 URL http://cdn.tarsyun.com/src/mysql-5.6.46.zip
                 DEPENDS ADD_${LIB_SSL}
@@ -143,12 +159,19 @@ if(TARS_MYSQL)
                 BUILD_COMMAND cmake --build . --config ${CMAKE_BUILD_TYPE} --target mysqlclient
                 LOG_CONFIGURE 1
                 LOG_BUILD 1
-                INSTALL_COMMAND ${CMAKE_COMMAND} -E copy  ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql
-             #   INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${LIB_MYSQL}.dll ${CMAKE_BINARY_DIR}/src/mysql/lib
+                INSTALL_COMMAND cmake -P ${RUN_MYSQL_INSTALL_FILE}
                 URL_MD5 851be8973981979041ad422f7e5f693a
                 )
     else()
         set(LIB_MYSQL "mysqlclient")
+        SET(RUN_MYSQL_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-mysql-install.cmake")
+        FILE(WRITE ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/lib${LIB_MYSQL}.dll ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/lib${LIB_MYSQL}.lib ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql)\n")
+        
+
         ExternalProject_Add(ADD_${LIB_MYSQL}
                 URL http://cdn.tarsyun.com/src/mysql-5.6.26.tar.gz
                 PREFIX    ${CMAKE_BINARY_DIR}
@@ -159,12 +182,13 @@ if(TARS_MYSQL)
                 BUILD_COMMAND make mysqlclient
                 LOG_CONFIGURE 1
                 LOG_BUILD 1
-                INSTALL_COMMAND ${CMAKE_COMMAND} -E copy  ${CMAKE_BINARY_DIR}/src/mysql-lib/include/mysql ${CMAKE_BINARY_DIR}/src/mysql
+                INSTALL_COMMAND cmake -E copy  ${CMAKE_BINARY_DIR}/src/mysql-lib/include/mysql ${CMAKE_BINARY_DIR}/src/mysql
                 URL_MD5 c537c08c1276abc79d76e8e562bbcea5
                 #URL_MD5 9d225528742c882d5b1e4a40b0877690
                 )
     endif()
-        
+
+
     INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql-lib/include/mysql DESTINATION include)
     if(WIN32)
         INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${LIB_MYSQL}.dll DESTINATION lib)
@@ -212,7 +236,7 @@ if(TARS_HTTP2)
             LOG_BUILD 1
             LOG_CONFIGURE 1
             BUILD_COMMAND make
-            INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+            INSTALL_COMMAND cmake -E echo "install"
             URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
             )
     endif()
