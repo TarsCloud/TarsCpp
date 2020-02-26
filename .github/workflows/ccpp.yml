@@ -14,11 +14,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install
-      run: sudo apt-get install -y bison flex cmake; cmake --version
+      run: sudo apt-get install -y bison flex cmake which psmisc libncurses5-dev ; cmake --version
     - name: git
       run: git submodule update --init --recursive
     - name: configure
-      run: mkdir build;cd build;cmake ..
+      run: mkdir build;cd build;cmake .. -DTARS_MYSQL=ON -DTARS_SSL=ON -DTARS_HTTP2=ON -DTARS_PROTOBUF=ON
     - name: make
       run: cd build; make
     - name: make run
