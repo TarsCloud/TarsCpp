@@ -16,6 +16,8 @@
 
 #ifndef __TC_TIMEOUT_QUEUE_NEW_H
 #define __TC_TIMEOUT_QUEUE_NEW_H
+
+#include <functional>
 #include <map>
 #include <list>
 #include <unordered_map>

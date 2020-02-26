@@ -44,22 +44,43 @@ include(ExternalProject)
 
 
 if(TARS_PROTOBUF)
-    set(PROTOBUF_DIR_INC "${THIRDPARTY_PATH}/protobuf-lib/src")
-    set(PROTOBUF_DIR_LIB "${THIRDPARTY_PATH}/protobuf-lib")
+    set(PROTOBUF_DIR_INC "${THIRDPARTY_PATH}/protobuf/include")
+    set(PROTOBUF_DIR_LIB "${THIRDPARTY_PATH}/protobuf/lib")
     include_directories(${PROTOBUF_DIR_INC})
     link_directories(${PROTOBUF_DIR_LIB})
 
     if(WIN32)
-        set(LIB_PROTOBUF "liblibmysql")
-    else()
         set(LIB_PROTOBUF "protoc")
-    endif()
 
+        SET(RUN_PROTOBUF_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-protobuf-install.cmake")
+        FILE(WRITE ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/protobuf)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/protobuf/include/google)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/lib/${CMAKE_BUILD_TYPE}/libprotoc.lib ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/lib/${CMAKE_BUILD_TYPE}/libprotobuf.lib ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/lib/${CMAKE_BUILD_TYPE}/protoc.exe ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/protobuf-lib/src/google ${CMAKE_BINARY_DIR}/src/protobuf/include/google)\n")
+        
     ExternalProject_Add(ADD_${LIB_PROTOBUF}
         URL http://cdn.tarsyun.com/src/protobuf-cpp-3.11.3.tar.gz
         PREFIX    ${CMAKE_BINARY_DIR}
         INSTALL_DIR ${CMAKE_SOURCE_DIR}
-        CONFIGURE_COMMAND cmake 
+        CONFIGURE_COMMAND cmake cmake
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
+        BUILD_IN_SOURCE 1
+        BUILD_COMMAND cmake --build . --config release
+        LOG_CONFIGURE 1
+        LOG_BUILD 1
+        INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
+        URL_MD5 fb59398329002c98d4d92238324c4187
+        )
+    else()
+        set(LIB_PROTOBUF "protoc")
+    ExternalProject_Add(ADD_${LIB_PROTOBUF}
+        URL http://cdn.tarsyun.com/src/protobuf-cpp-3.11.3.tar.gz
+        PREFIX    ${CMAKE_BINARY_DIR}
+        INSTALL_DIR ${CMAKE_SOURCE_DIR}
+        CONFIGURE_COMMAND cmake cmake
         SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
         BUILD_IN_SOURCE 1
         BUILD_COMMAND make -j4 libprotoc
@@ -68,6 +89,7 @@ if(TARS_PROTOBUF)
         INSTALL_COMMAND cmake -E echo "install"
         URL_MD5 fb59398329002c98d4d92238324c4187
         )
+    endif()
 
     add_dependencies(thirdparty ADD_${LIB_PROTOBUF})
 
@@ -75,8 +97,8 @@ endif()
 
 
 if(TARS_SSL)
-    set(SSL_DIR_INC "${THIRDPARTY_PATH}/openssl-lib/include/")
-    set(SSL_DIR_LIB "${THIRDPARTY_PATH}/openssl-lib")
+    set(SSL_DIR_INC "${THIRDPARTY_PATH}/openssl/include/")
+    set(SSL_DIR_LIB "${THIRDPARTY_PATH}/openssl/lib")
     include_directories(${SSL_DIR_INC})
     link_directories(${SSL_DIR_LIB})
 
@@ -143,8 +165,8 @@ if(TARS_SSL)
 endif()
 
 if(TARS_MYSQL)
-    set(MYSQL_DIR_INC "${THIRDPARTY_PATH}/mysql-lib/include")
-    set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/mysql-lib/libmysql")
+    set(MYSQL_DIR_INC "${THIRDPARTY_PATH}/mysql/include")
+    set(MYSQL_DIR_LIB "${THIRDPARTY_PATH}/mysql/lib")
     include_directories(${MYSQL_DIR_INC})
     link_directories(${MYSQL_DIR_LIB})
 
@@ -154,7 +176,8 @@ if(TARS_MYSQL)
         FILE(WRITE ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/include)\n")
-        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${CMAKE_BUILD_TYPE}/mysqlclient.lib ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${CMAKE_BUILD_TYPE}/libmysql.lib ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${CMAKE_BUILD_TYPE}/libmysql.dll ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql/include)\n")
         
         ExternalProject_Add(ADD_${LIB_MYSQL}
@@ -165,7 +188,7 @@ if(TARS_MYSQL)
                 CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release -DWITH_SSL=${CMAKE_BINARY_DIR}/src/openssl
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND cmake --build . --config ${CMAKE_BUILD_TYPE}
+                BUILD_COMMAND cmake --build . --config ${CMAKE_BUILD_TYPE} --target libmysql
                 LOG_CONFIGURE 1
                 LOG_BUILD 1
                 INSTALL_COMMAND cmake -P ${RUN_MYSQL_INSTALL_FILE}
@@ -199,11 +222,11 @@ if(TARS_MYSQL)
     endif()
 
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql-lib/include/mysql DESTINATION include)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/include/mysql DESTINATION include)
     if(WIN32)
-        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${LIB_MYSQL}.dll DESTINATION lib)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql/libmysql/${LIB_MYSQL}.dll DESTINATION lib)
     else()
-        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/lib${LIB_MYSQL}.a DESTINATION lib)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql/libmysql/lib${LIB_MYSQL}.a DESTINATION lib)
     endif()
 
     add_dependencies(thirdparty ADD_${LIB_MYSQL})
@@ -212,14 +235,20 @@ endif()
 
 if(TARS_HTTP2)
 
-    set(NGHTTP2_DIR_INC "${THIRDPARTY_PATH}/nghttp2-lib/lib/includes/")
-    set(NGHTTP2_DIR_LIB "${THIRDPARTY_PATH}/nghttp2-lib/lib")
+    set(NGHTTP2_DIR_INC "${THIRDPARTY_PATH}/nghttp2/include/")
+    set(NGHTTP2_DIR_LIB "${THIRDPARTY_PATH}/nghttp2/lib")
     include_directories(${NGHTTP2_DIR_INC})
     link_directories(${NGHTTP2_DIR_LIB})
 
     if(WIN32)
-        set(LIB_HTTP2 "libnghttp2_static")
-
+        set(LIB_HTTP2 "nghttp2_static")
+        SET(RUN_HTTP2_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-http2-install.cmake")
+        FILE(WRITE ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/nghttp2)\n")
+        FILE(APPEND ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/nghttp2/lib)\n")
+        FILE(APPEND ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/nghttp2/include/nghttp2)\n")
+        FILE(APPEND ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/nghttp2-lib/lib/${CMAKE_BUILD_TYPE}/nghttp2_static.lib ${CMAKE_BINARY_DIR}/src/nghttp2/lib)\n")
+        FILE(APPEND ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/nghttp2-lib/lib/includes/nghttp2 ${CMAKE_BINARY_DIR}/src/nghttp2/include/nghttp2)\n")
+        
         ExternalProject_Add(ADD_${LIB_HTTP2}
             URL http://cdn.tarsyun.com/src/nghttp2-1.40.0.tar.gz
             PREFIX    ${CMAKE_BINARY_DIR}
@@ -230,12 +259,22 @@ if(TARS_HTTP2)
             LOG_BUILD 1
             LOG_CONFIGURE 1
             BUILD_COMMAND cmake --build . --config release
-            INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "install"
+            INSTALL_COMMAND cmake -P ${RUN_HTTP2_INSTALL_FILE} 
             URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
             )
+            
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/lib/includes/nghttp2 DESTINATION include)
+    INSTALL(FILES ${CMAKE_BINARY_DIR}/src/nghttp2/lib/${LIB_HTTP2}.a DESTINATION lib)    
+
     else()
         set(LIB_HTTP2 "nghttp2_static")
-
+        SET(RUN_HTTP2_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-http2-install.cmake")
+        FILE(WRITE ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/nghttp2)\n")
+        FILE(APPEND ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/nghttp2/lib)\n")
+        FILE(APPEND ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/nghttp2/include)\n")
+        FILE(APPEND ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/nghttp2-lib/lib/${CMAKE_BUILD_TYPE}/nghttp2_static.lib ${CMAKE_BINARY_DIR}/src/nghttp2/lib)\n")
+        FILE(APPEND ${RUN_HTTP2_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/nghttp2-lib/lib/includes/nghttp2 ${CMAKE_BINARY_DIR}/src/nghttp2/include)\n")
+        
         ExternalProject_Add(ADD_${LIB_HTTP2}
             URL http://cdn.tarsyun.com/src/nghttp2-1.40.0.tar.gz
             PREFIX    ${CMAKE_BINARY_DIR}
@@ -246,13 +285,14 @@ if(TARS_HTTP2)
             LOG_BUILD 1
             LOG_CONFIGURE 1
             BUILD_COMMAND make
-            INSTALL_COMMAND cmake -E echo "install"
+            INSTALL_COMMAND cmake -P ${RUN_HTTP2_INSTALL_FILE} 
             URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
             )
-    endif()
+            
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/lib/includes/nghttp2 DESTINATION include)
+    INSTALL(FILES ${CMAKE_BINARY_DIR}/src/nghttp2/lib/lib${LIB_HTTP2}.a DESTINATION lib)    
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2-lib/lib/includes/nghttp2 DESTINATION include)
-    INSTALL(FILES ${CMAKE_BINARY_DIR}/src/nghttp2-lib/lib/lib${LIB_HTTP2}.a DESTINATION lib)    
+    endif()
 
     add_dependencies(thirdparty ADD_${LIB_HTTP2})
 endif()
