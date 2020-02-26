@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.2)
 
 project(servant)
 
@@ -15,17 +15,17 @@ endif()
 macro(complice_tars OUT_DEPENDS_LIST HEADER TARS_DIR)
     set(DEPENDS_LIST)
 
-    if (NOT ${TARS_DIR} STREQUAL "")
-        FILE(GLOB SRC_LIST "${TARS_DIR}/*.tars")
-    else ()
+    if ("${TARS_DIR}" STREQUAL "")
         FILE(GLOB SRC_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.tars")
+    else ()
+        FILE(GLOB SRC_LIST "${TARS_DIR}/*.tars")
     endif ()
 
     set(CLEAN_LIST)
 
     #设置tars生成后, cpp文件因为h文件的include路径
     set(INCLUDE)
-    if (NOT ${HEADER} STREQUAL "")
+    if (NOT "${HEADER}" STREQUAL "")
         set(INCLUDE "--header=${HEADER}")
     endif ()
 
