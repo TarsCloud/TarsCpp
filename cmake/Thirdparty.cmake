@@ -50,22 +50,25 @@ if (TARS_PROTOBUF)
     link_directories(${PROTOBUF_DIR_LIB})
 
     if (WIN32)
-        set(LIB_PROTOBUF "protoc")
+        set(LIB_PROTOC "libprotoc")
+        set(LIB_PROTOBUF "libprotobuf")
 
         SET(RUN_PROTOBUF_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-protobuf-install.cmake")
         FILE(WRITE ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/protobuf)\n")
         FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
         FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/protobuf/include/google)\n")
-        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/lib/${CMAKE_BUILD_TYPE}/libprotoc.lib ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
-        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/lib/${CMAKE_BUILD_TYPE}/libprotobuf.lib ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
-        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/lib/${CMAKE_BUILD_TYPE}/protoc.exe ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/${CMAKE_BUILD_TYPE}/libprotoc.dll ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/${CMAKE_BUILD_TYPE}/libprotoc.lib ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/${CMAKE_BUILD_TYPE}/libprotobuf.dll ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/${CMAKE_BUILD_TYPE}/libprotobuf.lib ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
+        FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/protobuf-lib/${CMAKE_BUILD_TYPE}/protoc.exe ${CMAKE_BINARY_DIR}/src/protobuf/lib)\n")
         FILE(APPEND ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/protobuf-lib/src/google ${CMAKE_BINARY_DIR}/src/protobuf/include/google)\n")
 
         ExternalProject_Add(ADD_${LIB_PROTOBUF}
                 URL http://cdn.tarsyun.com/src/protobuf-cpp-3.11.3.tar.gz
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake cmake
+                CONFIGURE_COMMAND cmake cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND cmake --build . --config release
@@ -75,12 +78,15 @@ if (TARS_PROTOBUF)
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
 
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/protobuf/lib/libprotoc.dll DESTINATION lib)
         INSTALL(FILES ${CMAKE_BINARY_DIR}/src/protobuf/lib/libprotoc.lib DESTINATION lib)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/protobuf/lib/libprotobuf.dll DESTINATION lib)
         INSTALL(FILES ${CMAKE_BINARY_DIR}/src/protobuf/lib/libprotobuf.lib DESTINATION lib)
-        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/protobuf/lib/protoc DESTINATION lib)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/protobuf/lib/protoc.exe DESTINATION bin)
 
     else ()
-        set(LIB_PROTOBUF "protoc")
+        set(LIB_PROTOC "protoc")
+        set(LIB_PROTOBUF "protobuf")
 
         SET(RUN_PROTOBUF_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-protobuf-install.cmake")
         FILE(WRITE ${RUN_PROTOBUF_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/protobuf)\n")
@@ -96,7 +102,7 @@ if (TARS_PROTOBUF)
                 URL http://cdn.tarsyun.com/src/protobuf-cpp-3.11.3.tar.gz
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake cmake
+                CONFIGURE_COMMAND cmake cmake -DBUILD_SHARED_LIBS=OFF
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
@@ -133,8 +139,12 @@ if (TARS_SSL)
         FILE(WRITE ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/openssl)\n")
         FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
         FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/openssl/include/openssl)\n")
-        FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/${LIB_SSL}.lib ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
-        FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/${LIB_CRYPTO}.lib ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
+        FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/libssl-1_1-x64.dll ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
+        FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/libssl.lib ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
+        FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/libssl_static.lib ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
+        FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/libcrypto-1_1-x64.dll ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
+        FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/libcrypto.lib ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
+        FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/openssl-lib/libcrypto_static.lib ${CMAKE_BINARY_DIR}/src/openssl/lib)\n")
         FILE(APPEND ${RUN_SSL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/openssl-lib/include/openssl ${CMAKE_BINARY_DIR}/src/openssl/include/openssl)\n")
 
         ExternalProject_Add(ADD_${LIB_SSL}
@@ -142,7 +152,7 @@ if (TARS_SSL)
                 URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND perl Configure --prefix=${CMAKE_BINARY_DIR}/src/openssl VC-WIN64A no-asm no-shared
+                CONFIGURE_COMMAND perl Configure --prefix=${CMAKE_BINARY_DIR}/src/openssl VC-WIN64A no-asm 
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND nmake
@@ -152,8 +162,12 @@ if (TARS_SSL)
                 URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
                 )
 
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/openssl/lib/libssl-1_1-x64.dll DESTINATION lib)
         INSTALL(FILES ${CMAKE_BINARY_DIR}/src/openssl/lib/libssl.lib DESTINATION lib)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/openssl/lib/libssl_static.lib DESTINATION lib)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/openssl/lib/libcrypto-1_1-x64.dll DESTINATION lib)
         INSTALL(FILES ${CMAKE_BINARY_DIR}/src/openssl/lib/libcrypto.lib DESTINATION lib)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/openssl/lib/libcrypto_static.lib DESTINATION lib)
 
     else ()
         set(LIB_SSL "ssl")
@@ -223,7 +237,7 @@ if (TARS_MYSQL)
                 URL_MD5 851be8973981979041ad422f7e5f693a
                 )
 
-        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql/lib/libmysql.a DESTINATION lib)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql/lib/libmysql.lib DESTINATION lib)
         INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql/lib/libmysql.dll DESTINATION lib)
 
     else ()
