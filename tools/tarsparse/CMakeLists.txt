@@ -8,11 +8,11 @@ aux_source_directory(. DIR_SRCS)
 set(DEPENDS_SRC_LIST)
 
 set(DEPENDS_LEC_YACC_SRC_LIST)
-if(WIN32)
+#if(WIN32)
 list(APPEND DEPENDS_LEC_YACC_SRC_LIST "tars.lex.cpp")
 list(APPEND DEPENDS_LEC_YACC_SRC_LIST "tars.tab.hpp")
 list(APPEND DEPENDS_LEC_YACC_SRC_LIST "tars.tab.cpp")
-endif()
+#endif()
 
 set(DEPENDS_LEC_YACC_SRC_DIR "${PROJECT_SOURCE_DIR}/tarsGrammar/")
 

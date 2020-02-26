@@ -20,12 +20,14 @@ function(tars2language TARGET)
             RUNTIME DESTINATION tools)
 endfunction()
 
+IF(UNIX)
+
 macro(complice_lex OUT_DEPENDS_LEX_LIST)
     set(DEPENDS_LIST)
 
     FILE(GLOB SRC_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.l")
 
-    set(CLEAN_LIST)
+#    set(CLEAN_LIST)
 
     foreach (FILE ${SRC_LIST})
 
@@ -44,13 +46,13 @@ macro(complice_lex OUT_DEPENDS_LEX_LIST)
         list(APPEND DEPENDS_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${LEX_CPP})
 
         get_filename_component(PATH ${FILE} PATH)
-        list(APPEND CLEAN_LIST ${PATH}/${LEX_CPP})
+#        list(APPEND CLEAN_LIST ${PATH}/${LEX_CPP})
 
     endforeach (FILE)
 
     set(OUT_DEPENDS_LEX_LIST ${DEPENDS_LIST})
 
-    set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")
+#    set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")
 
 endmacro()
 
@@ -59,7 +61,7 @@ macro(complice_yacc OUT_DEPENDS_YACC_LIST)
 
     FILE(GLOB SRC_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.y")
 
-    set(CLEAN_LIST)
+#    set(CLEAN_LIST)
 
     foreach (FILE ${SRC_LIST})
 
@@ -80,21 +82,20 @@ macro(complice_yacc OUT_DEPENDS_YACC_LIST)
 
         get_filename_component(PATH ${FILE} PATH)
         
-        list(APPEND CLEAN_LIST ${PATH}/${YACC_H})
-        list(APPEND CLEAN_LIST ${PATH}/${YACC_CPP})
+#        list(APPEND CLEAN_LIST ${PATH}/${YACC_H})
+#        list(APPEND CLEAN_LIST ${PATH}/${YACC_CPP})
         #if (EXISTS ${PATH}/${NAME_WE}.tab.cpp)
         #    list(APPEND CLEAN_LIST ${PATH}/${NAME_WE}.tab.cpp)
         #endif (EXISTS ${PATH}/${NAME_WE}.tab.cpp)
 
     endforeach (FILE)
 
-    set(OUT_DEPENDS_YACC_LIST ${DEPENDS_LIST})
+#    set(OUT_DEPENDS_YACC_LIST ${DEPENDS_LIST})
 
-    set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")
+#    set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")
 
 endmacro()
 
-IF(UNIX)
 add_subdirectory(tarsgrammar)
 ENDIF(UNIX)
 

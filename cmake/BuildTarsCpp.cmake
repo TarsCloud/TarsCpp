@@ -52,12 +52,20 @@ macro(build_tars_server MODULE DEPS)
         add_dependencies(${MODULE} ${DEP_LIST} tarsservant tarsutil)
     endif()
 
+    target_link_libraries(${MODULE} tarsservant tarsutil)
+
     if(TARS_SSL)
-        target_link_libraries(${MODULE} tarsservant tarsutil ${LIB_SSL} ${LIB_CRYPTO} Crypt32)
-    else()
-        target_link_libraries(${MODULE} tarsservant tarsutil)
+        target_link_libraries(${MODULE} tarsservant tarsutil ${LIB_SSL} ${LIB_CRYPTO})
+
+        if(WIN32)
+            target_link_libraries(${MODULE} Crypt32)
+        endif()
     endif()
-        
+
+    if(TARS_HTTP2)
+        target_link_libraries(${MODULE} ${LIB_HTTP2})
+    endif()
+
     SET(MODULE-TGZ "${CMAKE_BINARY_DIR}/${MODULE}.tgz")
     SET(RUN_DEPLOY_COMMAND_FILE "${PROJECT_BINARY_DIR}/run-deploy-${MODULE}.cmake")
     FILE(WRITE ${RUN_DEPLOY_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/deploy/${MODULE})\n")

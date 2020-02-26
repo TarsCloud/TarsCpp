@@ -4,11 +4,15 @@ link_libraries(tarsutil)
 
 FILE(GLOB_RECURSE SRC_LIST "*.cpp")
 
-if(TARS_SSL)
-    link_libraries(tarsutil ${LIB_SSL} ${LIB_CRYPTO} Crypt32)
-else()
+if (TARS_SSL)
+    if (WIN32)
+        link_libraries(tarsutil ${LIB_SSL} ${LIB_CRYPTO} Crypt32)
+    else ()
+        link_libraries(tarsutil ${LIB_SSL} ${LIB_CRYPTO})
+    endif ()
+else ()
     link_libraries(tarsutil)
-endif()
+endif ()
 
 add_executable(demo-util ${SRC_LIST})
 

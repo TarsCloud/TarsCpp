@@ -2,8 +2,6 @@
 # -------------------------------------------------------------------------------
 
 TARS_PATH    :=/usr/local/tars/cpp
-# !!如果业务要使用OPENSSL，那么请在业务makefile中添加定义 TARS_SSL := 1
-# # # !!必须放在include /usr/local/tars/makefile.tars之前，因为本文件要引用TARS_SSL！
 
 #-------------------------------------------------------------------------------
 
@@ -70,7 +68,7 @@ ifneq ($(TARS_HTTP2), 0)
 ifneq ($(TARS_HTTP2), )
 	#业务编译
 	CFLAGS += -DTARS_HTTP2=1
-	LIB += -lnghttp2
+	LIB += -lnghttp2_static
 endif
 endif
 
