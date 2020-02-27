@@ -234,10 +234,10 @@ if (TARS_MYSQL)
         SET(RUN_MYSQL_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-mysql-install.cmake")
         FILE(WRITE ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
-        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/include)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/include/mysql)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${CMAKE_BUILD_TYPE}/libmysql.lib ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${CMAKE_BUILD_TYPE}/libmysql.dll ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
-        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql/include)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql/include/mysql)\n")
 
         ExternalProject_Add(ADD_${LIB_MYSQL}
                 URL http://cdn.tarsyun.com/src/mysql-5.6.46.zip
@@ -262,9 +262,9 @@ if (TARS_MYSQL)
         SET(RUN_MYSQL_INSTALL_FILE "${PROJECT_BINARY_DIR}/run-mysql-install.cmake")
         FILE(WRITE ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
-        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/include)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/src/mysql/include/mysql)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/libmysqlclient.a ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
-        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql/include)\n")
+        FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql/include/mysql)\n")
 
 
         ExternalProject_Add(ADD_${LIB_MYSQL}
@@ -286,7 +286,12 @@ if (TARS_MYSQL)
 
     endif ()
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/include/mysql DESTINATION include)
+
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/include/mysql/
+            DESTINATION include/mysql
+            PATTERN "*.h")
+
+    # INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/include/mysql DESTINATION include)
 
     add_dependencies(thirdparty ADD_${LIB_MYSQL})
 

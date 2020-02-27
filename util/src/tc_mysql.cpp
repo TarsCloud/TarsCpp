@@ -17,7 +17,7 @@
 #if TARS_MYSQL
 #include "util/tc_mysql.h"
 #include "util/tc_common.h"
-#include "errmsg.h"
+#include "mysql/errmsg.h"
 #include <sstream>
 #include <string.h>
 
