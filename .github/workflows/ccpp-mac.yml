@@ -3,7 +3,6 @@ name: C/C++ mac
 on: 
   push:
     branches:
-    - "2.0"
     - master
 
 jobs:
