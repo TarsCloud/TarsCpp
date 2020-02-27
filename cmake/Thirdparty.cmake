@@ -11,7 +11,9 @@ option(TARS_PROTOBUF "option for protocol" OFF)
 
 if (TARS_MYSQL)
     add_definitions(-DTARS_MYSQL=1)
+    if(WIN32)
     set(TARS_SSL ON)
+    endif()
 endif ()
 
 if (TARS_SSL)
