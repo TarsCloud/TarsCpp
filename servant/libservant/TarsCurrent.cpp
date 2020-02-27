@@ -417,7 +417,9 @@ void TarsCurrent::reportToStat(const string& sObj)
         // int sptime = endtime - _begintime;
 
         //被调上报自己的set信息，set信息在setReportInfo设置
-        stat->report(sObj, "" , _request.sServantName, _data->ip(), 0, _request.sFuncName, (StatReport::StatResult)_ret, TNOWMS - _data->recvTimeStamp(), 0);
+        // stat->report(sObj, "" , _request.sServantName, _data->ip(), 0, _request.sFuncName, (StatReport::StatResult)_ret, TNOWMS - _data->recvTimeStamp(), 0);
+
+        stat->report(sObj, "", _request.sFuncName, _data->ip(), 0, (StatReport::StatResult)_ret, TNOWMS - _data->recvTimeStamp(), 0, false);
     }
 }
 

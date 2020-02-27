@@ -18,7 +18,7 @@
 #define __TC_MYSQL_H
 
 #include "util/tc_platform.h"
-#include "mysql/mysql.h"
+#include "mysql.h"
 #include "util/tc_ex.h"
 #include <map>
 #include <vector>
