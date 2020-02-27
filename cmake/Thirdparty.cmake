@@ -143,6 +143,7 @@ endif ()
 
 
 if (TARS_SSL)
+    set(SSL_DIR "${THIRDPARTY_PATH}/openssl")
     set(SSL_DIR_INC "${THIRDPARTY_PATH}/openssl/include/")
     set(SSL_DIR_LIB "${THIRDPARTY_PATH}/openssl/lib")
     include_directories(${SSL_DIR_INC})
@@ -239,12 +240,13 @@ if (TARS_MYSQL)
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/${CMAKE_BUILD_TYPE}/libmysql.dll ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql/include/mysql)\n")
 
+        if(TARS_SSL)
         ExternalProject_Add(ADD_${LIB_MYSQL}
                 URL http://cdn.tarsyun.com/src/mysql-5.6.46.zip
                 DEPENDS ADD_${LIB_SSL}
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release -DWITH_SSL=${CMAKE_BINARY_DIR}/src/openssl
+                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release -DWITH_SSL=${SSL_DIR}
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND cmake --build . --config ${CMAKE_BUILD_TYPE} --target libmysql
@@ -253,6 +255,22 @@ if (TARS_MYSQL)
                 INSTALL_COMMAND cmake -P ${RUN_MYSQL_INSTALL_FILE}
                 URL_MD5 851be8973981979041ad422f7e5f693a
                 )
+        else()
+        ExternalProject_Add(ADD_${LIB_MYSQL}
+                URL http://cdn.tarsyun.com/src/mysql-5.6.46.zip
+                DEPENDS ADD_${LIB_SSL}
+                PREFIX ${CMAKE_BINARY_DIR}
+                INSTALL_DIR ${CMAKE_SOURCE_DIR}
+                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release
+                SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
+                BUILD_IN_SOURCE 1
+                BUILD_COMMAND cmake --build . --config ${CMAKE_BUILD_TYPE} --target libmysql
+                LOG_CONFIGURE 1
+                LOG_BUILD 1
+                INSTALL_COMMAND cmake -P ${RUN_MYSQL_INSTALL_FILE}
+                URL_MD5 851be8973981979041ad422f7e5f693a
+                )
+        endif() 
 
         INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql/lib/libmysql.lib DESTINATION lib)
         INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql/lib/libmysql.dll DESTINATION lib)
@@ -266,9 +284,25 @@ if (TARS_MYSQL)
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/src/mysql-lib/libmysql/libmysqlclient.a ${CMAKE_BINARY_DIR}/src/mysql/lib)\n")
         FILE(APPEND ${RUN_MYSQL_INSTALL_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/src/mysql-lib/include ${CMAKE_BINARY_DIR}/src/mysql/include/mysql)\n")
 
-
+        if(TARS_SSL)
         ExternalProject_Add(ADD_${LIB_MYSQL}
-                URL http://cdn.tarsyun.com/src/mysql-5.6.26.tar.gz
+                URL http://cdn.tarsyun.com/src/mysql-5.6.46.tar.gz
+                DEPENDS ADD_${LIB_SSL}
+                PREFIX ${CMAKE_BINARY_DIR}
+                INSTALL_DIR ${CMAKE_SOURCE_DIR}
+                CONFIGURE_COMMAND cmake . -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1  -DWITH_SSL=${SSL_DIR}
+                SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
+                BUILD_IN_SOURCE 1
+                BUILD_COMMAND make mysqlclient
+                LOG_CONFIGURE 1
+                LOG_BUILD 1
+                INSTALL_COMMAND cmake -P ${RUN_MYSQL_INSTALL_FILE}
+#                URL_MD5 c537c08c1276abc79d76e8e562bbcea5
+                URL_MD5 9d225528742c882d5b1e4a40b0877690
+                )
+        else()
+        ExternalProject_Add(ADD_${LIB_MYSQL}
+                URL http://cdn.tarsyun.com/src/mysql-5.6.46.tar.gz
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
                 CONFIGURE_COMMAND cmake . -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
@@ -278,10 +312,10 @@ if (TARS_MYSQL)
                 LOG_CONFIGURE 1
                 LOG_BUILD 1
                 INSTALL_COMMAND cmake -P ${RUN_MYSQL_INSTALL_FILE}
-                URL_MD5 c537c08c1276abc79d76e8e562bbcea5
-                #URL_MD5 9d225528742c882d5b1e4a40b0877690
+#                URL_MD5 c537c08c1276abc79d76e8e562bbcea5
+                URL_MD5 9d225528742c882d5b1e4a40b0877690
                 )
-
+        endif()
         INSTALL(FILES ${CMAKE_BINARY_DIR}/src/mysql/lib/libmysqlclient.a DESTINATION lib)
 
     endif ()
