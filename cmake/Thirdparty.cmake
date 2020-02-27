@@ -14,6 +14,21 @@ if (TARS_MYSQL)
     if(WIN32)
     set(TARS_SSL ON)
     endif()
+
+    IF(UNIX AND NOT APPLE)
+        FIND_PACKAGE(Curses) 
+        IF(NOT CURSES_FOUND)
+            SET(ERRORMSG "Curses library not found. Please install appropriate package,
+            remove CMakeCache.txt and rerun cmake.")
+            IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
+                SET(ERRORMSG ${ERRORMSG} 
+                "On Debian/Ubuntu, package name is libncurses5-dev(apt-get install libncurses5-dev), on Redhat/Centos and derivates " 
+                "it is ncurses-devel (yum install ncurses-devel).")
+        ENDIF()
+        MESSAGE(FATAL_ERROR ${ERRORMSG})
+        ENDIF()
+   ENDIF()
+
 endif ()
 
 if (TARS_SSL)
