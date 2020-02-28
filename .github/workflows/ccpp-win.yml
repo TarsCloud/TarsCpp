@@ -16,8 +16,6 @@ jobs:
       with:
         perl-version: ${{ matrix.perl }}
     - run: perl -V
-    - run: cpanm --installdeps .
-    - run: prove -lv t
     - uses: actions/checkout@v2
     - name: git
       run: git submodule update --init --recursive
