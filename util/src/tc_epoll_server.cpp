@@ -1601,6 +1601,7 @@ void TC_EpollServer::NetThread::processPipe()
 
 	    if (!cPtr)
 	    {
+		    _sbuffer.pop_front();
 	    	continue;
 	    }
         switch (sc->cmd())
