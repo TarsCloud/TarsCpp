@@ -62,8 +62,10 @@ include(ExternalProject)
 if (TARS_PROTOBUF)
     set(PROTOBUF_DIR_INC "${THIRDPARTY_PATH}/protobuf/include")
     set(PROTOBUF_DIR_LIB "${THIRDPARTY_PATH}/protobuf/lib")
+    set(PROTOBUF_DIR_LIB64 "${THIRDPARTY_PATH}/protobuf/lib64")
     include_directories(${PROTOBUF_DIR_INC})
     link_directories(${PROTOBUF_DIR_LIB})
+    link_directories(${PROTOBUF_DIR_LIB64})
 
     if (WIN32)
         set(LIB_PROTOC "libprotoc")
@@ -216,8 +218,11 @@ if (TARS_HTTP2)
 
     set(NGHTTP2_DIR_INC "${THIRDPARTY_PATH}/nghttp2/include/")
     set(NGHTTP2_DIR_LIB "${THIRDPARTY_PATH}/nghttp2/lib")
+    set(NGHTTP2_DIR_LIB64 "${THIRDPARTY_PATH}/nghttp2/lib64")
     include_directories(${NGHTTP2_DIR_INC})
     link_directories(${NGHTTP2_DIR_LIB})
+    link_directories(${NGHTTP2_DIR_LIB64})
+
     set(LIB_HTTP2 "nghttp2_static")
 
     if (WIN32)
@@ -225,7 +230,7 @@ if (TARS_HTTP2)
                 URL http://cdn.tarsyun.com/src/nghttp2-1.40.0.tar.gz
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON
+                CONFIGURE_COMMAND cmake .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
                 LOG_BUILD 1
@@ -240,7 +245,7 @@ if (TARS_HTTP2)
                 URL http://cdn.tarsyun.com/src/nghttp2-1.40.0.tar.gz
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON
+                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
                 LOG_BUILD 1
