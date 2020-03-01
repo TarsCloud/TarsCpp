@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.2.2.  */
+/* A Bison parser, made by GNU Bison 3.0.4.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -40,14 +40,11 @@
    define necessary library symbols; they are noted "INFRINGES ON
    USER NAME SPACE" below.  */
 
-/* Undocumented macros, especially those whose name start with YY_,
-   are private implementation details.  Do not rely on them.  */
-
 /* Identify Bison output.  */
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.2.2"
+#define YYBISON_VERSION "3.0.4"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -64,8 +61,8 @@
 
 
 
-/* First part of user prologue.  */
-#line 17 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:338  */
+/* Copy the first part of user declarations.  */
+#line 17 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:339  */
 
 #include <iostream>
 #include <memory>
@@ -79,16 +76,13 @@ using namespace std;
 #define YYDEBUG 1
 #define YYINITDEPTH 10000
 
-#line 83 "tars.tab.cpp" /* yacc.c:338  */
+#line 80 "tars.tab.cpp" /* yacc.c:339  */
+
 # ifndef YY_NULLPTR
-#  if defined __cplusplus
-#   if 201103L <= __cplusplus
-#    define YY_NULLPTR nullptr
-#   else
-#    define YY_NULLPTR 0
-#   endif
+#  if defined __cplusplus && 201103L <= __cplusplus
+#   define YY_NULLPTR nullptr
 #  else
-#   define YY_NULLPTR ((void*)0)
+#   define YY_NULLPTR 0
 #  endif
 # endif
 
@@ -165,7 +159,9 @@ int yyparse (void);
 
 #endif /* !YY_YY_TARS_TAB_HPP_INCLUDED  */
 
+/* Copy the second part of user declarations.  */
 
+#line 165 "tars.tab.cpp" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -186,13 +182,13 @@ typedef signed char yytype_int8;
 #ifdef YYTYPE_UINT16
 typedef YYTYPE_UINT16 yytype_uint16;
 #else
-typedef unsigned short yytype_uint16;
+typedef unsigned short int yytype_uint16;
 #endif
 
 #ifdef YYTYPE_INT16
 typedef YYTYPE_INT16 yytype_int16;
 #else
-typedef short yytype_int16;
+typedef short int yytype_int16;
 #endif
 
 #ifndef YYSIZE_T
@@ -204,7 +200,7 @@ typedef short yytype_int16;
 #  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
 #  define YYSIZE_T size_t
 # else
-#  define YYSIZE_T unsigned
+#  define YYSIZE_T unsigned int
 # endif
 #endif
 
@@ -240,6 +236,15 @@ typedef short yytype_int16;
 # define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
 #endif
 
+#if !defined _Noreturn \
+     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
+# if defined _MSC_VER && 1200 <= _MSC_VER
+#  define _Noreturn __declspec (noreturn)
+# else
+#  define _Noreturn YY_ATTRIBUTE ((__noreturn__))
+# endif
+#endif
+
 /* Suppress unused-variable warnings by "using" E.  */
 #if ! defined lint || defined __GNUC__
 # define YYUSE(E) ((void) (E))
@@ -247,7 +252,7 @@ typedef short yytype_int16;
 # define YYUSE(E) /* empty */
 #endif
 
-#if defined __GNUC__ && ! defined __ICC && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
+#if defined __GNUC__ && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
 /* Suppress an incorrect diagnostic about yylval being uninitialized.  */
 # define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN \
     _Pragma ("GCC diagnostic push") \
@@ -415,7 +420,7 @@ union yyalloc
 #define YYMAXUTOK   288
 
 #define YYTRANSLATE(YYX)                                                \
-  ((unsigned) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
+  ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
 
 /* YYTRANSLATE[TOKEN-NUM] -- Symbol number corresponding to TOKEN-NUM
    as returned by yylex, without out-of-bounds checking.  */
@@ -851,37 +856,37 @@ do {                                                                      \
 } while (0)
 
 
-/*-----------------------------------.
-| Print this symbol's value on YYO.  |
-`-----------------------------------*/
+/*----------------------------------------.
+| Print this symbol's value on YYOUTPUT.  |
+`----------------------------------------*/
 
 static void
-yy_symbol_value_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
 {
-  FILE *yyoutput = yyo;
-  YYUSE (yyoutput);
+  FILE *yyo = yyoutput;
+  YYUSE (yyo);
   if (!yyvaluep)
     return;
 # ifdef YYPRINT
   if (yytype < YYNTOKENS)
-    YYPRINT (yyo, yytoknum[yytype], *yyvaluep);
+    YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
 # endif
   YYUSE (yytype);
 }
 
 
-/*---------------------------.
-| Print this symbol on YYO.  |
-`---------------------------*/
+/*--------------------------------.
+| Print this symbol on YYOUTPUT.  |
+`--------------------------------*/
 
 static void
-yy_symbol_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
 {
-  YYFPRINTF (yyo, "%s %s (",
+  YYFPRINTF (yyoutput, "%s %s (",
              yytype < YYNTOKENS ? "token" : "nterm", yytname[yytype]);
 
-  yy_symbol_value_print (yyo, yytype, yyvaluep);
-  YYFPRINTF (yyo, ")");
+  yy_symbol_value_print (yyoutput, yytype, yyvaluep);
+  YYFPRINTF (yyoutput, ")");
 }
 
 /*------------------------------------------------------------------.
@@ -915,7 +920,7 @@ do {                                                            \
 static void
 yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, int yyrule)
 {
-  unsigned long yylno = yyrline[yyrule];
+  unsigned long int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
   int yyi;
   YYFPRINTF (stderr, "Reducing stack by rule %d (line %lu):\n",
@@ -1048,7 +1053,7 @@ yytnamerr (char *yyres, const char *yystr)
   if (! yyres)
     return yystrlen (yystr);
 
-  return (YYSIZE_T) (yystpcpy (yyres, yystr) - yyres);
+  return yystpcpy (yyres, yystr) - yyres;
 }
 # endif
 
@@ -1141,7 +1146,6 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
       case N:                               \
         yyformat = S;                       \
       break
-    default: /* Avoid compiler warnings. */
       YYCASE_(0, YY_("syntax error"));
       YYCASE_(1, YY_("syntax error, unexpected %s"));
       YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
@@ -1290,12 +1294,12 @@ yyparse (void)
   yyssp++;
 
  yysetstate:
-  *yyssp = (yytype_int16) yystate;
+  *yyssp = yystate;
 
   if (yyss + yystacksize - 1 <= yyssp)
     {
       /* Get the current used size of the three stacks, in elements.  */
-      YYSIZE_T yysize = (YYSIZE_T) (yyssp - yyss + 1);
+      YYSIZE_T yysize = yyssp - yyss + 1;
 
 #ifdef yyoverflow
       {
@@ -1313,6 +1317,7 @@ yyparse (void)
                     &yyss1, yysize * sizeof (*yyssp),
                     &yyvs1, yysize * sizeof (*yyvsp),
                     &yystacksize);
+
         yyss = yyss1;
         yyvs = yyvs1;
       }
@@ -1346,7 +1351,7 @@ yyparse (void)
       yyvsp = yyvs + yysize - 1;
 
       YYDPRINTF ((stderr, "Stack size increased to %lu\n",
-                  (unsigned long) yystacksize));
+                  (unsigned long int) yystacksize));
 
       if (yyss + yystacksize - 1 <= yyssp)
         YYABORT;
@@ -1457,92 +1462,92 @@ yyreduce:
   switch (yyn)
     {
         case 3:
-#line 75 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 75 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1464 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1469 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 79 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 79 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     yyerrok;
 }
-#line 1472 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1477 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 84 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 84 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("`;' missing after definition");
 }
-#line 1480 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1485 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 88 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 88 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1487 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1492 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 96 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 96 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     assert((yyvsp[0]) == 0 || NamespacePtr::dynamicCast((yyvsp[0])));
 }
-#line 1495 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1500 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 100 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 100 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     assert((yyvsp[0]) == 0 || InterfacePtr::dynamicCast((yyvsp[0])));
 }
-#line 1503 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1508 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 104 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 104 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     assert((yyvsp[0]) == 0 || StructPtr::dynamicCast((yyvsp[0])));
 }
-#line 1511 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1516 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 108 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 108 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1518 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1523 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 111 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 111 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     assert((yyvsp[0]) == 0 || EnumPtr::dynamicCast((yyvsp[0])));
 }
-#line 1526 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1531 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 115 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 115 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     assert((yyvsp[0]) == 0 || ConstPtr::dynamicCast((yyvsp[0])));
 }
-#line 1534 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1539 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 124 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 124 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = (yyvsp[0]);
 }
-#line 1542 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1547 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 128 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 128 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     if((yyvsp[-2]))
     {
@@ -1556,11 +1561,11 @@ yyreduce:
 
     (yyval) = (yyvsp[-3]);
 }
-#line 1560 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1565 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 147 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 147 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     NamespacePtr c = NamespacePtr::dynamicCast(g_parse->currentContainer());
     if(!c)
@@ -1573,36 +1578,36 @@ yyreduce:
 
     (yyval) = e;
 }
-#line 1577 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1582 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 160 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 160 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     g_parse->error("keyword `" + ident->v + "' cannot be used as enumeration name");
     (yyval) = (yyvsp[0]);
 }
-#line 1587 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1592 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 171 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 171 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = (yyvsp[-1]);
 }
-#line 1595 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1600 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 175 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 175 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1602 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1607 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 183 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 183 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     TypePtr type        = TypePtr::dynamicCast(g_parse->createBuiltin(Builtin::KindLong));
     StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[0]));
@@ -1613,20 +1618,20 @@ yyreduce:
     e->addMember(tPtr);
     (yyval) = e;
 }
-#line 1617 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1622 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 194 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 194 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     g_parse->error("keyword `" + ident->v + "' cannot be used as enumerator");
 }
-#line 1626 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1631 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 199 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 199 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     TypePtr type        = TypePtr::dynamicCast(g_parse->createBuiltin(Builtin::KindLong));
     StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[-2]));
@@ -1639,18 +1644,18 @@ yyreduce:
     e->addMember(tPtr);
     (yyval) = e;
 }
-#line 1643 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1648 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 212 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 212 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1650 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1655 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 220 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 220 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[0]));
     ContainerPtr c      = g_parse->currentContainer();
@@ -1665,11 +1670,11 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 1669 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1674 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 235 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 235 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     if((yyvsp[-3]))
     {
@@ -1681,11 +1686,11 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 1685 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1690 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 253 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 253 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[-1]));
     StructPtr sp = StructPtr::dynamicCast(g_parse->findUserType(ident->v));
@@ -1696,18 +1701,18 @@ yyreduce:
 
     g_parse->setKeyStruct(sp);
 }
-#line 1700 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1705 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 264 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 264 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1707 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1712 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 272 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 272 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     StructPtr np = g_parse->getKeyStruct();
@@ -1720,11 +1725,11 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 1724 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1729 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 285 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 285 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     StructPtr np = g_parse->getKeyStruct();
@@ -1737,11 +1742,11 @@ yyreduce:
         (yyval) = 0;
     }   
 }
-#line 1741 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1746 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 304 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 304 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
 
@@ -1758,11 +1763,11 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 1762 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1767 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 321 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 321 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     if((yyvsp[-3]))
     {
@@ -1774,58 +1779,58 @@ yyreduce:
        (yyval) = 0;
     }
 }
-#line 1778 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1783 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 338 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 338 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = (yyvsp[0]);
 }
-#line 1786 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1791 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 342 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 342 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     g_parse->error("keyword `" + ident->v + "' cannot be used as interface name");
     (yyval) = (yyvsp[0]);
 }
-#line 1796 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1801 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 353 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 353 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1803 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1808 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 356 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 356 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1810 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1815 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 359 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 359 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("`;' missing after definition");
 }
-#line 1818 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1823 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 363 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 363 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1825 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1830 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 377 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 377 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     if((yyvsp[-2]))
     {
@@ -1837,11 +1842,11 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 1841 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1846 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 394 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 394 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     TypePtr returnType = TypePtr::dynamicCast((yyvsp[-1]));
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
@@ -1865,26 +1870,26 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 1869 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1874 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 424 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 424 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = 0;
 }
-#line 1877 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1882 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 434 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 434 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 1884 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1889 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 437 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 437 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     TypeIdPtr  tsp         = TypeIdPtr::dynamicCast((yyvsp[0]));
 
@@ -1895,11 +1900,11 @@ yyreduce:
         op->createParamDecl(tsp, false, false);
     }
 }
-#line 1899 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1904 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 448 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 448 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     TypeIdPtr  tsp         = TypeIdPtr::dynamicCast((yyvsp[0]));
 
@@ -1910,11 +1915,11 @@ yyreduce:
         op->createParamDecl(tsp, false, false);
     }
 }
-#line 1914 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1919 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 459 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 459 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     BoolGrammarPtr isOutParam  = BoolGrammarPtr::dynamicCast((yyvsp[-1]));
     TypeIdPtr  tsp         = TypeIdPtr::dynamicCast((yyvsp[0]));
@@ -1926,11 +1931,11 @@ yyreduce:
         op->createParamDecl(tsp, isOutParam->v, false);
     }
 }
-#line 1930 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1935 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 471 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 471 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     BoolGrammarPtr isOutParam  = BoolGrammarPtr::dynamicCast((yyvsp[-1]));
     TypeIdPtr  tsp         = TypeIdPtr::dynamicCast((yyvsp[0]));
@@ -1942,11 +1947,11 @@ yyreduce:
         op->createParamDecl(tsp, isOutParam->v, false);
     }
 }
-#line 1946 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1951 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 483 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 483 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     BoolGrammarPtr isRouteKeyParam  = BoolGrammarPtr::dynamicCast((yyvsp[-1]));
     TypeIdPtr  tsp              = TypeIdPtr::dynamicCast((yyvsp[0]));
@@ -1958,11 +1963,11 @@ yyreduce:
          op->createParamDecl(tsp, false, isRouteKeyParam->v);
     }
 }
-#line 1962 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1967 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 495 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 495 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     BoolGrammarPtr isRouteKeyParam = BoolGrammarPtr::dynamicCast((yyvsp[-1]));
     TypeIdPtr  tsp             = TypeIdPtr::dynamicCast((yyvsp[0]));
@@ -1974,47 +1979,47 @@ yyreduce:
          op->createParamDecl(tsp, false, isRouteKeyParam->v);
     }
 }
-#line 1978 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1983 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 507 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 507 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("'out' must be defined with a type");
 }
-#line 1986 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1991 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 511 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 511 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("'routekey' must be defined with a type");
 }
-#line 1994 "tars.tab.cpp" /* yacc.c:1660  */
+#line 1999 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 520 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 520 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     BoolGrammarPtr routekey = new BoolGrammar;
     routekey->v = true;
     (yyval) = GrammarBasePtr::dynamicCast(routekey);
 }
-#line 2004 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2009 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 531 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 531 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     BoolGrammarPtr out = new BoolGrammar;
     out->v = true;
     (yyval) = GrammarBasePtr::dynamicCast(out);
 }
-#line 2014 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2019 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 542 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 542 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     NamespacePtr np = NamespacePtr::dynamicCast(g_parse->currentContainer());
@@ -2036,11 +2041,11 @@ yyreduce:
        g_parse->error("struct '" + ident->v + "' must definition in namespace");
     }
 }
-#line 2040 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2045 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 564 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 564 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     if((yyvsp[-3]))
     {
@@ -2055,68 +2060,68 @@ yyreduce:
         g_parse->error("struct `" + st->getSid() + "' must have at least one member");
     }
 }
-#line 2059 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2064 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 584 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 584 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = (yyvsp[0]);
 }
-#line 2067 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2072 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 588 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 588 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
 
     g_parse->error("keyword `" + ident->v + "' cannot be used as struct name");
 }
-#line 2077 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2082 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 594 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 594 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("abstract declarator '<anonymous struct>' used as declaration");
 }
-#line 2085 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2090 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 603 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 603 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 
 }
-#line 2093 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2098 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 607 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 607 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    g_parse->error("';' missing after definition");
 }
-#line 2101 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2106 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 611 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 611 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2108 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2113 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 621 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 621 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = GrammarBasePtr::dynamicCast((yyvsp[0]));
 }
-#line 2116 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2121 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 630 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 630 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StructPtr np = StructPtr::dynamicCast(g_parse->currentContainer());
     if(np)
@@ -2134,11 +2139,11 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 2138 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2143 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 648 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 648 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StructPtr np = StructPtr::dynamicCast(g_parse->currentContainer());
     if(np)
@@ -2160,11 +2165,11 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 2164 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2169 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 670 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 670 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StructPtr np = StructPtr::dynamicCast(g_parse->currentContainer());
     if(np)
@@ -2186,11 +2191,11 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 2190 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2195 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 692 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 692 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StructPtr np = StructPtr::dynamicCast(g_parse->currentContainer());
     if(np)
@@ -2207,43 +2212,43 @@ yyreduce:
         (yyval) = 0;
     }
 }
-#line 2211 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2216 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 709 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 709 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("struct member need 'tag'");
 }
-#line 2219 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2224 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 713 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 713 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("struct member need 'tag'");
 }
-#line 2227 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2232 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 717 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 717 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("struct member need 'require' or 'optional'");
 }
-#line 2235 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2240 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 721 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 721 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("struct member need 'tag' or 'require' or 'optional'");
 }
-#line 2243 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2248 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 730 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 730 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     IntergerGrammarPtr intVal = IntergerGrammarPtr::dynamicCast((yyvsp[0]));
     ostringstream sstr;
@@ -2253,11 +2258,11 @@ yyreduce:
     c->v = sstr.str();
     (yyval) = c;
 }
-#line 2257 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2262 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 740 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 740 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     FloatGrammarPtr floatVal = FloatGrammarPtr::dynamicCast((yyvsp[0]));
     ostringstream sstr;
@@ -2267,11 +2272,11 @@ yyreduce:
     c->v = sstr.str();
     (yyval) = c;
 }
-#line 2271 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2276 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 750 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 750 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     ConstGrammarPtr c = new ConstGrammar();
@@ -2279,11 +2284,11 @@ yyreduce:
     c->v = ident->v;
     (yyval) = c;
 }
-#line 2283 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2288 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 758 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 758 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     ConstGrammarPtr c = new ConstGrammar();
@@ -2291,11 +2296,11 @@ yyreduce:
     c->v = ident->v;
     (yyval) = c;
 }
-#line 2295 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2300 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 766 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 766 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     ConstGrammarPtr c = new ConstGrammar();
@@ -2303,11 +2308,11 @@ yyreduce:
     c->v = ident->v;
     (yyval) = c;
 }
-#line 2307 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2312 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 774 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 774 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
 
@@ -2320,11 +2325,11 @@ yyreduce:
     c->v = ident->v;
     (yyval) = c;
 }
-#line 2324 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2329 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 787 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 787 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 
     StringGrammarPtr scoped = StringGrammarPtr::dynamicCast((yyvsp[-2]));
@@ -2339,11 +2344,11 @@ yyreduce:
     c->v = scoped->v + "::" + ident->v;
     (yyval) = c;
 }
-#line 2343 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2348 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 807 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 807 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     NamespacePtr np = NamespacePtr::dynamicCast(g_parse->currentContainer());
     if(!np)
@@ -2356,11 +2361,11 @@ yyreduce:
     ConstPtr cPtr = np->createConst(t, c);
     (yyval) = cPtr;
 }
-#line 2360 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2365 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 825 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 825 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     TypePtr type = TypePtr::dynamicCast((yyvsp[-1]));
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
@@ -2369,11 +2374,11 @@ yyreduce:
 
     (yyval) = GrammarBasePtr::dynamicCast(typeIdPtr);
 }
-#line 2373 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2378 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 834 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 834 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     TypePtr type = g_parse->createVector(TypePtr::dynamicCast((yyvsp[-4])));
     IntergerGrammarPtr iPtrSize = IntergerGrammarPtr::dynamicCast((yyvsp[-1]));
@@ -2383,11 +2388,11 @@ yyreduce:
     TypeIdPtr typeIdPtr = new TypeId(type, ident->v);
     (yyval) = GrammarBasePtr::dynamicCast(typeIdPtr);
 }
-#line 2387 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2392 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 844 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 844 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     TypePtr type = g_parse->createVector(TypePtr::dynamicCast((yyvsp[-2])));
     //IntergerGrammarPtr iPtrSize = IntergerGrammarPtr::dynamicCast($4);
@@ -2397,11 +2402,11 @@ yyreduce:
     TypeIdPtr typeIdPtr = new TypeId(type, ident->v);
     (yyval) = GrammarBasePtr::dynamicCast(typeIdPtr);
 }
-#line 2401 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2406 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 854 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 854 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     TypePtr type = TypePtr::dynamicCast((yyvsp[-3]));
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[-2]));
@@ -2410,36 +2415,36 @@ yyreduce:
     g_parse->checkArrayVaid(type,iPtrSize->v);
     (yyval) = GrammarBasePtr::dynamicCast(typeIdPtr);
 }
-#line 2414 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2419 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 863 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 863 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     g_parse->error("keyword `" + ident->v + "' cannot be used as data member name");
 }
-#line 2423 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2428 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 868 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 868 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("missing data member name");
 }
-#line 2431 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2436 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 872 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 872 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     g_parse->error("unkown type");
 }
-#line 2439 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2444 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 881 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 881 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 
     TypePtr type = TypePtr::dynamicCast((yyvsp[-2]));
@@ -2448,131 +2453,131 @@ yyreduce:
     type->setArray(iPtrSize->v);
     (yyval) = type;
 }
-#line 2452 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2457 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 890 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 890 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = (yyvsp[0]);
 }
-#line 2460 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2465 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 894 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 894 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    g_parse->error("array missing size");
 }
-#line 2468 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2473 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 903 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 903 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindBool);
 }
-#line 2476 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2481 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 907 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 907 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindByte);
 }
-#line 2484 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2489 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 911 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 911 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindShort,true);
 }
-#line 2492 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2497 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 915 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 915 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindShort);
 }
-#line 2500 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2505 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 919 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 919 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindInt,true);
 }
-#line 2508 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2513 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 923 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 923 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindInt);
 }
-#line 2516 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2521 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 927 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 927 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindLong,true);
 }
-#line 2524 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2529 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 931 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 931 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindLong);
 }
-#line 2532 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2537 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 935 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 935 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindFloat);
 }
-#line 2540 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2545 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 939 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 939 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindDouble);
 }
-#line 2548 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2553 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 943 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 943 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     (yyval) = g_parse->createBuiltin(Builtin::KindString);
 }
-#line 2556 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2561 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 947 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 947 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    (yyval) = GrammarBasePtr::dynamicCast((yyvsp[0]));
 }
-#line 2564 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2569 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 951 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 951 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    (yyval) = GrammarBasePtr::dynamicCast((yyvsp[0]));
 }
-#line 2572 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2577 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 955 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 955 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     TypePtr sp = g_parse->findUserType(ident->v);
@@ -2585,76 +2590,76 @@ yyreduce:
         g_parse->error("'" + ident->v + "' undefined!");
     }
 }
-#line 2589 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2594 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 973 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 973 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    (yyval) = GrammarBasePtr::dynamicCast(g_parse->createVector(TypePtr::dynamicCast((yyvsp[-1]))));
 }
-#line 2597 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2602 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 977 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 977 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    g_parse->error("vector error");
 }
-#line 2605 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2610 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 981 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 981 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    g_parse->error("vector missing '>'");
 }
-#line 2613 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2618 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 985 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 985 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    g_parse->error("vector missing type");
 }
-#line 2621 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2626 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 994 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 994 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    (yyval) = GrammarBasePtr::dynamicCast(g_parse->createMap(TypePtr::dynamicCast((yyvsp[-3])), TypePtr::dynamicCast((yyvsp[-1]))));
 }
-#line 2629 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2634 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 998 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 998 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
    g_parse->error("map error");
 }
-#line 2637 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2642 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 1007 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1007 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2644 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2649 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 1010 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1010 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[0]));
     ident->v = "::" + ident->v;
     (yyval) = GrammarBasePtr::dynamicCast(ident);
 }
-#line 2654 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2659 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 1016 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1016 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
     StringGrammarPtr scoped = StringGrammarPtr::dynamicCast((yyvsp[-2]));
     StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[0]));
@@ -2662,186 +2667,186 @@ yyreduce:
     scoped->v += ident->v;
     (yyval) = GrammarBasePtr::dynamicCast(scoped);
 }
-#line 2666 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2671 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 1029 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1029 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2673 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2678 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 1032 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1032 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2680 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2685 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 1035 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1035 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2687 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2692 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 1038 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1038 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2694 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2699 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 1041 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1041 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2701 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2706 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 1044 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1044 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2708 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2713 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 1047 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1047 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2715 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2720 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 1050 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1050 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2722 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2727 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 1053 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1053 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2729 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2734 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 1056 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1056 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2736 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2741 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 1059 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1059 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2743 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2748 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 1062 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1062 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2750 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2755 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 1065 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1065 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2757 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2762 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 1068 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1068 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2764 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2769 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 1071 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1071 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2771 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2776 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 1074 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1074 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2778 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2783 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 1077 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1077 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2785 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2790 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 130:
-#line 1080 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1080 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2792 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2797 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 1083 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1083 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2799 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2804 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 132:
-#line 1086 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1086 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2806 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2811 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 133:
-#line 1089 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1089 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2813 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2818 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 134:
-#line 1092 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1092 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2820 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2825 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 1095 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1095 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2827 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2832 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 136:
-#line 1098 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1098 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2834 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2839 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 1101 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1660  */
+#line 1101 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1646  */
     {
 }
-#line 2841 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2846 "tars.tab.cpp" /* yacc.c:1646  */
     break;
 
 
-#line 2845 "tars.tab.cpp" /* yacc.c:1660  */
+#line 2850 "tars.tab.cpp" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2866,13 +2871,14 @@ yyreduce:
   /* Now 'shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
      number reduced by.  */
-  {
-    const int yylhs = yyr1[yyn] - YYNTOKENS;
-    const int yyi = yypgoto[yylhs] + *yyssp;
-    yystate = (0 <= yyi && yyi <= YYLAST && yycheck[yyi] == *yyssp
-               ? yytable[yyi]
-               : yydefgoto[yylhs]);
-  }
+
+  yyn = yyr1[yyn];
+
+  yystate = yypgoto[yyn - YYNTOKENS] + *yyssp;
+  if (0 <= yystate && yystate <= YYLAST && yycheck[yystate] == *yyssp)
+    yystate = yytable[yystate];
+  else
+    yystate = yydefgoto[yyn - YYNTOKENS];
 
   goto yynewstate;
 
@@ -3068,7 +3074,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1105 "/Users/jarod/centos/TarsCloud/framework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1903  */
+#line 1105 "/home/tars/TarsFramework/tarscpp/tools/tarsgrammar/tars.y" /* yacc.c:1906  */
 
 
 
