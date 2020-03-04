@@ -318,17 +318,19 @@ void StatReport::report(const string& strModuleName,
     }
 
     head.interfaceName  = trimAndLimitStr(strInterfaceName, MAX_MASTER_NAME_LEN);
+
     head.slavePort      = iPort;
+
     head.returnValue    = iReturnValue;
-    
+
     //包体信息.
-    if(eResult == STAT_SUCC)
+    if (eResult == STAT_SUCC)
     {
         body.count = 1;
 
         body.totalRspTime = body.minRspTime = body.maxRspTime = iSptime;
     }
-    else if(eResult == STAT_TIMEOUT)
+    else if (eResult == STAT_TIMEOUT)
     {
         body.timeoutCount = 1;
     }
@@ -381,23 +383,24 @@ void StatReport::report(const string& strMasterName,
 
     submit(head, body, true);
 }
-
-string StatReport::sampleUnid()
-{
-	static atomic<int> g_id(rand());
-
-    char s[14]              = {0};
-    time_t t                = TNOW;
-    int ip                  = inet_addr(_ip.c_str());
-    int thread              = ++g_id;
-    static unsigned short n = 0;
-    ++n;
-    memcpy( s, &ip, 4 );
-    memcpy( s + 4, &t, 4);
-    memcpy( s + 8, &thread, 4);
-    memcpy( s + 12, &n, 2 );
-    return TC_Common::bin2str(string(s,14));
-}
+//
+//string StatReport::sampleUnid()
+//{
+//
+//    static atomic<int> g_id(rand());
+//
+//    char s[14] = { 0 };
+//    time_t t                = TNOW;
+//    int ip                  = inet_addr(_ip.c_str());
+//    int thread              = ++g_id;
+//    static unsigned short n = 0;
+//    ++n;
+//    memcpy(s, &ip, 4);
+//    memcpy(s + 4, &t, 4);
+//    memcpy(s + 8, &thread, 4);
+//    memcpy(s + 12, &n, 2);
+//    return TC_Common::bin2str(string(s, 14));
+//}
 
 void StatReport::submit( StatMicMsgHead& head, StatMicMsgBody& body,bool bFromClient )
 {
@@ -430,12 +433,22 @@ void StatReport::submit( StatMicMsgHead& head, StatMicMsgBody& body,bool bFromCl
     }
 }
 
-void StatReport::doSample(const string& strSlaveName,
-                      const string& strInterfaceName,
-                      const string& strSlaveIp,
-                      map<string, string> &status)
+size_t StatReport::getQueueSize(size_t epollIndex)
 {
+	if(epollIndex >= _statMsg.size())
+	{
+		return 0;
+	}
+
+	return _statMsg[epollIndex]->size();
 }
+
+//void StatReport::doSample(const string& strSlaveName,
+//                          const string& strInterfaceName,
+//                          const string& strSlaveIp,
+//                          map<string, string>& status)
+//{
+//}
 
 int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
 {

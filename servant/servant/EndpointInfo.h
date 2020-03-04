@@ -54,11 +54,16 @@ public:
     EndpointInfo(const string& host, uint16_t port, TC_Endpoint::EType type, int32_t grid, const string & setDivision, int qos, int weight = -1, unsigned int weighttype = 0, int authType = 0);
 
     /**
-     * 地址的字符串描述,不带set信息
-     *
-     * @return string
+     * get endpoint
+     * @return
      */
-     const string& descNoSetInfo() const;
+	const TC_Endpoint &getEndpoint() const { return _ep; }
+//    /**
+//     * 地址的字符串描述,不带set信息
+//     *
+//     * @return string
+//     */
+//     const string& descNoSetInfo() const;
 
     /**
      * 地址的字符串描述
@@ -70,15 +75,15 @@ public:
         return _desc;
     }
 
-    /**
-     * 比较的地址的字符串描述
-     *
-     * @return string
-     */
-    const string & compareDesc() const
-    {
-        return _cmpDesc;
-    }
+//    /**
+//     * 比较的地址的字符串描述
+//     *
+//     * @return string
+//     */
+//    const string & compareDesc() const
+//    {
+//        return _cmpDesc;
+//    }
 
     /**
      * 详细地址字符串描述
@@ -181,13 +186,13 @@ public:
      */
     bool operator == (const EndpointInfo& r) const;
 
-    /**
-    *等于,set信息不参与比较
-    *@param r
-    *
-    *@return bool
-    */
-    bool equalNoSetInfo(const EndpointInfo& r) const;
+//    /**
+//    *等于,set信息不参与比较
+//    *@param r
+//    *
+//    *@return bool
+//    */
+//    bool equalNoSetInfo(const EndpointInfo& r) const;
 
     /**
      * 小于

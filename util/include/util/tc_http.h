@@ -25,6 +25,7 @@
 #include "util/tc_socket.h"
 #include "util/tc_epoller.h"
 #include "util/tc_timeout_queue.h"
+#include "util/tc_network_buffer.h"
 #include <map>
 #include <sstream>
 #include <cassert>
@@ -60,6 +61,7 @@ namespace tars
  */             
 /////////////////////////////////////////////////
 
+class TC_NetWorkBuffer;
 
 /**
 * @brief  http协议解析异常类
@@ -577,13 +579,13 @@ public:
       */
     void reset();
 
-    /**
-     * @brief 读取一行.
-     *  
-     * @param ppChar  读取位置指针
-     * @return string 读取的内容
-     */
-    static string getLine(const char** ppChar);
+//    /**
+//     * @brief 读取一行.
+//     *
+//     * @param ppChar  读取位置指针
+//     * @return string 读取的内容
+//     */
+//    static string getLine(const char** ppChar);
 
     /**
      * @brief 读取一行.
@@ -592,7 +594,7 @@ public:
      * @param iBufLen  长度
      * @return string  读取的内容
      */
-    static string getLine(const char** ppChar, int iBufLen);
+//    static string getLine(const char** ppChar, int iBufLen);
 
     /**
      * @brief 生成头部字符串(不包含第一行).
@@ -614,8 +616,45 @@ public:
      * @param szBuffer 
      * @return const char*, 偏移的指针
      */
-    static const char* parseHeader(const char* szBuffer, http_header_type &sHeader);
+//    static const char* parseHeader(const char* szBuffer, http_header_type &sHeader);
 
+    template<typename ForwardIterator1, typename ForwardIterator2>
+	static void parseHeader(const ForwardIterator1 &beginIt, const ForwardIterator2 &headerIt, http_header_type &sHeader)
+	{
+		sHeader.clear();
+		string sep      = "\r\n";
+		string colon    = ":";
+		bool first      = true;
+		auto lineStartIt= beginIt;
+		while (true)
+		{
+			auto it = std::search(lineStartIt, headerIt, sep.c_str(), sep.c_str() + sep.size());
+			if(it == headerIt)
+			{
+				break;
+			}
+			if(!first)
+			{
+				auto itF = std::search(lineStartIt, it, colon.c_str(), colon.c_str() + colon.size());
+				if (itF != it)
+				{
+					string name;
+					name.resize(itF - lineStartIt);
+					std::copy(lineStartIt, itF, name.begin());
+					string value;
+					value.resize(it - (itF + 1));
+					std::copy(itF + 1, it, value.begin());
+					sHeader.insert(multimap<string, string>::value_type(TC_Common::trim(name, " "),
+					                                                    TC_Common::trim(value, " ")));
+				}
+			}
+			else
+			{
+				first = false;
+			}
+			lineStartIt = it + sep.size();
+		}
+	}
 protected:
 
     /**
@@ -815,7 +854,7 @@ public:
      *        false:还需要继续解析，如果服务器主动关闭连接的模式下
      *        , 也可能不需要再解析了
      */
-    bool incrementDecode(string &sBuffer);
+	bool incrementDecode(TC_NetWorkBuffer &buff);
 
     /**
      * @brief 解析http应答(采用string方式) ，
@@ -954,14 +993,42 @@ public:
      * @param szBuffer 应答头信息
      * @return
      */
-    void parseResponseHeader(const char* szBuffer);
+//    void parseResponseHeader(const char* szBuffer, const char* header);
 
+    template<typename ForwardIterator1, typename ForwardIterator2>
+	void parseResponseHeader(const ForwardIterator1 &beginIt, const ForwardIterator2 &headerIt)
+	{
+		string line = "\r\n";
+		auto it = std::search(beginIt, headerIt, line.c_str(), line.c_str() + line.size());
+		assert(it != headerIt);
+		string sep = " ";
+		auto f1 = std::search(beginIt, headerIt, sep.c_str(), sep.c_str() + sep.size());
+		if(f1 == headerIt)
+		{
+			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse version format error : " + string(beginIt, it));
+		}
+		auto f2 = std::search(f1 + 1, headerIt, sep.c_str(), sep.c_str() + sep.size());
+		if(f1 == headerIt)
+		{
+			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse status format error : " + string(beginIt, it));
+		}
+		_headerLine = string(beginIt, it);
+		if(TC_Port::strncasecmp(_headerLine.c_str(), "HTTP/", 5) != 0)
+		{
+			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response version is not start with 'HTTP/' : " + _headerLine);
+		}
+		_version    = string(beginIt, f1);
+		_status     = TC_Common::strto<int>(string(f1 + 1, f2));
+		_about      = TC_Common::trim(string(f2 + 1, it));
+		parseHeader(beginIt, headerIt, _headers);
+	}
 protected:
     /**
      * 添加内容, 增量解析用到
      * @param sBuffer
      */
     void addContent(const string &sBuffer);
+	void addContent(const char *buffer, size_t length);
 
 protected:
 
@@ -1034,6 +1101,13 @@ public:
     static bool checkRequest(const char* sBuffer, size_t len);
 
     /**
+     * 检查http包是否收全
+     * @param buff
+     * @return
+     */
+	static bool checkRequest(TC_NetWorkBuffer &buff);
+
+	/**
      * @brief 重置
      */
     void reset();
@@ -1095,6 +1169,12 @@ public:
     void encode(vector<char> &buffer);
 
     /**
+     * encode buffer to TC_NetWorkBuffer
+     * @param buff
+     */
+	void encode(TC_NetWorkBuffer &buff);
+
+	/**
      * @brief 设置请求包.
      *  
      * @param sUrl         例如:http://www.qq.com/query?a=b&c=d
@@ -1265,7 +1345,7 @@ public:
 
     /**
      * @brief 获取完整的http请求.
-     * 
+     *
      * @return http请求串
      */
     string getOriginRequest() const { return _httpURL.getURL(); }
@@ -1281,7 +1361,7 @@ public:
      * @brief 获取http请求的url部分, 即?前面，不包括Host,
      *        例如http://www.qq.com/abc?a=b#def, 则为:/abc
      * @return http请求的url部分
-     * */ 
+     * */
     string getRequestUrl() const { return _httpURL.getPath(); }
 
     /**
@@ -1293,15 +1373,15 @@ public:
 
     /**
      * @brief 解析请求头部.
-     *  
+     *
      * @param szBuffer 请求头部
-     * @return size_t
+     * @return
      */
-    size_t parseRequestHeader(const char* szBuffer);
+    void parseRequestHeader(const char* szBuffer, const char *header);
 
     /**
      * @brief 请求类型到字符串.
-     *  
+     *
      * @param iRequestType  请求
      * @return              解析后的字符串
      */
@@ -1311,7 +1391,7 @@ protected:
 
     /**
      * @brief 对http请求编码.
-     *  
+     *
      * @param sUrl         需要进行编码的http请求
      * @param iRequestType 编码后的输出流
      * @return void

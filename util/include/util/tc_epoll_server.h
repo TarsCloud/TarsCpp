@@ -172,18 +172,20 @@ public:
 	typedef TC_CasQueue<shared_ptr<SendContext>> send_queue;
 	typedef recv_queue::queue_type recv_queue_type;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /**
-     * 链接状态
-     */
-    struct ConnStatus
-    {
-        string          ip;
-        int32_t         uid;
-        uint16_t        port;
-        int             timeout;
-        int             iLastRefreshTime;
-    };
+	////////////////////////////////////////////////////////////////////////////
+	/**
+	 * 链接状态
+	 */
+	struct ConnStatus
+	{
+		string          ip;
+		int32_t         uid;
+		uint16_t        port;
+		int             timeout;
+		int             iLastRefreshTime;
+		size_t          recvBufferSize;
+		size_t          sendBufferSize;
+	};
 
     ////////////////////////////////////////////////////////////////////////////
     /**
@@ -642,28 +644,28 @@ public:
          */
         void decreaseNowConnection();
 
-        /**
-         * 增加当前连接数
-         */
-        void increaseNowConnection();
+		/**
+		 * 增加当前连接数
+		 */
+		void increaseNowConnection();
 
-        /**
-         * 获取所有链接状态
-         * @return ConnStatus
-         */
-        vector<ConnStatus> getConnStatus();
+		/**
+		 * 获取所有链接状态
+		 * @return ConnStatus
+		 */
+		vector<ConnStatus> getConnStatus();
 
-        /**
-         * 获取当前连接数
-         * @return int
-         */
-        int getNowConnection() const;
+		/**
+		 * 获取当前连接数
+		 * @return int
+		 */
+		int getNowConnection() const;
 
-        /**
-         * 获取EpollServer
-         * @return TC_EpollServer*
-         */
-        TC_EpollServer* getEpollServer() const  { return _pEpollServer; }
+		/**
+		 * 获取服务
+		 * @return TC_EpollServer*
+		 */
+		TC_EpollServer* getEpollServer() const { return _pEpollServer; };
 
 		/**
 		 * 获取对应的网络线程
@@ -678,17 +680,17 @@ public:
 		 */
 		void setProtocol(const TC_NetWorkBuffer::protocol_functor& pf, int iHeaderLen = 0, const header_filter_functor& hf = echo_header_filter);
 
-        /**
-         * 获取协议解析器
-         * @return protocol_functor&
-         */
-        TC_NetWorkBuffer::protocol_functor &getProtocol();
+		/**
+		 * 获取协议解析器
+		 * @return protocol_functor&
+		 */
+		TC_NetWorkBuffer::protocol_functor &getProtocol();
 
-        /**
-         * 解析包头处理对象
-         * @return protocol_functor&
-         */
-        header_filter_functor &getHeaderFilterFunctor();
+		/**
+		 * 解析包头处理对象
+		 * @return protocol_functor&
+		 */
+		header_filter_functor &getHeaderFilterFunctor();
 
 		/**
 		 * 增加数据到队列中
@@ -704,11 +706,27 @@ public:
 		 */
 		bool waitForRecvQueue(uint32_t handleIndex, shared_ptr<RecvContext> &recv);
 
-        /**
-         * 接收队列的大小
-         * @return size_t
-         */
-        size_t getRecvBufferSize() const;
+		/**
+		 * 接收队列的大小
+		 * @return size_t
+		 */
+		size_t getRecvBufferSize() const;
+
+		/**
+		 * 发送队列的大小
+		 * @return size_t
+		 */
+		size_t getSendBufferSize() const;
+
+		/**
+		 * add send buffer size
+		 */
+		inline void increaseSendBufferSize() { ++_iSendBufferSize; }
+
+		/**
+		 * increase send buffer size
+		 */
+		inline void decreaseSendBufferSize(size_t s = 1) { _iSendBufferSize.fetch_sub(s); }
 
 		/**
 		 * 默认的协议解析类, 直接echo
@@ -783,16 +801,25 @@ public:
 			return _handles[index];
 		}
 
-        // /**
-        //  * 设置服务端回包缓存的大小限制
-        //  */
-        // void setBackPacketBuffLimit(size_t iLimitSize);
+		/*
+		 * 设置服务端积压缓存的大小限制(超过大小启用)
+		 */
+		void setBackPacketBuffLimit(size_t iLimitSize) { _iBackPacketBuffLimit = iLimitSize; }
 
-        // /**
-        //  * 获取服务端回包缓存的大小限制
-        //  */
-        // size_t getBackPacketBuffLimit();
+		/**
+		 * 获取服务端回包缓存的大小限制(超过大小启用)
+		 */
+		size_t getBackPacketBuffLimit() const { return _iBackPacketBuffLimit; }
 
+		/*
+		 * 设置服务端5/s最低发送字节
+		 */
+		void setBackPacketBuffMin(size_t iMinLimit) { _iBackPacketBuffMin = iMinLimit; }
+
+		/**
+		 * 获取服务端5/s最低发送字节
+		 */
+		size_t getBackPacketBuffMin() const { return _iBackPacketBuffMin; }
 
 		/**
 		 * 获取服务端接收队列(如果_rnbuffer有多个, 则根据调用者的线程id来hash获取)
@@ -943,12 +970,17 @@ public:
 		/**
 		 * 接收队列数据总个数
 		 */
-		atomic<size_t>  _iBufferSize{0};
+		atomic<size_t>  _iRecvBufferSize{0};
 
-        /**
-         * 队列最大容量
-         */
-        int             _iQueueCapacity;
+		/**
+		 * 发送队列数据总个数
+		 */
+		atomic<size_t>  _iSendBufferSize{0};
+
+		/**
+		 * 队列最大容量
+		 */
+		int             _iQueueCapacity;
 
         /**
          * 消息超时时间（从入队列到出队列间隔)(毫秒）
@@ -970,8 +1002,15 @@ public:
          */
         string                  _protocolName;
 
-        // 回包缓存限制大小
-        // size_t                    _iBackPacketBuffLimit;
+		/**
+		 * 回包缓存限制大小
+		 */
+		size_t					_iBackPacketBuffLimit = 0;
+
+		/**
+		 * 回包速度最低限制(5/s), 默认1K
+		 */
+		size_t					_iBackPacketBuffMin = 1024;
 
 		//队列模式
 		bool _queueMode 		= false;
@@ -1121,6 +1160,16 @@ public:
          */
         void tryInitAuthState(int initState);
 
+		/**
+		 * 接收数据buffer
+		 */
+		TC_NetWorkBuffer &getRecvBuffer() { return _recvBuffer; }
+
+		/**
+		 * 发送数据buffer
+		 */
+		TC_NetWorkBuffer &getSendBuffer() { return _sendBuffer; }
+
 	    friend class NetThread;
 
     protected:
@@ -1131,15 +1180,15 @@ public:
 		 */
 		void close();
 
-		/**
-		* 发送TCP
-		*/
-		int sendTcp(const shared_ptr<SendContext> &data);
-
-		/**
-		* 发送Udp
-		*/
-		int sendUdp(const shared_ptr<SendContext> &data);
+//		/**
+//		* 发送TCP
+//		*/
+//		int sendTcp(const shared_ptr<SendContext> &data);
+//
+//		/**
+//		* 发送Udp
+//		*/
+//		int sendUdp(const shared_ptr<SendContext> &data);
 
 		/**
 		 * 添加发送buffer
@@ -1248,10 +1297,25 @@ public:
          */
         TC_NetWorkBuffer    _sendBuffer;
 
-        /**
-         * 需要过滤的头部字节数
-         */
-        int                 _iHeaderLen;
+		/**
+		 * 发送数据
+		 */
+		size_t              _sendBufferSize = 0;
+
+		/**
+		 * 检查时间
+		 */
+		time_t              _lastCheckTime = 0;
+
+		/**
+		 * 发送的检查<已经发送数据, 剩余buffer大小>
+		 */
+		vector<pair<size_t, size_t>> _checkSend;
+
+		/**
+		 * 需要过滤的头部字节数
+		 */
+		int                 _iHeaderLen;
 
         /**
          * 发送完当前数据就关闭连接
@@ -1373,12 +1437,12 @@ public:
 		/**
 		 * 无锁
 		 */
-		TC_SpinLock                     _mutex;
+		TC_ThreadMutex                 _mutex;
 
-        /**
-         * 服务
-         */
-        NetThread                      *_pEpollServer;
+		/**
+		 * 服务
+		 */
+		NetThread                      *_pEpollServer;
 
         /**
          * 总计连接数
@@ -1545,11 +1609,11 @@ public:
          */
         void setUdpRecvBufferSize(size_t nSize=DEFAULT_RECV_BUFFERSIZE);
 
-        /**
-         * 发送队列的大小
-         * @return size_t
-         */
-        size_t getSendRspSize();
+//		/**
+//		 * 发送队列的大小
+//		 * @return size_t
+//		 */
+//		size_t getSendRspSize();
 
     protected:
 

@@ -29,6 +29,15 @@
 namespace tars
 {
 
+/**
+* @brief
+*/
+struct TC_NetWorkBuffer_Exception : public TC_Exception
+{
+	TC_NetWorkBuffer_Exception(const string &sBuffer) : TC_Exception(sBuffer){};
+	~TC_NetWorkBuffer_Exception() {};
+};
+
 class TC_NetWorkBuffer
 {
 public:
@@ -109,7 +118,21 @@ public:
 
         size_t pos() const { return _pos; }
 
-        void add(uint32_t ret)
+        char &at(size_t offset)
+        {
+	    	if(_pos + offset >= _buffer.size() )
+	    		throw TC_NetWorkBuffer_Exception("[TC_NetWorkBuffer::Buffer] at '" + TC_Common::tostr(offset) + "' offset overflow");
+	    	return _buffer[_pos + offset];
+        }
+
+	    char at(size_t offset) const
+	    {
+		    if(_pos + offset >= _buffer.size() )
+			    throw TC_NetWorkBuffer_Exception("[TC_NetWorkBuffer::Buffer] at '" + TC_Common::tostr(offset) + "' offset overflow");
+		    return _buffer[_pos + offset];
+	    }
+
+	    void add(uint32_t ret)
         {
 	        _pos += ret;
             assert(_pos <= _buffer.size());
@@ -120,6 +143,212 @@ public:
 	    size_t          _pos = 0;
 
     };
+
+	typedef std::list<std::shared_ptr<Buffer>>::const_iterator buffer_list_iterator;
+
+	class buffer_iterator : public std::iterator<std::random_access_iterator_tag, char>
+	{
+	public:
+		buffer_iterator(const TC_NetWorkBuffer *buffer, size_t offset) : _buffer(buffer)
+		{
+			parseOffset(offset);
+		}
+
+		/**
+		 * @brief copy
+		 * @param it
+		 */
+		buffer_iterator(const buffer_iterator &it)
+		{
+			if(this != &it)
+			{
+				_buffer = it._buffer;
+				_pos    = it._pos;
+				_offset = it._offset;
+				_it     = it._it;
+			}
+		}
+
+		/**
+		 *
+		 * @param mcmi
+		 *
+		 * @return bool
+		 */
+		bool operator==(const buffer_iterator& it) const
+		{
+			if (_buffer == it._buffer && _it == it._it && _offset == it._offset)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		/**
+		 *
+		 * @param mv
+		 *
+		 * @return bool
+		 */
+		bool operator!=(const buffer_iterator& it) const
+		{
+			if (_buffer == it._buffer && _it == it._it && _offset == it._offset)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		char & operator *()
+		{
+			return (*_it)->buffer()[_pos];
+		}
+
+		char * operator ->()
+		{
+			return &(*_it)->buffer()[_pos];
+		}
+
+		char& operator *() const
+		{
+			return (*_it)->buffer()[_pos];
+		}
+
+		const char* operator ->() const
+		{
+			return &(*_it)->buffer()[_pos];
+		}
+
+		buffer_iterator operator +(size_t n) const
+		{
+			return buffer_iterator(_buffer, _offset + n);
+		}
+
+		buffer_iterator operator += (size_t n)
+		{
+			parseOffset(_offset + n);
+			return *this;
+		}
+
+		difference_type operator -(const buffer_iterator &n) const
+		{
+			return _offset - n._offset;
+		}
+
+		buffer_iterator operator -(size_t n) const
+		{
+			return buffer_iterator(_buffer, _offset - n);
+		}
+
+		bool  operator < (const buffer_iterator n) const
+		{
+			return _offset<n._offset;
+		}
+
+		bool  operator <= (const buffer_iterator n) const
+		{
+			return _offset<=n._offset;
+		}
+
+		bool  operator > (const buffer_iterator n) const
+		{
+			return _offset>n._offset;
+		}
+
+		bool  operator >= (const buffer_iterator n) const
+		{
+			return _offset>=n._offset;
+		}
+
+		//前置++
+		buffer_iterator& operator ++()
+		{
+			if(_offset >= _buffer->getBufferLength())
+				return *this;
+
+			assert(_it != _buffer->_bufferList.end());
+
+			if(_pos < (*_it)->length() - 1)
+			{
+				++_pos;
+				++_offset;
+			}
+			else
+			{
+				++_it;
+				++_offset;
+				_pos    = 0;
+			}
+			return *this;
+		}
+
+		//后置++
+		buffer_iterator operator ++(int)
+		{
+			buffer_iterator it(*this);
+
+			if(_it != _buffer->_bufferList.end())
+			{
+				if (_pos < (*_it)->length() - 1)
+				{
+					++_pos;
+					++_offset;
+				}
+				else
+				{
+					++_it;
+					++_offset;
+					_pos = 0;
+				}
+			}
+			else
+			{
+				_offset = _buffer->getBufferLength();
+				_pos = 0;
+			}
+			return it;
+		}
+
+	protected:
+		void parseOffset(size_t offset)
+		{
+			_offset = offset;
+
+			bool flag = false;
+			for(auto it  = _buffer->_bufferList.begin(); it != _buffer->_bufferList.end(); ++it)
+			{
+				if(offset >= (*it)->length())
+				{
+					offset -= (*it)->length();
+				}
+				else
+				{
+					_it     = it;
+					_pos    = offset;
+					flag    = true;
+
+					break;
+				}
+			}
+
+			if(!flag)
+			{
+				_offset = _buffer->getBufferLength();
+				_pos    = 0;
+				_it     = _buffer->_bufferList.end();
+			}
+		}
+
+		friend class TC_NetWorkBuffer;
+
+	protected:
+		const TC_NetWorkBuffer* _buffer;
+		buffer_list_iterator    _it;
+		size_t                  _offset = 0;
+		size_t                  _pos = 0;
+	};
 
     /**
      * 必须以connection来构造(不同服务模型中获取的对象不一样, 需要自己强制转换)
@@ -170,6 +399,12 @@ public:
     void addBuffer(const std::vector<char>& buff);
 
 	/**
+	 * 增加buffer
+	 * @param buff
+	 */
+	void addBuffer(const std::string& buff);
+
+	/**
      * 增加buffer
      * @param buff
      * @param length
@@ -177,6 +412,75 @@ public:
     void addBuffer(const char* buff, size_t length);
 
     /**
+     * begin
+     * @return
+     */
+	buffer_iterator begin() const;
+
+	/**
+	 * end
+	 * @return
+	 */
+	buffer_iterator end() const;
+
+	/**
+	 * 查找
+	 * @param str
+	 * @param length
+	 * @return
+	 */
+	buffer_iterator find(const char *str, size_t length);
+
+	/**
+	 * 获取从开头到迭代器(前一个, 不包括迭代器本身)所有buffer
+	 * T: string or vector<char>
+	 * @param it
+	 * @return
+	 */
+	template<typename T>
+	T iteratorToIterator(const buffer_iterator &sit, const buffer_iterator &eit)
+	{
+		T buff;
+
+		if(sit == end() || sit == eit)
+		{
+			return buff;
+		}
+
+		if(sit > eit)
+		{
+			throw TC_NetWorkBuffer_Exception("[TC_NetWorkBuffer::iteratorToIterator] sit > eit error");
+		}
+
+		buff.resize(eit - sit);
+
+		std::copy(sit, eit, buff.begin());
+
+		return buff;
+	}
+
+	/**
+	 * 匹配到对应buff, 获取之前的buffer
+	 * T: string or vector<char>
+	 * @param sep
+	 * @param length
+	 * @return
+	 */
+	template<typename T>
+	T getPrefixBuffer(const char *sep, size_t length)
+	{
+		T buff;
+		auto sit = std::search(begin(), end(), sep, sep + length);
+
+		if(sit == end())
+		{
+			return buff;
+		}
+
+		return iteratorToIterator<T>(begin(), sit);
+	}
+
+	/**
      * 清空所有buffer
      */
     void clearBuffers();
@@ -191,6 +495,12 @@ public:
      * @return size_t
      */
     size_t getBufferLength() const;
+
+    /**
+     * buffer list length
+     * @return
+     */
+    size_t size() const { return _bufferList.size(); }
 
     /**
      * 获取第一块有效数据buffer的指针, 可以用来发送数据
@@ -229,6 +539,34 @@ public:
      * @return
      */
     bool getHeader(size_t len, std::vector<char> &buffer) const;
+
+	/**
+	 * 读取len字节的buffer(避免len个字节被分割到多个buffer的情况)(注意: 不往后移动)
+	 * getHeader<string>(10), getHeader<vector<char>>(10);
+	 * @param len
+	 * @return 不够会抛异常TC_NetWorkBuffer_Exception
+	 */
+    template<typename T>
+    T getHeader(size_t len) const
+	{
+		if(getBufferLength() < len)
+		{
+			throw TC_NetWorkBuffer_Exception("[TC_NetWorkBuffer::getHeader] no enough buff(" + TC_Common::tostr(getBufferLength()) + ") to get(" + TC_Common::tostr(len) + ")");
+		}
+
+		T buffer;
+
+		if(len == 0)
+		{
+			return buffer;
+		}
+
+		buffer.resize(len);
+
+		getBuffers(&buffer[0], len);
+
+		return buffer;
+	}
 
     /**
      * 往后移动len个字节

@@ -40,7 +40,12 @@
 
 namespace tars
 {
-//////////////////////////////////////////////////////////////////////
+//#ifndef GEN_PYTHON_MASK
+
+#define OUT_LINE        (TC_Common::outfill("", '-', 80))
+#define OUT_LINE_LONG   (TC_Common::outfill("", '=', 80))
+#define OUT_LINE_TAB(x) (TC_Common::outfill("", '-', 80 - 4*x))
+
 /**
  * 以下定义配置框架支持的命令
  */
@@ -56,7 +61,7 @@ namespace tars
 #define TARS_CMD_SET_DAYLOG_LEVEL    "tars.enabledaylog"      //设置按天日志是否输出: tars.enabledaylog [remote|local]|[logname]|[true|false]
 #define TARS_CMD_CLOSE_CORE          "tars.closecore"         //设置服务的core limit:  tars.setlimit [yes|no]
 #define TARS_CMD_RELOAD_LOCATOR      "tars.reloadlocator"     //重新加载locator的配置信息
-
+#define TARS_CMD_RESOURCE            "tars.resource"          //get resource
 //////////////////////////////////////////////////////////////////////
 /**
  * 通知信息给notify服务, 展示在页面上
@@ -127,6 +132,8 @@ struct ServerConfig
 	static int         NetThread;               //servernet thread
 	static bool        ManualListen;               //是否启用手工端口监听
 	static bool        MergeNetImp;                //网络线程和IMP线程合并(以网络线程个数为准)
+	static int         BackPacketLimit;     //回包积压检查
+	static int         BackPacketMin;       //回包速度检查
 #if TARS_SSL
 	static std::string CA;
 	static std::string Cert;
@@ -368,6 +375,14 @@ protected:
     * @param result
     */
     bool cmdReloadLocator(const string& command, const string& params, string& result);
+
+	/*
+	* view server resource
+	* @param command
+	* @param params
+	* @param result
+	*/
+	bool cmdViewResource(const string& command, const string& params, string& result);
 
 protected:
 

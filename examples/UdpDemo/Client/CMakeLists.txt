@@ -1,0 +1,1 @@
+build_tars_server(UdpClient UdpServer)

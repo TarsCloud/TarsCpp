@@ -73,6 +73,7 @@ if (TARS_PROTOBUF)
 
         ExternalProject_Add(ADD_${LIB_PROTOBUF}
                 URL http://cdn.tarsyun.com/src/protobuf-cpp-3.11.3.tar.gz
+                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
                 CONFIGURE_COMMAND cmake cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
@@ -90,6 +91,7 @@ if (TARS_PROTOBUF)
 
         ExternalProject_Add(ADD_${LIB_PROTOBUF}
                 URL http://cdn.tarsyun.com/src/protobuf-cpp-3.11.3.tar.gz
+                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
                 CONFIGURE_COMMAND cmake cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DBUILD_SHARED_LIBS=OFF
@@ -104,8 +106,8 @@ if (TARS_PROTOBUF)
 
     endif ()
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/lib DESTINATION .)
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/include/google DESTINATION include)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/lib DESTINATION thirdparty)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/include/google DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_PROTOBUF})
 
@@ -124,8 +126,8 @@ if (TARS_SSL)
         set(LIB_CRYPTO "libcrypto")
 
         ExternalProject_Add(ADD_${LIB_SSL}
-                DEPENDS ${LIB_ZLIB}
                 URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
+                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
                 CONFIGURE_COMMAND perl Configure --prefix=${CMAKE_BINARY_DIR}/src/openssl VC-WIN64A no-asm 
@@ -142,8 +144,8 @@ if (TARS_SSL)
         set(LIB_CRYPTO "crypto")
 
         ExternalProject_Add(ADD_${LIB_SSL}
-                DEPENDS ${LIB_ZLIB}
                 URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
+                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
                 CONFIGURE_COMMAND ./config --prefix=${CMAKE_BINARY_DIR}/src/openssl no-shared
@@ -158,8 +160,8 @@ if (TARS_SSL)
 
     endif ()
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/lib DESTINATION .)
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/include/openssl DESTINATION include)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/lib DESTINATION thirdparty)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/include/openssl DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_SSL})
 endif ()
@@ -175,6 +177,7 @@ if (TARS_MYSQL)
 
         ExternalProject_Add(ADD_${LIB_MYSQL}
                 URL http://cdn.tarsyun.com/src/mysql-connector-c-6.1.11-src.zip
+                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
                 CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release 
@@ -192,6 +195,7 @@ if (TARS_MYSQL)
 
         ExternalProject_Add(ADD_${LIB_MYSQL}
                 URL http://cdn.tarsyun.com/src/mysql-connector-c-6.1.11-src.tar.gz
+                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
                 CONFIGURE_COMMAND cmake .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
@@ -206,9 +210,9 @@ if (TARS_MYSQL)
 
     endif ()
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/lib DESTINATION .)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/lib DESTINATION thirdparty)
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/include/mysql DESTINATION include)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/include/mysql DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_MYSQL})
 endif ()
@@ -228,6 +232,7 @@ if (TARS_HTTP2)
     if (WIN32)
         ExternalProject_Add(ADD_${LIB_HTTP2}
                 URL http://cdn.tarsyun.com/src/nghttp2-1.40.0.tar.gz
+                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
                 CONFIGURE_COMMAND cmake .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
@@ -243,6 +248,7 @@ if (TARS_HTTP2)
     else ()
         ExternalProject_Add(ADD_${LIB_HTTP2}
                 URL http://cdn.tarsyun.com/src/nghttp2-1.40.0.tar.gz
+                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
                 CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
@@ -257,8 +263,8 @@ if (TARS_HTTP2)
 
     endif ()
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/lib DESTINATION .)
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/include/nghttp2 DESTINATION include)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/lib DESTINATION thirdparty)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/include/nghttp2 DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_HTTP2})
 

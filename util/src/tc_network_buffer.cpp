@@ -12,20 +12,50 @@ namespace tars
 
 void TC_NetWorkBuffer::addBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> & buff)
 {
+	if(buff->empty()) return;
+
 	_bufferList.push_back(buff);
 	_length += buff->length();
 }
 
 void TC_NetWorkBuffer::addBuffer(const vector<char>& buff)
 {
+	if(buff.empty()) return;
+
     _bufferList.push_back(std::make_shared<Buffer>(buff));
 
     _length += buff.size();
 }
 
+void TC_NetWorkBuffer::addBuffer(const std::string& buff)
+{
+	if(buff.empty()) return;
+
+	_bufferList.push_back(std::make_shared<Buffer>(buff.c_str(), buff.size()));
+
+	_length += buff.size();
+}
+
 void TC_NetWorkBuffer::addBuffer(const char* buff, size_t length)
 {
-    addBuffer(vector<char>(buff, buff + length));
+	if(buff == NULL || length == 0) return;
+
+	addBuffer(vector<char>(buff, buff + length));
+}
+
+TC_NetWorkBuffer::buffer_iterator TC_NetWorkBuffer::begin() const
+{
+	return buffer_iterator(this, 0);
+}
+
+TC_NetWorkBuffer::buffer_iterator TC_NetWorkBuffer::end() const
+{
+	return buffer_iterator(this,  this->getBufferLength());
+}
+
+TC_NetWorkBuffer::buffer_iterator TC_NetWorkBuffer::find(const char *str, size_t length)
+{
+	return std::search(begin(), end(), str, str + length);
 }
 
 void TC_NetWorkBuffer::clearBuffers()
@@ -230,16 +260,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::checkHttp()
 {
     try
     {
-        mergeBuffers();
-
-        pair<const char*, size_t> buffer = getBufferPointer();
-
-        if(buffer.first == NULL || buffer.second == 0)
-        {
-            return PACKET_LESS;
-        }
-
-        bool b = TC_HttpRequest::checkRequest(buffer.first, buffer.second);
+	    bool b = TC_HttpRequest::checkRequest(*this);
 
         return b ? PACKET_FULL : PACKET_LESS;
     }

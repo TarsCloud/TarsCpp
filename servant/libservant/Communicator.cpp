@@ -15,8 +15,8 @@
  */
 
 #include "util/tc_file.h"
-
 #include "servant/Communicator.h"
+#include "servant/Application.h"
 #include "servant/StatReport.h"
 #include "servant/TarsLogger.h"
 
@@ -458,8 +458,19 @@ vector<TC_Endpoint> Communicator::getEndpoint(const string & objName)
 
 vector<TC_Endpoint> Communicator::getEndpoint4All(const string & objName)
 {
-    ServantProxy * pServantProxy = getServantProxy(objName);
+    ServantProxy *pServantProxy = getServantProxy(objName);
     return pServantProxy->getEndpoint4All();
+}
+
+string Communicator::getResouresInfo()
+{
+	ostringstream os;
+	for (size_t i = 0; i < _clientThreadNum; ++i)
+	{
+		os << OUT_LINE << endl;
+		os << _communicatorEpoll[i]->getResouresInfo();
+	}
+	return os.str();
 }
 
 void Communicator::terminate()

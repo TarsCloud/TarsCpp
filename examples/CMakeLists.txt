@@ -12,6 +12,7 @@ endif()
 add_subdirectory(PushDemo)
 add_subdirectory(QuickStartDemo)
 add_subdirectory(StressDemo)
+add_subdirectory(UdpDemo)
 
 set(WORKING_DIRECTORY ${tars-cpp_SOURCE_DIR})
 
@@ -37,6 +38,13 @@ if(WIN32)
             USES_TERMINAL
             COMMAND examples/scripts/run-auth.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${WORKING_DIRECTORY}
             COMMENT "call run auth")
+
+    add_custom_target(run-udp
+            WORKING_DIRECTORY ${WORKING_DIRECTORY}
+            DEPENDS UdpServer UdpClient
+            USES_TERMINAL
+            COMMAND examples/scripts/run-udp.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${WORKING_DIRECTORY}
+            COMMENT "call run udp")
 
     if(TARS_HTTP2)
         add_custom_target(run-http2
@@ -117,10 +125,16 @@ else(WIN32)
         COMMENT "call quick start")
 
     add_custom_target(run-http
-        WORKING_DIRECTORY ${WORKING_DIRECTORY}
-        DEPENDS HttpServer HttpClient
-        COMMAND sh examples/scripts/run-http.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${WORKING_DIRECTORY}
-        COMMENT "call run http")
+            WORKING_DIRECTORY ${WORKING_DIRECTORY}
+            DEPENDS HttpServer HttpClient
+            COMMAND sh examples/scripts/run-http.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${WORKING_DIRECTORY}
+            COMMENT "call run http")
+
+    add_custom_target(run-udp
+            WORKING_DIRECTORY ${WORKING_DIRECTORY}
+            DEPENDS UdpServer UdpClient
+            COMMAND sh examples/scripts/run-udp.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${WORKING_DIRECTORY}
+            COMMENT "call run udp")
 
     add_custom_target(run-auth
             WORKING_DIRECTORY ${WORKING_DIRECTORY}

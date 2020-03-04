@@ -303,6 +303,16 @@ public:
      */
     virtual int onDispatch(ReqMessagePtr ptr) = 0;
 
+    /**
+     * 连接关闭掉了(只对PUSH callback生效)
+     */    
+    virtual void onClose(){};
+
+	/**
+	 * 连接已建立(只对PUSH callback生效)
+	 */
+	virtual void onConnect(const TC_Endpoint &ep){};
+
 protected:
 
     /**
@@ -498,6 +508,12 @@ public:
      * @return int
      */
     void tars_connect_timeout(int conTimeout);
+
+	/**
+	 * set auto reconnect time
+	 * @return int, second
+	 */
+    void tars_reconnect(int second);
 
     /**
      * 获取所属的Object名称

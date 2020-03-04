@@ -67,16 +67,11 @@ ObjectProxy::~ObjectProxy()
 void ObjectProxy::initialize()
 {
 }
-//
-//ServantProxy * ObjectProxy::getServantProxy()
-//{
-//    return _pServantProxy;
-//}
-//
-//void ObjectProxy::setServantProxy(ServantProxy * pServantProxy)
-//{
-//    _pServantProxy = pServantProxy;
-//}
+
+const vector<AdapterProxy*> & ObjectProxy::getAdapters()
+{
+	return _endpointManger->getAdapters();
+}
 
 int ObjectProxy::loadLocator()
 {

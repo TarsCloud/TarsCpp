@@ -132,14 +132,14 @@ public:
      */
     void doTimeout();
 
-    /**
-     * Obj的超时队列的长度
-     */
-    size_t timeoutQSize()
-    {
-        return _reqTimeoutQueue.size();
-    }
-    
+//    /**
+//     * Obj的超时队列的长度
+//     */
+//    size_t timeoutQSize()
+//    {
+//        return _reqTimeoutQueue.size();
+//    }
+//
     /**
      * 获取CommunicatorEpoll*
      */
@@ -158,6 +158,24 @@ public:
     }
 
     /**
+     * reconnect
+     * @param second
+     */
+    inline void reconnect(int second)
+	{
+		_reConnectSecond = second;
+	}
+
+	/**
+	 * reconnect
+	 * @param second
+	 */
+	inline int reconnect()
+	{
+		return _reConnectSecond;
+	}
+
+	/**
      * 判断此obj是否走按set规则调用流程，如果是直连方式，即使服务端是启用set的，也不认为是按set规则调用的
      */
     bool isInvokeBySet() const
@@ -215,6 +233,12 @@ public:
         _servantProxy = pServantProxy;
     }
 
+    /**
+     * get all adapter proxy
+     * @return
+     */
+	const vector<AdapterProxy*> & getAdapters();
+
 protected:
 
     /**
@@ -258,6 +282,11 @@ private:
      * 连接超时的时间
      */
     int                                   _conTimeout;
+
+    /**
+     * reconnect, 0: not reconnect
+     */
+    int                                   _reConnectSecond = 0;
 
     /*
      * 超时控制策略信息

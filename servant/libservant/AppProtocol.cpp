@@ -75,7 +75,7 @@ vector<char> ProxyProtocol::http1Request(tars::RequestPacket& request, Transceiv
 
 struct Http1Context
 {
-    string buff;
+//    string buff;
 
     TC_HttpResponse httpRsp;
 };
@@ -90,10 +90,10 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
         in.setContextData(context, [=]{ delete context; }); 
     }
 
-    context->buff.append(in.getBuffersString());
-    in.clearBuffers();
+//    context->buff.append(in.getBuffersString());
+//    in.clearBuffers();
 
-    if(context->httpRsp.incrementDecode(context->buff))
+    if(context->httpRsp.incrementDecode(in))
     {
         rsp.iRequestId = ((Transceiver*)(in.getConnection()))->getAdapterProxy()->getId();
 

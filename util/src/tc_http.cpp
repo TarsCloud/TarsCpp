@@ -18,6 +18,7 @@
 #include "util/tc_port.h"
 #include "util/tc_common.h"
 #include "util/tc_clientsocket.h"
+#include "util/tc_network_buffer.h"
 
 namespace tars
 {
@@ -350,17 +351,6 @@ string TC_URL::getRef() const
     return _sRef;
 }
 
-//string TC_URL::getFragment(const string& frag) const
-//{
-//    map<string, string>::const_iterator it = _fragment.find(frag);
-//    if(it == _fragment.end())
-//    {
-//        return "";
-//    }
-//
-//    return it->second;
-//}
-
 string TC_URL::getRelativePath() const
 {
     string sURL = getPath();
@@ -608,123 +598,170 @@ vector<string> TC_Http::getHeaderMulti(const string &sHeadName) const
 
 	return v;
 }
+//
+//string TC_Http::getLine(const char** ppChar)
+//{
+//    string sTmp;
+//
+//    sTmp.reserve(512);
+//
+//    while ((**ppChar) != '\r' && (**ppChar) != '\n' && (**ppChar) != '\0')
+//    {
+//        sTmp.append(1, (**ppChar));
+//        (*ppChar)++;
+//    }
+//
+//    if ((**ppChar) == '\r')
+//    {
+//        (*ppChar)++;   /* pass the char '\n' */
+//    }
+//
+//    (*ppChar)++;
+//
+//	return sTmp;
+//}
+//
+//
+//string TC_Http::getLine(const char** ppChar, int iBufLen)
+//{
+//    string sTmp;
+//
+//    sTmp.reserve(512);
+//
+//    int iCurIndex = 0;
+//    while ( (**ppChar) != '\r' && (**ppChar) != '\n' && (**ppChar) != '\0')
+//    {
+//        if ( iCurIndex < iBufLen )
+//        {
+//            sTmp.append(1, (**ppChar));
+//            (*ppChar)++;
+//            iCurIndex++;
+//        }
+//        else
+//        {
+//            //MTT_ERRDAY << "parseHttp WARN: iCurIndex < iBufLen 1 " << endl;
+//            break;
+//        }
+//    }
+//
+//    if ( (**ppChar) == '\r')
+//    {
+//        if ( iCurIndex < iBufLen )
+//        {
+//            (*ppChar)++;   /* pass the char '\n' */
+//            iCurIndex++;
+//        }
+//        else
+//        {
+//            //MTT_ERRDAY << "parseHttp WARN: iCurIndex < iBufLen 2 " << endl;
+//        }
+//    }
+//
+//    if ( iCurIndex < iBufLen )
+//    {
+//        (*ppChar)++;
+//        iCurIndex++;
+//    }
+//    else
+//    {
+//        //MTT_ERRDAY << "parseHttp WARN: iCurIndex < iBufLen 3 " << endl;
+//    }
+//
+//	return sTmp;
+//}
 
-string TC_Http::getLine(const char** ppChar)
-{
-    string sTmp;
+//
+//void TC_Http::parseHeader(const TC_NetWorkBuffer::buffer_iterator &beginIt, const TC_NetWorkBuffer::buffer_iterator &headerIt, http_header_type &sHeader)
+//{
+//	sHeader.clear();
+//
+//	string sep      = "\r\n";
+//	string colon    = ":";
+//
+//	bool first      = true;
+//	auto lineStartIt= beginIt;
+//
+//	while (true)
+//	{
+//		auto it = std::search(lineStartIt, headerIt, sep.c_str(), sep.c_str() + sep.size());
+//		if(it == headerIt)
+//		{
+//			break;
+//		}
+//
+//		//first line ignore
+//		if(!first)
+//		{
+//			auto itF = std::search(lineStartIt, it, colon.c_str(), colon.c_str() + colon.size());
+//			if (itF != it)
+//			{
+//				string name;
+//				name.resize(itF - lineStartIt);
+//				std::copy(lineStartIt, itF, name.begin());
+//
+//				string value;
+//				value.resize(it - (itF + 1));
+//				std::copy(itF + 1, it, value.begin());
+//
+//				sHeader.insert(multimap<string, string>::value_type(TC_Common::trim(name, " "),
+//				                                                    TC_Common::trim(value, " ")));
+//
+//			}
+//		}
+//		else
+//		{
+//			first = false;
+//		}
+//
+//		lineStartIt = it + sep.size();
+//	}
+//}
+//
+//const char* TC_Http::parseHeader(const char* szBuffer, http_header_type &sHeader)
+//{
+//	sHeader.clear();
+//
+//	const char **ppChar = &szBuffer;
+//
+//	size_t length = strlen(szBuffer);
+//	size_t srcPtr = (size_t)(*ppChar);
+//
+//	while (true)
+//	{
+//		string sLine = getLine(ppChar);
+//
+//		if (sLine.empty()) break;
+//
+//		//如果是第一行, 则忽略掉
+//		if(TC_Port::strncasecmp(sLine.c_str(), "GET ", 4) ==0
+//			|| TC_Port::strncasecmp(sLine.c_str(), "POST ", 5) ==0
+//			|| TC_Port::strncasecmp(sLine.c_str(), "PUT ", 4) ==0
+//			|| TC_Port::strncasecmp(sLine.c_str(), "PATCH ", 6) ==0
+//			|| TC_Port::strncasecmp(sLine.c_str(), "OPTIONS ", 8) ==0
+//			|| TC_Port::strncasecmp(sLine.c_str(), "HEAD ", 5) ==0
+//			|| TC_Port::strncasecmp(sLine.c_str(), "DELETE ", 7) ==0
+//			|| TC_Port::strncasecmp(sLine.c_str(), "HTTP/", 5) ==0)
+//		{
+//			continue;
+//		}
+//
+//		string::size_type index = sLine.find(":");
+//		if (index != string::npos)
+//		{
+//			sHeader.insert(multimap<string, string>::value_type(TC_Common::trim(sLine.substr(0, index), " "), TC_Common::trim(sLine.substr(index + 1), " ")));
+//		}
+//
+//		size_t offset = (size_t)(*ppChar - srcPtr);
+//
+//		if (offset >= length)
+//		{
+//			break;
+//		}
+//	}
+//
+//	return *ppChar;
+//}
 
-    sTmp.reserve(512);
-
-    while ((**ppChar) != '\r' && (**ppChar) != '\n' && (**ppChar) != '\0')
-    {
-        sTmp.append(1, (**ppChar));
-        (*ppChar)++;
-    }
-
-    if ((**ppChar) == '\r')
-    {
-        (*ppChar)++;   /* pass the char '\n' */
-    }
-
-    (*ppChar)++;
-
-	return sTmp;
-}
-
-
-string TC_Http::getLine(const char** ppChar, int iBufLen)
-{
-    string sTmp;
-
-    sTmp.reserve(512);
-
-    int iCurIndex = 0;
-    while ( (**ppChar) != '\r' && (**ppChar) != '\n' && (**ppChar) != '\0')
-    {
-        if ( iCurIndex < iBufLen )
-        {
-            sTmp.append(1, (**ppChar));
-            (*ppChar)++;
-            iCurIndex++;
-        }
-        else
-        {
-            //MTT_ERRDAY << "parseHttp WARN: iCurIndex < iBufLen 1 " << endl;
-            break;
-        }
-    }
-
-    if ( (**ppChar) == '\r')
-    {
-        if ( iCurIndex < iBufLen )
-        {
-            (*ppChar)++;   /* pass the char '\n' */
-            iCurIndex++;
-        }
-        else
-        {
-            //MTT_ERRDAY << "parseHttp WARN: iCurIndex < iBufLen 2 " << endl;
-        }
-    }
-
-    if ( iCurIndex < iBufLen )
-    {
-        (*ppChar)++;
-        iCurIndex++;
-    }
-    else
-    {
-        //MTT_ERRDAY << "parseHttp WARN: iCurIndex < iBufLen 3 " << endl;
-    }
-
-	return sTmp;
-}
-
-
-const char* TC_Http::parseHeader(const char* szBuffer, http_header_type &sHeader)
-{
-    sHeader.clear();
-
-    const char **ppChar = &szBuffer;
-
-    size_t length = strlen(szBuffer);
-    size_t srcPtr = (size_t)(*ppChar);
-
-    while (true)
-    {
-        string sLine = getLine(ppChar);
-
-        if (sLine.empty()) break;
-
-        //如果是第一行, 则忽略掉
-        if(TC_Port::strncasecmp(sLine.c_str(), "GET ", 4) ==0
-           || TC_Port::strncasecmp(sLine.c_str(), "POST ", 5) ==0
-           || TC_Port::strncasecmp(sLine.c_str(), "PUT ", 4) ==0
-           || TC_Port::strncasecmp(sLine.c_str(), "PATCH ", 6) ==0
-           || TC_Port::strncasecmp(sLine.c_str(), "OPTIONS ", 8) ==0
-           || TC_Port::strncasecmp(sLine.c_str(), "HEAD ", 5) ==0
-           || TC_Port::strncasecmp(sLine.c_str(), "DELETE ", 7) ==0
-           || TC_Port::strncasecmp(sLine.c_str(), "HTTP/", 5) ==0)
-        {
-            continue;
-        }
-
-        string::size_type index = sLine.find(":");
-        if(index != string::npos)
-        {
-            sHeader.insert(multimap<string, string>::value_type(TC_Common::trim(sLine.substr(0, index), " "), TC_Common::trim(sLine.substr(index + 1), " ")));
-        }
-
-		size_t offset = (size_t)(*ppChar - srcPtr);
-
-        if(offset >= length)
-        {
-            break;
-        }
-    }
-
-    return *ppChar;
-}
 
 void TC_Http::reset()
 {
@@ -1010,7 +1047,7 @@ void TC_HttpCookie::addCookie(const string &sRspURL, const vector<string> &vCook
         }
 
         //URL在Path范围内,Cookie 有效
-        if(!matchPath(cookie._path, sRspURLPath))
+        if (!matchPath(cookie._path, sRspURLPath))
             continue;
 
         //添加Cookie
@@ -1021,7 +1058,7 @@ void TC_HttpCookie::addCookie(const string &sRspURL, const vector<string> &vCook
 bool TC_HttpCookie::isCookieExpires(const Cookie &cookie) const
 {
     //过期了
-    if(cookie._expires !=0 && cookie._expires < time(NULL))
+    if (cookie._expires != 0 && cookie._expires < time(NULL))
         return true;
 
     return false;
@@ -1030,16 +1067,16 @@ bool TC_HttpCookie::isCookieExpires(const Cookie &cookie) const
 size_t TC_HttpCookie::isCookieMatch(const Cookie &cookie, const TC_URL &tURL) const
 {
     //域名没有匹配
-    if(!matchDomain(cookie._domain, tURL.getDomain()))
+    if (!matchDomain(cookie._domain, tURL.getDomain()))
         return 0;
 
     //路径没有匹配
     size_t len = matchPath(cookie._path, tURL.getPath());
-    if(len == 0)
+    if (len == 0)
         return 0;
 
     //安全的cookie,不安全的URL
-    if(cookie._isSecure && (tURL.getType() != TC_URL::HTTPS))
+    if (cookie._isSecure && (tURL.getType() != TC_URL::HTTPS))
         return 0;
 
     return len;
@@ -1163,48 +1200,80 @@ void TC_HttpCookie::deleteExpires(time_t t, bool bErase)
 }
 
 /********************* TC_HttpResponse ***********************/
-
-void TC_HttpResponse::parseResponseHeader(const char* szBuffer)
-{
-    const char **ppChar = &szBuffer;
-
-    _headerLine = TC_Common::trim(getLine(ppChar));
-
-    string::size_type pos = _headerLine.find(' ');
-
-    if(pos != string::npos)
-    {
-        _version    = _headerLine.substr(0, pos);
-
-        string left = TC_Common::trim(_headerLine.substr(pos));
-
-        string::size_type pos1 = left.find(' ');
-
-        if(pos1 != string::npos)
-        {
-            _status  = TC_Common::strto<int>(left.substr(0, pos));
-
-            _about   = TC_Common::trim(left.substr(pos1 + 1));
-        }
-        else
-        {
-            _status  = TC_Common::strto<int>(left);
-
-            _about   = "";
-        }
-
-        parseHeader(*ppChar, _headers);
-        return;
-    }
-    else
-    {
-        _version = _headerLine;
-        _status  = 0;
-        _about   = "";
-    }
-
-//    throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response format error : " + _headerLine);
-}
+//
+//void TC_HttpResponse::parseResponseHeader(const char* szBuffer, const char* header)
+//{
+//	auto it = strstr(szBuffer, "\r\n");
+//
+//	assert(it != NULL);
+//
+//	string sep = " ";
+//
+//	auto f1 = std::search(szBuffer, it, sep.c_str(), sep.c_str() + sep.size());
+//	if(f1 == it)
+//	{
+//		throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse version format error : " + string(szBuffer, it-szBuffer));
+//	}
+//
+//	auto f2 = std::search(f1 + 1, it, sep.c_str(), sep.c_str() + sep.size());
+//	if(f1 == it)
+//	{
+//		throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse status format error : " + string(szBuffer, it-szBuffer));
+//	}
+//
+//	_headerLine = string(szBuffer, it-szBuffer);
+//
+//	if(TC_Port::strncasecmp(_headerLine.c_str(), "HTTP/", 5) != 0)
+//	{
+//		throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response version is not start with 'HTTP/' : " + _headerLine);
+//	}
+//
+//	_version    = string(szBuffer, f1);
+//
+//	_status     = TC_Common::strto<int>(string(f1 + 1, f2));
+//
+//	_about      = TC_Common::trim(string(f2 + 1, it));
+//
+//	parseHeader(szBuffer, header, _headers);
+//}
+//
+//void TC_HttpResponse::parseResponseHeader(TC_NetWorkBuffer &buff, TC_NetWorkBuffer::buffer_iterator &headerIt)
+//{
+//	string line = "\r\n";
+//	auto it = buff.find(line.c_str(), line.size());
+//
+//	assert(it != buff.end());
+//
+//	string sep = " ";
+//
+//	auto f1 = std::search(buff.begin(), it, sep.c_str(), sep.c_str() + sep.size());
+//	if(f1 == it)
+//	{
+//	    throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse version format error : " + buff.iteratorToIterator<string>(buff.begin(), it));
+//	}
+//
+//	auto f2 = std::search(f1 + 1, it, sep.c_str(), sep.c_str() + sep.size());
+//	if(f1 == it)
+//	{
+//		throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse status format error : " + buff.iteratorToIterator<string>(buff.begin(), it));
+//	}
+//
+//	_headerLine = buff.iteratorToIterator<string>(buff.begin(), it);
+//
+//	if(TC_Port::strncasecmp(_headerLine.c_str(), "HTTP/", 5) != 0)
+//	{
+//		throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response version is not start with 'HTTP/' : " + _headerLine);
+//	}
+//
+//	_version    = buff.iteratorToIterator<string>(buff.begin(), f1);
+//
+//	_status     = TC_Common::strto<int>(buff.iteratorToIterator<string>(f1 + 1, f2));
+//
+//	_about      = TC_Common::trim(buff.iteratorToIterator<string>(f2 + 1, it));
+//
+//	parseHeader(buff.begin(), headerIt, _headers);
+//
+//}
 
 void TC_HttpResponse::reset()
 {
@@ -1228,19 +1297,28 @@ void TC_HttpResponse::addContent(const string &sBuffer)
     _iRecvContentLength += sBuffer.length();
 }
 
-bool TC_HttpResponse::incrementDecode(string &sBuffer)
+void TC_HttpResponse::addContent(const char *buffer, size_t length)
 {
-    //解析头部
-    if(_headLength == 0)
-    {
-        string::size_type pos = sBuffer.find("\r\n\r\n");
+	_content.append(buffer, length);
 
-        if(pos == string::npos)
-        {
-            return false;
-        }
+	_iRecvContentLength += length;
+}
 
-        parseResponseHeader(sBuffer.c_str());
+bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer &buff)
+{
+	//解析头部
+	if (_headLength == 0)
+	{
+		const static string sep = "\r\n\r\n";
+
+		auto sit = std::search(buff.begin(), buff.end(), sep.c_str(), sep.c_str() + sep.size());
+
+		if (sit == buff.end())
+		{
+			return false;
+		}
+
+		parseResponseHeader(buff.begin(), sit + 2);
 
         if ( (204 == _status) || (304 == _status) )
         {
@@ -1258,9 +1336,9 @@ bool TC_HttpResponse::incrementDecode(string &sBuffer)
             _iTmpContentLength = -1;
         }
 
-        _headLength = pos + 4;
+		_headLength = sit - buff.begin() + 4;
 
-        sBuffer = sBuffer.substr(_headLength);
+		buff.moveHeader(_headLength);
 
         //重定向就认为成功了
         if((_status == 301 || _status == 302) && !getHeader("Location").empty())
@@ -1275,35 +1353,346 @@ bool TC_HttpResponse::incrementDecode(string &sBuffer)
         eraseHeader("Transfer-Encoding");
     }
 
-    if(_bIsChunked)
+	if (_bIsChunked)
+	{
+		while (true)
+		{
+			const static string sep = "\r\n";
+
+			auto sit = std::search(buff.begin(), buff.end(), sep.c_str(), sep.c_str() + sep.size());
+
+			if (sit == buff.end())
+			{
+				return false;
+			}
+
+			string header = buff.iteratorToIterator<string>(buff.begin(), sit);
+
+			int iChunkSize    = strtol(header.c_str(), NULL, 16);
+
+			if (iChunkSize <= 0)
+			{
+				break;     //所有chunk都接收完毕
+			}
+
+			if (buff.getBufferLength() < header.size() + 2 + (size_t)iChunkSize + 2)
+			{
+				//没有接收完整的chunk
+				return false;
+			}
+
+			//接收到一个完整的chunk了
+			buff.moveHeader(header.size() + 2);
+			addContent(buff.getHeader<string>(iChunkSize));
+
+			//删除一个chunk
+			buff.moveHeader(iChunkSize + 2);
+		}
+
+		buff.clearBuffers();
+
+		//接收到buffer长度设置好
+		setContentLength(_iRecvContentLength);
+
+		return true;
+	}
+	else
+	{
+		if (_iTmpContentLength == 0)
+		{
+			//header长度为0, 但是有body数据
+			addContent(buff.getBuffersString());
+
+			buff.clearBuffers();
+
+			setContentLength(_iRecvContentLength);
+
+			return true;
+		}
+		else if (_iTmpContentLength == (size_t) - 1)
+		{
+			//304的返回码中头没有Content-Length，不会有数据体
+			if (_status == 304 || _status == 302)
+			{
+				return true;
+			}
+
+			//header中没长度, 但是有body数据
+			addContent(buff.getBuffersString());
+
+			buff.clearBuffers();
+
+			setContentLength(_iRecvContentLength);
+
+			return true;
+		}
+		else
+		{
+			//头部有长度, 接收到长度大于头部为止
+			addContent(buff.getBuffersString());
+
+			buff.clearBuffers();
+
+			//头部的长度小于接收的内容, 还需要继续增加解析后续的buffer
+			if (_iTmpContentLength > _iRecvContentLength)
+				return false;
+
+			return true;
+		}
+	}
+
+	return true;
+}
+//
+//bool TC_HttpResponse::incrementDecode(string &sBuffer)
+//{
+//    //解析头部
+//    if (_headLength == 0)
+//    {
+//        string::size_type pos = sBuffer.find("\r\n\r\n");
+//
+//        if (pos == string::npos)
+//        {
+//            return false;
+//        }
+//
+//        parseResponseHeader(sBuffer.c_str());
+//
+//        //304的返回码中头里本来就没有Content-Length，也不会有数据体，头收全了就是真正的收全了
+//        if ( (204 == _status) || (304 == _status) )
+//        {
+//            return true;
+//        }
+//
+//        http_header_type::const_iterator it = _headers.find("Content-Length");
+//        if (it != _headers.end())
+//        {
+//            _iTmpContentLength = getContentLength();
+//        }
+//        else
+//        {
+//            //没有指明ContentLength, 接收到服务器关闭连接
+//            _iTmpContentLength = -1;
+//        }
+//
+//        _headLength = pos + 4;
+//
+//		sBuffer = sBuffer.substr(_headLength);
+//
+//        //重定向就认为成功了
+//        if ((_status == 301 || _status == 302) && !getHeader("Location").empty())
+//        {
+//            return true;
+//        }
+//
+//        //是否是chunk编码
+//        _bIsChunked = (getHeader("Transfer-Encoding") == "chunked");
+//
+//        //删除头部里面
+//        eraseHeader("Transfer-Encoding");
+//    }
+//
+//    if (_bIsChunked)
+//    {
+//        while (true)
+//        {
+//            string::size_type pos   = sBuffer.find("\r\n");
+//            if (pos == string::npos)
+//                return false;
+//
+//            //查找当前chunk的大小
+//			string sChunkSize = sBuffer.substr(0, pos);
+//            int iChunkSize    = strtol(sChunkSize.c_str(), NULL, 16);
+//
+//            if (iChunkSize <= 0)     break;     //所有chunk都接收完毕
+//
+//            if (sBuffer.length() < pos + 2 + (size_t)iChunkSize + 2)
+//            {
+//                //没有接收完整的chunk
+//                return false;
+//            }
+//
+//            //接收到一个完整的chunk了
+//            addContent(sBuffer.substr(pos + 2, iChunkSize));
+//
+//            //删除一个chunk
+//			sBuffer = sBuffer.substr(pos + 2 + iChunkSize + 2);
+//
+//            // _content += sBuffer.substr(pos + 2, iChunkSize);
+//            // //删除一个chunk
+//            // sBuffer   =  sBuffer.substr(pos + 2 + iChunkSize + 2);
+//            // setContentLength(getContent().length());
+//        }
+//
+//        sBuffer = "";
+//
+//        //接收到buffer长度设置好
+//        setContentLength(_iRecvContentLength);
+//
+//        return true;
+//    }
+//    else
+//    {
+//        if (_iTmpContentLength == 0)
+//        {
+//            //header长度为0, 但是有body数据
+//            addContent(sBuffer);
+//
+//            sBuffer   = "";
+//
+//            setContentLength(_iRecvContentLength);
+//
+//            // _content += sBuffer;
+//            // sBuffer   = "";
+//
+//            // //自动填写content-length
+//            // setContentLength(getContent().length());
+//
+//            return true;
+//        }
+//        else if (_iTmpContentLength == (size_t) - 1)
+//        {
+//            //304的返回码中头没有Content-Length，不会有数据体
+//            if (_status == 304 || _status == 302)
+//            {
+//                return true;
+//            }
+//
+//            //header中没长度, 但是有body数据
+//            addContent(sBuffer);
+//
+//            sBuffer   = "";
+//
+//            setContentLength(_iRecvContentLength);
+//
+//            // _content += sBuffer;
+//            // sBuffer   = "";
+//
+//            // //自动填写content-length
+//            // setContentLength(getContent().length());
+//
+//            return false;
+//        }
+//        else
+//        {
+//            //头部有长度, 接收到长度大于头部为止
+//            addContent(sBuffer);
+//            sBuffer   = "";
+//
+//            // _content += sBuffer;
+//            // sBuffer   = "";
+//
+//            // size_t iNowLength = getContent().length();
+//
+//            //头部的长度小于接收的内容, 还需要继续增加解析后续的buffer
+//            if (_iTmpContentLength > _iRecvContentLength)
+//                return false;
+//
+//            return true;
+//        }
+//    }
+//
+//    return true;
+
+//}
+
+bool TC_HttpResponse::decode(const string &sBuffer)
+{
+	return decode(sBuffer.c_str(), sBuffer.length());
+//
+//    string::size_type pos = sBuffer.find("\r\n\r\n");
+//
+//    if (pos == string::npos)
+//    {
+//        return false;
+//    }
+//
+//    string tmp = sBuffer;
+//
+//    incrementDecode(tmp);
+//
+//    //body内容长度为0或者没有content-length  且 非chunk模式, 则认为包收全了, 直接返回
+//    if ((_iTmpContentLength == 0 || _iTmpContentLength == (size_t) - 1) && !_bIsChunked)
+//        return true;
+//
+//    return getContentLength() + getHeadLength() <= sBuffer.length();
+}
+
+bool TC_HttpResponse::decode(const char *sBuffer, size_t iLength)
+{
+    assert(sBuffer != NULL);
+
+	const char *p = strstr(sBuffer, "\r\n\r\n");
+    if ( p == NULL)
     {
-        while(true)
+        return false;
+    }
+
+    //解析头部
+    parseResponseHeader(sBuffer, p + 2);
+
+    //304的返回码中头里本来就没有Content-Length，也不会有数据体，头收全了就是真正的收全了
+    if ( (204 == _status) || (304 == _status) )
+    {
+        return true;
+    }
+
+    http_header_type::const_iterator it = _headers.find("Content-Length");
+    if (it != _headers.end())
+    {
+        _iTmpContentLength = getContentLength();
+    }
+    else
+    {
+        //没有指明ContentLength, 接收到服务器关闭连接
+        _iTmpContentLength = -1;
+    }
+
+    _headLength = p - sBuffer + 4;
+
+	sBuffer += _headLength;
+
+    //重定向就认为成功了
+    if ((_status == 301 || _status == 302) && !getHeader("Location").empty())
+    {
+        return true;
+    }
+
+    //是否是chunk编码
+    _bIsChunked = (getHeader("Transfer-Encoding") == "chunked");
+
+    //删除头部里面
+    eraseHeader("Transfer-Encoding");
+
+    if (_bIsChunked)
+    {
+        while (true)
         {
-            string::size_type pos   = sBuffer.find("\r\n");
-            if(pos == string::npos)
+	        p = strstr(sBuffer, "\r\n");
+            if (p == NULL)
                 return false;
 
+            size_t pos = p - sBuffer;
+
             //查找当前chunk的大小
-            string sChunkSize       = sBuffer.substr(0, pos);
-            int iChunkSize          = strtol(sChunkSize.c_str(), NULL, 16);
+			string sChunkSize;
+	        sChunkSize.insert(sChunkSize.end(), sBuffer, p);
+            int iChunkSize    = strtol(sChunkSize.c_str(), NULL, 16);
 
             if(iChunkSize <= 0)     break;      //所有chunk都接收完毕
 
-            if (sBuffer.length() < pos + 2 + (size_t)iChunkSize + 2)
+            if (strlen(sBuffer) < pos + 2 + (size_t)iChunkSize + 2)
             {
-                //获取一个chunk的内容
-
-                //删除一个chunk
                 //没有接收完整的chunk
                 return false;
             }
 
-            addContent(sBuffer.substr(pos + 2, iChunkSize));
-			sBuffer = sBuffer.substr(pos + 2 + iChunkSize + 2);
-            // setContentLength(getContent().length());
-        }
+            //接收到一个完整的chunk了
+            addContent(p + 2, iChunkSize);
 
-        sBuffer = "";
+            //删除一个chunk
+            sBuffer += pos + 2 + iChunkSize + 2;
+        }
 
         //接收到buffer长度设置好
         setContentLength(_iRecvContentLength);
@@ -1316,11 +1705,8 @@ bool TC_HttpResponse::incrementDecode(string &sBuffer)
         {
             //header长度为0, 但是有body数据
             addContent(sBuffer);
-            sBuffer   = "";
 
             setContentLength(_iRecvContentLength);
-            //自动填写content-length
-            // setContentLength(getContent().length());
 
             return true;
         }
@@ -1334,69 +1720,22 @@ bool TC_HttpResponse::incrementDecode(string &sBuffer)
 
             //header中没长度, 但是有body数据
             addContent(sBuffer);
-            sBuffer   = "";
 
             setContentLength(_iRecvContentLength);
-            //自动填写content-length
-            // setContentLength(getContent().length());
-
-            return false;
         }
         else
         {
             //头部有长度, 接收到长度大于头部为止
             addContent(sBuffer);
-            sBuffer   = "";
-
-            // size_t iNowLength = getContent().length();
 
             //头部的长度小于接收的内容, 还需要继续增加解析后续的buffer
-            if (_iTmpContentLength > _iRecvContentLength)
-                return false;
-
-            return true;
+            if (_iTmpContentLength <= _iRecvContentLength)
+                return true;
         }
     }
 
-    return true;
-}
-
-bool TC_HttpResponse::decode(const string &sBuffer)
-{
-    string::size_type pos = sBuffer.find("\r\n\r\n");
-
-    if(pos == string::npos)
-    {
-        return false;
-    }
-
-    string tmp = sBuffer;
-
-    incrementDecode(tmp);
-
     //body内容长度为0或者没有content-length  且 非chunk模式, 则认为包收全了, 直接返回
-    if((_iTmpContentLength == 0 || _iTmpContentLength == (size_t)-1) && !_bIsChunked)
-        return true;
-
-    return getContentLength() + getHeadLength() <= sBuffer.length();
-}
-
-bool TC_HttpResponse::decode(const char *sBuffer, size_t iLength)
-{
-    assert(sBuffer != NULL);
-
-    const char *p = strstr(sBuffer, "\r\n\r\n");
-    if( p == NULL)
-    {
-        return false;
-    }
-
-    string tmp(sBuffer, iLength);
-
-    incrementDecode(tmp);
-
-    //body内容长度为0或者没有content-length  且 非chunk模式, 则认为包收全了, 直接返回
-    if((_iTmpContentLength == 0 || _iTmpContentLength == (size_t)-1) && !_bIsChunked)
+    if ((_iTmpContentLength == 0 || _iTmpContentLength == (size_t) - 1) && !_bIsChunked)
         return true;
 
     return (getContentLength() + getHeadLength() <= iLength);
@@ -1404,25 +1743,25 @@ bool TC_HttpResponse::decode(const char *sBuffer, size_t iLength)
 
 string TC_HttpResponse::encode() const
 {
-    string sRet;
-    sRet += _version;
-    sRet += " ";
-    sRet += TC_Common::tostr(_status);
-    sRet += " ";
-    sRet += _about;
-    sRet += "\r\n";
-    sRet += genHeader();
-    sRet += "\r\n";
-    sRet += _content;
+	stringstream sRet;
+    sRet << _version;
+    sRet << " ";
+    sRet << TC_Common::tostr(_status);
+    sRet << " ";
+    sRet << _about;
+    sRet << "\r\n";
+    sRet << genHeader();
+    sRet << "\r\n";
+    sRet << _content;
 
-    return sRet;
+	return sRet.str();
 }
 
 void TC_HttpResponse::encode(vector<char> &buffer) const
 {
     buffer.clear();
 
-    string s = encode();
+	string s = encode();
 
     buffer.resize(s.length());
     memcpy(buffer.data(), s.c_str(), s.length());
@@ -1714,103 +2053,85 @@ void TC_HttpRequest::setDeleteRequest(const string &sUrl, const string &sPostBod
 
 string TC_HttpRequest::encode()
 {
-//    assert(_requestType == REQUEST_GET || _requestType == REQUEST_POST || !_originRequest.empty());
-
-    /*ostringstream os;
+	stringstream sRet;
 
     if(_requestType == REQUEST_GET)
     {
-        encode(REQUEST_GET, os);
+        sRet << requestType2str(_requestType);
+        sRet << " ";
+        sRet << _httpURL.getRequest();
+        sRet << " HTTP/1.1\r\n";
+        sRet << genHeader();
+        sRet << "\r\n";
     }
     else if(_requestType == REQUEST_POST)
     {
         setContentLength(_content.length());
-        encode(REQUEST_POST, os);
-        os << _content;
+        sRet << requestType2str(_requestType);
+        sRet << " ";
+        sRet << _httpURL.getRequest();
+        sRet << " HTTP/1.1\r\n";
+        sRet << genHeader();
+        sRet << "\r\n";
+        sRet << _content;
     }
     else if(_requestType == REQUEST_OPTIONS)
     {
-        encode(REQUEST_OPTIONS, os);
-    }
-
-    return os.str();*/
-    string sRet;
-
-    if(_requestType == REQUEST_GET)
-    {
-        //encode(REQUEST_GET, os);
-        sRet += requestType2str(_requestType);
-        sRet += " ";
-        sRet += _httpURL.getRequest();
-        sRet += " HTTP/1.1\r\n";
-        sRet += genHeader();
-        sRet += "\r\n";
-    }
-    else if(_requestType == REQUEST_POST)
-    {
-        setContentLength(_content.length());
-        //encode(REQUEST_POST, os);
-        sRet += requestType2str(_requestType);
-        sRet += " ";
-        sRet += _httpURL.getRequest();
-        sRet += " HTTP/1.1\r\n";
-        sRet += genHeader();
-        sRet += "\r\n";
-        sRet += _content;
-    }
-    else if(_requestType == REQUEST_OPTIONS)
-    {
-        //encode(REQUEST_OPTIONS, os);
-        sRet += requestType2str(_requestType);
-        sRet += " ";
-        sRet += _httpURL.getRequest();
-        sRet += " HTTP/1.1\r\n";
-        sRet += genHeader();
-        sRet += "\r\n";
+        sRet << requestType2str(_requestType);
+        sRet << " ";
+        sRet << _httpURL.getRequest();
+        sRet << " HTTP/1.1\r\n";
+        sRet << genHeader();
+        sRet << "\r\n";
     }
     else if(_requestType == REQUEST_HEAD)
     {
-        sRet += requestType2str(_requestType);
-        sRet += " ";
-        sRet += _httpURL.getRequest();
-        sRet += " HTTP/1.1\r\n";
-        sRet += genHeader();
-        sRet += "\r\n";
+        sRet << requestType2str(_requestType);
+        sRet << " ";
+        sRet << _httpURL.getRequest();
+        sRet << " HTTP/1.1\r\n";
+        sRet << genHeader();
+        sRet << "\r\n";
     }
     else if(_requestType == REQUEST_PUT || _requestType == REQUEST_PATCH)
     {
         setContentLength(_content.length());
-        sRet += requestType2str(_requestType);
-        sRet += " ";
-        sRet += _httpURL.getRequest();
-        sRet += " HTTP/1.1\r\n";
-        sRet += genHeader();
-        sRet += "\r\n";
-        sRet += _content;
+        sRet << requestType2str(_requestType);
+        sRet << " ";
+        sRet << _httpURL.getRequest();
+        sRet << " HTTP/1.1\r\n";
+        sRet << genHeader();
+        sRet << "\r\n";
+        sRet << _content;
     }
     else if(_requestType == REQUEST_DELETE)
     {
         setContentLength(_content.length());
-        //encode(REQUEST_GET, os);
-        sRet += requestType2str(_requestType);
-        sRet += " ";
-        sRet += _httpURL.getRequest();
-        sRet += " HTTP/1.1\r\n";
-        sRet += genHeader();
-        sRet += "\r\n";
-        sRet += _content;
+        sRet << requestType2str(_requestType);
+        sRet << " ";
+        sRet << _httpURL.getRequest();
+        sRet << " HTTP/1.1\r\n";
+        sRet << genHeader();
+        sRet << "\r\n";
+        sRet << _content;
     }
-
-    return sRet;
+	return sRet.str();
 }
 
 void TC_HttpRequest::encode(vector<char> &buffer)
 {
+//    assert(_requestType == REQUEST_GET || _requestType == REQUEST_POST || !_originRequest.empty());
+
     buffer.clear();
 
     string s = encode();
     buffer.resize(s.length());
     memcpy(buffer.data(), s.c_str(), s.length());
+}
+
+void TC_HttpRequest::encode(TC_NetWorkBuffer &buff)
+{
+	buff.addBuffer(std::move(encode()));
 }
 
 bool TC_HttpRequest::decode(const string &sBuffer)
@@ -1831,18 +2152,21 @@ bool TC_HttpRequest::decode(const char *sBuffer, size_t iLength)
 		TC_Port::strncasecmp(sBuffer, "DELETE " , 7) !=0 &&
 		TC_Port::strncasecmp(sBuffer, "HEAD " ,5))
     {
-        throw runtime_error("[TC_HttpRequest::checkRequest] protocol not support, only support GET HEAD POST and OPTIONS ");
+        throw runtime_error("[TC_HttpRequest::decode] protocol not support, only support GET HEAD POST and OPTIONS ");
     }
 
-
-    if(strstr(sBuffer, "\r\n\r\n") == NULL)
+    const char *p = strstr(sBuffer, "\r\n\r\n");
+    if (p == NULL)
     {
         return false;
     }
 
-    _headLength = parseRequestHeader(sBuffer);
+    parseRequestHeader(sBuffer, p);
 
-   bool bChunk = (getHeader("Transfer-Encoding") == "chunked");
+	_headLength = p - sBuffer + 4;
+
+    bool bChunk = (getHeader("Transfer-Encoding") == "chunked");
+
     int iChunkSuffixLen = 0;
 
     if(bChunk)
@@ -1891,9 +2215,161 @@ bool TC_HttpRequest::decode(const char *sBuffer, size_t iLength)
     return (getContentLength() + getHeadLength() + iChunkSuffixLen == iLength);
 }
 
+bool TC_HttpRequest::checkRequest(TC_NetWorkBuffer &buff)
+{
+	if(buff.getBufferLength() < 10)
+		return false;
+
+	auto data = buff.getBufferPointer();
+	if(TC_Port::strncasecmp(data.first, "GET " ,4) !=0 &&
+		TC_Port::strncasecmp(data.first, "POST " ,5) !=0 &&
+		TC_Port::strncasecmp(data.first, "PUT " ,4) !=0 &&
+		TC_Port::strncasecmp(data.first, "PATCH " ,6) !=0 &&
+		TC_Port::strncasecmp(data.first, "OPTIONS " ,8) !=0 &&
+		TC_Port::strncasecmp(data.first, "PRI " , 4) !=0 &&
+		TC_Port::strncasecmp(data.first, "DELETE " , 7) !=0 &&
+		TC_Port::strncasecmp(data.first, "HEAD " ,5))
+	{
+		throw runtime_error("[TC_HttpRequest::decode] protocol not support, only support GET HEAD POST PUT PATCH DELETE and OPTIONS ");
+	}
+
+	string sep = "\r\n\r\n";
+
+	auto sit = buff.find(sep.c_str(), sep.size());
+	if ( sit == buff.end())
+	{
+		return false;
+	}
+
+	size_t pos = sit - buff.begin();
+
+	size_t iHeadLen = pos + 4;
+
+	bool bChunk = false;
+
+	sep = "\r\n";
+
+	auto it = std::search(buff.begin(), buff.end(), sep.c_str(), sep.c_str() + sep.size());
+	if(it == buff.end())
+	{
+		//first line
+		return false;
+	}
+
+	it = it + sep.size();
+
+//	cout << buff.iteratorToIterator<string>(buff.begin(), it) << endl;
+	size_t len = 0;
+
+	//找到\r\n\r\n之前的长度表示
+	while (true)
+	{
+		size_t iMoveLen = it - buff.begin();
+		if (iMoveLen >= iHeadLen)
+		{
+			break;
+		}
+
+
+		auto lineItStart = it;
+
+		auto lineItEnd = std::search(lineItStart, buff.end(), sep.c_str(), sep.c_str() + sep.size());
+
+		if (lineItEnd != buff.end())
+		{
+			it = lineItEnd + sep.size();
+
+			std::function<bool(char, char)> cmp = [](char i, char j)
+			{
+
+				return toupper(i) == toupper(j);
+			};
+
+			const char *TE = "Transfer-Encoding:";
+
+			auto itTE = std::search(lineItStart, lineItEnd, TE, TE + strlen(TE), cmp);
+
+			if (itTE != lineItEnd)
+			{
+				const char *CH = "chunked";
+
+				auto itCH = std::search(lineItStart + strlen(TE), lineItEnd, CH, CH + strlen(CH), cmp);
+
+				if (itCH != lineItEnd)
+				{
+					bChunk = true;
+					break;
+				}
+			}
+
+			const char *CL = "Content-Length:";
+
+			auto itCL = std::search(lineItStart, lineItEnd, CL, CL + strlen(CL), cmp);
+			if (itCL == lineItEnd)
+			{
+				continue;
+			}
+
+			string contentLength;
+			contentLength.resize(lineItEnd - lineItStart - strlen(CL));
+			std::copy(lineItStart + strlen(CL), lineItEnd, contentLength.begin());
+
+			len = TC_Common::strto<size_t>(TC_Common::trim(contentLength, " "));
+		}
+
+	}
+
+	if (bChunk)
+	{
+		int remain_len = buff.getBufferLength() - iHeadLen;
+		int move_len = 0;
+
+		auto it = sit + 4;
+		while (true)
+		{
+			auto lineIt = std::search(it, buff.end(), sep.c_str(), sep.c_str() + sep.size());
+			if ( lineIt == buff.end() )
+			{
+				return false;
+			}
+
+			//查找当前chunk的大小
+			string contentLength;
+			contentLength.resize(lineIt - it);
+			std::copy(it, lineIt, contentLength.begin());
+
+			int iChunkSize = strtol(contentLength.c_str(), NULL, 16);
+			if (iChunkSize <= 0)
+			{
+				return true; //所有chunk都接收完毕
+			}
+
+			move_len = (lineIt - it) + 2 + iChunkSize + 2;
+			if ( remain_len >= move_len )  //接收到一个完整的chunk了
+			{
+				//移动到下一个chunk
+				remain_len -= move_len;
+				it = lineIt + 2 + iChunkSize + 2;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+	else if (len + pos + 4 <= buff.getBufferLength())
+	{
+		return true;
+	}
+
+	return false;
+}
 
 bool TC_HttpRequest::checkRequest(const char* sBuffer, size_t iLen)
 {
+	if(iLen < 10)
+		return false;
+
     if(TC_Port::strncasecmp(sBuffer, "GET " ,4) !=0 &&
 		TC_Port::strncasecmp(sBuffer, "POST " ,5) !=0 &&
 		TC_Port::strncasecmp(sBuffer, "PUT " ,4) !=0 &&
@@ -1903,102 +2379,70 @@ bool TC_HttpRequest::checkRequest(const char* sBuffer, size_t iLen)
 		TC_Port::strncasecmp(sBuffer, "DELETE " , 7) !=0 &&
 		TC_Port::strncasecmp(sBuffer, "HEAD " ,5))
    {
-       throw runtime_error("[TC_HttpRequest::checkRequest] protocol not support, only support GET HEAD POST PUT PATCH DELETE and OPTIONS ");
+       throw runtime_error("[TC_HttpRequest::decode] protocol not support:" + string(sBuffer, 8));
    }
 
-   const char *p = strstr(sBuffer, "\r\n\r\n");
-   if( p == NULL)
-   {
-       return false;
-   }
-
-   size_t pos = p - sBuffer;
-
-   size_t iHeadLen= pos + 4;
-
-   const char **ppChar    = &sBuffer;
-
-   bool bChunk = false;
-
-   //找到\r\n\r\n之前的长度表示
-   while(true)
-   {
-       size_t iMoveLen= (*ppChar) - sBuffer;
-        if ( iMoveLen >= iHeadLen )
-       {
-           //MTT_ERRDAY << "parseHttp WARN: iMoveLen >= iLen" << "|" << iMoveLen << "|" <<iLen<<endl;
-           break;
-       }
-
-       size_t len = 0;
-        string sLine = getLine(ppChar, iHeadLen - iMoveLen);
-       if(sLine == "")
-       {
-           len = 0;
-       }
-       else if(TC_Port::strncasecmp(sLine.c_str(), "Transfer-Encoding:", 18) == 0)
-       {
-            bChunk = (TC_Common::trim(sLine.substr(18)) == "chunked");
-           if(bChunk) break;
-       }
-       else if(TC_Port::strncasecmp(sLine.c_str(), "Content-Length:", 15) != 0)
-       {
-           continue;
-       }
-       else
-       {
-            len = TC_Common::strto<size_t>(TC_Common::trim(sLine.substr(15), " "));
-       }
-
-       if(len + pos + 4 <= iLen)
-       {
-           return true;
-       }
-       else
-       {
-           break;
-
-       }
-   }
-
-/*
-    if(bChunk)
+    const char *header = strstr(sBuffer, "\r\n\r\n");
+    if ( header == NULL)
     {
-        string sTmp = string(p + 4, iLen - iHeadLen);
-        while(true)
+        return false;
+    }
+
+	size_t pos = header - sBuffer;
+
+    size_t iHeadLen = pos + 4;
+
+	const char *p =  strstr(sBuffer, "\r\n");
+	if(p == NULL)
+	{
+		//first line
+		return false;
+	}
+
+	p += 2;
+
+    bool bChunk = false;
+
+	size_t len  = 0;
+
+    //找到\r\n\r\n之前的长度表示
+    while (true)
+    {
+        size_t iMoveLen = p - sBuffer;
+        if ( iMoveLen >= iHeadLen )
         {
-            string::size_type pos   = sTmp.find("\r\n");
-            if(pos == string::npos)
-            {
-                return false;
-            }
+            break;
+        }
 
-            //查找当前chunk的大小
-            string sChunkSize       = sTmp.substr(0, pos);
-            int iChunkSize          = strtol(sChunkSize.c_str(), NULL, 16);
+        const char *line    = p;
+        const char *lineEnd = strstr(line, "\r\n");
+        if (lineEnd != NULL)
+        {
+	        p = lineEnd + 2;
 
-            if(iChunkSize <= 0)
+	        if (TC_Port::strncasecmp(line, "Transfer-Encoding:", 18) == 0)
+	        {
+		        string chunked = TC_Common::trim(string(line + 18, lineEnd));
+		        bChunk = (chunked == "chunked");
+		        if (bChunk) break;
+	        }
+	        else if (TC_Port::strncasecmp(line, "Content-Length:", 15) != 0)
+	        {
+		        continue;
+	        }
+	        else
             {
-                return true; //所有chunk都接收完毕
-            }
-            if(sTmp.length() >= pos + 2 + (size_t)iChunkSize + 2)   //接收到一个完整的chunk了
-            {
-                //删除一个chunk
-                sTmp   =  sTmp.substr(pos + 2 + iChunkSize + 2);
-            }
-            else
-            {
-                return false;
-            }
+		        len = TC_Common::strto<size_t>(TC_Common::trim(string(line + 15, lineEnd), " "));
+	        }
         }
     }
-*/
-    if(bChunk)
+
+    if (bChunk)
     {
         int remain_len = iLen - iHeadLen;
         int move_len = 0;
-        const char * pCur = p + 4;
-        while(true)
+        const char * pCur = header + 4;
+        while (true)
         {
             p = strstr(pCur , "\r\n");
             if( p == NULL )
@@ -2026,75 +2470,83 @@ bool TC_HttpRequest::checkRequest(const char* sBuffer, size_t iLen)
             }
         }
     }
+    else  if (len + pos + 4 <= iLen)
+	{
+		return true;
+	}
 
     return false;
-//     throw TC_HttpRequest_Exception("[TC_HttpRequest::checkRequest] Content-Length not exists.");
-
-//     return true;
 }
 
-
-size_t TC_HttpRequest::parseRequestHeader(const char* szBuffer)
+void TC_HttpRequest::parseRequestHeader(const char* szBuffer, const char *header)
 {
-    const char *szBuffer_copy = szBuffer;
-    const char **ppChar = &szBuffer;
+//    const char *szBuffer_copy = szBuffer;
+//    const char **ppChar = &szBuffer;
 
-    /* parse the first line and get status */
-    string sLine = getLine(ppChar);
+	const char *p = strstr(szBuffer, "\r\n");
 
-    string::size_type pos = sLine.find(" ");
-    if(pos == string::npos)
-    {
-        throw TC_HttpRequest_Exception("[TC_HttpRequest::parseRequestHeader] http request format error: " + sLine);
-    }
+	assert(p != NULL);
 
-    string sMethod = TC_Common::trim(sLine.substr(0, pos));
+
+    const char * sMethod = szBuffer;
 
     //解析请求类型
-    if(TC_Port::strncasecmp(sMethod.c_str(), "GET", 3) ==0)    //if(sMethod == "GET")
+    if(TC_Port::strncasecmp(sMethod, "GET ", 4) ==0)    //if(sMethod == "GET")
     {
         _requestType = REQUEST_GET;
     }
-    else if(TC_Port::strncasecmp(sMethod.c_str(), "POST", 4) ==0)    //else if(sMethod == "POST")
+    else if(TC_Port::strncasecmp(sMethod, "POST ", 5) ==0)    //else if(sMethod == "POST")
     {
         _requestType = REQUEST_POST;
     }
-    else if(TC_Port::strncasecmp(sMethod.c_str(), "PUT", 3) ==0)
+    else if(TC_Port::strncasecmp(sMethod, "PUT ", 4) ==0)
     {
         _requestType = REQUEST_PUT;
     }
-    else if(TC_Port::strncasecmp(sMethod.c_str(), "PATCH", 5) ==0)
+    else if(TC_Port::strncasecmp(sMethod, "PATCH ", 6) ==0)
     {
         _requestType = REQUEST_PATCH;
     }
-    else if(TC_Port::strncasecmp(sMethod.c_str(), "OPTIONS", 7) ==0)    //else if(sMethod == "OPTIONS")
+    else if(TC_Port::strncasecmp(sMethod, "OPTIONS ", 8) ==0)    //else if(sMethod == "OPTIONS")
     {
         _requestType = REQUEST_OPTIONS;
     }
-    else if(TC_Port::strncasecmp(sMethod.c_str(), "HEAD", 4) == 0)
+    else if(TC_Port::strncasecmp(sMethod, "HEAD ", 5) == 0)
     {
          _requestType = REQUEST_HEAD;
     }
-    else if(TC_Port::strncasecmp(sMethod.c_str(), "DELETE", 6) == 0)
+    else if(TC_Port::strncasecmp(sMethod, "DELETE ", 7) == 0)
     {
          _requestType = REQUEST_DELETE;
     }
     else
     {
-        throw TC_HttpRequest_Exception("[TC_HttpRequest::parseRequestHeader] http request command error: " + sMethod);
+        throw TC_HttpRequest_Exception("[TC_HttpRequest::parseRequestHeader] http request error: " + string(szBuffer, p - szBuffer));
     }
 
-    string::size_type pos1 = sLine.rfind(" ");
-    if(pos1 == string::npos || pos1 <= pos)
-    {
-        throw TC_HttpRequest_Exception("[TC_HttpRequest::parseRequestHeader] http request format error: " + sLine);
-    }
+	string sep = " ";
+	auto f1 = std::search(szBuffer, p, sep.c_str(), sep.c_str() + sep.size());
+	if (f1 == p)
+	{
+		throw TC_HttpRequest_Exception("[TC_HttpRequest::parseRequestHeader] http request format error: " + string(szBuffer, p - szBuffer));
+	}
+
+	auto f2 = std::search(f1 + 1, p, sep.c_str(), sep.c_str() + sep.size());
+	if (f2 == p || f1 >= f2)
+	{
+		throw TC_HttpRequest_Exception("[TC_HttpRequest::parseRequestHeader] http request format error: " + string(szBuffer, p - szBuffer));
+	}
+//	string::size_type pos1 = sLine.rfind(" ");
+//    if (pos1 == string::npos || pos1 <= pos)
+//    {
+//        throw TC_HttpRequest_Exception("[TC_HttpRequest::parseRequestHeader] http request format error: " + sLine);
+//    }
 
     //URL地址
-    string sURL = TC_Common::trim(sLine.substr(pos+1, pos1 - pos));
+    string sURL     = string(f1 + 1, f2 - f1 -1 ); //TC_Common::trim(sLine.substr(pos + 1, pos1 - pos));
 
     //HTTP协议版本
-    string sVersion = TC_Common::trim(sLine.substr(pos1 + 1));
+    string sVersion = string(f2 + 1, p); //TC_Common::trim(sLine.substr(pos1 + 1));
 
 //    if (sVersion != "HTTP/1.1" || sVersion != "HTTP/1.0")
     if (TC_Port::strncasecmp(sVersion.c_str(), "HTTP/1.1", 8) != 0 || TC_Port::strncasecmp(sVersion.c_str(), "HTTP/1.0", 8) != 0)
@@ -2102,7 +2554,8 @@ size_t TC_HttpRequest::parseRequestHeader(const char* szBuffer)
         sVersion = "HTTP/1.1";
     }
 
-    size_t n = parseHeader(*ppChar, _headers) - szBuffer_copy;
+	parseHeader(szBuffer, header, _headers);
+//    size_t n = parseHeader(*ppChar, _headers) - szBuffer_copy;
 
     if(TC_Port::strncasecmp(sURL.c_str(), "https://", 8) !=0 )
     {
@@ -2114,7 +2567,7 @@ size_t TC_HttpRequest::parseRequestHeader(const char* szBuffer)
 
     parseURL(sURL);
 
-    return n;
+//    return header - szBuffer;
 }
 
 void TC_HttpRequest::getHostPort(string &sDomain, uint32_t &iPort)
@@ -2191,35 +2644,32 @@ int TC_HttpRequest::doRequest(TC_TCPClient& tcpClient, TC_HttpResponse& stHttpRs
 
     stHttpRsp.reset();
 
-    string sBuffer;
-
-    char* sTmpBuffer = new char[10240];
-    size_t iRecvLen = 10240;
+    TC_NetWorkBuffer recvBuffer(NULL);
 
     while (true)
     {
-        iRecvLen = 10240;
+    	char buffer[8*1024];
+        size_t iRecvLen = sizeof(buffer);
 
-        iRet = tcpClient.recv(sTmpBuffer, iRecvLen);
+        iRet = tcpClient.recv(buffer, iRecvLen);
 
         if (iRet == TC_ClientSocket::EM_SUCCESS)
-            sBuffer.append(sTmpBuffer, iRecvLen);
+        {
+	        recvBuffer.addBuffer(buffer, iRecvLen);
+        }
 
         switch (iRet)
         {
         case TC_ClientSocket::EM_SUCCESS:
-            if (stHttpRsp.incrementDecode(sBuffer))
+            if (stHttpRsp.incrementDecode(recvBuffer))
             {
-                delete[]sTmpBuffer;
                 return TC_ClientSocket::EM_SUCCESS;
             }
             continue;
         case TC_ClientSocket::EM_CLOSE:
-            delete[]sTmpBuffer;
-            stHttpRsp.incrementDecode(sBuffer);
+            stHttpRsp.incrementDecode(recvBuffer);
             return TC_ClientSocket::EM_SUCCESS;
         default:
-            delete[]sTmpBuffer;
             return iRet;
         }
     }
@@ -2242,10 +2692,6 @@ int TC_HttpRequest::doRequest(TC_HttpResponse &stHttpRsp, int iTimeout)
     getHostPort(sHost, iPort);
 
     TC_TCPClient tcpClient;
-//    if (_client == NULL)
- //   {
- //       _client = new TC_TCPClient();
- //   }
     tcpClient.init(sHost, iPort, iTimeout);
 
     int iRet = tcpClient.send(sSendBuffer.c_str(), sSendBuffer.length());
@@ -2256,35 +2702,32 @@ int TC_HttpRequest::doRequest(TC_HttpResponse &stHttpRsp, int iTimeout)
 
     stHttpRsp.reset();
 
-    string sBuffer;
-
-    char *sTmpBuffer = new char[10240];
-    size_t iRecvLen  = 10240;
+	TC_NetWorkBuffer recvBuffer(NULL);
 
     while(true)
     {
-        iRecvLen = 10240;
+	    char buffer[8*1024];
+	    size_t iRecvLen = sizeof(buffer);
 
-        iRet = tcpClient.recv(sTmpBuffer, iRecvLen);
+        iRet = tcpClient.recv(buffer, iRecvLen);
 
-        if(iRet == TC_ClientSocket::EM_SUCCESS)
-            sBuffer.append(sTmpBuffer, iRecvLen);
+        if (iRet == TC_ClientSocket::EM_SUCCESS)
+        {
+	        recvBuffer.addBuffer(buffer, iRecvLen);
+        }
 
-        switch(iRet)
+        switch (iRet)
         {
         case TC_ClientSocket::EM_SUCCESS:
-            if(stHttpRsp.incrementDecode(sBuffer))
+            if (stHttpRsp.incrementDecode(recvBuffer))
             {
-                delete []sTmpBuffer;
                 return TC_ClientSocket::EM_SUCCESS;
             }
             continue;
         case TC_ClientSocket::EM_CLOSE:
-            delete []sTmpBuffer;
-            stHttpRsp.incrementDecode(sBuffer);
+            stHttpRsp.incrementDecode(recvBuffer);
             return TC_ClientSocket::EM_SUCCESS;
         default:
-            delete []sTmpBuffer;
             return iRet;
         }
     }

@@ -240,6 +240,12 @@ public:
      */
     int64_t getMinTimeout() { return _minTimeout; }
 
+    /**
+     * get resource info
+     * @return
+     */
+	string getResouresInfo();
+
 protected:
     /**
      * 初始化

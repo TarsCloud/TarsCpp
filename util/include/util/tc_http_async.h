@@ -20,6 +20,7 @@
 #include <functional>
 #include "util/tc_platform.h"
 #include "util/tc_thread_pool.h"
+#include "util/tc_network_buffer.h"
 #include "util/tc_http.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_socket.h"
@@ -41,17 +42,6 @@ namespace tars
 * @author ruanshudong@qq.com
 */
 /////////////////////////////////////////////////
-
-
-///**
-//* @brief 线程异常
-//*/
-//struct TC_HttpAsync_Exception : public TC_Exception
-//{
-//    TC_HttpAsync_Exception(const string &buffer) : TC_Exception(buffer) {};
-//    TC_HttpAsync_Exception(const string &buffer, int err) : TC_Exception(buffer, err) {};
-//    ~TC_HttpAsync_Exception() throw() {};
-//};
 
 /**
  * @brief 异步线程处理类.
@@ -129,6 +119,15 @@ protected:
         AsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, bool bUseProxy);
 
         /**
+         * @brief 构造.
+         *
+         * @param stHttpRequest
+         * @param callbackPtr
+         * @param addr
+         */
+        AsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, const string &addr);
+
+        /**
          * @brief 析构
          */
         ~AsyncRequest();
@@ -141,11 +140,6 @@ protected:
         int getfd() const { return _fd.getfd(); }
 
         /**
-         * 获取通知fd
-         */
-        // int getNotifyfd() const { return _notify.getfd(); }
-
-        /**
          * @brief 发起建立连接.
          *
          */
@@ -155,7 +149,7 @@ protected:
          * @brief 获取系统错误提示
          * @return
          */
-        string getError(const char* sDefault) const;
+        string getError(const string &sDefault) const;
 
         /**
         * @brief 发生异常
@@ -266,8 +260,8 @@ protected:
         string                      _sHost;
         uint32_t                    _iPort;
         uint32_t                    _iUniqId;
-        string                      _sReq;
-        string                      _sRsp;
+        TC_NetWorkBuffer            _sendBuffer;
+	    TC_NetWorkBuffer            _recvBuffer;
         RequestCallbackPtr          _callbackPtr;
         bool                        _bindAddrSet;
         struct sockaddr             _bindAddr;
@@ -299,6 +293,15 @@ public:
      * @param bUseProxy,是否使用代理方式连接
      */
     void doAsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, bool bUseProxy = false);
+
+    /**
+     * @brief 异步发起请求.
+     *
+     * @param stHttpRequest
+     * @param httpCallbackPtr
+     * @param addr, 请求地址, ip:port
+     */
+    void doAsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, const string &addr);
 
     /**
      * @brief 设置proxy地址
@@ -372,11 +375,6 @@ protected:
      * @param ptr
      */
     static void timeout(AsyncRequestPtr& ptr);
-
-    /**
-     * @brief 具体网络处理
-     */
-    // static void process(AsyncRequestPtr &p, int events);
 
     /**
      * @brief 确保线程

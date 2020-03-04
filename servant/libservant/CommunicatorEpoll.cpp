@@ -16,6 +16,7 @@
 
 #include "servant/CommunicatorEpoll.h"
 #include "servant/Communicator.h"
+#include "servant/Application.h"
 #include "servant/TarsLogger.h"
 #include "servant/StatReport.h"
 
@@ -380,7 +381,60 @@ void CommunicatorEpoll::doStat()
 void CommunicatorEpoll::pushAsyncThreadQueue(ReqMessage * msg)
 {
     _communicator->pushAsyncThreadQueue(msg);
+}
 
+void CommunicatorEpoll::reConnect(int64_t ms, Transceiver*p)
+{
+	_reconnect[ms] = p;
+}
+
+string CommunicatorEpoll::getResouresInfo()
+{
+	ostringstream desc;
+	desc << TC_Common::outfill("index") << _netThreadSeq << endl;
+	if(_communicator->_statReport) {
+		desc << TC_Common::outfill("stat size") << _communicator->_statReport->getQueueSize(_netThreadSeq) << endl;
+	}
+	desc << TC_Common::outfill("obj num") << _objectProxyFactory->getObjNum() << endl;
+
+	const static string TAB = "    ";
+	for(size_t i = 0; i < _objectProxyFactory->getObjNum(); ++i)
+	{
+		desc << TAB << OUT_LINE_TAB(1) << endl;
+
+		desc << TAB << TC_Common::outfill("obj name") << _objectProxyFactory->getObjectProxy(i)->name() << endl;
+		const vector<AdapterProxy*> &adapters = _objectProxyFactory->getObjectProxy(i)->getAdapters();
+
+		for(auto adapter : adapters)
+		{
+			desc << TAB << TAB << OUT_LINE_TAB(2) << endl;
+
+			desc << TAB << TAB << TC_Common::outfill("adapter") << adapter->endpoint().getEndpoint().toString() << endl;
+			desc << TAB << TAB << TC_Common::outfill("recv size")  << adapter->trans()->getRecvBuffer()->getBufferLength() << endl;
+			desc << TAB << TAB << TC_Common::outfill("send size")  << adapter->trans()->getSendBuffer()->getBufferLength() << endl;
+		}
+	}
+
+	return desc.str();
+}
+
+void CommunicatorEpoll::reConnect()
+{
+	int64_t iNow = TNOWMS;
+
+	while(!_reconnect.empty())
+	{
+		auto it = _reconnect.begin();
+
+		if(it->first > iNow)
+		{
+			return;
+		}
+
+		it->second->reconnect();
+
+		_reconnect.erase(it++);
+	}
 }
 
 void CommunicatorEpoll::run()
@@ -419,6 +473,7 @@ void CommunicatorEpoll::run()
 
             //数据上报
             doStat();
+	        reConnect();
         }
         catch (exception& e)
         {

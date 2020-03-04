@@ -163,7 +163,7 @@ ServantProxyCallback::ServantProxyCallback()
 
 int HttpServantProxyCallback::onDispatch(ReqMessagePtr msg)
 {
-    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+    if (msg->response->iRet != TARSSERVERSUCCESS)
     {
         return onDispatchException(msg->request, *msg->response);
     }
@@ -288,6 +288,13 @@ string ServantProxy::tars_name() const
     return "NULL";
 }
 
+void ServantProxy::tars_reconnect(int second)
+{
+	if (_objectProxyNum >= 1 && (*_objectProxy != NULL))
+	{
+		(*_objectProxy)->reconnect(second);
+	}
+}
 
 TC_Endpoint ServantProxy::tars_invoke_endpoint()
 {
@@ -406,9 +413,9 @@ void ServantProxy::tars_ping()
 
     map<string, string> s;
 
-	tars::TarsOutputStream<tars::BufferWriterVector> os;
+	TarsOutputStream<BufferWriterVector> os;
 
-	tars_invoke(tars::TARSNORMAL, "tars_ping", os, m, s);
+	tars_invoke(TARSNORMAL, "tars_ping", os, m, s);
 }
 
 
@@ -417,9 +424,9 @@ void ServantProxy::tars_async_ping()
 	map<string, string> m;
     map<string, string> s;
 
-	tars::TarsOutputStream<tars::BufferWriterVector> os;
+	TarsOutputStream<BufferWriterVector> os;
 
-	tars_invoke_async(tars::TARSONEWAY, "tars_ping", os, m, s, NULL);
+	tars_invoke_async(TARSONEWAY, "tars_ping", os, m, s, NULL);
 }
 
 ServantProxy* ServantProxy::tars_hash(int64_t key)
@@ -591,7 +598,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
     //如果是按set规则调用
     if (pObjProxy && pObjProxy->isInvokeBySet())
     {
-        SET_MSG_TYPE(msg->request.iMessageType, tars::TARSMESSAGETYPESETNAME);
+        SET_MSG_TYPE(msg->request.iMessageType, TARSMESSAGETYPESETNAME);
         msg->request.status[ServantProxy::STATUS_SETNAME_VALUE] = pObjProxy->getInvokeSetName();
 
         TLOGTARS("[TARS][ServantProxy::invoke, " << msg->request.sServantName << ", invoke with set,"<<pObjProxy->getInvokeSetName()<<"]" << endl);
@@ -742,7 +749,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 //////////////////////////////////////////////////////////////////
 void ServantProxy::tars_invoke_async(char  cPacketType,
                                     const string &sFuncName,
-                                    tars::TarsOutputStream<tars::BufferWriterVector> &buf,
+                                    TarsOutputStream<BufferWriterVector> &buf,
                                     const map<string, string>& context,
                                     const map<string, string>& status,
                                     const ServantProxyCallbackPtr& callback,
@@ -777,7 +784,7 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
 
 shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
                               const string& sFuncName,
-                              tars::TarsOutputStream<tars::BufferWriterVector>& buf,
+                              TarsOutputStream<BufferWriterVector>& buf,
                               const map<string, string>& context,
                               const map<string, string>& status)
                             //   ResponsePacket& rsp)
@@ -964,7 +971,7 @@ void ServantProxy::checkDye(RequestPacket& req)
     assert(pSptd != NULL);
     if(pSptd && pSptd->_dyeing)
     {
-        SET_MSG_TYPE(req.iMessageType, tars::TARSMESSAGETYPEDYED);
+        SET_MSG_TYPE(req.iMessageType, TARSMESSAGETYPEDYED);
 
         req.status[ServantProxy::STATUS_DYED_KEY] = pSptd->_dyeingKey;
     }

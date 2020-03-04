@@ -70,8 +70,6 @@ bool Transceiver::isSSL() const
 
 void Transceiver::reconnect()
 {
-    close();
-
     connect();
 }
 
@@ -157,6 +155,11 @@ void Transceiver::setConnected()
 	TLOGTARS("[TARS][tcp setConnected, " << _adapterProxy->getObjProxy()->name() << ",fd:" << _fd << "]" << endl);
 
 	onConnect();
+
+	if(_adapterProxy->getObjProxy()->getPushCallback())
+	{
+		_adapterProxy->getObjProxy()->getPushCallback()->onConnect(_ep.getEndpoint());
+	}
 }
 
 void Transceiver::onConnect()
@@ -401,11 +404,9 @@ bool Transceiver::sendAuthData(const BasicAuthInfo& info)
 void Transceiver::close()
 {
     if(!isValid()) return;
-//    if(_adapterProxy->getObjProxy()->getPushCallback())
-//    {
-//	    _adapterProxy->getObjProxy()->getPushCallback()->onClose();
-//    }
-#if TARS_SSL
+
+
+#if TAF_SSL
     if (_openssl)
     {
         _openssl->release();
@@ -427,7 +428,21 @@ void Transceiver::close()
 
     _authState = AUTH_INIT;
 
-    TLOGTARS("[TARS][trans close:"<< _adapterProxy->getObjProxy()->name()<< "," << _ep.desc() << "]" << endl);
+	if(_adapterProxy->getObjProxy()->getPushCallback())
+	{
+		_adapterProxy->getObjProxy()->getPushCallback()->onClose();
+	}
+
+	int second = _adapterProxy->getObjProxy()->reconnect();
+
+	if(second > 0) {
+		_adapterProxy->getObjProxy()->getCommunicatorEpoll()->reConnect(TNOWMS + second * 1000, this);
+		TLOGERROR("[TAF][trans close:" << _adapterProxy->getObjProxy()->name() << "," << _ep.desc() << ", reconnect:" << second << "]" << endl);
+	}
+//	else
+//	{
+//		TLOGERROR("[TAF][trans close:" << _adapterProxy->getObjProxy()->name() << "," << _ep.desc() << "]" << endl);
+//	}
 }
 
 int Transceiver::doRequest()
@@ -998,7 +1013,8 @@ int UdpTransceiver::send(const void* buf, uint32_t len, uint32_t flag)
 {
     if(!isValid()) return -1;
 
-    int iRet=::sendto(_fd, (const char*)buf, len, flag, (struct sockaddr*) &(_ep.addr()), sizeof(sockaddr));
+	socklen_t addrlen = _ep.isIPv6() ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in);
+	int iRet=::sendto(_fd, (const char*)buf, len, flag, _ep.addrPtr(), addrlen);
 
     if (iRet<0)
     {

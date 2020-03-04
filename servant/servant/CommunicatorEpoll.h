@@ -180,6 +180,18 @@ public:
      */
     void pushAsyncThreadQueue(ReqMessage * msg);
 
+	/**
+	 * set reconnect
+	 * @param time
+	 */
+	void reConnect(int64_t ms, Transceiver*);
+
+	/**
+	 * communicator resource desc
+	 * @return
+	 */
+	string getResouresInfo();
+
 protected:
     /**
      * 处理函数
@@ -212,6 +224,11 @@ protected:
      * @param pi
      */
     void doStat();
+
+    /**
+     * reconnect
+     */
+    void reConnect();
 
 protected:
     /*
@@ -261,6 +278,12 @@ protected:
      * 超时的检查时间间隔
      */
     int64_t                _timeoutCheckInterval;
+
+    /**
+     * auto reconnect Transceiver
+     */
+	unordered_map<int64_t, Transceiver*> _reconnect;
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////

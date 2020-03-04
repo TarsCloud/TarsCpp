@@ -84,6 +84,8 @@ bool        ServerConfig::ManualListen = false;     //手工启动监听端口
 bool        ServerConfig::MergeNetImp = false;     //合并网络和处理线程
 int         ServerConfig::NetThread = 1;               //servernet thread
 bool        ServerConfig::CloseCout = true;
+int         ServerConfig::BackPacketLimit = 0;
+int         ServerConfig::BackPacketMin = 1024;
 
 #if TARS_SSL
 std::string ServerConfig::CA;
@@ -92,8 +94,6 @@ std::string ServerConfig::Key;
 bool ServerConfig::VerifyClient = false;
 #endif
 
-#define OUT_LINE        (TC_Common::outfill("", '-', 80))
-#define OUT_LINE_LONG   (TC_Common::outfill("", '=', 80))
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 TC_Config                       Application::_conf;
@@ -157,14 +157,12 @@ void reportRspQueue(TC_EpollServer *epollServer)
     {
         iLastCheckTime = iNow;
 
-        vector<TC_EpollServer::NetThread*> vNetThread = epollServer->getNetThread();
-
-        unsigned int iNetThreadNum = epollServer->getNetThreadNum();
+        const vector<TC_EpollServer::BindAdapterPtr> &adapters = epollServer->getBindAdapters();
 
         size_t n = 0;
-        for (size_t i = 0; i < iNetThreadNum; ++i)
+        for (size_t i = 0; i < adapters.size(); ++i)
         {
-            n = n + vNetThread[i]->getSendRspSize();
+            n = n + adapters[i]->getSendBufferSize();
         }
 
         g_pReportRspQueue->report((int)n);
@@ -419,14 +417,20 @@ bool Application::cmdConnections(const string& command, const string& params, st
         os  << TC_Common::outfill("conn-uid", ' ', 15)
             << TC_Common::outfill("ip:port", ' ', 25)
             << TC_Common::outfill("last-time", ' ', 25)
-            << TC_Common::outfill("timeout", ' ', 10) << endl;
+            << TC_Common::outfill("timeout", ' ', 10)
+	        << TC_Common::outfill("recvBufferSize", ' ', 30)
+	        << TC_Common::outfill("sendBufferSize", ' ', 30)
+	        << endl;
 
         for (size_t i = 0; i < v.size(); i++)
         {
             os  << TC_Common::outfill(TC_Common::tostr<uint32_t>(v[i].uid), ' ', 15)
                 << TC_Common::outfill(v[i].ip + ":" + TC_Common::tostr(v[i].port), ' ', 25)
                 << TC_Common::outfill(TC_Common::tm2str(v[i].iLastRefreshTime, "%Y-%m-%d %H:%M:%S"), ' ', 25)
-                << TC_Common::outfill(TC_Common::tostr(v[i].timeout), ' ', 10) << endl;
+                << TC_Common::outfill(TC_Common::tostr(v[i].timeout), ' ', 10)
+	            << TC_Common::outfill(TC_Common::tostr(v[i].recvBufferSize), ' ', 30)
+	            << TC_Common::outfill(TC_Common::tostr(v[i].sendBufferSize), ' ', 30)
+	            << endl;
         }
     }
     os << OUT_LINE_LONG << endl;
@@ -572,6 +576,31 @@ bool Application::cmdReloadLocator(const string& command, const string& params, 
     }
 
     return bSucc;
+}
+
+bool Application::cmdViewResource(const string& command, const string& params, string& result)
+{
+	TLOGDEBUG("Application::cmdViewResource:" << command << " " << params << endl);
+
+	ostringstream os;
+
+	os << _communicator->getResouresInfo() << endl;
+
+	os << OUT_LINE << endl;
+
+	vector<TC_EpollServer::BindAdapterPtr> adapters = _epollServer->getBindAdapters();
+	for(auto adapter : adapters)
+	{
+		outAdapter(os, ServantHelperManager::getInstance()->getAdapterServant(adapter->getName()), adapter);
+		os << TC_Common::outfill("recv-buffer-count") << adapter->getRecvBufferSize() << endl;
+		os << TC_Common::outfill("send-buffer-count") << adapter->getSendBufferSize() << endl;
+	}
+
+	result += os.str();
+
+	TLOGDEBUG("Application::cmdViewResource result:" << result << endl);
+
+	return true;
 }
 
 void Application::outAllAdapter(ostream &os)
@@ -725,6 +754,12 @@ void Application::main(const TC_Option &option)
 
         //设置是否标准输出
         TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_CLOSE_COUT, Application::cmdCloseCout);
+
+	    //设置是否标准输出
+	    TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_RELOAD_LOCATOR, Application::cmdReloadLocator);
+
+	    //设置是否标准输出
+	    TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_RESOURCE, Application::cmdViewResource);
 
         //上报版本
         TARS_REPORTVERSION(TARS_VERSION);
@@ -921,12 +956,16 @@ void Application::outServer(ostream &os)
 	os << TC_Common::outfill("NetThread(netthread)")          << ServerConfig::NetThread << endl;
 	os << TC_Common::outfill("ManualListen(manuallisten)")       << ServerConfig::ManualListen << endl;
 	os << TC_Common::outfill("MergeNetImp(mergenetimp)")       << ServerConfig::MergeNetImp << endl;
-	os << TC_Common::outfill("ReportFlow")         << ServerConfig::ReportFlow<< endl;
-#if TARS_SSL
-	cout << TC_Common::outfill("Ca")                << ServerConfig::CA << endl;
-	cout << TC_Common::outfill("Cert")              << ServerConfig::Cert << endl;
-	cout << TC_Common::outfill("Key")               << ServerConfig::Key << endl;
-	cout << TC_Common::outfill("VerifyClient")      << ServerConfig::VerifyClient << endl;
+	os << TC_Common::outfill("ReportFlow(reportflow)")                  << ServerConfig::ReportFlow<< endl;
+	os << TC_Common::outfill("BackPacketLimit(backpacketlimit)")  << ServerConfig::BackPacketLimit<< endl;
+	os << TC_Common::outfill("BackPacketMin(backpacketmin)")  << ServerConfig::BackPacketMin<< endl;
+
+#if TAF_SSL
+	cout << TC_Common::outfill("Ca(ca)")                    << ServerConfig::CA << endl;
+	cout << TC_Common::outfill("Cert(cert)")              << ServerConfig::Cert << endl;
+	cout << TC_Common::outfill("Key(key)")                  << ServerConfig::Key << endl;
+	cout << TC_Common::outfill("VerifyClient(verifyclient)")      << ServerConfig::VerifyClient << endl;
+//	cout << TC_Common::outfill("Ciphers(ciphers)")               << ServerConfig::Ciphers << endl;
 #endif
 
 }
@@ -997,6 +1036,8 @@ void Application::initializeServer()
 	ServerConfig::MergeNetImp       = _conf.get("/tars/application/server<mergenetimp>", "0") == "0" ? false : true;
 	ServerConfig::NetThread         = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<nethread>"), "1"));
 	ServerConfig::CloseCout        = _conf.get("/tars/application/server<closecout>","1")=="0"?0:1;
+	ServerConfig::BackPacketLimit  = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketlimit>", "100*1024*1024"));
+	ServerConfig::BackPacketMin    = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketmin>", "1024"));
 
 #if TARS_SSL
 	ServerConfig::CA                = _conf.get("/tars/application/server<ca>");
@@ -1243,7 +1284,10 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
 
             bindAdapter->setProtocolName(_conf.get(sLastPath + "<protocol>", "tars"));
 
-            if (bindAdapter->isTarsProtocol())
+	        bindAdapter->setBackPacketBuffLimit(ServerConfig::BackPacketLimit);
+	        bindAdapter->setBackPacketBuffMin(ServerConfig::BackPacketMin);
+
+	        if (bindAdapter->isTarsProtocol())
             {
                 bindAdapter->setProtocol(AppProtocol::parse);
             }

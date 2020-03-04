@@ -22,26 +22,56 @@ namespace tars
 {
 
 TC_HttpAsync::AsyncRequest::AsyncRequest(TC_HttpRequest &stHttpRequest, TC_HttpAsync::RequestCallbackPtr &callbackPtr, bool bUseProxy)
-    : _pHttpAsync(NULL), _iUniqId(0), _callbackPtr(callbackPtr), _bUseProxy(bUseProxy), _isConnected(false)
+: _pHttpAsync(NULL)
+, _iUniqId(0)
+, _sendBuffer(this)
+, _recvBuffer(this)
+, _callbackPtr(callbackPtr)
+, _bUseProxy(bUseProxy)
+, _isConnected(false)
 {
     memset(&_bindAddr, 0, sizeof(struct sockaddr));
     _bindAddrSet = false;
 
-    _sReq = stHttpRequest.encode();
+    vector<char> buff;
+    stHttpRequest.encode(buff);
+
+    _sendBuffer.addBuffer(std::move(buff));
 
     stHttpRequest.getHostPort(_sHost, _iPort);
+}
 
-    // _notify.createSocket();
+TC_HttpAsync::AsyncRequest::AsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, const string &addr)
+: _pHttpAsync(NULL)
+, _iUniqId(0)
+, _sendBuffer(this)
+, _recvBuffer(this)
+, _callbackPtr(callbackPtr)
+, _bUseProxy(false)
+, _isConnected(false)
+{
+    memset(&_bindAddr, 0, sizeof(struct sockaddr));
+
+    _bindAddrSet = false;
+
+	stHttpRequest.encode(_sendBuffer);
+
+    vector<string> v = TC_Common::sepstr<string>(addr, ":");
+
+    if (v.size() < 2)
+    {
+        stHttpRequest.getHostPort(_sHost, _iPort);    
+    }
+    else
+    {
+        _sHost = v[0];
+        _iPort = TC_Common::strto<uint32_t>(v[1]);    
+    }
 }
 
 TC_HttpAsync::AsyncRequest::~AsyncRequest()
 {
     doClose();
-
-    // if (_pHttpAsync)
-    //     _pHttpAsync->delConnection(_notify.getfd());
-
-    // _notify.close();
 }
 
 void TC_HttpAsync::AsyncRequest::doClose()
@@ -154,41 +184,16 @@ void TC_HttpAsync::AsyncRequest::timeout()
 
 }
 
-string TC_HttpAsync::AsyncRequest::getError(const char* sDefault) const
+string TC_HttpAsync::AsyncRequest::getError(const string &sDefault) const
 {
     int ret = TC_Exception::getSystemCode();
     if(ret!= 0)
     {
-        return TC_Exception::parseError(ret);
+        return sDefault + ", ret:" + TC_Common::tostr(ret) + ", msg:" + TC_Exception::parseError(ret);
     }
 
-    return sDefault;
+    return sDefault + ", ret:" + TC_Common::tostr(ret);
 }
-// string TC_HttpAsync::AsyncRequest::getError(const string &sDefault) const
-// {
-//     string err;
-
-//     if (_fd.isValid())
-//     {
-//         int error;
-//         SOCKET_LEN_TYPE len = sizeof(error);
-//         _fd.getSockOpt(SO_ERROR, (void*)&error, len, SOL_SOCKET);
-//         if (error != 0)
-//         {
-//             err = strerror(error);
-//         }
-//     }
-
-//     if (err.empty() && errno != 0)
-//     {
-//         err = strerror(errno);
-//     }
-
-//     if (err.empty())
-//         err = sDefault;
-
-//     return err;
-// }
 
 void TC_HttpAsync::AsyncRequest::doException(RequestCallback::FAILED_CODE ret, const string &e)
 {
@@ -210,14 +215,15 @@ void TC_HttpAsync::AsyncRequest::doRequest()
     {
         ret = -1;
 
-        if (!_sReq.empty())
+        if (!_sendBuffer.empty())
         {
-            if ((ret = this->send(_sReq.c_str(), _sReq.length(), 0)) > 0)
+        	auto data = _sendBuffer.getBufferPointer();
+            if ((ret = this->send(data.first, data.second, 0)) > 0)
             {
-				_sReq = _sReq.substr(ret);
+            	_sendBuffer.moveHeader(ret);
             }
         }
-    } while (ret > 0);
+    } while (ret > 0 && !_sendBuffer.empty());
 
     //网络异常
     if (ret == -2)
@@ -239,19 +245,19 @@ void TC_HttpAsync::AsyncRequest::doReceive()
     {
         if ((recv = this->recv(buff, sizeof(buff), 0)) > 0)
         {
-            _sRsp.append(buff, recv);
+        	_recvBuffer.addBuffer(buff, recv);
         }
     }
     while (recv > 0);
 
     if (recv == -2)
     {
-        doException(RequestCallback::Failed_Net, getError("recv error."));
+        doException(RequestCallback::Failed_Net, getError("recv error"));
     }
     else
     {
         //增量decode
-        bool ret    = _stHttpResp.incrementDecode(_sRsp);
+	    bool ret    = _stHttpResp.incrementDecode(_recvBuffer);
 
         //有头部数据了
         if (_callbackPtr && !_stHttpResp.getHeaders().empty())
@@ -259,7 +265,7 @@ void TC_HttpAsync::AsyncRequest::doReceive()
             bool bContinue = _callbackPtr->onContinue(_stHttpResp);
             if (!bContinue)
             {
-                doException(RequestCallback::Failed_Interrupt, getError("receive interrupt."));
+                doException(RequestCallback::Failed_Interrupt, getError("receive interrupt"));
                 return;
             }
         }
@@ -282,8 +288,6 @@ void TC_HttpAsync::AsyncRequest::doReceive()
                 doClose();
 
                 try { if (_callbackPtr) _callbackPtr->onSucc(_stHttpResp); } catch (...) { }
-
-                // doException(RequestCallback::Failed_Close, getError("close by server."));
             }
         }
     }
@@ -291,15 +295,19 @@ void TC_HttpAsync::AsyncRequest::doReceive()
 
 void TC_HttpAsync::AsyncRequest::processNet(const epoll_event &ev)
 {
-    if (TC_Epoller::readEvent(ev))//events & EPOLLIN)
+    if (TC_Epoller::errorEvent(ev))
     {
-        // cout << "readEvent" << endl;
+        doException(RequestCallback::Failed_Net, getError("net error"));
+        return;
+    }
+
+    if (TC_Epoller::readEvent(ev))
+    {
         doReceive();
     }
 
     if (TC_Epoller::writeEvent(ev))
     {
-        // cout << "writeEvent" << endl;
         doRequest();
     }
 }
@@ -331,7 +339,7 @@ TC_HttpAsync::TC_HttpAsync() : _terminate(false)
 
     _data = new http_queue_type(10000);
 
-    _epoller.create(1024);
+    _epoller.create(20480);
 
     // _notify.createSocket();
     _notify.init(&_epoller);
@@ -348,7 +356,6 @@ TC_HttpAsync::~TC_HttpAsync()
 
     delete _data;
 
-    // _notify.close();
     _notify.release();
     _epoller.close();
 
@@ -358,9 +365,6 @@ void TC_HttpAsync::start()
 {
     _tpool.init(1);
     _tpool.start();
-
-    // TC_Functor<void> cmd(this, &TC_HttpAsync::run);
-    // TC_Functor<void>::wrapper_type wt(cmd);
 
     _tpool.exec(std::bind(&TC_HttpAsync::run, this));
 }
@@ -435,7 +439,30 @@ void TC_HttpAsync::doAsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallback
         _events.push_back(H64(_notify.notifyFd()) | uniqId);
     }
     _notify.notify();
-    // addConnection(req->getNotifyfd(), uniqId, EPOLLIN);
+}
+
+void TC_HttpAsync::doAsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, const string &addr)
+{
+    AsyncRequest * req = new AsyncRequest(stHttpRequest, callbackPtr, addr);
+
+    if (_bindAddrSet)
+    {
+        req->setBindAddr(&_bindAddr);
+    }
+
+    uint32_t uniqId = _data->generateId();
+
+    req->setUniqId(uniqId);
+
+    req->setHttpAsync(this);
+
+    _data->push(req, uniqId);
+
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _events.push_back(H64(_notify.notifyFd()) | uniqId);
+    }
+    _notify.notify();
 }
 
 void TC_HttpAsync::addConnection(int fd, uint32_t uniqId, uint32_t events)
@@ -541,7 +568,6 @@ void TC_HttpAsync::run()
 
                 if ((int)fd == _notify.notifyFd())
                 {
-                    // cout << "notify" << endl;
                     deque<uint64_t> events;
 
                     {
@@ -554,7 +580,6 @@ void TC_HttpAsync::run()
                     {                    
                         uint32_t uniqId = (uint32_t)data;
 
-                        // cout << "socket uniqId:" << uniqId << endl;
                         AsyncRequestPtr ptr = _data->getAndRefresh(uniqId);
                         if (!ptr) 
                             continue;
@@ -568,13 +593,10 @@ void TC_HttpAsync::run()
 
                     uint32_t uniqId = TC_Epoller::getU32(ev, false);
 
-                    // cout << "http socket uniqId:" << uniqId << endl;
-
                     AsyncRequestPtr ptr = _data->getAndRefresh(uniqId);
                     if (!ptr) 
                         continue;
  
-                    // assert(fd == ptr->getfd());
                     ptr->processNet(ev);
                 }
             }
