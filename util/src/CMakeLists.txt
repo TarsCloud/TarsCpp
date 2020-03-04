@@ -1,6 +1,7 @@
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 IF(WIN32)
+include_directories(epoll_windows)
 aux_source_directory(epoll_windows/src. DIR_SRCS)
 ENDIF()
 

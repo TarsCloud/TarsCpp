@@ -21,6 +21,8 @@ endif()
 #-------------------------------------------------------------------
 
 include_directories(${PROJECT_SOURCE_DIR}/util/include)
+include_directories(${PROJECT_SOURCE_DIR}/util/src/epoll_windows)
+
 include_directories(${PROJECT_SOURCE_DIR}/servant)
 include_directories(${PROJECT_SOURCE_DIR}/servant/protocol)
 
