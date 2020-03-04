@@ -212,7 +212,7 @@ if (TARS_MYSQL)
 
     INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/lib DESTINATION thirdparty)
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/include/mysql DESTINATION thirdparty/include)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/include/ DESTINATION thirdparty/include/mysql)
 
     add_dependencies(thirdparty ADD_${LIB_MYSQL})
 endif ()
