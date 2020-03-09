@@ -231,7 +231,6 @@ public:
     void addServant(const string &id)
     {
         ServantHelperManager::getInstance()->addServant<T>(id, this, true);
-
     }
 
     /**

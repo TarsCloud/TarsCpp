@@ -194,7 +194,10 @@ void Application::waitForShutdown()
 
     destroyApp();
 
-    TarsRemoteNotify::getInstance()->report("stop", true);
+    TarsRemoteNotify::getInstance()->report("stop");
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(100)); //稍微休息一下, 让当前处理包能够回复
+
 }
 
 void Application::terminate()
@@ -717,7 +720,9 @@ void Application::main(const TC_Option &option)
             {
                 keepActiving.detach();
                 TarsRemoteNotify::getInstance()->report("exit: " + string(ex.what()));
-                cout << "[init exception]:" << ex.what() << endl;
+	            std::this_thread::sleep_for(std::chrono::milliseconds(100)); //稍微休息一下, 让当前处理包能够回复
+
+	            cout << "[init exception]:" << ex.what() << endl;
                 exit(-1);
             }
         }
@@ -803,8 +808,10 @@ void Application::main(const TC_Option &option)
         cout << "[main exception]:" << ex.what() << endl;
 
         TarsRemoteNotify::getInstance()->report("exit: " + string(ex.what()));
-        
-        exit(-1);
+
+	    std::this_thread::sleep_for(std::chrono::milliseconds(100)); //稍微休息一下, 让当前处理包能够回复
+
+	    exit(-1);
     }
 
     //初始化完毕后, 日志再修改为异步
@@ -1330,8 +1337,9 @@ void Application::checkServantNameValid(const string& servant, const string& sPr
 
         TarsRemoteNotify::getInstance()->report("exit:" + os.str());
 
-        cout << os.str() << endl;
+	    std::this_thread::sleep_for(std::chrono::milliseconds(100)); //稍微休息一下, 让当前处理包能够回复
 
+	    cout << os.str() << endl;
 
         exit(-1);
     }

@@ -44,7 +44,7 @@ bool TarsRemoteConfig::addConfig(const string & sFileName, string &buffer, bool 
 
     try
     {
-        string sFullFileName = _basePath + "/" + sFileName;
+        string sFullFileName = _basePath + FILE_SEP + sFileName;
 
         string newFile = getRemoteFile(sFileName, bAppConfigOnly);
 

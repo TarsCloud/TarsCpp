@@ -28,7 +28,7 @@ echo "[create server: $APP.$SERVER ...]"
 
 DEMO_PATH=c:\\taf\\cpp\\script\\demo
 
-SRC_FILE="DemoServer.h DemoServer.cpp DemoServantImp.h DemoServantImp.cpp DemoServant.jce makefile CMakeLists.txt"
+SRC_FILE="DemoServer.h DemoServer.cpp DemoServantImp.h DemoServantImp.cpp DemoServant.tars makefile CMakeLists.txt"
 
 for FILE in $SRC_FILE
 do

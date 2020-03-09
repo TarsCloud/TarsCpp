@@ -383,7 +383,7 @@ string TC_ConfigDomain::tostr(int i) const
     string sTab;
     for(int k = 0; k < i; ++k)
     {
-        sTab += "\t";
+        sTab += "  ";
     }
 
     ostringstream buf;
@@ -399,11 +399,11 @@ string TC_ConfigDomain::tostr(int i) const
         //值为空, 则不打印出=
         if(it->second.empty())
         {
-            buf << "\t" << sTab << reverse_parse(_key[n]) << endl;
+            buf << "  " << sTab << reverse_parse(_key[n]) << endl;
         }
         else
         {
-            buf << "\t" << sTab << reverse_parse(_key[n]) << "=" << reverse_parse(it->second) << endl;
+            buf << "  " << sTab << reverse_parse(_key[n]) << "=" << reverse_parse(it->second) << endl;
         }
     }
 

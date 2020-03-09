@@ -2,14 +2,11 @@ cmake_minimum_required(VERSION 3.2)
 
 project(servant)
 
-
 if(_USE_OPENTRACKING)
 include_directories(${util_SOURCE_DIR}/include ${OPENTRACKING_INC})
 else()
 include_directories(${util_SOURCE_DIR}/include)
 endif()
-
-# link_libraries(pthread)
 
 #调用tars2cpp, 生成tars对应的文件
 macro(complice_tars OUT_DEPENDS_LIST HEADER TARS_DIR)
@@ -40,7 +37,7 @@ macro(complice_tars OUT_DEPENDS_LIST HEADER TARS_DIR)
         add_custom_command(
                 OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                DEPENDS tars2cpp
+                DEPENDS tars2cpp ${TARS_IN}
                 COMMAND ${TARS2CPP} --with-tars ${INCLUDE} ${TARS_IN}
                 COMMENT "${TARS2CPP} --with-tars ${INCLUDE} ${TARS_IN}")
 
@@ -65,10 +62,11 @@ add_subdirectory(protocol/servant)
 add_subdirectory(tup)
 add_subdirectory(libservant)
 
-
 install(DIRECTORY servant DESTINATION include)
 install(DIRECTORY tup DESTINATION include)
 install(DIRECTORY jmem DESTINATION include)
-install(DIRECTORY script DESTINATION .)
+install(DIRECTORY script DESTINATION .
+        PATTERN "*.sh"
+        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ)
 install(DIRECTORY makefile DESTINATION .)
 

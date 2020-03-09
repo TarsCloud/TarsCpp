@@ -5,44 +5,6 @@ using namespace std;
 
 DemoServer g_app;
 
-struct HttpProtocol
-{
-    /**
-     * 解析http请求
-     * @param in
-     * @param out
-     *
-     * @return int
-     */
-    static int parseHttp(string &in, string &out)
-    {
-        try
-        {
-            //判断请求是否是HTTP请求
-            bool b = TC_HttpRequest ::checkRequest(in.c_str(), in.length());
-            //完整的HTTP请求
-            if(b)
-            {
-                out = in;
-                in  = "";
-                //TLOGDEBUG("out size: " << out.size() << endl);
-                return TC_EpollServer::PACKET_FULL;
-            }
-            else
-            {
-                return TC_EpollServer::PACKET_LESS;
-            }
-        }
-        catch(exception &ex)
-        {
-            return TC_EpollServer::PACKET_ERR;
-        }
-
-        return TC_EpollServer::PACKET_LESS;             //表示收到的包不完全
-    }
-
-};
-
 /////////////////////////////////////////////////////////////////
 void
 DemoServer::initialize()
@@ -51,7 +13,7 @@ DemoServer::initialize()
     //...
 
     addServant<DemoServantImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".DemoServantObj");
-	addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".DemoServantObj", &HttpProtocol::parseHttp);
+	addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".DemoServantObj", &TC_NetWorkBuffer::parseHttp);
 }
 /////////////////////////////////////////////////////////////////
 void
