@@ -23,11 +23,11 @@ set(TARS_INC "${TARS_PATH}/include")
 set(TARS_LIB_DIR "${TARS_PATH}/lib" )
 
 if(WIN32)
-set (LIB_TARS_SERVANT "${TARS_LIB_DIR}/tarsservant.lib")
-set (LIB_TARS_UTIL "${TARS_LIB_DIR}/tarsutil.lib")
+	set (LIB_TARS_SERVANT "${TARS_LIB_DIR}/tarsservant.lib")
+	set (LIB_TARS_UTIL "${TARS_LIB_DIR}/tarsutil.lib")
 else()
-set (LIB_TARS_SERVANT "${TARS_LIB_DIR}/libtarsservant.a")
-set (LIB_TARS_UTIL "${TARS_LIB_DIR}/libtarsutil.a")
+	set (LIB_TARS_SERVANT "${TARS_LIB_DIR}/libtarsservant.a")
+	set (LIB_TARS_UTIL "${TARS_LIB_DIR}/libtarsutil.a")
 endif()
 
 include_directories(${TARS_INC})
@@ -80,52 +80,52 @@ ENDIF (UNIX)
 
 set(TARS_WEB_HOST "http://web.tars.com")
 
-macro(gen_tars TARGET)
+function(gen_tars TARGET)
 
 	file(GLOB_RECURSE TARS_INPUT *.tars)
-	set(TARS_GEN_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-
-	set(CLEAN_LIST)
 
 	if (TARS_INPUT)
+
 		foreach(TARS_FILE ${TARS_INPUT})
 			get_filename_component(TARS_NAME ${TARS_FILE} NAME_WE)
+			get_filename_component(TARS_PATH ${TARS_FILE} PATH)
 
-			set(CUR_TARS_GEN ${TARS_GEN_DIR}/${TARS_NAME}.h)
-
-			set(TARS_GEN ${TARS_GEN} ${CUR_TARS_GEN})
+			set(CUR_TARS_GEN ${TARS_PATH}/${TARS_NAME}.h)
 
 			add_custom_command(
 					OUTPUT ${CUR_TARS_GEN}
-					WORKING_DIRECTORY ${TARS_GEN_DIR}
+					WORKING_DIRECTORY ${TARS_PATH}
 					COMMAND ${TARS2CPP} ${TARS_TOOL_FLAG} ${TARS_FILE}
+					COMMENT "${TARS2CPP} ${TARS_TOOL_FLAG} ${TARS_FILE}"
 					DEPENDS ${TARS2CPP} ${TARS_FILE}
 			)
 
-			list(APPEND CLEAN_LIST ${CUR_TARS_GEN})
+			list(APPEND OUT_TARS_H_LIST ${CUR_TARS_GEN})
 
-		endforeach(TARS_FILE ${TARS_INPUT})
+		endforeach()
 
-		add_custom_target(${TARGET} ALL DEPENDS ${CUR_TARS_GEN})
+		add_custom_target(${TARGET} ALL DEPENDS ${OUT_TARS_H_LIST})
+
+		set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${OUT_TARS_H_LIST}")
 
 	endif()
 
-	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")
-
-endmacro()
+endfunction()
 
 #生成带tars文件的可执行程序
 macro(gen_server APP TARGET)
 
 	include_directories(${PROJECT_SOURCE_DIR})
 
-	gen_tars(tars-${TARGET})
-
 	FILE(GLOB_RECURSE SRC_FILES  "*.cc" "*.cpp" ".c")
 
 	add_executable(${TARGET} ${SRC_FILES})
+	file(GLOB_RECURSE TARS_INPUT *.tars)
 
-	add_dependencies(${TARGET} tars-${APP}-${TARGET})
+	if(TARS_INPUT)
+		gen_tars(tars-${TARGET})
+		add_dependencies(${TARGET} tars-${TARGET})
+	endif()
 
 	if(TARS_SSL)
 		target_link_libraries(${TARGET} ${LIB_SSL} ${LIB_CRYPTO})
@@ -156,7 +156,7 @@ macro(gen_server APP TARGET)
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 			COMMAND ${CMAKE_COMMAND} -P ${RUN_TAR_COMMAND_FILE}
 			COMMENT "call ${RUN_TAR_COMMAND_FILE}")
-	
+
 	add_custom_target(${TARGET}-tar DEPENDS ${TARGET}.tgz ${TARGET})
 
 	#make upload #########################################################################

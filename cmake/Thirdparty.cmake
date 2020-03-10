@@ -52,12 +52,52 @@ set(LIB_HTTP2)
 set(LIB_SSL)
 set(LIB_CRYPTO)
 set(LIB_PROTOBUF)
-
+set(LIB_GTEST)
 #-------------------------------------------------------------
 
 add_custom_target(thirdparty)
 
 include(ExternalProject)
+
+set(LIB_GTEST "libgtest")
+
+if (WIN32)
+
+    ExternalProject_Add(ADD_${LIB_GTEST}
+            URL http://cdn.tarsyun.com/src/release-1.10.0.zip
+            DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
+            PREFIX ${CMAKE_BINARY_DIR}
+            INSTALL_DIR ${CMAKE_SOURCE_DIR}
+            CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
+            SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
+            BUILD_IN_SOURCE 1
+            BUILD_COMMAND cmake --build . --config release
+            LOG_CONFIGURE 1
+            LOG_BUILD 1
+            # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
+            URL_MD5 82358affdd7ab94854c8ee73a180fc53
+            )
+else()
+    ExternalProject_Add(ADD_${LIB_GTEST}
+            URL http://cdn.tarsyun.com/src/release-1.10.0.tar.gz
+            DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
+            PREFIX ${CMAKE_BINARY_DIR}
+            INSTALL_DIR ${CMAKE_SOURCE_DIR}
+            CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
+            SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
+            BUILD_IN_SOURCE 1
+            BUILD_COMMAND make
+            LOG_CONFIGURE 1
+            LOG_BUILD 1
+            # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
+            URL_MD5 ecd1fa65e7de707cd5c00bdac56022cd
+            )
+endif()
+
+INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gtest/lib DESTINATION thirdparty)
+INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gtest/include/ DESTINATION thirdparty/include)
+
+add_dependencies(thirdparty ADD_${LIB_GTEST})
 
 if (TARS_PROTOBUF)
     set(PROTOBUF_DIR_INC "${THIRDPARTY_PATH}/protobuf/include")

@@ -497,13 +497,13 @@ namespace tars
                 if (tag < 15)
                 {
                     h.tag = tag;
-                    os.writeBuf(&h, sizeof(h));
+                    os.writeBuf((const char *)&h, sizeof(h));
                 }
                 else
                 {
                     h.tag = 15;
-                    os.writeBuf(&h, sizeof(h));
-                    os.writeBuf(&tag, sizeof(tag));
+                    os.writeBuf((const char *)&h, sizeof(h));
+                    os.writeBuf((const char *)&tag, sizeof(tag));
                 }
             }
         };
