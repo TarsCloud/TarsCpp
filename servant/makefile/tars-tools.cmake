@@ -93,6 +93,8 @@ function(gen_tars TARGET)
 
 	file(GLOB_RECURSE TARS_INPUT *.tars)
 
+	set(OUT_TARS_H_LIST)
+
 	if (TARS_INPUT)
 
 		foreach(TARS_FILE ${TARS_INPUT})

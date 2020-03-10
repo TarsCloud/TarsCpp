@@ -94,8 +94,8 @@ else()
             )
 endif()
 
-INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gtest/lib DESTINATION thirdparty)
-INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gtest/include/ DESTINATION thirdparty/include)
+INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gtest/ DESTINATION thirdparty)
+#INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gtest/ DESTINATION thirdparty/include)
 
 add_dependencies(thirdparty ADD_${LIB_GTEST})
 
@@ -146,8 +146,8 @@ if (TARS_PROTOBUF)
 
     endif ()
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/lib DESTINATION thirdparty)
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/include/google DESTINATION thirdparty/include)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/ DESTINATION thirdparty)
+#    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/include/google DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_PROTOBUF})
 
@@ -200,8 +200,8 @@ if (TARS_SSL)
 
     endif ()
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/lib DESTINATION thirdparty)
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/include/openssl DESTINATION thirdparty/include)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/ DESTINATION thirdparty)
+#    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/include/openssl DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_SSL})
 endif ()
@@ -251,7 +251,6 @@ if (TARS_MYSQL)
     endif ()
 
     INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/lib DESTINATION thirdparty)
-
     INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/mysql/include/ DESTINATION thirdparty/include/mysql)
 
     add_dependencies(thirdparty ADD_${LIB_MYSQL})
@@ -303,8 +302,8 @@ if (TARS_HTTP2)
 
     endif ()
 
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/lib DESTINATION thirdparty)
-    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/include/nghttp2 DESTINATION thirdparty/include)
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/ DESTINATION thirdparty)
+#    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/include/nghttp2 DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_HTTP2})
 
