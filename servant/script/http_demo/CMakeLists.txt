@@ -12,12 +12,13 @@ else()
     include (/usr/local/tars/cpp/makefile/tars-tools.cmake)
 endif()
 
-set(TARS_WEB_SERVER "upchina@taf.test.whup.com")
-set(TARS_WEB_HOST "taf.test.whup.com:8080")
+set(TARS_WEB_HOST "http://tars.test.com")
 
-include_directories(/usr/local/taf/cpp/thirdparty/include)
-link_directories(/usr/local/taf/cpp/thirdparty/lib)
+include_directories(/usr/local/tars/cpp/thirdparty/include)
+link_directories(/usr/local/tars/cpp/thirdparty/lib)
 
 #include_directories(/home/tarsprotol/App/OtherServer)
 
-gen_server(Demo DemoServer)
+add_subdirectory(src)
+
+#target_link_libraries(mysqlclient ssl crypto nghttp2-static)
