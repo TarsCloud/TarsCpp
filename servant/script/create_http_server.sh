@@ -10,31 +10,27 @@ APP=$1
 SERVER=$2
 SERVANT=$3
 
-echo "APP:$APP, SERVER:$SERVER, SERVANT:$SERVANT"
-
 if [ "$SERVER" == "$SERVANT" ]
 then
 	echo "Error!(ServerName == ServantName)"
 	exit -1
 fi
 
-if [ ! -d $SERVER ]
+if [ ! -d $APP/$SERVER ]
 then
-	echo "[mkdir: $SERVER]"
-	mkdir -p $SERVER
+	echo "[mkdir: $APP/$SERVER]"
+	mkdir -p $APP/$SERVER
 fi
 
 echo "[create server: $APP.$SERVER ...]"
 
-DEMO_PATH=/usr/local/tars/cpp/script/http_demo
+DEMO_PATH=/usr/local/tars/cpp/script/demo
 
-#make cleanall -C $DEMO_PATH
+cp $DEMO_PATH/* $APP/$SERVER/
 
-cp -rf $DEMO_PATH/* $SERVER/
+cd $APP/$SERVER/
 
-cd $SERVER/src
-
-SRC_FILE="DemoServer.h DemoServer.cpp DemoServantImp.h DemoServantImp.cpp CMakeLists.txt"
+SRC_FILE="DemoServer.h DemoServer.cpp DemoServantImp.h DemoServantImp.cpp DemoServant.tars makefile"
 
 for FILE in $SRC_FILE
 do
@@ -48,15 +44,9 @@ do
 	mv $FILE.tmp $FILE
 done
 
-mv DemoServer.h ${SERVER}.h
-mv DemoServer.cpp ${SERVER}.cpp
-mv DemoServantImp.h ${SERVANT}Imp.h
-mv DemoServantImp.cpp ${SERVANT}Imp.cpp
+rename "DemoServer" "$SERVER" $SRC_FILE
+rename "DemoServant" "$SERVANT" $SRC_FILE
 
-cd ..
-mkdir build; cd build
-cmake ..; make
-
-#cd ../../
+cd ../../
 
 echo "[done.]"

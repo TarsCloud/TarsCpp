@@ -32,9 +32,9 @@ DEMO_PATH=/usr/local/tars/cpp/script/demo
 
 cp -rf $DEMO_PATH/* $SERVER/
 
-cd $SERVER/src
+cd $SERVER
 
-SRC_FILE="DemoServer.h DemoServer.cpp DemoServantImp.h DemoServantImp.cpp DemoServant.tars CMakeLists.txt"
+SRC_FILE="DemoServer.h DemoServer.cpp DemoServantImp.h DemoServantImp.cpp DemoServant.tars makefile"
 
 for FILE in $SRC_FILE
 do
@@ -54,10 +54,6 @@ mv DemoServantImp.h ${SERVANT}Imp.h
 mv DemoServantImp.cpp ${SERVANT}Imp.cpp
 mv DemoServant.tars ${SERVANT}.tars
 
-cd ..
-mkdir build; cd build
-cmake ..; make
-
-#cd ../../
+make
 
 echo "[done.]"
