@@ -19,7 +19,7 @@ jobs:
     - name: configure
       run: mkdir build;cd build;cmake .. -DTARS_MYSQL=ON -DTARS_SSL=ON -DTARS_HTTP2=ON -DTARS_PROTOBUF=ON
     - name: make
-      run: cd build; make
+      run: cd build; make -j4
     - name: make run
       run: cd build; make run-all
 
