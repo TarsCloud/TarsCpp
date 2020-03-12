@@ -26,7 +26,7 @@ include_directories(${PROJECT_SOURCE_DIR}/servant)
 include_directories(${PROJECT_SOURCE_DIR}/servant/protocol)
 
 IF(WIN32)
-include_directories(${CMAKE_SOURCE_DIR}/util/src/epoll_windows)
+include_directories(${PROJECT_SOURCE_DIR}/util/src/epoll_windows)
 ENDIF()
 
 add_subdirectory(util)
