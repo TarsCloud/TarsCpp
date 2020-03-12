@@ -85,6 +85,7 @@ ENDIF (UNIX)
 
 set(TARS_RELEASE "${PROJECT_BINARY_DIR}/run-release.cmake")
 set(TARS_UPLOAD "${PROJECT_BINARY_DIR}/run-upload.cmake")
+set(TARS_TAR "${PROJECT_BINARY_DIR}/run-tar.cmake")
 
 FILE(WRITE ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND echo release all)\n")
 FILE(WRITE ${TARS_UPLOAD} "EXECUTE_PROCESS(COMMAND echo upload all)\n")
@@ -170,6 +171,8 @@ macro(gen_server APP TARGET)
 
 	add_custom_target(${TARGET}-tar DEPENDS ${TARGET}.tgz ${TARGET})
 
+	FILE(APPEND ${TARS_TAR} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_TAR_COMMAND_FILE})\n")
+
 	#make upload #########################################################################
 	SET(RUN_UPLOAD_COMMAND_FILE "${PROJECT_BINARY_DIR}/run-upload-${TARGET}.cmake")
 	IF(WIN32)
@@ -235,6 +238,10 @@ add_custom_target(upload
 add_custom_target(release
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMAND cmake -P ${TARS_RELEASE})
+
+add_custom_target(tar
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		COMMAND cmake -P ${TARS_TAR})
 
 message("-------------------------------------------------------------------------------------")
 message("CMAKE_SOURCE_DIR:          ${CMAKE_SOURCE_DIR}")
