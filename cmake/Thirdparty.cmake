@@ -114,7 +114,7 @@ if (TARS_PROTOBUF)
                 BUILD_COMMAND cmake --build . --config release
 #                LOG_CONFIGURE 1
 #                LOG_BUILD 1
-                # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
+                INSTALL_COMMAND cmake --build . --config release --target install
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
     else ()
