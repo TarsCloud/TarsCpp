@@ -4,6 +4,20 @@ option(TARS_SSL "option for ssl" OFF)
 option(TARS_HTTP2 "option for http2" OFF)
 option(TARS_PROTOBUF "option for protocol" OFF)
 
+IF(UNIX)
+    FIND_PACKAGE(ZLIB)
+    IF(NOT ZLIB_FOUND)
+        SET(ERRORMSG "zlib library not found. Please install appropriate package,
+                remove CMakeCache.txt and rerun cmake.")
+        IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
+            SET(ERRORMSG ${ERRORMSG}
+                    "On Debian/Ubuntu, package name is zlib1g-dev(apt-get install  zlib1g-dev), on Redhat/Centos and derivates "
+                    "it is zlib-devel (yum install zlib-devel).")
+        ENDIF()
+        MESSAGE(FATAL_ERROR ${ERRORMSG})
+    ENDIF()
+ENDIF(UNIX)
+
 if (TARS_MYSQL)
     add_definitions(-DTARS_MYSQL=1)
 
