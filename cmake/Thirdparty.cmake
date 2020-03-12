@@ -1,19 +1,11 @@
 
-if (WIN32)
-    option(TARS_MYSQL "option for mysql" OFF)
-else ()
-    option(TARS_MYSQL "option for mysql" ON)
-endif ()
-
+option(TARS_MYSQL "option for mysql" ON)
 option(TARS_SSL "option for ssl" OFF)
 option(TARS_HTTP2 "option for http2" OFF)
 option(TARS_PROTOBUF "option for protocol" OFF)
 
 if (TARS_MYSQL)
     add_definitions(-DTARS_MYSQL=1)
-#    if(WIN32)
-#    set(TARS_SSL ON)
-#    endif()
 
     IF(UNIX AND NOT APPLE)
         FIND_PACKAGE(Curses) 
@@ -72,9 +64,9 @@ if (WIN32)
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
             BUILD_COMMAND cmake --build . --config release
-            LOG_CONFIGURE 1
-            LOG_BUILD 1
-            # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
+            INSTALL_COMMAND cmake --build . --config release --target install
+#            LOG_CONFIGURE 1
+#            LOG_BUILD 1
             URL_MD5 82358affdd7ab94854c8ee73a180fc53
             )
 else()
@@ -87,8 +79,8 @@ else()
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
             BUILD_COMMAND make
-            LOG_CONFIGURE 1
-            LOG_BUILD 1
+#            LOG_CONFIGURE 1
+#            LOG_BUILD 1
             # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
             URL_MD5 ecd1fa65e7de707cd5c00bdac56022cd
             )
@@ -120,8 +112,8 @@ if (TARS_PROTOBUF)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND cmake --build . --config release
-                LOG_CONFIGURE 1
-                LOG_BUILD 1
+#                LOG_CONFIGURE 1
+#                LOG_BUILD 1
                 # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
@@ -138,8 +130,8 @@ if (TARS_PROTOBUF)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
-                LOG_CONFIGURE 1
-                LOG_BUILD 1
+#                LOG_CONFIGURE 1
+#                LOG_BUILD 1
                 # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
@@ -174,8 +166,8 @@ if (TARS_SSL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND nmake
-                LOG_CONFIGURE 1
-                LOG_BUILD 1
+#                LOG_CONFIGURE 1
+#                LOG_BUILD 1
                 INSTALL_COMMAND nmake install
                 URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
                 )
@@ -192,8 +184,8 @@ if (TARS_SSL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
-                LOG_CONFIGURE 1
-                LOG_BUILD 1
+#                LOG_CONFIGURE 1
+#                LOG_BUILD 1
                 # INSTALL_COMMAND cmake -P ${RUN_SSL_INSTALL_FILE}
                 URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
                 )
@@ -224,8 +216,8 @@ if (TARS_MYSQL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND cmake --build . --config release 
-                LOG_CONFIGURE 1
-                LOG_BUILD 1
+#                LOG_CONFIGURE 1
+#                LOG_BUILD 1
                 INSTALL_COMMAND cmake --build . --config release --target install
                 URL_MD5 62de01beffc48348708c983a585b4dc1
                 )
@@ -242,8 +234,8 @@ if (TARS_MYSQL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make mysqlclient
-                LOG_CONFIGURE 1
-                LOG_BUILD 1
+#                LOG_CONFIGURE 1
+#                LOG_BUILD 1
                 # INSTALL_COMMAND cmake --build . --config release --target install
                 URL_MD5 98ca2071f9d4c6b73146cc0455f6b914
                 )
@@ -277,8 +269,8 @@ if (TARS_HTTP2)
                 CONFIGURE_COMMAND cmake .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
-                LOG_BUILD 1
-                LOG_CONFIGURE 1
+#                LOG_BUILD 1
+#                LOG_CONFIGURE 1
                 BUILD_COMMAND cmake --build . --config release
                 INSTALL_COMMAND cmake --build . --config release --target install
                 URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
@@ -293,8 +285,8 @@ if (TARS_HTTP2)
                 CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
-                LOG_BUILD 1
-                LOG_CONFIGURE 1
+#                LOG_BUILD 1
+#                LOG_CONFIGURE 1
                 BUILD_COMMAND make
                 # INSTALL_COMMAND incmake --build . --config release --target install
                 URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
