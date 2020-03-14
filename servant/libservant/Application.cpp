@@ -54,7 +54,7 @@ static void sighandler( int sig_no )
 #else
 static BOOL WINAPI HandlerRoutine(DWORD dwCtrlType)
 {
-	TLOGERROR("[TARS][sighandler] sig_no :" << sig_no << endl);
+	TLOGERROR("[TARS][sighandler] dwCtrlType :" << dwCtrlType << endl);
 	Application::terminate();
 	ExitProcess(0);
 	return TRUE;
