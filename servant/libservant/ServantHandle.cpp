@@ -348,8 +348,13 @@ void ServantHandle::initialize()
     }
     else
     {
-        TLOGERROR("[TAF]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl);
-	    cerr << "[TAF]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl;
+        TLOGERROR("[TARS]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl);
+	    cerr << "[TARS]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl;
+
+	    TarsRemoteNotify::getInstance()->report("initialize createServant error: no adapter:" + _bindAdapter->getName());
+
+	    TC_Common::msleep(100);
+
 	    exit(-1);
     }
 
@@ -360,6 +365,8 @@ void ServantHandle::initialize()
         TLOGERROR("[TARS]initialize error: no servant exists." << endl);
 
         TarsRemoteNotify::getInstance()->report("initialize error: no servant exists.");
+
+        TC_Common::msleep(100);
 
         exit(-1);
     }
@@ -380,15 +387,19 @@ void ServantHandle::initialize()
 
             TarsRemoteNotify::getInstance()->report("initialize error:" + string(ex.what()));
 
-            exit(-1);
+	        TC_Common::msleep(100);
+
+	        exit(-1);
         }
         catch(...)
         {
             TLOGERROR("[TARS]initialize unknown exception error" << endl);
 
-            TarsRemoteNotify::getInstance()->report("initialize error");
+            TarsRemoteNotify::getInstance()->report("initialize unknown exception error");
 
-            exit(-1);
+	        TC_Common::msleep(100);
+
+	        exit(-1);
         }
         ++it;
     }
@@ -404,7 +415,9 @@ void ServantHandle::heartbeat()
 
         TARS_KEEPALIVE(_bindAdapter->getName());
 
-        //上报连接数 比率
+//	    TLOGERROR("[TARS]ServantHandle::handle heartbeat:" << _bindAdapter->getName() << endl);
+
+	    //上报连接数 比率
         if (_bindAdapter->_pReportConRate)
         {
             _bindAdapter->_pReportConRate->report((int)(_bindAdapter->getNowConnection() * 1000 / _bindAdapter->getMaxConns()));

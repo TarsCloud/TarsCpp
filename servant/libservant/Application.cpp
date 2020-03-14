@@ -47,11 +47,14 @@ namespace tars
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 static void sighandler( int sig_no )
 {
+	TLOGERROR("[TARS][sighandler] sig_no :" << sig_no << endl);
+
     Application::terminate();
 }
 #else
 static BOOL WINAPI HandlerRoutine(DWORD dwCtrlType)
 {
+	TLOGERROR("[TARS][sighandler] sig_no :" << sig_no << endl);
 	Application::terminate();
 	ExitProcess(0);
 	return TRUE;

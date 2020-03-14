@@ -39,7 +39,7 @@ bool processAuth(TC_EpollServer::Connection *conn, const shared_ptr<TC_EpollServ
     int type = adapter->getEndpoint().getAuthType();
     if (type == AUTH_TYPENONE)
     {
-        adapter->getEpollServer()->info("[TARS]processAuth no need auth func, auth succ");
+        adapter->getEpollServer()->info("processAuth no need auth func, auth succ");
         conn->_authState = AUTH_SUCC;
         return false;
     }
@@ -59,7 +59,7 @@ bool processAuth(TC_EpollServer::Connection *conn, const shared_ptr<TC_EpollServ
         }
         catch(...)
         {
-	        adapter->getEpollServer()->error("[TARS]processAuth tars protocol decode error, close connection.");
+	        adapter->getEpollServer()->error("processAuth tars protocol decode error, close connection.");
 
             conn->setClose();
             return true;
