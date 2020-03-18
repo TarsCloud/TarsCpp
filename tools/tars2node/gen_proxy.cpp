@@ -119,7 +119,7 @@ string CodeGenerator::generateJSProxy(const NamespacePtr &nPtr, const InterfaceP
     str << TAB << "try {" << endl;
     INC_TAB;
 
-    bool bHasParamOut = false;
+//    bool bHasParamOut = false;
     if (vParamDecl.size() > 0) 
     {
         for (size_t i = 0; i < vParamDecl.size(); i++)
