@@ -107,6 +107,20 @@ public:
 	{
 		return eJsonTypeObj;
 	}
+	const JsonValuePtr &get(const char *name)
+	{
+		auto it = value.find(name);
+
+		if(it == value.end())
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "get obj error(key is not exists)[key:%s]", name);
+			throw TC_Json_Exception(s);
+		}
+
+		return it->second;
+	}
+
 	virtual ~JsonValueObj(){}
 public:
 	unordered_map<string,JsonValuePtr> value;
