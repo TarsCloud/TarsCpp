@@ -16,6 +16,15 @@
 
 #include "code_generator.h"
 
+#define INVOKE_RETURN(protocol, prefix, params) \
+    str << TAB << "return this._worker." << TC_Common::lower(protocol) << "_invoke(\"" << oPtr->getId() << "\", "; \
+    str << "__" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$" << prefix << "E"; \
+    str << "(" << sParams << params << "), arguments[arguments.length - 1], "; \
+    str << "__" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$IF" << ").then("; \
+    str << "__" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$" << prefix << "D, "; \
+    str << "__" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$ER);" << endl;
+#define PROTOCOL_PARAMS (sParams.empty() ? "" : ", ") << "version"
+
 struct SortOperation
 {
     bool operator()(const OperationPtr &o1, const OperationPtr &o2)
@@ -28,9 +37,10 @@ string CodeGenerator::generateJSProxy(const NamespacePtr &nPtr, const InterfaceP
 {
     ostringstream str;
 
-    //SETP01 生成编码接口
-    str << TAB << "var __" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$EN = function (";
     vector<ParamDeclPtr> & vParamDecl = oPtr->getAllParamDeclPtr();
+    bool bHasParamOut = false;
+    string sParams = "";
+
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
         if (vParamDecl[i]->isOut())
@@ -38,9 +48,48 @@ string CodeGenerator::generateJSProxy(const NamespacePtr &nPtr, const InterfaceP
             continue;
         }
 
-        str << (i == 0?"":", ") << vParamDecl[i]->getTypeIdPtr()->getId();
+        sParams += (sParams.empty()?"":", ") + vParamDecl[i]->getTypeIdPtr()->getId();
     }
-    str << ") {" << endl;
+
+    // generate function metadata (SharedFunctionInfo)
+    str << TAB << "var __" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$IF = {" << endl;
+
+    INC_TAB;
+
+    str << TAB << "\"name\" : \"" << oPtr->getId() << "\"," << endl;
+    str << TAB << "\"return\" : \"" << getClassName(oPtr->getReturnPtr()->getTypePtr()) << "\"," << endl;
+    str << TAB << "\"arguments\" : [";
+    for (size_t i = 0; i < vParamDecl.size(); i++)
+    {
+        str << (i > 0 ? ", {" : "{") << endl;
+
+        INC_TAB;
+
+        str << TAB << "\"name\" : \"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"," << endl;
+        str << TAB << "\"class\" : \"" << getClassName(vParamDecl[i]->getTypeIdPtr()->getTypePtr()) << "\"," << endl;
+
+        if (vParamDecl[i]->isOut())
+        {
+            bHasParamOut = true;
+            str << TAB << "\"direction\" : \"out\"" << endl; 
+        }
+        else
+        {
+            str << TAB << "\"direction\" : \"in\"" << endl; 
+        }
+
+        DEL_TAB;
+
+        str << TAB << "}";
+    }
+    str << "]" << endl;
+
+    DEL_TAB;
+
+    str << TAB << "};" << endl << endl;
+
+    // generate IDL Encoder ($IE)
+    str << TAB << "var __" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$IE = function (" << sParams << ") {" << endl;
     
     INC_TAB;
 
@@ -51,10 +100,10 @@ string CodeGenerator::generateJSProxy(const NamespacePtr &nPtr, const InterfaceP
         if (vParamDecl[i]->isOut()) continue;
 
         str << TAB << "os." << toFunctionName(vParamDecl[i]->getTypeIdPtr(), "write") << "(" 
-            << (i + 1) << ", " << vParamDecl[i]->getTypeIdPtr()->getId() 
-            << (isRawOrString(vParamDecl[i]->getTypeIdPtr()->getTypePtr()) ? ", 1" : "") << ");" << endl;
+            << (i + 1) << ", " << vParamDecl[i]->getTypeIdPtr()->getId()
+            << representArgument(vParamDecl[i]->getTypeIdPtr()->getTypePtr()) << ");" << endl;
 
-        // 写入 Dependent 列表
+        // push the symbol into dependent list
         getDataType(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
     }
 
@@ -64,9 +113,8 @@ string CodeGenerator::generateJSProxy(const NamespacePtr &nPtr, const InterfaceP
 
     str << TAB << "};" << endl << endl;
 
-
-    //STEP02 生成解码函数
-    str << TAB << "var __" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$DE = function (data) {" << endl;
+    // generate IDL Decoder ($ID)
+    str << TAB << "var __" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$ID = function (data) {" << endl;
     INC_TAB;
     str << TAB << "try {" << endl;
     INC_TAB;
@@ -104,7 +152,7 @@ string CodeGenerator::generateJSProxy(const NamespacePtr &nPtr, const InterfaceP
         if (isSimple(oPtr->getReturnPtr()->getTypePtr()))
         {
             str << getDefault(oPtr->getReturnPtr(), oPtr->getReturnPtr()->def(), nPtr->getId())
-                << (isRawOrString(oPtr->getReturnPtr()->getTypePtr()) ? ", 1" : "");
+                << representArgument(oPtr->getReturnPtr()->getTypePtr());
         }
         else
         {
@@ -130,8 +178,8 @@ string CodeGenerator::generateJSProxy(const NamespacePtr &nPtr, const InterfaceP
 
             if (isSimple(vParamDecl[i]->getTypeIdPtr()->getTypePtr()))
             {
-                str << getDefault(vParamDecl[i]->getTypeIdPtr(), vParamDecl[i]->getTypeIdPtr()->def(), nPtr->getId()) 
-                    << (isRawOrString(vParamDecl[i]->getTypeIdPtr()->getTypePtr()) ? ", 1" : "");
+                str << getDefault(vParamDecl[i]->getTypeIdPtr(), vParamDecl[i]->getTypeIdPtr()->def(), nPtr->getId())
+                    << representArgument(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
             }
             else
             {
@@ -163,79 +211,154 @@ string CodeGenerator::generateJSProxy(const NamespacePtr &nPtr, const InterfaceP
     DEL_TAB;
     str << TAB << "} catch (e) {" << endl;
     INC_TAB;
-    str << TAB << "throw {" << endl;
+    str << TAB << "throw _makeError(data, e.message, " << IDL_NAMESPACE_STR << "Error.CLIENT.DECODE_ERROR);" << endl;
+    DEL_TAB;
+    str << TAB << "}" << endl;
+    DEL_TAB;
+    str << TAB << "};" << endl << endl;
+
+    // generate Protocol Encoder ($PE)
+    str << TAB << "var __" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$PE = function (" 
+        << sParams << (sParams.empty() ? "" : ", ") << "__$PROTOCOL$VERSION) {" << endl;
+    
+    INC_TAB;
+
+    str << TAB << "var " << PROTOCOL_VAR << " = new " << IDL_NAMESPACE_STR << "Stream.UniAttribute();" << endl;
+
+    str << TAB << PROTOCOL_VAR << "." << PROTOCOL_VAR << "Version = __$PROTOCOL$VERSION;" << endl;
+
+    for (size_t i = 0; i < vParamDecl.size(); i++)
+    {
+        if (vParamDecl[i]->isOut()) continue;
+
+        str << TAB << PROTOCOL_VAR << "." << toFunctionName(vParamDecl[i]->getTypeIdPtr(), "write") << "(\"" 
+            << vParamDecl[i]->getTypeIdPtr()->getId() << "\", " << vParamDecl[i]->getTypeIdPtr()->getId()
+            << representArgument(vParamDecl[i]->getTypeIdPtr()->getTypePtr()) << ");" << endl;
+
+        // push the symbol into dependent list
+        getDataType(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+    }
+
+    str << TAB << "return " << PROTOCOL_VAR << ";" << endl;
+    DEL_TAB;
+    str << TAB << "};" << endl << endl;
+
+    // generate Protocol Decoder ($PD)
+    str << TAB << "var __" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$PD = function (data) {" << endl;
+    INC_TAB;
+    str << TAB << "try {" << endl;
+    INC_TAB;
+    if (oPtr->getReturnPtr()->getTypePtr() || bHasParamOut) {
+        str << TAB << "var " << PROTOCOL_VAR << " = data.response." << PROTOCOL_VAR << ";" << endl;
+    }
+    str << TAB << "return {" << endl;
     INC_TAB;
     str << TAB << "\"request\" : data.request," << endl;
     str << TAB << "\"response\" : {" << endl;
     INC_TAB;
-    str << TAB << "\"costtime\" : data.request.costtime," << endl;
-    str << TAB << "\"error\" : {" << endl;
-    INC_TAB;
-    str << TAB << "\"code\" : " << IDL_NAMESPACE_STR << "Error.CLIENT.DECODE_ERROR," << endl;
-    str << TAB << "\"message\" : e.message" << endl;
-    DEL_TAB;
-    str << TAB << "}" << endl;
+    str << TAB << "\"costtime\" : data.request.costtime";
+
+    if (oPtr->getReturnPtr()->getTypePtr())
+    {
+        str << "," << endl;
+        str << TAB << "\"return\" : " << PROTOCOL_VAR << "." << toFunctionName(oPtr->getReturnPtr(), "read") << "(\"\"";
+
+        if (!isSimple(oPtr->getReturnPtr()->getTypePtr()) && !isBinBuffer(oPtr->getReturnPtr()->getTypePtr()))
+        {
+            str << ", " << getDataType(oPtr->getReturnPtr()->getTypePtr());
+        }
+
+        str << ", " << getDefault(oPtr->getReturnPtr(), "", nPtr->getId(), true)
+                << representArgument(oPtr->getReturnPtr()->getTypePtr());
+        
+        str << ")";
+    }
+
+    if (bHasParamOut)
+    {
+        str << "," << endl;
+        str << TAB << "\"arguments\" : {" << endl;
+
+        INC_TAB;
+
+        for (size_t i = 0; i < vParamDecl.size(); i++)
+        {
+            if (!vParamDecl[i]->isOut()) continue;
+
+            str << TAB << "\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\" : "
+                    << PROTOCOL_VAR << "." << toFunctionName(vParamDecl[i]->getTypeIdPtr(), "read")
+                    << "(\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"";
+
+            if (!isSimple(vParamDecl[i]->getTypeIdPtr()->getTypePtr()) && !isBinBuffer(vParamDecl[i]->getTypeIdPtr()->getTypePtr()))
+            {
+                str << ", " << getDataType(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+            }
+
+            str << ")";
+
+            if (i == vParamDecl.size() - 1)
+            {
+                str << endl;
+            }
+            else
+            {
+                str << "," << endl;
+            }
+
+        }
+
+        DEL_TAB;
+        str << TAB << "}";
+    }
+
+    str << endl;
     DEL_TAB;
     str << TAB << "}" << endl;
     DEL_TAB;
     str << TAB << "};" << endl;
+    DEL_TAB;
+    str << TAB << "} catch (e) {" << endl;
+    INC_TAB;
+    str << TAB << "throw _makeError(data, e.message, " << IDL_NAMESPACE_STR << "Error.CLIENT.DECODE_ERROR);" << endl;
     DEL_TAB;
     str << TAB << "}" << endl;
     DEL_TAB;
     str << TAB << "};" << endl << endl;
 
 
-    //STEP03 生成框架调用错误处理函数
+    // generate error handler ($ER）
     str << TAB << "var __" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$ER = function (data) {" << endl;
     INC_TAB;
-    str << TAB << "throw {" << endl;
-    INC_TAB;
-    str << TAB << "\"request\" : data.request," << endl;
-    str << TAB << "\"response\" : {" << endl;
-    INC_TAB;
-    str << TAB << "\"costtime\" : data.request.costtime," << endl;
-    str << TAB << "\"error\" : data.error" << endl;
-    DEL_TAB;
-    str << TAB << "}" << endl;
-    DEL_TAB;
-    str << TAB << "}" << endl;
+    str << TAB << "throw _makeError(data, \"Call " << pPtr->getId() << "::" << oPtr->getId() << " failed\");" << endl;
     DEL_TAB;
     str << TAB << "};" << endl << endl;
 
 
-    //SETP04 生成函数接口
-    str << TAB << nPtr->getId() << "." << pPtr->getId() << "Proxy.prototype." << oPtr->getId() << " = function (";
-    for (size_t i = 0; i < vParamDecl.size(); i++)
-    {
-        if (vParamDecl[i]->isOut())
-        {
-            continue;
-        }
-
-        str << (i == 0?"":", ") << vParamDecl[i]->getTypeIdPtr()->getId();
-    }
-    str << ") {" << endl;
+    // generate function body
+    str << TAB << nPtr->getId() << "." << pPtr->getId() << "Proxy.prototype." << oPtr->getId() << " = function ("
+        << sParams << ") {" << endl;
 
     INC_TAB;
 
-    str << TAB << "return this._worker." << TC_Common::lower(IDL_NAMESPACE_STR) << "_invoke(\"" << oPtr->getId() << "\", ";
-    str << "__" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$EN(";
-    for (size_t i = 0; i < vParamDecl.size(); i++)
-    {
-        if (vParamDecl[i]->isOut())
-        {
-            continue;
-        }
+    str << TAB << "var version = this._worker.version;" << endl;
 
-        str << (i == 0?"":", ") << vParamDecl[i]->getTypeIdPtr()->getId();
-    }
-    str << "), arguments[arguments.length - 1]).then(";
-    str << "__" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$DE, ";
-    str << "__" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$ER);" << endl;
+    str << TAB << "if (version === " << PROTOCOL_SIMPLE << " || version === " << PROTOCOL_COMPLEX << ") {" << endl;
+    INC_TAB;
+    INVOKE_RETURN(PROTOCOL_VAR, "P", PROTOCOL_PARAMS);
+    DEL_TAB;
+    str << TAB << "} else {" << endl;
+    INC_TAB;
+    INVOKE_RETURN(IDL_NAMESPACE_STR, "I", "");
+    DEL_TAB;
+    str << TAB << "}" << endl;
 
     DEL_TAB;
 
     str << TAB << "};" << endl;
+
+    // add the function into the prototype of the proxy class
+    str << TAB << nPtr->getId() << "." << pPtr->getId() << "Proxy." << oPtr->getId() << " = "
+            << "__" << nPtr->getId() << "_" << pPtr->getId() << "$" << oPtr->getId() << "$IF;" << endl;
 
     return str.str();
 }
@@ -303,8 +426,8 @@ bool CodeGenerator::generateJSProxy(const ContextPtr &cPtr)
 
             istr << TAB << namespaces[i]->getId() << "." << is[ii]->getId() << "Proxy = function () {" << endl;
             INC_TAB;
-            istr << TAB << "this._name   = undefined;" << endl;
-            istr << TAB << "this._worker = undefined;" << endl;
+            istr << TAB << "this._name    = undefined;" << endl;
+            istr << TAB << "this._worker  = undefined;" << endl;
             DEL_TAB;
             istr << TAB << "};" << endl << endl;
 
@@ -319,16 +442,29 @@ bool CodeGenerator::generateJSProxy(const ContextPtr &cPtr)
             istr << TAB << "return this._worker.timeout;" << endl;
             DEL_TAB;
             istr << TAB << "};" << endl << endl;
+
+            istr << TAB << namespaces[i]->getId() << "." << is[ii]->getId() << "Proxy.prototype.setVersion = function (iVersion) {" << endl;
+            INC_TAB;
+            istr << TAB << "this._worker.version = iVersion;" << endl;
+            DEL_TAB;
+            istr << TAB << "};" << endl << endl;
+
+            istr << TAB << namespaces[i]->getId() << "." << is[ii]->getId() << "Proxy.prototype.getVersion = function () {" << endl;
+            INC_TAB;
+            istr << TAB << "return this._worker.version;" << endl;
+            DEL_TAB;
+            istr << TAB << "};" << endl;
         }
     }
 
-    //先生成编解码 + 代理类
+    // generate proxy classes with encoders and decoders
     ostringstream estr;
     bool bNeedAssert = false;
     bool bNeedStream = false;
+    bool bQuickFunc = false;
 	for(size_t i = 0; i < namespaces.size(); i++)
 	{
-		estr << generateJS(namespaces[i], bNeedStream, bNeedAssert);
+		estr << generateJS(namespaces[i], bNeedStream, bNeedAssert, bQuickFunc);
 	}
 
     bool bNeedRpc = false;
@@ -342,7 +478,7 @@ bool CodeGenerator::generateJSProxy(const ContextPtr &cPtr)
         return false;
     }
 
-    //再生成导入模块
+    // generate module imports
     ostringstream ostr;
     for (map<string, ImportFile>::iterator it = _mapFiles.begin(); it != _mapFiles.end(); it++)
     {
@@ -353,9 +489,11 @@ bool CodeGenerator::generateJSProxy(const ContextPtr &cPtr)
         ostr << "var " << it->second.sModule << " = require(\"" << it->second.sFile << "\");" << endl;
     }
 
-    //生成文件内容    
+    // concat generated code    
     ostringstream sstr;
     sstr << printHeaderRemark("Client");
+    sstr << DISABLE_ESLINT << endl;
+    sstr << endl;
     sstr << "\"use strict\";" << endl << endl;
     if (bNeedAssert)
     {
@@ -371,6 +509,48 @@ bool CodeGenerator::generateJSProxy(const ContextPtr &cPtr)
     }
 
     sstr << ostr.str() << endl;
+
+    // generate helper functions
+    if (bQuickFunc)
+    {
+        sstr << "var _hasOwnProperty = Object.prototype.hasOwnProperty;" << endl;
+    }
+    if (bNeedRpc)
+    {
+        sstr << TAB << "var _makeError = function (data, message, type) {" << endl;
+        INC_TAB;
+        sstr << TAB << "var error = new Error(message || \"\");" << endl;
+        sstr << TAB << "error.request = data.request;" << endl;
+        sstr << TAB << "error.response = {" << endl;
+        INC_TAB;
+        sstr << TAB << "\"costtime\" : data.request.costtime" << endl;
+        DEL_TAB;
+        sstr << TAB << "};" << endl;
+        sstr << TAB << "if (type === " << IDL_NAMESPACE_STR << "Error.CLIENT.DECODE_ERROR) {" << endl;
+        INC_TAB;
+        sstr << TAB << "error.name = \"DECODE_ERROR\";" << endl;
+        sstr << TAB << "error.response.error = {" << endl;
+        INC_TAB;
+        sstr << TAB << "\"code\" : type," << endl;
+        sstr << TAB << "\"message\" : message" << endl;
+        DEL_TAB;
+        sstr << TAB << "};" << endl;
+        DEL_TAB;
+        sstr << TAB << "} else {" << endl;
+        INC_TAB;
+        sstr << TAB << "error.name = \"RPC_ERROR\";" << endl;
+        sstr << TAB << "error.response.error = data.error;" << endl;
+        DEL_TAB;
+        sstr << TAB << "}" << endl;
+        sstr << TAB << "return error;" << endl;
+        DEL_TAB;
+        sstr << TAB << "};" << endl;
+    }
+    if (bQuickFunc || bNeedRpc)
+    {
+        sstr << endl;
+    }
+
     sstr << istr.str() << endl;
     sstr << estr.str() << endl;
 
@@ -381,3 +561,6 @@ bool CodeGenerator::generateJSProxy(const ContextPtr &cPtr)
 
     return true;
 }
+
+#undef INVOKE_RETURN
+#undef PROTOCOL_PARAMS

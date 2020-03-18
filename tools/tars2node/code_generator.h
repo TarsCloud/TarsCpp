@@ -60,6 +60,9 @@
 #define PROTOCOL_COMPLEX PROTOCOL_V(IDL_NAMESPACE_STR, PROTOCOL_NAME, "COMPLEX")
 #define PROTOCOL_VAR TO_LOWER_STRING(PROTOCOL_NAME)
 
+#define DISABLE_ESLINT "/* eslint-disable */"
+#define DISABLE_TSLINT "/* tslint:disable */"
+
 using namespace TC_NAMESPACE;
 
 class CodeGenerator
@@ -74,10 +77,13 @@ public:
           _bServer(false),
           _bRecursive(false),
           _bUseSpecialPath(false),
-          _bUseStringRepresent(false),
+          _iLongType(Number),
           _bStringBinaryEncoding(false),
+          _bEnumReverseMappings(false),
           _bMinimalMembers(false),
-          _bDTS(false) {}
+          _bTS(false),
+          _bDTS(false),
+          _iOptimizeLevel(O0) {}
 
     void createFile(const string &file, const bool bEntry = true);
 
@@ -95,15 +101,25 @@ public:
 
     void setUseSpecialPath(bool bEnable) { _bUseSpecialPath = bEnable; }
 
-    void setUseStringRepresent(bool bEnable) { _bUseStringRepresent = bEnable; }
+    void setLongType(int iLongType) { _iLongType = iLongType; }
 
     void setStringBinaryEncoding(bool bEnable) { _bStringBinaryEncoding = bEnable; }
 
+    void setEnumReverseMappings(bool bEnable) { _bEnumReverseMappings = bEnable; }
+
     void setMinimalMembers(bool bEnable) { _bMinimalMembers = bEnable; }
 
-    void setDependent(set<string> & deps) { _depMembers = deps; }
+    void setDependent(set<string>& deps) { _depMembers = deps; }
+
+    void setEnableTS(bool bEnable) { _bTS = bEnable; }
 
     void setEnableDTS(bool bEnable) { _bDTS = bEnable; }
+
+    void setOptimize(int iLevel) { _iOptimizeLevel = iLevel; }
+
+    enum OPTIMIZE_LEVEL {O0 = 0, Os};
+
+    enum LONG_TYPE {Number = 0, String, BigInt};
 
 private:
     struct ImportFileType
@@ -132,28 +148,42 @@ private:
 
     string makeName();
 
-    string findName(const string & sNamespace, const string & sName);
+    string findName(const string & sNamespace, const string & sName, const bool &bBase = false);
 
 private:
     string toFunctionName(const TypeIdPtr & pPtr, const string &sAction);
 
-    string getDataType(const TypePtr & pPtr);
+    string getDataType(const TypePtr& pPtr, const bool &bCastEnumAsAny = false);
 
-    string getDtsType(const TypePtr &pPtr, const bool bStream = true);
+    string getClassName(const TypePtr& pPtr);
 
-    string getDefault(const TypeIdPtr & pPtr, const string &sDefault, const string & sNamespace);
+    string getTsType(const TypePtr &pPtr, const bool bStream = true, const bool bBase = false);
 
-    string getDefault(const TypeIdPtr & pPtr, const string &sDefault, const string & sNamespace, const bool bGlobal);
+    string getDefault(const TypeIdPtr & pPtr, const string &sDefault, const string & sNamespace, const bool &bGlobal = true, const bool &bCastEnumAsAny = false);
 
-    string generateJS(const StructPtr & pPtr, const string &sNamespace, bool &bNeedAssert);
+private:
+    string generateJS(const StructPtr &pPtr, const string &sNamespace, bool &bNeedAssert, bool &bQuickFunc);
 
     string generateJS(const ConstPtr &pPtr, const string &sNamespace, bool &bNeedStream);
 
     string generateJS(const EnumPtr &pPtr, const string &sNamespace);
 
-    string generateJS(const NamespacePtr &pPtr, bool &bNeedStream, bool &bNeedAssert);
+    string generateJS(const NamespacePtr &pPtr, bool &bNeedStream, bool &bNeedAssert, bool &bQuickFunc);
 
     bool   generateJS(const ContextPtr &pPtr);
+
+private:
+    string generateTS(const StructPtr &pPtr, const string &sNamespace, bool &bNeedAssert, bool &bQuickFunc);
+
+    string generateTS(const ConstPtr &pPtr, const string &sNamespace, bool &bNeedStream);
+
+    string generateTS(const EnumPtr &pPtr, const string &sNamespace);
+
+    string generateTS(const NamespacePtr &pPtr, bool &bNeedStream, bool &bNeedAssert, bool &bQuickFunc);
+
+    string generateTS(const NamespacePtr &pPtr, const string &sContent);
+
+    void   generateTS(const ContextPtr &cPtr);
 
 private:
     string generateJSProxy(const NamespacePtr &nPtr, bool &bNeedRpc, bool &bNeedStream);
@@ -163,6 +193,15 @@ private:
     string generateJSProxy(const NamespacePtr &nPtr, const InterfacePtr &pPtr, const OperationPtr &oPtr);
 
     bool   generateJSProxy(const ContextPtr &pPtr);
+
+private:
+    string generateTSProxy(const NamespacePtr &pPtr, bool &bNeedStream, bool &bNeedRpc);
+
+    string generateTSProxy(const NamespacePtr &nPtr, const InterfacePtr &pPtr);
+
+    string generateTSProxy(const NamespacePtr &nPtr, const InterfacePtr &pPtr, const OperationPtr &oPtr);
+
+    bool   generateTSProxy(const ContextPtr &pPtr);
 
 private:
     string generateJSServer(const NamespacePtr &pPtr, bool &bNeedStream, bool &bNeedRpc, bool &bNeedAssert);
@@ -180,6 +219,17 @@ private:
     bool   generateJSServer(const ContextPtr &pPtr);
 
 private:
+    string generateTSServerAsync(const NamespacePtr &nPtr, const InterfacePtr &pPtr, const OperationPtr &oPtr);
+
+    string generateTSServerDispatch(const NamespacePtr &nPtr, const InterfacePtr &pPtr, const OperationPtr &oPtr);
+
+    string generateTSServer(const NamespacePtr &pPtr, bool &bNeedStream, bool &bNeedRpc, bool &bNeedAssert);
+
+    string generateTSServer(const InterfacePtr &pPtr, const NamespacePtr &nPtr);
+
+    bool   generateTSServer(const ContextPtr &pPtr);
+
+private:
     string generateJSServerImp(const NamespacePtr &nPtr, const InterfacePtr &pPtr, const OperationPtr &oPtr);
 
     string generateJSServerImp(const NamespacePtr &nPtr, const InterfacePtr &pPtr);
@@ -187,6 +237,9 @@ private:
     string generateJSServerImp(const ContextPtr &cPtr, const NamespacePtr &nPtr);
 
     void   generateJSServerImp(const ContextPtr &cPtr);
+
+private:
+    void   generateTSServerImp(const ContextPtr &cPtr);
 
 private:
     string generateDTS(const StructPtr &pPtr, const string &sNamespace);
@@ -222,7 +275,7 @@ private:
 
     bool   isBinBuffer(const TypePtr & pPtr) const;
 
-    bool   isRawOrString(const TypePtr & pPtr) const;
+    string representArgument(const TypePtr& pPtr) const;
 
     bool   isDependent(const string & sNamespace, const string & sName) const;
 
@@ -245,9 +298,11 @@ private:
 
     bool   _bUseSpecialPath;
 
-    bool   _bUseStringRepresent;
+    int    _iLongType;
 
     bool   _bStringBinaryEncoding;
+
+    bool   _bEnumReverseMappings;
 
     bool   _bMinimalMembers;
 
@@ -255,7 +310,11 @@ private:
 
     string _sIdlFile;
 
+    bool   _bTS;
+
     bool   _bDTS;
+
+    int    _iOptimizeLevel;
 };
 
 #endif

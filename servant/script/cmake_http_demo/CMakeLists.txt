@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 project(Demo-DemoServer)
 
 option(TARS_MYSQL "option for mysql" ON)
-option(TARS_SSL "option for ssl" ON)
-option(TARS_HTTP2 "option for http2" ON)
+option(TARS_SSL "option for ssl" OFF)
+option(TARS_HTTP2 "option for http2" OFF)
 
 if(WIN32)
     include (c:\\tars\\cpp\\makefile\\tars-tools.cmake)

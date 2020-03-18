@@ -29,7 +29,7 @@ string CodeGenerator::makeName()
 
     if (iHigh != 0)
     {
-        s << string(1, (char)(iHigh + 65)) << string(1, (char)(iLow + 65)); 
+        s << string(1, (char)(iHigh + 65)) << string(1, (char)(iLow + 65));
     }
     else
     {
@@ -46,7 +46,7 @@ bool CodeGenerator::isDependent(const string& sNamespace, const string& sName) c
     return _depMembers.find(sNamespace + "::" + sName) != _depMembers.end();
 }
 
-string CodeGenerator::findName(const string& sNamespace, const string& sName) 
+string CodeGenerator::findName(const string& sNamespace, const string& sName, const bool &bBase)
 {
 #ifdef DUMP_FIND_NAME
     cout << "FINDNAME BEGIN:" << sNamespace << "|" << sName << endl;
@@ -71,17 +71,24 @@ string CodeGenerator::findName(const string& sNamespace, const string& sName)
         cout << "DEPMEMBER:" << it->first << "|" << inIter->second.sNamespace << "::" << inIter->second.sName << endl;
     #endif
         _depMembers.insert(inIter->second.sNamespace + "::" + inIter->second.sName);
+        string prefix;
+
+        if (bBase && it->second.sModule.empty()) {
+            prefix = "base.";
+        } else if (!it->second.sModule.empty()) {
+            prefix = it->second.sModule + ".";
+        }
 
         switch (inIter->second.iType)
         {
             case ImportFileType::EN_ENUM : // [[fallthrough]]
             case ImportFileType::EN_STRUCT :
             {
-                return it->second.sModule + (it->second.sModule.empty()?"":".") + inIter->second.sNamespace + "." + inIter->second.sName;
+                return prefix + inIter->second.sNamespace + "." + inIter->second.sName;
             }
             case ImportFileType::EN_ENUM_VALUE :
             {
-                return it->second.sModule + (it->second.sModule.empty()?"":".") + inIter->second.sNamespace + "." + inIter->second.sTypeName + "." + inIter->second.sName;
+                return prefix + inIter->second.sNamespace + "." + inIter->second.sTypeName + "." + inIter->second.sName;
             }
             default :
             {

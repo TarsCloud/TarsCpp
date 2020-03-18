@@ -26,21 +26,24 @@ void usage()
 {
     cout << "Version : " << GENERATOR_VERSION << endl;
     cout << "Usage   : " << EXECUTE_FILENAME << " [OPTION] " << "*." << TC_Common::lower(IDL_TYPE) << " file" << endl;
-    cout << "  --version                    print " << EXECUTE_FILENAME << " version" << endl;
-    cout << "  --rpc-path=DIRECTORY         specify the path of rpc module." << endl;
-    cout << "  --stream-path=DIRECTORY      specify the path of stream module." << endl;
-    cout << "  --allow-reserved-namespace   allow you to use reserved word as a namespace." << endl;
-    cout << "  --dir=DIRECTORY              generate source file to DIRECTORY." << endl;
-    cout << "  --relative                   use current path." << endl;
-    cout << "  --base=DIRECTORY             where to search " << IDL_TYPE << " files." << endl;
-    cout << "  --r                          generate source all " << IDL_TYPE << " files." << endl;
-    cout << "  --r-minimal                  minimize the dependent members." << endl;
-    cout << "  --r-reserved                 list of names(split by \",\") that should be keeped." << endl;
-    cout << "  --client                     just for client side source file." << endl;
-    cout << "  --server                     just for server side source file." << endl;
-    cout << "  --dts                        generate d.ts file." << endl;
-    cout << "  --use-string-represent       use string represent long type." << endl;
-    cout << "  --string-binary-encoding     get string raw bytes <BinBuffer>." << endl;
+    cout << "  --version                                   print " << EXECUTE_FILENAME << " version" << endl;
+    cout << "  --rpc-path=[DIRECTORY]                      specify the path of rpc module." << endl;
+    cout << "  --stream-path=[DIRECTORY]                   specify the path of stream module." << endl;
+    cout << "  --allow-reserved-namespace                  allow you to use reserved word as a namespace." << endl;
+    cout << "  --dir=DIRECTORY                             generate source file to DIRECTORY." << endl;
+    cout << "  --relative                                  use current path." << endl;
+    cout << "  --base=DIRECTORY                            where to search " << IDL_TYPE << " files." << endl;
+    cout << "  --r                                         generate source all " << IDL_TYPE << " files." << endl;
+    cout << "  --r-minimal                                 minimize the dependent members." << endl;
+    cout << "  --r-reserved                                list of names(split by \",\") that should be keeped." << endl;
+    cout << "  --client                                    just for client side source file." << endl;
+    cout << "  --server                                    just for server side source file." << endl;
+    cout << "  --ts                                        generate typescript file." << endl;
+    cout << "  --dts                                       generate d.ts file." << endl;
+    cout << "  --long-type=[number|string|bigint]          use <Number|String|BigInt> represent <long> type, default is <Number>." << endl;
+    cout << "  --string-binary-encoding                    get string raw bytes <BinBuffer>." << endl;
+    cout << "  --enum-reverse-mappings                     reverse mapping from enum values to enum names." << endl;
+    cout << "  --optimize=[0|s]                            support \"s\" to reduce code size, default is 0." << endl;
     cout << endl;
     cout << EXECUTE_FILENAME << " support type: boolean char short int long float double list map" << endl;
 
@@ -128,9 +131,37 @@ int main(int argc, char* argv[])
         generator.setEnableServer(option.hasParam("server"));
         generator.setTargetPath(option.hasParam("dir")?option.getValue("dir"):"./");
         generator.setUseSpecialPath(option.hasParam("relative"));
-        generator.setUseStringRepresent(option.hasParam("use-string-represent"));
         generator.setStringBinaryEncoding(option.hasParam("string-binary-encoding"));
+        generator.setEnumReverseMappings(option.hasParam("enum-reverse-mappings"));
+        generator.setEnableTS(option.hasParam("ts"));
         generator.setEnableDTS(option.hasParam("dts"));
+
+        if (option.hasParam("long-type"))
+        {
+            string longType = TC_Common::lower(option.getValue("long-type"));
+            if (longType == "string")
+            {
+                generator.setLongType(CodeGenerator::String);
+            }
+            else if (longType == "bigint")
+            {
+                generator.setLongType(CodeGenerator::BigInt);
+            }
+            
+        }
+
+        if (option.hasParam("optimize"))
+        {
+            string level = TC_Common::lower(option.getValue("optimize"));
+            if (level == "s")
+            {
+                generator.setOptimize(CodeGenerator::Os);
+            }
+            else
+            {
+                generator.setOptimize(CodeGenerator::O0);
+            }
+        }
 
         bool _bRecursive = option.hasParam("r");
         bool _bMinimalMembers = option.hasParam("r-minimal");

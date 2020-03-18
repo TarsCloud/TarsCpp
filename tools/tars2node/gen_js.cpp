@@ -19,33 +19,61 @@
 string CodeGenerator::generateJS(const EnumPtr &pPtr, const string &sNamespace)
 {
 	ostringstream s;
-    s << TAB << sNamespace << "." << pPtr->getId() << " = {" << endl;
-    INC_TAB;
-
-    //成员变量
-    int nenum = -1;
     bool bDependent = false;
-    vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
-    for (size_t i = 0; i < member.size(); i++)
+
+    if (_bEnumReverseMappings)
     {
-        bDependent |= isDependent(sNamespace, member[i]->getId());
+        s << TAB << "(function(" << pPtr->getId() << ") {" << endl;
+        INC_TAB;
 
-		if (member[i]->hasDefault())
-		{
-			nenum = TC_Common::strto<int>(member[i]->def());
-		}
-		else
-		{
-			nenum++;
-		}
+        int nenum = -1;
+        vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
+        for (size_t i = 0; i < member.size(); i++)
+        {
+            bDependent |= isDependent(sNamespace, member[i]->getId());
 
-        s << TAB << "\"" << member[i]->getId() << "\" : " << TC_Common::tostr(nenum) << "," << endl;
+            if (member[i]->hasDefault())
+            {
+                nenum = TC_Common::strto<int>(member[i]->def());
+            }
+            else
+            {
+                nenum++;
+            }
+
+            s << TAB << pPtr->getId() << "[" << pPtr->getId() << "[\"" << member[i]->getId() << "\"] = " << TC_Common::tostr(nenum) << "] = "
+              << "\"" << member[i]->getId() << "\";" << endl;
+        }
+        DEL_TAB;
+        s << TAB << "}(" << sNamespace << "." << pPtr->getId() << " = {}));" << endl;
     }
-    s << TAB << "\"_classname\" : \"" << sNamespace << "." << pPtr->getId() << "\"" << endl;
-	DEL_TAB;
-	s << TAB << "};" << endl;
+    else
+    {
+        s << TAB << sNamespace << "." << pPtr->getId() << " = {" << endl;
+        INC_TAB;
 
-    //函数
+        int nenum = -1;
+        vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
+        for (size_t i = 0; i < member.size(); i++)
+        {
+            bDependent |= isDependent(sNamespace, member[i]->getId());
+
+            if (member[i]->hasDefault())
+            {
+                nenum = TC_Common::strto<int>(member[i]->def());
+            }
+            else
+            {
+                nenum++;
+            }
+
+            s << TAB << "\"" << member[i]->getId() << "\" : " << TC_Common::tostr(nenum) << (i < member.size() - 1 ? "," : "") << endl;
+        }
+        DEL_TAB;
+        s << TAB << "};" << endl;
+    }
+
+    s << TAB << sNamespace << "." << pPtr->getId() << "._classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl;
     s << TAB << sNamespace << "." << pPtr->getId() << "._write = function(os, tag, val) { return os.writeInt32(tag, val); };" << endl;
     s << TAB << sNamespace << "." << pPtr->getId() << "._read  = function(is, tag, def) { return is.readInt32(tag, true, def); };" << endl;
 
@@ -75,7 +103,7 @@ string CodeGenerator::generateJS(const ConstPtr &pPtr, const string &sNamespace,
     return s.str();
 }
 
-string CodeGenerator::generateJS(const StructPtr & pPtr, const string &sNamespace, bool &bNeedAssert)
+string CodeGenerator::generateJS(const StructPtr &pPtr, const string &sNamespace, bool &bNeedAssert, bool &bQuickFunc)
 {
     if (_bMinimalMembers && !_bEntry && !isDependent(sNamespace, pPtr->getId()))
     {
@@ -110,7 +138,7 @@ string CodeGenerator::generateJS(const StructPtr & pPtr, const string &sNamespac
     //_readFrom
     s << TAB << sNamespace << "." << pPtr->getId() << "._readFrom = function (is) {" << endl;
     INC_TAB;
-    s << TAB << "var tmp = new " << sNamespace << "." << pPtr->getId() << "();" << endl;
+    s << TAB << "var tmp = new " << sNamespace << "." << pPtr->getId() << ";" << endl;
     for (size_t i = 0; i < member.size(); i++)
     {
         string sFuncName = toFunctionName(member[i], "read");
@@ -120,7 +148,7 @@ string CodeGenerator::generateJS(const StructPtr & pPtr, const string &sNamespac
         if (isSimple(member[i]->getTypePtr()))
         {
             s << getDefault(member[i], member[i]->def(), sNamespace)
-                << (isRawOrString(member[i]->getTypePtr()) ? ", 1" : "");
+                << representArgument(member[i]->getTypePtr());
         }
         else
         {
@@ -142,10 +170,20 @@ string CodeGenerator::generateJS(const StructPtr & pPtr, const string &sNamespac
         string sFuncName = toFunctionName(member[i], "write");
 
        	s << TAB << "os." << sFuncName << "(" << member[i]->getTag() << ", this." << member[i]->getId()
-            << (isRawOrString(member[i]->getTypePtr()) ? ", 1" : "") << ");" << endl;
+            << representArgument(member[i]->getTypePtr()) << ");" << endl;
     }
     DEL_TAB;
     s << TAB << "};" << endl;
+
+    /*
+     *  Size Optimize:
+     *    Remove <mutil_map> support.
+     *    Remove toBinBuffer, readFromObject, toObject, new, create members.
+     */ 
+    if (_iOptimizeLevel == Os)
+    {
+        return s.str();
+    }
 
     //_equal
     vector<string> key = pPtr->getKey();
@@ -233,18 +271,21 @@ string CodeGenerator::generateJS(const StructPtr & pPtr, const string &sNamespac
     DEL_TAB;
     s << TAB << "};" << endl;
 
-    //readFromJson
+    //readFromObject
     s << TAB << sNamespace << "." << pPtr->getId() << ".prototype.readFromObject = function(json) { "<< endl;
     INC_TAB;
 
     for (size_t i = 0; i < member.size(); i++)
     {
         if (isSimple(member[i]->getTypePtr())) {
-            s << TAB << "json.hasOwnProperty(\"" << member[i]->getId() << "\") && (this." << member[i]->getId() << " = json." << member[i]->getId() << ");" << endl;
+            s << TAB << "_hasOwnProperty.call(json, \"" << member[i]->getId() << "\") && (this." << member[i]->getId() << " = json." << member[i]->getId() << ");" << endl;
         } else {
-            s << TAB << "json.hasOwnProperty(\"" << member[i]->getId() << "\") && (this." << member[i]->getId() << ".readFromObject(json." << member[i]->getId() << "));" << endl;
+            s << TAB << "_hasOwnProperty.call(json, \"" << member[i]->getId() << "\") && (this." << member[i]->getId() << ".readFromObject(json." << member[i]->getId() << "));" << endl;
         }
+        bQuickFunc = true;
     }
+
+    s << TAB << "return this;" << endl;
 
     DEL_TAB;
     s << TAB << "};" << endl;
@@ -275,7 +316,7 @@ string CodeGenerator::generateJS(const StructPtr & pPtr, const string &sNamespac
     return s.str();
 }
 
-string CodeGenerator::generateJS(const NamespacePtr &pPtr, bool &bNeedStream, bool &bNeedAssert)
+string CodeGenerator::generateJS(const NamespacePtr &pPtr, bool &bNeedStream, bool &bNeedAssert, bool &bQuickFunc)
 {
     ostringstream sstr;
     vector<StructPtr> ss(pPtr->getAllStructPtr());
@@ -285,7 +326,7 @@ string CodeGenerator::generateJS(const NamespacePtr &pPtr, bool &bNeedStream, bo
 
         for (vector<StructPtr>::iterator iter=ss.begin(); iter!=ss.end();)
         {
-            string str = generateJS(*iter, pPtr->getId(), bNeedAssert);
+            string str = generateJS(*iter, pPtr->getId(), bNeedAssert, bQuickFunc);
 
             if (!str.empty()) {
                 sstr << str << endl;
@@ -301,23 +342,31 @@ string CodeGenerator::generateJS(const NamespacePtr &pPtr, bool &bNeedStream, bo
 	vector<ConstPtr> &cs = pPtr->getAllConstPtr();
 	for (size_t i = 0; i < cs.size(); i++)
 	{
-        cstr << generateJS(cs[i], pPtr->getId(), bNeedStream);
+        string str = generateJS(cs[i], pPtr->getId(), bNeedStream);
+
+        if (!str.empty()) {
+            cstr << str << endl;
+        }
 	}
 
     ostringstream estr;
 	vector<EnumPtr> & es = pPtr->getAllEnumPtr();
     for (size_t i = 0; i < es.size(); i++)
     {
-        estr << generateJS(es[i], pPtr->getId());
+        string str = generateJS(es[i], pPtr->getId());
+        
+        if (!str.empty()) {
+            estr << str << endl;
+        }
     }
 
     ostringstream str;
-    if (!estr.str().empty()) str << estr.str() << endl;
-    if (!cstr.str().empty()) str << cstr.str() << endl;
+    if (!estr.str().empty()) str << estr.str();
+    if (!cstr.str().empty()) str << cstr.str();
     if (!sstr.str().empty())
     {
         bNeedStream = true;
-        str << sstr.str() << endl;
+        str << sstr.str();
     }
 
 	return str.str();
@@ -340,20 +389,21 @@ bool CodeGenerator::generateJS(const ContextPtr &pPtr)
         }
     }
 
-    //先生成编解码体
+    // generate encoders and decoders
     ostringstream estr;
     bool bNeedAssert = false;
     bool bNeedStream = false;
+    bool bQuickFunc = false;
     for(size_t i = 0; i < namespaces.size(); i++)
     {
-        estr << generateJS(namespaces[i], bNeedStream, bNeedAssert);
+        estr << generateJS(namespaces[i], bNeedStream, bNeedAssert, bQuickFunc);
     }
     if (estr.str().empty())
     {
         return false;
     }
 
-    //再生成导入模块
+    // generate module imports
     ostringstream ostr;
     for (map<string, ImportFile>::iterator it = _mapFiles.begin(); it != _mapFiles.end(); it++)
     {
@@ -364,9 +414,11 @@ bool CodeGenerator::generateJS(const ContextPtr &pPtr)
         ostr << "var " << it->second.sModule << " = require(\"" << it->second.sFile << "\");" << endl;
     }
 
-    //生成文件内容
+    // concat generated code
     ostringstream sstr;
     sstr << printHeaderRemark("Structure");
+    sstr << DISABLE_ESLINT << endl;
+    sstr << endl;
     sstr << "\"use strict\";" << endl << endl;
     if (bNeedAssert)
     {
@@ -375,6 +427,11 @@ bool CodeGenerator::generateJS(const ContextPtr &pPtr)
     if (bNeedStream)
     {
         sstr << "var " << IDL_NAMESPACE_STR << "Stream = require(\"" << _sStreamPath << "\");" << endl;
+    }
+    if (bQuickFunc)
+    {
+        sstr << endl;
+        sstr << "var _hasOwnProperty = Object.prototype.hasOwnProperty;" << endl;
     }
     sstr << ostr.str() << endl;
     sstr << istr.str();

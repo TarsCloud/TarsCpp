@@ -25,34 +25,37 @@ string CodeGenerator::generateDTSServer(const NamespacePtr &nPtr, const Interfac
     INC_TAB;
     str << TAB << "class " << pPtr->getId() << "Imp {" << endl;
     INC_TAB;
-    str << TAB << "initialize(): Promise<any> | void;" << endl;
+    str << TAB << "initialize(): PromiseLike<any> | void;" << endl;
     str << TAB << "protected onDispatch(current: " << IDL_NAMESPACE_STR << "Rpc." << IDL_TYPE << "Current, funcName: string, binBuffer: " << IDL_NAMESPACE_STR << "Stream.BinBuffer): number" << endl;
     for (size_t i = 0; i < vOperation.size(); i++)
     {
         OperationPtr &oPtr = vOperation[i];
-        str << TAB << oPtr->getId() << "(current: " << pPtr->getId() << "$" << oPtr->getId() << "$CUR";
+        str << TAB << oPtr->getId() << "(current: " << pPtr->getId() << "Imp." << oPtr->getId() << "Current";
 
         vector<ParamDeclPtr> &vParamDecl = oPtr->getAllParamDeclPtr();
-        for (size_t j = 0; j < vParamDecl.size(); j++) 
+        for (size_t j = 0; j < vParamDecl.size(); j++)
         {
-            str << ", " << vParamDecl[j]->getTypeIdPtr()->getId() << ": " << getDtsType(vParamDecl[j]->getTypeIdPtr()->getTypePtr());
+            str << ", " << vParamDecl[j]->getTypeIdPtr()->getId() << ": " << getTsType(vParamDecl[j]->getTypeIdPtr()->getTypePtr());
         }
-        str << "): void;" << endl;
+        str << "): any;" << endl;
     }
     DEL_TAB;
     str << TAB << "}" << endl;
 
-    //interface
+    // Additional namespace
+    str << TAB << "namespace " << pPtr->getId() << "Imp {" << endl;
+    INC_TAB;
+
     for (size_t i = 0; i < vOperation.size(); i++)
     {
         OperationPtr &oPtr = vOperation[i];
 
-        str << TAB << "interface " << pPtr->getId() << "$" << oPtr->getId() << "$CUR extends " << IDL_NAMESPACE_STR << "Rpc." << IDL_TYPE << "Current {" <<endl;
+        str << TAB << "interface " << oPtr->getId() << "Current extends " << IDL_NAMESPACE_STR << "Rpc." << IDL_TYPE << "Current {" <<endl;
         INC_TAB;
         str << TAB;
         if (oPtr->getReturnPtr()->getTypePtr())
         {
-            str << "sendResponse(ret: " << getDtsType(oPtr->getReturnPtr()->getTypePtr()); 
+            str << "sendResponse(ret: " << getTsType(oPtr->getReturnPtr()->getTypePtr());
 
             vector<ParamDeclPtr> &vParamDecl = oPtr->getAllParamDeclPtr();
             for (size_t j = 0; j < vParamDecl.size(); j++)
@@ -60,7 +63,7 @@ string CodeGenerator::generateDTSServer(const NamespacePtr &nPtr, const Interfac
                 if(!vParamDecl[j]->isOut()) {
                     continue;
                 }
-                str << ", " << vParamDecl[j]->getTypeIdPtr()->getId() << ": " << getDtsType(vParamDecl[j]->getTypeIdPtr()->getTypePtr()) ;
+                str << ", " << vParamDecl[j]->getTypeIdPtr()->getId() << ": " << getTsType(vParamDecl[j]->getTypeIdPtr()->getTypePtr()) ;
             }
             str << "): void;" << endl;
         }
@@ -72,8 +75,11 @@ string CodeGenerator::generateDTSServer(const NamespacePtr &nPtr, const Interfac
         DEL_TAB;
         str << TAB << "}" << endl;
     }
-    DEL_TAB;
 
+    DEL_TAB;
+    str << TAB << "}" << endl;
+
+    DEL_TAB;
     return str.str();
 }
 
@@ -100,7 +106,7 @@ void CodeGenerator::generateDTSServer(const ContextPtr &pPtr)
 {
     vector<NamespacePtr> namespaces = pPtr->getNamespaces();
 
-    //生成编解码 + 服务类
+    // generate server classes with encoders and decoders
     ostringstream estr;
     bool bNeedStream = false;
     bool bNeedRpc = false;
@@ -110,7 +116,7 @@ void CodeGenerator::generateDTSServer(const ContextPtr &pPtr)
 
         kstr << generateDTS(namespaces[i], bNeedStream);
         kstr << generateDTSServer(namespaces[i], bNeedStream, bNeedRpc);
-        
+
         estr << generateDTS(namespaces[i], kstr.str());
     }
     if(estr.str().empty())
@@ -118,7 +124,7 @@ void CodeGenerator::generateDTSServer(const ContextPtr &pPtr)
         return;
     }
 
-    //再生成导入模块
+    // generate module imports
     ostringstream ostr;
     if (bNeedStream)
     {
@@ -131,7 +137,7 @@ void CodeGenerator::generateDTSServer(const ContextPtr &pPtr)
     for (map<string, ImportFile>::iterator it = _mapFiles.begin(); it != _mapFiles.end(); it++)
     {
         if (it->second.sModule.empty()) continue;
-        
+
         if (estr.str().find(it->second.sModule + ".") == string::npos) continue;
 
         ostr << "import * as " << it->second.sModule << " from \"" << TC_File::excludeFileExt(it->second.sFile) << "\";" << endl;
@@ -139,6 +145,9 @@ void CodeGenerator::generateDTSServer(const ContextPtr &pPtr)
 
     ostringstream str;
     str << printHeaderRemark("Server");
+    str << DISABLE_TSLINT << endl;
+    str << DISABLE_ESLINT << endl;
+    str << endl;
     str << ostr.str() << endl;
     str << estr.str() << endl;
 

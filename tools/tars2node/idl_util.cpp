@@ -68,26 +68,77 @@ string CodeGenerator::toFunctionName(const TypeIdPtr& pPtr, const string& sActio
     return "";
 }
 
-bool CodeGenerator::isRawOrString(const TypePtr& pPtr) const
+string CodeGenerator::representArgument(const TypePtr& pPtr) const
 {
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
     if (bPtr)
     {
-        if (_bUseStringRepresent && bPtr->kind() == Builtin::KindLong)
+        if (bPtr->kind() == Builtin::KindLong && _iLongType != CodeGenerator::Number)
         {
-            return true;
+            stringstream str;
+            str << ", " << _iLongType;
+            return str.str();
         }
 
         if (_bStringBinaryEncoding && bPtr->kind() == Builtin::KindString)
         {
-            return true;
+            return ", 1";
         }
     }
 
-    return false;
+    return "";
 }
 
-string CodeGenerator::getDataType(const TypePtr & pPtr)
+string CodeGenerator::getClassName(const TypePtr& pPtr)
+{
+    BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
+    if (bPtr)
+    {
+        switch (bPtr->kind())
+        {
+            case Builtin::KindBool   : return "bool";
+            case Builtin::KindString : return "string";
+            case Builtin::KindByte   : return "char";
+            case Builtin::KindShort  : return "short";
+            case Builtin::KindInt    : return "int32";
+            case Builtin::KindLong   : return "int64";
+            case Builtin::KindFloat  : return "float";
+            case Builtin::KindDouble : return "double";
+            default                  : assert(false);
+        }
+    }
+
+    VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
+    if (vPtr)
+    {
+        return "list(" + getClassName(vPtr->getTypePtr()) + ")";
+    }
+
+    StructPtr sPtr = StructPtr::dynamicCast(pPtr);
+    if (sPtr)
+    {
+        vector<string> vecNames = TC_Common::sepstr<string>(sPtr->getSid(), "::");
+        assert(vecNames.size() == 2);
+
+        return vecNames[0] + "." + vecNames[1];
+    }
+
+    MapPtr mPtr = MapPtr::dynamicCast(pPtr);
+    if (mPtr)
+    {
+        return "map(" + getClassName(mPtr->getLeftTypePtr()) + ", " + getClassName(mPtr->getRightTypePtr()) + ")";
+    }
+
+    EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
+    if (ePtr)
+    {
+        return "int32";
+    }
+
+    return "void";
+}
+
+string CodeGenerator::getDataType(const TypePtr& pPtr, const bool &bCastEnumAsAny)
 {
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
     if (bPtr)
@@ -114,8 +165,7 @@ string CodeGenerator::getDataType(const TypePtr & pPtr)
         {
             return IDL_NAMESPACE_STR + "Stream.BinBuffer";
         }
-
-        return IDL_NAMESPACE_STR + "Stream.List(" + getDataType(vPtr->getTypePtr()) + (isRawOrString(vPtr->getTypePtr()) ? ", 1" : "") + ")";
+        return IDL_NAMESPACE_STR + "Stream.List(" + getDataType(vPtr->getTypePtr(), bCastEnumAsAny) + representArgument(vPtr->getTypePtr()) + ")";
     }
 
     StructPtr sPtr = StructPtr::dynamicCast(pPtr);
@@ -130,20 +180,16 @@ string CodeGenerator::getDataType(const TypePtr & pPtr)
     MapPtr mPtr = MapPtr::dynamicCast(pPtr);
     if (mPtr)
     {
-        bool bLeft = isRawOrString(mPtr->getLeftTypePtr());
-        bool bRight = isRawOrString(mPtr->getRightTypePtr());
+        string sLeft = representArgument(mPtr->getLeftTypePtr());
+        string sRight = representArgument(mPtr->getRightTypePtr());
 
-        if (!bRight && !bLeft) {
-            return IDL_NAMESPACE_STR + "Stream.Map(" + getDataType(mPtr->getLeftTypePtr()) + ", " + getDataType(mPtr->getRightTypePtr()) + ")";
-        } else if (bRight && bLeft) {
-            return IDL_NAMESPACE_STR + "Stream.Map(" + getDataType(mPtr->getLeftTypePtr()) + ", " + getDataType(mPtr->getRightTypePtr()) + ", 1, 1)";
-        } else if (bRight) {
-            return IDL_NAMESPACE_STR + "Stream.Map(" + getDataType(mPtr->getLeftTypePtr()) + ", " + getDataType(mPtr->getRightTypePtr()) + ", 0, 1)";
-        } else if (bLeft) {
-            return IDL_NAMESPACE_STR + "Stream.Map(" + getDataType(mPtr->getLeftTypePtr()) + ", " + getDataType(mPtr->getRightTypePtr()) + ", 1)";
-        } else {
-            assert(false);
+        if (sLeft.empty() && !sRight.empty())
+        {
+            sLeft = ", 0";
         }
+
+        return IDL_NAMESPACE_STR + "Stream.Map(" + getDataType(mPtr->getLeftTypePtr(), bCastEnumAsAny) + ", " +
+                getDataType(mPtr->getRightTypePtr(), bCastEnumAsAny) + sLeft + sRight + ")";
     }
 
     EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
@@ -151,15 +197,16 @@ string CodeGenerator::getDataType(const TypePtr & pPtr)
     {
         vector<string> vecNames = TC_Common::sepstr<string>(ePtr->getSid(), "::");
         assert(vecNames.size() == 2);
+        string suffix = bCastEnumAsAny ? " as any" : "";
 
-        return findName(vecNames[0], vecNames[1]);
+        return findName(vecNames[0], vecNames[1]) + suffix;
     }
 
     assert(false);
     return "";
 }
 
-string CodeGenerator::getDtsType(const TypePtr &pPtr, const bool bStream)
+string CodeGenerator::getTsType(const TypePtr &pPtr, const bool bStream, const bool bBase)
 {
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
     if (bPtr)
@@ -167,13 +214,22 @@ string CodeGenerator::getDtsType(const TypePtr &pPtr, const bool bStream)
         switch (bPtr->kind())
         {
             case Builtin::KindBool   : return "boolean";
-            case Builtin::KindString : return _bStringBinaryEncoding ? (bStream ? (IDL_NAMESPACE_STR + "Stream.BinBuffer") : "Buffer") : "string";
+            case Builtin::KindString : return _bStringBinaryEncoding ? "Buffer" : "string";
             case Builtin::KindByte   : return "number";
             case Builtin::KindShort  : return "number";
             case Builtin::KindInt    : return "number";
-            case Builtin::KindLong   : return _bUseStringRepresent ? "string" : "number";
             case Builtin::KindFloat  : return "number";
             case Builtin::KindDouble : return "number";
+            case Builtin::KindLong   :
+            {
+                switch (_iLongType)
+                {
+                    case CodeGenerator::Number : return "number";
+                    case CodeGenerator::String : return "string";
+                    case CodeGenerator::BigInt : return "bigint";
+                    default                    : assert(false);
+                }
+            }
             default                  : assert(false);
         }
     }
@@ -186,7 +242,7 @@ string CodeGenerator::getDtsType(const TypePtr &pPtr, const bool bStream)
         {
             return bStream ? (IDL_NAMESPACE_STR + "Stream.BinBuffer") : "Buffer";
         }
-        return (bStream ? (IDL_NAMESPACE_STR + "Stream.List") : "Array") + string("<") + getDtsType(vPtr->getTypePtr(), bStream) + string(">");
+        return (bStream ? (IDL_NAMESPACE_STR + "Stream.List") : "Array") + string("<") + getTsType(vPtr->getTypePtr(), bStream, bBase) + string(">");
     }
 
     StructPtr sPtr = StructPtr::dynamicCast(pPtr);
@@ -195,7 +251,7 @@ string CodeGenerator::getDtsType(const TypePtr &pPtr, const bool bStream)
         vector<string> vecNames = TC_Common::sepstr<string>(sPtr->getSid(), "::");
         assert(vecNames.size() == 2);
 
-        return findName(vecNames[0], vecNames[1]) + (bStream ? "" : "$OBJ");
+        return findName(vecNames[0], vecNames[1], bBase) + (bStream ? "" : ".Object");
     }
 
     MapPtr mPtr = MapPtr::dynamicCast(pPtr);
@@ -203,20 +259,24 @@ string CodeGenerator::getDtsType(const TypePtr &pPtr, const bool bStream)
     {
         if (bStream)
         {
-            return IDL_NAMESPACE_STR + "Stream.Map<" + getDtsType(mPtr->getLeftTypePtr(), bStream) + ", " + getDtsType(mPtr->getRightTypePtr(), bStream) + ">";
+            // In current version (20190311) of the streaming library, 
+            // TypeScript cannot infer enum type over conditional type correctly.
+            // So use `HeroMap` instead of `Map` to solve this problem.
+            EnumPtr keyTypePtr = EnumPtr::dynamicCast(mPtr->getLeftTypePtr());
+            string mapName = keyTypePtr ? "HeroMap" : "Map";
+
+            return IDL_NAMESPACE_STR + "Stream." + mapName + "<" + getTsType(mPtr->getLeftTypePtr(), bStream) + ", " + getTsType(mPtr->getRightTypePtr(), bStream, bBase) + ">";
         }
         else
         {
-            const string& sLeftType = getDtsType(mPtr->getLeftTypePtr(), bStream);
-            if (sLeftType == "number" || sLeftType == "string")
+            const string& sLeftType = getTsType(mPtr->getLeftTypePtr(), bStream, bBase);
+            const string& sRightType = getTsType(mPtr->getRightTypePtr(), bStream, bBase);
+            if (isSimple(mPtr->getLeftTypePtr()))
             {
-                return "{[key: " + getDtsType(mPtr->getLeftTypePtr(), bStream) + "]: " + getDtsType(mPtr->getRightTypePtr(), bStream) + "}";
+                const string& recordKeyType = sLeftType == "number" ? "number" : "string";
+                return "Record<" + recordKeyType + ", " + sRightType + ">";
             }
-            else if (isSimple(mPtr->getLeftTypePtr()) && sLeftType != "Buffer")
-            {
-                return "object";
-            }
-            else 
+            else
             {
                 return "";
             }
@@ -229,7 +289,7 @@ string CodeGenerator::getDtsType(const TypePtr &pPtr, const bool bStream)
         vector<string> vecNames = TC_Common::sepstr<string>(ePtr->getSid(), "::");
         assert(vecNames.size() == 2);
 
-        return findName(vecNames[0], vecNames[1]);
+        return findName(vecNames[0], vecNames[1], bBase);
     }
 
     assert(false);
@@ -269,21 +329,16 @@ bool CodeGenerator::isBinBuffer(const TypePtr & pPtr) const
     return false;
 }
 
-string CodeGenerator::getDefault(const TypeIdPtr & pPtr, const string &sDefault, const string& sNamespace)
-{
-    return getDefault(pPtr, sDefault, sNamespace, true);
-}
-
-string CodeGenerator::getDefault(const TypeIdPtr & pPtr, const string &sDefault, const string& sNamespace, const bool bGlobal)
+string CodeGenerator::getDefault(const TypeIdPtr & pPtr, const string &sDefault, const string& sNamespace, const bool &bGlobal, const bool &bCastEnumAsAny)
 {
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
     if (bPtr)
     {
         switch (bPtr->kind())
         {
-            case Builtin::KindBool    : 
+            case Builtin::KindBool    :
                 return sDefault.empty() ? "false" : sDefault;
-            case Builtin::KindString  : 
+            case Builtin::KindString  :
             {
                 if (_bStringBinaryEncoding)
                 {
@@ -308,13 +363,13 @@ string CodeGenerator::getDefault(const TypeIdPtr & pPtr, const string &sDefault,
                 {
                     if (TC_Common::tostr(TC_Common::strto<long>(sTemp)) != sTemp)
                     {
-                        //有可能是枚举值，在枚举值中查找
+                        // lookup in the enum when it is a enum
                         vector<string> vecNames = TC_Common::sepstr<string>(sDefault, "::");
                         if (vecNames.size() == 2)
                         {
                             sTemp = findName(vecNames[0], vecNames[1]);
                         }
-                        else 
+                        else
                         {
                             sTemp = findName(sNamespace, sDefault);
                         }
@@ -326,18 +381,27 @@ string CodeGenerator::getDefault(const TypeIdPtr & pPtr, const string &sDefault,
                     sTemp = "0";
                 }
 
-                if (_bUseStringRepresent)
+                if (bPtr->kind() == Builtin::KindLong)
                 {
-                    if (bPtr->kind() == Builtin::KindLong)
+                    switch (_iLongType)
                     {
-                        sTemp = "\"" + sTemp + "\"";
+                        case CodeGenerator::String:
+                        {
+                            sTemp = "\"" + sTemp + "\"";
+                            break;
+                        }
+                        case CodeGenerator::BigInt:
+                        {
+                            sTemp = sTemp + "n";
+                            break;
+                        }
                     }
                 }
 
                 return sTemp;
             }
             case Builtin::KindFloat    : // [[fallthrough]]
-            case Builtin::KindDouble   : 
+            case Builtin::KindDouble   :
                 return sDefault.empty()?"0.0":sDefault;
             default                    :
                 assert(false);
@@ -384,7 +448,7 @@ string CodeGenerator::getDefault(const TypeIdPtr & pPtr, const string &sDefault,
 
     if (bGlobal)
     {
-        return "new " + getDataType(pPtr->getTypePtr());
+        return "new " + getDataType(pPtr->getTypePtr(), bCastEnumAsAny);
     }
 
     return sDefault;

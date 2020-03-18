@@ -18,13 +18,14 @@
 
 void CodeGenerator::makeUTF8File(const string& sFileName, const string& sFileContent) 
 {
-    char header[3] = {(char)(0xef), (char)(0xbb), (char)(0xbf)};
+    try {
+        string sData = TC_Encoder::gbk2utf8(sFileContent);
 
-    string sData(header, 3);
-
-    sData += TC_Encoder::gbk2utf8(sFileContent);
-
-    TC_File::save2file(sFileName, sData.c_str());
+        TC_File::save2file(sFileName, sData.c_str());
+    } catch (...) {
+    	cout << "Convert GBK to UTF8 failed, current encoding is GBK.";
+        TC_File::save2file(sFileName, sFileContent.c_str());
+    }
 }
 
 string CodeGenerator::getRealFileInfo(const string& sPath) 
