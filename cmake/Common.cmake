@@ -74,11 +74,7 @@ ELSE ()
 ENDIF (UNIX)
 
 #-------------------------------------------------------------
-IF(WIN32)
-set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/tars2cpp.exe")
-ELSE()
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
-ENDIF()
 
 message("----------------------------------------------------")
 
