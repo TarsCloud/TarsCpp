@@ -186,7 +186,7 @@ void TC_Epoller::del(SOCKET_TYPE fd, uint64_t data, int32_t event)
 #if TARGET_PLATFORM_IOS    
     ctrl(fd, data, event, EV_DELETE);
 #else
-    ctrl(fd, event, event, EPOLL_CTL_DEL);
+    ctrl(fd, data, event, EPOLL_CTL_DEL);
 #endif
 }
 
