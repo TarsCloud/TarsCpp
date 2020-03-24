@@ -140,6 +140,7 @@ struct ServerConfig
 	static std::string Key;
 	static bool VerifyClient;
 #endif
+	static map<string, string> Context;     //框架内部用, 传递节点名称(以域名形式部署时)
 };
 
 class PropertyReport;

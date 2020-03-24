@@ -529,7 +529,7 @@ public:
      * @param server, 服务名称
      * @param logpath, 日志路径
      */
-    void setLogInfo(const CommunicatorPtr &comm, const string &obj, const string &sApp, const string &sServer, const string &sLogpath,const string& setdivision="", const bool &bLogStatReport = false);
+    void setLogInfo(const CommunicatorPtr &comm, const string &obj, const string &sApp, const string &sServer, const string &sLogpath,const string& setdivision="", const bool &bLogStatReport=false);
 
     /**
      * 初始化设置时间格式("%Y%m%d")

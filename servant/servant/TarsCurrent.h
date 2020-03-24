@@ -56,6 +56,12 @@ public:
     const string &getIp() const;
 
     /**
+     * get host name
+     * @return
+     */
+	const string &getHostName() const;
+
+	/**
      * 获取端口
      * @return int
      */

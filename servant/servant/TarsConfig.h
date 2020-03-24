@@ -57,7 +57,7 @@ public:
      *
      * @return int
      */
-    int setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath,const string& setdivision="",int maxBakNum=5);
+    int setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath,const string& setdivision="",int maxBakNum = 5);
 
     /**
      * 读取ConfigServer上配置文件到本地，并备份原文件

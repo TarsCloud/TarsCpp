@@ -60,10 +60,20 @@ TarsCurrent::~TarsCurrent()
     }
 }
 
+const string &TarsCurrent::getHostName() const
+{
+	auto it = _request.context.find("node_name");
+	if(it != _request.context.end())
+	{
+		return it->second;
+	}
+	return _data->ip();
+
+}
+
 const string &TarsCurrent::getIp() const
 {
-    return _data->ip();
-    // return _ip;
+	return _data->ip();
 }
 
 int TarsCurrent::getPort() const

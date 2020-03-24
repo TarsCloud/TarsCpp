@@ -84,7 +84,7 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
     {
         try
         {
-            _logPrx->logger(DYEING_DIR, DYEING_FILE, "roll", "%Y%m%d", vRemoteDyeing);
+            _logPrx->logger(DYEING_DIR, DYEING_FILE, "roll", "%Y%m%d", vRemoteDyeing, ServerConfig::Context);
         }
         catch(exception &ex)
         {
@@ -254,7 +254,7 @@ void RemoteTimeWriteT::sync2remote(const vector<string> &v)
         stInfo.sSepar            = _timeWrite->_separ;
         stInfo.sLogType          = _timeWrite->_logType;
 
-        _timeWrite->_logPrx->loggerbyInfo(stInfo,v);
+        _timeWrite->_logPrx->loggerbyInfo(stInfo,v, ServerConfig::Context);
 
         if (_timeWrite->_reportSuccPtr)
         {
@@ -276,7 +276,7 @@ void RemoteTimeWriteT::sync2remoteDyeing(const vector<string> &v)
 {
     try
     {
-        _timeWrite->_logPrx->logger(DYEING_DIR, DYEING_FILE, "", _timeWrite->_format, v);
+        _timeWrite->_logPrx->logger(DYEING_DIR, DYEING_FILE, "", _timeWrite->_format, v, ServerConfig::Context);
     }
     catch(exception &ex)
     {
@@ -418,7 +418,7 @@ void TimeWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &buf
     {
         try
         {
-            _logPrx->logger(DYEING_DIR, DYEING_FILE, "day", "%Y%m%d", vDyeingLog);
+            _logPrx->logger(DYEING_DIR, DYEING_FILE, "day", "%Y%m%d", vDyeingLog, ServerConfig::Context);
         }
         catch(exception &ex)
         {

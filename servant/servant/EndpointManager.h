@@ -246,7 +246,6 @@ protected:
      */
     set<EndpointInfo>         _inactiveEndpoints;
 
-    
 private:
 
     /////////以下是请求主控的策略信息/////////////////

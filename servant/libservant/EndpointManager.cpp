@@ -389,16 +389,16 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            iRet = _queryFPrx->findObjectById4Any(_objName,activeEp,inactiveEp);
+                            iRet = _queryFPrx->findObjectById4Any(_objName,activeEp,inactiveEp, ServerConfig::Context);
                             break;
                         }
                     case E_STATION:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp);
+                            iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
                         }
                     case E_SET:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp);
+                            iRet = _queryFPrx->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
                             break;
                         }
                     case E_DEFAULT:
@@ -408,11 +408,11 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             {
                                    //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                iRet = _queryFPrx->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp);
+                                iRet = _queryFPrx->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp, ServerConfig::Context);
                             }
                             else
                             {
-                                iRet = _queryFPrx->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp);
+                                iRet = _queryFPrx->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp, ServerConfig::Context);
                             }
                             break;
                         }
@@ -425,17 +425,17 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            _queryFPrx->async_findObjectById4Any(this,_objName);
+                            _queryFPrx->async_findObjectById4Any(this,_objName, ServerConfig::Context);
                             break;
                         }
                     case E_STATION:
                         {
-                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName);
+                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName, ServerConfig::Context);
                             break;
                         }
                     case E_SET:
                         {
-                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName);
+                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName, ServerConfig::Context);
                             break;
                         }
                     case E_DEFAULT:
@@ -445,11 +445,11 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             {
                                     //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId);
+                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId, ServerConfig::Context);
                             }
                             else
                             {
-                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName);
+                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName, ServerConfig::Context);
                             }
                             break;
                         }

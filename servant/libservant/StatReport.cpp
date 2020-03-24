@@ -19,6 +19,7 @@
 #include "util/tc_timeprovider.h"
 #include "servant/TarsLogger.h"
 #include "servant/Communicator.h"
+#include "servant/Application.h"
 #include <iostream>
 
 namespace tars
@@ -477,7 +478,7 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
                if(_statPrx)
                {
                    TLOGTARS("[TARS][StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
-                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient);
+                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient, ServerConfig::Context);
                }
                iLen = iTemLen;
                mTemp.clear();
@@ -499,7 +500,7 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
            if(_statPrx)
            {
                TLOGTARS("[TARS][StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
-               _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient);
+               _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient, ServerConfig::Context);
            }
        }
        return 0;
@@ -690,7 +691,7 @@ int StatReport::reportSampleMsg()
                if(_statPrx)
                {
                    TLOGTARS("[TARS][StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
-                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp);
+                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp, ServerConfig::Context);
                }
                iLen = iTemLen;
                vTemp.clear();
@@ -702,7 +703,7 @@ int StatReport::reportSampleMsg()
            if(_statPrx)
            {
                TLOGTARS("[TARS][StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
-               _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp);
+               _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp, ServerConfig::Context);
            }
         }
 

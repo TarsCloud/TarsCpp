@@ -97,6 +97,7 @@ std::string ServerConfig::Key;
 bool ServerConfig::VerifyClient = false;
 #endif
 
+map<string, string> ServerConfig::Context;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 TC_Config                       Application::_conf;
@@ -475,7 +476,7 @@ bool Application::cmdLoadProperty(const string& command, const string& params, s
 
         ServerConfig::Config = _conf.get("/tars/application/server<config>");
 
-        TarsRemoteConfig::getInstance()->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath,setDivision());
+        TarsRemoteConfig::getInstance()->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath,setDivision(), 5);
 
         ServerConfig::Notify = _conf.get("/tars/application/server<notify>");
 
@@ -1049,6 +1050,7 @@ void Application::initializeServer()
 	ServerConfig::BackPacketLimit  = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketlimit>", "100*1024*1024"));
 	ServerConfig::BackPacketMin    = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketmin>", "1024"));
 
+	ServerConfig::Context["node_name"] = ServerConfig::LocalIp;
 #if TARS_SSL
 	ServerConfig::CA                = _conf.get("/tars/application/server<ca>");
 	ServerConfig::Cert              = _conf.get("/tars/application/server<cert>");
@@ -1149,7 +1151,7 @@ void Application::initializeServer()
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到信息中心代理
     cout << OUT_LINE << "\n" << TC_Common::outfill("[set remote notify] ") << "OK" << endl;
-    TarsRemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision());
+    TarsRemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision(), ServerConfig::LocalIp);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到Node的代理
