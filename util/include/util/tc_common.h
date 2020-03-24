@@ -578,6 +578,19 @@ namespace p
     };
 
     template<>
+    struct strto1<unsigned char>
+    {
+        unsigned char operator()(const string &sStr)
+        {
+            if(!sStr.empty())
+            {
+                return (unsigned char)sStr[0];
+            }
+            return 0;
+        }
+    };
+
+    template<>
     struct strto1<short>
     {
         short operator()(const string &sStr)
