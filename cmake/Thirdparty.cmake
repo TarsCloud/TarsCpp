@@ -74,11 +74,11 @@ if (WIN32)
             DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
             PREFIX ${CMAKE_BINARY_DIR}
             INSTALL_DIR ${CMAKE_SOURCE_DIR}
-            CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
-            BUILD_COMMAND cmake --build . --config release
-            INSTALL_COMMAND cmake --build . --config release --target install
+            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+            INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
 #            LOG_CONFIGURE 1
 #            LOG_BUILD 1
             URL_MD5 82358affdd7ab94854c8ee73a180fc53
@@ -89,13 +89,13 @@ else()
             DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
             PREFIX ${CMAKE_BINARY_DIR}
             INSTALL_DIR ${CMAKE_SOURCE_DIR}
-            CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
             BUILD_COMMAND make
 #            LOG_CONFIGURE 1
 #            LOG_BUILD 1
-            # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
+            # INSTALL_COMMAND ${CMAKE_COMMAND} -P ${RUN_PROTOBUF_INSTALL_FILE}
             URL_MD5 ecd1fa65e7de707cd5c00bdac56022cd
             )
 endif()
@@ -122,13 +122,13 @@ if (TARS_PROTOBUF)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND cmake --build . --config release
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
 #                LOG_CONFIGURE 1
 #                LOG_BUILD 1
-                INSTALL_COMMAND cmake --build . --config release --target install
+                INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
     else ()
@@ -140,13 +140,13 @@ if (TARS_PROTOBUF)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DBUILD_SHARED_LIBS=OFF
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DBUILD_SHARED_LIBS=OFF
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
 #                LOG_CONFIGURE 1
 #                LOG_BUILD 1
-                # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
+                # INSTALL_COMMAND ${CMAKE_COMMAND} -P ${RUN_PROTOBUF_INSTALL_FILE}
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
 
@@ -200,7 +200,7 @@ if (TARS_SSL)
                 BUILD_COMMAND make
 #                LOG_CONFIGURE 1
 #                LOG_BUILD 1
-                # INSTALL_COMMAND cmake -P ${RUN_SSL_INSTALL_FILE}
+                # INSTALL_COMMAND ${CMAKE_COMMAND} -P ${RUN_SSL_INSTALL_FILE}
                 URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
                 )
 
@@ -226,13 +226,13 @@ if (TARS_MYSQL)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release 
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND cmake --build . --config release 
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
 #                LOG_CONFIGURE 1
 #                LOG_BUILD 1
-                INSTALL_COMMAND cmake --build . --config release --target install
+                INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 62de01beffc48348708c983a585b4dc1
                 )
 
@@ -244,13 +244,13 @@ if (TARS_MYSQL)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make mysqlclient
 #                LOG_CONFIGURE 1
 #                LOG_BUILD 1
-                # INSTALL_COMMAND cmake --build . --config release --target install
+                # INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 98ca2071f9d4c6b73146cc0455f6b914
                 )
 
@@ -280,13 +280,13 @@ if (TARS_HTTP2)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
 #                LOG_BUILD 1
 #                LOG_CONFIGURE 1
-                BUILD_COMMAND cmake --build . --config release
-                INSTALL_COMMAND cmake --build . --config release --target install
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+                INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
                 )
 
@@ -296,7 +296,7 @@ if (TARS_HTTP2)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
 #                LOG_BUILD 1
