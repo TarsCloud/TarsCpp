@@ -829,7 +829,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     }
 
     //处理cookie
-    string cookie;
+    map<string, string> cookie;
     TarsCookieOp cookieOp;
     if (processCookie(current, cookie))
     {
