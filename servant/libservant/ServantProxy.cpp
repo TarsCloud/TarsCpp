@@ -991,7 +991,9 @@ void ServantProxy::checkCookie(RequestPacket& req)
     assert(pSptd != NULL);
     if(pSptd->_hasCookie)
     {
-        req.context[ServantProxy::STATUS_COOKIE] = pSptd->_cookie;
+        Cookie stCookie;
+        stCookie.cookie = pSptd->_cookie;
+        req.context[ServantProxy::STATUS_COOKIE] = stCookie.writeToJsonString();
     }
 }
 
