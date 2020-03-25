@@ -56,6 +56,9 @@ struct HelloCallback : public HelloPrxCallback
         assert(ret == 0);
 	    callback_count++;
 
+		map<string, string> & cookie = TarsCookieOp::getCookie();
+    	TLOGDEBUG("cookie:" << TC_Common::tostr(cookie.begin(), cookie.end()) << endl);
+
         if(cur == count-1)
         {
             int64_t cost = TC_Common::now2us() - start;
@@ -111,6 +114,10 @@ void asyncCall(int c)
 	int64_t t = TC_Common::now2us();
 
 	string buffer(param.buffersize, 'a');
+
+	TarsCookieOp cookieOp;
+	map<string, string> cookie = {{"msgno", "12345"}, {"uid", "67890"}};
+    cookieOp.setCookie(cookie);
 
 	//发起远程调用
 	for (int i = 0; i < c; ++i)

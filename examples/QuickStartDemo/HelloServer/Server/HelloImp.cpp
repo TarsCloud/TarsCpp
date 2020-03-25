@@ -42,7 +42,7 @@ int HelloImp::testHello(const std::string &sReq, std::string &sRsp, tars::TarsCu
     TLOGDEBUG("cookie:" << TC_Common::tostr(cookie.begin(), cookie.end()) << endl);
 
     TLOGDEBUG("msgno:" << cookie["msgno"] << endl);
-    TLOGDEBUG("uin:" << cookie["uin"] << endl);
+    TLOGDEBUG("uid:" << cookie["uid"] << endl);
 
     {
         map<string, string> & cookie = current->getCookie();
