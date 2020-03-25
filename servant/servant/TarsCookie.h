@@ -53,7 +53,7 @@ public:
     /**
      * 获取cookie
      */
-    static const map<string, string> & getCookie()
+    static map<string, string> & getCookie()
     {
         ServantProxyThreadData * td = ServantProxyThreadData::getData();
         assert(NULL != td);

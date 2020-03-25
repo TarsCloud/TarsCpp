@@ -234,7 +234,7 @@ public:
     /**
      * 获取cookie
      */
-    const map<string, string> & getCookie()
+    map<string, string> & getCookie()
     {
         return _cookie;
     }
