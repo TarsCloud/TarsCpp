@@ -109,6 +109,9 @@ void AsyncProcThread::callback(ReqMessage * msg)
 	pServantProxyThreadData->_dyeing  = msg->bDyeing;
 	pServantProxyThreadData->_dyeingKey = msg->sDyeingKey;
 
+	pServantProxyThreadData->_hasCookie  = msg->hasCookie;
+	pServantProxyThreadData->_cookie = msg->cookie;
+
 	if(msg->adapter)
 	{
 		pServantProxyThreadData->_szHost = msg->adapter->endpoint().desc();

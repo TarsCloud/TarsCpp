@@ -573,6 +573,9 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         TLOGTARS("[TARS][ServantProxy::invoke, set dyeing, key=" << pSptd->_dyeingKey << endl);
     }
 
+    msg->hasCookie    = pSptd->_hasCookie;
+    msg->cookie       = pSptd->_cookie;
+
 
 #ifdef _USE_OPENTRACKING
     msg->trackInfoMap = pSptd->_trackInfoMap;
