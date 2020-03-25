@@ -16,7 +16,6 @@
 
 #include "HelloImp.h"
 #include "servant/Application.h"
-#include "servant/TarsCookie.h"
 
 using namespace std;
 
@@ -37,20 +36,7 @@ void HelloImp::destroy()
 int HelloImp::testHello(const std::string &sReq, std::string &sRsp, tars::TarsCurrentPtr current)
 {
     TLOGDEBUG("HelloImp::testHellosReq:"<<sReq<<endl);
-
-    map<string, string> & cookie = TarsCookieOp::getCookie();
-    TLOGDEBUG("cookie:" << TC_Common::tostr(cookie.begin(), cookie.end()) << endl);
-
-    TLOGDEBUG("msgno:" << cookie["msgno"] << endl);
-    TLOGDEBUG("uid:" << cookie["uid"] << endl);
-
-    {
-        map<string, string> & cookie = current->getCookie();
-        TLOGDEBUG("current cookie:" << TC_Common::tostr(cookie.begin(), cookie.end()) << endl);
-    }
-
     sRsp = sReq;
-
     return 0;
 }
 
