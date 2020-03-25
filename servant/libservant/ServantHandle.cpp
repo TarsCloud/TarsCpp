@@ -22,6 +22,7 @@
 #include "servant/AppProtocol.h"
 #include "servant/BaseF.h"
 #include "servant/TarsNodeF.h"
+#include "servant/TarsCookie.h"
 #ifdef _USE_OPENTRACKING
 #include "servant/text_map_carrier.h"
 #endif
@@ -822,7 +823,6 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     //处理染色消息
     string dyeingKey = "";
     TarsDyeingSwitch dyeSwitch;
-
     if (processDye(current, dyeingKey))
     {
         dyeSwitch.enableDyeing(dyeingKey);
