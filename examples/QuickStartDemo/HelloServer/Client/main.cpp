@@ -18,6 +18,7 @@
 #include "servant/Communicator.h"
 #include "Hello.h"
 #include "util/tc_option.h"
+#include "servant/TarsCookie.h"
 
 using namespace std;
 using namespace tars;
@@ -78,6 +79,11 @@ void syncCall(int c)
 	string buffer(param.buffersize, 'a');
 
 	int64_t t = TC_Common::now2us();
+
+	TarsCookieOp cookieOp;
+	map<string, string> cookie = {{"msgno", "12345"}, {"uid", "67890"}};
+    cookieOp.setCookie(cookie);
+
     //发起远程调用
     for (int i = 0; i < c; ++i)
     {
