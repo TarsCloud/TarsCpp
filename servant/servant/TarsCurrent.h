@@ -223,6 +223,22 @@ public:
      */
     void sendResponse(const char* buff, uint32_t len);
 
+    /**
+     * 设置cookie
+     */
+    void setCookie(const map<string, string> &cookie)
+    {
+        _cookie = cookie;
+    }
+
+    /**
+     * 获取cookie
+     */
+    const map<string, string> & getCookie()
+    {
+        return _cookie;
+    }
+
 protected:
 
     friend class ServantHandle;
@@ -297,6 +313,11 @@ protected:
      * 设置额外返回的内容
      */
     map<std::string, std::string> _responseContext;
+
+    /**
+     * cookie
+     */
+    map<string, string>             _cookie;
 };
 //////////////////////////////////////////////////////////////
 }

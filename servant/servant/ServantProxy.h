@@ -151,6 +151,12 @@ public:
 #ifdef _USE_OPENTRACKING
     std::unordered_map<std::string, std::string> _trackInfoMap;
 #endif
+
+    /**
+     * cookie
+     */
+    bool                            _hasCookie;       // 是否包含cookie
+    map<string, string>             _cookie;          // cookie内容 
 };
 
 
@@ -405,6 +411,8 @@ public:
     static string TARS_MASTER_KEY; //透传主调名称信息
 
     static string STATUS_TRACK_KEY; //track信息
+
+    static string STATUS_COOKIE; //cookie信息
 
     /**
      * 缺省的同步调用超时时间
@@ -716,6 +724,13 @@ private:
      * @param  req
      */
     void checkDye(RequestPacket& req);
+
+    /**
+     * 检查是否需要设置cookie
+     * @param  req
+     */
+    void checkCookie(RequestPacket &req);
+
 private:
     friend class ObjectProxy;
     friend class AdapterProxy;

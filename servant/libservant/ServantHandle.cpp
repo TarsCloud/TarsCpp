@@ -704,6 +704,24 @@ bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
     return false;
 }
 
+
+bool ServantHandle::processCookie(const TarsCurrentPtr &current, map<string, string> &cookie)
+{
+    map<string, string>::const_iterator cookieIt = current->getContext().find(ServantProxy::STATUS_COOKIE);
+    if (cookieIt != current->getContext().end())
+    {
+        TLOGINFO("[TARS] cookie:" << cookieIt->second << endl);
+
+        Cookie stCookie;
+        stCookie.readFromJsonString(cookieIt->second);
+        cookie = stCookie.cookie;
+        return true;
+    }
+
+    return false;
+
+}
+
 bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
 {
     /*是否允许检查合法性*/
@@ -809,6 +827,17 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     {
         dyeSwitch.enableDyeing(dyeingKey);
     }
+
+    //处理cookie
+    string cookie;
+    TarsCookieOp cookieOp;
+    if (processCookie(current, cookie))
+    {
+        cookieOp.setCookie(cookie);
+        current->setCookie(cookie);
+    }
+
+
 #ifdef _USE_OPENTRACKING
     //处理tracking信息
     processTracking(current);
