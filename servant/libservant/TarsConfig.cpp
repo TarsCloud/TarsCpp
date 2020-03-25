@@ -18,6 +18,7 @@
 #include "util/tc_file.h"
 #include "servant/Communicator.h"
 #include "servant/TarsNotify.h"
+#include "servant/Application.h"
 #include <fstream>
 
 namespace tars
@@ -108,7 +109,7 @@ string TarsRemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigO
            {
                 if(_setdivision.empty())
                 {
-                    ret = _configPrx->loadConfig(_app, (bAppConfigOnly ? "" : _serverName), sFileName, stream);
+                    ret = _configPrx->loadConfig(_app, (bAppConfigOnly ? "" : _serverName), sFileName, stream, ServerConfig::Context);
                 }
                 else
                 {
@@ -118,7 +119,7 @@ string TarsRemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigO
                     confInfo.filename    = sFileName;
                     confInfo.bAppOnly    = bAppConfigOnly;
                     confInfo.setdivision = _setdivision;
-                    ret = _configPrx->loadConfigByInfo(confInfo,stream);
+                    ret = _configPrx->loadConfigByInfo(confInfo,stream, ServerConfig::Context);
                 }
                 
                 break;
