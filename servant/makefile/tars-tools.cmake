@@ -215,22 +215,21 @@ macro(gen_server APP TARGET)
 				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND make_directory $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo cp -rf ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
-			elseif(LINUX)
+			elseif(UNIX)
 				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND make_directory /home/tarsproto/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo cp -rf ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
 			endif()
 		endforeach(TARS_FILE ${TARS_INPUT})
-	endif ()
 
-	#执行命令
-	add_custom_target(${TARGET}-release
+		add_custom_target(${TARGET}-release
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 			DEPENDS ${TARGET}
 			COMMAND cmake -P ${RUN_RELEASE_COMMAND_FILE}
 			COMMENT "call ${RUN_RELEASE_COMMAND_FILE}")
-
-	FILE(APPEND ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_RELEASE_COMMAND_FILE})\n")
+        
+		FILE(APPEND ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_RELEASE_COMMAND_FILE})\n")
+	endif ()
 endmacro()
 
 add_custom_target(upload
