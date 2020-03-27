@@ -4,8 +4,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(WIN32)
-	set(TARS2CPP "c:\\tars\\cpp\\tools\\tars2cpp")
-	set(TARS_PATH "c:\\tars\\cpp")
+	set(TARS2CPP "c:/tars/cpp/tools/tars2cpp.exe")
+	set(TARS_PATH "c:/tars/cpp")
 else()
 	set(TARS2CPP "/usr/local/tars/cpp/tools/tars2cpp")
 	set(TARS_PATH "/usr/local/tars/cpp")
@@ -178,9 +178,9 @@ macro(gen_server APP TARGET)
 	#make upload #########################################################################
 	SET(RUN_UPLOAD_COMMAND_FILE "${PROJECT_BINARY_DIR}/run-upload-${TARGET}.cmake")
 	IF(WIN32)
-		FILE(WRITE ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${TARGET}.tgz ${APP}.${TARGET}.tgz)\n")
-		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${TARS_PATH}\\cpp\\\\script\\\\WinSCP.exe  sftp://${TARS_WEB_SERVER}/usr/local/app/patchs/tars.upload/ /upload ${APP}.${TARGET}.tgz)\n")
-		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${TARS_PATH}\\cpp\\\\script\\\\busybox.exe wget -O ${APP}.${TARGET}.wget.out http://${TARS_WEB_HOST}/doUpload.jsp?SERVER=${APP}.${TARGET}&TGZ=/usr/local/app/patchs/tars.upload/${APP}.${TARGET}.tgz)\n")
+		FILE(WRITE ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo ${TARS_WEB_HOST}/api/upload_and_publish -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
+		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${TARS_PATH}/thirdparty/bin/curl.exe ${TARS_WEB_HOST}/api/upload_and_publish?ticket=${TARS_TOKEN} -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
+		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo \n---------------------------------------------------------------------------)\n")
 	ELSE()
 		FILE(WRITE ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo ${TARS_WEB_HOST}/api/upload_and_publish -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
 		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND curl ${TARS_WEB_HOST}/api/upload_and_publish?ticket=${TARS_TOKEN} -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
@@ -215,22 +215,21 @@ macro(gen_server APP TARGET)
 				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND make_directory $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo cp -rf ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
-			elseif(LINUX)
+			elseif(UNIX)
 				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND make_directory /home/tarsproto/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo cp -rf ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND cmake -E copy ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
 			endif()
 		endforeach(TARS_FILE ${TARS_INPUT})
-	endif ()
 
-	#执行命令
-	add_custom_target(${TARGET}-release
+		add_custom_target(${TARGET}-release
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 			DEPENDS ${TARGET}
 			COMMAND cmake -P ${RUN_RELEASE_COMMAND_FILE}
 			COMMENT "call ${RUN_RELEASE_COMMAND_FILE}")
-
-	FILE(APPEND ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_RELEASE_COMMAND_FILE})\n")
+        
+		FILE(APPEND ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_RELEASE_COMMAND_FILE})\n")
+	endif ()
 endmacro()
 
 add_custom_target(upload
