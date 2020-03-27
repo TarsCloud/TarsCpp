@@ -26,7 +26,13 @@ fi
 
 echo "[create server: $APP.$SERVER ...]"
 
-DEMO_PATH=/usr/local/tars/cpp/script/cmake_http_demo
+TARSPATH=$4
+
+if [ "$TARSPATH" == "" ]; then
+	TARSPATH=/usr/local/tars
+fi 
+
+DEMO_PATH=${TARSPATH}/cpp/script/cmake_http_demo
 
 #make cleanall -C $DEMO_PATH
 
@@ -55,7 +61,8 @@ mv DemoServantImp.cpp ${SERVANT}Imp.cpp
 
 cd ..
 mkdir build; cd build
-cmake ..; make
+cmake ..
+cmake --build . --config Release
 
 #cd ../../
 

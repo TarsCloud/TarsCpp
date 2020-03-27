@@ -67,6 +67,42 @@ include(ExternalProject)
 
 set(LIB_GTEST "libgtest")
 
+if(WIN32)
+    ExternalProject_Add(ADD_CURL
+        URL http://cdn.tarsyun.com/src/curl-7.69.1.tar.gz 
+        DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
+        PREFIX ${CMAKE_BINARY_DIR}
+        INSTALL_DIR ${CMAKE_SOURCE_DIR}
+        CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/curl
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/src/curl-lib
+        BUILD_IN_SOURCE 1
+        BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+        INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
+        URL_MD5 b9bb5e11d579425154a9f97ed44be9b8
+    )
+
+    add_dependencies(thirdparty ADD_CURL)
+
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/curl/ DESTINATION thirdparty)
+
+    # ExternalProject_Add(ADD_BUSYBOX
+    #     URL http://cdn.tarsyun.com/src/busybox-1.31.1.tar.bz2
+    #     DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
+    #     PREFIX ${CMAKE_BINARY_DIR}
+    #     INSTALL_DIR ${CMAKE_SOURCE_DIR}
+    #     CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/busybox
+    #     SOURCE_DIR ${CMAKE_BINARY_DIR}/src/busybox-lib
+    #     BUILD_IN_SOURCE 1
+    #     BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+    #     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
+    #     URL_MD5 70913edaf2263a157393af07565c17f0
+    # )
+
+    # add_dependencies(thirdparty ADD_BUSYBOX)
+
+    # INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/busybox/ DESTINATION thirdparty)
+endif(WIN32)
+
 if (WIN32)
 
     ExternalProject_Add(ADD_${LIB_GTEST}
