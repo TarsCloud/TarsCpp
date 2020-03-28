@@ -380,20 +380,52 @@ string TC_File::simplifyDirectory(const string& path)
 
 string TC_File::load2str(const string &sFullFileName)
 {
-    ifstream ifs(sFullFileName.c_str());
+    FILE *fd = TC_Port::fopen(sFullFileName.data(), "r");
+    if (fd == NULL)
+        return "";
 
-    return string(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
+    string s;
+    int nread = -1;
+    do {
+        char buf[8096] = {'\0'};
+        nread = fread(buf, 1, sizeof(buf), fd);
+        if (nread > 0)
+        {
+            s.append(buf, nread);
+        }
+    } while (nread > 0);
+    fclose(fd);
+    return s;
+
+    // ifstream ifs(sFullFileName.c_str());
+
+    // return string(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
 }
 
 bool TC_File::load2str(const string &sFullFileName, vector<char> &data)
 {
-     ifstream ifs(sFullFileName.c_str());
-     if(ifs.is_open())
-     {
-         data.assign(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
-         return true;
-     }
-     return false;
+    FILE *fd = TC_Port::fopen(sFullFileName.data(), "r");
+    if (fd == NULL)
+        return false;
+
+    int nread = -1;
+    do {
+        char buf[8096] = {'\0'};
+        nread = fread(buf, 1, sizeof(buf), fd);
+        if (nread > 0)
+        {
+            data.insert(data.end(), buf, buf+nread);
+        }
+    } while (nread > 0);
+    fclose(fd);
+    return true;
+    //  ifstream ifs(sFullFileName.c_str());
+    //  if(ifs.is_open())
+    //  {
+    //      data.assign(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
+    //      return true;
+    //  }
+    //  return false;
 }
 
 void TC_File::save2file(const string &sFullFileName, const string &sFileData)

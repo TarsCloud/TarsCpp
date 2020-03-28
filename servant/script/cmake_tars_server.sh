@@ -12,6 +12,12 @@ SERVANT=$3
 
 echo "APP:$APP, SERVER:$SERVER, SERVANT:$SERVANT"
 
+TARSPATH=$4
+
+if [ "$TARSPATH" == "" ]; then
+	TARSPATH=/usr/local/tars/
+fi 
+
 if [ "$SERVER" == "$SERVANT" ]
 then
 	echo "Error!(ServerName == ServantName)"
@@ -26,7 +32,7 @@ fi
 
 echo "[create server: $APP.$SERVER ...]"
 
-DEMO_PATH=/usr/local/tars/cpp/script/cmake_demo
+DEMO_PATH=${TARSPATH}/cpp/script/cmake_demo
 
 #make cleanall -C $DEMO_PATH
 
@@ -56,7 +62,9 @@ mv DemoServant.tars ${SERVANT}.tars
 
 cd ..
 mkdir build; cd build
-cmake ..; make
+cmake ..
+cmake --build . --config Release
+
 
 #cd ../../
 
