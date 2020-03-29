@@ -95,7 +95,7 @@ string TC_Exception::parseError(int err)
 
     FormatMessageA(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            NULL, err, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
             (LPTSTR) & lpMsgBuf, 0, NULL);
 
     // errMsg = Unicode2ANSI((LPCWSTR)lpMsgBuf);

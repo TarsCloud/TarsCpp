@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -43,6 +43,7 @@ typedef short   Short;
 typedef float   Float;
 typedef double  Double;
 typedef int     Int32;
+struct TarsStructBase;
 
 typedef unsigned char   UInt8;
 typedef unsigned short  UInt16;

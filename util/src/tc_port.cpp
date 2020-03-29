@@ -28,6 +28,8 @@
 #include "util/tc_strptime.h"
 #endif
 
+using namespace std;
+
 namespace tars
 {
 int TC_Port::strcasecmp(const char *s1, const char *s2)
@@ -171,4 +173,20 @@ int64_t TC_Port::getpid()
 	return pid;
 }
 
+string TC_Port::getEnv(const string &name)
+{
+	char* p = getenv(name.c_str());
+    string str = p ? string(p) : "";
+
+	return str;
+}
+
+void TC_Port::setEnv(const string &name, const string &value)
+{
+#if TARGET_PLATFORM_WINDOWS
+	SetEnvironmentVariable(name.c_str(), value.c_str());
+#else
+	setenv(name.c_str(), value.c_str(), true);
+#endif
+}
 }

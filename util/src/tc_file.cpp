@@ -292,26 +292,28 @@ string TC_File::simplifyDirectory(const string& path)
     result = TC_Common::replace(result, "\\", "/");
 #endif    
 
+    string sep(FILE_SEP);
+
     string::size_type pos;
 
     pos = 0;
-    while((pos = result.find(string(FILE_SEP) + FILE_SEP, pos)) != string::npos)
+    while((pos = result.find(sep + FILE_SEP, pos)) != string::npos)
     {
         result.erase(pos, 1);
     }
 
     pos = 0;
-    while((pos = result.find(string(FILE_SEP) + "." + FILE_SEP, pos)) != string::npos)
+    while((pos = result.find(sep+ "." + FILE_SEP, pos)) != string::npos)
     {
         result.erase(pos, 2);
     }
 
-    while(result.substr(0, 4) == string(FILE_SEP) + ".." + FILE_SEP)
+    while(result.substr(0, 4) == sep + ".." + FILE_SEP)
     {
         result.erase(0, 3);
     }
 
-    if(result.find(string(FILE_SEP) + ".." + FILE_SEP) != string::npos)
+    if(result.find(sep + ".." + FILE_SEP) != string::npos)
     {
         bool ab = TC_File::isAbsolute(result);
 
@@ -350,12 +352,12 @@ string TC_File::simplifyDirectory(const string& path)
 #endif
     }
 
-    if(result == string(FILE_SEP) + ".")
+    if(result == sep + ".")
     {
        return result.substr(0, result.size() - 1);
     }
 
-    if(result.size() >= 2 && result.substr(result.size() - 2, 2) == string(FILE_SEP) + ".")
+    if(result.size() >= 2 && result.substr(result.size() - 2, 2) == sep + ".")
     {
         result.erase(result.size() - 2, 2);
     }
@@ -370,7 +372,7 @@ string TC_File::simplifyDirectory(const string& path)
         result.erase(result.size() - 1);
     }
 
-    if(result == string(FILE_SEP) + "..")
+    if(result == sep + "..")
     {
         result = FILE_SEP;
     }
@@ -458,61 +460,97 @@ string TC_File::extractFileName(const string &sFullFileName)
         return "";
     }
 
-    string::size_type pos = sFullFileName.rfind(FILE_SEP);
-    if(pos == string::npos)
+    string::size_type found = sFullFileName.find_last_of("/\\");
+
+    // string::size_type pos = sFullFileName.rfind(FILE_SEP);
+    if(found == string::npos)
     {
         return sFullFileName;
     }
 
-    return sFullFileName.substr(pos + 1);
+    return sFullFileName.substr(found + 1);
 }
 
 string TC_File::extractFilePath(const string &sFullFileName)
 {
-#if TARGET_PLATFORM_WINDOWS
-    string sFullFileNameTmp = TC_Common::replace(sFullFileName, "/", "\\");
-#else
-    string sFullFileNameTmp = TC_Common::replace(sFullFileName, "\\", "/");
-#endif    
+// #if TARGET_PLATFORM_WINDOWS
+//     string sFullFileNameTmp = TC_Common::replace(sFullFileName, "/", "\\");
+// #else
+//     string sFullFileNameTmp = TC_Common::replace(sFullFileName, "\\", "/");
+// #endif    
 
-    if (sFullFileNameTmp.length() <= 0)
+    if (sFullFileName.length() <= 0)
     {
         return string(".") + FILE_SEP;
     }
 
-    string::size_type pos = 0;
-
-    for (pos = sFullFileNameTmp.length(); pos != 0; --pos)
+    string::size_type found = sFullFileName.find_last_of("/\\");
+    if(found == string::npos)
     {
-        if (sFullFileNameTmp[pos - 1] == FILE_SEP[0])
-        {
-            return sFullFileNameTmp.substr(0, pos);
-        }
+        return string(".") + FILE_SEP;
     }
 
-    return string(".") + FILE_SEP;
+    return sFullFileName.substr(0, found+1);
+
+    // string::size_type pos = 0;
+
+    // for (pos = sFullFileNameTmp.length(); pos != 0; --pos)
+    // {
+    //     if (sFullFileNameTmp[pos - 1] == FILE_SEP[0])
+    //     {
+    //         return sFullFileNameTmp.substr(0, pos);
+    //     }
+    // }
+
+    // return string(".") + FILE_SEP;
 }
 
 string TC_File::extractFileExt(const string &sFullFileName)
 {
-    string::size_type pos;
-    if ((pos = sFullFileName.rfind('.')) == string::npos)
+    string::size_type found = sFullFileName.find_last_of("/\\");
+    if(found == string::npos)
     {
-        return string("");
-    }
+        if ((found = sFullFileName.rfind('.')) == string::npos)
+        {
+            return string("");
+        }
 
-    return sFullFileName.substr(pos+1);
+        return sFullFileName.substr(found+1);        
+    }
+    else
+    {
+        for(string::size_type i = sFullFileName.size()-1; i > found; i--)
+        {
+            if(sFullFileName[i] == '.')
+            {
+                return sFullFileName.substr(i+1);
+            }
+        }
+
+        return "";
+    }
 }
 
 string TC_File::excludeFileExt(const string &sFullFileName)
 {
-    string::size_type pos;
-    if ((pos = sFullFileName.rfind('.')) == string::npos)
+    string::size_type found = sFullFileName.find_last_of("./\\");
+    if(found != string::npos)
     {
-        return sFullFileName;
+        if(sFullFileName[found] == '.')
+        {
+            return sFullFileName.substr(0, found);
+        }
     }
 
-    return sFullFileName.substr(0, pos);
+    return sFullFileName;
+
+    // string::size_type pos;
+    // if ((pos = sFullFileName.rfind('.')) == string::npos)
+    // {
+    //     return sFullFileName;
+    // }
+
+    // return sFullFileName.substr(0, pos);
 }
 
 string TC_File::replaceFileExt(const string &sFullFileName, const string &sExt)

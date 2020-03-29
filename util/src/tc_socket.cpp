@@ -209,7 +209,11 @@ SOCKET_TYPE TC_Socket::accept(TC_Socket &tcSock, struct sockaddr *pstSockAddr, S
 
     SOCKET_TYPE ifd;
 
+#if TARGET_PLATFORM_WINDOWS
+    ifd = ::accept(_sock, pstSockAddr, &iSockLen);
+#else
     while ((ifd = ::accept(_sock, pstSockAddr, &iSockLen)) < 0 && errno == EINTR);
+#endif
 
     tcSock._sock    = ifd;
     tcSock._iDomain = _iDomain;

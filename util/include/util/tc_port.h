@@ -62,6 +62,10 @@ public:
     static int closeSocket(int fd);
 
     static int64_t getpid();
+
+    static std::string getEnv(const std::string &name);
+
+    static void setEnv(const std::string &name, const std::string &value);
 };
 
 }
