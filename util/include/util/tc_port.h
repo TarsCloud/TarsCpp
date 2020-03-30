@@ -66,6 +66,8 @@ public:
     static std::string getEnv(const std::string &name);
 
     static void setEnv(const std::string &name, const std::string &value);
+
+    static std::string exec(const char* cmd);
 };
 
 }

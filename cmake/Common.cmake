@@ -29,15 +29,11 @@ endif()
 
 #-------------------------------------------------------------
 
-if("${INSTALL_PREFIX}" STREQUAL "")
-    IF (UNIX)
-        set(INSTALL_PREFIX "/usr/local/tars/cpp")
-    ELSE()
-        set(INSTALL_PREFIX "c:\\tars\\cpp")
-    ENDIF()
-
-    set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
-endif()
+IF (UNIX)
+    set(CMAKE_INSTALL_PREFIX "/usr/local/tars/cpp" CACHE STRING "set install path" FORCE)
+ELSE()
+    set(CMAKE_INSTALL_PREFIX "c:\\tars\\cpp" CACHE STRING "set install path" FORCE)
+ENDIF()
 
 #-------------------------------------------------------------
 IF (APPLE)
@@ -89,7 +85,7 @@ message("CMAKE_BINARY_DIR:          ${CMAKE_BINARY_DIR}")
 message("PROJECT_SOURCE_DIR:        ${PROJECT_SOURCE_DIR}")
 message("CMAKE_BUILD_TYPE:          ${CMAKE_BUILD_TYPE}")
 message("PLATFORM:                  ${PLATFORM}")
-message("INSTALL_PREFIX:            ${INSTALL_PREFIX}")
+message("CMAKE_INSTALL_PREFIX:      ${CMAKE_INSTALL_PREFIX}")
 message("BIN:                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}") 
 message("TARS2CPP:                  ${TARS2CPP}") 
 #-------------------------------------------------------------

@@ -189,4 +189,28 @@ void TC_Port::setEnv(const string &name, const string &value)
 	setenv(name.c_str(), value.c_str(), true);
 #endif
 }
+
+string TC_Port::exec(const char *cmd)
+{
+	string fileData;
+#if TARGET_PLATFORM_WINDOWS
+    FILE* fp = _popen(cmd, "r");
+#else
+    FILE* fp = popen(cmd, "r");
+#endif
+    static size_t buf_len = 2 * 1024 * 1024;
+    char *buf = new char[buf_len];
+    memset(buf, 0, buf_len);
+    fread(buf, sizeof(char), buf_len - 1, fp);
+#if TARGET_PLATFORM_WINDOWS
+    _pclose(fp);
+#else
+    pclose(fp);
+#endif
+    fileData = string(buf);
+    delete []buf;
+
+	return fileData;
+}
+
 }

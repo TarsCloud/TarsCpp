@@ -37,7 +37,7 @@ macro(complice_tars OUT_DEPENDS_LIST HEADER TARS_DIR)
         add_custom_command(
                 OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                DEPENDS tars2cpp ${TARS_IN}
+                DEPENDS tars2cpp ${FILE}
                 COMMAND ${TARS2CPP} --with-tars ${INCLUDE} ${TARS_IN}
                 COMMENT "${TARS2CPP} --with-tars ${INCLUDE} ${TARS_IN}")
 
