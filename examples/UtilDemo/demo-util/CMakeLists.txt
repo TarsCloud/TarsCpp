@@ -1,6 +1,7 @@
 include_directories(${util_SOURCE_DIR}/include)
 include_directories(${CMAKE_BINARY_DIR}/src/gtest/include)
 link_directories(${CMAKE_BINARY_DIR}/src/gtest/lib)
+link_directories(${CMAKE_BINARY_DIR}/src/gtest/lib64)
 
 FILE(GLOB_RECURSE SRC_LIST "*.cpp")
 
