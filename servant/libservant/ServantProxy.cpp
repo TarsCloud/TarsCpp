@@ -233,6 +233,9 @@ string ServantProxy::TARS_MASTER_KEY      = "TARS_MASTER_KEY";
 
 string ServantProxy::STATUS_TRACK_KEY     = "STATUS_TRACK_KEY";
 
+string ServantProxy::STATUS_COOKIE       = "STATUS_COOKIE";
+
+
 ////////////////////////////////////
 ServantProxy::ServantProxy(Communicator * pCommunicator, ObjectProxy ** ppObjectProxy, size_t iClientThreadNum)
 : _communicator(pCommunicator)
@@ -570,6 +573,9 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         TLOGTARS("[TARS][ServantProxy::invoke, set dyeing, key=" << pSptd->_dyeingKey << endl);
     }
 
+    msg->hasCookie    = pSptd->_hasCookie;
+    msg->cookie       = pSptd->_cookie;
+
 
 #ifdef _USE_OPENTRACKING
     msg->trackInfoMap = pSptd->_trackInfoMap;
@@ -779,6 +785,8 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
 
     checkDye(msg->request);
 
+    checkCookie(msg->request);
+
     invoke(msg, bCoro);
 }
 
@@ -811,6 +819,8 @@ shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
 
 
     checkDye(msg->request);
+
+    checkCookie(msg->request);
 
     invoke(msg);
 
@@ -974,6 +984,19 @@ void ServantProxy::checkDye(RequestPacket& req)
         SET_MSG_TYPE(req.iMessageType, TARSMESSAGETYPEDYED);
 
         req.status[ServantProxy::STATUS_DYED_KEY] = pSptd->_dyeingKey;
+    }
+}
+
+void ServantProxy::checkCookie(RequestPacket& req)
+{
+    //线程私有数据
+    ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
+    assert(pSptd != NULL);
+    if(pSptd->_hasCookie)
+    {
+        Cookie stCookie;
+        stCookie.cookie = pSptd->_cookie;
+        req.context[ServantProxy::STATUS_COOKIE] = stCookie.writeToJsonString();
     }
 }
 

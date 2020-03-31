@@ -22,6 +22,7 @@
 #include "servant/AppProtocol.h"
 #include "servant/BaseF.h"
 #include "servant/TarsNodeF.h"
+#include "servant/TarsCookie.h"
 #ifdef _USE_OPENTRACKING
 #include "servant/text_map_carrier.h"
 #endif
@@ -704,6 +705,24 @@ bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
     return false;
 }
 
+
+bool ServantHandle::processCookie(const TarsCurrentPtr &current, map<string, string> &cookie)
+{
+    map<string, string>::const_iterator cookieIt = current->getContext().find(ServantProxy::STATUS_COOKIE);
+    if (cookieIt != current->getContext().end())
+    {
+        TLOGINFO("[TARS] cookie:" << cookieIt->second << endl);
+
+        Cookie stCookie;
+        stCookie.readFromJsonString(cookieIt->second);
+        cookie = stCookie.cookie;
+        return true;
+    }
+
+    return false;
+
+}
+
 bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
 {
     /*是否允许检查合法性*/
@@ -804,11 +823,21 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     //处理染色消息
     string dyeingKey = "";
     TarsDyeingSwitch dyeSwitch;
-
     if (processDye(current, dyeingKey))
     {
         dyeSwitch.enableDyeing(dyeingKey);
     }
+
+    //处理cookie
+    map<string, string> cookie;
+    TarsCookieOp cookieOp;
+    if (processCookie(current, cookie))
+    {
+        cookieOp.setCookie(cookie);
+        current->setCookie(cookie);
+    }
+
+
 #ifdef _USE_OPENTRACKING
     //处理tracking信息
     processTracking(current);

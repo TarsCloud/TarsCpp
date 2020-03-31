@@ -187,6 +187,11 @@ protected:
     bool processDye(const TarsCurrentPtr &current, string& dyeingKey);
 
     /**
+     * 处理cookie
+     */
+    bool processCookie(const TarsCurrentPtr &current, map<string, string> &cookie);
+
+    /**
      * 检查set调用合法性
      *
      * @param current
