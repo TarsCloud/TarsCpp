@@ -614,7 +614,7 @@ const vector<string> &TC_EpollServer::BindAdapter::getDeny() const
 
 bool TC_EpollServer::BindAdapter::isLimitMaxConnection() const
 {
-    return (_iCurConns + 1 > (size_t)_iMaxConns) || (_iCurConns + 1 > (int)((uint32_t)1 << 22) - 1);
+    return (_iCurConns + 1 > _iMaxConns) || (_iCurConns + 1 > (int)((uint32_t)1 << 22) - 1);
 }
 
 void TC_EpollServer::BindAdapter::decreaseNowConnection()
