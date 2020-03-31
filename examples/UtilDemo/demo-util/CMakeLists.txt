@@ -1,17 +1,17 @@
 include_directories(${util_SOURCE_DIR}/include)
-
-link_libraries(tarsutil)
+include_directories(${CMAKE_BINARY_DIR}/src/gtest/include)
+link_directories(${CMAKE_BINARY_DIR}/src/gtest/lib)
 
 FILE(GLOB_RECURSE SRC_LIST "*.cpp")
 
 if (TARS_SSL)
     if (WIN32)
-        link_libraries(tarsutil ${LIB_SSL} ${LIB_CRYPTO} Crypt32)
+        link_libraries(tarsutil gtest ${LIB_SSL} ${LIB_CRYPTO} Crypt32)
     else ()
-        link_libraries(tarsutil ${LIB_SSL} ${LIB_CRYPTO})
+        link_libraries(tarsutil gtest ${LIB_SSL} ${LIB_CRYPTO})
     endif ()
 else ()
-    link_libraries(tarsutil)
+    link_libraries(tarsutil gtest)
 endif ()
 
 add_executable(demo-util ${SRC_LIST})

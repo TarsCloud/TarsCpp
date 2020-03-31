@@ -4,8 +4,6 @@ macro(complice_lex OUT_DEPENDS_LEX_LIST)
 
     FILE(GLOB SRC_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.l")
 
-    #    set(CLEAN_LIST)
-
     foreach (FILE ${SRC_LIST})
 
         get_filename_component(NAME_WE ${FILE} NAME_WE)
@@ -23,13 +21,10 @@ macro(complice_lex OUT_DEPENDS_LEX_LIST)
         list(APPEND DEPENDS_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${LEX_CPP})
 
         get_filename_component(PATH ${FILE} PATH)
-        #        list(APPEND CLEAN_LIST ${PATH}/${LEX_CPP})
 
     endforeach (FILE)
 
     set(OUT_DEPENDS_LEX_LIST ${DEPENDS_LIST})
-
-    #    set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")
 
 endmacro()
 
@@ -37,8 +32,6 @@ macro(complice_yacc OUT_DEPENDS_YACC_LIST)
     set(DEPENDS_LIST)
 
     FILE(GLOB SRC_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.y")
-
-    #    set(CLEAN_LIST)
 
     foreach (FILE ${SRC_LIST})
 
@@ -59,17 +52,7 @@ macro(complice_yacc OUT_DEPENDS_YACC_LIST)
 
         get_filename_component(PATH ${FILE} PATH)
 
-        #        list(APPEND CLEAN_LIST ${PATH}/${YACC_H})
-        #        list(APPEND CLEAN_LIST ${PATH}/${YACC_CPP})
-        #if (EXISTS ${PATH}/${NAME_WE}.tab.cpp)
-        #    list(APPEND CLEAN_LIST ${PATH}/${NAME_WE}.tab.cpp)
-        #endif (EXISTS ${PATH}/${NAME_WE}.tab.cpp)
-
     endforeach (FILE)
-
-    #    set(OUT_DEPENDS_YACC_LIST ${DEPENDS_LIST})
-
-    #    set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")
 
 endmacro()
 
@@ -101,9 +84,6 @@ foreach (FILE ${SRC_LEX_LIST})
     #设置依赖
     list(APPEND OUT_DEPENDS_LEX_LIST ${CP_SOURCE_CPP_DIR}/${LEX_CPP})
 
-    #设置需要清除的.h文件
-#    list(APPEND CLEAN_LIST ${CP_SOURCE_CPP_DIR}/${LEX_CPP})
-
 endforeach ()
 
 set(OUT_DEPENDS_YACC_LIST)
@@ -130,15 +110,7 @@ foreach (FILE ${SRC_YACC_LIST})
     #设置依赖
     list(APPEND OUT_DEPENDS_YACC_LIST ${CP_SOURCE_H_DIR}/${YACC_H})
 
-    #设置需要清除的.h文件
-#    list(APPEND CLEAN_LIST ${CP_SOURCE_H_DIR}/${YACC_H})
-#    list(APPEND CLEAN_LIST ${CP_SOURCE_H_DIR}/${YACC_CPP})
-
 endforeach ()
-
-#设置需要清除的文件
-#set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")
 
 add_custom_target(COPY-LEX-YACC ALL DEPENDS ${OUT_DEPENDS_LEX_LIST} ${OUT_DEPENDS_YACC_LIST})
 
-#add_custom_target(COPY-LEX-YACC ALL DEPENDS ${OUT_DEPENDS_LEX_LIST} ${CP_SOURCE_CPP_DIR}/${LEX_CPP} ${OUT_DEPENDS_YACC_LIST} ${CP_SOURCE_H_DIR}/${YACC_H})
