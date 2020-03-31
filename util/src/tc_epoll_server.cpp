@@ -1049,7 +1049,7 @@ int TC_EpollServer::Connection::sendBuffer()
 			{
 				_sendBuffer.moveHeader(iBytesSent);
 
-				if (iBytesSent == data.second)
+				if (iBytesSent == (int)data.second)
 				{
 					_pBindAdapter->decreaseSendBufferSize();
 				}
@@ -1104,7 +1104,7 @@ int TC_EpollServer::Connection::sendBuffer()
 
 			//连续3个5秒, 发送速度都极慢, 每5秒发送 < iBackPacketBuffMin, 认为连接有问题, 关闭之
 			int left = 3;
-			if (_checkSend.size() >= left)
+			if ((int)_checkSend.size() >= left)
 			{
 				bool slow = true;
 				for (int i = (int)_checkSend.size() - 1; i >= (int)(_checkSend.size() - left); i--)
