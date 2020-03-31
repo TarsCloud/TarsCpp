@@ -36,9 +36,9 @@ ELSE()
 ENDIF()
 
 #-------------------------------------------------------------
-#IF (APPLE)
+IF (APPLE)
 link_libraries(iconv)
-#ENDIF(APPLE)
+ENDIF(APPLE)
 
 IF (WIN32)
 
