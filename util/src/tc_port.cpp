@@ -28,6 +28,8 @@
 #include "util/tc_strptime.h"
 #endif
 
+#include <string.h>
+
 using namespace std;
 
 namespace tars
