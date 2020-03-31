@@ -44,10 +44,4 @@ module tars
         8 optional string        sResultDesc;
         9 optional map<string, string> context;
     };
-
-    // Cookie, 在服务调用链上透传
-    struct Cookie
-    {
-        1 optional map<string, string>         cookie;
-    };
 };

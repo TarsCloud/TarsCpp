@@ -155,8 +155,7 @@ public:
     /**
      * cookie
      */
-    bool                            _hasCookie;       // 是否包含cookie
-    map<string, string>             _cookie;          // cookie内容 
+    map<string, string>             _cookie;          // cookie内容
 };
 
 
@@ -398,9 +397,9 @@ public:
      */
     static string STATUS_DYED_KEY;  //需要染色的用户ID
 
-    static string STATUS_GRID_KEY;  //需要灰度的用户ID
+//    static string STATUS_GRID_KEY;  //需要灰度的用户ID
 
-    static string STATUS_SAMPLE_KEY; //stat 采样的信息
+//    static string STATUS_SAMPLE_KEY; //stat 采样的信息
 
     static string STATUS_RESULT_CODE; //处理结果码,tup使用
 
@@ -408,7 +407,7 @@ public:
 
     static string STATUS_SETNAME_VALUE; //set调用
 
-    static string TARS_MASTER_KEY; //透传主调名称信息
+//    static string TARS_MASTER_KEY; //透传主调名称信息
 
     static string STATUS_TRACK_KEY; //track信息
 

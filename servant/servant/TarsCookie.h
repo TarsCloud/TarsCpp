@@ -28,7 +28,6 @@ public:
      * 构造函数
      */
     TarsCookieOp()
-    :_hasCookie(false)
     {
     }
 
@@ -37,16 +36,11 @@ public:
      */
     ~TarsCookieOp()
     {
-        if(_hasCookie)
+        ServantProxyThreadData * td = ServantProxyThreadData::getData();
+        assert(NULL != td);
+        if (td)
         {
-            ServantProxyThreadData * td = ServantProxyThreadData::getData();
-            assert(NULL != td);
-            if (td)
-            {
-                td->_hasCookie = false;
-                td->_cookie.clear();
-            }
-            _hasCookie = false;
+            td->_cookie.clear();
         }
     }
 
@@ -70,16 +64,9 @@ public:
         assert(NULL != td);
         if(td)
         {
-            td->_hasCookie = true;
             td->_cookie = cookie;
         }
-
-        _hasCookie = true;
-
     }
-
-protected:
-    bool _hasCookie;
 };
 
 #endif

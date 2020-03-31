@@ -203,7 +203,6 @@ struct ReqMessage : public TC_HandleBase
     , bCoroFlag(false)
     , sched(NULL)
     , iCoroId(0)
-    , hasCookie(0)
     {
     }
 
@@ -251,7 +250,6 @@ struct ReqMessage : public TC_HandleBase
         bCoroFlag      = false;
         sched          = NULL;
         iCoroId        = 0;
-        hasCookie      = false;
     }
 
 
@@ -295,8 +293,7 @@ struct ReqMessage : public TC_HandleBase
     std::unordered_map<std::string, std::string> trackInfoMap; //调用链信息
 #endif
 
-    bool                            hasCookie;       // 是否包含cookie
-    map<string, string>             cookie;          // cookie内容 
+    map<string, string>             cookie;          // cookie内容
 };
 
 typedef TC_AutoPtr<ReqMessage>          ReqMessagePtr;

@@ -675,32 +675,32 @@ bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
 
     if (IS_MSG_TYPE(current->getMessageType(), tars::TARSMESSAGETYPEDYED))
     {
-        TLOGTARS("[TARS] servant got a dyeing request, message_type set" << current->getMessageType() << endl);
+        TLOGTARS("[TARS] servant got a dyeing request, message_type set: " << current->getMessageType() << endl);
 
         if (dyeingIt != current->getRequestStatus().end())
         {
-            TLOGTARS("[TARS] servant got a dyeing request, dyeing key:" << dyeingIt->second << endl);
+            TLOGTARS("[TARS] servant got a dyeing request, dyeing key: " << dyeingIt->second << endl);
 
             dyeingKey = dyeingIt->second;
         }
         return true;
     }
 
-    //servant已经被染色, 开启染色日志
-    if (ServantHelperManager::getInstance()->isDyeing())
-    {
-        map<string, string>::const_iterator dyeingKeyIt = current->getRequestStatus().find(ServantProxy::STATUS_GRID_KEY);
-
-        if (dyeingKeyIt != current->getRequestStatus().end() &&
-            ServantHelperManager::getInstance()->isDyeingReq(dyeingKeyIt->second, current->getServantName(), current->getFuncName()))
-        {
-            TLOGTARS("[TARS] dyeing servant got a dyeing req, key:" << dyeingKeyIt->second << endl);
-
-            dyeingKey = dyeingKeyIt->second;
-
-            return true;
-        }
-    }
+//    //servant已经被染色, 开启染色日志
+//    if (ServantHelperManager::getInstance()->isDyeing())
+//    {
+//        map<string, string>::const_iterator dyeingKeyIt = current->getRequestStatus().find(ServantProxy::STATUS_GRID_KEY);
+//
+//        if (dyeingKeyIt != current->getRequestStatus().end() &&
+//            ServantHelperManager::getInstance()->isDyeingReq(dyeingKeyIt->second, current->getServantName(), current->getFuncName()))
+//        {
+//            TLOGTARS("[TARS] dyeing servant got a dyeing req, key:" << dyeingKeyIt->second << endl);
+//
+//            dyeingKey = dyeingKeyIt->second;
+//
+//            return true;
+//        }
+//    }
 
     return false;
 }
@@ -708,18 +708,33 @@ bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
 
 bool ServantHandle::processCookie(const TarsCurrentPtr &current, map<string, string> &cookie)
 {
-    map<string, string>::const_iterator cookieIt = current->getContext().find(ServantProxy::STATUS_COOKIE);
-    if (cookieIt != current->getContext().end())
-    {
-        TLOGINFO("[TARS] cookie:" << cookieIt->second << endl);
+	const static string STATUS = "STATUS_";
 
-        Cookie stCookie;
-        stCookie.readFromJsonString(cookieIt->second);
-        cookie = stCookie.cookie;
-        return true;
-    }
+	std::for_each(current->getRequestStatus().begin(), current->getRequestStatus().end(),[&](const map<string, string>::value_type& p){
+		if(p.first.size() > STATUS.size() && TC_Port::strncasecmp(p.first.c_str(), STATUS.c_str(), STATUS.size()) == 0) {
+			return;
+		}
+		cookie.insert(make_pair(p.first, p.second));
+	});
 
-    return false;
+	return !cookie.empty();
+//
+//	map<string, string>::const_iterator cookieIt = current->getRequestStatus().find(ServantProxy::STATUS_COOKIE);
+//    if (cookieIt != current->getContext().end())
+//    {
+//	    std::for_each(pSptd->_cookie.begin(), pSptd->_cookie.end(),[&](map<string, string>::value_type& p){
+//		    req.status.insert(make_pair(p.first, p.second));
+//	    });
+//
+////        TLOGINFO("[TARS] cookie:" << cookieIt->second << endl);
+//
+//        Cookie stCookie;
+//        stCookie.readFromJsonString(cookieIt->second);
+//        cookie = stCookie.cookie;
+//        return true;
+//    }
+//
+//    return false;
 
 }
 
@@ -836,7 +851,6 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
         cookieOp.setCookie(cookie);
         current->setCookie(cookie);
     }
-
 
 #ifdef _USE_OPENTRACKING
     //处理tracking信息

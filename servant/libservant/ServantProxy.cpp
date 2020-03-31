@@ -219,9 +219,9 @@ void coroWhenAll(const CoroParallelBasePtr &ptr)
 ///////////////////////////////////////////////////////////////
 string ServantProxy::STATUS_DYED_KEY      = "STATUS_DYED_KEY";
 
-string ServantProxy::STATUS_GRID_KEY      = "STATUS_GRID_KEY";
+//string ServantProxy::STATUS_GRID_KEY      = "STATUS_GRID_KEY";
 
-string ServantProxy::STATUS_SAMPLE_KEY    = "STATUS_SAMPLE_KEY";
+//string ServantProxy::STATUS_SAMPLE_KEY    = "STATUS_SAMPLE_KEY";
 
 string ServantProxy::STATUS_RESULT_CODE   = "STATUS_RESULT_CODE";
 
@@ -229,11 +229,11 @@ string ServantProxy::STATUS_RESULT_DESC   = "STATUS_RESULT_DESC";
 
 string ServantProxy::STATUS_SETNAME_VALUE = "STATUS_SETNAME_VALUE";
 
-string ServantProxy::TARS_MASTER_KEY      = "TARS_MASTER_KEY";
+//string ServantProxy::TARS_MASTER_KEY      = "TARS_MASTER_KEY";
 
 string ServantProxy::STATUS_TRACK_KEY     = "STATUS_TRACK_KEY";
 
-string ServantProxy::STATUS_COOKIE       = "STATUS_COOKIE";
+string ServantProxy::STATUS_COOKIE        = "STATUS_COOKIE";
 
 
 ////////////////////////////////////
@@ -573,9 +573,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         TLOGTARS("[TARS][ServantProxy::invoke, set dyeing, key=" << pSptd->_dyeingKey << endl);
     }
 
-    msg->hasCookie    = pSptd->_hasCookie;
     msg->cookie       = pSptd->_cookie;
-
 
 #ifdef _USE_OPENTRACKING
     msg->trackInfoMap = pSptd->_trackInfoMap;
@@ -777,11 +775,11 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
     msg->request.status       = status;
     msg->request.iTimeout     = _asyncTimeout;
     
-    // 在RequestPacket中的context设置主调信息
-    if(_masterFlag)
-    {
-        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName)); //TARS_MASTER_KEY  clientConfig.ModuleName
-    }
+//    // 在RequestPacket中的context设置主调信息
+//    if(_masterFlag)
+//    {
+//        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName)); //TARS_MASTER_KEY  clientConfig.ModuleName
+//    }
 
     checkDye(msg->request);
 
@@ -811,12 +809,11 @@ shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
     msg->request.status       = status;
     msg->request.iTimeout     = _syncTimeout;
 
-    // 在RequestPacket中的context设置主调信息
-    if(_masterFlag)
-    {
-        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName));
-    }
-
+//    // 在RequestPacket中的context设置主调信息
+//    if(_masterFlag)
+//    {
+//        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName));
+//    }
 
     checkDye(msg->request);
 
@@ -992,12 +989,16 @@ void ServantProxy::checkCookie(RequestPacket& req)
     //线程私有数据
     ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);
-    if(pSptd->_hasCookie)
-    {
-        Cookie stCookie;
-        stCookie.cookie = pSptd->_cookie;
-        req.context[ServantProxy::STATUS_COOKIE] = stCookie.writeToJsonString();
-    }
+
+    std::for_each(pSptd->_cookie.begin(), pSptd->_cookie.end(),[&](map<string, string>::value_type& p){
+	    req.status.insert(make_pair(p.first, p.second));
+    });
+
+//        Cookie stCookie;
+//        stCookie.cookie = pSptd->_cookie;
+//
+//        req.status.insert(make_pair());
+//        req.context[ServantProxy::STATUS_COOKIE] = stCookie.writeToJsonString();
 }
 
 

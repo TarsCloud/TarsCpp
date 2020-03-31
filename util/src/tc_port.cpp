@@ -34,6 +34,25 @@ using namespace std;
 
 namespace tars
 {
+
+int TC_Port::strcmp(const char *s1, const char *s2)
+{
+#if TARGET_PLATFORM_WINDOWS
+	return ::_strcmp(s1, s2);
+#else
+	return ::strcmp(s1, s2);
+#endif
+}
+
+int TC_Port::strncmp(const char *s1, const char *s2, size_t n)
+{
+#if TARGET_PLATFORM_WINDOWS
+	return ::_strncmp(s1, s2, n);
+#else
+	return ::strncmp(s1, s2, n);
+#endif
+}
+
 int TC_Port::strcasecmp(const char *s1, const char *s2)
 {
 #if TARGET_PLATFORM_WINDOWS
