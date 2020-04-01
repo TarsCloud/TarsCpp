@@ -198,11 +198,12 @@ public:
      * @param buff
      * @return
      */
-    int submit(const string &method, const string &path, const map<string, string> &header, const vector<char> &buff);
+//    int submit(const string &method, const string &path, const map<string, string> &header, const vector<char> &buff);
+	int submit(const TC_HttpRequest &request);
 
-    /**
-     * @brief response
-     */
+	/**
+	 * @brief response
+	 */
     std::unordered_map<int, shared_ptr<TC_HttpResponse>> &responses() { return _responses; }
 
     /** 

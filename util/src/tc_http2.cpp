@@ -332,7 +332,8 @@ int TC_Http2Server::encodeResponse(const shared_ptr<TC_Http2Server::Http2Context
 		hdrs[n].valuelen    = it->second.size();
 	}
 
-	DataPack dataPack(context->response.getContent().c_str(), context->response.getContent().size());
+	const string &data = context->response.getContent();
+	DataPack dataPack(data.c_str(), data.size());
 
 	nghttp2_data_provider data_prd;
 	data_prd.source.ptr     = (void*)&dataPack;
@@ -497,23 +498,34 @@ TC_Http2Client::~TC_Http2Client()
 {
 }
 
-int TC_Http2Client::submit(const string &method, const string &path, const map<string, string> &header, const vector<char> &buff)
+int TC_Http2Client::submit(const TC_HttpRequest &request)
 {
 	std::vector<nghttp2_nv> nva;
 
 	const std::string smethod(":method");
-	nghttp2_nv nv1 = MAKE_STRING_NV(smethod, method);
-	if (!method.empty()) {
-		nva.push_back(nv1);
-	}
+	nghttp2_nv nv1 = MAKE_STRING_NV(smethod, request.getMethod());
+	nva.push_back(nv1);
 
 	const std::string spath(":path");
-	nghttp2_nv nv2 = MAKE_STRING_NV(spath, path);
-	if (!path.empty())
-		nva.push_back(nv2);
+	nghttp2_nv nv2 = MAKE_STRING_NV(spath, request.getRequest());
+	nva.push_back(nv2);
 
-	for (std::map<std::string, std::string>::const_iterator it(header.begin()); it != header.end(); ++ it)
+	const std::string sauthority(":authority");
+	nghttp2_nv nv3 = MAKE_STRING_NV(sauthority, request.getURL().getDomain());
+	nva.push_back(nv3);
+
+	const std::string sscheme(":scheme");
+	nghttp2_nv nv4 = MAKE_STRING_NV(sscheme, request.getURL().getScheme());
+	nva.push_back(nv4);
+
+// cout << "submit:" << request.getMethod() << ", " << request.getRequest() << ", " << request.getURL().getDomain() << ", " << request.getURL().getScheme() << endl;
+
+	const TC_Http::http_header_type &header = request.getHeaders();
+	for (auto it = header.begin(); it != header.end(); ++ it)
 	{
+		if(TC_Port::strcasecmp(it->first.c_str(), "Content-Length") == 0 || it->second.empty())
+			continue;
+
 		nghttp2_nv nv = MAKE_STRING_NV(it->first, it->second);
 		nva.push_back(nv);
 	}
@@ -521,9 +533,9 @@ int TC_Http2Client::submit(const string &method, const string &path, const map<s
 	nghttp2_data_provider* pData = NULL;
 	nghttp2_data_provider data;
 
-	DataPack dataPack(buff.data(), buff.size());
+	DataPack dataPack(request.getContent().c_str(), request.getContent().size());
 
-	if (!buff.empty())
+	if (!request.getContent().empty())
 	{
 		pData = &data;
 		data.source.ptr = (void*)&dataPack;
@@ -531,25 +543,24 @@ int TC_Http2Client::submit(const string &method, const string &path, const map<s
 	}
 
 	_err = nghttp2_submit_request(_session,
-	                                     NULL,
-	                                     nva.data(),
-	                                     nva.size(),
-	                                     pData,
-	                                     NULL);
+	                              NULL,
+	                              nva.data(),
+	                              nva.size(),
+	                              pData,
+	                              NULL);
 	if (_err < 0)
 	{
 		return _err;
 	}
 
-    int sid = _err;
-    
+	int sid = _err;
+
 	_err = nghttp2_session_send(_session);
 	if (_err != 0) {
 		return _err;
 	}
 
 	return sid;
-
 }
 
 TC_NetWorkBuffer::PACKET_TYPE TC_Http2Client::parseResponse(TC_NetWorkBuffer &in, pair<int, shared_ptr<TC_HttpResponse>> &out)

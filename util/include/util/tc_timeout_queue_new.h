@@ -17,9 +17,10 @@
 #ifndef __TC_TIMEOUT_QUEUE_NEW_H
 #define __TC_TIMEOUT_QUEUE_NEW_H
 
-#include <functional>
 #include <map>
 #include <list>
+#include <functional>
+// #include <ext/hash_map>
 #include <unordered_map>
 #include <iostream>
 #include <cassert>
@@ -53,7 +54,7 @@ public:
     typedef multimap<int64_t,NodeInfo>      time_type;
     typedef list<SendInfo>                  send_type;
 
-    using data_functor = std::function<void (T& )>;
+    typedef std::function<void(T&)> data_functor;
 
     struct PtrInfo
     {

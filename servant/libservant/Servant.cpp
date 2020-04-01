@@ -18,7 +18,7 @@
 #include "servant/BaseF.h"
 #include "servant/Application.h"
 #include "servant/AppCache.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 
 #include <cerrno>
 

@@ -50,7 +50,7 @@ class AdapterProxy;
 class ServantProxy;
 class ServantProxyCallback;
 class ObjectProxy;
-class TarsCurrent;
+class Current;
 class FDReactor;
 class Transceiver;
 class StatFProxy;
@@ -58,18 +58,26 @@ class StatReport;
 class ServantProxyFactory;
 class ObjectProxyFactory;
 class AsyncProcThread;
+class LocalRollLogger;
+class RemoteConfig;
+class RemoteTimeLogger;
+class RemoteNotify;
 
 typedef TC_AutoPtr<Communicator> CommunicatorPtr;
 typedef TC_AutoPtr<ServantProxy> ServantPrx;
 typedef TC_AutoPtr<ServantProxyCallback> ServantProxyCallbackPtr;
 typedef TC_AutoPtr<ObjectProxy> ObjectPrx;
-typedef TC_AutoPtr<TarsCurrent> TarsCurrentPtr;
+typedef TC_AutoPtr<Current> CurrentPtr;
 typedef TC_AutoPtr<StatFProxy> StatFPrx;
 typedef TC_AutoPtr<StatReport> StatReportPtr;
 typedef TC_AutoPtr<FDReactor> FDReactorPtr;
-// typedef TC_AutoPtr<ServantProxyFactory> ServantProxyFactoryPtr;
-//typedef TC_AutoPtr<ObjectProxyFactory> ObjectProxyFactoryPtr;
 typedef TC_AutoPtr<AsyncProcThread> AsyncProcThreadPtr;
+
+typedef CurrentPtr TarsCurrentPtr;
+typedef RemoteConfig TarsRemoteConfig;
+typedef RemoteNotify TarsRemoteNotify;
+typedef LocalRollLogger TarsRollLogger;
+typedef RemoteTimeLogger TarsTimeLogger;
 
 //////////////////////////////////////////////////////////////
 /**

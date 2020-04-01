@@ -16,7 +16,7 @@
 #include "util/tc_port.h"
 #include "servant/EndpointManager.h"
 #include "servant/ObjectProxy.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/AppCache.h"
 #include "servant/Application.h"
 #include "servant/StatReport.h"
@@ -34,6 +34,7 @@ QueryEpBase::QueryEpBase(Communicator * pComm, bool bFirstNetThread,bool bInterf
 , _locator("")
 , _valid(false)
 , _weightType(E_LOOP)
+, _rootServant(true)
 , _requestRegistry(false)
 , _requestTimeout(0)
 , _timeoutInterval(5*1000)
@@ -158,12 +159,19 @@ void QueryEpBase::setObjName(const string & sObjName)
     if (pos != string::npos)
     {
         //[直接连接]指定服务的IP和端口列表
-
         _objName = sObjName.substr(0,pos);
 
         sEndpoints = sObjName.substr(pos + 1);
 
-        _direct = true;
+	    pos = _objName.find_first_of("#");
+
+	    if(pos != string::npos)
+	    {
+		    _rootServant    = false;
+		    _objName        = _objName.substr(0, pos);
+	    }
+
+	    _direct = true;
 
         _valid = true;
     }
@@ -181,6 +189,13 @@ void QueryEpBase::setObjName(const string & sObjName)
             TLOGERROR("[TARS][QueryEpBase::setObjName locator is not valid,_locator:" << _locator << "]" << endl);
             throw TarsRegistryException("locator is not valid,_locator:" + _locator);
         }
+
+	    pos = _objName.find_first_of("#");
+	    if(pos != string::npos)
+	    {
+		    _objName = _objName.substr(0, pos);
+	    }
+
 
         _queryFPrx = _communicator->stringToProxy<QueryFPrx>(_locator);
 
@@ -378,6 +393,9 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
         //内部请求主控都是异步请求
         //接口请求主控第一次是同步请求
         bool bSync = (!_valid && _interfaceReq);
+	    //如果是异步且不是根servant(通过#1创建的servant, 不主动更新主控信息)
+        if(!bSync && !_rootServant)
+	        return;
         try
         {
             if(bSync)
@@ -704,7 +722,7 @@ EndpointManager::~EndpointManager()
     }
 }
 
-void EndpointManager::notifyEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive, bool bSync)
+void EndpointManager::updateEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive)
 {
     set<EndpointInfo>::const_iterator iter;
     map<string,AdapterProxy*>::iterator iterAdapter;
@@ -786,6 +804,13 @@ void EndpointManager::notifyEndpoints(const set<EndpointInfo> & active, const se
     }
 
     _update = true;
+}
+
+void EndpointManager::notifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive,bool bNotify)
+{
+	updateEndpoints(active, inactive);
+
+    _objectProxy->onNotifyEndpoints(active, inactive);
 }
 
 void EndpointManager::doNotify()

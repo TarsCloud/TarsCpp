@@ -77,7 +77,7 @@ public:
      * @param verifyClient
      * @return
      */
-	static shared_ptr<CTX> newCtx(const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient);
+	static shared_ptr<CTX> newCtx(const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient, const string &ciphers);
 
 	/**
 	 * new ssl

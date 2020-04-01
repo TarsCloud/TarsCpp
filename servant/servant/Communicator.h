@@ -26,8 +26,8 @@
 #include "servant/ObjectProxyFactory.h"
 #include "servant/AsyncProcThread.h"
 #include "servant/CommunicatorEpoll.h"
-#include "servant/TarsLogger.h"
-#ifdef _USE_OPENTRACKING
+#include "servant/RemoteLogger.h"
+#ifdef TARS_OPENTRACKING
 #include "zipkin/opentracing.h"
 #include "zipkin/tracer.h"
 #include "zipkin/ip_address.h"
@@ -77,10 +77,11 @@ struct ClientConfig
 /**
  * 通信器,用于创建和维护客户端proxy
  */
-class Communicator : public TC_HandleBase, public TC_ThreadRecMutex
+class SVT_DLL_API Communicator : public TC_HandleBase, public TC_ThreadRecMutex
 {
 public:
 
+	typedef std::function<void(ReqMessagePtr)> custom_callback;
     /**
      * 构造函数
      */
@@ -195,6 +196,11 @@ public:
 	 */
 	string getServantProperty(const string &sObj, const string& name);
 
+	/**
+	 * 设置自动回调对象
+	 */
+	void setServantCustomCallback(const string &sObj, custom_callback callback);
+
     /**
      * 上报统计
      * @return StatReport*
@@ -218,12 +224,12 @@ public:
      */
     vector<TC_Endpoint> getEndpoint(const string & objName);
 
-    /**
-     * 获取obj对应可用ip port列表 包括所有IDC的
-     * @param sObjName
-     * @return vector<TC_Endpoint>
-     */
-    vector<TC_Endpoint> getEndpoint4All(const string & objName);
+   /**
+    * 获取obj对应可用ip port列表 包括所有IDC的
+    * @param sObjName
+    * @return vector<TC_Endpoint>
+    */
+   vector<TC_Endpoint> getEndpoint4All(const string& objName);
 
     /**
      * 结束
@@ -244,7 +250,7 @@ public:
      * get resource info
      * @return
      */
-	string getResouresInfo();
+	string getResourcesInfo();
 
 protected:
     /**
@@ -376,6 +382,16 @@ protected:
 	unordered_map<string, shared_ptr<TC_OpenSSL::CTX>> _objCtx;
 #endif
 
+	/**
+	 *
+	 */
+	TC_SpinLock                                    _callbackLock;
+
+	/**
+	 * callback
+	 */
+	unordered_map<string, custom_callback>         _callback;
+
     /*
      * 异步线程数组
      */
@@ -396,7 +412,7 @@ protected:
      */
     size_t                 _asyncSeq = 0;
 
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
 public:
     struct TraceManager:public TC_HandleBase{
         zipkin::ZipkinOtTracerOptions _zipkin_options;

@@ -18,7 +18,7 @@
 #define __TARS_NOTIFY_OBSERVER_H_
 
 #include "servant/Global.h"
-#include "servant/TarsCurrent.h"
+#include "servant/Current.h"
 #include "util/tc_singleton.h"
 
 namespace tars

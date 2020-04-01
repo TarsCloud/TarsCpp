@@ -15,7 +15,7 @@
  */
 
 #include "servant/ServantProxyFactory.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 
 namespace tars
 {

@@ -17,7 +17,7 @@
 #include "servant/AsyncProcThread.h"
 #include "servant/Communicator.h"
 #include "servant/StatReport.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 
 namespace tars
 {
@@ -119,7 +119,7 @@ void AsyncProcThread::callback(ReqMessage * msg)
 	try
 	{
 		ReqMessagePtr msgPtr = msg;
-		msg->callback->onDispatch(msgPtr);
+		msg->callback->dispatch(msgPtr);
 	}
 	catch (exception& e)
 	{

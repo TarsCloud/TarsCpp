@@ -159,7 +159,7 @@ string TC_MD5::md5file(const string& fileFullName)
     MD5_CTX context;
     if(( f = fopen( fileFullName.c_str(), "rb" )) == NULL )
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_MD5_Exception, "[TC_MD5::md5file] fopen '" + fileFullName + "', error");
+        THROW_EXCEPTION_SYSCODE(TC_MD5_Exception, "[TC_MD5::md5file] fopen '" + fileFullName + "', error");
     }
 
     md5init(&context);

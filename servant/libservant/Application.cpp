@@ -16,7 +16,7 @@
 
 #include "util/tc_option.h"
 #include "util/tc_common.h"
-#include "servant/TarsNodeF.h"
+#include "servant/KeepAliveNodeF.h"
 #include "servant/Application.h"
 #include "servant/AppProtocol.h"
 #include "servant/AdminServant.h"
@@ -95,6 +95,7 @@ std::string ServerConfig::CA;
 std::string ServerConfig::Cert;
 std::string ServerConfig::Key;
 bool ServerConfig::VerifyClient = false;
+std::string ServerConfig::Ciphers;
 #endif
 
 map<string, string> ServerConfig::Context;
@@ -198,7 +199,7 @@ void Application::waitForShutdown()
 
     destroyApp();
 
-    TarsRemoteNotify::getInstance()->report("stop");
+    RemoteNotify::getInstance()->report("stop");
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(100)); //稍微休息一下, 让当前处理包能够回复
 
@@ -302,7 +303,7 @@ bool Application::cmdSetLogLevel(const string& command, const string& params, st
 
     string level = TC_Common::trim(params);
 
-    int ret = TarsRollLogger::getInstance()->logger()->setLogLevel(level);
+    int ret = LocalRollLogger::getInstance()->logger()->setLogLevel(level);
 
     if(ret == 0)
     {
@@ -372,13 +373,13 @@ bool Application::cmdEnableDayLog(const string& command, const string& params, s
 
     if(vParams[0] == "local")
     {
-        TarsTimeLogger::getInstance()->enableLocal(sFile,bEnable);
+        RemoteTimeLogger::getInstance()->enableLocal(sFile,bEnable);
         return true;
     }
 
     if(vParams[0] == "remote")
     {
-        TarsTimeLogger::getInstance()->enableRemote(sFile,bEnable);
+        RemoteTimeLogger::getInstance()->enableRemote(sFile,bEnable);
         return true;
     }
 
@@ -393,14 +394,14 @@ bool Application::cmdLoadConfig(const string& command, const string& params, str
 
     string filename = TC_Common::trim(params);
 
-    if (TarsRemoteConfig::getInstance()->addConfig(filename, result,false))
+    if (RemoteConfig::getInstance()->addConfig(filename, result,false))
     {
-        TarsRemoteNotify::getInstance()->report(result);
+        RemoteNotify::getInstance()->report(result);
 
         return true;
     }
 
-    TarsRemoteNotify::getInstance()->report(result);
+    RemoteNotify::getInstance()->report(result);
 
     return true;
 }
@@ -453,6 +454,33 @@ bool Application::cmdViewVersion(const string& command, const string& params, st
     return true;
 }
 
+bool Application::cmdViewBuildID(const string& command, const string& params, string& result)
+{
+    #define YEARSUF ((__DATE__ [9] - '0') * 10 + (__DATE__ [10] - '0'))
+
+    #define MONTH (__DATE__ [2] == 'n' ? (__DATE__ [1] == 'a' ? 0 : 5)  \
+        : __DATE__ [2] == 'b' ? 1 \
+        : __DATE__ [2] == 'r' ? (__DATE__ [0] == 'M' ? 2 : 3) \
+        : __DATE__ [2] == 'y' ? 4 \
+        : __DATE__ [2] == 'l' ? 6 \
+        : __DATE__ [2] == 'g' ? 7 \
+        : __DATE__ [2] == 'p' ? 8 \
+        : __DATE__ [2] == 't' ? 9 \
+        : __DATE__ [2] == 'v' ? 10 : 11)
+
+    #define DAY ((__DATE__ [4] == ' ' ? 0 : __DATE__ [4] - '0') * 10 \
+        + (__DATE__ [5] - '0'))
+
+	#define TIMEINT ((((((__TIME__[0] - '0') * 10 + (__TIME__[1] - '0')) * 10 \
+        + (__TIME__[3] - '0')) * 10 + (__TIME__[4] - '0')) * 10 \
+        + (__TIME__[6] - '0')) * 10 + (__TIME__[7] - '0'))
+
+    char buildTime[50] = {0};
+    sprintf(buildTime, "%d.%02d%02d.%06d", YEARSUF, MONTH + 1, DAY, TIMEINT);
+    result = "$" + ServerConfig::Application + "." + ServerConfig::ServerName + "-" + string(buildTime) + "$";
+    return true;
+}
+
 bool Application::cmdLoadProperty(const string& command, const string& params, string& result)
 {
     try
@@ -472,15 +500,15 @@ bool Application::cmdLoadProperty(const string& command, const string& params, s
         //加载远程对象
         ServerConfig::Log = _conf.get("/tars/application/server<log>");
 
-        TarsTimeLogger::getInstance()->setLogInfo(_communicator, ServerConfig::Log, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath,setDivision());
+        RemoteTimeLogger::getInstance()->setLogInfo(_communicator, ServerConfig::Log, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath,setDivision());
 
         ServerConfig::Config = _conf.get("/tars/application/server<config>");
 
-        TarsRemoteConfig::getInstance()->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath,setDivision(), 5);
+        RemoteConfig::getInstance()->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath,setDivision(), 5);
 
         ServerConfig::Notify = _conf.get("/tars/application/server<notify>");
 
-        TarsRemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LocalIp, setDivision());
+        RemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision());
 
         result = "loaded config items:\r\n" + sResult +
                  "log=" + ServerConfig::Log + "\r\n" +
@@ -591,7 +619,7 @@ bool Application::cmdViewResource(const string& command, const string& params, s
 
 	ostringstream os;
 
-	os << _communicator->getResouresInfo() << endl;
+	os << _communicator->getResourcesInfo() << endl;
 
 	os << OUT_LINE << endl;
 
@@ -626,13 +654,13 @@ bool Application::addConfig(const string &filename)
 {
     string result;
 
-    if (TarsRemoteConfig::getInstance()->addConfig(filename, result, false))
+    if (RemoteConfig::getInstance()->addConfig(filename, result, false))
     {
-        TarsRemoteNotify::getInstance()->report(result);
+        RemoteNotify::getInstance()->report(result);
 
         return true;
     }
-    TarsRemoteNotify::getInstance()->report(result);
+    RemoteNotify::getInstance()->report(result);
 
     return true;
 }
@@ -642,15 +670,15 @@ bool Application::addAppConfig(const string &filename)
     string result = "";
 
     // true-只获取应用级别配置
-    if (TarsRemoteConfig::getInstance()->addConfig(filename, result, true))
+    if (RemoteConfig::getInstance()->addConfig(filename, result, true))
 
     {
-        TarsRemoteNotify::getInstance()->report(result);
+        RemoteNotify::getInstance()->report(result);
 
         return true;
     }
 
-    TarsRemoteNotify::getInstance()->report(result);
+    RemoteNotify::getInstance()->report(result);
 
     return true;
 }
@@ -723,7 +751,7 @@ void Application::main(const TC_Option &option)
             catch (exception & ex)
             {
                 keepActiving.detach();
-                TarsRemoteNotify::getInstance()->report("exit: " + string(ex.what()));
+                RemoteNotify::getInstance()->report("exit: " + string(ex.what()));
 	            std::this_thread::sleep_for(std::chrono::milliseconds(100)); //稍微休息一下, 让当前处理包能够回复
 
 	            cout << "[init exception]:" << ex.what() << endl;
@@ -748,6 +776,9 @@ void Application::main(const TC_Option &option)
 
         //查看编译的TARS版本
         TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_VIEW_VERSION, Application::cmdViewVersion);
+
+        //查看服务buildid(编译时间）
+        TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_VIEW_BID, Application::cmdViewBuildID);
 
         //加载配置文件中的属性信息
         TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_LOAD_PROPERTY, Application::cmdLoadProperty);
@@ -777,7 +808,7 @@ void Application::main(const TC_Option &option)
         TARS_KEEPALIVE("");
 
         //发送给notify表示服务启动了
-        TarsRemoteNotify::getInstance()->report("restart");
+        RemoteNotify::getInstance()->report("restart");
 
         //ctrl + c能够完美结束服务
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
@@ -811,7 +842,7 @@ void Application::main(const TC_Option &option)
     {
         cout << "[main exception]:" << ex.what() << endl;
 
-        TarsRemoteNotify::getInstance()->report("exit: " + string(ex.what()));
+        RemoteNotify::getInstance()->report("exit: " + string(ex.what()));
 
 	    std::this_thread::sleep_for(std::chrono::milliseconds(100)); //稍微休息一下, 让当前处理包能够回复
 
@@ -819,7 +850,7 @@ void Application::main(const TC_Option &option)
     }
 
     //初始化完毕后, 日志再修改为异步
-    TarsRollLogger::getInstance()->sync(false);
+    LocalRollLogger::getInstance()->sync(false);
 }
 
 void Application::parseConfig(const TC_Option &op)
@@ -971,12 +1002,12 @@ void Application::outServer(ostream &os)
 	os << TC_Common::outfill("BackPacketLimit(backpacketlimit)")  << ServerConfig::BackPacketLimit<< endl;
 	os << TC_Common::outfill("BackPacketMin(backpacketmin)")  << ServerConfig::BackPacketMin<< endl;
 
-#if TAF_SSL
+#if TARS_SSL
 	cout << TC_Common::outfill("Ca(ca)")                    << ServerConfig::CA << endl;
 	cout << TC_Common::outfill("Cert(cert)")              << ServerConfig::Cert << endl;
 	cout << TC_Common::outfill("Key(key)")                  << ServerConfig::Key << endl;
 	cout << TC_Common::outfill("VerifyClient(verifyclient)")      << ServerConfig::VerifyClient << endl;
-//	cout << TC_Common::outfill("Ciphers(ciphers)")               << ServerConfig::Ciphers << endl;
+	cout << TC_Common::outfill("Ciphers(ciphers)")               << ServerConfig::Ciphers << endl;
 #endif
 
 }
@@ -1056,9 +1087,10 @@ void Application::initializeServer()
 	ServerConfig::Cert              = _conf.get("/tars/application/server<cert>");
 	ServerConfig::Key               = _conf.get("/tars/application/server<key>");
 	ServerConfig::VerifyClient      = _conf.get("/tars/application/server<verifyclient>","0")=="0"?false:true;
+	ServerConfig::Ciphers           = _conf.get("/tars/application/server<ciphers>");
 
 	if(!ServerConfig::Cert.empty()) {
-		_ctx = TC_OpenSSL::newCtx(ServerConfig::CA, ServerConfig::Cert, ServerConfig::Key, ServerConfig::VerifyClient);
+		_ctx = TC_OpenSSL::newCtx(ServerConfig::CA, ServerConfig::Cert, ServerConfig::Key, ServerConfig::VerifyClient, ServerConfig::Ciphers);
 
 		if (!_ctx) {
 			TLOGERROR("[TARS]load server ssl error, ca:" << ServerConfig::CA << endl);
@@ -1120,11 +1152,11 @@ void Application::initializeServer()
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化本地Log
     cout << OUT_LINE << "\n" << TC_Common::outfill("[set roll logger] ") << "OK" << endl;
-    TarsRollLogger::getInstance()->setLogInfo(ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath, ServerConfig::LogSize, ServerConfig::LogNum, _communicator, ServerConfig::Log);
-    _epollServer->setLocalLogger(TarsRollLogger::getInstance()->logger());
+    LocalRollLogger::getInstance()->setLogInfo(ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath, ServerConfig::LogSize, ServerConfig::LogNum, _communicator, ServerConfig::Log);
+    _epollServer->setLocalLogger(LocalRollLogger::getInstance()->logger());
 
     //初始化是日志为同步
-    TarsRollLogger::getInstance()->sync(true);
+    LocalRollLogger::getInstance()->sync(true);
 
     //设置日志级别
     string level = AppCache::getInstance()->get("logLevel");
@@ -1135,28 +1167,28 @@ void Application::initializeServer()
 
 	ServerConfig::LogLevel = TC_Common::upper(level);
 
-	TarsRollLogger::getInstance()->logger()->setLogLevel(ServerConfig::LogLevel);
+	LocalRollLogger::getInstance()->logger()->setLogLevel(ServerConfig::LogLevel);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到LogServer代理
     cout << OUT_LINE << "\n" << TC_Common::outfill("[set time logger] ") << "OK" << endl;
     bool bLogStatReport = (_conf.get("/tars/application/server<logstatreport>", "0") == "1") ? true : false;
-    TarsTimeLogger::getInstance()->setLogInfo(_communicator, ServerConfig::Log, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath, setDivision(), bLogStatReport);
+    RemoteTimeLogger::getInstance()->setLogInfo(_communicator, ServerConfig::Log, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath, setDivision(), bLogStatReport);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到配置中心代理
     cout << OUT_LINE << "\n" << TC_Common::outfill("[set remote config] ") << "OK" << endl;
-    TarsRemoteConfig::getInstance()->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath,setDivision());
+    RemoteConfig::getInstance()->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath,setDivision());
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到信息中心代理
     cout << OUT_LINE << "\n" << TC_Common::outfill("[set remote notify] ") << "OK" << endl;
-    TarsRemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision(), ServerConfig::LocalIp);
+    RemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision());
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到Node的代理
     cout << OUT_LINE << "\n" << TC_Common::outfill("[set node proxy]") << "OK" << endl;
-    TarsNodeFHelper::getInstance()->setNodeInfo(_communicator, ServerConfig::Node, ServerConfig::Application, ServerConfig::ServerName);
+    KeepAliveNodeFHelper::getInstance()->setNodeInfo(_communicator, ServerConfig::Node, ServerConfig::Application, ServerConfig::ServerName);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化管理对象
@@ -1227,8 +1259,9 @@ void Application::setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const stri
 		string key = _conf.get("/tars/application/server/" + name + "<key>");
 		bool verifyClient =
 			_conf.get("/tars/application/server/" + name + "<verifyclient>", "0") == "0" ? false : true;
+		string ciphers = _conf.get("/tars/application/server/" + name + "<ciphers>");
 
-		shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx(ca, cert, key, verifyClient);
+		shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx(ca, cert, key, verifyClient, ciphers);
 
 		if (!ctx) {
 			TLOGERROR("[TARS]load server ssl error, cert:" << cert << endl);
@@ -1340,7 +1373,7 @@ void Application::checkServantNameValid(const string& servant, const string& sPr
 
         os << "Servant '" << servant << "' error: must be start with '" << sPrefix << "'";
 
-        TarsRemoteNotify::getInstance()->report("exit:" + os.str());
+        RemoteNotify::getInstance()->report("exit:" + os.str());
 
 	    std::this_thread::sleep_for(std::chrono::milliseconds(100)); //稍微休息一下, 让当前处理包能够回复
 

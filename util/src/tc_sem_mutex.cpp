@@ -64,7 +64,7 @@ void TC_SemMutex::init(key_t iKey)
         //将所有信号量的值设置为0
         if ( semctl( iSemID, 0, SETALL, arg ) == -1 )
         {
-            TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] semctl error");
+            THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] semctl error");
             // throw TC_SemMutex_Exception("[TC_SemMutex::init] semctl error", TC_Exception::getSystemCode());
         }
     }
@@ -73,14 +73,14 @@ void TC_SemMutex::init(key_t iKey)
         //信号量已经存在
         if ( errno != EEXIST )
         {
-            TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] sem has exist error");
+            THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] sem has exist error");
             // throw TC_SemMutex_Exception("[TC_SemMutex::init] sem has exist error", TC_Exception::getSystemCode());
         }
 
         //连接信号量
         if ( (iSemID = semget( iKey, 2, 0666 )) == -1 )
         {
-            TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] connect sem error");
+            THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] connect sem error");
             // throw TC_SemMutex_Exception("[TC_SemMutex::init] connect sem error", TC_Exception::getSystemCode());
         }
     }
@@ -144,7 +144,7 @@ bool TC_SemMutex::tryrlock() const
         }
         else
         {
-            TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::tryrlock] semop error");
+            THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::tryrlock] semop error");
             // throw TC_SemMutex_Exception("[TC_SemMutex::tryrlock] semop error", TC_Exception::getSystemCode());
         }
     }
@@ -208,7 +208,7 @@ bool TC_SemMutex::trywlock() const
         }
         else
         {
-            TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::trywlock] semop error");
+            THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::trywlock] semop error");
             // throw TC_SemMutex_Exception("[TC_SemMutex::trywlock] semop error", TC_Exception::getSystemCode());
         }
     }
@@ -252,14 +252,14 @@ void TC_SemMutex::init(key_t iKey)
     _mutex = CreateMutex(NULL, FALSE, key.c_str());  
     if (_mutex == NULL)  
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] CreateMutex error");
+        THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] CreateMutex error");
     }
     _readEvent = CreateEvent(NULL, TRUE, TRUE, rkey.c_str());  
     if (_readEvent == NULL)  
     {
         CloseHandle(_mutex); 
         _mutex = NULL;
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] CreateEvent error");
+        THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] CreateEvent error");
     }  
     _writeEvent = CreateEvent(NULL, TRUE, TRUE, wkey.c_str());  
     if (_writeEvent == NULL)  
@@ -268,7 +268,7 @@ void TC_SemMutex::init(key_t iKey)
         _mutex = NULL;
         CloseHandle(_readEvent); 
         _readEvent = NULL;
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] CreateEvent error");
+        THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] CreateEvent error");
     }   
     _semKey = iKey; 
 }
@@ -282,7 +282,7 @@ void TC_SemMutex::addWriter() const
         ReleaseMutex(_mutex);  
         break;  
     default:  
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::addWriter] WaitForSingleObject error");
+        THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::addWriter] WaitForSingleObject error");
     }  
 }  
 void TC_SemMutex::removeWriter() const 
@@ -295,7 +295,7 @@ void TC_SemMutex::removeWriter() const
         ReleaseMutex(_mutex);  
         break;  
     default:  
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::removeWriter] WaitForSingleObject error");
+        THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::removeWriter] WaitForSingleObject error");
     }
 }  
 void TC_SemMutex::rlock() const
@@ -313,7 +313,7 @@ void TC_SemMutex::rlock() const
         assert(_writers == 0);  
         break;  
     default:  
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::rlock] WaitForSingleObject error");
+        THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::rlock] WaitForSingleObject error");
     }  
 }
 void TC_SemMutex::unrlock( ) const
@@ -335,7 +335,7 @@ bool TC_SemMutex::tryrlock() const
         case WAIT_TIMEOUT:  
             continue;  
         default:  
-            TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::tryrlock] WaitForSingleObject error");
+            THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::tryrlock] WaitForSingleObject error");
         }  
     } 
 }
@@ -359,7 +359,7 @@ void TC_SemMutex::wlock() const
         break;  
     default:  
         removeWriter();  
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::wlock] WaitForSingleObject error");
+        THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::wlock] WaitForSingleObject error");
     }  
 }
 void TC_SemMutex::unwlock() const
@@ -401,7 +401,7 @@ void TC_SemMutex::unlockImp() const
         ReleaseMutex(_mutex);  
         break;  
     default:  
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::unlockImp] WaitForSingleObject error");
+        THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::unlockImp] WaitForSingleObject error");
     }  
 }  
 DWORD TC_SemMutex::tryReadLockOnce() const 

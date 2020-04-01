@@ -21,7 +21,7 @@
 #include "servant/AppCache.h"
 #include "util/tc_common.h"
 #include "util/tc_clientsocket.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 
 namespace tars
 {
@@ -39,7 +39,8 @@ ObjectProxy::ObjectProxy(CommunicatorEpoll * pCommunicatorEpoll, const string & 
 
     if(pos != string::npos)
     {
-        _name = sObjectProxyName.substr(0,pos);
+        _name       = sObjectProxyName.substr(0,pos);
+	    _address    = sObjectProxyName.substr(pos+1);
     }
     else
     {
@@ -53,8 +54,17 @@ ObjectProxy::ObjectProxy(CommunicatorEpoll * pCommunicatorEpoll, const string & 
         }
     }
 
-    _proxyProtocol.requestFunc  = ProxyProtocol::tarsRequest;
+	pos = _name.find_first_of('#');
+
+	if(pos != string::npos)
+	{
+		_hash = _name.substr(pos+1);
+		_name = _name.substr(0,pos);
+	}
+
+    _proxyProtocol.requestFunc = ProxyProtocol::tarsRequest;
     _proxyProtocol.responseFunc = ProxyProtocol::tarsResponse;
+
 
     _endpointManger.reset(new EndpointManager(this, _communicatorEpoll->getCommunicator(), sObjectProxyName, pCommunicatorEpoll->isFirstNetThread(), setName));
 
@@ -107,12 +117,6 @@ ServantProxyCallbackPtr ObjectProxy::getPushCallback()
     return _pushCallback;
 }
 
-//
-//const string& ObjectProxy::name() const
-//{
-//    return _name;
-//}
-
 void ObjectProxy::setProxyProtocol(const ProxyProtocol& protocol)
 {
     if(_hasSetProtocol)
@@ -149,7 +153,7 @@ vector<SocketOpt>& ObjectProxy::getSocketOpt()
 //
 //bool ObjectProxy::invoke_sync(ReqMessage * msg)
 //{
-//	TLOGTAF("[TAF][ObjectProxy::invoke_sync, " << _name << ", begin]" << endl);
+//	TLOGTARS("[TARS][ObjectProxy::invoke_sync, " << _name << ", begin]" << endl);
 //
 //	//选择一个远程服务的Adapter来调用
 //	AdapterProxy * pAdapterProxy = NULL;
@@ -198,42 +202,106 @@ void ObjectProxy::invoke(ReqMessage * msg)
     }
 
 	msg->adapter = pAdapterProxy;
+
+    //连接还没有建立, 暂时先放队列里面
+	if(!msg->adapter->getTransceiver()->hasConnected())
+    {
+        bool bRet = _reqTimeoutQueue.push(msg,msg->request.iTimeout+msg->iBeginTime);
+
+        assert(bRet);
+
+        //把数据缓存在obj里面
+        TLOGTARS("[TARS][ObjectProxy::invoke, " << _name << ", select adapter proxy not connected (have not inovoke reg)]" << endl);
+        return;
+    }
+
     pAdapterProxy->invoke(msg);
+}
+
+
+void ObjectProxy::onConnect(AdapterProxy *adapterProxy)
+{
+	while(!_reqTimeoutQueue.empty())
+	{
+		TLOGTARS("[TARS][ObjectProxy::doInvoke, " << _name << ", pop...]" << endl);
+
+		ReqMessage * msg = NULL;
+		_reqTimeoutQueue.pop(msg);
+
+		assert(msg != NULL);
+
+		if(msg->adapter != NULL && msg->adapter != adapterProxy)
+		{
+			//选择一个远程服务的Adapter来调用
+			_endpointManger->selectAdapterProxy(msg, adapterProxy, false);
+
+			if (!adapterProxy)
+			{
+				//这里肯定是请求过主控
+				TLOGERROR("[TARS][ObjectProxy::doInvoke, " << _name << ", selectAdapterProxy is null]" << endl);
+				msg->response->iRet = TARSADAPTERNULL;
+				doInvokeException(msg);
+				return;
+			}
+
+			msg->adapter = adapterProxy;
+		}
+		else
+		{
+			msg->adapter = adapterProxy;
+		}
+
+		adapterProxy->invoke(msg);
+	}
+}
+
+void ObjectProxy::onNotifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
+{
+	if(_servantProxy) {
+		_servantProxy->onNotifyEndpoints(active, inactive);
+	}
 }
 
 void ObjectProxy::doInvoke()
 {
     TLOGTARS("[TARS][ObjectProxy::doInvoke, objname:" << _name << ", begin...]" << endl);
 
-    while(!_reqTimeoutQueue.empty())
-    {
-        TLOGTARS("[TARS][ObjectProxy::doInvoke, objname:" << _name << ", pop...]" << endl);
+    for(auto it = _reqTimeoutQueue.begin(); it != _reqTimeoutQueue.end(); ++it)
+	{
+		ReqMessage * msg = (*it).ptr;
 
-        ReqMessage * msg = NULL;
-        _reqTimeoutQueue.pop(msg);
+		AdapterProxy* adapterProxy;
 
-        assert(msg != NULL);
-
-        //选择一个远程服务的Adapter来调用
-        AdapterProxy * pAdapterProxy = NULL;
-        _endpointManger->selectAdapterProxy(msg,pAdapterProxy, false);
-
-        if(!pAdapterProxy)
-        {
-            //这里肯定是请求过主控
-            TLOGERROR("[TARS][ObjectProxy::doInvoke, objname:" << _name << ", selectAdapterProxy is null]" << endl);
-
-            msg->response->iRet = TARSADAPTERNULL;
-
-            doInvokeException(msg);
-
-            return;
-        }
-
-        msg->adapter = pAdapterProxy;
-
-        pAdapterProxy->invoke(msg);
-    }
+		//选择一个远程服务的Adapter来调用, selectAdapterProxy会发起连接
+		_endpointManger->selectAdapterProxy(msg, adapterProxy, false);
+	}
+//
+//    while(!_reqTimeoutQueue.empty())
+//    {
+//        TLOGTARS("[TARS][ObjectProxy::doInvoke, " << _name << ", pop...]" << endl);
+//
+//        ReqMessage * msg = NULL;
+//        _reqTimeoutQueue.pop(msg);
+//
+//        assert(msg != NULL);
+//
+//	    AdapterProxy* adapterProxy;
+//
+//        //选择一个远程服务的Adapter来调用
+//        _endpointManger->selectAdapterProxy(msg, adapterProxy, false);
+//
+//        if (!adapterProxy) {
+//	        //这里肯定是请求过主控
+//	        TLOGERROR("[TARS][ObjectProxy::doInvoke, " << _name << ", selectAdapterProxy is null]" << endl);
+//	        msg->response->iRet = JCEADAPTERNULL;
+//	        doInvokeException(msg);
+//	        return;
+//        }
+//
+//        msg->adapter = adapterProxy;
+//
+//	    adapterProxy->invoke(msg);
+//    }
 }
 
 void ObjectProxy::doInvokeException(ReqMessage * msg)
@@ -280,7 +348,7 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
                 //比如获取endpoint
                 try
                 {
-                    msg->callback->onDispatch(msgPtr);
+                    msg->callback->dispatch(msgPtr);
                 }
                 catch(exception & e)
                 {
@@ -346,5 +414,16 @@ void ObjectProxy::mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg)
     }
 }
 
+void ObjectProxy::onSetInactive(const EndpointInfo& ep)
+{
+	const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+	for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
+	{
+		if(vAdapterProxy[iAdapter]->endpoint() == ep)
+		{
+			vAdapterProxy[iAdapter]->onSetInactive();
+		}
+	}
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////
 }

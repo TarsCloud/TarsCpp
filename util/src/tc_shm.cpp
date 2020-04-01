@@ -67,7 +67,7 @@ void TC_Shm::init(size_t iShmSize, key_t iKey, bool bOwner)
         //有可能是已经存在同样的key_shm,则试图连接
         if ((_shemID = shmget(iKey, iShmSize, 0666)) < 0)
         {
-            TARS_THROW_EXCEPTION_SYSCODE(TC_Shm_Exception, "[TC_Shm::init()] shmget error");
+            THROW_EXCEPTION_SYSCODE(TC_Shm_Exception, "[TC_Shm::init()] shmget error");
             // throw TC_Shm_Exception("[TC_Shm::init()] shmget error", TC_Exception::getSystemCode());
         }
     }
@@ -79,7 +79,7 @@ void TC_Shm::init(size_t iShmSize, key_t iKey, bool bOwner)
     //try to access shm
     if ((_pshm = shmat(_shemID, NULL, 0)) == (char *) - 1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Shm_Exception, "[TC_Shm::init()] shmat error");
+        THROW_EXCEPTION_SYSCODE(TC_Shm_Exception, "[TC_Shm::init()] shmat error");
         // throw TC_Shm_Exception("[TC_Shm::init()] shmat error", TC_Exception::getSystemCode());
     }
 

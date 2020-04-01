@@ -30,9 +30,9 @@
 #include "servant/ServantHandle.h"
 #include "servant/StatReport.h"
 #include "servant/CommunicatorFactory.h"
-#include "servant/TarsLogger.h"
-#include "servant/TarsConfig.h"
-#include "servant/TarsNotify.h"
+#include "servant/RemoteLogger.h"
+#include "servant/RemoteConfig.h"
+#include "servant/RemoteNotify.h"
 
 #if TARS_SSL
 #include "util/tc_openssl.h"
@@ -62,27 +62,28 @@ namespace tars
 #define TARS_CMD_CLOSE_CORE          "tars.closecore"         //设置服务的core limit:  tars.setlimit [yes|no]
 #define TARS_CMD_RELOAD_LOCATOR      "tars.reloadlocator"     //重新加载locator的配置信息
 #define TARS_CMD_RESOURCE            "tars.resource"          //get resource
+#define TARS_CMD_VIEW_BID            "tars.bid"               //查看服务编译时间,build id
 //////////////////////////////////////////////////////////////////////
 /**
  * 通知信息给notify服务, 展示在页面上
  */
 //上报普通信息
-#define TARS_NOTIFY_NORMAL(info)     {TarsRemoteNotify::getInstance()->notify(NOTIFYNORMAL, info);}
+#define TARS_NOTIFY_NORMAL(info)     {RemoteNotify::getInstance()->notify(NOTIFYNORMAL, info);}
 
 //上报警告信息
-#define TARS_NOTIFY_WARN(info)       {TarsRemoteNotify::getInstance()->notify(NOTIFYWARN, info);}
+#define TARS_NOTIFY_WARN(info)       {RemoteNotify::getInstance()->notify(NOTIFYWARN, info);}
 
 //上报错误信息
-#define TARS_NOTIFY_ERROR(info)      {TarsRemoteNotify::getInstance()->notify(NOTIFYERROR, info);}
+#define TARS_NOTIFY_ERROR(info)      {RemoteNotify::getInstance()->notify(NOTIFYERROR, info);}
 
 //发送心跳给node 多个adapter分别上报
-#define TARS_KEEPALIVE(adapter)      {TarsNodeFHelper::getInstance()->keepAlive(adapter);}
+#define TARS_KEEPALIVE(adapter)      {KeepAliveNodeFHelper::getInstance()->keepAlive(adapter);}
 
 //发送激活信息
-#define TARS_KEEPACTIVING            {TarsNodeFHelper::getInstance()->keepActiving();}
+#define TARS_KEEPACTIVING            {KeepAliveNodeFHelper::getInstance()->keepActiving();}
 
 //发送TARS版本给node
-#define TARS_REPORTVERSION(x)        {TarsNodeFHelper::getInstance()->reportVersion(TARS_VERSION);}
+#define TARS_REPORTVERSION(x)        {KeepAliveNodeFHelper::getInstance()->reportVersion(TARS_VERSION);}
 
 //////////////////////////////////////////////////////////////////////
 /**
@@ -105,7 +106,7 @@ namespace tars
 /**
  * 服务基本信息
  */
-struct ServerConfig
+struct SVT_DLL_API ServerConfig
 {
     static std::string TarsPath;
     static std::string Application;         //应用名称
@@ -139,6 +140,7 @@ struct ServerConfig
 	static std::string Cert;
 	static std::string Key;
 	static bool VerifyClient;
+	static std::string Ciphers;
 #endif
 	static map<string, string> Context;     //框架内部用, 传递节点名称(以域名形式部署时)
 };
@@ -326,7 +328,17 @@ protected:
      *
      * @return bool
      */
-    bool cmdViewVersion(const string& command, const string& params, string& result);
+    bool cmdViewVersion(const string &command, const string &params, string &result);
+
+    /**
+     * 查看服务的buildid（编译时间）
+     * @param command
+     * @param params
+     * @param result
+     *
+     * @return bool
+     */
+    bool cmdViewBuildID(const string &command, const string &params, string &result);
 
     /**
      * 使配置文件的property信息生效

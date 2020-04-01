@@ -27,7 +27,7 @@
 #include "servant/Servant.h"
 #include "servant/StatReport.h"
 #include "servant/CoroutineScheduler.h"
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
 #include "opentracing/span.h"
 #endif
 
@@ -58,10 +58,10 @@ public:
      */
     ~ServantHandle();
 
-    /**
-     * 线程处理方法
-     */
-    virtual void run();
+	/**
+	 * 线程处理方法
+	 */
+	virtual void run();
 
     /**
      * 获取协程调度器
@@ -136,14 +136,14 @@ protected:
     /**
      * 创建上下文
      * @param stRecvData
-     * @return TarsCurrent*
+     * @return Current*
      */
     TarsCurrentPtr createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * 创建闭连接时的关上下文
      * @param stRecvData
-     * @return TarsCurrent*
+     * @return Current*
      */
     TarsCurrentPtr createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
@@ -161,14 +161,8 @@ protected:
      */
     void handleNoTarsProtocol(const TarsCurrentPtr &current);
 
-    /**
-     * 处理TARS下的采样统计逻辑
-     *
-     * @param current
-     */
-    void processSample(const TarsCurrentPtr &current);
 
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
     /**
      * 处理TARS下的调用链逻辑
      *
@@ -211,7 +205,7 @@ protected:
      */
     CoroutineScheduler     *_coroSched;
 
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
     map<int,std::unique_ptr<opentracing::Span>> _spanMap;
 #endif
 };

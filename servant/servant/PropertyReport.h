@@ -19,7 +19,7 @@
 
  #include "util/tc_lock.h"
 #include "util/tc_autoptr.h"
-//#include "util/tc_thread_mutex.h"
+#include "util/tc_thread_mutex.h"
 #include "util/tc_spin_lock.h"
 #include <tuple>
 #include <vector>
@@ -80,7 +80,7 @@ public:
         string get();
         void   set(int o)           { _sum += o;++_count; }
     protected:
-        void   clear()                { _sum = 0; _count = 0; }
+        void clear()                { _sum = 0; _count = 0; }
     private:
         int _sum;
         int _count;
@@ -170,7 +170,7 @@ typedef TC_AutoPtr<PropertyReport> PropertyReportPtr;
  */
 
 template <typename... Params>
-class PropertyReportImp : public PropertyReport, public TC_SpinLock
+class PropertyReportImp : public PropertyReport, public TC_ThreadMutex
 {
 public:
     using PropertyReportData = std::tuple<Params...>;
@@ -195,7 +195,7 @@ public:
     */
     void report(int iValue) override
     {
-        TC_LockT<TC_SpinLock> lock(*this);
+        TC_LockT<TC_ThreadMutex> lock(*this);
         Helper<std::tuple_size<decltype(_propertyReportData)>::value>::Report(*this, iValue);
     }
 
@@ -207,7 +207,7 @@ public:
      */
     vector<pair<string, string> > get() override
     {
-        TC_LockT<TC_SpinLock> lock(*this);
+        TC_LockT<TC_ThreadMutex> lock(*this);
         return Helper<std::tuple_size<decltype(_propertyReportData)>::value>::Get(*this);
     }
 

@@ -117,7 +117,15 @@ void TC_Epoller::ctrl(SOCKET_TYPE fd, uint64_t data, uint32_t events, int op)
         EV_SET64(&ev[n++], fd, EVFILT_WRITE, op | EV_CLEAR, 0, 0, data, 0, 0);
     }
 
-    kevent64(_iEpollfd, ev, n, nullptr, 0, 0, nullptr);
+    int ret = kevent64(_iEpollfd, ev, n, nullptr, 0, 0, nullptr);
+
+    if(ret == -1)
+    {
+        //一般都是析构的时候出现，有需要close就行
+//        cerr << "[TC_Epoller::ctrl] error, fd:" << fd << ", errno:" << errno  << "|"<< strerror(errno) << endl;
+        ::close(_iEpollfd);
+        _iEpollfd = 0;
+    }
 }
 
 #else

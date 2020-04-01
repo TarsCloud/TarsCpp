@@ -33,8 +33,8 @@ namespace tars
 enum  GetEndpointType
 {
     E_DEFAULT = 0,
-    E_ALL     = 1,
-    E_SET     = 2,
+    E_ALL = 1,
+    E_SET = 2,
     E_STATION = 3
 };
 
@@ -129,9 +129,9 @@ public:
      */
     virtual void doNotify() = 0;
 
-    /*
-     * 设置主控的代理
-     */
+	/*
+	 * 设置主控的代理
+	 */
     int  setLocatorPrx(QueryFPrx prx);
 
     /*
@@ -168,7 +168,7 @@ private:
     /*
      * 主控的请求的响应到了,做相应的处理
      */
-    void doEndpoints(const vector<tars::EndpointF>& activeEp, const vector<tars::EndpointF>& inactiveEp, int iRet, bool bSync = false);
+    void doEndpoints(const vector<EndpointF>& activeEp, const vector<EndpointF>& inactiveEp, int iRet, bool bSync = false);
 
     /*
      * 请求主控异常,做相应的处理
@@ -245,6 +245,11 @@ protected:
      * 不活跃节点列表
      */
     set<EndpointInfo>         _inactiveEndpoints;
+
+    /**
+     * 是否是root servant
+     */
+	bool                      _rootServant;
 
 private:
 
@@ -334,7 +339,14 @@ public:
      */
     void notifyEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive, bool bSync = false);
 
-    /*
+    /**
+     * 更新
+     * @param active
+     * @param inactive
+     */
+	void updateEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive);
+
+	/*
      * 重写基类的实现
      */
     void doNotify();

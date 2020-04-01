@@ -88,6 +88,19 @@ public:
     void doInvoke();
 
     /**
+     *
+     * @param adapterProxy
+     */
+//	void doInvoke(AdapterProxy *adapterProxy);
+
+	/**
+     *
+     * @param active
+     * @param inactive
+     */
+	void onNotifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
+
+    /**
      * 设置协议解析器
      * @return UserProtocol&
      */
@@ -121,10 +134,13 @@ public:
     ServantProxyCallbackPtr getPushCallback();
 
     /**
+     * connected
+     */
+	void onConnect(AdapterProxy *adapterProxy);
+
+	/**
      * 获取所有的adapter
      */
-    // const vector<AdapterProxy*> & getAdapters() const;
-
     void mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg);
 
     /**
@@ -132,14 +148,6 @@ public:
      */
     void doTimeout();
 
-//    /**
-//     * Obj的超时队列的长度
-//     */
-//    size_t timeoutQSize()
-//    {
-//        return _reqTimeoutQueue.size();
-//    }
-//
     /**
      * 获取CommunicatorEpoll*
      */
@@ -155,6 +163,24 @@ public:
     inline const string & name() const
     {
         return _name;
+    }
+
+	/**
+	 * address
+	 * @return
+	 */
+	inline const string &hash() const
+	{
+		return _hash;
+	}
+
+    /**
+     * address
+     * @return
+     */
+    inline const string &address() const
+    {
+    	return _address;
     }
 
     /**
@@ -234,17 +260,33 @@ public:
     }
 
     /**
+     *
+     * @return
+     */
+	inline EndpointManager* getEndpointManager()
+	{
+    	return _endpointManger.get();
+	}
+
+    /**
      * get all adapter proxy
      * @return
      */
 	const vector<AdapterProxy*> & getAdapters();
 
+	/**
+	 *
+	 * @param ep
+	 */
+	void onSetInactive(const EndpointInfo& ep);
+
 protected:
 
-    /**
-     * 处理请求异常
-     */
-    void doInvokeException(ReqMessage * msg);
+	/**
+	 * 处理请求异常
+	 *
+	 */
+	void doInvokeException(ReqMessage * msg);
 
 private:
     /*
@@ -253,9 +295,21 @@ private:
     CommunicatorEpoll *                   _communicatorEpoll;
 
     /*
-     * object的名称
+     * [obname]#hash@tcp -h xxxx -p xxx
      */
     string                                _name;
+
+    /**
+     * obname#[hash]@tcp -h xxxx -p xxx
+     * ever hash has one connection
+     */
+    string                                _hash;
+
+	/**
+	 * obname#hash@[tcp -h xxxx -p xxx]
+	 * ever hash has one connection
+	 */
+    string                                _address;
 
     /*
      * 按set规则调用的set名称
@@ -268,7 +322,7 @@ private:
     bool                                  _isInvokeBySet;
 
     /*
-     * 是否调用了tars_set_protocol设置过proxy的协议函数，
+     * 是否调用了taf_set_protocol设置过proxy的协议函数，
      * 设置过了就不在设置
      */
     bool                                  _hasSetProtocol;

@@ -1170,6 +1170,12 @@ public:
 		 */
 		TC_NetWorkBuffer &getSendBuffer() { return _sendBuffer; }
 
+		/**
+		 * 发送buffer里面数据
+		 * @return
+		 */
+		int sendBuffer();
+
 	    friend class NetThread;
 
     protected:
@@ -1196,12 +1202,6 @@ public:
 		 * @return int, -1:发送出错, 0:无数据, 1:发送完毕, 2:还有数据
 		 */
 		int send(const shared_ptr<SendContext> &data);
-
-		/**
-		 * 发送buffer里面数据
-		 * @return
-		 */
-		int sendBuffer();
 
 		/**
 		 * 读取数据

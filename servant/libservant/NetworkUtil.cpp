@@ -42,6 +42,7 @@ int NetworkUtil::createSocket(bool udp, bool isLocal, bool isIpv6)
     {
         s.setTcpNoDelay();
 	    s.setKeepAlive();
+	    s.setNoCloseWait();
     }
     else
     {
@@ -58,25 +59,6 @@ void NetworkUtil::closeSocketNoThrow(int fd)
     TC_Port::closeSocket(fd);
 }
 
-//bool NetworkUtil::doConnect(int fd, const struct sockaddr& addr)
-//{
-//	bool bConnected = false;
-//
-//	int iRet = ::connect(fd, (struct sockaddr*)(&addr), int(sizeof(addr)));
-//
-//	if (iRet == 0)
-//	{
-//		bConnected  = true;
-//	}
-//	else if (!TC_Socket::isInProgress())
-//	{
-//        closeSocketNoThrow(fd);
-//        TARS_THROW_EXCEPTION_SYSCODE(TafNetConnectException, "NetworkUtil::doConnect error");
-//	}
-//
-//    return bConnected;
-//}
-
 bool NetworkUtil::doConnect(int fd, const struct sockaddr *addr, socklen_t len)
 {
 	bool bConnected = false;
@@ -90,7 +72,7 @@ bool NetworkUtil::doConnect(int fd, const struct sockaddr *addr, socklen_t len)
 	else if (!TC_Socket::isInProgress())
 	{
         closeSocketNoThrow(fd);
-        TARS_THROW_EXCEPTION_SYSCODE(TarsNetConnectException, "NetworkUtil::doConnect error");
+        THROW_EXCEPTION_SYSCODE(TarsNetConnectException, "NetworkUtil::doConnect error");
 	}
 
     return bConnected;

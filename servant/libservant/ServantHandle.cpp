@@ -21,9 +21,9 @@
 #include "servant/ServantHelper.h"
 #include "servant/AppProtocol.h"
 #include "servant/BaseF.h"
-#include "servant/TarsNodeF.h"
-#include "servant/TarsCookie.h"
-#ifdef _USE_OPENTRACKING
+#include "servant/KeepAliveNodeF.h"
+#include "servant/Cookie.h"
+#ifdef TARS_OPENTRACKING
 #include "servant/text_map_carrier.h"
 #endif
 
@@ -352,7 +352,7 @@ void ServantHandle::initialize()
         TLOGERROR("[TARS]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl);
 	    cerr << "[TARS]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl;
 
-	    TarsRemoteNotify::getInstance()->report("initialize createServant error: no adapter:" + _bindAdapter->getName());
+	    RemoteNotify::getInstance()->report("initialize createServant error: no adapter:" + _bindAdapter->getName());
 
 	    TC_Common::msleep(100);
 
@@ -365,7 +365,7 @@ void ServantHandle::initialize()
     {
         TLOGERROR("[TARS]initialize error: no servant exists." << endl);
 
-        TarsRemoteNotify::getInstance()->report("initialize error: no servant exists.");
+        RemoteNotify::getInstance()->report("initialize error: no servant exists.");
 
         TC_Common::msleep(100);
 
@@ -386,7 +386,7 @@ void ServantHandle::initialize()
         {
             TLOGERROR("[TARS]initialize error:" << ex.what() << endl);
 
-            TarsRemoteNotify::getInstance()->report("initialize error:" + string(ex.what()));
+            RemoteNotify::getInstance()->report("initialize error:" + string(ex.what()));
 
 	        TC_Common::msleep(100);
 
@@ -396,7 +396,7 @@ void ServantHandle::initialize()
         {
             TLOGERROR("[TARS]initialize unknown exception error" << endl);
 
-            TarsRemoteNotify::getInstance()->report("initialize unknown exception error");
+            RemoteNotify::getInstance()->report("initialize unknown exception error");
 
 	        TC_Common::msleep(100);
 
@@ -434,7 +434,7 @@ void ServantHandle::heartbeat()
 
 TarsCurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = new TarsCurrent(this);
+    TarsCurrentPtr current = new Current(this);
 
     try
     {
@@ -478,7 +478,7 @@ TarsCurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::Rec
 
 TarsCurrentPtr ServantHandle::createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = new TarsCurrent(this);
+    TarsCurrentPtr current = new Current(this);
 
     current->initializeClose(data);
     current->setReportStat(false);
@@ -580,7 +580,7 @@ void ServantHandle::handle(const shared_ptr<TC_EpollServer::RecvContext> &data)
 }
 
 
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
 void ServantHandle::processTracking(const TarsCurrentPtr &current)
 {
     if(!(Application::getCommunicator()->_traceManager))
@@ -686,21 +686,7 @@ bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
         return true;
     }
 
-//    //servant已经被染色, 开启染色日志
-//    if (ServantHelperManager::getInstance()->isDyeing())
-//    {
-//        map<string, string>::const_iterator dyeingKeyIt = current->getRequestStatus().find(ServantProxy::STATUS_GRID_KEY);
-//
-//        if (dyeingKeyIt != current->getRequestStatus().end() &&
-//            ServantHelperManager::getInstance()->isDyeingReq(dyeingKeyIt->second, current->getServantName(), current->getFuncName()))
-//        {
-//            TLOGTARS("[TARS] dyeing servant got a dyeing req, key:" << dyeingKeyIt->second << endl);
-//
-//            dyeingKey = dyeingKeyIt->second;
-//
-//            return true;
-//        }
-//    }
+
 
     return false;
 }
@@ -845,14 +831,14 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
 
     //处理cookie
     map<string, string> cookie;
-    TarsCookieOp cookieOp;
+    CookieOp cookieOp;
     if (processCookie(current, cookie))
     {
         cookieOp.setCookie(cookie);
         current->setCookie(cookie);
     }
 
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
     //处理tracking信息
     processTracking(current);
 #endif
@@ -861,7 +847,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     if (sit == _servants.end())
     {
         current->sendResponse(TARSSERVERNOSERVANTERR);
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
         finishTracking(TARSSERVERNOSERVANTERR, current);
 #endif
         return;
@@ -913,9 +899,9 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     //单向调用或者业务不需要同步返回
     if (current->isResponse())
     {
-        current->sendResponse(ret, buffer, TarsCurrent::TARS_STATUS(), sResultDesc);
+        current->sendResponse(ret, buffer, Current::TARS_STATUS(), sResultDesc);
     }
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
     finishTracking(ret, current);
 #endif
 }
@@ -947,7 +933,7 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
         TLOGERROR("[TARS]ServantHandle::handleNoTarsProtocol unknown error" << endl);
     }
 
-    if (current->isResponse())
+    if (current->isResponse() && !buffer.empty())
     {
         current->sendResponse((const char*)buffer.data(), buffer.size());
     }

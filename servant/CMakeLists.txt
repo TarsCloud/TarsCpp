@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 
 project(servant)
 
-if(_USE_OPENTRACKING)
+if(TARS_OPENTRACKING)
 include_directories(${util_SOURCE_DIR}/include ${OPENTRACKING_INC})
 else()
 include_directories(${util_SOURCE_DIR}/include)

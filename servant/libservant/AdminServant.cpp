@@ -58,7 +58,7 @@ void AdminServant::shutdown(TarsCurrentPtr current)
 
 string AdminServant::notify(const string &command, TarsCurrentPtr current)
 {
-    TarsRemoteNotify::getInstance()->report("AdminServant::notify:" + command);
+    RemoteNotify::getInstance()->report("AdminServant::notify:" + command);
 
     return NotifyObserver::getInstance()->notify(command, current);
 }

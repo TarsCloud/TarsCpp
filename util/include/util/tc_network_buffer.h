@@ -368,11 +368,17 @@ public:
         }
     }
 
-    /**
-     * 获取connection, 不同服务模型中获取的对象不一样, 需要自己强制转换
-     * @param buff
-     */
-    void* getConnection() { return _connection; }
+	/**
+	 * 获取connection, 不同服务模型中获取的对象不一样, 需要自己强制转换
+	 * @param buff
+	 */
+	void* getConnection() { return _connection; }
+
+	/**
+	 * 获取connection, 不同服务模型中获取的对象不一样, 需要自己强制转换
+	 * @param buff
+	 */
+	void setConnection(void *connection) { _connection = connection; }
 
     /**
      * 设置上下文数据, 可以业务存放数据

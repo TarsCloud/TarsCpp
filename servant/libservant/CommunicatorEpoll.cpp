@@ -17,7 +17,7 @@
 #include "servant/CommunicatorEpoll.h"
 #include "servant/Communicator.h"
 #include "servant/Application.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/StatReport.h"
 
 using namespace std;
@@ -388,7 +388,7 @@ void CommunicatorEpoll::reConnect(int64_t ms, Transceiver*p)
 	_reconnect[ms] = p;
 }
 
-string CommunicatorEpoll::getResouresInfo()
+string CommunicatorEpoll::getResourcesInfo()
 {
 	ostringstream desc;
 	desc << TC_Common::outfill("index") << _netThreadSeq << endl;

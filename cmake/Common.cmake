@@ -21,11 +21,18 @@ foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/bin)
 endforeach()   
 
-set(_USE_OPENTRACKING $ENV{_USE_OPENTRACKING})
-if(_USE_OPENTRACKING)
-set(OPENTRACKING_INC "/usr/local/include")
-add_definitions(-D_USE_OPENTRACKING=${_USE_OPENTRACKING})
-endif()
+option(TARS_OPENTRACKING "option for open tracking" OFF)
+
+if (TARS_OPENTRACKING)
+    add_definitions(-DTARS_OPENTRACKING=1)
+    set(OPENTRACKING_INC "/usr/local/include")
+endif ()
+
+# set(TARS_OPENTRACKING $ENV{TARS_OPENTRACKING})
+# if(TARS_OPENTRACKING)
+# set(OPENTRACKING_INC "/usr/local/include")
+# add_definitions(-D_USE_OPENTRACKING=${TARS_OPENTRACKING})
+# endif()
 
 #-------------------------------------------------------------
 
@@ -88,5 +95,7 @@ message("PLATFORM:                  ${PLATFORM}")
 message("CMAKE_INSTALL_PREFIX:      ${CMAKE_INSTALL_PREFIX}")
 message("BIN:                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}") 
 message("TARS2CPP:                  ${TARS2CPP}") 
+message("TARS_OPENTRACKING:         ${TARS_OPENTRACKING}") 
+
 #-------------------------------------------------------------
 

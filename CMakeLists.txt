@@ -18,6 +18,10 @@ if("${TARS_CPP_COMMON}" STREQUAL "")
 
 endif()
 
+set(CLEAR_INCLUDE "clear-install.cmake")
+FILE(WRITE ${CLEAR_INCLUDE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_INSTALL_PREFIX}/include)\n")
+install(SCRIPT ${CLEAR_INCLUDE})
+
 #-------------------------------------------------------------------
 
 include_directories(${PROJECT_SOURCE_DIR}/util/include)

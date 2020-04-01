@@ -18,7 +18,7 @@
 #define __TC_AUTOPTR_H
 
 #include "util/tc_ex.h"
-// #include "util/tc_atomic.h"
+#include "util/tc_platform.h"
 #include <atomic>
 #include <typeinfo> 
 
@@ -40,7 +40,7 @@ struct TC_AutoPtrNull_Exception : public TC_Exception
  *  所有需要智能指针支持的类都需要从该对象继承，
  *  
  */
-class TC_HandleBase
+class UTIL_DLL_API TC_HandleBase
 {
 public:
 

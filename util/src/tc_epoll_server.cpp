@@ -305,8 +305,6 @@ TC_EpollServer::BindAdapter::BindAdapter(TC_EpollServer *pEpollServer)
 
 TC_EpollServer::BindAdapter::~BindAdapter()
 {
-    //adapter析够的时候, 服务要退出
-    // _pEpollServer->terminate();
 }
 
 void TC_EpollServer::BindAdapter::setProtocolName(const string& name)
@@ -614,7 +612,7 @@ const vector<string> &TC_EpollServer::BindAdapter::getDeny() const
 
 bool TC_EpollServer::BindAdapter::isLimitMaxConnection() const
 {
-    return (_iCurConns + 1 > _iMaxConns) || (_iCurConns + 1 > (int)((uint32_t)1 << 22) - 1);
+    return (_iCurConns + 1 > (size_t)_iMaxConns) || (_iCurConns + 1 > (int)((uint32_t)1 << 22) - 1);
 }
 
 void TC_EpollServer::BindAdapter::decreaseNowConnection()
@@ -1049,7 +1047,7 @@ int TC_EpollServer::Connection::sendBuffer()
 			{
 				_sendBuffer.moveHeader(iBytesSent);
 
-				if (iBytesSent == (int)data.second)
+				if (iBytesSent == data.second)
 				{
 					_pBindAdapter->decreaseSendBufferSize();
 				}
@@ -1179,7 +1177,7 @@ int TC_EpollServer::Connection::sendBuffer()
 //
 //int TC_EpollServer::Connection::sendTcp(const shared_ptr<SendContext> &sc)
 //{
-//#if TAF_SSL
+//#if TARS_SSL
 //	if (getBindAdapter()->getEndpoint().isSSL())
 //	{
 //		assert(_openssl->isHandshaked());
@@ -1223,7 +1221,7 @@ int TC_EpollServer::Connection::send(const shared_ptr<SendContext> &sc)
 
 	_pBindAdapter->increaseSendBufferSize();
 
-#if TAF_SSL
+#if TARS_SSL
 	if (getBindAdapter()->getEndpoint().isSSL())
 	{
 		assert(_openssl->isHandshaked());

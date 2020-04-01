@@ -2,7 +2,7 @@
 
 echo "run-quick-start.sh"
 EXE_PATH=$1
-SRC_PATH=$2
+SRC_PATH=$2/..
 
 echo ${EXE_PATH} ${SRC_PATH}
 

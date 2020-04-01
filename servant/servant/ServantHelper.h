@@ -56,7 +56,7 @@ struct ServantCreation : public ServantHelperCreation
 /**
  * Servant管理
  */
-class ServantHelperManager : public TC_Singleton<ServantHelperManager>
+class SVT_DLL_API ServantHelperManager : public TC_Singleton<ServantHelperManager>
 {
 public:
     /**
@@ -77,8 +77,8 @@ public:
     {
         if(check && _servant_adapter.end() == _servant_adapter.find(id))
         {
-            cerr<<"[TAF]ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not conf in the web)"<<endl;
-			throw runtime_error("[TAF]ServantHelperManager::addServant " + id + " not find adapter.(maybe not conf in the web)");
+            cerr<<"[TARS]ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not conf in the web)"<<endl;
+			throw runtime_error("[TARS]ServantHelperManager::addServant " + id + " not find adapter.(maybe not conf in the web)");
         }
         _servant_creator[id] = new ServantCreation<T>(application);
     }
@@ -188,7 +188,7 @@ protected:
     /**
      * 是否染色
      */
-    bool           _isDyeing;
+    bool   _isDyeing;
 
     /**
      * 染色用户号码

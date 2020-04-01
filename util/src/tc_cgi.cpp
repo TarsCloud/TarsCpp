@@ -371,7 +371,7 @@ bool TC_Cgi::writeFile(FILE*fp, const string &sFileName, const string &sBuffer, 
     if(ret != (int)sBuffer.length())
     {
         fclose(fp);
-        throw TC_Cgi_Exception("[TC_Cgi::parseFormData] upload file '" + _mpUpload[sFileName]._sServerFileName + "' error:" + string(strerror(errno)));
+        throw TC_Cgi_Exception("[TC_Cgi::parseFormData] upload file '" + _mpUpload[sFileName]._sServerFileName + "' error", TC_Exception::getSystemCode());
     }
     iTotalWrite += sBuffer.length();
     _mpUpload[sFileName]._iSize = iTotalWrite;
@@ -438,7 +438,8 @@ void TC_Cgi::parseFormData(multimap<string, string> &mmpParams, const string &sB
                 if ( (fp = fopen(sUploadFileName.c_str(),"w")) == NULL)
                 {
                     mmpParams.clear();          //clear , exception safe
-                    throw TC_Cgi_Exception("[TC_Cgi::parseFormData] Upload File '" + sValue + "' to '" + sUploadFileName +"' error! " + string(strerror(errno)));
+                    THROW_EXCEPTION_SYSCODE(TC_Cgi_Exception, "[TC_Cgi::parseFormData] Upload File '" + sValue + "' to '" + sUploadFileName +"' error");
+                    // throw TC_Cgi_Exception("[TC_Cgi::parseFormData] Upload File '" + sValue + "' to '" + sUploadFileName +"' error! " + string(strerror(errno)));
                 }
             }
             else

@@ -343,6 +343,9 @@ protected:
 class TC_Http
 {
 public:
+	static unordered_map<string, int> HEADER;
+	static unordered_map<int, string> HEADER_REVERSE;
+
     /**
      * @brief  构造函数
      */
@@ -562,10 +565,25 @@ public:
     string getHeader(const string& sHeader) const;
 
     /**
-     * @brief 获取http头部map.
-     *
-     * @return http_header_type&
+     * 是否有header
+     * @param sHeader
+     * @return
      */
+    bool hasHeader(const char *sHeader) const;
+
+    /**
+     * @brief 检查头部
+     * @param sHeader
+     * @param value
+     * @return
+     */
+	bool checkHeader(const char *sHeader, const char *value) const;
+
+	/**
+	 * @brief 获取http头部map.
+	 *
+	 * @return http_header_type&
+	 */
     const http_header_type& getHeaders() const{return _headers;}
 
 	/**
@@ -579,82 +597,89 @@ public:
       */
     void reset();
 
-//    /**
-//     * @brief 读取一行.
-//     *
-//     * @param ppChar  读取位置指针
-//     * @return string 读取的内容
-//     */
-//    static string getLine(const char** ppChar);
-
     /**
-     * @brief 读取一行.
-     *  
-     * @param ppChar   读取位置指针
-     * @param iBufLen  长度
-     * @return string  读取的内容
-     */
-//    static string getLine(const char** ppChar, int iBufLen);
-
-    /**
-     * @brief 生成头部字符串(不包含第一行).
+     * @brief 生成头部字符串(不包含第一行), 直接累加到sHttpHeader后
      *
      * @return string：头部字符串
      */
-    string genHeader() const;
+    void genHeader(string &sHttpHeader) const;
 
     /**
-     * @brief 该http原始数据包是否是chunk编码格式.
-     * 
-     * @return bool：包含返回true，否则返回false
+     * @brief 生成头部字符串(不包含第一行)
+     * @return
      */
+	string genHeader() const;
+
+	/**
+	 * @brief 该http原始数据包是否是chunk编码格式.
+	 *
+	 * @return bool：包含返回true，否则返回false
+	 */
     bool isChunked() const { return _bIsChunked; }
 
     /**
      * @brief 解析请求head，不解析第一行,
      *        第一行请求包和响应包不一样， 后面的数据解析为map格式
-     * @param szBuffer 
+     * @param szBuffer
      * @return const char*, 偏移的指针
      */
 //    static const char* parseHeader(const char* szBuffer, http_header_type &sHeader);
+//
+//    template<typename ForwardIterator1, typename ForwardIterator2>
+//	static void parseHeader(const ForwardIterator1 &beginIt, const ForwardIterator2 &headerIt, http_header_type &sHeader)
+//	{
+//		sHeader.clear();
+//
+//		string sep      = "\r\n";
+//		string colon    = ":";
+//
+//		bool first      = true;
+//		auto lineStartIt= beginIt;
+//
+//		while (true)
+//		{
+//			auto it = std::search(lineStartIt, headerIt, sep.c_str(), sep.c_str() + sep.size());
+//			if(it == headerIt)
+//			{
+//				break;
+//			}
+//
+//			//first line ignore
+//			if(!first)
+//			{
+//				auto itF = std::search(lineStartIt, it, colon.c_str(), colon.c_str() + colon.size());
+//				if (itF != it)
+//				{
+//					string name;
+//					name.resize(itF - lineStartIt);
+//					std::copy(lineStartIt, itF, name.begin());
+//
+//					string value;
+//					value.resize(it - (itF + 1));
+//					std::copy(itF + 1, it, value.begin());
+//
+//					sHeader.insert(multimap<string, string>::value_type(TC_Common::trim(name, " "),
+//					                                                    TC_Common::trim(value, " ")));
+//
+//				}
+//			}
+//			else
+//			{
+//				first = false;
+//			}
+//
+//			lineStartIt = it + sep.size();
+//		}
+//	}
 
-    template<typename ForwardIterator1, typename ForwardIterator2>
-	static void parseHeader(const ForwardIterator1 &beginIt, const ForwardIterator2 &headerIt, http_header_type &sHeader)
-	{
-		sHeader.clear();
-		string sep      = "\r\n";
-		string colon    = ":";
-		bool first      = true;
-		auto lineStartIt= beginIt;
-		while (true)
-		{
-			auto it = std::search(lineStartIt, headerIt, sep.c_str(), sep.c_str() + sep.size());
-			if(it == headerIt)
-			{
-				break;
-			}
-			if(!first)
-			{
-				auto itF = std::search(lineStartIt, it, colon.c_str(), colon.c_str() + colon.size());
-				if (itF != it)
-				{
-					string name;
-					name.resize(itF - lineStartIt);
-					std::copy(lineStartIt, itF, name.begin());
-					string value;
-					value.resize(it - (itF + 1));
-					std::copy(itF + 1, it, value.begin());
-					sHeader.insert(multimap<string, string>::value_type(TC_Common::trim(name, " "),
-					                                                    TC_Common::trim(value, " ")));
-				}
-			}
-			else
-			{
-				first = false;
-			}
-			lineStartIt = it + sep.size();
-		}
-	}
+	/**
+	 * 解析, 尽量避免内存copy, 提升效率
+	 * @param beginIt
+	 * @param headerIt
+	 * @param sHeader
+	 */
+	static size_t parseHeaderString(const char *beginIt, const char *headerIt, http_header_type &sHeader);
+
 protected:
 
     /**
@@ -666,6 +691,11 @@ protected:
      * http头部长度
      */
     size_t              _headLength;
+
+	/**
+	 * 获取版本
+	 */
+	string  _version;
 
     /**
      * http头部内容
@@ -989,45 +1019,67 @@ public:
 
     /**
      * @brief 解析应答头.
-     *  
+     *
      * @param szBuffer 应答头信息
      * @return
      */
-//    void parseResponseHeader(const char* szBuffer, const char* header);
+//    /**
+//     *
+//     * @param szBuffer
+//     */
+//    template<typename ForwardIterator1, typename ForwardIterator2>
+//	void parseResponseHeader(const ForwardIterator1 &beginIt, const ForwardIterator2 &headerIt)
+//	{
+//		string line = "\r\n";
+//
+//		auto it = std::search(beginIt, headerIt, line.c_str(), line.c_str() + line.size());
+//
+//		assert(it != headerIt);
+//
+//		string sep = " ";
+//
+//		auto f1 = std::search(beginIt, headerIt, sep.c_str(), sep.c_str() + sep.size());
+//		if(f1 == headerIt)
+//		{
+//			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse version format error : " + string(beginIt, it));
+//		}
+//
+//		auto f2 = std::search(f1 + 1, headerIt, sep.c_str(), sep.c_str() + sep.size());
+//		if(f1 == headerIt)
+//		{
+//			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse status format error : " + string(beginIt, it));
+//		}
+//
+//		_headerLine = string(beginIt, it);
+//
+//		if(TC_Port::strncasecmp(_headerLine.c_str(), "HTTP/", 5) != 0)
+//		{
+//			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response version is not start with 'HTTP/' : " + _headerLine);
+//		}
+//
+//		_version    = string(beginIt, f1);
+//
+//		_status     = TC_Common::strto<int>(string(f1 + 1, f2));
+//
+//		_about      = TC_Common::trim(string(f2 + 1, it));
+//
+//		parseHeader(beginIt, headerIt, _headers);
+//	}
 
-    template<typename ForwardIterator1, typename ForwardIterator2>
-	void parseResponseHeader(const ForwardIterator1 &beginIt, const ForwardIterator2 &headerIt)
-	{
-		string line = "\r\n";
-		auto it = std::search(beginIt, headerIt, line.c_str(), line.c_str() + line.size());
-		assert(it != headerIt);
-		string sep = " ";
-		auto f1 = std::search(beginIt, headerIt, sep.c_str(), sep.c_str() + sep.size());
-		if(f1 == headerIt)
-		{
-			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse version format error : " + string(beginIt, it));
-		}
-		auto f2 = std::search(f1 + 1, headerIt, sep.c_str(), sep.c_str() + sep.size());
-		if(f1 == headerIt)
-		{
-			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse status format error : " + string(beginIt, it));
-		}
-		_headerLine = string(beginIt, it);
-		if(TC_Port::strncasecmp(_headerLine.c_str(), "HTTP/", 5) != 0)
-		{
-			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response version is not start with 'HTTP/' : " + _headerLine);
-		}
-		_version    = string(beginIt, f1);
-		_status     = TC_Common::strto<int>(string(f1 + 1, f2));
-		_about      = TC_Common::trim(string(f2 + 1, it));
-		parseHeader(beginIt, headerIt, _headers);
-	}
+	size_t parseResponseHeaderString(const char *beginIt, const char *headerIt);
+
 protected:
     /**
-     * 添加内容, 增量解析用到
+     * 添加内容
      * @param sBuffer
      */
     void addContent(const string &sBuffer);
+
+    /**
+     * 添加内容
+     * @param buffer
+     * @param length
+     */
 	void addContent(const char *buffer, size_t length);
 
 protected:
@@ -1041,11 +1093,6 @@ protected:
      * 应答描述
      */
     string  _about;
-
-    /**
-     * 获取版本
-     */
-    string  _version;
 
     /**
      * 获取第一行
@@ -1089,11 +1136,12 @@ public:
         REQUEST_PUT,
         REQUEST_DELETE,
         REQUEST_PATCH,
+	    REQUEST_PRI,
     };
 
     /**
      * @brief 检查http请求是否收全.
-     *  
+     *
      * @param sBuffer http请求
      * @throws TC_HttpRequest_Exception, 不支持的http协议, 抛出异常
      * @return  true: 收全, false:不全
@@ -1142,7 +1190,16 @@ public:
      */
     bool decode(const string &sBuffer);
 
-    /**
+	/**
+	* @brief 解析http请求, 如果不是HTTP请求则抛出异常.
+	*
+	* @param sBuffer 要解析的http请求
+	* @return        sBuffer是否是完整的http请求
+	* @throw         TC_HttpRequest_Exception
+	*/
+	bool decode(const vector<char> &sBuffer);
+
+	/**
      * @brief 解析http请求,
      *        如果不是HTTP请求则抛出异常(采用vector<char>方式).
      *  
@@ -1277,6 +1334,12 @@ public:
 	void setRequestType(int requestType) {  _requestType = requestType ; }
 
 	/**
+	 * get method
+	 * @return
+	 */
+	const string &getMethod() const;
+
+	/**
 	 * set method
 	 * @param
 	 * @return method invalid, throw exception
@@ -1335,10 +1398,9 @@ public:
      * @return 是delete请求返回true，否则返回false
      */
     bool isDELETE() const { return _requestType == REQUEST_DELETE; }
-
     /**
      * @brief 获取请求的URL.
-     * 
+     *
      * @return const TC_URL&
      */
     const TC_URL &getURL() const { return _httpURL; }
@@ -1379,13 +1441,13 @@ public:
      */
     void parseRequestHeader(const char* szBuffer, const char *header);
 
-    /**
-     * @brief 请求类型到字符串.
-     *
-     * @param iRequestType  请求
-     * @return              解析后的字符串
-     */
-    string requestType2str(int iRequestType) const;
+//    /**
+//     * @brief 请求类型到字符串.
+//     *
+//     * @param iRequestType  请求
+//     * @return              解析后的字符串
+//     */
+//    const char *requestType2str(int iRequestType) const;
 
 protected:
 
@@ -1396,7 +1458,7 @@ protected:
      * @param iRequestType 编码后的输出流
      * @return void
      */
-    void encode(int iRequestType, ostream &os);
+//    void encode(int iRequestType, ostream &os);
 
     /**
      * @brief 解析URL

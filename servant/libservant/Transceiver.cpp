@@ -17,7 +17,7 @@
 #include "servant/Transceiver.h"
 #include "servant/AdapterProxy.h"
 #include "servant/Application.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/AuthLogic.h"
 
 #if TARS_SSL
@@ -160,6 +160,7 @@ void Transceiver::setConnected()
 	{
 		_adapterProxy->getObjProxy()->getPushCallback()->onConnect(_ep.getEndpoint());
 	}
+	_adapterProxy->onConnect();
 }
 
 void Transceiver::onConnect()
@@ -181,6 +182,7 @@ void Transceiver::onConnect()
 	    _openssl->setReadBufferSize(1024 * 8);
 	    _openssl->setWriteBufferSize(1024 * 8);
 
+	    _openssl->recvBuffer()->setConnection(this);
         int ret = _openssl->doHandshake(_sendBuffer);
         if (ret != 0)
         {
@@ -212,7 +214,7 @@ void Transceiver::doAuthReq()
     if (_adapterProxy->endpoint().authType() == AUTH_TYPENONE)
     {
         _authState = AUTH_SUCC;
-        _adapterProxy->doInvoke();
+        _adapterProxy->doInvoke(true);
     }
     else
     {
@@ -284,7 +286,7 @@ void Transceiver::doAuthReq()
 //
 //			if (ret == TC_NetWorkBuffer::PACKET_ERR)
 //			{
-//				TLOGERROR("[TAF][tcp doResponse," << _pAdapterProxy->getObjProxy()->name() << ",fd:" << _iFd << "," << _ep.desc() << ",tcp recv decode error" << endl);
+//				TLOGERROR("[TARS][tcp doResponse," << _pAdapterProxy->getObjProxy()->name() << ",fd:" << _iFd << "," << _ep.desc() << ",tcp recv decode error" << endl);
 //				msg->eStatus = ReqMessage::REQ_NET;
 //				msg->response->sResultDesc = "recv packet decode failed";
 //
@@ -298,7 +300,7 @@ void Transceiver::doAuthReq()
 //		}
 //		catch (exception & ex) {
 //			TLOGERROR(
-//				"[TAF][tcp doResponse," << _pAdapterProxy->getObjProxy()->name() << ",fd:" << _iFd << "," << _ep.desc() << ",tcp recv decode error:" << ex.what() << endl);
+//				"[TARS][tcp doResponse," << _pAdapterProxy->getObjProxy()->name() << ",fd:" << _iFd << "," << _ep.desc() << ",tcp recv decode error:" << ex.what() << endl);
 //			msg->eStatus = ReqMessage::REQ_NET;
 //			msg->response->sResultDesc = "recv packet decode failed";
 //
@@ -306,7 +308,7 @@ void Transceiver::doAuthReq()
 //		}
 //		catch (...) {
 //			TLOGERROR(
-//				"[TAF][tcp doResponse," << _pAdapterProxy->getObjProxy()->name() << ",fd:" << _iFd << "," << _ep.desc() << ",tcp recv decode error." << endl);
+//				"[TARS][tcp doResponse," << _pAdapterProxy->getObjProxy()->name() << ",fd:" << _iFd << "," << _ep.desc() << ",tcp recv decode error." << endl);
 //			msg->eStatus = ReqMessage::REQ_NET;
 //			msg->response->sResultDesc = "recv packet decode failed";
 //		}
@@ -323,7 +325,7 @@ void Transceiver::doAuthReq()
 
 void Transceiver::finishInvoke(shared_ptr<ResponsePacket> &rsp)
 {
-	if (_authState != AUTH_SUCC)
+	if (_adapterProxy->endpoint().authType() == AUTH_TYPELOCAL && _authState != AUTH_SUCC)
 	{
 		std::string ret(rsp->sBuffer.begin(), rsp->sBuffer.end());
 		tars::AUTH_STATE tmp = AUTH_SUCC;
@@ -336,7 +338,7 @@ void Transceiver::finishInvoke(shared_ptr<ResponsePacket> &rsp)
 		if (newstate == AUTH_SUCC)
 		{
 			// flush old buffered msg when auth is not complete
-			_adapterProxy->doInvoke();
+			_adapterProxy->doInvoke(true);
 		}
 		else
 		{
@@ -406,7 +408,7 @@ void Transceiver::close()
     if(!isValid()) return;
 
 
-#if TAF_SSL
+#if TARS_SSL
     if (_openssl)
     {
         _openssl->release();
@@ -437,11 +439,11 @@ void Transceiver::close()
 
 	if(second > 0) {
 		_adapterProxy->getObjProxy()->getCommunicatorEpoll()->reConnect(TNOWMS + second * 1000, this);
-		TLOGERROR("[TAF][trans close:" << _adapterProxy->getObjProxy()->name() << "," << _ep.desc() << ", reconnect:" << second << "]" << endl);
+		TLOGERROR("[TARS][trans close:" << _adapterProxy->getObjProxy()->name() << "," << _ep.desc() << ", reconnect:" << second << "]" << endl);
 	}
 //	else
 //	{
-//		TLOGERROR("[TAF][trans close:" << _adapterProxy->getObjProxy()->name() << "," << _ep.desc() << "]" << endl);
+//		TLOGERROR("[TARS][trans close:" << _adapterProxy->getObjProxy()->name() << "," << _ep.desc() << "]" << endl);
 //	}
 }
 
@@ -467,7 +469,7 @@ int Transceiver::doRequest()
 
 	//取adapter里面积攒的数据
     if(_sendBuffer.empty()) {
-        _adapterProxy->doInvoke();
+        _adapterProxy->doInvoke(false);
     }
 
 	//object里面应该是空的
@@ -939,7 +941,7 @@ UdpTransceiver::UdpTransceiver(AdapterProxy * pAdapterProxy, const EndpointInfo 
         _pRecvBuffer = new char[DEFAULT_RECV_BUFFERSIZE];
         if(!_pRecvBuffer)
         {
-            throw TC_Exception("objproxy '" + _adapterProxy->getObjProxy()->name() + "' malloc udp receive buffer fail");
+            throw TC_Exception("obj: '" + _adapterProxy->getObjProxy()->name() + "' malloc udp receive buffer fail");
         }
     }
 

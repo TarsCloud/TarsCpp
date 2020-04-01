@@ -33,7 +33,7 @@
 #include <assert.h>
 #include "util/tc_timeprovider.h"
 
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/ServantHandle.h"
 
 namespace tars 

@@ -35,17 +35,17 @@ void HttpImp::destroy()
 
 int HttpImp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 {
-    TC_HttpRequest request; 
-    vector<char> v = current->getRequestBuffer();
-    string sBuf;
-    sBuf.assign(v.data(),v.size());
+    TC_HttpRequest request;
 
-    request.decode(sBuf);
-  //  cout << request.getContent() << endl;
+    vector<char> v = current->getRequestBuffer();
+
+    request.decode(current->getRequestBuffer());
+
     TC_HttpResponse rsp;
-    string s="hello";
+    string s=request.getContent();
     rsp.setResponse(s.c_str(),s.size());
+    rsp.setHeader("Connection", request.getHeader("Connection"));
     rsp.encode(buffer);
-   
+    
     return 0;
 }

@@ -19,7 +19,7 @@
 #include "servant/AppProtocol.h"
 #include "servant/Transceiver.h"
 #include "servant/AdapterProxy.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "tup/Tars.h"
 #include <iostream>
 
@@ -60,63 +60,135 @@ vector<char> ProxyProtocol::tarsRequest(RequestPacket& request, Transceiver *)
 
 vector<char> ProxyProtocol::http1Request(tars::RequestPacket& request, Transceiver *trans)
 {
-	request.iRequestId = trans->getAdapterProxy()->getId();
+//	assert(trans->getAdapterProxy()->getObjProxy()->getServantProxy()->taf_connection_serial() > 0);
 
-    TC_HttpRequest httpRequest;
+//	request.iRequestId = trans->getAdapterProxy()->getId();
 
-    httpRequest.setRequest(request.sFuncName, request.sServantName, string(request.sBuffer.data(), request.sBuffer.size()), true);
+	shared_ptr<TC_HttpRequest> &data = *(shared_ptr<TC_HttpRequest>*)request.sBuffer.data();
 
-    vector<char> buffer;
+	vector<char> buffer;
 
-    httpRequest.encode(buffer);    
+	data->encode(buffer);
 
-    return buffer;
+	data.reset();
+
+	return buffer;
 }
-
-struct Http1Context
-{
-//    string buff;
-
-    TC_HttpResponse httpRsp;
-};
 
 TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in, ResponsePacket& rsp)
 {
-    Http1Context *context = (Http1Context*)(in.getContextData());
+	shared_ptr<TC_HttpResponse> *context = (shared_ptr<TC_HttpResponse>*)(in.getContextData());
 
-    if(context == NULL)
+    if(!context)
     {
-        context = new Http1Context();
+        context = new shared_ptr<TC_HttpResponse>();
+        *context = std::make_shared<TC_HttpResponse>();
         in.setContextData(context, [=]{ delete context; }); 
     }
 
-//    context->buff.append(in.getBuffersString());
-//    in.clearBuffers();
-
-    if(context->httpRsp.incrementDecode(in))
+    if((*context)->incrementDecode(in))
     {
-        rsp.iRequestId = ((Transceiver*)(in.getConnection()))->getAdapterProxy()->getId();
+	    rsp.sBuffer.resize(sizeof(shared_ptr<TC_HttpResponse>));
 
-        rsp.status["status"]  = context->httpRsp.getResponseHeaderLine();
-        for (const auto& kv : context->httpRsp.getHeaders())
-        {
-            rsp.status[kv.first] = kv.second; 
-        } 
+	    shared_ptr<TC_HttpResponse> &data = *(shared_ptr<TC_HttpResponse>*)rsp.sBuffer.data();
 
-        rsp.sBuffer.assign(context->httpRsp.getContent().begin(), context->httpRsp.getContent().end());
+	    data = *context;
 
-        delete context;
+	    if(!data->checkHeader("Connection", "keep-alive"))
+	    {
+		    Transceiver* session = (Transceiver*)(in.getConnection());
 
-        context = NULL;
+		    session->close();
+	    }
 
-        in.setContextData(NULL); 
+		(*context) = NULL;
+		delete context;
+		in.setContextData(NULL);
 
-        return TC_NetWorkBuffer::PACKET_FULL;
+	    return TC_NetWorkBuffer::PACKET_FULL;
 
     }
 
     return TC_NetWorkBuffer::PACKET_LESS;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+// vector<char> ProxyProtocol::httpJceRequest(taf::BasePacket& request, Transceiver *trans)
+// {
+// 	TC_HttpRequest httpRequest;
+
+// 	string uri;
+// 	if(trans->isSSL())
+// 		uri = "https://";
+// 	else
+// 		uri = "http://";
+
+// 	uri += trans->getEndpointInfo().getEndpoint().getHost();
+
+// 	vector<char> buff = tafRequest(request, trans);
+
+// 	for(auto it = request.context.begin(); it != request.context.end(); ++it)
+// 	{
+// 		if(it->second == ":path")
+// 		{
+// 			uri += "/" + it->second;
+// 		}
+// 		else
+// 		{
+// 			httpRequest.setHeader(it->first, it->second);
+// 		}
+// 	}
+
+// 	httpRequest.setPostRequest(uri, buff.data(), buff.size(), true);
+
+// 	vector<char> buffer;
+
+// 	httpRequest.encode(buffer);
+
+// 	return buffer;
+// }
+
+// TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::httpJceResponse(TC_NetWorkBuffer &in, BasePacket& rsp)
+// {
+// 	TC_HttpResponse *context = (TC_HttpResponse*)(in.getContextData());
+
+// 	if(!context)
+// 	{
+// 		context = new TC_HttpResponse();
+// 		in.setContextData(context, [=]{ delete context; });
+// 	}
+
+// 	if(context->incrementDecode(in))
+// 	{
+// 		if(context->getStatus() != 200)
+// 		{
+// 			rsp.iRet = taf::JCESERVERUNKNOWNERR;
+// 			rsp.sResultDesc = context->getContent();
+// 			return TC_NetWorkBuffer::PACKET_FULL;
+// 		}
+
+// 		JceInputStream<> is;
+// 		is.setBuffer(context->getContent().c_str() + 4, context->getContent().size() - 4);
+
+// 		rsp.readFrom(is);
+
+// 		if(!context->checkHeader("Connection", "keep-alive"))
+// 		{
+// 			Transceiver* session = (Transceiver*)(in.getConnection());
+
+// 			session->close();
+// 		}
+
+// 		context = NULL;
+// 		delete context;
+// 		in.setContextData(NULL);
+
+// 		return TC_NetWorkBuffer::PACKET_FULL;
+// 	}
+
+// 	return TC_NetWorkBuffer::PACKET_LESS;
+// }
 
 #if TARS_HTTP2
 
@@ -133,7 +205,13 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
 		session->settings(3000);
 	}
 
-	request.iRequestId = session->submit(request.sFuncName, request.sServantName, request.context, request.sBuffer);
+	shared_ptr<TC_HttpRequest> *data = (shared_ptr<TC_HttpRequest>*)request.sBuffer.data();
+
+	request.iRequestId = session->submit(*(*data).get());
+
+	//这里把智能指针释放一次
+	(*data).reset();
+
 	if (request.iRequestId < 0)
 	{
 		TLOGERROR("[TARS]http2Request::Fatal submit error: " << session->getErrMsg() << endl);
@@ -156,8 +234,11 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in,
 	if(flag == TC_NetWorkBuffer::PACKET_FULL)
 	{
 		rsp.iRequestId  = out.first;
-		out.second->getHeaders(rsp.status);
-		rsp.sBuffer.assign(out.second->getContent().begin(), out.second->getContent().end());
+
+		rsp.sBuffer.resize(sizeof(shared_ptr<TC_HttpResponse>));
+
+		//这里智能指针有一次+1, 后面要自己reset掉
+		*(shared_ptr<TC_HttpResponse>*)rsp.sBuffer.data() = out.second;
 	}
 
 	return flag;

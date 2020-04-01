@@ -17,7 +17,7 @@
 #include "servant/StatReport.h"
 #include "util/tc_common.h"
 #include "util/tc_timeprovider.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/Communicator.h"
 #include "servant/Application.h"
 #include <iostream>
@@ -485,7 +485,7 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
            }
 
            mTemp[head] = it->second;
-           if(LOG->isNeedLog(TarsRollLogger::INFO_LOG))
+           if(LOG->isNeedLog(LocalRollLogger::INFO_LOG))
            {
                ostringstream os;
                os.str("");
@@ -607,7 +607,7 @@ int StatReport::reportPropMsg()
                    }
                }
                mStatMsg[head]  = body;
-               if(LOG->isNeedLog(TarsRollLogger::INFO_LOG))
+               if(LOG->isNeedLog(LocalRollLogger::INFO_LOG))
                {
                       ostringstream os;
                    os.str("");
