@@ -1067,7 +1067,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
         unsigned int iIndex = 0;
 
         // 通过一致性hash取到对应的节点
-        _consistentHashWeight.getIndex(hashCode, iIndex);
+        _consistentHashWeight.getIndex(std::to_string(hashCode), iIndex);
 
         if(iIndex >= _vRegProxys.size())
         {
@@ -1456,7 +1456,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode, bool o
         unsigned int iIndex = 0;
 
         // 通过一致性hash取到对应的节点
-        _consistentHash.getIndex(hashCode, iIndex);
+        _consistentHash.getIndex(std::to_string(hashCode), iIndex);
 
         if(iIndex >= _vRegProxys.size())
         {
