@@ -3,14 +3,14 @@
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
  *
- * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except 
+ * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  *
  * https://opensource.org/licenses/BSD-3-Clause
  *
- * Unless required by applicable law or agreed to in writing, software distributed 
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
+ * Unless required by applicable law or agreed to in writing, software distributed
+ * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 
@@ -29,6 +29,8 @@
 Tars2Cpp::Tars2Cpp()
 : _checkDefault(false)
 , _onlyStruct(false)
+, _bSqlSupport(false)
+, _bXmlSupport(false)
 , _bJsonSupport(true)
 , _namespace("tars")
 // , _unknownField(false)
@@ -36,6 +38,182 @@ Tars2Cpp::Tars2Cpp()
 {
 
 }
+
+string Tars2Cpp::writeToXml(const TypeIdPtr &pPtr) const
+{
+	ostringstream s;
+	if(EnumPtr::dynamicCast(pPtr->getTypePtr()))
+	{
+		s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace+ "::XmlOutput::writeXml((" + _namespace+ "::Int32)" << pPtr->getId() << ", _cdata_format);" << endl;
+	}
+	else if(pPtr->getTypePtr()->isArray())
+	{
+		s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace+ "::XmlOutput::writeXml((const "
+          << tostr(pPtr->getTypePtr()) << " *)" << pPtr->getId() << "Len"  << ");" << endl;
+	}
+	else if(pPtr->getTypePtr()->isPointer())
+	{
+		s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace+ "::XmlOutput::writeXml((const "
+          << tostr(pPtr->getTypePtr()) << " )" << pPtr->getId() << "Len"  << ");" << endl;
+	}
+	else
+	{
+		MapPtr mPtr = MapPtr::dynamicCast(pPtr->getTypePtr());
+		VectorPtr vPtr = VectorPtr::dynamicCast(pPtr->getTypePtr());
+		if (!_checkDefault || pPtr->isRequire() || (!pPtr->hasDefault() && !mPtr && !vPtr))
+		{
+            BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
+            if (pPtr->getTypePtr()->isSimple() || (bPtr && bPtr->kind() == Builtin::KindString))
+            {
+                s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::XmlOutput::writeXml(" << pPtr->getId() << ", _cdata_format);" << endl;
+            }
+            else
+            {
+                s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::XmlOutput::writeXml(" << pPtr->getId() << ");" << endl;
+            }
+		}
+		else
+		{
+			string sDefault = pPtr->def();
+            BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
+			if (bPtr && bPtr->kind() == Builtin::KindString)
+			{
+				sDefault = "\"" + TC_Common::replace(pPtr->def(), "\"", "\\\"") + "\"";
+			}
+
+			if (mPtr || vPtr)
+			{
+				s << TAB << "if (" << pPtr->getId() << ".size() > 0)" << endl;
+			}
+			else
+			{
+				s << TAB << "if (" << pPtr->getId() << " != " << sDefault << ")" << endl;
+			}
+
+			s << TAB << "{" << endl;
+			INC_TAB;
+			s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace+ "::XmlOutput::writeXml(" << pPtr->getId() << ");" << endl;
+			DEL_TAB;
+			s << TAB << "}" << endl;
+		}
+	}
+
+	return s.str();
+}
+
+string Tars2Cpp::readFromXml(const TypeIdPtr &pPtr, bool bIsRequire) const
+{
+	ostringstream s;
+	if(EnumPtr::dynamicCast(pPtr->getTypePtr()))
+	{
+		s << TAB << "tars::XmlInput::readXml((tars::Int32&)" << pPtr->getId() <<", pObj->value[\"" << pPtr->getId() << "\"]";
+	}
+	else if(pPtr->getTypePtr()->isArray())
+	{
+		s << TAB << "tars::XmlInput::readXml(" << pPtr->getId() << "Len" <<", pObj->value[\"" << pPtr->getId() << "\"]" << getSuffix(pPtr);
+	}
+	else if(pPtr->getTypePtr()->isPointer())
+	{
+		// "not support";
+	}
+	else
+	{
+		s << TAB << "tars::XmlInput::readXml(" << pPtr->getId() << ",pObj->value[\"" << pPtr->getId() << "\"]";
+	}
+	s << ", " << ((pPtr->isRequire() && bIsRequire)?"true":"false") << ");" << endl;
+
+	return s.str();
+}
+
+string Tars2Cpp::writeToSql(const TypeIdPtr &pPtr) const
+{
+	ostringstream s;
+	if(EnumPtr::dynamicCast(pPtr->getTypePtr()))
+	{
+		s << TAB << "_mycols[\"" << pPtr->getId() << "\"] = make_pair(tars::TC_Mysql::DB_INT, tars::TC_Common::tostr(" << pPtr->getId() << "));" << endl;
+	}
+
+	BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
+	if (bPtr)
+	{
+		switch(bPtr->kind())
+		{
+			case Builtin::KindBool:
+			case Builtin::KindByte:
+			case Builtin::KindShort:
+			case Builtin::KindInt:
+			case Builtin::KindLong:
+				s << TAB << "_mycols[\"" << pPtr->getId() << "\"] = make_pair(tars::TC_Mysql::DB_INT, tars::TC_Common::tostr(" << pPtr->getId() << "));" << endl;
+				break;
+			case Builtin::KindFloat:
+			case Builtin::KindDouble:
+				s << TAB << "_mycols[\"" << pPtr->getId() << "\"] = make_pair(tars::TC_Mysql::DB_STR, tars::TC_Common::tostr(" << pPtr->getId() << "));" << endl;
+				break;
+			case Builtin::KindString:
+				s << TAB << "_mycols[\"" << pPtr->getId() << "\"] = make_pair(tars::TC_Mysql::DB_STR, tars::TC_Common::trim(" << pPtr->getId() << "));" << endl;
+				break;
+			default:
+				break;
+		}
+	}
+    else if (!pPtr->getTypePtr()->isSimple())
+	{
+		s << TAB << "_mycols[\"" << pPtr->getId() << "\"] = make_pair(tars::TC_Mysql::DB_STR, tars::TC_Json::writeValue(tars::JsonOutput::writeJson(" << pPtr->getId() << ")));" << endl;
+	}
+
+	return s.str();
+}
+
+string Tars2Cpp::readFromSql(const TypeIdPtr &pPtr, bool bIsRequire) const
+{
+	ostringstream s;
+	EnumPtr ePtr = EnumPtr::dynamicCast(pPtr->getTypePtr());
+	if(ePtr)
+	{
+		s << TAB << pPtr->getId() << " = (" << ePtr->getSid() <<")TC_Common::strto<tars::Int32>(_mysrd[\"" << pPtr->getId() << "\"]);" << endl;
+	}
+
+	BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
+	if (bPtr)
+	{
+		switch(bPtr->kind())
+		{
+			case Builtin::KindBool:
+				s << TAB << pPtr->getId() << " = TC_Common::strto<tars::Bool>(_mysrd[\"" << pPtr->getId() << "\"]);" << endl;
+				break;
+			case Builtin::KindByte:
+				s << TAB << pPtr->getId() << " = TC_Common::strto<tars::" << (bPtr->isUnsigned() ? "UInt8" : "Char") << ">(_mysrd[\"" << pPtr->getId() << "\"]);" << endl;
+				break;
+			case Builtin::KindShort:
+				s << TAB << pPtr->getId() << " = TC_Common::strto<tars::" << (bPtr->isUnsigned() ? "UInt16" : "Short") << ">(_mysrd[\"" << pPtr->getId() << "\"]);" << endl;
+				break;
+			case Builtin::KindInt:
+				s << TAB << pPtr->getId() << " = TC_Common::strto<tars::" << (bPtr->isUnsigned() ? "UInt32" : "Int32") << ">(_mysrd[\"" << pPtr->getId() << "\"]);" << endl;
+				break;
+			case Builtin::KindLong:
+				s << TAB << pPtr->getId() << " = TC_Common::strto<tars::" << (bPtr->isUnsigned() ? "UInt64" : "Int64") << ">(_mysrd[\"" << pPtr->getId() << "\"]);" << endl;
+				break;
+			case Builtin::KindFloat:
+				s << TAB << pPtr->getId() << " = TC_Common::strto<tars::Float>(_mysrd[\"" << pPtr->getId() << "\"]);" << endl;
+				break;
+			case Builtin::KindDouble:
+				s << TAB << pPtr->getId() << " = TC_Common::strto<tars::Double>(_mysrd[\"" << pPtr->getId() << "\"]);" << endl;
+				break;
+			case Builtin::KindString:
+				s << TAB << pPtr->getId() << " = TC_Common::trim(_mysrd[\"" << pPtr->getId() << "\"]);" << endl;
+				break;
+			default:
+				break;
+		}
+	}
+    else if (!pPtr->getTypePtr()->isSimple() )
+	{
+		s << TAB << "tars::JsonInput::readJson(" << pPtr->getId() << ", tars::TC_Json::getValue(_mysrd[\"" << pPtr->getId() << "\"]), false);" << endl;
+	}
+
+	return s.str();
+}
+
 
 string Tars2Cpp::writeToJson(const TypeIdPtr& pPtr) const
 {
@@ -109,7 +287,7 @@ string Tars2Cpp::readFromJson(const TypeIdPtr& pPtr, bool bIsRequire) const
     //     s << TAB << _namespace + "::JsonInput::readJson((" + _namespace + "::Int32&)" << pPtr->getId() << ",pObj->value[\"" << pPtr->getId() << "\"]";
     // }
     // else
-    
+
     if (pPtr->getTypePtr()->isArray())
     {
         s << TAB << _namespace + "::JsonInput::readJson(" << pPtr->getId() << "Len" << ",pObj->value[\"" << pPtr->getId() << "\"]" << getSuffix(pPtr);
@@ -507,13 +685,16 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
     ////////////////////////////////////////////////////////////
     //定义缺省构造函数
     s << TAB << pPtr->getId() << "()" << endl;
-
+    s << TAB << "{" << endl;
+    INC_TAB;
+    s << TAB << "resetDefautlt();" << endl;
     vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
+
+/*
     bool b = false;
     //定义初始化列表
     for (size_t j = 0; j < member.size(); j++)
     {
-
         if (member[j]->getTypePtr()->isArray())
         {
             if (!b) s << TAB << ":";
@@ -596,8 +777,17 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
         }
         s << TAB << "memset(" << member[j]->getId() << ", 0, " << "sizeof(" << member[j]->getId() << "));" << endl;
     }
+
+    */
+
+    if (_bXmlSupport)
+    {
+        s << TAB << "_cdata_format = false;" << endl;
+    }
+
     DEL_TAB;
     s << TAB << "}" << endl;
+
 
     //resetDefault()函数
     s << TAB << "void resetDefautlt()" <<  endl;
@@ -730,6 +920,86 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
         s << TAB << "}" << endl;
     }
 
+	if (_bXmlSupport)
+	{
+		s << TAB << "void setXmlFormat(bool cdata = false)" << endl;
+		s << TAB << "{" << endl;
+		INC_TAB;
+		s << TAB << "_cdata_format = cdata;" <<endl;
+		DEL_TAB;
+		s << TAB << "}" << endl;
+
+		s << TAB << "tars::XmlValueObjPtr writeToXml() const" << endl;
+		s << TAB << "{" << endl;
+		INC_TAB;
+		s << TAB << "tars::XmlValueObjPtr p = new tars::XmlValueObj();" << endl;
+		for(size_t j = 0; j < member.size(); j++)
+		{
+			s << writeToXml(member[j]);
+		}
+		s << TAB << "return p;" <<endl;
+		DEL_TAB;
+		s << TAB << "}" << endl;
+
+		s << TAB << "string writeToXmlString() const" << endl;
+		s << TAB << "{" << endl;
+		INC_TAB;
+		s << TAB << "return tars::TC_Xml::writeValue(writeToXml());" <<endl;
+		DEL_TAB;
+		s << TAB << "}" << endl;
+
+		s << TAB << "void readFromXml(const tars::XmlValuePtr & p, bool isRequire = true)" << endl;
+		s << TAB << "{" << endl;
+		INC_TAB;
+		s << TAB << "resetDefautlt();" << endl;
+		s << TAB << "if(NULL == p.get() || p->getType() != eXmlTypeObj)" << endl;
+		s << TAB << "{" << endl;
+		INC_TAB;
+		s << TAB << "char s[128];" << endl;
+		s << TAB << "snprintf(s, sizeof(s), \"read 'struct' type mismatch, get type: %d.\", p->getType());" << endl;
+		s << TAB << "throw TC_Xml_Exception(s);" << endl;
+		DEL_TAB;
+		s << TAB << "}" << endl;
+		s << TAB << "tars::XmlValueObjPtr pObj= tars::XmlValueObjPtr::dynamicCast(p);" << endl;
+		for(size_t j = 0; j < member.size(); j++)
+		{
+			s << readFromXml(member[j]);
+		}
+		DEL_TAB;
+		s << TAB << "}" << endl;
+
+		s << TAB << "void readFromXmlString(const string & str)" << endl;
+		s << TAB << "{" << endl;
+		INC_TAB;
+		s << TAB << "readFromXml(tars::TC_Xml::getValue(str));" <<endl;
+		DEL_TAB;
+		s << TAB << "}" << endl;
+	}
+
+    if (_bSqlSupport)
+    {
+        s << TAB << "tars::TC_Mysql::RECORD_DATA& toSql(tars::TC_Mysql::RECORD_DATA& _mycols) const" << endl;
+		s << TAB << "{" << endl;
+		INC_TAB;
+		for(size_t j = 0; j < member.size(); j++)
+		{
+			s << writeToSql(member[j]);
+		}
+		s << TAB << "return _mycols;" << endl;
+		DEL_TAB;
+		s << TAB << "}" << endl;
+		s << TAB << "void fromSql(tars::TC_Mysql::MysqlRecord& _mysrd)" << endl;
+		s << TAB << "{" << endl;
+		INC_TAB;
+		s << TAB << "resetDefautlt();" << endl;
+		for(size_t j = 0; j < member.size(); j++)
+		{
+			s << readFromSql(member[j]);
+		}
+		DEL_TAB;
+		s << TAB << "}" << endl;
+    }
+
     s << TAB << "ostream& display(ostream& _os, int _level=0) const" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
@@ -771,6 +1041,15 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
         s << TAB << tostr(member[j]->getTypePtr()) << " " << member[j]->getId() << toStrSuffix(member[j]) << ";" << endl;
 
     }
+
+    if (_bXmlSupport)
+	{
+        DEL_TAB;
+	    s << TAB << "private:" << endl;
+	    INC_TAB;
+        s << TAB << "bool _cdata_format;" << endl;
+    }
+
     // if  (_unknownField)
     // {
 	//     s << TAB << "std::string sUnknownField;" << endl;
@@ -1284,6 +1563,58 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     }
     DEL_TAB;
     s << TAB << "}" << endl;
+
+    // 支持JSON协议分发
+    if (_bJsonSupport && tars::TC_Common::matchPeriod(pPtr->getId(), _vJsonIntf))
+    {
+        s << TAB << "else if (_current->getRequestVersion() == JSONVERSION)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << _namespace << "::JsonValueObjPtr _jsonPtr = " << _namespace << "::JsonValueObjPtr::dynamicCast(" << _namespace << "::TC_Json::getValue(_current->getRequestBuffer()));" << endl;
+        for(size_t i = 0; i < vParamDecl.size(); i++)
+        {
+            string sParamName =  vParamDecl[i]->getTypeIdPtr()->getId();
+            string sEnum2Int = (EnumPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr())) ? "(" + _namespace + "::Int32)" : "";
+            if (!vParamDecl[i]->isOut())
+            {
+                // tars::JsonInput::readJson(uin, _jsonPtr->value["uin"], true); 枚举类型转成int
+                s << TAB << _namespace << "::JsonInput::readJson(" << sParamName << ", _jsonPtr->value[\"" << sParamName << "\"], true);" << endl;
+            }
+            else
+            {
+                s << TAB << _namespace << "::JsonInput::readJson(" << sParamName << ", _jsonPtr->value[\"" << sParamName << "\"], false);" << endl;
+            }
+        }
+        DEL_TAB;
+        s << TAB << "}" << endl;
+    }
+
+    // 支持XML协议分发
+    if (_bXmlSupport && tars::TC_Common::matchPeriod(pPtr->getId(), _vXmlIntf))
+    {
+        s << TAB << "else if (_current->getRequestVersion() == XMLVERSION)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+
+        s << TAB << "tars::XmlValueObjPtr _xmlPtr = tars::XmlValueObjPtr::dynamicCast(tars::TC_Xml::getValue(_current->getRequestBuffer()));" << endl;
+        for(size_t i = 0; i < vParamDecl.size(); i++)
+	    {
+		    string sParamName =  vParamDecl[i]->getTypeIdPtr()->getId();
+		    if(!vParamDecl[i]->isOut())
+		    {
+			    //枚举类型转成int
+			    s << TAB << "tars::XmlInput::readXml(" << sParamName << ", _xmlPtr->value[\"" << sParamName << "\"], true);" << endl;
+		    }
+		    else
+		    {
+                s << TAB << "tars::XmlInput::readXml(" << sParamName << ", _xmlPtr->value[\"" << sParamName << "\"], false);" << endl;
+		    }
+	    }
+
+        DEL_TAB;
+        s << TAB << "}" << endl;
+    }
+
     s << TAB << "else" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
@@ -1346,6 +1677,70 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
 
     DEL_TAB;
     s << TAB << "}" << endl;
+
+    // 支持JSON协议分发
+    if (_bJsonSupport && tars::TC_Common::matchPeriod(pPtr->getId(), _vJsonIntf))
+    {
+        s << TAB << "else if (_current->getRequestVersion() == JSONVERSION)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << _namespace << "::JsonValueObjPtr _p = new " << _namespace << "::JsonValueObj();" << endl;
+        for(size_t i = 0; i < vParamDecl.size(); i++)
+        {
+            string sParamName =  vParamDecl[i]->getTypeIdPtr()->getId();
+            if (vParamDecl[i]->isOut())
+            {
+                s << TAB << "_p->value[\"" << sParamName << "\"] = "<< _namespace << "::JsonOutput::writeJson(" << sParamName << ");" << endl;
+            }
+        }
+
+        if (pPtr->getReturnPtr()->getTypePtr())
+        {
+            BuiltinPtr retPtr = BuiltinPtr::dynamicCast(pPtr->getReturnPtr()->getTypePtr());
+            if (retPtr->kind() >= Builtin::KindBool && retPtr->kind() <= Builtin::KindLong)
+            {
+                s << TAB << "_p->value[\"ret\"] = "<< _namespace << "::JsonOutput::writeJson(" << pPtr->getReturnPtr()->getId() << ");" << endl;
+            }
+        }
+
+        s << TAB << _namespace << "::TC_Json::writeValue(_p, _sResponseBuffer);" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+    }
+
+    // 支持XML协议分发
+    if (_bXmlSupport && tars::TC_Common::matchPeriod(pPtr->getId(), _vXmlIntf))
+    {
+        s << TAB << "else if (_current->getRequestVersion() == XMLVERSION)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+
+        s << TAB << "tars::XmlValueObjPtr _p = new tars::XmlValueObj();" << endl;
+
+        for(size_t i = 0; i < vParamDecl.size(); i++)
+	    {
+		    string sParamName =  vParamDecl[i]->getTypeIdPtr()->getId();
+		    if (vParamDecl[i]->isOut())
+		    {
+                s << TAB << "_p->value[\"" << sParamName << "\"] = tars::XmlOutput::writeXml(" << sParamName << ");" << endl;
+		    }
+	    }
+
+        if (pPtr->getReturnPtr()->getTypePtr())
+        {
+            BuiltinPtr retPtr = BuiltinPtr::dynamicCast(pPtr->getReturnPtr()->getTypePtr());
+            if (retPtr->kind() >= Builtin::KindBool && retPtr->kind() <= Builtin::KindLong)
+            {
+                s << TAB << "_p->value[\"ret\"] = tars::XmlOutput::writeXml(" << pPtr->getReturnPtr()->getId() << ");" << endl;
+            }
+        }
+
+        s << TAB << "tars::TC_Xml::writeValue(_p, _sResponseBuffer);" << endl;
+
+        DEL_TAB;
+        s << TAB << "}" << endl;
+    }
+
     s << TAB << "else" << endl;
 
     //普通tars调用输出参数
@@ -1831,7 +2226,7 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
     s << TAB << "virtual void " << "callback_" << pPtr->getId() << "(const " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << "Ptr &ptr)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
-    s << TAB << "_promise_" << sStruct << ".setValue(ptr);" << endl; 
+    s << TAB << "_promise_" << sStruct << ".setValue(ptr);" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
     s << TAB << "virtual void " << "callback_" << pPtr->getId() << "_exception(" + _namespace + "::Int32 ret)" << endl;
@@ -1839,7 +2234,7 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
     INC_TAB;
     s << TAB << "std::string str(\"\");" << endl;
     s << TAB << "str += \"Function:" << pPtr->getId() << "_exception|Ret:\";" << endl;
-    s << TAB << "str += TC_Common::tostr(ret);" << endl; 
+    s << TAB << "str += TC_Common::tostr(ret);" << endl;
     s << TAB << "_promise_" << sStruct << ".setException(tars::copyException(str, ret));" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
@@ -2457,6 +2852,8 @@ void Tars2Cpp::generateH(const ContextPtr &pPtr) const
     s << "#include <vector>" << endl;
     s << "#include \"tup/Tars.h\"" << endl;
     if (_bJsonSupport) s << "#include \"tup/TarsJson.h\"" << endl;
+    if (_bSqlSupport) s << "#include \"util/tc_mysql.h\"" << endl;
+    if (_bXmlSupport) s << "#include \"tup/TarsXml.h\"" << endl;
 
     s << "using namespace std;" << endl;
 
@@ -2863,4 +3260,4 @@ StructPtr Tars2Cpp::findStruct(const ContextPtr& pPtr, const string& id)
 //     s << endl;
 //     s << "#endif" << endl;
 
-//   
+//

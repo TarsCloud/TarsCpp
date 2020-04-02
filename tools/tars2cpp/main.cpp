@@ -111,6 +111,35 @@ int main(int argc, char* argv[])
         t2c.setJsonSupport(false);
     }
 
+    if (option.hasParam("sql"))
+    {
+        t2c.setSqlSupport(true);
+        t2c.setJsonSupport(true);
+    }
+
+    if (option.hasParam("xml"))
+    {
+        vector<string> vXmlIntf;
+        string sXml = tars::TC_Common::trim(option.getValue("xml"));
+        sXml = tars::TC_Common::trimleft(tars::TC_Common::trimright(sXml, "]"), "[");
+        if (!sXml.empty())
+        {
+            vXmlIntf = tars::TC_Common::sepstr<string>(sXml, ",", false);
+        }
+        t2c.setXmlSupport(true, vXmlIntf);
+    }
+
+    if (option.hasParam("json"))
+    {
+        t2c.setJsonSupport(true);
+        string sJson = tars::TC_Common::trim(option.getValue("json"));
+        sJson = tars::TC_Common::trimleft(tars::TC_Common::trimright(sJson, "]"), "[");
+        if (!sJson.empty())
+        {
+            t2c.setJsonSupport(tars::TC_Common::sepstr<string>(sJson, ",", false));
+        }
+    }
+
     t2c.setTarsMaster(option.hasParam("tarsMaster"));
 
     try

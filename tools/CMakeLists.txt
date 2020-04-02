@@ -11,7 +11,7 @@ function(tars2language TARGET)
     foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
         string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/bin)
-    endforeach()   
+    endforeach()
 
     include_directories(${PROJECT_SOURCE_DIR}/tarsparse)
 
@@ -38,6 +38,7 @@ add_subdirectory(tars2oc)
 add_subdirectory(tars2php)
 add_subdirectory(tars2android)
 add_subdirectory(tars2node)
+add_subdirectory(tars2case)
 
 IF(TARS_PROTOBUF)
     add_subdirectory(pb2tarscpp)
