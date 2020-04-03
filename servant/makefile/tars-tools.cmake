@@ -89,8 +89,9 @@ set(TARS_RELEASE "${PROJECT_BINARY_DIR}/run-release.cmake")
 set(TARS_UPLOAD "${PROJECT_BINARY_DIR}/run-upload.cmake")
 set(TARS_TAR "${PROJECT_BINARY_DIR}/run-tar.cmake")
 
-FILE(WRITE ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND echo release all)\n")
-FILE(WRITE ${TARS_UPLOAD} "EXECUTE_PROCESS(COMMAND echo upload all)\n")
+FILE(WRITE ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo release all)\n")
+FILE(WRITE ${TARS_UPLOAD} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo upload all)\n")
+FILE(WRITE ${TARS_TAR} "")
 
 function(gen_tars TARGET)
 
@@ -129,6 +130,8 @@ endfunction()
 #生成带tars文件的可执行程序
 macro(gen_server APP TARGET)
 
+	set(UPLOAD_FILES ${ARGN})
+
 	include_directories(${PROJECT_SOURCE_DIR})
 
 	FILE(GLOB_RECURSE SRC_FILES  "*.cc" "*.cpp" ".c")
@@ -157,13 +160,28 @@ macro(gen_server APP TARGET)
 
 	#make tar #########################################################################
 	SET(RUN_TAR_COMMAND_FILE "${CMAKE_BINARY_DIR}/run-tar-${TARGET}.cmake")
-	FILE(WRITE ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND make_directory ${CMAKE_BINARY_DIR}/${TARGET})\n")
+	FILE(WRITE ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo mkdir -p ${CMAKE_BINARY_DIR}/${TARGET}/)\n")
+	FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${TARGET}/)\n")
+	FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo copy bin/${TARGET} ${TARGET}/)\n")
+
 	IF(WIN32)
-		FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND copy ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/${TARGET}.exe ${CMAKE_BINARY_DIR}/${TARGET}/)\n")
+		FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy bin/${TARGET}.exe ${TARGET}/)\n")
 	ELSE()
-		FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND copy ${CMAKE_BINARY_DIR}/bin/${TARGET} ${CMAKE_BINARY_DIR}/${TARGET}/)\n")
-	ENDIF()
-	FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND tar czfv ${CMAKE_BINARY_DIR}/${TARGET}.tgz ${CMAKE_BINARY_DIR}/${TARGET})\n")
+		FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy bin/${TARGET} ${TARGET}/)\n")
+	ENDIF()	
+
+	foreach(UPLOAD ${UPLOAD_FILES})
+		FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo copy ${UPLOAD} ${TARGET}/)\n")
+		IF(WIN32)
+			FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${UPLOAD} ${TARGET}/)\n")
+		ELSE()
+			FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${UPLOAD} ${TARGET}/)\n")
+		ENDIF()	
+	endforeach(UPLOAD ${UPLOAD_FILES})
+
+	FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo tar czfv ${TARGET}.tgz ${TARGET}/)\n")
+
+	FILE(APPEND ${RUN_TAR_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E tar czfv ${TARGET}.tgz ${TARGET}/)\n")
 
 	#执行命令
 	add_custom_command(OUTPUT ${TARGET}.tgz
@@ -178,13 +196,13 @@ macro(gen_server APP TARGET)
 	#make upload #########################################################################
 	SET(RUN_UPLOAD_COMMAND_FILE "${PROJECT_BINARY_DIR}/run-upload-${TARGET}.cmake")
 	IF(WIN32)
-		FILE(WRITE ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo ${TARS_WEB_HOST}/api/upload_and_publish -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
+		FILE(WRITE ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo ${TARS_WEB_HOST}/api/upload_and_publish -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
 		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${TARS_PATH}/thirdparty/bin/curl.exe ${TARS_WEB_HOST}/api/upload_and_publish?ticket=${TARS_TOKEN} -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
-		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo \n---------------------------------------------------------------------------)\n")
+		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND -E echo \n---------------------------------------------------------------------------)\n")
 	ELSE()
-		FILE(WRITE ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo ${TARS_WEB_HOST}/api/upload_and_publish -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
+		FILE(WRITE ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo ${TARS_WEB_HOST}/api/upload_and_publish -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
 		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND curl ${TARS_WEB_HOST}/api/upload_and_publish?ticket=${TARS_TOKEN} -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload)\n")
-		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo \n---------------------------------------------------------------------------)\n")
+		FILE(APPEND ${RUN_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo \n---------------------------------------------------------------------------)\n")
 
 	ENDIF()
 
@@ -208,17 +226,17 @@ macro(gen_server APP TARGET)
 			set(CUR_TARS_GEN ${TARS_PATH}/${TARS_NAME}.h)
 
 			if(WIN32)
-				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND make_directory c:\\tarsproto\\protocol\\${APP}\\${TARGET})\n")
-				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo cp -rf ${CUR_TARS_GEN} c:\\tarsproto\\protocol\\${APP}\\${TARGET})\n")
-				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND copy ${CUR_TARS_GEN} c:\\tarsproto\\protocol\\${APP}\\${TARGET})\n")
+				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory c:\\tarsproto\\protocol\\${APP}\\${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${CUR_TARS_GEN} c:\\tarsproto\\protocol\\${APP}\\${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${CUR_TARS_GEN} c:\\tarsproto\\protocol\\${APP}\\${TARGET})\n")
 			elseif(APPLE)
-				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND make_directory $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
-				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo cp -rf ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
-				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND copy ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
+				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
 			elseif(UNIX)
-				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND make_directory /home/tarsproto/${APP}/${TARGET})\n")
-				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND echo cp -rf ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
-				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND copy ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
+				FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory /home/tarsproto/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
 			endif()
 		endforeach(TARS_FILE ${TARS_INPUT})
 

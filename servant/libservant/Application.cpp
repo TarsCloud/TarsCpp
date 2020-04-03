@@ -927,7 +927,7 @@ void Application::outClient(ostream &os)
     os << TC_Common::outfill("property")                    << _communicator->getProperty("property") << endl;
     os << TC_Common::outfill("report-interval")             << _communicator->getProperty("report-interval") << endl;
 //    os << TC_Common::outfill("sample-rate")                 << _communicator->getProperty("sample-rate") << endl;
-    os << TC_Common::outfill("max-sample-count")            << _communicator->getProperty("max-sample-count") << endl;
+//    os << TC_Common::outfill("max-sample-count")            << _communicator->getProperty("max-sample-count") << endl;
     os << TC_Common::outfill("netthread")                  << _communicator->getProperty("netthread") << endl;
     os << TC_Common::outfill("asyncthread")                 << _communicator->getProperty("asyncthread") << endl;
     os << TC_Common::outfill("modulename")                  << _communicator->getProperty("modulename") << endl;
@@ -1072,8 +1072,8 @@ void Application::initializeServer()
     ServerConfig::ReportFlow        = _conf.get("/tars/application/server<reportflow>")=="0"?0:1;
     ServerConfig::IsCheckSet        = _conf.get("/tars/application/server<checkset>","1")=="0"?0:1;
     ServerConfig::OpenCoroutine     = TC_Common::strto<bool>(toDefault(_conf.get("/tars/application/server<opencoroutine>"), "0"));
-    ServerConfig::CoroutineMemSize  =  TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinememsize>"), "1073741824"), 1073741824);
-    ServerConfig::CoroutineStackSize= (uint32_t)TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinestack>"), "131072"), 131072);
+    ServerConfig::CoroutineMemSize  =  TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinememsize>"), "1G"), 1024*1024*1024);
+    ServerConfig::CoroutineStackSize= (uint32_t)TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinestack>"), "128K"), 1024*128);
     ServerConfig::ManualListen      = _conf.get("/tars/application/server<manuallisten>", "0") == "0" ? false : true;
 	ServerConfig::MergeNetImp       = _conf.get("/tars/application/server<mergenetimp>", "0") == "0" ? false : true;
 	ServerConfig::NetThread         = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<nethread>"), "1"));
