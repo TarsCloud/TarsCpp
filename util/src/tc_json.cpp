@@ -333,6 +333,7 @@ JsonValueNumPtr TC_Json::getNum(BufferJsonReader & reader,char head)
 		dResult=0-dResult;
 	JsonValueNumPtr p = new JsonValueNum();
 	p->value=dResult;
+	p->isInt=!bFloat;
 	return p;
 }
 
@@ -447,6 +448,13 @@ string TC_Json::writeValue(const JsonValuePtr & p)
 	string ostr;
 	writeValue(p, ostr);
 	return ostr;
+}
+
+void TC_Json::writeValue(const JsonValuePtr& p, vector<char>& buf)
+{
+    string ostr;
+    writeValue(p, ostr);
+    buf.assign(ostr.begin(), ostr.end());
 }
 
 void TC_Json::writeValue(const JsonValuePtr & p, string& ostr)
@@ -597,6 +605,13 @@ JsonValuePtr TC_Json::getValue(const string & str)
 {
 	BufferJsonReader reader;
 	reader.setBuffer(str.c_str(),str.length());
+	return getValue(reader);
+}
+
+JsonValuePtr TC_Json::getValue(const vector<char>& buf)
+{
+	BufferJsonReader reader;
+	reader.setBuffer(buf);
 	return getValue(reader);
 }
 

@@ -17,4 +17,5 @@ tars2php      | Source code implementation of IDL tool for generating PHP code t
 tars2python   | Source code implementation of IDL tool for generating Python code through tars file
 tars2node     | Source code implementation of IDL tool for generating Node.js code through tars file
 tars2android  | Source code implementation of IDL tool for generating Android code through tars file
+tars2case     | Generate test case for tars server
 pb2tarscpp    | Generate protoc plugin source code for tars C++ code via proto file
