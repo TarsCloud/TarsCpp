@@ -34,7 +34,7 @@ public:
     typedef D queue_type;
 
 	/**
-	 * @brief 从头部获取数据, 没有数据则等待.
+	 * @brief 从头部获取数据, 没有数据抛异常
 	 *
 	 * @param t
 	 * @return bool: true, 获取了数据, false, 无数据
