@@ -1076,7 +1076,7 @@ void Application::initializeServer()
     ServerConfig::CoroutineStackSize= (uint32_t)TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinestack>"), "128K"), 1024*128);
     ServerConfig::ManualListen      = _conf.get("/tars/application/server<manuallisten>", "0") == "0" ? false : true;
 	ServerConfig::MergeNetImp       = _conf.get("/tars/application/server<mergenetimp>", "0") == "0" ? false : true;
-	ServerConfig::NetThread         = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<nethread>"), "1"));
+	ServerConfig::NetThread         = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<netthread>"), "1"));
 	ServerConfig::CloseCout        = _conf.get("/tars/application/server<closecout>","1")=="0"?0:1;
 	ServerConfig::BackPacketLimit  = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketlimit>", "100*1024*1024"));
 	ServerConfig::BackPacketMin    = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketmin>", "1024"));
