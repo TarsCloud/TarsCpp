@@ -168,8 +168,10 @@ public:
 		int64_t         _recvTimeStamp;  /**接收到数据的时间*/
 	};
 
-	typedef TC_CasQueue<shared_ptr<RecvContext>> recv_queue;
-	typedef TC_CasQueue<shared_ptr<SendContext>> send_queue;
+//	typedef TC_CasQueue<shared_ptr<RecvContext>> recv_queue;
+	typedef TC_ThreadQueue<shared_ptr<RecvContext>> recv_queue;
+//	typedef TC_CasQueue<shared_ptr<SendContext>> send_queue;
+	typedef TC_ThreadQueue<shared_ptr<SendContext>> send_queue;
 	typedef recv_queue::queue_type recv_queue_type;
 
 	////////////////////////////////////////////////////////////////////////////
