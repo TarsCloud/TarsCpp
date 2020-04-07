@@ -134,7 +134,7 @@ macro(gen_server APP TARGET)
 
 	include_directories(${PROJECT_SOURCE_DIR})
 
-	FILE(GLOB_RECURSE SRC_FILES  "*.cc" "*.cpp" ".c")
+	FILE(GLOB_RECURSE SRC_FILES  "*.cc" "*.cpp" "*.c")
 
 	add_executable(${TARGET} ${SRC_FILES})
 	file(GLOB_RECURSE TARS_INPUT *.tars)
