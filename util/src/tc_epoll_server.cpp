@@ -3,14 +3,14 @@
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
  *
- * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except 
+ * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  *
  * https://opensource.org/licenses/BSD-3-Clause
  *
- * Unless required by applicable law or agreed to in writing, software distributed 
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
+ * Unless required by applicable law or agreed to in writing, software distributed
+ * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 
@@ -24,7 +24,7 @@
 #include <cassert>
 #include <iostream>
 
-#define FILE_FUNC_LINE          "[" << __FILE__ << "::" << __FUNCTION__ << "::" << __LINE__ << "]" 
+#define FILE_FUNC_LINE          "[" << __FILE__ << "::" << __FUNCTION__ << "::" << __LINE__ << "]"
 #define LOG_CONSOLE cout << this_thread::get_id() <<"|"<< TC_Common::now2str()<< FILE_FUNC_LINE << "|"
 
 #if TARGET_PLATFORM_WINDOWS
@@ -52,7 +52,7 @@ static const int BUFFER_SIZE = 8 * 1024;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // handle的实现
-TC_EpollServer::Handle::Handle() 
+TC_EpollServer::Handle::Handle()
 : _pEpollServer(NULL)
 , _iWaitTime(100)
 {
@@ -612,7 +612,7 @@ const vector<string> &TC_EpollServer::BindAdapter::getDeny() const
 
 bool TC_EpollServer::BindAdapter::isLimitMaxConnection() const
 {
-    return (_iCurConns + 1 > (size_t)_iMaxConns) || (_iCurConns + 1 > (int)((uint32_t)1 << 22) - 1);
+    return (_iCurConns + 1 > _iMaxConns) || (_iCurConns + 1 > (int)((uint32_t)1 << 22) - 1);
 }
 
 void TC_EpollServer::BindAdapter::decreaseNowConnection()
@@ -723,7 +723,7 @@ TC_EpollServer::Connection::~Connection()
         delete _pRecvBuffer;
         _pRecvBuffer = NULL;
     }
-    
+
     if (isTcp())
     {
         assert(!_sock.isValid());
@@ -1047,7 +1047,7 @@ int TC_EpollServer::Connection::sendBuffer()
 			{
 				_sendBuffer.moveHeader(iBytesSent);
 
-				if (iBytesSent == data.second)
+				if (iBytesSent == (int)data.second)
 				{
 					_pBindAdapter->decreaseSendBufferSize();
 				}
@@ -1865,7 +1865,7 @@ void TC_EpollServer::NetThread::run()
         if (iEvNum == 0)
         {
             //在这里加上心跳逻辑，获取所有的bindAdpator,然后发心跳
-            if (_epollServer->isMergeHandleNetThread()) 
+            if (_epollServer->isMergeHandleNetThread())
             {
                 vector<TC_EpollServer::BindAdapterPtr> adapters = _epollServer->getBindAdapters();
                 for (auto adapter : adapters)
@@ -1913,9 +1913,9 @@ TC_EpollServer::TC_EpollServer(unsigned int iNetThreadNum)
 : _netThreadNum(iNetThreadNum)
 , _bTerminate(false)
 , _handleStarted(false)
-, _pLocalLogger(NULL) 
+, _pLocalLogger(NULL)
 {
-#if TARGET_PLATFORM_WINDOWS    
+#if TARGET_PLATFORM_WINDOWS
     WSADATA wsadata;
     WSAStartup(MAKEWORD(2, 2), &wsadata);
 #endif
@@ -1966,9 +1966,9 @@ TC_EpollServer::~TC_EpollServer()
 	}
 	_listeners.clear();
 
-#if TARGET_PLATFORM_WINDOWS    
+#if TARGET_PLATFORM_WINDOWS
     WSACleanup();
-#endif    
+#endif
 }
 
 void TC_EpollServer::applicationCallback(TC_EpollServer *epollServer)
@@ -2002,7 +2002,7 @@ bool TC_EpollServer::accept(int fd, int domain)
 	    inet_ntop(domain, (AF_INET6 == domain) ? ( void *)&stSockAddr6.sin6_addr : ( void *)&stSockAddr4.sin_addr, sAddr, sizeof(sAddr));
         port = (AF_INET6 == domain) ? ntohs(stSockAddr6.sin6_port) : ntohs(stSockAddr4.sin_port);
         ip = sAddr;
-        
+
 		debug("accept [" + ip + ":" + TC_Common::tostr(port) + "] [" + TC_Common::tostr(cs.getfd()) + "] incomming");
 
 		if (!_listeners[fd]->isIpAllow(ip))
@@ -2126,7 +2126,7 @@ void TC_EpollServer::waitForShutdown()
             }
         }
     }
-    
+
     for (size_t i = 0; i < _netThreads.size(); ++i)
     {
         if (_netThreads[i]->isAlive())
@@ -2136,7 +2136,7 @@ void TC_EpollServer::waitForShutdown()
             _netThreads[i]->getThreadControl().join();
         }
     }
-    
+
 }
 
 void TC_EpollServer::terminate()
