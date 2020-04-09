@@ -9,21 +9,24 @@ include_directories(${util_SOURCE_DIR}/include)
 endif()
 
 #调用tars2cpp, 生成tars对应的文件
-macro(complice_tars OUT_DEPENDS_LIST HEADER TARS_DIR)
+macro(complice_tars OUT_DEPENDS_LIST HEADER INCLUDE)
     set(DEPENDS_LIST)
 
-    if ("${TARS_DIR}" STREQUAL "")
-        FILE(GLOB SRC_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.tars")
-    else ()
-        FILE(GLOB SRC_LIST "${TARS_DIR}/*.tars")
-    endif ()
+    FILE(GLOB SRC_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.tars")
 
     set(CLEAN_LIST)
 
     #设置tars生成后, cpp文件因为h文件的include路径
-    set(INCLUDE)
+    set(HEADER_STRING)
     if (NOT "${HEADER}" STREQUAL "")
-        set(INCLUDE "--header=${HEADER}")
+        set(HEADER_STRING "--header=${HEADER}")
+    endif ()
+
+    #设置tars文件搜索路径
+    set(INCLUDE_STRING "")
+    set(HEADER_STRING)
+    if (NOT "${INCLUDE}" STREQUAL "")
+        set(INCLUDE_STRING "--include=${INCLUDE}")
     endif ()
 
     foreach (FILE ${SRC_LIST})
@@ -38,8 +41,8 @@ macro(complice_tars OUT_DEPENDS_LIST HEADER TARS_DIR)
                 OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                 DEPENDS tars2cpp ${FILE}
-                COMMAND ${TARS2CPP} --with-tars ${INCLUDE} ${TARS_IN}
-                COMMENT "${TARS2CPP} --with-tars ${INCLUDE} ${TARS_IN}")
+                COMMAND ${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}
+                COMMENT "${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}")
 
         list(APPEND DEPENDS_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H})
 
@@ -59,6 +62,7 @@ macro(complice_tars OUT_DEPENDS_LIST HEADER TARS_DIR)
 endmacro()
 
 add_subdirectory(protocol/servant)
+add_subdirectory(protocol/framework)
 add_subdirectory(tup)
 add_subdirectory(libservant)
 

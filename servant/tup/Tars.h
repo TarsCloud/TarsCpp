@@ -3,14 +3,14 @@
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
  *
- * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except 
+ * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  *
  * https://opensource.org/licenses/BSD-3-Clause
  *
- * Unless required by applicable law or agreed to in writing, software distributed 
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
+ * Unless required by applicable law or agreed to in writing, software distributed
+ * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 
@@ -708,7 +708,7 @@ namespace tars
 /// 缓冲区写入器封装
      class BufferWriter
     {
-    protected:
+    public:
         char *  _buf;
         size_t  _len;
         size_t  _buf_len;
@@ -721,7 +721,7 @@ namespace tars
             delete[] (os)._buf;
             return p;
         }
-        
+
     private:
         BufferWriter(const BufferWriter & bw);
         BufferWriter& operator=(const BufferWriter& buf);
@@ -759,7 +759,7 @@ namespace tars
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// 实际buffer是std::string
-/// 可以swap, 把buffer交换出来, 避免一次内存copy 
+/// 可以swap, 把buffer交换出来, 避免一次内存copy
     class BufferWriterString
     {
     protected:
@@ -811,7 +811,7 @@ namespace tars
             _buffer.resize(_len);
             v.swap(_buffer);
             _buf = NULL;
-            _buf_len = 0; 
+            _buf_len = 0;
             _len = 0;
         }
         void swap(std::vector<char>& v)
@@ -819,7 +819,7 @@ namespace tars
             _buffer.resize(_len);
             v.assign(_buffer.c_str(), _buffer.c_str() + _buffer.size());
             _buf = NULL;
-            _buf_len = 0; 
+            _buf_len = 0;
             _len = 0;
         }
         void swap(BufferWriterString& buf)
@@ -832,7 +832,7 @@ namespace tars
     };
 
 /// 实际buffer是std::vector<char>
-/// 可以swap, 把buffer交换出来, 避免一次内存copy 
+/// 可以swap, 把buffer交换出来, 避免一次内存copy
     class BufferWriterVector
     {
     protected:
@@ -884,7 +884,7 @@ namespace tars
             _buffer.resize(_len);
             v.assign(_buffer.data(), _buffer.size());
             _buf = NULL;
-            _buf_len = 0; 
+            _buf_len = 0;
             _len = 0;
         }
         void swap(std::vector<char>& v)
@@ -892,7 +892,7 @@ namespace tars
             _buffer.resize(_len);
             v.swap(_buffer);
             _buf = NULL;
-            _buf_len = 0; 
+            _buf_len = 0;
             _len = 0;
         }
         void swap(BufferWriterVector& buf)
@@ -909,7 +909,7 @@ namespace tars
     class TarsInputStream : public ReaderT
     {
     public:
-        
+
         /// 跳到指定标签的元素前
         bool skipToTag(uint8_t tag)
         {
@@ -942,7 +942,7 @@ namespace tars
                 skipField(headType);
             }while (headType != TarsHeadeStructEnd);
         }
-        
+
         /// 跳过一个字段
         void skipField()
         {
@@ -1169,8 +1169,8 @@ namespace tars
             uint8_t headType = 1, headTag = 1;
             bool skipFlag = false;
             TarsSkipToTag(skipFlag, tag, headType, headTag);
-            if (tars_likely(skipFlag)) 
-            {            
+            if (tars_likely(skipFlag))
+            {
                 switch (headType)
                 {
                 case TarsHeadeZeroTag:
@@ -1223,10 +1223,10 @@ namespace tars
                     n = 0;
                     break;
                 case TarsHeadeChar:
-                    TarsReadTypeBuf(*this, n, Char); 
+                    TarsReadTypeBuf(*this, n, Char);
                     break;
                 case TarsHeadeShort:
-                    TarsReadTypeBuf(*this, n, Short); 
+                    TarsReadTypeBuf(*this, n, Short);
                     n = (Short) ntohs(n);
                     break;
                 case TarsHeadeInt32:
@@ -1240,7 +1240,7 @@ namespace tars
                 default:
                     {
                         char s[64];
-                        snprintf(s, sizeof(s), "read 'Int64' type mismatch, tag: %d, get type: %d.", tag, headType); 
+                        snprintf(s, sizeof(s), "read 'Int64' type mismatch, tag: %d, get type: %d.", tag, headType);
                         throw TarsDecodeMismatch(s);
                     }
 
@@ -1309,7 +1309,7 @@ namespace tars
                 default:
                     {
                         char s[64];
-                        snprintf(s, sizeof(s), "read 'Double' type mismatch, tag: %d, get type: %d.", tag, headType); 
+                        snprintf(s, sizeof(s), "read 'Double' type mismatch, tag: %d, get type: %d.", tag, headType);
                         throw TarsDecodeMismatch(s);
                     }
                 }
@@ -1334,7 +1334,7 @@ namespace tars
                 case TarsHeadeString1:
                     {
                         size_t len = 0;
-                        TarsReadTypeBuf(*this, len, uint8_t); 
+                        TarsReadTypeBuf(*this, len, uint8_t);
                         char ss[256];
                         //s.resize(len);
                         //this->readBuf((void *)s.c_str(), len);
@@ -1357,7 +1357,7 @@ namespace tars
                         //char *ss = new char[len];
                         //s.resize(len);
                         //this->readBuf((void *)s.c_str(), len);
-                        
+
                         char *ss = new char[len];
                         try
                         {
@@ -1457,7 +1457,7 @@ namespace tars
                         if (tars_unlikely(size > bufLen))
                         {
                             char s[128];
-                            snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, %d, size: %d", tag, headType, hheadType, size); 
+                            snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, %d, size: %d", tag, headType, hheadType, size);
                             throw TarsDecodeInvalidValue(s);
                         }
                         //TarsReadTypeBuf(*this, size, UInt32);
@@ -1469,7 +1469,7 @@ namespace tars
                 default:
                     {
                         char s[128];
-                        snprintf(s, sizeof(s), "type mismatch, tag: %d, type: %d", tag, headType); 
+                        snprintf(s, sizeof(s), "type mismatch, tag: %d, type: %d", tag, headType);
                         throw TarsDecodeMismatch(s);
                     }
                 }
@@ -1517,7 +1517,7 @@ namespace tars
                 default:
                     {
                         char s[64];
-                        snprintf(s, sizeof(s), "read 'map' type mismatch, tag: %d, get type: %d.", tag, headType); 
+                        snprintf(s, sizeof(s), "read 'map' type mismatch, tag: %d, get type: %d.", tag, headType);
                         throw TarsDecodeMismatch(s);
                     }
                 }
@@ -1558,7 +1558,7 @@ namespace tars
                             snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, %d, size: %d", tag, headType, hheadType, size);
                             throw TarsDecodeInvalidValue(s);
                         }
-                        
+
                         this->readBuf(v, size);
                     }
                     break;
@@ -1611,7 +1611,7 @@ namespace tars
                         if (tars_unlikely(size > this->size()))
                         {
                             char s[128];
-                            snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, size: %d", tag, headType, size); 
+                            snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, size: %d", tag, headType, size);
                             throw TarsDecodeInvalidValue(s);
                         }
                         v.reserve(size);
@@ -1623,7 +1623,7 @@ namespace tars
                 default:
                     {
                         char s[64];
-                        snprintf(s, sizeof(s), "read 'vector' type mismatch, tag: %d, get type: %d.", tag, headType); 
+                        snprintf(s, sizeof(s), "read 'vector' type mismatch, tag: %d, get type: %d.", tag, headType);
                         throw TarsDecodeMismatch(s);
                     }
                 }
@@ -1665,7 +1665,7 @@ namespace tars
                 default:
                     {
                         char s[64];
-                        snprintf(s, sizeof(s), "read 'vector struct' type mismatch, tag: %d, get type: %d.", tag, headType); 
+                        snprintf(s, sizeof(s), "read 'vector struct' type mismatch, tag: %d, get type: %d.", tag, headType);
                         throw TarsDecodeMismatch(s);
                     }
                 }
@@ -1752,7 +1752,7 @@ namespace tars
             else
             {
                 TarsWriteToHead(*this, TarsHeadeChar, tag);
-                TarsWriteCharTypeBuf(*this, n, (*this)._len);  
+                TarsWriteCharTypeBuf(*this, n, (*this)._len);
             }
         }
 
@@ -1778,7 +1778,7 @@ namespace tars
                 */
                 TarsWriteToHead(*this, TarsHeadeShort, tag);
                 n = htons(n);
-                TarsWriteShortTypeBuf(*this, n, (*this)._len); 
+                TarsWriteShortTypeBuf(*this, n, (*this)._len);
             }
         }
 
@@ -1800,7 +1800,7 @@ namespace tars
                 //h.writeTo(*this);
                 TarsWriteToHead(*this, TarsHeadeInt32, tag);
                 n = htonl(n);
-                TarsWriteInt32TypeBuf(*this, n, (*this)._len);  
+                TarsWriteInt32TypeBuf(*this, n, (*this)._len);
             }
         }
 
@@ -1822,7 +1822,7 @@ namespace tars
                 //h.writeTo(*this);
                 TarsWriteToHead(*this, TarsHeadeInt64, tag);
                 n = tars_htonll(n);
-                TarsWriteInt64TypeBuf(*this, n, (*this)._len); 
+                TarsWriteInt64TypeBuf(*this, n, (*this)._len);
             }
         }
 
@@ -1832,7 +1832,7 @@ namespace tars
             //h.writeTo(*this);
             TarsWriteToHead(*this, TarsHeadeFloat, tag);
             n = tars_htonf(n);
-            TarsWriteFloatTypeBuf(*this, n, (*this)._len);  
+            TarsWriteFloatTypeBuf(*this, n, (*this)._len);
         }
 
         void write(Double n, uint8_t tag)
@@ -1841,7 +1841,7 @@ namespace tars
             //h.writeTo(*this);
             TarsWriteToHead(*this, TarsHeadeDouble, tag);
             n = tars_htond(n);
-            TarsWriteDoubleTypeBuf(*this, n, (*this)._len); 
+            TarsWriteDoubleTypeBuf(*this, n, (*this)._len);
         }
 
         void write(const std::string& s, uint8_t tag)
@@ -1856,7 +1856,7 @@ namespace tars
                 }
                 TarsWriteToHead(*this, TarsHeadeString4, tag);
                 uint32_t n = htonl((uint32_t)s.size());
-                TarsWriteUInt32TTypeBuf(*this, n, (*this)._len); 
+                TarsWriteUInt32TTypeBuf(*this, n, (*this)._len);
                 //this->writeBuf(s.data(), s.size());
                 TarsWriteTypeBuf(*this, s.data(), s.size());
             }
@@ -1864,7 +1864,7 @@ namespace tars
             {
                 TarsWriteToHead(*this, TarsHeadeString1, tag);
                 uint8_t n = (uint8_t)s.size();
-                TarsWriteUInt8TTypeBuf(*this, n, (*this)._len); 
+                TarsWriteUInt8TTypeBuf(*this, n, (*this)._len);
                 //this->writeBuf(s.data(), s.size());
                 TarsWriteTypeBuf(*this, s.data(), s.size());
             }

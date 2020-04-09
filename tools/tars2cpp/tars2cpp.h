@@ -52,9 +52,28 @@ public:
     void setCheckDefault(bool bCheck) { _checkDefault = bCheck; }
 
     /**
+     * 根据命令选项设置是否需要生成sql支持
+     */
+    void setSqlSupport(bool bSqlSupport) { _bSqlSupport  = bSqlSupport;}
+
+    /**
+     * 根据命令选项设置是否需要生成xml支持
+     */
+    void setXmlSupport(bool bXmlSupport, const vector<string>& vXmlIntf)
+    {
+        _bXmlSupport = bXmlSupport;
+        _vXmlIntf = vXmlIntf;
+    }
+
+    /**
      * 根据命令选项设置是否需要生成json支持
      */
     void setJsonSupport(bool bJsonSupport) { _bJsonSupport = bJsonSupport; }
+
+    /**
+     * 根据命令选项设置是否需要生成json支持
+     */
+    void setJsonSupport(const vector<string>& vJsonIntf) { _vJsonIntf = vJsonIntf; }
 
     /**
      * 设置是否只生成struct
@@ -74,6 +93,37 @@ public:
 
     //下面是编解码的源码生成
 protected:
+    /**
+     * 生成xml
+     * @param pPtr
+     *
+     * @return string
+     */
+	string writeToXml(const TypeIdPtr &pPtr) const;
+
+    /**
+     * 生成xml
+     * @param pPtr
+     *
+     * @return string
+     */
+	string readFromXml(const TypeIdPtr &pPtr, bool bIsRequire = true) const;
+
+    /**
+     * 生成sql
+     * @param pPtr
+     *
+     * @return string
+     */
+	string writeToSql(const TypeIdPtr &pPtr) const;
+
+    /**
+     * 生成sql
+     * @param pPtr
+     *
+     * @return string
+     */
+	string readFromSql(const TypeIdPtr &pPtr, bool bIsRequire = true) const;
 
     /**
      * 生成json
@@ -449,7 +499,15 @@ private:
 
     bool _onlyStruct;
 
+    bool _bSqlSupport;
+
+    bool _bXmlSupport;
+
     bool _bJsonSupport;
+
+    vector<string>  _vJsonIntf;
+    vector<string>  _vXmlIntf;
+
 
     std::string _namespace ;
 
