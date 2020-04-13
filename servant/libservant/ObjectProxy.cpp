@@ -153,7 +153,7 @@ vector<SocketOpt>& ObjectProxy::getSocketOpt()
 //
 //bool ObjectProxy::invoke_sync(ReqMessage * msg)
 //{
-//	TLOGTARS("[TARS][ObjectProxy::invoke_sync, " << _name << ", begin]" << endl);
+//	TLOGTARS("[ObjectProxy::invoke_sync, " << _name << ", begin]" << endl);
 //
 //	//选择一个远程服务的Adapter来调用
 //	AdapterProxy * pAdapterProxy = NULL;
@@ -171,7 +171,7 @@ vector<SocketOpt>& ObjectProxy::getSocketOpt()
 
 void ObjectProxy::invoke(ReqMessage * msg)
 {
-    TLOGTARS("[TARS][ObjectProxy::invoke, objname:" << _name << ", begin...]" << endl);
+    TLOGTARS("[ObjectProxy::invoke, objname:" << _name << ", begin...]" << endl);
 
     //选择一个远程服务的Adapter来调用
     AdapterProxy * pAdapterProxy = NULL;
@@ -185,14 +185,14 @@ void ObjectProxy::invoke(ReqMessage * msg)
         assert(bRet);
 
         //把数据缓存在obj里面
-        TLOGTARS("[TARS][ObjectProxy::invoke, objname:" << _name << ", select adapter proxy not valid (have not inovoke reg)]" << endl);
+        TLOGTARS("[ObjectProxy::invoke, objname:" << _name << ", select adapter proxy not valid (have not invoke reg)]" << endl);
 
         return;
     }
 
     if(!pAdapterProxy)
     {
-        TLOGERROR("[TARS][ObjectProxy::invoke, objname:"<< _name << ", selectAdapterProxy is null]"<<endl);
+        TLOGERROR("[ObjectProxy::invoke, objname:"<< _name << ", selectAdapterProxy is null]"<<endl);
 
         msg->response->iRet = TARSADAPTERNULL;
 
@@ -211,7 +211,7 @@ void ObjectProxy::invoke(ReqMessage * msg)
         assert(bRet);
 
         //把数据缓存在obj里面
-        TLOGTARS("[TARS][ObjectProxy::invoke, " << _name << ", select adapter proxy not connected (have not inovoke reg)]" << endl);
+        TLOGTARS("[ObjectProxy::invoke, " << _name << ", select adapter proxy not connected (have not inovoke reg)]" << endl);
         return;
     }
 
@@ -223,7 +223,7 @@ void ObjectProxy::onConnect(AdapterProxy *adapterProxy)
 {
 	while(!_reqTimeoutQueue.empty())
 	{
-		TLOGTARS("[TARS][ObjectProxy::doInvoke, " << _name << ", pop...]" << endl);
+		TLOGTARS("[ObjectProxy::onConnect, " << _name << ", queue size:" << _reqTimeoutQueue.size() << ", pop...]" << endl);
 
 		ReqMessage * msg = NULL;
 		_reqTimeoutQueue.pop(msg);
@@ -238,7 +238,7 @@ void ObjectProxy::onConnect(AdapterProxy *adapterProxy)
 			if (!adapterProxy)
 			{
 				//这里肯定是请求过主控
-				TLOGERROR("[TARS][ObjectProxy::doInvoke, " << _name << ", selectAdapterProxy is null]" << endl);
+				TLOGERROR("[ObjectProxy::onConnect, " << _name << ", selectAdapterProxy is null]" << endl);
 				msg->response->iRet = TARSADAPTERNULL;
 				doInvokeException(msg);
 				return;
@@ -251,6 +251,8 @@ void ObjectProxy::onConnect(AdapterProxy *adapterProxy)
 			msg->adapter = adapterProxy;
 		}
 
+		TLOGTARS("[ObjectProxy::onConnect, " << _name << ", queue size:" << _reqTimeoutQueue.size() << ", " << adapterProxy->endpoint().desc() << endl);
+
 		adapterProxy->invoke(msg);
 	}
 }
@@ -258,13 +260,13 @@ void ObjectProxy::onConnect(AdapterProxy *adapterProxy)
 void ObjectProxy::onNotifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
 {
 	if(_servantProxy) {
-		_servantProxy->onNotifyEndpoints(active, inactive);
+		_servantProxy->onNotifyEndpoints(this->_communicatorEpoll->getCommunicatorEpollId(), active, inactive);
 	}
 }
 
 void ObjectProxy::doInvoke()
 {
-    TLOGTARS("[TARS][ObjectProxy::doInvoke, objname:" << _name << ", begin...]" << endl);
+    TLOGTARS("[ObjectProxy::doInvoke, objname:" << _name << ", begin...]" << endl);
 
     for(auto it = _reqTimeoutQueue.begin(); it != _reqTimeoutQueue.end(); ++it)
 	{
@@ -278,7 +280,7 @@ void ObjectProxy::doInvoke()
 //
 //    while(!_reqTimeoutQueue.empty())
 //    {
-//        TLOGTARS("[TARS][ObjectProxy::doInvoke, " << _name << ", pop...]" << endl);
+//        TLOGTARS("[ObjectProxy::doInvoke, " << _name << ", pop...]" << endl);
 //
 //        ReqMessage * msg = NULL;
 //        _reqTimeoutQueue.pop(msg);
@@ -292,7 +294,7 @@ void ObjectProxy::doInvoke()
 //
 //        if (!adapterProxy) {
 //	        //这里肯定是请求过主控
-//	        TLOGERROR("[TARS][ObjectProxy::doInvoke, " << _name << ", selectAdapterProxy is null]" << endl);
+//	        TLOGERROR("[ObjectProxy::doInvoke, " << _name << ", selectAdapterProxy is null]" << endl);
 //	        msg->response->iRet = JCEADAPTERNULL;
 //	        doInvokeException(msg);
 //	        return;
@@ -306,7 +308,7 @@ void ObjectProxy::doInvoke()
 
 void ObjectProxy::doInvokeException(ReqMessage * msg)
 {
-    // TLOGTARS("[TARS][ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
+    // TLOGTARS("[ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
 
     //单向调用出现异常直接删除请求
     if(msg->eType == ReqMessage::ONE_WAY)
@@ -352,11 +354,11 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
                 }
                 catch(exception & e)
                 {
-                    TLOGERROR("[TARS]ObjectProxy::doInvokeException exp:" << e.what() << " ,line:" << __LINE__ << endl);
+                    TLOGERROR("ObjectProxy::doInvokeException exp:" << e.what() << " ,line:" << __LINE__ << endl);
                 }
                 catch(...)
                 {
-                    TLOGERROR("[TARS]ObjectProxy::doInvokeException exp:unknown line:|" << __LINE__ << endl);
+                    TLOGERROR("ObjectProxy::doInvokeException exp:unknown line:|" << __LINE__ << endl);
                 }
             }
             else
@@ -378,7 +380,7 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
             }
             else
             {
-                TLOGERROR("[TARS]ObjectProxy::doInvokeException coro parallel callback error, objname:" << _name << endl);
+                TLOGERROR("ObjectProxy::doInvokeException coro parallel callback error, objname:" << _name << endl);
                 delete msg;
             }
         }
@@ -397,7 +399,7 @@ void ObjectProxy::doTimeout()
     ReqMessage * reqInfo = NULL;
     while(_reqTimeoutQueue.timeout(reqInfo))
     {
-        TLOGERROR("[TARS][ObjectProxy::doTimeout, objname:" << _name << ", queue timeout error]" << endl);
+        TLOGERROR("[ObjectProxy::doTimeout, objname:" << _name << ", queue timeout error]" << endl);
 
         reqInfo->response->iRet = TARSINVOKETIMEOUT;
 

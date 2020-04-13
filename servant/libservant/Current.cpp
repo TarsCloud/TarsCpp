@@ -335,7 +335,7 @@ void Current::sendResponse(int iRet, const vector<char> &buffer,  const map<stri
         response.context        = _responseContext;
         response.iRet           = iRet;
 
-        TLOGTARS("[TARS]Current::sendResponse :"
+        TLOGTARS("Current::sendResponse :"
                    << response.iMessageType << "|"
                    << _request.sServantName << "|"
                    << _request.sFuncName << "|"
@@ -377,7 +377,7 @@ void Current::sendResponse(int iRet, const vector<char> &buffer,  const map<stri
             response.status[ServantProxy::STATUS_RESULT_DESC] = sResultDesc;
         }
 
-        TLOGTARS("[TARS]Current::sendResponse :"
+        TLOGTARS("Current::sendResponse :"
                    << response.iMessageType << "|"
                    << _request.sServantName << "|"
                    << _request.sFuncName << "|"

@@ -88,7 +88,7 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
         }
         catch(exception &ex)
         {
-            TLOGERROR("[TARS] dyeing log write to remote log server error:" << ex.what() << endl);
+            TLOGERROR("[dyeing log write to remote log server error:" << ex.what() << "]" << endl);
         }
     }
 }
@@ -263,7 +263,7 @@ void RemoteTimeWriteT::sync2remote(const vector<string> &v)
     }
     catch(exception &ex)
     {
-        TLOGERROR("[TARS] write to remote log server error:" << ex.what() << ": buffer size:" << v.size() << endl);
+        TLOGERROR("[write to remote log server error:" << ex.what() << ": buffer size:" << v.size() << "]"<< endl);
         _timeWrite->writeError(v);
         if (_timeWrite->_reportFailPtr)
         {
@@ -280,7 +280,7 @@ void RemoteTimeWriteT::sync2remoteDyeing(const vector<string> &v)
     }
     catch(exception &ex)
     {
-        TLOGERROR("[TARS] write dyeing log to remote log server error:" << ex.what() << ": buffer size:" << v.size() << endl);
+        TLOGERROR("[write dyeing log to remote log server error:" << ex.what() << ": buffer size:" << v.size() << "]" << endl);
         _timeWrite->writeError(v);
     }
 }
@@ -422,7 +422,7 @@ void TimeWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &buf
         }
         catch(exception &ex)
         {
-            TLOGERROR("[TARS] dyeing log write to remote log server error:" << ex.what() << endl);
+            TLOGERROR("[dyeing log write to remote log server error:" << ex.what() << "]" << endl);
         }
     }
 }

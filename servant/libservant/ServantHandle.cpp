@@ -50,11 +50,11 @@ ServantHandle::~ServantHandle()
         }
         catch(exception &ex)
         {
-            TLOGERROR("[TARS]ServantHandle::destroy error:" << ex.what() << endl);
+            TLOGERROR("[ServantHandle::destroy error:" << ex.what() << "]" << endl);
         }
         catch(...)
         {
-            TLOGERROR("[TARS]ServantHandle::destroy unknown exception error" << endl);
+            TLOGERROR("[ServantHandle::destroy unknown exception error]" << endl);
         }
         ++it;
     }
@@ -114,13 +114,13 @@ void ServantHandle::run()
 	}
 	catch(exception &ex)
 	{
-		TLOGERROR("[TARS]ServantHandle::run exception error:" << ex.what() << endl);
-		cerr << "[TARS]ServantHandle::run exception error:" << ex.what() << endl;
+		TLOGERROR("[ServantHandle::run exception error:" << ex.what() << "]" << endl);
+		cerr << "ServantHandle::run exception error:" << ex.what() << endl;
 	}
 	catch(...)
 	{
-		TLOGERROR("[TARS]ServantHandle::run unknown exception error." << endl);
-		cerr << "[TARS]ServantHandle::run unknown exception error." << endl;
+		TLOGERROR("[ServantHandle::run unknown exception error]" << endl);
+		cerr << "ServantHandle::run unknown exception error]" << endl;
 	}
 }
 
@@ -241,11 +241,11 @@ void ServantHandle::handleRecvData(const shared_ptr<TC_EpollServer::RecvContext>
     }
     catch(exception &ex)
     {
-        TLOGERROR("[TARS]ServantHandle::handleRecvData exception:" << ex.what() << endl);
+        TLOGERROR("[ServantHandle::handleRecvData exception:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        TLOGERROR("[TARS]ServantHandle::handleRecvData unknown exception error" << endl);
+        TLOGERROR("[ServantHandle::handleRecvData unknown exception error]" << endl);
     }
 }
 
@@ -276,11 +276,11 @@ void ServantHandle::handleAsyncResponse()
             }
             catch (exception& e)
             {
-                TLOGERROR("[TARS][ServantHandle::doResponse ex:" << e.what() << "]" << endl);
+                TLOGERROR("[ServantHandle::doResponse ex:" << e.what() << "]" << endl);
             }
             catch (...)
             {
-                TLOGERROR("[TARS][ServantHandle::doResponse ex.]" << endl);
+                TLOGERROR("[ServantHandle::doResponse error]" << endl);
             }
         }
 
@@ -292,11 +292,11 @@ void ServantHandle::handleAsyncResponse()
         }
         catch (exception& e)
         {
-            TLOGERROR("[TARS][ServantHandle::doCustemMessage ex:" << e.what() << "]" << endl);
+            TLOGERROR("[ServantHandle::doCustemMessage ex:" << e.what() << "]" << endl);
         }
         catch (...)
         {
-            TLOGERROR("[TARS][ServantHandle::doCustemMessage ex.]" << endl);
+            TLOGERROR("[ServantHandle::doCustemMessage ex.]" << endl);
         }
 
         ++it;
@@ -315,11 +315,11 @@ void ServantHandle::handleCustomMessage(bool bExpectIdle)
         }
         catch (exception& e)
         {
-            TLOGERROR("[TARS][ServantHandle::doCustemMessage ex:" << e.what() << "]" << endl);
+            TLOGERROR("[ServantHandle::doCustemMessage ex:" << e.what() << "]" << endl);
         }
         catch (...)
         {
-            TLOGERROR("[TARS][ServantHandle::doCustemMessage ex.]" << endl);
+            TLOGERROR("[ServantHandle::doCustemMessage ex.]" << endl);
         }
     }
 }
@@ -349,8 +349,8 @@ void ServantHandle::initialize()
     }
     else
     {
-        TLOGERROR("[TARS]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl);
-	    cerr << "[TARS]ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`" << endl;
+        TLOGERROR("[ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`]" << endl);
+	    cerr << "ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`]" << endl;
 
 	    RemoteNotify::getInstance()->report("initialize createServant error: no adapter:" + _bindAdapter->getName());
 
@@ -363,7 +363,7 @@ void ServantHandle::initialize()
 
     if(it == _servants.end())
     {
-        TLOGERROR("[TARS]initialize error: no servant exists." << endl);
+        TLOGERROR("[initialize error: no servant exists]" << endl);
 
         RemoteNotify::getInstance()->report("initialize error: no servant exists.");
 
@@ -380,11 +380,11 @@ void ServantHandle::initialize()
 
             it->second->initialize();
 
-            TLOGTARS("[TARS][" << it->second->getName() << "] initialize" << endl);
+            TLOGTARS("[" << it->second->getName() << " initialize]" << endl);
         }
         catch(exception &ex)
         {
-            TLOGERROR("[TARS]initialize error:" << ex.what() << endl);
+            TLOGERROR("[initialize error:" << ex.what() << "]" << endl);
 
             RemoteNotify::getInstance()->report("initialize error:" + string(ex.what()));
 
@@ -394,7 +394,7 @@ void ServantHandle::initialize()
         }
         catch(...)
         {
-            TLOGERROR("[TARS]initialize unknown exception error" << endl);
+            TLOGERROR("[initialize unknown exception error]" << endl);
 
             RemoteNotify::getInstance()->report("initialize unknown exception error");
 
@@ -415,8 +415,6 @@ void ServantHandle::heartbeat()
         _bindAdapter->setHeartBeatTime(fcur);
 
         TARS_KEEPALIVE(_bindAdapter->getName());
-
-//	    TLOGERROR("[TARS]ServantHandle::handle heartbeat:" << _bindAdapter->getName() << endl);
 
 	    //上报连接数 比率
         if (_bindAdapter->_pReportConRate)
@@ -442,7 +440,7 @@ TarsCurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::Rec
     }
     catch (TarsDecodeException &ex)
     {
-        TLOGERROR("[TARS]ServantHandle::handle request protocol decode error:" << ex.what() << endl);
+        TLOGERROR("[ServantHandle::handle request protocol decode error:" << ex.what() << "]" << endl);
         close(data);
         return NULL;
     }
@@ -459,13 +457,13 @@ TarsCurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::Rec
             if(data->adapter()->_pReportTimeoutNum)
                 data->adapter()->_pReportTimeoutNum->report(1);
 
-            TLOGERROR("[TARS]ServantHandle::handle queue timeout:"
-                         << current->_request.sServantName << "|"
-                         << current->_request.sFuncName << "|"
-                         << data->recvTimeStamp()  << "|"
-                         << data->adapter()->getQueueTimeout() << "|"
-                         << current->_request.iTimeout << "|"
-                         << now << "|" << data->ip() << ":" << data->port() << endl);
+            TLOGERROR("[ServantHandle::handle queue timeout:"
+                         << current->_request.sServantName << ", func:"
+                         << current->_request.sFuncName << ", recv time:"
+                         << data->recvTimeStamp()  << ", queue timeout:"
+                         << data->adapter()->getQueueTimeout() << ", timeout:"
+                         << current->_request.iTimeout << ", now:"
+                         << now << ", ip:" << data->ip() << ", port:" << data->port() << "]" << endl);
 
             current->sendResponse(TARSSERVERQUEUETIMEOUT);
 
@@ -488,8 +486,7 @@ TarsCurrentPtr ServantHandle::createCloseCurrent(const shared_ptr<TC_EpollServer
 
 void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TLOGTARS("[TARS]ServantHandle::handleClose,adapter:" << data->adapter()->getName()
-                << ",peer:" << data->ip() << ":" << data->port() << endl);
+    TLOGTARS("[ServantHandle::handleClose,adapter:" << data->adapter()->getName() << ",peer:" << data->ip() << ":" << data->port() << "]"<< endl);
 
     TarsCurrentPtr current = createCloseCurrent(data);
 
@@ -497,8 +494,8 @@ void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &d
 
     if (sit == _servants.end())
     {
-        TLOGERROR("[TARS]ServantHandle::handleClose,adapter:" << data->adapter()->getName()
-                << ",peer:" << data->ip() << ":" << data->port()<<", " << current->getServantName() << " not found" << endl);
+        TLOGERROR("[ServantHandle::handleClose,adapter:" << data->adapter()->getName()
+                << ",peer:" << data->ip() << ":" << data->port()<<", " << current->getServantName() << " not found]" << endl);
 
         return;
     }
@@ -511,13 +508,13 @@ void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &d
     }
     catch(exception &ex)
     {
-        TLOGERROR("[TARS]ServantHandle::handleClose " << ex.what() << endl);
+        TLOGERROR("[ServantHandle::handleClose " << ex.what() << "]" << endl);
 
         return;
     }
     catch(...)
     {
-        TLOGERROR("[TARS]ServantHandle::handleClose unknown error" << endl);
+        TLOGERROR("[ServantHandle::handleClose unknown error]" << endl);
 
         return;
     }
@@ -533,11 +530,11 @@ void ServantHandle::handleTimeout(const shared_ptr<TC_EpollServer::RecvContext> 
     if(data->adapter()->_pReportTimeoutNum)
         data->adapter()->_pReportTimeoutNum->report(1);
 
-    TLOGERROR("[TARS]ServantHandle::handleTimeout adapter '"
+    TLOGERROR("[ServantHandle::handleTimeout adapter '"
                  << data->adapter()->getName()
                  << "', recvtime:" << data->recvTimeStamp() << "|"
                  << ", timeout:" << data->adapter()->getQueueTimeout()
-                 << ", id:" << current->getRequestId() << endl);
+                 << ", id:" << current->getRequestId() << "]" << endl);
 
     if (current->getBindAdapter()->isTarsProtocol())
     {
@@ -551,11 +548,11 @@ void ServantHandle::handleOverload(const shared_ptr<TC_EpollServer::RecvContext>
 
     if (!current) return;
 
-    TLOGERROR("[TARS]ServantHandle::handleOverload adapter '"
+    TLOGERROR("[ServantHandle::handleOverload adapter '"
                  << data->adapter()->getName()
                  << "',overload:-1,queue capacity:"
                  << data->adapter()->getQueueCapacity()
-                 << ",id:" << current->getRequestId() << endl);
+                 << ",id:" << current->getRequestId() << "]" << endl);
 
     if (current->getBindAdapter()->isTarsProtocol())
     {
@@ -675,18 +672,16 @@ bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
 
     if (IS_MSG_TYPE(current->getMessageType(), tars::TARSMESSAGETYPEDYED))
     {
-        TLOGTARS("[TARS] servant got a dyeing request, message_type set: " << current->getMessageType() << endl);
+        TLOGTARS("[servant got a dyeing request, message_type set: " << current->getMessageType() << "]" << endl);
 
         if (dyeingIt != current->getRequestStatus().end())
         {
-            TLOGTARS("[TARS] servant got a dyeing request, dyeing key: " << dyeingIt->second << endl);
+            TLOGTARS("[servant got a dyeing request, dyeing key: " << dyeingIt->second << "]" << endl);
 
             dyeingKey = dyeingIt->second;
         }
         return true;
     }
-
-
 
     return false;
 }
@@ -704,24 +699,6 @@ bool ServantHandle::processCookie(const TarsCurrentPtr &current, map<string, str
 	});
 
 	return !cookie.empty();
-//
-//	map<string, string>::const_iterator cookieIt = current->getRequestStatus().find(ServantProxy::STATUS_COOKIE);
-//    if (cookieIt != current->getContext().end())
-//    {
-//	    std::for_each(pSptd->_cookie.begin(), pSptd->_cookie.end(),[&](map<string, string>::value_type& p){
-//		    req.status.insert(make_pair(p.first, p.second));
-//	    });
-//
-////        TLOGINFO("[TARS] cookie:" << cookieIt->second << endl);
-//
-//        Cookie stCookie;
-//        stCookie.readFromJsonString(cookieIt->second);
-//        cookie = stCookie.cookie;
-//        return true;
-//    }
-//
-//    return false;
-
 }
 
 bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
@@ -749,7 +726,7 @@ bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
 
         if (setIt != current->getRequestStatus().end())
         {
-            TLOGTARS("[TARS] servant got a setname request, setname key:" << setIt->second << endl);
+            TLOGTARS("[servant got a setname request, setname key:" << setIt->second << "]" << endl);
 
             sSetName = setIt->second;
 
@@ -774,13 +751,13 @@ bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
                 }
                 else
                 {
-                    TLOGERROR("[TARS]ServantHandle::checkValidSetInvoke|"
+                    TLOGERROR("[ServantHandle::checkValidSetInvoke|"
                             << current->getIp() << "|"
                             << current->getMessageType() << "|"
                             << current->getServantName() << "|"
                             << current->getFuncName() << "|client:"
                             << ClientConfig::SetDivision << "|server:"
-                            << sSetName << endl);
+                            << sSetName << "]" << endl);
                     current->sendResponse(TARSINVOKEBYINVALIDESET);
                     return false;
                 }
@@ -788,13 +765,13 @@ bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
         }
         else
         {
-            TLOGERROR("[TARS]ServantHandle::checkValidSetInvoke|"
+            TLOGERROR("[ServantHandle::checkValidSetInvoke|"
                             << current->getIp() << "|"
                             << current->getMessageType() << "|"
                             << current->getServantName() << "|"
                             << current->getFuncName() << "|client:"
                             << ClientConfig::SetDivision << "|server:"
-                            << sSetName << endl);
+                            << sSetName << "]" << endl);
             current->sendResponse(TARSINVOKEBYINVALIDESET);
             return false;
         }
@@ -806,14 +783,14 @@ bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
 
 void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
 {
-    TLOGTARS("[TARS]ServantHandle::handleTarsProtocol current:"
+    TLOGTARS("[ServantHandle::handleTarsProtocol current:"
                 << current->getIp() << "|"
                 << current->getPort() << "|"
                 << current->getMessageType() << "|"
                 << current->getServantName() << "|"
                 << current->getFuncName() << "|"
                 << current->getRequestId() << "|"
-                << TC_Common::tostr(current->getRequestStatus())<<endl);
+                << TC_Common::tostr(current->getRequestStatus()) << "]"<<endl);
 
     //检查set调用合法性
     if(!checkValidSetInvoke(current))
@@ -865,7 +842,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     }
     catch(TarsDecodeException &ex)
     {
-        TLOGERROR("[TARS]ServantHandle::handleTarsProtocol " << ex.what() << endl);
+        TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
 
         ret = TARSSERVERDECODEERR;
 
@@ -873,7 +850,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     }
     catch(TarsEncodeException &ex)
     {
-        TLOGERROR("[TARS]ServantHandle::handleTarsProtocol " << ex.what() << endl);
+        TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
 
         ret = TARSSERVERENCODEERR;
 
@@ -881,7 +858,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     }
     catch(exception &ex)
     {
-        TLOGERROR("[TARS]ServantHandle::handleTarsProtocol " << ex.what() << endl);
+        TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
 
         ret = TARSSERVERUNKNOWNERR;
 
@@ -889,7 +866,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     }
     catch(...)
     {
-        TLOGERROR("[TARS]ServantHandle::handleTarsProtocol unknown error" << endl);
+        TLOGERROR("[ServantHandle::handleTarsProtocol unknown error]" << endl);
 
         ret = TARSSERVERUNKNOWNERR;
 
@@ -908,10 +885,10 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
 
 void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
 {
-    TLOGTARS("[TARS]ServantHandle::handleNoTarsProtocol current:"
+    TLOGTARS("[ServantHandle::handleNoTarsProtocol current:"
         << current->getIp() << "|"
         << current->getPort() << "|"
-        << current->getServantName() << endl);
+        << current->getServantName() << "]" << endl);
 
 	auto sit = _servants.find(current->getServantName());
 
@@ -926,11 +903,11 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
     }
     catch(exception &ex)
     {
-        TLOGERROR("[TARS]ServantHandle::handleNoTarsProtocol " << ex.what() << endl);
+        TLOGERROR("[ServantHandle::handleNoTarsProtocol " << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        TLOGERROR("[TARS]ServantHandle::handleNoTarsProtocol unknown error" << endl);
+        TLOGERROR("[ServantHandle::handleNoTarsProtocol unknown error]" << endl);
     }
 
     if (current->isResponse() && !buffer.empty())

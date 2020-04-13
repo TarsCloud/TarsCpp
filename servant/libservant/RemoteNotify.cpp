@@ -44,6 +44,7 @@ void RemoteNotify::report(const string &sResult, bool bSync)
         if(_notifyPrx)
         {
             ReportInfo info;
+            info.eType     = REPORT;
             info.sApp      = _app;
             info.sServer   = _serverName;
             info.sSet      = _setName;
@@ -52,23 +53,21 @@ void RemoteNotify::report(const string &sResult, bool bSync)
             info.sNodeName = _nodeName;
             if(!bSync)
             {
-                //_notifyPrx->async_reportServer(NULL, _app + "." + _serverName, TC_Common::tostr(std::this_thread::get_id()), sResult);
                 _notifyPrx->async_reportNotifyInfo(NULL, info);
             }
             else
             {
-                //_notifyPrx->reportServer(_app + "." + _serverName, TC_Common::tostr(std::this_thread::get_id()), sResult);
                 _notifyPrx->reportNotifyInfo(info);
             }
         }
     }
     catch(exception &ex)
     {
-        TLOGERROR("RemoteNotify::report error:" << ex.what() << endl);
+        TLOGERROR("[RemoteNotify::report error:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        TLOGERROR("RemoteNotify::report unknown error" << endl);
+        TLOGERROR("[RemoteNotify::report unknown error" << "]" << endl);
     }
 }
 
@@ -79,7 +78,7 @@ void RemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
         if(_notifyPrx)
         {
             ReportInfo info;
-           // info.eType     = 0;
+            info.eType     = NOTIFY;
             info.sApp      = _app;
             info.sServer   = _serverName;
             info.sSet      = _setName;
@@ -87,17 +86,16 @@ void RemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
             info.sMessage  = sMessage;
             info.eLevel    = level;
             info.sNodeName = _nodeName;
-            //_notifyPrx->async_notifyServer(NULL, _app + "." + _serverName, level, sMessage);
             _notifyPrx->async_reportNotifyInfo(NULL, info);
         }
     }
     catch(exception &ex)
     {
-        TLOGERROR("RemoteNotify::notify error:" << ex.what() << endl);
+        TLOGERROR("[RemoteNotify::notify error:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        TLOGERROR("RemoteNotify::notify unknown error" << endl);
+        TLOGERROR("[RemoteNotify::notify unknown error" << "]" << endl);
     }
 }
 
@@ -108,7 +106,7 @@ void RemoteNotify::report(const string &sMessage, const string & app, const stri
         if(_notifyPrx)
         {
             ReportInfo info;
-           // info.eType     = 0;
+            info.eType     = REPORT;
             info.sApp      = app;
             info.sServer   = serverName;
             info.sSet      = "";
@@ -119,11 +117,11 @@ void RemoteNotify::report(const string &sMessage, const string & app, const stri
     }
     catch(exception &ex)
     {
-        TLOGERROR("RemoteNotify::notify error:" << ex.what() << endl);
+        TLOGERROR("[RemoteNotify::notify error:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        TLOGERROR("RemoteNotify::notify unknown error" << endl);
+        TLOGERROR("[RemoteNotify::notify unknown error" << "]" << endl);
     }
 }
 

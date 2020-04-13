@@ -214,7 +214,7 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
 
 	if (request.iRequestId < 0)
 	{
-		TLOGERROR("[TARS]http2Request::Fatal submit error: " << session->getErrMsg() << endl);
+		TLOGERROR("http2Request::Fatal submit error: " << session->getErrMsg() << endl);
 		return vector<char>();
 	}
 

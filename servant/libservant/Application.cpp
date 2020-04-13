@@ -1264,7 +1264,7 @@ void Application::setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const stri
 		shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx(ca, cert, key, verifyClient, ciphers);
 
 		if (!ctx) {
-			TLOGERROR("[TARS]load server ssl error, cert:" << cert << endl);
+			TLOGERROR("load server ssl error, cert:" << cert << endl);
 			exit(-1);
 		}
 
