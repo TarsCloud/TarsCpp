@@ -43,7 +43,7 @@ public:
      *
      * @return int
      */
-    int setNotifyInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string &nodeName, const string &sSetName="");
+    int setNotifyInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string &sSetName, const string &nodeName);
 
     /**
      * 通知, 一定是异步上报的
