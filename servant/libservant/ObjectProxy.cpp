@@ -251,8 +251,6 @@ void ObjectProxy::onConnect(AdapterProxy *adapterProxy)
 			msg->adapter = adapterProxy;
 		}
 
-		TLOGTARS("[ObjectProxy::onConnect, " << _name << ", queue size:" << _reqTimeoutQueue.size() << ", " << adapterProxy->endpoint().desc() << endl);
-
 		adapterProxy->invoke(msg);
 	}
 }
