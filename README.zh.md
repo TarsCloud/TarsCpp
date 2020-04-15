@@ -33,4 +33,4 @@ make
 make install
 ```
 
-详细安装参见[案例文档](https://tarscloud.github.io/TarsDocs/demo/tarscpp/)
+详细安装参见[案例文档](https://tarscloud.github.io/TarsDocs/)
