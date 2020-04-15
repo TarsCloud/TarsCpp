@@ -21,7 +21,7 @@ linux kernel:   |	2.6.18 and above
 gcc:          	|   4.1.2 and above glibc-devel
 bison tool:     |	2.5 and above
 flex tool:      |	2.5 and above
-cmake:       	|   2.8.8 and above
+cmake:       	|   3.2 and above
 mysql:          |	4.1.17 and above
 
 Compile and install
@@ -33,4 +33,4 @@ make
 make install
 ```
 
-Detailed [reference](https://tarscloud.github.io/TarsDocs/an-li/tarscpp/README.en.html)
+Detailed [reference](https://tarscloud.github.io/TarsDocs/demo/tarscpp/README.html)
