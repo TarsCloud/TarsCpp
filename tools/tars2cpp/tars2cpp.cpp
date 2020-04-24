@@ -225,13 +225,22 @@ string Tars2Cpp::writeToJson(const TypeIdPtr& pPtr) const
     }
     else if (pPtr->getTypePtr()->isArray())
     {
+        /*
         s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::JsonOutput::writeJson((const "
             << tostr(pPtr->getTypePtr()) << " *)" << pPtr->getId() << "Len"  << ");" << endl;
+        */
+        s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::JsonOutput::writeJson((const "
+            << tostr(pPtr->getTypePtr()) << " *)" << pPtr->getId() << ", "<< pPtr->getId() << "Len"  << ");" << endl;
     }
     else if (pPtr->getTypePtr()->isPointer())
     {
+        /*
         s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::JsonOutput::writeJson((const "
             << tostr(pPtr->getTypePtr()) << " )" << pPtr->getId() << "Len"  << ");" << endl;
+        */
+        s << TAB << "p->value[\"" << pPtr->getId() << "\"] = " + _namespace + "::JsonOutput::writeJson((const "
+            << tostr(pPtr->getTypePtr()) << " )" << pPtr->getId() << ", "<< pPtr->getId() << "Len"  << ");" << endl;
+
     }
     else
     {
@@ -290,7 +299,8 @@ string Tars2Cpp::readFromJson(const TypeIdPtr& pPtr, bool bIsRequire) const
 
     if (pPtr->getTypePtr()->isArray())
     {
-        s << TAB << _namespace + "::JsonInput::readJson(" << pPtr->getId() << "Len" << ",pObj->value[\"" << pPtr->getId() << "\"]" << getSuffix(pPtr);
+        //s << TAB << _namespace + "::JsonInput::readJson(" << pPtr->getId() << "Len" << ",pObj->value[\"" << pPtr->getId() << "\"]" << getSuffix(pPtr);
+        s << TAB << _namespace + "::JsonInput::readJson(" << pPtr->getId() << ", " << "sizeof("+pPtr->getId()+")" << ", " << pPtr->getId() << "Len" << ", pObj->value[\"" << pPtr->getId() << "\"]";
     }
     else if (pPtr->getTypePtr()->isPointer())
     {
@@ -381,7 +391,8 @@ string Tars2Cpp::readFrom(const TypeIdPtr& pPtr, bool bIsRequire) const
     }
     else if (pPtr->getTypePtr()->isArray())
     {
-        s << TAB << "_is.read(" << pPtr->getId() << ", " << getSuffix(pPtr) << ", " << pPtr->getId() << "Len";
+        //s << TAB << "_is.read(" << pPtr->getId() << ", " << getSuffix(pPtr) << ", " << pPtr->getId() << "Len";
+        s << TAB << "_is.read(" << pPtr->getId() << ", " << "sizeof("+pPtr->getId()+")" << ", " << pPtr->getId() << "Len";
     }
     else if (pPtr->getTypePtr()->isPointer())
     {

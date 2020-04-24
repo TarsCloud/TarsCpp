@@ -85,31 +85,31 @@ void KeepAliveNodeFHelper::keepActiving()
     }
     catch(exception &ex)
     {
-        LOG->error() << "TafNodeFHelper::keepAlive error:" << ex.what() << endl;
+	    TLOGERROR("[KeepAliveNodeFHelper::keepAlive error:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        LOG->error() << "TafNodeFHelper::keepAlive unknown error" << endl;
+	    TLOGERROR("[KeepAliveNodeFHelper::keepAlive unknown error]" << endl);
     }
 }
 
 void KeepAliveNodeFHelper::reportVersion(const string &version)
 {
-        try
-        {
+    try
+    {
         if(_nodePrx)
         {
             _nodePrx->async_reportVersion(NULL, _si.application, _si.serverName, version);
         }
-        }
-        catch(exception &ex)
-        {
-                TLOGERROR("KeepAliveNodeFHelper::reportVersion error:" << ex.what() << endl);
-        }
-        catch(...)
-        {
-                TLOGERROR("KeepAliveNodeFHelper::reportVersion unknown error" << endl);
-        }
+    }
+    catch(exception &ex)
+    {
+        TLOGERROR("[KeepAliveNodeFHelper::reportVersion error:" << ex.what() << "]" << endl);
+    }
+    catch(...)
+    {
+        TLOGERROR("[KeepAliveNodeFHelper::reportVersion unknown error" << "]" << endl);
+    }
 }
 
 }

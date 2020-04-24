@@ -798,7 +798,7 @@ private:
      * @param active
      * @param inactive
      */
-	void onNotifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
+	void onNotifyEndpoints(size_t netThreadSeq, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
 
 	/**
 	 * 端口不活跃

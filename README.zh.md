@@ -21,7 +21,7 @@ linux内核版本:      |	2.6.18及以上版本
 gcc版本:          	|   4.1.2及以上版本、glibc-devel
 bison工具版本:      |	2.5及以上版本
 flex工具版本:       |	2.5及以上版本
-cmake版本：       	|   2.8.8及以上版本
+cmake版本：       	|   3.2及以上版本
 mysql版本：         |	4.1.17及以上版本
 
 编译和安装
@@ -33,4 +33,4 @@ make
 make install
 ```
 
-详细安装参见[案例文档](https://tarscloud.github.io/TarsDocs/an-li/tarscpp/)
+详细安装参见[案例文档](https://tarscloud.github.io/TarsDocs/)

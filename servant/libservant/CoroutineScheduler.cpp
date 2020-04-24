@@ -289,11 +289,11 @@ void CoroutineInfo::corotineEntry(transfer_t tf)
     }
     catch(std::exception &ex)
     {
-        TLOGERROR("[TARS][CoroutineInfo::corotineEntry exception:" << ex.what() << endl);
+        TLOGERROR("[CoroutineInfo::corotineEntry exception:" << ex.what() << endl);
     }
     catch(...)
     {
-        TLOGERROR("[TARS][CoroutineInfo::corotineEntry unknown exception." << endl);
+        TLOGERROR("[CoroutineInfo::corotineEntry unknown exception." << endl);
     }
 }
 
@@ -309,11 +309,11 @@ void CoroutineInfo::corotineProc(void * args, transfer_t t)
     }
     catch(std::exception &ex)
     {
-        TLOGERROR("[TARS][CoroutineInfo::corotineProc exception:" << ex.what() << endl);
+        TLOGERROR("[CoroutineInfo::corotineProc exception:" << ex.what() << endl);
     }
     catch(...)
     {
-        TLOGERROR("[TARS][CoroutineInfo::corotineProc unknown exception." << endl);
+        TLOGERROR("[CoroutineInfo::corotineProc unknown exception." << endl);
     }
 
     CoroutineScheduler* scheduler =  coro->getScheduler();
@@ -322,7 +322,7 @@ void CoroutineInfo::corotineProc(void * args, transfer_t t)
 
 	scheduler->switchCoro(&(scheduler->getMainCoroutine()));
     // scheduler->switchCoro(coro, &(scheduler->getMainCoroutine()));
-    TLOGERROR("[TARS][CoroutineInfo::corotineProc no come." << endl);
+    TLOGERROR("[CoroutineInfo::corotineProc no come." << endl);
 }
 
 //////////////////////////////////////////////////////////////
@@ -357,7 +357,7 @@ void CoroutineScheduler::init(uint32_t iPoolSize, size_t iStackSize)
 {
     if(iPoolSize <= 0)
     {
-        TLOGERROR("[TARS][[CoroutineScheduler::init iPoolSize <= 0." << endl);
+        TLOGERROR("[CoroutineScheduler::init iPoolSize <= 0." << endl);
         return ;
     }
 
@@ -396,7 +396,7 @@ void CoroutineScheduler::init(uint32_t iPoolSize, size_t iStackSize)
         // int ret = _alloc.allocate(s_ctx, iStackSize);
         // if(ret != 0)
         // {
-        //     TLOGERROR("[TARS][CoroutineScheduler::init iPoolSize:" << iPoolSize << "|iStackSize:" << iStackSize << "|i:" << i << endl);
+        //     TLOGERROR("[CoroutineScheduler::init iPoolSize:" << iPoolSize << "|iStackSize:" << iStackSize << "|i:" << i << endl);
 
         //     delete coro;
         //     coro = NULL;
@@ -429,7 +429,7 @@ void CoroutineScheduler::init(uint32_t iPoolSize, size_t iStackSize)
 
     _currentCoro = &_mainCoro;
 
-    TLOGDEBUG("[TARS][CoroutineScheduler::init iPoolSize:" << _poolSize << "|iCurrentSize:" << _currentSize << "|iStackSize:" << _stackSize << endl);
+    TLOGDEBUG("[CoroutineScheduler::init iPoolSize:" << _poolSize << "|iCurrentSize:" << _currentSize << "|iStackSize:" << _stackSize << endl);
 }
 
 int    CoroutineScheduler::increaseCoroPoolSize()
@@ -437,7 +437,7 @@ int    CoroutineScheduler::increaseCoroPoolSize()
     int iInc = ((_poolSize - _currentSize) > 100) ? 100 : (_poolSize - _currentSize);
     if(iInc <= 0)
     {
-        TLOGERROR("[TARS][CoroutineScheduler::increaseCoroPoolSize full iPoolSize:" << _poolSize << "|iCurrentSize:" << _currentSize << endl);
+        TLOGERROR("[CoroutineScheduler::increaseCoroPoolSize full iPoolSize:" << _poolSize << "|iCurrentSize:" << _currentSize << endl);
         return -1;
     }
 
@@ -453,7 +453,7 @@ int    CoroutineScheduler::increaseCoroPoolSize()
         // int ret = _alloc.allocate(s_ctx, _stackSize);
         // if(ret != 0)
         // {
-        //     TLOGERROR("[TARS][CoroutineScheduler::increaseCoroPoolSize iPoolSize:" << _poolSize << "|iStackSize:" << _stackSize << "|i:" << i << endl);
+        //     TLOGERROR("[CoroutineScheduler::increaseCoroPoolSize iPoolSize:" << _poolSize << "|iStackSize:" << _stackSize << "|i:" << i << endl);
 
         //     delete coro;
         //     coro = NULL;
@@ -473,7 +473,7 @@ int    CoroutineScheduler::increaseCoroPoolSize()
 
     if(iSucc == 0)
     {
-        TLOGERROR("[TARS][CoroutineScheduler::increaseCoroPoolSize cannot create iInc:" << iInc << "|iPoolSize:" << _poolSize << endl);
+        TLOGERROR("[CoroutineScheduler::increaseCoroPoolSize cannot create iInc:" << iInc << "|iPoolSize:" << _poolSize << endl);
         return -1;
     }
 
@@ -792,7 +792,7 @@ void CoroutineScheduler::moveToActive(CoroutineInfo *coro, bool bFlag)
     }
     else
     {
-        TLOGERROR("[TARS][CoroutineScheduler::moveToActive ERROR|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
+        TLOGERROR("[CoroutineScheduler::moveToActive ERROR|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
     }
 }
 
@@ -806,7 +806,7 @@ void CoroutineScheduler::moveToAvail(CoroutineInfo *coro)
     }
     else
     {
-        TLOGERROR("[TARS][CoroutineScheduler::moveToAvail ERROR:|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
+        TLOGERROR("[CoroutineScheduler::moveToAvail ERROR:|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
     }
 }
 
@@ -826,7 +826,7 @@ void CoroutineScheduler::moveToInactive(CoroutineInfo *coro)
     }
     else
     {
-        TLOGERROR("[TARS][CoroutineScheduler::moveToInactive ERROR|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
+        TLOGERROR("[CoroutineScheduler::moveToInactive ERROR|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
     }
 }
 
@@ -846,7 +846,7 @@ void CoroutineScheduler::moveToTimeout(CoroutineInfo *coro)
     }
     else
     {
-        TLOGERROR("[TARS][CoroutineScheduler::moveToTimeout ERROR|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
+        TLOGERROR("[CoroutineScheduler::moveToTimeout ERROR|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
     }
 }
 
@@ -878,7 +878,7 @@ void CoroutineScheduler::moveToFreeList(CoroutineInfo *coro)
     }
     else
     {
-        TLOGERROR("[TARS][CoroutineScheduler::moveToFreeList ERROR: already free|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
+        TLOGERROR("[CoroutineScheduler::moveToFreeList ERROR: already free|iCoroId:" << coro->getUid() << "|tyep:" << coro->getStatus() << endl);
     }
 }
 
@@ -970,11 +970,11 @@ void Coroutine::coroEntry(Coroutine *pCoro)
     }
     catch(exception &ex)
     {
-        TLOGERROR("[TARS][[Coroutine::coroEntry exception:" << ex.what() << "]" << endl);
+        TLOGERROR("[Coroutine::coroEntry exception:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        TLOGERROR("[TARS][[Coroutine::coroEntry unknown exception]" << endl);
+        TLOGERROR("[Coroutine::coroEntry unknown exception]" << endl);
     }
 }
 
@@ -986,7 +986,7 @@ uint32_t Coroutine::createCoroutine(const std::function<void ()> &coroFunc)
     }
     else
     {
-        TLOGERROR("[TARS][[Coroutine::createCoroutine coro sched no init]" << endl);
+        TLOGERROR("[Coroutine::createCoroutine coro sched no init]" << endl);
     }
     return -1;
 }
@@ -999,7 +999,7 @@ void Coroutine::yield()
     }
     else
     {
-        throw CoroutineException("[TARS][[Coroutine::yield coro sched no init]");
+        throw CoroutineException("[Coroutine::yield coro sched no init]");
     }
 }
 
@@ -1011,7 +1011,7 @@ void Coroutine::Sleep(int iSleepTime)
     }
     else
     {
-        throw CoroutineException("[TARS][[Coroutine::yield coro sched no init]");
+        throw CoroutineException("[Coroutine::yield coro sched no init]");
     }
 }
 

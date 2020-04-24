@@ -181,7 +181,7 @@ void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_
 				shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx( data["ca"], data["cert"], data["key"], false, data["ciphers"]);
 				if(!ctx)
 				{
-					TLOGERROR("[TARS]load obj:" << auths[i] << ", ssl error, ca:" << data["ca"] << endl);
+					TLOGERROR("load obj:" << auths[i] << ", ssl error, ca:" << data["ca"] << endl);
 					exit(-1);
 				}
 
@@ -219,7 +219,7 @@ void Communicator::initialize()
             //set分组名不对时默认没有打开set分组
             ClientConfig::SetOpen = false;
             setProperty("enableset","n");
-            TLOGERROR( "[TARS][set division name error:" << ClientConfig::SetDivision << ", client failed to open set]" << endl);
+            TLOGERROR( "[set division name error:" << ClientConfig::SetDivision << ", client failed to open set]" << endl);
         }
     }
 
@@ -264,7 +264,7 @@ void Communicator::initialize()
 
 		if(!_ctx)
 		{
-			TLOGERROR("[TARS]load client ssl error, ca:" << ca << endl);
+			TLOGERROR("load client ssl error, ca:" << ca << endl);
 			exit(-1);
 		}
 	}

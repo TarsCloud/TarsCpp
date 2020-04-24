@@ -686,7 +686,7 @@ TC_EpollServer::Connection::Connection(TC_EpollServer::BindAdapter *pBindAdapter
 , _bEmptyConn(true)
 , _pRecvBuffer(NULL)
 , _nRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
-
+, _authInit(false)
 {
     assert(fd != -1);
 

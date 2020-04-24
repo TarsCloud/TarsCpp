@@ -210,7 +210,7 @@ void coroWhenAll(const CoroParallelBasePtr &ptr)
 {
     if(!ptr->checkAllReqSend())
     {
-        TLOGERROR("[TARS][coroWhenAll use coro invoke interface's num not equal ptr set value]"<<endl);
+        TLOGERROR("[coroWhenAll use coro invoke interface's num not equal ptr set value]"<<endl);
         throw TarsUseCoroException("use coro invoke interface's num not equal ptr set value");
     }
 
@@ -220,7 +220,7 @@ void coroWhenAll(const CoroParallelBasePtr &ptr)
 
     if(!pSptd->_sched)
     {
-        TLOGERROR("[TARS][coroWhenAll no open coroutine mode]"<<endl);
+        TLOGERROR("[coroWhenAll no open coroutine mode]"<<endl);
         throw TarsUseCoroException("coroWhenAll not open coroutine mode");
     }
 
@@ -598,7 +598,7 @@ void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 //            }
 //            else
 //            {
-//                TLOGERROR("[TARS][ServantProxy::invoke_async use coroutine's callback not set CoroParallelBasePtr]" << endl);
+//                TLOGERROR("[ServantProxy::invoke_async use coroutine's callback not set CoroParallelBasePtr]" << endl);
 //                delete msg;
 //                msg = NULL;
 //                throw TarsUseCoroException("ServantProxy::invoke_async use coroutine's callback not set CoroParallelBasePtr");
@@ -606,7 +606,7 @@ void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 //        }
 //        else
 //        {
-//            TLOGERROR("[TARS][ServantProxy::invoke coroutine mode invoke not open]" << endl);
+//            TLOGERROR("[ServantProxy::invoke coroutine mode invoke not open]" << endl);
 //            delete msg;
 //            msg = NULL;
 //            throw TarsUseCoroException("coroutine mode invoke not open");
@@ -617,7 +617,7 @@ void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 //	bool bEmpty;
 //	if (!pReqQ->push_back(msg, bEmpty))
 //	{
-//		TLOGERROR("[TARS][ServantProxy::invoke_async msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
+//		TLOGERROR("[ServantProxy::invoke_async msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
 //		msg->pObjectProxy->getCommunicatorEpoll()->notify(pSptd->_reqQNo, pReqQ);
 //		delete msg;
 //		throw TarsClientQueueException("client queue full");
@@ -650,7 +650,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 
     if(msg->bDyeing)
     {
-        TLOGTARS("[TARS][ServantProxy::invoke, set dyeing, key=" << pSptd->_dyeingKey << endl);
+        TLOGTARS("[ServantProxy::invoke, set dyeing, key=" << pSptd->_dyeingKey << endl);
     }
 
     msg->cookie       = pSptd->_cookie;
@@ -685,7 +685,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         SET_MSG_TYPE(msg->request.iMessageType, TARSMESSAGETYPESETNAME);
         msg->request.status[ServantProxy::STATUS_SETNAME_VALUE] = pObjProxy->getInvokeSetName();
 
-        TLOGTARS("[TARS][ServantProxy::invoke, " << msg->request.sServantName << ", invoke with set,"<<pObjProxy->getInvokeSetName()<<"]" << endl);
+        TLOGTARS("[ServantProxy::invoke, " << msg->request.sServantName << ", invoke with set,"<<pObjProxy->getInvokeSetName()<<"]" << endl);
     }
 
     //同步调用 new 一个ReqMonitor
@@ -724,7 +724,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
                 }
                 else
                 {
-                    TLOGERROR("[TARS][ServantProxy::invoke use coroutine's callback not set CoroParallelBasePtr]"<<endl);
+                    TLOGERROR("[ServantProxy::invoke use coroutine's callback not set CoroParallelBasePtr]"<<endl);
                     delete msg;
                     msg = NULL;
                     throw TarsUseCoroException("use coroutine's callback not set CoroParallelBasePtr");
@@ -732,7 +732,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
             }
             else
             {
-                TLOGERROR("[TARS][ServantProxy::invoke coroutine mode invoke not open]"<<endl);
+                TLOGERROR("[ServantProxy::invoke coroutine mode invoke not open]"<<endl);
                 delete msg;
                 msg = NULL;
                 throw TarsUseCoroException("coroutine mode invoke not open");
@@ -746,7 +746,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 
     if(!pReqQ->push_back(msg,bEmpty))
     {
-        TLOGERROR("[TARS][ServantProxy::invoke msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
+        TLOGERROR("[ServantProxy::invoke msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
 
         delete msg;
         msg = NULL;
@@ -783,7 +783,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         //判断eStatus来判断状态
         assert(msg->eStatus != ReqMessage::REQ_REQ);
 
-        TLOGTARS("[TARS]ServantProxy::invoke line: " << __LINE__ << " status: " << msg->eStatus << ", ret: " <<msg->response->iRet << endl);
+//        TLOGTARS("[ServantProxy::invoke line: " << __LINE__ << " status: " << msg->eStatus << ", ret: " <<msg->response->iRet << endl);
 
         if(msg->eStatus == ReqMessage::REQ_RSP && msg->response->iRet == TARSSERVERSUCCESS)
         {
@@ -960,55 +960,52 @@ void ServantProxy::rpc_call_async(uint32_t iRequestId,
 
 ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
 {
-	if(_connectionSerial <= 0)
-		return this;
-
 	if(_servantId == 0)
 	{
 		std::lock_guard<std::mutex> m(_servantMutex);
 
-		if(_servantId == 0)
-		{
-			if(_servantList.empty())
-			{
-				for(int i = 0; i < _connectionSerial; ++i)
-				{
-					string obj = tars_name() + "#" + TC_Common::tostr(i);
-					if (!(*_objectProxy)->address().empty())
-					{
-						obj += "@" + (*_objectProxy)->address();
-					}
+        if(_servantId == 0 && _servantList.empty())
+        {
+            for(int i = 0; i < _connectionSerial; ++i)
+            {
+                string obj = tars_name() + "#" + TC_Common::tostr(i);
+                if (!(*_objectProxy)->address().empty())
+                {
+                    obj += "@" + (*_objectProxy)->address();
+                }
 
-					ServantPrx prx = _communicator->stringToProxy<ServantPrx>(obj);
-					prx->tars_set_protocol(tars_get_protocol());
-					prx->_rootPrx = this;
+                ServantPrx prx = _communicator->stringToProxy<ServantPrx>(obj);
+                prx->tars_set_protocol(tars_get_protocol());
+                prx->_rootPrx = this;
 
-					_servantList.push_back(prx);
-				}
-			}
-			++_servantId;
-		}
+                _servantList.push_back(prx);
+            }
+        }
 	}
 
-	return _servantList[(_servantId++) % _servantList.size()];
+//    assert((int)_servantList.size() == _connectionSerial);
+
+    int id = _servantId % (_servantList.size() + 1);
+
+    ++_servantId;
+
+    if(id == 0)
+    {
+        return this;
+    }
+
+    return _servantList[(id-1)];
+//	return _servantList[(_servantId++) % _servantList.size()];
 }
 
-void ServantProxy::onNotifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
+void ServantProxy::onNotifyEndpoints(size_t netThreadSeq, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
 {
-	if(_rootPrx)
-	{
-		for (size_t i = 0; i < _rootPrx->_servantList.size(); i++)
-		{
-			_rootPrx->_servantList[i]->onNotifyEndpoints(active, inactive);
-		}
-	}
-	else
-	{
-		for (size_t i = 0; i < _objectProxyNum; ++i)
-		{
-			_objectProxy[i]->getEndpointManager()->updateEndpoints(active, inactive);
-		}
-	}
+    for (size_t i = 0; i < _servantList.size(); i++)
+    {
+        _servantList[i]->_objectProxy[netThreadSeq]->getEndpointManager()->updateEndpoints(active, inactive);
+    }
+
+//    _objectProxy[netThreadSeq]->getEndpointManager()->updateEndpoints(active, inactive);
 }
 
 void ServantProxy::onSetInactive(const EndpointInfo& ep)
@@ -1189,12 +1186,6 @@ void ServantProxy::checkCookie(RequestPacket& req)
     std::for_each(pSptd->_cookie.begin(), pSptd->_cookie.end(),[&](map<string, string>::value_type& p){
 	    req.status.insert(make_pair(p.first, p.second));
     });
-
-//        Cookie stCookie;
-//        stCookie.cookie = pSptd->_cookie;
-//
-//        req.status.insert(make_pair());
-//        req.context[ServantProxy::STATUS_COOKIE] = stCookie.writeToJsonString();
 }
 
 
