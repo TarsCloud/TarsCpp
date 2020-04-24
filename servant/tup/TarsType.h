@@ -48,7 +48,7 @@ typedef unsigned char   UInt8;
 typedef unsigned short  UInt16;
 typedef unsigned int    UInt32;
 
-#if __WORDSIZE == 64 || defined _WIN64
+#if __WORDSIZE == 64
 typedef long    Int64;
 #else
 typedef long long   Int64;
