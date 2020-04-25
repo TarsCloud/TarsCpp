@@ -406,7 +406,7 @@ string TC_File::load2str(const string &sFullFileName)
 
 bool TC_File::load2str(const string &sFullFileName, vector<char> &data)
 {
-    FILE *fd = TC_Port::fopen(sFullFileName.data(), "r");
+    FILE *fd = TC_Port::fopen(sFullFileName.data(), "rb");
     if (fd == NULL)
         return false;
 
