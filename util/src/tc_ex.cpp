@@ -99,8 +99,10 @@ string TC_Exception::parseError(int err)
             (LPTSTR) & lpMsgBuf, 0, NULL);
 
     // errMsg = Unicode2ANSI((LPCWSTR)lpMsgBuf);
-
-    errMsg = lpMsgBuf;
+    if(lpMsgBuf != NULL)
+    {
+        errMsg = lpMsgBuf;
+    }
     LocalFree(lpMsgBuf);
 #endif
 
