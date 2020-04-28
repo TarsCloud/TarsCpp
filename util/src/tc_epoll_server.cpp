@@ -1008,6 +1008,11 @@ int TC_EpollServer::Connection::recv()
 
 int TC_EpollServer::Connection::sendBuffer()
 {
+    if(!isTcp())
+    {
+        return 0;
+    }
+
 	size_t nowSendBufferSize = 0;
 	size_t nowLeftBufferSize = _sendBuffer.getBufferLength();
 
@@ -1015,16 +1020,12 @@ int TC_EpollServer::Connection::sendBuffer()
 	{
 		pair<const char*, size_t> data = _sendBuffer.getBufferPointer();
 
-		int iBytesSent = 0;
-
-		if(this->isTcp())
-		{
-			iBytesSent = _sock.send((const void *) data.first, data.second);
-		}
-		else
-		{
-			iBytesSent = _sock.sendto((const void *) data.first, data.second, _ip, _port, 0);
-		}
+		int iBytesSent = _sock.send((const void *) data.first, data.second);
+		// }
+		// else
+		// {
+		// 	iBytesSent = _sock.sendto((const void *) data.first, data.second, _ip, _port, 0);
+		// }
 
 		if (iBytesSent < 0)
 		{
@@ -1221,25 +1222,40 @@ int TC_EpollServer::Connection::send(const shared_ptr<SendContext> &sc)
 
 	_pBindAdapter->increaseSendBufferSize();
 
-#if TARS_SSL
-	if (getBindAdapter()->getEndpoint().isSSL())
-	{
-		assert(_openssl->isHandshaked());
+    if(getBindAdapter()->getEndpoint().isTcp())
+    {
+    #if TARS_SSL
+        if (getBindAdapter()->getEndpoint().isSSL())
+        {
+            assert(_openssl->isHandshaked());
 
-		int ret = _openssl->write(sc->buffer()->buffer(), sc->buffer()->length(), _sendBuffer);
-		if (ret != 0) {
-			_pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send [" + _ip + ":" + TC_Common::tostr(_port) + "] error:" + _openssl->getErrMsg());
+            int ret = _openssl->write(sc->buffer()->buffer(), sc->buffer()->length(), _sendBuffer);
+            if (ret != 0) 
+            {
+                _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send [" + _ip + ":" + TC_Common::tostr(_port) + "] error:" + _openssl->getErrMsg());
 
-				return -1; // should not happen
-			}
-		}
-		else
-#endif
-	{
-		_sendBuffer.addBuffer(sc->buffer());
+                return -1; // should not happen
+            }
+        }
+        else
+    #endif
+        {
+            _sendBuffer.addBuffer(sc->buffer());
+        }
+
+        return sendBuffer();
+    }
+    else
+    {
+        //注意udp, 回包时需要带上请求包的ip, port的
+		int iRet = _sock.sendto((const void *) sc->buffer()->buffer(), sc->buffer()->length(), sc->ip(), sc->port(), 0);
+        if (iRet < 0)
+        {
+            _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send udp [" + _ip + ":" + TC_Common::tostr(_port) + "] error");
+            return -1;
+        }
 	}
-
-	return sendBuffer();
+    return 0;
 }
 
 bool TC_EpollServer::Connection::setRecvBuffer(size_t nSize)
