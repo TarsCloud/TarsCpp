@@ -1,38 +1,23 @@
-﻿/**
- * Tencent is pleased to support the open source community by making Tars available.
- *
- * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
- *
- * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except 
- * in compliance with the License. You may obtain a copy of the License at
- *
- * https://opensource.org/licenses/BSD-3-Clause
- *
- * Unless required by applicable law or agreed to in writing, software distributed 
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
- * specific language governing permissions and limitations under the License.
- */
+﻿
 
 #include <iostream>
 #include "util/tc_http.h"
-#include "util/tc_option.h"
 #include "util/tc_common.h"
 #include "util/tc_clientsocket.h"
 #include "util/tc_thread_pool.h"
-#include "tup/Tars.h"
-#include "tup/tup.h"
+// #include "tup/tup.h"
 #include "util/tc_timeprovider.h"
 #include "servant/Application.h"
+
 using namespace std;
 using namespace tars;
-using namespace tup;
-
+// using namespace wup;
 
 Communicator* _comm;
 
-//static string httpObj = "TestApp.HttpServer.httpObj@tcp -h 127.0.0.1 -p 8081";
-static string httpObj = "TestApp.HttpServer.httpObj@tcp -h 134.175.105.92 -p 8081";
+//static string httpObj = "TestApp.HttpServer.httpObj@tcp -h 127.0.0.1 -p 8081:tcp -h 127.0.0.1 -p 8082:tcp -h 127.0.0.1 -p 8083";
+static string httpObj = "TestApp.HttpServer.httpObj@tcp -h 127.0.0.1 -p 8081";
+//static string httpObj = "TestApp.HttpServer.httpObj@tcp -h 134.175.105.92 -p 8081";
 
 struct Param
 {
@@ -46,198 +31,272 @@ struct Param
 Param param;
 std::atomic<int> callback_count(0);
 
-
 void httpCall(int excut_num)
 {
-    int64_t _iTime = TC_TimeProvider::getInstance()->getNowMs();
+	int64_t _iTime = TC_TimeProvider::getInstance()->getNowMs();
 
-  //  string sServer1("http://134.175.105.92:8081/");
-    string sServer1("http://127.0.0.1:8081/");
+	//  string sServer1("http://134.175.105.92:8081/");
+	string sServer1("http://127.0.0.1:8081/");
 
-    TC_HttpRequest stHttpReq;
-    stHttpReq.setCacheControl("no-cache");
+	TC_HttpRequest stHttpReq;
+	stHttpReq.setCacheControl("no-cache");
 //    stHttpReq.setGetRequest(sServer1);
 
-    TC_TCPClient client ;
- //   client.init("127.0.0.1", 8081, 3000);
-    client.init("127.0.0.1", 8082, 3000);
+	TC_TCPClient client ;
+	//   client.init("127.0.0.1", 8081, 3000);
+	client.init("127.0.0.1", 8082, 3000);
 
-    int iRet = 0;
+	int iRet = 0;
 
-    for (int i = 0; i<excut_num; i++)
-    {
-        TC_HttpResponse stHttpRsp;
+	for (int i = 0; i<excut_num; i++)
+	{
+		TC_HttpResponse stHttpRsp;
 
-        stHttpReq.setPostRequest(sServer1, TC_Common::tostr(i), true);
-        iRet = stHttpReq.doRequest(stHttpRsp, 3000);
-    //    iRet = stHttpReq.doRequest(client,stHttpRsp);
-        
-        if (iRet != 0)
-        {
-            cout <<"pthread id: " << TC_Thread::CURRENT_THREADID() << ", iRet:" << iRet <<endl;
-        }
-        
-        ++callback_count;
-    }
-    cout <<  "httpCall, succ:" << param.count << "/" << excut_num << ", " << TC_TimeProvider::getInstance()->getNowMs() - _iTime <<"(ms)"<<endl;
+		stHttpReq.setPostRequest(sServer1, TC_Common::tostr(i), true);
+		iRet = stHttpReq.doRequest(stHttpRsp, 3000);
+		//    iRet = stHttpReq.doRequest(client,stHttpRsp);
+
+		if (iRet != 0)
+		{
+			cout <<"pthread id: " << TC_Thread::CURRENT_THREADID() << ", iRet:" << iRet <<endl;
+		}
+
+		++callback_count;
+	}
+	cout <<  "httpCall, succ:" << param.count << "/" << excut_num << ", " << TC_TimeProvider::getInstance()->getNowMs() - _iTime <<"(ms)"<<endl;
 }
-
-struct TestHttpCallback : public HttpCallback
-{
-    TestHttpCallback(int64_t t, int i, int c) : start(t), cur(i), count(c)
-    {
-
-    }
-
-    virtual int onHttpResponse(const std::map<std::string, std::string>& requestHeaders ,
-                               const std::map<std::string, std::string>& responseHeaders ,
-                               const std::vector<char>& rspBody)
-    {
-	    callback_count++;
-
-        if(cur == count-1)
-        {
-            int64_t cost = TC_Common::now2us() - start;
-            cout << "onHttpResponse count:" << count << ", " << cost << " us, avg:" << 1.*cost/count << "us" << endl;
-        }
-
-        return 0;
-    }
-    virtual int onHttpResponseException(const std::map<std::string, std::string>& requestHeaders,
-                                        int expCode)
-    {
-        cout << "onHttpResponseException expCode:" << expCode  << endl;
-
-	    callback_count++;
-
-        return 0;
-    }
-
-    int64_t start;
-    int     cur;
-    int     count;
-};
 
 void syncRpc(int c)
 {
 	int64_t t = TC_Common::now2us();
 
-    std::map<std::string, std::string> header;
+	//发起远程调用
+	for (int i = 0; i < c; ++i)
+	{
+		string buff = string("helloworld-") + TC_Common::tostr(i);
+		shared_ptr<TC_HttpRequest> req = std::make_shared<TC_HttpRequest>();
+		req->setPostRequest("http://tars.com/hello", buff, true);
+//		req->setHeader("Connection", "keep-alive");
 
-    std::map<std::string, std::string> rheader;
-    //发起远程调用
-    for (int i = 0; i < c; ++i)
-    {
-        string rbody;
+		shared_ptr<TC_HttpResponse> rsp;
 
-        try
-        {
-	        param.servantPrx->http_call("GET", "/", header, "helloworld", rheader, rbody);
-        }
-        catch(exception& e)
-        {
-            cout << "exception:" << e.what() << endl;
-        }
-        ++callback_count;
-    }
+		try
+		{
+			param.servantPrx->tars_hash(i)->http_call("hello", req, rsp);
+			assert(req->getContent() == rsp->getContent());
+		}
+		catch(exception& e)
+		{
+			cout << "exception:" << e.what() << endl;
+		}
 
-    int64_t cost = TC_Common::now2us() - t;
-    cout << "syncCall total:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
+//		sleep(1);
+//		assert(req.use_count() == 1);
+//		assert(rsp.use_count() == 1);
+		++callback_count;
+	}
+
+	int64_t cost = TC_Common::now2us() - t;
+	cout << "syncCall total:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
+}
+
+struct TestHttpCallback : public HttpCallback
+{
+	TestHttpCallback(const string &buff) : _buff(buff)
+	{
+
+	}
+
+	virtual int onHttpResponse(const shared_ptr<TC_HttpResponse> &rsp)
+	{
+		callback_count++;
+
+		assert(_buff == rsp->getContent());
+
+		return 0;
+	}
+	virtual int onHttpResponseException(int expCode)
+	{
+		cout << "onHttpResponseException expCode:" << expCode  << endl;
+
+		callback_count++;
+
+		return 0;
+	}
+
+	string _buff;
+};
+
+void asyncRpc(int c)
+{
+	int64_t t = TC_Common::now2us();
+
+	//发起远程调用
+	for (int i = 0; i < c; ++i)
+	{
+		shared_ptr<TC_HttpRequest> req = std::make_shared<TC_HttpRequest>();
+
+		string buff = string("helloworld-") + TC_Common::tostr(i);
+		req->setPostRequest("http://tars.com/hello", buff, true);
+//		req->setHeader("Connection", "keep-alive");
+
+		HttpCallbackPtr p = new TestHttpCallback(buff);
+
+		try
+		{
+			param.servantPrx->http_call_async("hello", req, p);
+		}
+		catch(exception& e)
+		{
+			cout << "exception:" << e.what() << endl;
+		}
+
+		if(i % 500 == 0)
+		{
+			TC_Common::msleep(100);
+		}
+	}
+
+	int64_t cost = TC_Common::now2us() - t;
+	cout << "asyncRpc2 send:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
+}
+
+
+void asyncRpcCallback(int c)
+{
+	int64_t t = TC_Common::now2us();
+
+	_comm->setServantCustomCallback(param.servantPrx->tars_name(), [](ReqMessagePtr msg) {
+		msg->callback->dispatch(msg);
+	});
+
+	//发起远程调用
+	for (int i = 0; i < c; ++i)
+	{
+		shared_ptr<TC_HttpRequest> req = std::make_shared<TC_HttpRequest>();
+
+		string buff = string("helloworld-") + TC_Common::tostr(i);
+		req->setPostRequest("http://tars.com/hello", buff, true);
+//		req->setHeader("Connection", "keep-alive");
+
+		HttpCallbackPtr p = new TestHttpCallback(buff);
+
+		try
+		{
+			param.servantPrx->http_call_async("hello", req, p);
+		}
+		catch(exception& e)
+		{
+			cout << "exception:" << e.what() << endl;
+		}
+
+		if(i % 500 == 0)
+		{
+			TC_Common::msleep(100);
+		}
+	}
+
+	int64_t cost = TC_Common::now2us() - t;
+	cout << "asyncRpc2 send:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
 }
 
 int main(int argc, char *argv[])
 {
-    try
-    {
-        if (argc < 4)
-        {
-	        cout << "Usage:" << argv[0] << "--count=1000 --call=[basehttp|synchttp] --thread=1" << endl;
+	try
+	{
+		if (argc < 4)
+		{
+			cout << "Usage:" << argv[0] << "--count=1000 --call=[base|sync|async|callback] --thread=1" << endl;
 
-	        return 0;
-        }
+			return 0;
+		}
 
-	    TC_Option option;
-        option.decode(argc, argv);
+		TC_Option option;
+		option.decode(argc, argv);
 
 		param.count = TC_Common::strto<int>(option.getValue("count"));
-	    if(param.count <= 0) param.count = 1000;
-	    param.call = option.getValue("call");
-	    if(param.call.empty()) param.call = "sync";
-	    param.thread = TC_Common::strto<int>(option.getValue("thread"));
-	    if(param.thread <= 0) param.thread = 1;
-/*
+		if(param.count <= 0) param.count = 1000;
+		param.call = option.getValue("call");
+		if(param.call.empty()) param.call = "sync";
+		param.thread = TC_Common::strto<int>(option.getValue("thread"));
+		if(param.thread <= 0) param.thread = 1;
+
         _comm = new Communicator();
 
-//         TarsRollLogger::getInstance()->logger()->setLogLevel(6);
+ //      LocalRollLogger::getInstance()->logger()->setLogLevel(6);
 
         _comm->setProperty("sendqueuelimit", "1000000");
         _comm->setProperty("asyncqueuecap", "1000000");
 
-	    param.servantPrx = _comm->stringToProxy<ServantPrx>(httpObj);
+		param.servantPrx = _comm->stringToProxy<ServantPrx>(httpObj);
 
-	    param.servantPrx->tars_connect_timeout(5000);
-        param.servantPrx->tars_async_timeout(60*1000);
+		int64_t start = TC_Common::now2us();
 
-        ProxyProtocol proto;
-        proto.requestFunc = ProxyProtocol::http1Request;
-        proto.responseFunc = ProxyProtocol::http1Response;
-        param.servantPrx->tars_set_protocol(proto);
-        */
-        int64_t start = TC_Common::now2us();
+		std::function<void(int)> func;
 
-        std::function<void(int)> func;
+		if (param.call == "base")
+		{
+			func = httpCall;
+		}
+		else if (param.call == "sync")
+		{
+			func = syncRpc;
+		}
+		else if(param.call == "async")
+		{
+		    func = asyncRpc;
+		}
+		else if(param.call == "callback")
+		{
+			func = asyncRpcCallback;
+		}
+		else
+		{
+			cout << "no func, exits" << endl;
+			exit(0);
+		}
 
-        if (param.call == "basehttp")
-        {
-            func = httpCall;
-        }
-        else if (param.call == "synchttp")
-        {
-            func = syncRpc;
-        }
-        // else if(param.call == "asynchttp")
-        // {
-        // 	func = asyncRpc;
-        // }
-        else
-        {
-        	cout << "no func, exits" << endl;
-        	exit(0);
-        }
+		param.servantPrx->tars_connect_timeout(5000);
+		param.servantPrx->tars_async_timeout(60*1000);
 
-	    vector<std::thread*> vt;
-        for(int i = 0 ; i< param.thread; i++)
-        {
-            vt.push_back(new std::thread(func, param.count));
-        }
+		param.servantPrx->tars_set_protocol(ServantProxy::PROTOCOL_HTTP1, 3);
 
-        std::thread print([&]{while(callback_count != param.count * param.thread) {
-	        cout << "Http:" << param.call << ": ----------finish count:" << callback_count << endl;
-	        std::this_thread::sleep_for(std::chrono::seconds(1));
-        };});
+		vector<std::thread*> vt;
+		for(int i = 0 ; i< param.thread; i++)
+		{
+			vt.push_back(new std::thread(func, param.count));
+		}
 
-        for(size_t i = 0 ; i< vt.size(); i++)
-        {
-            vt[i]->join();
-            delete vt[i];
-        }
+		std::thread print([&]{while(callback_count != param.count * param.thread) {
+			cout << "Http:" << param.call << ": ----------finish count:" << callback_count << endl;
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		};});
 
-        cout << "(pid:" << std::this_thread::get_id() << ")"
-             << "(count:" << param.count << ")"
-             << "(use ms:" << (TC_Common::now2us() - start)/1000 << ")"
-             << endl;
+		for(size_t i = 0 ; i< vt.size(); i++)
+		{
+			vt[i]->join();
+			delete vt[i];
+		}
 
-	    while(callback_count != param.count * param.thread) {
-		    std::this_thread::sleep_for(std::chrono::seconds(1));
-	    }
-	    print.join();
-	    cout << "----------finish count:" << callback_count << endl;
-    }
-    catch(exception &ex)
-    {
-        cout << ex.what() << endl;
-    }
-    cout << "main return." << endl;
+		cout << "(pid:" << std::this_thread::get_id() << ")"
+		     << "(count:" << param.count << ")"
+		     << "(use ms:" << (TC_Common::now2us() - start)/1000 << ")"
+		     << endl;
 
-    return 0;
+		while(callback_count != param.count * param.thread) {
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+		print.join();
+		cout << "----------finish count:" << callback_count << endl;
+
+		delete _comm;
+		_comm = NULL;
+	}
+	catch(exception &ex)
+	{
+		cout << ex.what() << endl;
+	}
+	cout << "main return." << endl;
+
+	return 0;
 }

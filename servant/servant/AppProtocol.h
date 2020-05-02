@@ -143,6 +143,8 @@ public:
     static vector<char> http1Request(tars::RequestPacket& request, Transceiver *);
     static TC_NetWorkBuffer::PACKET_TYPE http1Response(TC_NetWorkBuffer &in, ResponsePacket& done);
 
+	// static vector<char> httpJceRequest(taf::RequestPacket& request, Transceiver *);
+	// static TC_NetWorkBuffer::PACKET_TYPE httpJceResponse(TC_NetWorkBuffer &in, ResponsePacket& done);
 #if TARS_HTTP2
 
     // ENCODE function, called by network thread

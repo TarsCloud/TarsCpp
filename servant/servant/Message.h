@@ -49,8 +49,8 @@ struct CheckTimeoutInfo
     , frequenceFailInvoke(5)
     , minFrequenceFailTime(5)
     , radio(0.5)
-    , tryTimeInterval(30)
-    , maxConnectExc(5)
+    , tryTimeInterval(10)
+    , maxConnectExc(1)
     {
     }
 
@@ -88,61 +88,6 @@ struct CheckTimeoutInfo
      * 最大连接异常次数
      */
     uint32_t maxConnectExc;
-};
-
-/////////////////////////////////////////////////////////////////////////
-/*
- * stat采样信息(用于调用链时序分析)
- */
-struct SampleKey
-{
-    /*
-     * 构造函数
-     */
-    SampleKey()
-    : _root(true)
-    , _unid("")
-    , _depth(0)
-    , _width(0)
-    , _parentWidth(0)
-    {}
-
-    /*
-     * 初始化
-     */
-    void init()
-    {
-        _root        = true;
-        _unid.clear();
-        _depth       = 0;
-        _width       = 0;
-        _parentWidth = 0;
-    }
-
-    /*
-     * 是否根节点 在根节点产生唯一id
-     */
-    bool _root;
-
-    /*
-     * 唯一id
-     */
-    string _unid;
-
-    /*
-     * 深度
-     */
-    int _depth;
-
-    /*
-     * 广度
-     */
-    int _width;
-
-    /*
-     * 父节点广度值
-     */
-    int _parentWidth;
 };
 
 /////////////////////////////////////////////////////////////////////////
@@ -211,6 +156,11 @@ struct ReqMessage : public TC_HandleBase
      */
     ~ReqMessage()
     {
+    	if(deconstructor)
+	    {
+		    deconstructor();
+	    }
+
         if(pMonitor != NULL)
         {
             delete pMonitor;
@@ -263,6 +213,7 @@ struct ReqMessage : public TC_HandleBase
     ObjectProxy *               pObjectProxy;   //调用端的proxy对象
 
     RequestPacket               request;        //请求消息体
+    std::function<void()>       deconstructor;  //析构时调用
     shared_ptr<ResponsePacket>      response;   //响应消息体
     // string                      sReqData;       //请求消息体
 	shared_ptr<TC_NetWorkBuffer::Buffer> sReqData;       //请求消息体
@@ -289,15 +240,16 @@ struct ReqMessage : public TC_HandleBase
     uint32_t                    iCoroId;        //协程的id
 
 
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
     std::unordered_map<std::string, std::string> trackInfoMap; //调用链信息
 #endif
+
+    map<string, string>             cookie;          // cookie内容
 };
 
 typedef TC_AutoPtr<ReqMessage>          ReqMessagePtr;
 typedef TC_LoopQueue<ReqMessage*>  ReqInfoQueue;
     
-#define HTTP2 "http2"
 
 }
 

@@ -48,6 +48,14 @@ public:
 
     typedef D queue_type;
 
+	/**
+	 * @brief 从头部获取数据, 没有数据抛异常
+	 *
+	 * @param t
+	 * @return bool: true, 获取了数据, false, 无数据
+	 */
+	T front();
+
     /**
      * @brief 从头部获取数据, 没有数据则等待.
      *
@@ -59,6 +67,13 @@ public:
      * @return bool: true, 获取了数据, false, 无数据
      */
     bool pop_front(T& t, size_t millsecond = 0, bool wait = true);
+
+	/**
+	 * @brief 从头部获取数据.
+	 *
+	 * @return bool: true, 获取了数据, false, 无数据
+	 */
+	bool pop_front();
 
     /**
      * @brief 通知等待在队列上面的线程都醒过来
@@ -148,6 +163,13 @@ protected:
     mutable std::mutex _mutex;
 };
 
+template<typename T, typename D> T TC_ThreadQueue<T, D>::front()
+{
+	std::unique_lock<std::mutex> lock(_mutex);
+
+	return  _queue.front();
+}
+
 template<typename T, typename D> bool TC_ThreadQueue<T, D>::pop_front(T& t, size_t millsecond, bool wait)
 {
     if(wait) {
@@ -197,6 +219,21 @@ template<typename T, typename D> bool TC_ThreadQueue<T, D>::pop_front(T& t, size
     }
 }
 
+
+template<typename T, typename D> bool TC_ThreadQueue<T, D>::pop_front()
+{
+	std::unique_lock<std::mutex> lock(_mutex);
+	if (_queue.empty())
+	{
+		return false;
+	}
+
+	_queue.pop_front();
+	assert(_size > 0);
+	--_size;
+
+	return true;
+}
 
 template<typename T, typename D> void TC_ThreadQueue<T, D>::notifyT()
 {

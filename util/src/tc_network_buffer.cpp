@@ -262,7 +262,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::checkHttp()
     {
 	    bool b = TC_HttpRequest::checkRequest(*this);
 
-        return b ? PACKET_FULL : PACKET_LESS;
+	    return b ? PACKET_FULL : PACKET_LESS;
     }
     catch (exception &ex)
     {

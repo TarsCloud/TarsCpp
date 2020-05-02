@@ -1,4 +1,4 @@
-if(_USE_OPENTRACKING)
+if(TARS_OPENTRACKING)
 include_directories(${PROJECT_SOURCE_DIR} ${OPENTRACKING_INC})
 else()
 include_directories(${PROJECT_SOURCE_DIR})

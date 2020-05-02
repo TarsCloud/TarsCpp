@@ -45,25 +45,26 @@ void syncRpc2(int c)
 {
 	int64_t t = TC_Common::now2us();
 
-    std::map<std::string, std::string> header;
-    header[":authority"] = "domain.com";
-    header[":scheme"] = "http";
-    // header[":method"] = "POST";
-
-    std::map<std::string, std::string> rheader;
     //发起远程调用
     for (int i = 0; i < c; ++i)
     {
-        string rbody;
+	    shared_ptr<TC_HttpResponse> rsp;
+	    shared_ptr<TC_HttpRequest> req = std::make_shared<TC_HttpRequest>();
+	    req->setPostRequest("http://domain.com/hello", string("helloworld-") + TC_Common::tostr(i), true);
 
-        try
-        {
-		    param.servant2Prx->http_call("POST", "/", header, "helloworld", rheader, rbody);
-        }
-        catch(exception& e)
-        {
-            cout << "exception:" << e.what() << endl;
-        }
+	    try
+	    {
+		    param.servant2Prx->http_call("hello", req, rsp);
+	    }
+	    catch (exception & e)
+	    {
+		    cout << "exception:" << e.what() << endl;
+	    }
+
+	    assert(req->getContent() == rsp->getContent());
+	    assert(req.use_count() == 1);
+	    assert(rsp.use_count() == 1);
+
         ++callback_count;
     }
 
@@ -71,30 +72,22 @@ void syncRpc2(int c)
     cout << "syncRpc2 total:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
 }
 
-
 struct TestHttpCallback : public HttpCallback
 {
-	TestHttpCallback(int64_t t, int i, int c) : start(t), cur(i), count(c)
+	TestHttpCallback(const string &buff) : _buff(buff)
 	{
 
 	}
 
-	virtual int onHttpResponse(const std::map<std::string, std::string>& requestHeaders ,
-	                           const std::map<std::string, std::string>& responseHeaders ,
-	                           const std::vector<char>& rspBody)
+	virtual int onHttpResponse(const shared_ptr<TC_HttpResponse> &rsp)
 	{
 		callback_count++;
 
-		if(cur == count-1)
-		{
-			int64_t cost = TC_Common::now2us() - start;
-			cout << "onHttpResponse count:" << count << ", " << cost << " us, avg:" << 1.*cost/count << "us" << endl;
-		}
+		assert(_buff == rsp->getContent());
 
 		return 0;
 	}
-	virtual int onHttpResponseException(const std::map<std::string, std::string>& requestHeaders,
-	                                    int expCode)
+	virtual int onHttpResponseException(int expCode)
 	{
 		cout << "onHttpResponseException expCode:" << expCode  << endl;
 
@@ -103,27 +96,26 @@ struct TestHttpCallback : public HttpCallback
 		return 0;
 	}
 
-	int64_t start;
-	int     cur;
-	int     count;
+	string _buff;
 };
 
 void asyncRpc2(int c)
 {
 	int64_t t = TC_Common::now2us();
 
-    std::map<std::string, std::string> header;
-    header[":authority"] = "domain.com";
-    header[":scheme"] = "http";
-
 	//发起远程调用
 	for (int i = 0; i < c; ++i)
 	{
-		HttpCallbackPtr p = new TestHttpCallback(t, i, c);
+		shared_ptr<TC_HttpRequest> req = std::make_shared<TC_HttpRequest>();
+
+		string buff = string("helloworld-") + TC_Common::tostr(i);
+		req->setPostRequest("http://domain.com/hello", buff, true);
+
+		HttpCallbackPtr p = new TestHttpCallback(buff);
 
 		try
 		{
-			param.servant2Prx->http_call_async("POST", "/", header, "helloworld", p);
+			param.servant2Prx->http_call_async("hello", req, p);
 		}
 		catch(exception& e)
 		{
@@ -139,6 +131,7 @@ void asyncRpc2(int c)
 	int64_t cost = TC_Common::now2us() - t;
 	cout << "asyncRpc2 send:" << cost << "us, avg:" << 1.*cost/c << "us" << endl;
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -173,11 +166,7 @@ int main(int argc, char *argv[])
 	    param.servant2Prx->tars_connect_timeout(5000);
         param.servant2Prx->tars_async_timeout(60*1000);
 
-        ProxyProtocol proto;
-
-        proto.requestFunc = ProxyProtocol::http2Request;
-        proto.responseFunc = ProxyProtocol::http2Response;
-        param.servant2Prx->tars_set_protocol(proto);
+        param.servant2Prx->tars_set_protocol(ServantProxy::PROTOCOL_HTTP2);
 
         int64_t start = TC_Common::now2us();
 

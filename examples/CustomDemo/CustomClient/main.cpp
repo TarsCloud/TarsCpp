@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 
 		param.servantPrx = _comm->stringToProxy<ServantPrx>(sObjName);
 
-//        TarsRollLogger::getInstance()->logger()->setLogLevel(6);
+//        LocalRollLogger::getInstance()->logger()->setLogLevel(6);
 		ProxyProtocol prot;
 		prot.requestFunc = customRequest;
 		prot.responseFunc = customResponse;

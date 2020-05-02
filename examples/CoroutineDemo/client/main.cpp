@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
 
 		param.pPrx = _comm->stringToProxy<BServantPrx>(coroObj);
 
-//        TarsRollLogger::getInstance()->logger()->setLogLevel(6);
+//        LocalRollLogger::getInstance()->logger()->setLogLevel(6);
 
 		_comm->setProperty("sendqueuelimit", "1000000");
 		_comm->setProperty("asyncqueuecap", "1000000");

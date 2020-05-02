@@ -3,7 +3,7 @@
 echo "run-http.sh"
 
 EXE_PATH=$1
-SRC_PATH=$2
+SRC_PATH=$2/..
 
 echo ${EXE_PATH} ${SRC_PATH}
 
@@ -18,7 +18,9 @@ sleep 1
 
 echo "client: ${EXE_PATH}/HttpClient"
 
-${EXE_PATH}/HttpClient --count=10000 --thread=2 --call=basehttp
+${EXE_PATH}/HttpClient --count=10000 --thread=2 --call=base
+${EXE_PATH}/HttpClient --count=10000 --thread=2 --call=sync
+${EXE_PATH}/HttpClient --count=10000 --thread=2 --call=async
 #${EXE_PATH}/HttpClient --count=10000 --thread=2 --call=synchttp
 
 sleep 1

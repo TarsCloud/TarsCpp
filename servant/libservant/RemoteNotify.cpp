@@ -14,14 +14,14 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#include "servant/TarsNotify.h"
+#include "servant/RemoteNotify.h"
 #include "servant/Communicator.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 
 namespace tars
 {
 
-int TarsRemoteNotify::setNotifyInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string &sSetName, const string &nodeName)
+int RemoteNotify::setNotifyInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string &sSetName, const string &nodeName)
 {
     _comm           = comm;
     if(!obj.empty())
@@ -37,13 +37,14 @@ int TarsRemoteNotify::setNotifyInfo(const CommunicatorPtr &comm, const string &o
     return 0;
 }
 
-void TarsRemoteNotify::report(const string &sResult, bool bSync)
+void RemoteNotify::report(const string &sResult, bool bSync)
 {
     try
     {
         if(_notifyPrx)
         {
             ReportInfo info;
+            info.eType     = REPORT;
             info.sApp      = _app;
             info.sServer   = _serverName;
             info.sSet      = _setName;
@@ -52,34 +53,32 @@ void TarsRemoteNotify::report(const string &sResult, bool bSync)
             info.sNodeName = _nodeName;
             if(!bSync)
             {
-                //_notifyPrx->async_reportServer(NULL, _app + "." + _serverName, TC_Common::tostr(std::this_thread::get_id()), sResult);
                 _notifyPrx->async_reportNotifyInfo(NULL, info);
             }
             else
             {
-                //_notifyPrx->reportServer(_app + "." + _serverName, TC_Common::tostr(std::this_thread::get_id()), sResult);
                 _notifyPrx->reportNotifyInfo(info);
             }
         }
     }
     catch(exception &ex)
     {
-        TLOGERROR("TarsRemoteNotify::report error:" << ex.what() << endl);
+        TLOGERROR("[RemoteNotify::report error:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        TLOGERROR("TarsRemoteNotify::report unknown error" << endl);
+        TLOGERROR("[RemoteNotify::report unknown error" << "]" << endl);
     }
 }
 
-void TarsRemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
+void RemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
 {
     try
     {
         if(_notifyPrx)
         {
             ReportInfo info;
-           // info.eType     = 0;
+            info.eType     = NOTIFY;
             info.sApp      = _app;
             info.sServer   = _serverName;
             info.sSet      = _setName;
@@ -87,28 +86,27 @@ void TarsRemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
             info.sMessage  = sMessage;
             info.eLevel    = level;
             info.sNodeName = _nodeName;
-            //_notifyPrx->async_notifyServer(NULL, _app + "." + _serverName, level, sMessage);
             _notifyPrx->async_reportNotifyInfo(NULL, info);
         }
     }
     catch(exception &ex)
     {
-        TLOGERROR("TarsRemoteNotify::notify error:" << ex.what() << endl);
+        TLOGERROR("[RemoteNotify::notify error:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        TLOGERROR("TarsRemoteNotify::notify unknown error" << endl);
+        TLOGERROR("[RemoteNotify::notify unknown error" << "]" << endl);
     }
 }
 
-void TarsRemoteNotify::report(const string &sMessage, const string & app, const string &serverName, const string &sNodeName)
+void RemoteNotify::report(const string &sMessage, const string & app, const string &serverName, const string &sNodeName)
 {
     try
     {
         if(_notifyPrx)
         {
             ReportInfo info;
-           // info.eType     = 0;
+            info.eType     = REPORT;
             info.sApp      = app;
             info.sServer   = serverName;
             info.sSet      = "";
@@ -119,11 +117,11 @@ void TarsRemoteNotify::report(const string &sMessage, const string & app, const 
     }
     catch(exception &ex)
     {
-        TLOGERROR("TarsRemoteNotify::notify error:" << ex.what() << endl);
+        TLOGERROR("[RemoteNotify::notify error:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        TLOGERROR("TarsRemoteNotify::notify unknown error" << endl);
+        TLOGERROR("[RemoteNotify::notify unknown error" << "]" << endl);
     }
 }
 

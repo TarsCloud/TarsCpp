@@ -15,7 +15,7 @@
  */
 
 #include "servant/EndpointInfo.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/NetworkUtil.h"
 #include "util/tc_socket.h"
 

@@ -2,6 +2,7 @@
 #ifndef __TC_SPIN_LOCK_H
 #define __TC_SPIN_LOCK_H
 
+#include "util/tc_platform.h"
 #include <atomic>
 #include <memory>
 
@@ -15,7 +16,7 @@ namespace tars
  * 不能阻塞wait, 只能快速加解锁, 适用于锁粒度非常小的情况, 减小线程切换的开销
  * 不支持trylock
  */
-class TC_SpinLock
+class UTIL_DLL_API TC_SpinLock
 {
 public:
 

@@ -16,7 +16,7 @@
 #include "util/tc_port.h"
 #include "servant/EndpointManager.h"
 #include "servant/ObjectProxy.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/AppCache.h"
 #include "servant/Application.h"
 #include "servant/StatReport.h"
@@ -34,6 +34,7 @@ QueryEpBase::QueryEpBase(Communicator * pComm, bool bFirstNetThread,bool bInterf
 , _locator("")
 , _valid(false)
 , _weightType(E_LOOP)
+, _rootServant(true)
 , _requestRegistry(false)
 , _requestTimeout(0)
 , _timeoutInterval(5*1000)
@@ -50,7 +51,7 @@ QueryEpBase::QueryEpBase(Communicator * pComm, bool bFirstNetThread,bool bInterf
 
 void QueryEpBase::callback_findObjectById4All(Int32 ret, const vector<EndpointF>& activeEp, const vector<EndpointF>& inactiveEp)
 {
-    TLOGTARS("[TARS][callback_findObjectById4All _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[callback_findObjectById4All _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -59,14 +60,14 @@ void QueryEpBase::callback_findObjectById4All(Int32 ret, const vector<EndpointF>
 
 void QueryEpBase::callback_findObjectById4All_exception(Int32 ret)
 {
-    TLOGERROR("[TARS][callback_findObjectById4All_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
+    TLOGERROR("[callback_findObjectById4All_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
 
     doEndpointsExp(ret);
 }
 
 void QueryEpBase::callback_findObjectById4Any(Int32 ret, const vector<EndpointF>& activeEp, const vector<EndpointF>& inactiveEp)
 {
-    TLOGTARS("[TARS][callback_findObjectById4Any _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[callback_findObjectById4Any _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -75,14 +76,14 @@ void QueryEpBase::callback_findObjectById4Any(Int32 ret, const vector<EndpointF>
 
 void QueryEpBase::callback_findObjectById4Any_exception(Int32 ret)
 {
-    TLOGERROR("[TARS][callback_findObjectById4Any_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
+    TLOGERROR("[callback_findObjectById4Any_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
 
     doEndpointsExp(ret);
 }
 
 void QueryEpBase::callback_findObjectByIdInSameGroup(Int32 ret, const vector<EndpointF>& activeEp, const vector<EndpointF>& inactiveEp)
 {
-    TLOGTARS("[TARS][callback_findObjectByIdInSameGroup _objName:" << _objName << "|ret:"<<ret
+    TLOGTARS("[callback_findObjectByIdInSameGroup _objName:" << _objName << "|ret:"<<ret
             << ",active:" << activeEp.size()
                << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -91,14 +92,14 @@ void QueryEpBase::callback_findObjectByIdInSameGroup(Int32 ret, const vector<End
 
 void QueryEpBase::callback_findObjectByIdInSameGroup_exception(Int32 ret)
 {
-    TLOGERROR("[TARS][callback_findObjectByIdInSameGroup_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
+    TLOGERROR("[callback_findObjectByIdInSameGroup_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
 
     doEndpointsExp(ret);
 }
 
 void QueryEpBase::callback_findObjectByIdInSameSet( Int32 ret, const vector<EndpointF> &activeEp, const vector<EndpointF> & inactiveEp)
 {
-    TLOGTARS("[TARS][callback_findObjectByIdInSameSet _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[callback_findObjectByIdInSameSet _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -107,14 +108,14 @@ void QueryEpBase::callback_findObjectByIdInSameSet( Int32 ret, const vector<Endp
 
 void QueryEpBase::callback_findObjectByIdInSameSet_exception( Int32 ret)
 {
-   TLOGERROR("[TARS][callback_findObjectByIdInSameSet_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
+   TLOGERROR("[callback_findObjectByIdInSameSet_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
 
     doEndpointsExp(ret);
 }
 
 void QueryEpBase::callback_findObjectByIdInSameStation( Int32 ret, const vector<EndpointF> &activeEp, const vector<EndpointF> &inactiveEp)
 {
-    TLOGTARS("[TARS][callback_findObjectByIdInSameStation _objName:" << _objName << "|ret:" << ret
+    TLOGTARS("[callback_findObjectByIdInSameStation _objName:" << _objName << "|ret:" << ret
             << ",active:" << activeEp.size()
             << ",inactive:" << inactiveEp.size() << "]" << endl);
 
@@ -123,7 +124,7 @@ void QueryEpBase::callback_findObjectByIdInSameStation( Int32 ret, const vector<
 
 void QueryEpBase::callback_findObjectByIdInSameStation_exception( Int32 ret)
 {
-    TLOGERROR("[TARS][callback_findObjectByIdInSameStation_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
+    TLOGERROR("[callback_findObjectByIdInSameStation_exception _objName:" << _objName << "|ret:" << ret << "]" << endl);
 
     doEndpointsExp(ret);
 }
@@ -137,7 +138,7 @@ int QueryEpBase::setLocatorPrx(QueryFPrx prx)
 
 bool QueryEpBase::init(const string & sObjName,const string & sLocator,const string& setName)
 {
-    TLOGTARS("[TARS][QueryEpBase::init sObjName:" << sObjName << ",sLocator:" << sLocator << ",setName:" << setName << "]" << endl);
+    TLOGTARS("[QueryEpBase::init sObjName:" << sObjName << ",sLocator:" << sLocator << ",setName:" << setName << "]" << endl);
 
     _locator = sLocator;
 
@@ -158,12 +159,19 @@ void QueryEpBase::setObjName(const string & sObjName)
     if (pos != string::npos)
     {
         //[直接连接]指定服务的IP和端口列表
-
         _objName = sObjName.substr(0,pos);
 
         sEndpoints = sObjName.substr(pos + 1);
 
-        _direct = true;
+	    pos = _objName.find_first_of("#");
+
+	    if(pos != string::npos)
+	    {
+		    _rootServant    = false;
+		    _objName        = _objName.substr(0, pos);
+	    }
+
+	    _direct = true;
 
         _valid = true;
     }
@@ -178,9 +186,16 @@ void QueryEpBase::setObjName(const string & sObjName)
 
         if(_locator.find_first_not_of('@') == string::npos)
         {
-            TLOGERROR("[TARS][QueryEpBase::setObjName locator is not valid,_locator:" << _locator << "]" << endl);
+            TLOGERROR("[QueryEpBase::setObjName locator is not valid,_locator:" << _locator << "]" << endl);
             throw TarsRegistryException("locator is not valid,_locator:" + _locator);
         }
+
+	    pos = _objName.find_first_of("#");
+	    if(pos != string::npos)
+	    {
+		    _objName = _objName.substr(0, pos);
+	    }
+
 
         _queryFPrx = _communicator->stringToProxy<QueryFPrx>(_locator);
 
@@ -327,7 +342,7 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
         }
         catch (...)
         {
-            TLOGERROR("[TARS][QueryEpBase::setEndpoints parse error,objname:" << _objName << ",endpoint:" << vEndpoints[i] << "]" << endl);
+            TLOGERROR("[QueryEpBase::setEndpoints parse error,objname:" << _objName << ",endpoint:" << vEndpoints[i] << "]" << endl);
         }
     }
 
@@ -372,12 +387,15 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
         //一定时间不回调就算超时了
         _requestTimeout = iNow + _timeoutInterval;
 
-        TLOGTARS("[TARS][QueryEpBase::refresh,"<<_objName<<"]"<<endl);
+        TLOGTARS("[QueryEpBase::refresh,"<<_objName<<"]"<<endl);
 
         //判断是同步调用还是异步调用
         //内部请求主控都是异步请求
         //接口请求主控第一次是同步请求
         bool bSync = (!_valid && _interfaceReq);
+	    //如果是异步且不是根servant(通过#1创建的servant, 不主动更新主控信息)
+        if(!bSync && !_rootServant)
+	        return;
         try
         {
             if(bSync)
@@ -389,16 +407,16 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            iRet = _queryFPrx->findObjectById4Any(_objName,activeEp,inactiveEp);
+                            iRet = _queryFPrx->findObjectById4Any(_objName,activeEp,inactiveEp, ServerConfig::Context);
                             break;
                         }
                     case E_STATION:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp);
+                            iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
                         }
                     case E_SET:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp);
+                            iRet = _queryFPrx->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
                             break;
                         }
                     case E_DEFAULT:
@@ -408,11 +426,11 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             {
                                    //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                iRet = _queryFPrx->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp);
+                                iRet = _queryFPrx->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp, ServerConfig::Context);
                             }
                             else
                             {
-                                iRet = _queryFPrx->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp);
+                                iRet = _queryFPrx->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp, ServerConfig::Context);
                             }
                             break;
                         }
@@ -425,17 +443,17 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            _queryFPrx->async_findObjectById4Any(this,_objName);
+                            _queryFPrx->async_findObjectById4Any(this,_objName, ServerConfig::Context);
                             break;
                         }
                     case E_STATION:
                         {
-                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName);
+                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName, ServerConfig::Context);
                             break;
                         }
                     case E_SET:
                         {
-                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName);
+                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName, ServerConfig::Context);
                             break;
                         }
                     case E_DEFAULT:
@@ -445,11 +463,11 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             {
                                     //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId);
+                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId, ServerConfig::Context);
                             }
                             else
                             {
-                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName);
+                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName, ServerConfig::Context);
                             }
                             break;
                         }
@@ -458,12 +476,12 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
         }
         catch(TC_Exception & ex)
         {
-            TLOGERROR("[TARS]QueryEpBase::refreshReg obj:"<<_objName<<"exception:"<<ex.what()<<endl);
+            TLOGERROR("[QueryEpBase::refreshReg obj:"<<_objName<<"exception:"<<ex.what() << "]"<<endl);
             doEndpointsExp(TARSSERVERUNKNOWNERR);
         }
         catch(...)
         {
-            TLOGERROR("[TARS]QueryEpBase::refreshReg obj:"<<_objName<<"unknown exception:"<<endl);
+            TLOGERROR("[QueryEpBase::refreshReg obj:"<<_objName<<"unknown exception]" <<endl);
             doEndpointsExp(TARSSERVERUNKNOWNERR);
         }
     }
@@ -490,7 +508,7 @@ void QueryEpBase::doEndpoints(const vector<EndpointF>& activeEp, const vector<En
         _refreshTime = iNow + _activeEmptyInterval;
 
         //如果registry返回Active服务列表为空，不做更新
-        TLOGERROR("[TARS][QueryEpBase::doEndpoints, callback activeEps is empty,objname:"<< _objName << "]" << endl);
+        TLOGERROR("[QueryEpBase::doEndpoints, callback activeEps is empty,objname:"<< _objName << "]" << endl);
         return;
     }
     else
@@ -673,7 +691,7 @@ void QueryEpBase::setEndPointToCache(bool bInactive)
         AppCache::getInstance()->set(objName,sEndpoints,sLocatorKey);
     }
 
-    TLOGTARS("[TARS][setEndPointToCache,obj:" << _objName << ",invokeSetId:" << _invokeSetId << ",endpoint:" << sEndpoints << "]" << endl);
+    TLOGTARS("[setEndPointToCache,obj:" << _objName << ",invokeSetId:" << _invokeSetId << ",endpoint:" << sEndpoints << "]" << endl);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -704,7 +722,7 @@ EndpointManager::~EndpointManager()
     }
 }
 
-void EndpointManager::notifyEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive, bool bSync)
+void EndpointManager::updateEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive)
 {
     set<EndpointInfo>::const_iterator iter;
     map<string,AdapterProxy*>::iterator iterAdapter;
@@ -788,6 +806,13 @@ void EndpointManager::notifyEndpoints(const set<EndpointInfo> & active, const se
     _update = true;
 }
 
+void EndpointManager::notifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive,bool bNotify)
+{
+	updateEndpoints(active, inactive);
+
+    _objectProxy->onNotifyEndpoints(active, inactive);
+}
+
 void EndpointManager::doNotify()
 {
     _objectProxy->doInvoke();
@@ -840,7 +865,7 @@ AdapterProxy * EndpointManager::getNextValidProxy(bool onlyCheck)
 {
     if (_activeProxys.empty())
     {
-        TLOGERROR("[TARS][EndpointManager::getNextValidProxy activeEndpoints is empty][obj:"<<_objName<<"]" << endl);
+        TLOGERROR("[EndpointManager::getNextValidProxy activeEndpoints is empty][obj:"<<_objName<<"]" << endl);
         return NULL;
     }
 
@@ -913,7 +938,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
 {
     if(_vRegProxys.empty())
     {
-        TLOGERROR("[TARS][EndpointManager::getHashProxyForWeight _vRegProxys is empty], bStatic:" << bStatic << endl);
+        TLOGERROR("[EndpointManager::getHashProxyForWeight _vRegProxys is empty], bStatic:" << bStatic << endl);
         return NULL;
     }
 
@@ -925,7 +950,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
 
         int64_t iEnd = TNOWMS;
 
-        TLOGTARS("[TARS][EndpointManager::getHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
+        TLOGTARS("[EndpointManager::getHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
     }
 
     if(vRouterCache.size() > 0)
@@ -954,7 +979,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
         {
             if(_activeProxys.empty())
             {
-                TLOGERROR("[TARS][EndpointManager::getHashProxyForWeight _activeEndpoints is empty], bStatic:" << bStatic << endl);
+                TLOGERROR("[EndpointManager::getHashProxyForWeight _activeEndpoints is empty], bStatic:" << bStatic << endl);
                 return NULL;
             }
 
@@ -1022,7 +1047,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
 {
     if(_vRegProxys.empty())
     {
-        TLOGERROR("[TARS][EndpointManager::getConHashProxyForWeight _vRegProxys is empty], bStatic:" << bStatic << endl);
+        TLOGERROR("[EndpointManager::getConHashProxyForWeight _vRegProxys is empty], bStatic:" << bStatic << endl);
         return NULL;
     }
 
@@ -1034,7 +1059,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
 
         int64_t iEnd = TNOWMS;
 
-        TLOGTARS("[TARS][EndpointManager::getConHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
+        TLOGTARS("[EndpointManager::getConHashProxyForWeight update bStatic:" << bStatic << "|_objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
     }
 
     if(_consistentHashWeight.size() > 0)
@@ -1058,7 +1083,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
         {
             if(_activeProxys.empty())
             {
-                TLOGERROR("[TARS][EndpointManager::getConHashProxyForWeight _activeEndpoints is empty], bStatic:" << bStatic << endl);
+                TLOGERROR("[EndpointManager::getConHashProxyForWeight _activeEndpoints is empty], bStatic:" << bStatic << endl);
                 return NULL;
             }
 
@@ -1172,7 +1197,7 @@ void EndpointManager::updateHashProxyWeighted(bool bStatic)
 {
     if(_vRegProxys.size() <= 0)
     {    
-        TLOGERROR("[TARS][EndpointManager::updateHashProxyWeighted _vRegProxys is empty], bStatic:" << bStatic << endl);
+        TLOGERROR("[EndpointManager::updateHashProxyWeighted _vRegProxys is empty], bStatic:" << bStatic << endl);
         return ;
     }
 
@@ -1195,7 +1220,7 @@ void EndpointManager::updateHashProxyWeighted(bool bStatic)
 
     if(vRegProxys.size() <= 0)
     {
-        TLOGERROR("[TARS][EndpointManager::updateHashProxyWeighted vRegProxys is empty], bStatic:" << bStatic << endl);
+        TLOGERROR("[EndpointManager::updateHashProxyWeighted vRegProxys is empty], bStatic:" << bStatic << endl);
         return ;
     }
 
@@ -1260,7 +1285,7 @@ void EndpointManager::updateHashProxyWeighted(bool bStatic)
             }
         }
         
-        TLOGTARS("[TARS]EndpointManager::updateHashProxyWeighted bStatic:" << bStatic << "|_objName:" << _objName << "|endpoint:" << vRegProxys[i]->endpoint().desc() << "|iWeight:" << vRegProxys[i]->getWeight() << "|iWeightR:" << iWeight << "|iIndex:" << vIndex[i] << endl);
+        TLOGTARS("EndpointManager::updateHashProxyWeighted bStatic:" << bStatic << "|_objName:" << _objName << "|endpoint:" << vRegProxys[i]->endpoint().desc() << "|iWeight:" << vRegProxys[i]->getWeight() << "|iWeightR:" << iWeight << "|iIndex:" << vIndex[i] << endl);
     }
 
     for(size_t i = 0; i < iMaxRouterR; i++)
@@ -1297,7 +1322,7 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, vector<AdapterPro
 {
     if(_vRegProxys.size() <= 0)
     {    
-        TLOGERROR("[TARS][EndpointManager::updateHashProxyWeighted _vRegProxys is empty], bStatic:" << bStatic << endl);
+        TLOGERROR("[EndpointManager::updateHashProxyWeighted _vRegProxys is empty], bStatic:" << bStatic << endl);
         return ;
     }
 
@@ -1325,7 +1350,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode, bool only
 {
     if(_vRegProxys.empty())
     {
-        TLOGERROR("[TARS][EndpointManager::getHashProxyForNormal _vRegProxys is empty]" << endl);
+        TLOGERROR("[EndpointManager::getHashProxyForNormal _vRegProxys is empty]" << endl);
         return NULL;
     }
 
@@ -1349,7 +1374,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode, bool only
     {
         if(_activeProxys.empty())
         {
-            TLOGERROR("[TARS][EndpointManager::getHashProxyForNormal _activeEndpoints is empty]" << endl);
+            TLOGERROR("[EndpointManager::getHashProxyForNormal _activeEndpoints is empty]" << endl);
             return NULL;
         }
 
@@ -1411,7 +1436,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode, bool o
 {
     if(_vRegProxys.empty())
     {
-        TLOGERROR("[TARS][EndpointManager::getConHashProxyForNormal _vRegProxys is empty]" << endl);
+        TLOGERROR("[EndpointManager::getConHashProxyForNormal _vRegProxys is empty]" << endl);
         return NULL;
     }
 
@@ -1423,7 +1448,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode, bool o
 
         int64_t iEnd = TNOWMS;
 
-        TLOGTARS("[TARS][EndpointManager::getConHashProxyForNormal update _objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
+        TLOGTARS("[EndpointManager::getConHashProxyForNormal update _objName:" << _objName << "|timecost(ms):" << (iEnd - iBegin) << endl);
     }
 
     if(_consistentHash.size() > 0)
@@ -1447,7 +1472,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode, bool o
         {
             if(_activeProxys.empty())
             {
-                TLOGERROR("[TARS][EndpointManager::getConHashProxyForNormal _activeEndpoints is empty]" << endl);
+                TLOGERROR("[EndpointManager::getConHashProxyForNormal _activeEndpoints is empty]" << endl);
                 return NULL;
             }
 
@@ -1518,7 +1543,7 @@ AdapterProxy* EndpointManager::getWeightedForNormal(bool bStaticWeighted, bool o
 {
     if (_activeProxys.empty())
     {
-        TLOGERROR("[TARS][EndpointManager::getWeightedForNormal activeEndpoints is empty][obj:"<<_objName<<"]" << endl);
+        TLOGERROR("[EndpointManager::getWeightedForNormal activeEndpoints is empty][obj:"<<_objName<<"]" << endl);
         return NULL;
     }
 
@@ -1646,7 +1671,7 @@ void EndpointManager::updateProxyWeighted()
 
     if(iWeightProxySize <= 0)
     {
-        TLOGERROR("[TARS]EndpointManager::updateProxyWeighted _objName:" << _objName << "|_activeProxys.size() <= 0" << endl);
+        TLOGERROR("[EndpointManager::updateProxyWeighted _objName:" << _objName << ", activeProxys.size() <= 0]" << endl);
         return ;
     }
 
@@ -1664,7 +1689,7 @@ void EndpointManager::updateProxyWeighted()
 
     if(iWeightProxySize <= 0)
     {
-        TLOGERROR("[TARS]EndpointManager::updateProxyWeighted _objName:" << _objName << "|vProxy.size() <= 0" << endl);
+        TLOGERROR("[EndpointManager::updateProxyWeighted _objName:" << _objName << ", vProxy.size() <= 0]" << endl);
         return ;
     }
 
@@ -1697,7 +1722,7 @@ void EndpointManager::dispatchEndpointCache(const vector<int> &vWeight)
 {
     if(vWeight.size() <= 0)
     {
-        TLOGERROR("EndpointManager::dispatchEndpointCache vWeight.size() < 0" << endl);
+        TLOGERROR("[EndpointManager::dispatchEndpointCache vWeight.size() < 0]" << endl);
         return ;
     }
 
@@ -1771,7 +1796,7 @@ void EndpointManager::dispatchEndpointCache(const vector<int> &vWeight)
             _staticRouterCache.push_back(i);
         }
         
-        TLOGTARS("[TARS]EndpointManager::dispatchEndpointCache _objName:" << _objName << "|endpoint:" << _activeWeightProxy[i]->endpoint().desc() << "|iWeightR:" << iWeight << endl);
+        TLOGTARS("EndpointManager::dispatchEndpointCache _objName:" << _objName << "|endpoint:" << _activeWeightProxy[i]->endpoint().desc() << "|iWeightR:" << iWeight << endl);
     }
 
     for(size_t i = 0; i < iMaxRouterR; i++)

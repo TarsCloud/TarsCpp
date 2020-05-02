@@ -80,7 +80,7 @@ void TC_Socket::createSocket(int iSocketType, int iDomain)
     if(_sock < 0)
     {
         _sock = INVALID_SOCKET;
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createSocket] create socket error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createSocket] create socket error");
         // throw TC_Socket_Exception("[TC_Socket::createSocket] create socket error! :" + string(strerror(errno)));
     } 
 	else 
@@ -151,7 +151,7 @@ void TC_Socket::connect(const char *sPathName)
     int ret = connectNoThrow(sPathName);
     if(ret < 0)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SocketConnect_Exception, "[TC_Socket::connect] connect error");
+        THROW_EXCEPTION_SYSCODE(TC_SocketConnect_Exception, "[TC_Socket::connect] connect error");
     }
 }
 
@@ -173,7 +173,7 @@ void TC_Socket::getPeerName(struct sockaddr *pstPeerAddr, SOCKET_LEN_TYPE &iPeer
 {
     if(getpeername(_sock, pstPeerAddr, &iPeerLen) < 0)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getPeerName] getpeername error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getPeerName] getpeername error");
     }
 }
 
@@ -199,7 +199,7 @@ void TC_Socket::getSockName(struct sockaddr *pstSockAddr, SOCKET_LEN_TYPE &iSock
 {
     if(getsockname(_sock, pstSockAddr, &iSockLen) < 0)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getSockName] getsockname error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getSockName] getsockname error");
     }
 }
 
@@ -209,7 +209,11 @@ SOCKET_TYPE TC_Socket::accept(TC_Socket &tcSock, struct sockaddr *pstSockAddr, S
 
     SOCKET_TYPE ifd;
 
+#if TARGET_PLATFORM_WINDOWS
+    ifd = ::accept(_sock, pstSockAddr, &iSockLen);
+#else
     while ((ifd = ::accept(_sock, pstSockAddr, &iSockLen)) < 0 && errno == EINTR);
+#endif
 
     tcSock._sock    = ifd;
     tcSock._iDomain = _iDomain;
@@ -222,7 +226,7 @@ void TC_Socket::parseAddr(const string &sAddr, struct in_addr &stSinAddr)
     int iRet = inet_pton(AF_INET, sAddr.c_str(), &stSinAddr);
     if(iRet < 0)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::parseAddr] inet_pton(" + sAddr + ") error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::parseAddr] inet_pton(" + sAddr + ") error");
     }
 #if TARGET_PLATFORM_LINUX 
 	else if (iRet == 0)
@@ -236,7 +240,7 @@ void TC_Socket::parseAddr(const string &sAddr, struct in_addr &stSinAddr)
 
 		if (pstHostent == NULL)
 		{
-            TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::parseAddr] gethostbyname_r(" + sAddr + ") error");
+            THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::parseAddr] gethostbyname_r(" + sAddr + ") error");
  
 			// throw TC_Socket_Exception("[TC_Socket::parseAddr] gethostbyname_r(" + sAddr + ") error", TC_Exception::getSystemCode());
 		}
@@ -256,7 +260,7 @@ void TC_Socket::parseAddr(const string &sAddr, struct in_addr &stSinAddr)
 		int err = getaddrinfo(sAddr.c_str(), NULL, &hints, &ailist);
         if (err != 0)
         {
-            TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::parseAddr] getaddrinfo(" + sAddr + ") error");
+            THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::parseAddr] getaddrinfo(" + sAddr + ") error");
         }
         else
         {
@@ -278,7 +282,7 @@ void TC_Socket::parseAddr(const string &host, struct in6_addr &stSinAddr)
     int iRet = inet_pton(AF_INET6, host.c_str(), &stSinAddr);
     if(iRet < 0)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::parseAddr] inet_pton(" + host + ") error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::parseAddr] inet_pton(" + host + ") error");
     }
     else if(iRet == 0)
     {
@@ -381,7 +385,7 @@ void TC_Socket::bind(const struct sockaddr *pstBindAddr, SOCKET_LEN_TYPE iAddrLe
 
     if(::bind(_sock, pstBindAddr, iAddrLen) < 0)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::bind] bind error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::bind] bind error");
     }
 }
 
@@ -440,7 +444,7 @@ void TC_Socket::connect(const string &sServerAddr, uint16_t port)
 
     if(ret < 0)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_SocketConnect_Exception, "[TC_Socket::connect] connect error");
+        THROW_EXCEPTION_SYSCODE(TC_SocketConnect_Exception, "[TC_Socket::connect] connect error");
     }
 }
 
@@ -454,7 +458,7 @@ void TC_Socket::listen(int iConnBackLog)
 {
     if (::listen(_sock, iConnBackLog) < 0)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::listen] listen error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::listen] listen error");
     }
 }
 
@@ -543,7 +547,7 @@ void TC_Socket::shutdown(int iHow)
 {
     if (::shutdown(_sock, iHow) < 0)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::shutdown] shutdown error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::shutdown] shutdown error");
     }
 }
 
@@ -572,7 +576,7 @@ void TC_Socket::setNoCloseWait()
 
     if(setSockOpt(SO_LINGER, (const void *)&stLinger, sizeof(linger), SOL_SOCKET) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setNoCloseWait] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setNoCloseWait] error");
     }
 }
 
@@ -584,7 +588,7 @@ void TC_Socket::setCloseWait(int delay)
 
     if(setSockOpt(SO_LINGER, (const void *)&stLinger, sizeof(linger), SOL_SOCKET) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setCloseWait] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setCloseWait] error");
 
         // throw TC_Socket_Exception("[TC_Socket::setCloseWait] error", TC_Exception::getSystemCode());
     }
@@ -598,7 +602,7 @@ void TC_Socket::setCloseWaitDefault()
 
     if(setSockOpt(SO_LINGER, (const void *)&stLinger, sizeof(linger), SOL_SOCKET) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setCloseWait] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setCloseWait] error");
     }
 }
 
@@ -608,7 +612,7 @@ void TC_Socket::setTcpNoDelay()
 
     if(setSockOpt(TCP_NODELAY, (char*)&flag, int(sizeof(int)), IPPROTO_TCP) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setTcpNoDelay] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setTcpNoDelay] error");
     }
 }
 
@@ -617,7 +621,7 @@ void TC_Socket::setKeepAlive()
     int flag = 1;
     if(setSockOpt(SO_KEEPALIVE, (char*)&flag, int(sizeof(int)), SOL_SOCKET) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setKeepAlive] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setKeepAlive] error");
     }
 }
 
@@ -625,7 +629,7 @@ void TC_Socket::setSendBufferSize(int sz)
 {
     if(setSockOpt(SO_SNDBUF, (char*)&sz, int(sizeof(int)), SOL_SOCKET) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setKeepsetSendBufferSizeAlive] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setKeepsetSendBufferSizeAlive] error");
     }
 }
 
@@ -635,7 +639,7 @@ int TC_Socket::getSendBufferSize() const
     SOCKET_LEN_TYPE len = sizeof(sz);
     if (getSockOpt(SO_SNDBUF, (void*)&sz, len, SOL_SOCKET) == -1 || len != sizeof(sz))
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getSendBufferSize] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getSendBufferSize] error");
     }
 
     return sz;
@@ -645,7 +649,7 @@ void TC_Socket::setRecvBufferSize(int sz)
 {
     if(setSockOpt(SO_RCVBUF, (char*)&sz, int(sizeof(int)), SOL_SOCKET) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setRecvBufferSize] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setRecvBufferSize] error");
     }
 }
 
@@ -655,7 +659,7 @@ int TC_Socket::getRecvBufferSize() const
     SOCKET_LEN_TYPE len = sizeof(sz);
     if (getSockOpt(SO_RCVBUF, (void*)&sz, len, SOL_SOCKET) == -1 || len != sizeof(sz))
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getRecvBufferSize] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::getRecvBufferSize] error");
     }
 
     return sz;
@@ -668,7 +672,7 @@ void TC_Socket::ignoreSigPipe() {
 
     if (setSockOpt(SO_NOSIGPIPE, (char*)&set, int(sizeof(int)), SOL_SOCKET) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::ignoreSigPipe] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::ignoreSigPipe] error");
     }
 #endif
 }
@@ -681,7 +685,7 @@ void TC_Socket::setblock(SOCKET_TYPE fd, bool bBlock)
 
     if ((val = fcntl(fd, F_GETFL, 0)) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setblock] fcntl [F_GETFL] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setblock] fcntl [F_GETFL] error");
         // throw TC_Socket_Exception("[TC_Socket::setblock] fcntl [F_GETFL] error", TC_Exception::getSystemCode());
     }
 
@@ -696,7 +700,7 @@ void TC_Socket::setblock(SOCKET_TYPE fd, bool bBlock)
 
     if (fcntl(fd, F_SETFL, val) == -1)
     {
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setblock] fcntl [F_SETFL] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setblock] fcntl [F_SETFL] error");
     }
 #else
 	unsigned long ul = 1;
@@ -705,7 +709,7 @@ void TC_Socket::setblock(SOCKET_TYPE fd, bool bBlock)
 	ret = ioctlsocket(fd, FIONBIO, (unsigned long *)&ul);
 	if (ret == SOCKET_ERROR)
 	{
-        TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setblock] ioctlsocket [FIONBIO] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setblock] ioctlsocket [FIONBIO] error");
 	}
 
 #endif
@@ -786,7 +790,7 @@ clean:
 // #if TARGET_PLATFORM_LINUX||TARGET_PLATFORM_IOS
 // #undef closesocket
 // #endif
-    TARS_THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createPipe] error");
+    THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createPipe] error");
 }
 
 #if TARGET_PLATFORM_LINUX

@@ -31,7 +31,7 @@ class ServantHandle;
 /**
  * 当前请求的上下文
  */
-class TarsCurrent : public TC_HandleBase
+class Current : public TC_HandleBase
 {
 public:
     typedef std::map<string, string>    TARS_STATUS;
@@ -42,12 +42,12 @@ public:
      * 构造函数
      * @param pServantHandle
      */
-    TarsCurrent(ServantHandle *pServantHandle);
+    Current(ServantHandle *pServantHandle);
 
     /**
      * 析构
      */
-    ~TarsCurrent();
+    ~Current();
 
     /**
      * 获取IP
@@ -56,6 +56,12 @@ public:
     const string &getIp() const;
 
     /**
+     * get host name
+     * @return
+     */
+	const string &getHostName() const;
+
+	/**
      * 获取端口
      * @return int
      */
@@ -223,6 +229,22 @@ public:
      */
     void sendResponse(const char* buff, uint32_t len);
 
+    /**
+     * 设置cookie
+     */
+    void setCookie(const map<string, string> &cookie)
+    {
+        _cookie = cookie;
+    }
+
+    /**
+     * 获取cookie
+     */
+    map<string, string> & getCookie()
+    {
+        return _cookie;
+    }
+
 protected:
 
     friend class ServantHandle;
@@ -297,6 +319,11 @@ protected:
      * 设置额外返回的内容
      */
     map<std::string, std::string> _responseContext;
+
+    /**
+     * cookie
+     */
+    map<string, string>             _cookie;
 };
 //////////////////////////////////////////////////////////////
 }

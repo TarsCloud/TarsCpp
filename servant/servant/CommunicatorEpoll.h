@@ -65,13 +65,9 @@ struct FDInfo
     }
 
     size_t iSeq;
-
-    int    fd;
-
-    int    iType;
-
+    int fd;
+    int iType;
     void * p;
-
     TC_Epoller::NotifyInfo notify;
 };
 
@@ -82,6 +78,7 @@ struct FDInfo
 class CommunicatorEpoll : public TC_Thread ,public TC_ThreadRecMutex
 {
 public:
+
     /**
      * 构造函数
      */
@@ -190,7 +187,7 @@ public:
 	 * communicator resource desc
 	 * @return
 	 */
-	string getResouresInfo();
+	string getResourcesInfo();
 
 protected:
     /**

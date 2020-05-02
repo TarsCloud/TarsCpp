@@ -560,7 +560,7 @@ string TC_Des::decrypt3(const char *key, const char * sIn, size_t iInlen)
         {
             //去掉填充字符
             int pad = (int)(*(ret.end() - 1));
-            if (pad<0 || pad>ret.length())
+            if (pad<0 || pad>(int)ret.length())
                 ret.clear();
             else
                 ret.erase(ret.end() - pad, ret.end());

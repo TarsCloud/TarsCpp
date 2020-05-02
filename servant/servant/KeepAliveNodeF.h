@@ -28,7 +28,7 @@ namespace tars
  * 给node发送心跳
  * 调用keepAlive异步发送心跳给node
  */
-class TarsNodeFHelper : public TC_Singleton<TarsNodeFHelper>,public TC_ThreadMutex 
+class KeepAliveNodeFHelper : public TC_Singleton<KeepAliveNodeFHelper>,public TC_ThreadMutex 
 {
 public:
 

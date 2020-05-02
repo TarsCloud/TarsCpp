@@ -18,7 +18,7 @@
 #include "servant/Communicator.h"
 #include "servant/Application.h"
 #include "servant/StatReport.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 
 namespace tars
 {
@@ -46,7 +46,7 @@ Communicator::Communicator()
 , _statReport(NULL)
 , _timeoutLogFlag(true)
 , _minTimeout(100)
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
 , _traceManager(NULL)
 #endif
 {
@@ -61,7 +61,7 @@ Communicator::Communicator(TC_Config& conf, const string& domain/* = CONFIG_ROOT
 : _initialized(false)
 , _terminating(false)
 , _timeoutLogFlag(true)
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
 , _traceManager(NULL)
 #endif
 {
@@ -120,6 +120,13 @@ string Communicator::getServantProperty(const string &sObj, const string& name)
 	return "";
 }
 
+void Communicator::setServantCustomCallback(const string &sObj, Communicator::custom_callback callback)
+{
+	TC_LockT<TC_SpinLock> lock(_callbackLock);
+
+	_callback[sObj] = callback;
+}
+
 #if TARS_SSL
 shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string & objName)
 {
@@ -129,6 +136,10 @@ shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string & objName)
 	if(it != _objCtx.end())
 	{
 		return TC_OpenSSL::newSSL(it->second);
+	}
+
+	if(!_ctx) {
+		_ctx = TC_OpenSSL::newCtx("", "", "", false, "");
 	}
 
 	return TC_OpenSSL::newSSL(_ctx);
@@ -161,14 +172,16 @@ void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_
 			data["ca"]        = conf.get("/tars/application/client/" + auths[i] + "<ca>");
 			data["cert"]      = conf.get("/tars/application/client/" + auths[i] + "<cert>");
 			data["key"]       = conf.get("/tars/application/client/" + auths[i] + "<key>");
+			data["ciphers"]   = conf.get("/tars/application/client/" + auths[i] + "<ciphers>");
+
 #if TARS_SSL
 
 			if(!data["ca"].empty())
 			{
-				shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx( data["ca"], data["cert"], data["key"], false);
+				shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx( data["ca"], data["cert"], data["key"], false, data["ciphers"]);
 				if(!ctx)
 				{
-					TLOGERROR("[TARS]load obj:" << auths[i] << ", ssl error, ca:" << data["ca"] << endl);
+					TLOGERROR("load obj:" << auths[i] << ", ssl error, ca:" << data["ca"] << endl);
 					exit(-1);
 				}
 
@@ -206,7 +219,7 @@ void Communicator::initialize()
             //set分组名不对时默认没有打开set分组
             ClientConfig::SetOpen = false;
             setProperty("enableset","n");
-            TLOGERROR( "[TARS][set division name error:" << ClientConfig::SetDivision << ", client failed to open set]" << endl);
+            TLOGERROR( "[set division name error:" << ClientConfig::SetDivision << ", client failed to open set]" << endl);
         }
     }
 
@@ -244,13 +257,14 @@ void Communicator::initialize()
 	string ca   = getProperty("ca");
 	string cert = getProperty("cert");
 	string key  = getProperty("key");
+	string ciphers  = getProperty("ciphers");
 
 	if(!ca.empty()) {
-		_ctx = TC_OpenSSL::newCtx(ca, cert, key, false);
+		_ctx = TC_OpenSSL::newCtx(ca, cert, key, false, ciphers);
 
 		if(!_ctx)
 		{
-			TLOGERROR("[TARS]load client ssl error, ca:" << ca << endl);
+			TLOGERROR("load client ssl error, ca:" << ca << endl);
 			exit(-1);
 		}
 	}
@@ -317,9 +331,9 @@ void Communicator::initialize()
 
 	int iReportTimeout = TC_Common::strto<int>(getProperty("report-timeout", "5000"));
 
-	int iSampleRate = TC_Common::strto<int>(getProperty("sample-rate", "1000"));
+	// int iSampleRate = TC_Common::strto<int>(getProperty("sample-rate", "1000"));
 
-	int iMaxSampleCount = TC_Common::strto<int>(getProperty("max-sample-count", "100"));
+	// int iMaxSampleCount = TC_Common::strto<int>(getProperty("max-sample-count", "100"));
 
 	int iMaxReportSize = TC_Common::strto<int>(getProperty("max-report-size", "1400"));
 
@@ -343,9 +357,9 @@ void Communicator::initialize()
 	}
 
 	string sSetDivision = ClientConfig::SetOpen?ClientConfig::SetDivision:"";
-	_statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, iSampleRate, iMaxSampleCount, iMaxReportSize, iReportTimeout);
+	_statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
 
-#if _USE_OPENTRACKING
+#if TARS_OPENTRACKING
 	string collector_host = getProperty("collector_host", "");
     string collector_port = getProperty("collector_port", "");
     if(!collector_host.empty() && !collector_port.empty())
@@ -412,9 +426,9 @@ int Communicator::reloadProperty(string & sResult)
 
     int iReportTimeout = TC_Common::strto<int>(getProperty("report-timeout", "5000"));
 
-    int iSampleRate = TC_Common::strto<int>(getProperty("sample-rate", "1000"));
+    // int iSampleRate = TC_Common::strto<int>(getProperty("sample-rate", "1000"));
 
-    int iMaxSampleCount = TC_Common::strto<int>(getProperty("max-sample-count", "100"));
+    // int iMaxSampleCount = TC_Common::strto<int>(getProperty("max-sample-count", "100"));
 
     int iMaxReportSize = TC_Common::strto<int>(getProperty("max-report-size", "1400"));
 
@@ -437,15 +451,15 @@ int Communicator::reloadProperty(string & sResult)
     }
 
     string sSetDivision = ClientConfig::SetOpen?ClientConfig::SetDivision:"";
-    _statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, iSampleRate, iMaxSampleCount, iMaxReportSize, iReportTimeout);
+    _statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
 
     sResult = "locator=" + getProperty("locator", "") + "\r\n" +
         "stat=" + statObj + "\r\n" + "property=" + propertyObj + "\r\n" +
         "SetDivision=" + sSetDivision + "\r\n" +
         "report-interval=" + TC_Common::tostr(iReportInterval) + "\r\n" +
-        "report-timeout=" + TC_Common::tostr(iReportTimeout) + "\r\n" +
-        "sample-rate=" + TC_Common::tostr(iSampleRate) + "\r\n" +
-        "max-sample-count=" + TC_Common::tostr(iMaxSampleCount) + "\r\n";
+        "report-timeout=" + TC_Common::tostr(iReportTimeout) + "\r\n";
+        // "sample-rate=" + TC_Common::tostr(iSampleRate) + "\r\n" +
+        // "max-sample-count=" + TC_Common::tostr(iMaxSampleCount) + "\r\n";
 
     return 0;
 }
@@ -462,13 +476,13 @@ vector<TC_Endpoint> Communicator::getEndpoint4All(const string & objName)
     return pServantProxy->getEndpoint4All();
 }
 
-string Communicator::getResouresInfo()
+string Communicator::getResourcesInfo()
 {
 	ostringstream os;
 	for (size_t i = 0; i < _clientThreadNum; ++i)
 	{
 		os << OUT_LINE << endl;
-		os << _communicatorEpoll[i]->getResouresInfo();
+		os << _communicatorEpoll[i]->getResourcesInfo();
 	}
 	return os.str();
 }
@@ -542,8 +556,19 @@ void Communicator::terminate()
 
 void Communicator::pushAsyncThreadQueue(ReqMessage * msg)
 {
-    //先不考虑每个线程队列数目不一致的情况
-    _asyncThread[(_asyncSeq++)%_asyncThreadNum]->push_back(msg);
+	{
+		TC_LockT<TC_SpinLock> lock(_callbackLock);
+
+		auto it = _callback.find(msg->request.sServantName);
+		if (it != _callback.end()) {
+			ReqMessagePtr msgPtr = msg;
+			it->second(msgPtr);
+			return;
+		}
+	}
+
+	//先不考虑每个线程队列数目不一致的情况
+	_asyncThread[(_asyncSeq++) % _asyncThreadNum]->push_back(msg);
 }
 
 void Communicator::doStat()

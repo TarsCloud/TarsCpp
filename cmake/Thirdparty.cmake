@@ -3,38 +3,26 @@ option(TARS_MYSQL "option for mysql" ON)
 option(TARS_SSL "option for ssl" OFF)
 option(TARS_HTTP2 "option for http2" OFF)
 option(TARS_PROTOBUF "option for protocol" OFF)
+option(TARS_GPERF    "option for gperf" OFF)
 
 IF(UNIX)
     FIND_PACKAGE(ZLIB)
     IF(NOT ZLIB_FOUND)
-        SET(ERRORMSG "zlib library not found. Please install appropriate package,
-                remove CMakeCache.txt and rerun cmake.")
+        SET(ERRORMSG "zlib library not found. Please install appropriate package, remove CMakeCache.txt and rerun cmake.")
         IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
-            SET(ERRORMSG ${ERRORMSG}
-                    "On Debian/Ubuntu, package name is zlib1g-dev(apt-get install  zlib1g-dev), on Redhat/Centos and derivates "
-                    "it is zlib-devel (yum install zlib-devel).")
+            SET(ERRORMSG ${ERRORMSG} "On Debian/Ubuntu, package name is zlib1g-dev(apt-get install  zlib1g-dev), on Redhat/Centos and derivates it is zlib-devel (yum install zlib-devel).")
         ENDIF()
         MESSAGE(FATAL_ERROR ${ERRORMSG})
     ENDIF()
+
 ENDIF(UNIX)
 
 if (TARS_MYSQL)
     add_definitions(-DTARS_MYSQL=1)
+endif ()
 
-    IF(UNIX AND NOT APPLE)
-        FIND_PACKAGE(Curses) 
-        IF(NOT CURSES_FOUND)
-            SET(ERRORMSG "Curses library not found. Please install appropriate package,
-            remove CMakeCache.txt and rerun cmake.")
-            IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
-                SET(ERRORMSG ${ERRORMSG} 
-                "On Debian/Ubuntu, package name is libncurses5-dev(apt-get install libncurses5-dev), on Redhat/Centos and derivates " 
-                "it is ncurses-devel (yum install ncurses-devel).")
-        ENDIF()
-        MESSAGE(FATAL_ERROR ${ERRORMSG})
-        ENDIF()
-   ENDIF()
-
+if (TARS_GPERF)
+    add_definitions(-DTARS_GPERF=1)
 endif ()
 
 if (TARS_SSL)
@@ -65,7 +53,61 @@ add_custom_target(thirdparty)
 
 include(ExternalProject)
 
+if (TARS_GPERF)
+
+    set(GPERF_DIR_INC "${THIRDPARTY_PATH}/gpref/include")
+    set(GRPEF_DIR_LIB "${THIRDPARTY_PATH}/gpref/lib")
+    include_directories(${GPERF_DIR_INC})
+    link_directories(${GRPEF_DIR_LIB})
+
+    if (UNIX)
+        set(LIB_GPERF "profiler")
+
+        ExternalProject_Add(ADD_${LIB_GPERF}
+                URL https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com//src/gperftools-2.7.tar.gz
+                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
+                PREFIX ${CMAKE_BINARY_DIR}
+                INSTALL_DIR ${CMAKE_SOURCE_DIR}
+                CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/src/gpref --disable-shared --disable-debugalloc
+                SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gpref-lib
+                BUILD_IN_SOURCE 1
+                BUILD_COMMAND make
+                # INSTALL_COMMAND ${CMAKE_COMMAND}  --build . --config release --target install
+                URL_MD5 c6a852a817e9160c79bdb2d3101b4601
+                )
+
+        add_dependencies(thirdparty ADD_${LIB_GPERF})
+
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/gpref/bin/pprof
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
+                DESTINATION thirdparty/bin/)
+        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gpref/lib DESTINATION thirdparty)
+        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gpref/include/gperftools DESTINATION thirdparty/include)
+
+    endif (UNIX)
+
+endif (TARS_GPERF)
+
 set(LIB_GTEST "libgtest")
+
+if(WIN32)
+    ExternalProject_Add(ADD_CURL
+        URL http://cdn.tarsyun.com/src/curl-7.69.1.tar.gz 
+        DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
+        PREFIX ${CMAKE_BINARY_DIR}
+        INSTALL_DIR ${CMAKE_SOURCE_DIR}
+        CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/curl
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/src/curl-lib
+        BUILD_IN_SOURCE 1
+        BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+        INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
+        URL_MD5 b9bb5e11d579425154a9f97ed44be9b8
+    )
+
+    add_dependencies(thirdparty ADD_CURL)
+
+    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/curl/ DESTINATION thirdparty)
+endif(WIN32)
 
 if (WIN32)
 
@@ -74,13 +116,11 @@ if (WIN32)
             DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
             PREFIX ${CMAKE_BINARY_DIR}
             INSTALL_DIR ${CMAKE_SOURCE_DIR}
-            CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
-            BUILD_COMMAND cmake --build . --config release
-            INSTALL_COMMAND cmake --build . --config release --target install
-#            LOG_CONFIGURE 1
-#            LOG_BUILD 1
+            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+            INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
             URL_MD5 82358affdd7ab94854c8ee73a180fc53
             )
 else()
@@ -89,19 +129,15 @@ else()
             DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
             PREFIX ${CMAKE_BINARY_DIR}
             INSTALL_DIR ${CMAKE_SOURCE_DIR}
-            CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
             BUILD_COMMAND make
-#            LOG_CONFIGURE 1
-#            LOG_BUILD 1
-            # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
             URL_MD5 ecd1fa65e7de707cd5c00bdac56022cd
             )
 endif()
 
 INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gtest/ DESTINATION thirdparty)
-#INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gtest/ DESTINATION thirdparty/include)
 
 add_dependencies(thirdparty ADD_${LIB_GTEST})
 
@@ -122,13 +158,11 @@ if (TARS_PROTOBUF)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND cmake --build . --config release
-#                LOG_CONFIGURE 1
-#                LOG_BUILD 1
-                INSTALL_COMMAND cmake --build . --config release --target install
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+                INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
     else ()
@@ -140,20 +174,16 @@ if (TARS_PROTOBUF)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DBUILD_SHARED_LIBS=OFF
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DBUILD_SHARED_LIBS=OFF
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
-#                LOG_CONFIGURE 1
-#                LOG_BUILD 1
-                # INSTALL_COMMAND cmake -P ${RUN_PROTOBUF_INSTALL_FILE}
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
 
     endif ()
 
     INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/ DESTINATION thirdparty)
-#    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/protobuf/include/google DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_PROTOBUF})
 
@@ -180,8 +210,6 @@ if (TARS_SSL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND nmake
-#                LOG_CONFIGURE 1
-#                LOG_BUILD 1
                 INSTALL_COMMAND nmake install
                 URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
                 )
@@ -198,16 +226,12 @@ if (TARS_SSL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
-#                LOG_CONFIGURE 1
-#                LOG_BUILD 1
-                # INSTALL_COMMAND cmake -P ${RUN_SSL_INSTALL_FILE}
                 URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
                 )
 
     endif ()
 
     INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/ DESTINATION thirdparty)
-#    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl/include/openssl DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_SSL})
 endif ()
@@ -226,13 +250,11 @@ if (TARS_MYSQL)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release 
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND cmake --build . --config release 
-#                LOG_CONFIGURE 1
-#                LOG_BUILD 1
-                INSTALL_COMMAND cmake --build . --config release --target install
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+                INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 62de01beffc48348708c983a585b4dc1
                 )
 
@@ -244,13 +266,10 @@ if (TARS_MYSQL)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DDISABLE_SHARED=1
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make mysqlclient
-#                LOG_CONFIGURE 1
-#                LOG_BUILD 1
-                # INSTALL_COMMAND cmake --build . --config release --target install
                 URL_MD5 98ca2071f9d4c6b73146cc0455f6b914
                 )
 
@@ -280,13 +299,11 @@ if (TARS_HTTP2)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
-#                LOG_BUILD 1
-#                LOG_CONFIGURE 1
-                BUILD_COMMAND cmake --build . --config release
-                INSTALL_COMMAND cmake --build . --config release --target install
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+                INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
                 )
 
@@ -296,20 +313,16 @@ if (TARS_HTTP2)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
-#                LOG_BUILD 1
-#                LOG_CONFIGURE 1
                 BUILD_COMMAND make
-                # INSTALL_COMMAND incmake --build . --config release --target install
                 URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
                 )
 
     endif ()
 
     INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/ DESTINATION thirdparty)
-#    INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/nghttp2/include/nghttp2 DESTINATION thirdparty/include)
 
     add_dependencies(thirdparty ADD_${LIB_HTTP2})
 
@@ -320,4 +333,4 @@ message("TARS_MYSQL:                ${TARS_MYSQL}")
 message("TARS_HTTP2:                ${TARS_HTTP2}")
 message("TARS_SSL:                  ${TARS_SSL}")
 message("TARS_PROTOBUF:             ${TARS_PROTOBUF}")
-
+message("TARS_GPERF:                ${TARS_GPERF}")

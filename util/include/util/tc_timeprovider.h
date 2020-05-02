@@ -42,7 +42,7 @@ class TC_TimeProvider;
 /**
  * @brief 提供秒级别的时间
  */
-class TC_TimeProvider
+class UTIL_DLL_API TC_TimeProvider
 {
 public:
 

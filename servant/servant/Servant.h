@@ -22,7 +22,7 @@
 #include "util/tc_thread_pool.h"
 #include "util/tc_cas_queue.h"
 #include "servant/ServantProxy.h"
-#include "servant/TarsCurrent.h"
+#include "servant/Current.h"
 #include "servant/BaseNotify.h"
 
 namespace tars
@@ -250,7 +250,7 @@ protected:
     ServantPtr _servant;
 
     /*
-     * TarsCurrent
+     * Current
      */
     TarsCurrentPtr _current;
 };

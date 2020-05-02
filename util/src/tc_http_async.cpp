@@ -259,7 +259,7 @@ void TC_HttpAsync::AsyncRequest::doReceive()
         //增量decode
 	    bool ret    = _stHttpResp.incrementDecode(_recvBuffer);
 
-        //有头部数据了
+	    //有头部数据了
         if (_callbackPtr && !_stHttpResp.getHeaders().empty())
         {
             bool bContinue = _callbackPtr->onContinue(_stHttpResp);
@@ -317,12 +317,10 @@ void TC_HttpAsync::AsyncRequest::processNotify()
     //没有建立连接, 发起连接
     if (!isValid())
     {
-        // cout << "doConnect" << endl;
         doConnect();
     }
     else
     {
-        // cout << "doRequest" << endl;
         doRequest();
     }
 }
@@ -341,13 +339,10 @@ TC_HttpAsync::TC_HttpAsync() : _terminate(false)
 
     _epoller.create(20480);
 
-    // _notify.createSocket();
     _notify.init(&_epoller);
 
     uint64_t data = H64(_notify.notifyFd()) | 0;
     _notify.add(data);
-
-    // _epoller.add(_notify.getfd(), data, EPOLLIN);
 }
 
 TC_HttpAsync::~TC_HttpAsync()

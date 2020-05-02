@@ -256,7 +256,7 @@ void TC_OpenSSL::initialize()
 	}
 }
 
-shared_ptr<TC_OpenSSL::CTX> TC_OpenSSL::newCtx(const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient)
+shared_ptr<TC_OpenSSL::CTX> TC_OpenSSL::newCtx(const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient, const string &ciphers)
 {
 	initialize();
 
@@ -270,10 +270,13 @@ shared_ptr<TC_OpenSSL::CTX> TC_OpenSSL::newCtx(const std::string& cafile, const 
         return NULL;\
     }
 
+	int mode = SSL_VERIFY_NONE;
 	if (verifyClient)
-		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-	else
-		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+		mode |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+	if (!cafile.empty())
+		mode |= SSL_VERIFY_PEER;
+
+	SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
 
 	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_OFF);
 	SSL_CTX_clear_options(ctx, SSL_OP_LEGACY_SERVER_CONNECT);
@@ -293,10 +296,14 @@ shared_ptr<TC_OpenSSL::CTX> TC_OpenSSL::newCtx(const std::string& cafile, const 
 		RETURN_IF_FAIL (SSL_CTX_check_private_key(ctx));
 	}
 
+	if(!ciphers.empty()) {
+		RETURN_IF_FAIL (SSL_CTX_set_cipher_list(ctx, ciphers.c_str()));
+	}
 #undef RETURN_IF_FAIL
 
 	return std::make_shared<TC_OpenSSL::CTX>(ctx);
 }
+
 
 shared_ptr<TC_OpenSSL> TC_OpenSSL::newSSL(const std::shared_ptr<TC_OpenSSL::CTX> &ctx)
 {

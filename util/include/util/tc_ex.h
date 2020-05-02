@@ -107,8 +107,7 @@ private:
 //为了避免windows平台GetLastError()获取不对的问题, 因为抛异常, throw TC_Exception("xxxx", TC_Exception::getSystemCode())时
 //回调用系统函数分配内存, 导致错误码被改写, 因此专门定义宏来抛出异常
 //先获取到错误码, 再throw
-#define TARS_THROW_EXCEPTION(EX_CLASS, buffer) throw EX_CLASS(buffer)
-#define TARS_THROW_EXCEPTION_SYSCODE(EX_CLASS, buffer) \
+#define THROW_EXCEPTION_SYSCODE(EX_CLASS, buffer) \
     {   \
     int ret = TC_Exception::getSystemCode(); \
     throw EX_CLASS(buffer, ret);              \

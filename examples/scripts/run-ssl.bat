@@ -2,7 +2,7 @@
 echo "run-ssl.bat"
 
 set EXE_PATH=%1
-set SRC_PATH=%2
+set SRC_PATH=%2\\..
 
 echo %EXE_PATH% %SRC_PATH%
 

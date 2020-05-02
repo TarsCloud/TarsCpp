@@ -57,6 +57,8 @@ int Http2Imp::doRequest(TarsCurrentPtr current, vector<char> &buffer)
 		{
 			cout << "encodeResponse error:" << session->getErrMsg() << endl;
 		}
+//		cout << context->request.getContent() << endl;
+		
 		buffer.insert(buffer.end(), data.begin(), data.end());
 	}
 

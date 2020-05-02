@@ -43,4 +43,43 @@
 #include <unistd.h>
 #endif
 
+
+//UTIL 动态库编译的导入和导出
+#if TARGET_PLATFORM_WINDOWS
+
+#ifdef UTIL_DLL_EXPORT
+#define UTIL_DLL_API __declspec(dllexport)
+#else
+
+#ifdef UTIL_USE_DLL
+#define UTIL_DLL_API __declspec(dllimport)
+#else
+#define UTIL_DLL_API 
+#endif
+
+#endif
+
+#else
+#define UTIL_DLL_API 
+#endif
+
+//servant 动态库编译的导入和导出
+#if TARGET_PLATFORM_WINDOWS
+
+#ifdef SVT_DLL_EXPORT
+#define SVT_DLL_API __declspec(dllexport)
+#else
+
+#ifdef SVT_USE_DLL
+#define SVT_DLL_API __declspec(dllimport)
+#else
+#define SVT_DLL_API 
+#endif
+
+#endif
+
+#else
+#define SVT_DLL_API 
+#endif
+
 #endif

@@ -17,7 +17,7 @@
 #include "servant/AsyncProcThread.h"
 #include "servant/Communicator.h"
 #include "servant/StatReport.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 
 namespace tars
 {
@@ -64,7 +64,7 @@ void AsyncProcThread::push_back(ReqMessage * msg)
 	else {
 		if(_msgQueue->size() >= _iQueueCap)
 		{
-			TLOGERROR("[TARS][AsyncProcThread::push_back] async_queue full:" << _msgQueue->size() << ">=" << _iQueueCap << endl);
+			TLOGERROR("[AsyncProcThread::push_back] async_queue full:" << _msgQueue->size() << ">=" << _iQueueCap << endl);
 			delete msg;
 		}
 		else
@@ -109,6 +109,8 @@ void AsyncProcThread::callback(ReqMessage * msg)
 	pServantProxyThreadData->_dyeing  = msg->bDyeing;
 	pServantProxyThreadData->_dyeingKey = msg->sDyeingKey;
 
+	pServantProxyThreadData->_cookie = msg->cookie;
+
 	if(msg->adapter)
 	{
 		pServantProxyThreadData->_szHost = msg->adapter->endpoint().desc();
@@ -117,7 +119,7 @@ void AsyncProcThread::callback(ReqMessage * msg)
 	try
 	{
 		ReqMessagePtr msgPtr = msg;
-		msg->callback->onDispatch(msgPtr);
+		msg->callback->dispatch(msgPtr);
 	}
 	catch (exception& e)
 	{

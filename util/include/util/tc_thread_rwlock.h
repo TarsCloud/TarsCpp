@@ -20,6 +20,7 @@
 #include <mutex>
 #include <condition_variable>
 #include "util/tc_lock.h"
+#include "util/tc_platform.h"
 #include <functional>
 
 using namespace std;
@@ -36,7 +37,7 @@ namespace tars
 
 /////////////////////////////////////////////////
 
-class TC_ThreadRWLocker
+class UTIL_DLL_API TC_ThreadRWLocker
 {
 protected:
 

@@ -18,6 +18,7 @@
 #define __TC_THREAD_MUTEX_H
 
 #include "util/tc_lock.h"
+#include "util/tc_platform.h"
 #include <mutex>
 #include <atomic>
 
@@ -41,7 +42,7 @@ class TC_ThreadCond;
 *  
 * 通常不直接使用，和TC_Monitor配合使用，即TC_ThreadLock; 
 */
-class TC_ThreadMutex
+class UTIL_DLL_API TC_ThreadMutex
 {
 public:
 
@@ -68,8 +69,8 @@ public:
 protected:
 
     // noncopyable
-    TC_ThreadMutex(const TC_ThreadMutex&);
-    void operator=(const TC_ThreadMutex&);
+    TC_ThreadMutex(const TC_ThreadMutex&) = delete;
+    void operator=(const TC_ThreadMutex&) = delete;
 
     friend class TC_ThreadCond;
 
@@ -82,7 +83,7 @@ protected:
 *  
 * 采用线程库实现
 **/
-class TC_ThreadRecMutex
+class UTIL_DLL_API TC_ThreadRecMutex
 {
 public:
 

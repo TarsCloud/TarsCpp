@@ -21,7 +21,7 @@
 #include "util/tc_autoptr.h"
 #include "servant/Message.h"
 #include "servant/AppProtocol.h"
-#include "servant/TarsCurrent.h"
+#include "servant/Current.h"
 //#include "servant/EndpointInfo.h"
 #include "servant/CommunicatorEpoll.h"
 
@@ -148,9 +148,14 @@ public:
      *  objectProxy Pointer
      */
     shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
     std::unordered_map<std::string, std::string> _trackInfoMap;
 #endif
+
+    /**
+     * cookie
+     */
+    map<string, string>             _cookie;          // cookie内容
 };
 
 
@@ -260,6 +265,12 @@ public:
     virtual ~ServantProxyCallback() {}
 
     /**
+     * 设置发起调用的servant
+     * @param prx
+     */
+	void setServantPrx(const ServantPrx &prx) { _servantPrx = prx; }
+
+    /**
      * 获取类型
      * @return const string&
      */
@@ -283,7 +294,7 @@ public:
 
     /**
      * 异步请求是否在网络线程处理
-     * tars内部用的到 业务不能设置这个值
+     * taf内部用的到 业务不能设置这个值
      * */
     inline void setNetThreadProcess(bool bNetThreadProcess)
     {
@@ -296,23 +307,32 @@ public:
     }
 
 public:
+	/**
+	 * dispatch, call onDispatch
+	 * @param msg
+	 * @return
+	 */
+	int dispatch(ReqMessagePtr msg);
+
+protected:
     /**
      * 异步回调对象实现该方法，进行业务逻辑处理
      * @param msg
      * @return int
      */
-    virtual int onDispatch(ReqMessagePtr ptr) = 0;
+    virtual int onDispatch(ReqMessagePtr msg) = 0;
 
     /**
-     * 连接关闭掉了(只对PUSH callback生效)
+     * 连接关闭掉了(push callback 才有效)
      */    
     virtual void onClose(){};
 
 	/**
-	 * 连接已建立(只对PUSH callback生效)
+	 * 连接已建立(push callback 才有效)
 	 */
 	virtual void onConnect(const TC_Endpoint &ep){};
 
+	friend class Transceiver;
 protected:
 
     /**
@@ -329,18 +349,20 @@ protected:
     /**
      * 协程并行请求的共享智能指针
      */
-    tars::CoroParallelBasePtr _pPtr;
+    CoroParallelBasePtr _pPtr;
+
+    /**
+     * servant prx
+     */
+	ServantPrx _servantPrx;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // for http
 class HttpCallback : public TC_HandleBase
 {
 public:
-    virtual int onHttpResponse(const std::map<std::string, std::string>& requestHeaders ,
-                               const std::map<std::string, std::string>& responseHeaders ,
-                               const std::vector<char>& rspBody) = 0;
-    virtual int onHttpResponseException(const std::map<std::string, std::string>& requestHeaders,
-                                        int expCode) = 0;
+    virtual int onHttpResponse(const shared_ptr<TC_HttpResponse> &rsp) = 0;
+    virtual int onHttpResponseException(int expCode) = 0;
 };
 
 typedef TC_AutoPtr<HttpCallback> HttpCallbackPtr;
@@ -392,9 +414,9 @@ public:
      */
     static string STATUS_DYED_KEY;  //需要染色的用户ID
 
-    static string STATUS_GRID_KEY;  //需要灰度的用户ID
+//    static string STATUS_GRID_KEY;  //需要灰度的用户ID
 
-    static string STATUS_SAMPLE_KEY; //stat 采样的信息
+//    static string STATUS_SAMPLE_KEY; //stat 采样的信息
 
     static string STATUS_RESULT_CODE; //处理结果码,tup使用
 
@@ -402,15 +424,34 @@ public:
 
     static string STATUS_SETNAME_VALUE; //set调用
 
-    static string TARS_MASTER_KEY; //透传主调名称信息
+//    static string TARS_MASTER_KEY; //透传主调名称信息
 
     static string STATUS_TRACK_KEY; //track信息
+
+    // static string STATUS_COOKIE; //cookie信息
 
     /**
      * 缺省的同步调用超时时间
      * 超时后不保证消息不会被服务端处理
      */
     enum { DEFAULT_SYNCTIMEOUT = 3000, DEFAULT_ASYNCTIMEOUT=5000};
+
+    /**
+     * default connection serial num
+     */
+    const static int DEFAULT_CONNECTION_SERIAL = 10;
+
+	/**
+	 * 内置四种协议支持
+	 */
+    enum SERVANT_PROTOCOL
+    {
+    	PROTOCOL_TARS,              //默认tars服务的协议
+    	PROTOCOL_HTTP1,             //http协议
+#if TARS_HTTP2
+	    PROTOCOL_HTTP2,             //http2协议
+#endif
+    };
 
     /**
      * 构造函数
@@ -521,19 +562,48 @@ public:
      */
     string tars_name() const;
 
+	/**
+	 * 获取所属的Object名称#hash@address
+	 * @return string
+	 */
+	string tars_full_name() const;
+
     /**
      * 获取最近一次调用的IP地址和端口
      * @return string
      */
     static TC_Endpoint tars_invoke_endpoint();
 
+	/**
+	 * 设置连接为多连接, 串行模式
+	 * @param connectionSerial, <=0: 连接复用模式(一个连接上同时跑多个请求, 响应包), >0: 连接串行模式(连接个数), 同一个连接上并行只能跑一个包(http协议)
+	 */
+	void tars_connection_serial(int connectionSerial);
+
+	/**
+	 * 获取连接并发模式
+	 * @return int
+	 */
+	int tars_connection_serial() const;
+
+	/**
+	 * 直接设置内置支持的协议
+	 */
+    void tars_set_protocol(SERVANT_PROTOCOL protocol, int connectionSerial = 0);
+
     /**
      * 设置用户自定义协议
      * @param protocol
      */
-    void tars_set_protocol(const ProxyProtocol& protocol);
+    void tars_set_protocol(const ProxyProtocol& protocol, int connectionSerial = 0);
 
     /**
+     * get protocol
+     * @return
+     */
+	ProxyProtocol tars_get_protocol();
+
+	/**
     *设置套接字选项
     */
     void tars_set_sockopt(int level, int optname, const void *optval, SOCKET_LEN_TYPE optlen);
@@ -636,28 +706,19 @@ public:
 //	               std::map<std::string, std::string>& rheaders,
 //	               std::string& rbody);
 
-    /**
-     * http2协议同步远程调用
-     */
-    void http_call(const std::string& method,
-                    const std::string& uri,
-                    const std::map<std::string, std::string>& headers,
-                    const std::string& body,
-                    std::map<std::string, std::string>& rheaders,
-                    std::string& rbody);
-    /**
-     * http2协议异步远程调用
-     */
-    void http_call_async(const std::string& method,
-                         const std::string& uri,
-                         const std::map<std::string, std::string>& headers,
-                          const std::string& body,
-                          const HttpCallbackPtr &cb);
+	/**
+	 * http1/2协议同步远程调用
+	 * @param funcName: 调用名称, 这里只是做统计用
+	 */
+	void http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response);
 
-    /**
-     * 在RequestPacket中的context设置主调信息标识
-     */
-    virtual void tars_setMasterFlag(bool bMasterFlag) {_masterFlag = bMasterFlag;}
+	/**
+	 * http1/2协议异步远程调用
+	 * @param funcName: 调用名称, 这里只是做统计用
+	 */
+	void http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro = false);
+
+protected:
 
     /**
      * TARS协议同步方法调用
@@ -679,6 +740,14 @@ public:
                                   const ServantProxyCallbackPtr& callback,
                                   bool bCoro = false);
 
+	/**
+	 * 获得可以复用的servant
+	 * @return
+	 */
+	ServantPrx getServantPrx(ReqMessage *msg);
+
+	friend class ServantProxyCallback;
+
 private:
     /**
      * 远程方法调用
@@ -686,6 +755,13 @@ private:
      * @return int
      */
     void invoke(ReqMessage *msg, bool bCoroAsync = false);
+
+    /**
+     * 选择某个servant来发送
+     * @param msg
+     * @param bCoroAsync
+     */
+	int servant_invoke(ReqMessage *msg, bool bCoroAsync);
 
 //    /**
 //     * invoke 异步
@@ -716,6 +792,24 @@ private:
      * @param  req
      */
     void checkDye(RequestPacket& req);
+
+    /**
+     * 更新endpoint
+     * @param active
+     * @param inactive
+     */
+	void onNotifyEndpoints(size_t netThreadSeq, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
+
+	/**
+	 * 端口不活跃
+	 */
+	void onSetInactive(const EndpointInfo& ep);
+    /**
+     * 检查是否需要设置cookie
+     * @param  req
+     */
+    void checkCookie(RequestPacket &req);
+
 private:
     friend class ObjectProxy;
     friend class AdapterProxy;
@@ -723,29 +817,29 @@ private:
     /**
      * 通信器
      */
-    Communicator *            _communicator;
+    Communicator *              _communicator;
 
     /**
      * 保存ObjectProxy对象的指针数组
      */
-    ObjectProxy ** _objectProxy;                    //保存ObjectProxy对象的指针数组
-    shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
+    ObjectProxy **              _objectProxy;                    //保存ObjectProxy对象的指针数组
+    shared_ptr<ObjectProxy *>   _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
 
     /**
      * ObjectProxy对象的个数，其个数由客户端的网络线程数决定，
      * 每个网络线程有一个ObjectProxy
      */
-    size_t                    _objectProxyNum;
+    size_t                      _objectProxyNum;
 
     /**
      * 同步调用超时(毫秒)
      */
-    int                        _syncTimeout;
+    int                         _syncTimeout;
 
     /**
      * 同步调用超时(毫秒)
      */
-    int                        _asyncTimeout;
+    int                         _asyncTimeout;
 
     /**
      * 唯一id
@@ -766,6 +860,31 @@ private:
      *最小的超时时间
      */
     int64_t                    _minTimeout;
+
+    /**
+     * 最大连接串行数(默认0, 表示连接并行请求)
+     */
+    int                         _connectionSerial = 0;
+
+    /**
+     * 短连接使用http使用
+     */
+	ServantPrx                  _rootPrx;
+
+	/**
+	 *
+	 */
+	int                         _servantId = 0;
+
+	/**
+	 *
+	 */
+	std::mutex                  _servantMutex;
+
+	/**
+	 *
+	 */
+	vector<ServantPrx>          _servantList;
 };
 }
 #endif

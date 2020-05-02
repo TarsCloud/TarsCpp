@@ -9,6 +9,11 @@ fi
 APP=$1
 SERVER=$2
 SERVANT=$3
+TARSPATH=$4
+
+if [ "$TARSPATH" == "" ]; then
+	TARSPATH=/usr/local/tars/
+fi 
 
 if [ "$SERVER" == "$SERVANT" ]
 then
@@ -24,13 +29,13 @@ fi
 
 echo "[create server: $APP.$SERVER ...]"
 
-DEMO_PATH=/usr/local/tars/cpp/script/demo
+DEMO_PATH=${TARSPATH}/cpp/script/http_demo
 
 cp $DEMO_PATH/* $APP/$SERVER/
 
 cd $APP/$SERVER/
 
-SRC_FILE="DemoServer.h DemoServer.cpp DemoServantImp.h DemoServantImp.cpp DemoServant.tars makefile"
+SRC_FILE="DemoServer.h DemoServer.cpp DemoServantImp.h DemoServantImp.cpp makefile"
 
 for FILE in $SRC_FILE
 do

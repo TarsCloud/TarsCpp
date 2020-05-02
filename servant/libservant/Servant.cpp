@@ -18,7 +18,7 @@
 #include "servant/BaseF.h"
 #include "servant/Application.h"
 #include "servant/AppCache.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 
 #include <cerrno>
 
@@ -71,7 +71,7 @@ int Servant::dispatch(TarsCurrentPtr current, vector<char> &buffer)
 
     if (current->getFuncName() == "tars_ping")
     {
-        TLOGTARS("[TARS][Servant::dispatch] tars_ping ok from [" << current->getIp() << ":" << current->getPort() << "]" << endl);
+        TLOGTARS("[Servant::dispatch] tars_ping ok from [" << current->getIp() << ":" << current->getPort() << "]" << endl);
 
         ret = TARSSERVERSUCCESS;
     }

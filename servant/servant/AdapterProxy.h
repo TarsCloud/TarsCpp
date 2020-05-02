@@ -26,7 +26,9 @@
 #include "servant/Message.h"
 #include "servant/StatReport.h"
 #include <queue>
-#ifdef _USE_OPENTRACKING
+#include <unordered_map>
+
+#ifdef TARS_OPENTRACKING
 #include <opentracing/span.h>
 #endif
 namespace tars
@@ -52,14 +54,30 @@ public:
 
     /**
      * 调用server端对象方法
+     * @param req
+     * @return int
      */
-    int invoke(ReqMessage * msg);
+	int invoke(ReqMessage * msg);
+
+//	/**
+//	 * 同步阻塞调用server
+//	 * @param msg
+//	 * @return
+//	 */
+//	bool invoke_sync(ReqMessage * msg);
+
+	/**
+	 *
+	 */
+	void onConnect();
 
     /**
      * 发送请求
      * 发送挤压的数据
+     * @param req
+     * @return
      */
-    void doInvoke();
+    void doInvoke(bool initInvoke);
 
     /**
      * server端的响应包返回
@@ -91,9 +109,9 @@ public:
     /**
      * 处理采样
      */
-    void sample(ReqMessage * msg);
+//    void sample(ReqMessage * msg);
 
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
 	/** 
 	 * Zipkin调用链
 	 */
@@ -169,6 +187,17 @@ public:
      */
     inline int getId() const { return _id; }
 
+    /**
+     *
+     * @return
+     */
+	inline Transceiver* getTransceiver() const { return _trans.get(); }
+
+	/**
+	 * 屏蔽结点
+	 */
+	void onSetInactive();
+
 private:
 
     /**
@@ -204,9 +233,31 @@ private:
     void merge(const StatMicMsgBody& inBody, StatMicMsgBody& outBody);
 
     /**
-     * 获取被调名
+     * 连接串行模式
+     * @param msg
+     * @return
      */
-    string getSlaveName(const string& sSlaveName);
+	int invoke_connection_serial(ReqMessage * msg);
+
+	/**
+	 * 连接并行模式
+	 * @param msg
+	 * @return
+	 */
+	int invoke_connection_parallel(ReqMessage * msg);
+
+	void finishInvoke_serial(shared_ptr<ResponsePacket> & rsp);
+
+	void finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp);
+
+	void doInvoke_serial();
+
+	void doInvoke_parallel();
+
+   /**
+    * 获取被调名
+    */
+   string getSlaveName(const string& sSlaveName);
 
 private:
 
@@ -224,6 +275,11 @@ private:
      * 节点信息
      */
     EndpointInfo                           _endpoint;
+
+    /**
+     * in request
+     */
+    ReqMessage*                             _requestMsg = NULL;
 
     /*
      * 收发包处理
@@ -316,19 +372,9 @@ private:
     map<string,StatMicMsgBody>               _statBody;
 
     /*
-     * 最大采样次数
-     */
-    uint32_t                               _maxSampleCount;
-
-    /*
-     * 采样比率
-     */
-    int                                    _sampleRate;
-
-    /*
      * 调用链信息
      */
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
     map<int,std::unique_ptr<opentracing::Span>> _spanMap;
 #endif
     int                                    _id;

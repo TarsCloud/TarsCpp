@@ -17,7 +17,7 @@
 #include "servant/CommunicatorEpoll.h"
 #include "servant/Communicator.h"
 #include "servant/Application.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/StatReport.h"
 
 using namespace std;
@@ -149,7 +149,7 @@ void CommunicatorEpoll::handleInputImp(Transceiver * pTransceiver)
         {
             pTransceiver->close();
             pTransceiver->getAdapterProxy()->addConnExc(true);
-            TLOGERROR("[TARS][CommunicatorEpoll::handleInputImp] connect error "
+            TLOGERROR("[CommunicatorEpoll::handleInputImp] connect error "
                     << pTransceiver->getAdapterProxy()->endpoint().desc()
                     << "," << pTransceiver->getAdapterProxy()->getObjProxy()->name()
                     << ",_connExcCnt=" << pTransceiver->getAdapterProxy()->ConnExcCnt()
@@ -174,7 +174,7 @@ void CommunicatorEpoll::handleOutputImp(Transceiver * pTransceiver)
         {
             pTransceiver->close();
             pTransceiver->getAdapterProxy()->addConnExc(true);
-            TLOGERROR("[TARS][CommunicatorEpoll::handleOutputImp] connect error "
+            TLOGERROR("[CommunicatorEpoll::handleOutputImp] connect error "
                     << pTransceiver->getAdapterProxy()->endpoint().desc()
                     << "," << pTransceiver->getAdapterProxy()->getObjProxy()->name()
                     << ",_connExcCnt=" << pTransceiver->getAdapterProxy()->ConnExcCnt()
@@ -240,11 +240,11 @@ void CommunicatorEpoll::handle(FDInfo * pFDInfo, const epoll_event &ev)
                     }
                     catch(exception & e)
                     {
-                        TLOGERROR("[TARS]CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
+                        TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
                     }
                     catch(...)
                     {
-                        TLOGERROR("[TARS]CommunicatorEpoll::handle|"<<__LINE__<<endl);
+                        TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
                     }
 
                     if(++maxProcessCount > 1000)
@@ -257,11 +257,11 @@ void CommunicatorEpoll::handle(FDInfo * pFDInfo, const epoll_event &ev)
             }
             catch(exception & e)
             {
-                TLOGERROR("[TARS]CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
+                TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
             }
             catch(...)
             {
-                TLOGERROR("[TARS]CommunicatorEpoll::handle|"<<__LINE__<<endl);
+                TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
             }
         }
         else
@@ -278,11 +278,11 @@ void CommunicatorEpoll::handle(FDInfo * pFDInfo, const epoll_event &ev)
                 }
                 catch(exception & e)
                 {
-                    TLOGERROR("[TARS]CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
+                    TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
                 }
                 catch(...)
                 {
-                    TLOGERROR("[TARS]CommunicatorEpoll::handle|"<<__LINE__<<endl);
+                    TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
                 }
             }
 
@@ -295,11 +295,11 @@ void CommunicatorEpoll::handle(FDInfo * pFDInfo, const epoll_event &ev)
                 }
                 catch(exception & e)
                 {
-                    TLOGERROR("[TARS]CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
+                    TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
                 }
                 catch(...)
                 {
-                    TLOGERROR("[TARS]CommunicatorEpoll::handle|"<<__LINE__<<endl);
+                    TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
                 }
             }
 
@@ -312,22 +312,22 @@ void CommunicatorEpoll::handle(FDInfo * pFDInfo, const epoll_event &ev)
                 }
                 catch(exception & e)
                 {
-                    TLOGERROR("[TARS]CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
+                    TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
                 }
                 catch(...)
                 {
-                    TLOGERROR("[TARS]CommunicatorEpoll::handle|"<<__LINE__<<endl);
+                    TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
                 }
             }
         }
     }
     catch(exception & e)
     {
-        TLOGERROR("[TARS]CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
+        TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
     }
     catch(...)
     {
-        TLOGERROR("[TARS]CommunicatorEpoll::handle|"<<__LINE__<<endl);
+        TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
     }
 }
 
@@ -388,7 +388,7 @@ void CommunicatorEpoll::reConnect(int64_t ms, Transceiver*p)
 	_reconnect[ms] = p;
 }
 
-string CommunicatorEpoll::getResouresInfo()
+string CommunicatorEpoll::getResourcesInfo()
 {
 	ostringstream desc;
 	desc << TC_Common::outfill("index") << _netThreadSeq << endl;
@@ -477,11 +477,11 @@ void CommunicatorEpoll::run()
         }
         catch (exception& e)
         {
-            TLOGERROR("[TARS][CommunicatorEpoll:run exception:" << e.what() << "]" << endl);
+            TLOGERROR("[CommunicatorEpoll:run exception:" << e.what() << "]" << endl);
         }
         catch (...)
         {
-            TLOGERROR("[TARS][CommunicatorEpoll:run exception.]" << endl);
+            TLOGERROR("[CommunicatorEpoll:run exception.]" << endl);
         }
     }
 }

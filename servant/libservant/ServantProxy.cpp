@@ -19,7 +19,7 @@
 #include "servant/StatReport.h"
 #include "servant/Application.h"
 #include "servant/BaseF.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/Message.h"
 #include "servant/EndpointManager.h"
 
@@ -49,7 +49,7 @@ SeqManager::SeqManager(uint16_t iNum)
     for(uint16_t i=0;i<(uint16_t)iNum;i++)
     {
         _p[i].free = true;
-        _p[i].next = i+1;
+        _p[i].next = i + 1;
     }
     _p[iNum-1].next = MAX_UNSIGN_SHORT;
     _num = iNum;
@@ -155,11 +155,19 @@ ServantProxyThreadData * ServantProxyThreadData::getData()
     return g_sp.get();
 }
 
-///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
 ServantProxyCallback::ServantProxyCallback()
 : _bNetThreadProcess(false)
 {
 }
+
+int ServantProxyCallback::dispatch(ReqMessagePtr msg)
+{
+	return onDispatch(msg);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
 
 int HttpServantProxyCallback::onDispatch(ReqMessagePtr msg)
 {
@@ -178,12 +186,23 @@ HttpServantProxyCallback::HttpServantProxyCallback(const HttpCallbackPtr& cb) :
 
 int HttpServantProxyCallback::onDispatchException(const RequestPacket &request, const ResponsePacket &response)
 {
-   return _httpCb->onHttpResponseException(request.context, response.iRet);
+	if(_httpCb)
+        return _httpCb->onHttpResponseException(response.iRet);
+
+	return 0;
 }
 
 int HttpServantProxyCallback::onDispatchResponse(const RequestPacket &request, const ResponsePacket &response)
 {
-    return _httpCb->onHttpResponse(request.context, response.status, response.sBuffer);
+	assert(response.sBuffer.size() == sizeof(shared_ptr<TC_HttpResponse>));
+
+	shared_ptr<TC_HttpResponse> rsp = *(shared_ptr<TC_HttpResponse>*)(response.sBuffer.data());
+
+
+	if(_httpCb)
+	    return _httpCb->onHttpResponse(rsp);
+
+	return 0;
 }
 
 ///////////////////////////////////////////////////////////////
@@ -191,7 +210,7 @@ void coroWhenAll(const CoroParallelBasePtr &ptr)
 {
     if(!ptr->checkAllReqSend())
     {
-        TLOGERROR("[TARS][coroWhenAll use coro invoke interface's num not equal ptr set value]"<<endl);
+        TLOGERROR("[coroWhenAll use coro invoke interface's num not equal ptr set value]"<<endl);
         throw TarsUseCoroException("use coro invoke interface's num not equal ptr set value");
     }
 
@@ -201,7 +220,7 @@ void coroWhenAll(const CoroParallelBasePtr &ptr)
 
     if(!pSptd->_sched)
     {
-        TLOGERROR("[TARS][coroWhenAll no open coroutine mode]"<<endl);
+        TLOGERROR("[coroWhenAll no open coroutine mode]"<<endl);
         throw TarsUseCoroException("coroWhenAll not open coroutine mode");
     }
 
@@ -212,16 +231,16 @@ void coroWhenAll(const CoroParallelBasePtr &ptr)
     for(size_t i = 0; i < vMsg.size(); ++i)
     {
         ReqMessagePtr msgPtr = vMsg[i];
-        vMsg[i]->callback->onDispatch(msgPtr);
+        vMsg[i]->callback->dispatch(msgPtr);
     }
 }
 
 ///////////////////////////////////////////////////////////////
 string ServantProxy::STATUS_DYED_KEY      = "STATUS_DYED_KEY";
 
-string ServantProxy::STATUS_GRID_KEY      = "STATUS_GRID_KEY";
+//string ServantProxy::STATUS_GRID_KEY      = "STATUS_GRID_KEY";
 
-string ServantProxy::STATUS_SAMPLE_KEY    = "STATUS_SAMPLE_KEY";
+//string ServantProxy::STATUS_SAMPLE_KEY    = "STATUS_SAMPLE_KEY";
 
 string ServantProxy::STATUS_RESULT_CODE   = "STATUS_RESULT_CODE";
 
@@ -229,9 +248,12 @@ string ServantProxy::STATUS_RESULT_DESC   = "STATUS_RESULT_DESC";
 
 string ServantProxy::STATUS_SETNAME_VALUE = "STATUS_SETNAME_VALUE";
 
-string ServantProxy::TARS_MASTER_KEY      = "TARS_MASTER_KEY";
+//string ServantProxy::TARS_MASTER_KEY      = "TARS_MASTER_KEY";
 
 string ServantProxy::STATUS_TRACK_KEY     = "STATUS_TRACK_KEY";
+
+// string ServantProxy::STATUS_COOKIE        = "STATUS_COOKIE";
+
 
 ////////////////////////////////////
 ServantProxy::ServantProxy(Communicator * pCommunicator, ObjectProxy ** ppObjectProxy, size_t iClientThreadNum)
@@ -287,6 +309,16 @@ string ServantProxy::tars_name() const
     }
     return "NULL";
 }
+
+string ServantProxy::tars_full_name() const
+{
+	if (_objectProxyNum >= 1 && (*_objectProxy != NULL))
+	{
+		return (*_objectProxy)->name() +"#" + (*_objectProxy)->hash() + "@" + (*_objectProxy)->address();
+	}
+	return "NULL";
+}
+
 
 void ServantProxy::tars_reconnect(int second)
 {
@@ -353,17 +385,68 @@ int ServantProxy::tars_async_timeout() const
     return _asyncTimeout;
 }
 
+void ServantProxy::tars_connection_serial(int connectionSerial)
+{
+	assert(!_rootPrx);
+	_connectionSerial = connectionSerial;
+}
 
-void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol)
+int ServantProxy::tars_connection_serial() const
+{
+	if(_rootPrx) {
+		return _rootPrx->tars_connection_serial();
+	}
+
+	return _connectionSerial;
+}
+
+void ServantProxy::tars_set_protocol(SERVANT_PROTOCOL protocol, int connectionSerial)
+{
+	ProxyProtocol proto;
+
+	switch(protocol)
+	{
+		case PROTOCOL_HTTP1:
+			proto.requestFunc   = ProxyProtocol::http1Request;
+			proto.responseFunc  = ProxyProtocol::http1Response;
+
+			if(connectionSerial <= 0)
+				connectionSerial = DEFAULT_CONNECTION_SERIAL;
+			break;
+#if TARS_HTTP2
+		case PROTOCOL_HTTP2:
+			proto.requestFunc   = ProxyProtocol::http2Request;
+			proto.responseFunc  = ProxyProtocol::http2Response;
+            connectionSerial    = 0;
+			break;
+#endif
+		case PROTOCOL_TARS:
+		default:
+			proto.requestFunc   = ProxyProtocol::tarsRequest;
+			proto.responseFunc  = ProxyProtocol::tarsResponse;
+			break;
+	}
+	tars_set_protocol(proto, connectionSerial);
+}
+
+void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol, int connectionSerial)
 {
     TC_LockT<TC_ThreadMutex> lock(*this);
 
-    for(size_t i = 0;i < _objectProxyNum; ++i)
+    for (size_t i = 0; i < _objectProxyNum; ++i)
     {
         (*(_objectProxy + i))->setProxyProtocol(protocol);
     }
+
+	_connectionSerial = connectionSerial;
 }
 
+ProxyProtocol ServantProxy::tars_get_protocol()
+{
+	TC_LockT<TC_ThreadMutex> lock(*this);
+
+	return (*(_objectProxy + 0))->getProxyProtocol();
+}
 
 void ServantProxy::tars_set_sockopt(int level, int optname, const void * optval, SOCKET_LEN_TYPE optlen)
 {
@@ -515,7 +598,7 @@ void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 //            }
 //            else
 //            {
-//                TLOGERROR("[TAF][ServantProxy::invoke_async use coroutine's callback not set CoroParallelBasePtr]" << endl);
+//                TLOGERROR("[ServantProxy::invoke_async use coroutine's callback not set CoroParallelBasePtr]" << endl);
 //                delete msg;
 //                msg = NULL;
 //                throw TarsUseCoroException("ServantProxy::invoke_async use coroutine's callback not set CoroParallelBasePtr");
@@ -523,7 +606,7 @@ void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 //        }
 //        else
 //        {
-//            TLOGERROR("[TAF][ServantProxy::invoke coroutine mode invoke not open]" << endl);
+//            TLOGERROR("[ServantProxy::invoke coroutine mode invoke not open]" << endl);
 //            delete msg;
 //            msg = NULL;
 //            throw TarsUseCoroException("coroutine mode invoke not open");
@@ -534,7 +617,7 @@ void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 //	bool bEmpty;
 //	if (!pReqQ->push_back(msg, bEmpty))
 //	{
-//		TLOGERROR("[TAF][ServantProxy::invoke_async msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
+//		TLOGERROR("[ServantProxy::invoke_async msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
 //		msg->pObjectProxy->getCommunicatorEpoll()->notify(pSptd->_reqQNo, pReqQ);
 //		delete msg;
 //		throw TarsClientQueueException("client queue full");
@@ -567,11 +650,12 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 
     if(msg->bDyeing)
     {
-        TLOGTARS("[TARS][ServantProxy::invoke, set dyeing, key=" << pSptd->_dyeingKey << endl);
+        TLOGTARS("[ServantProxy::invoke, set dyeing, key=" << pSptd->_dyeingKey << endl);
     }
 
+    msg->cookie       = pSptd->_cookie;
 
-#ifdef _USE_OPENTRACKING
+#ifdef TARS_OPENTRACKING
     msg->trackInfoMap = pSptd->_trackInfoMap;
 #endif
 
@@ -601,7 +685,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         SET_MSG_TYPE(msg->request.iMessageType, TARSMESSAGETYPESETNAME);
         msg->request.status[ServantProxy::STATUS_SETNAME_VALUE] = pObjProxy->getInvokeSetName();
 
-        TLOGTARS("[TARS][ServantProxy::invoke, " << msg->request.sServantName << ", invoke with set,"<<pObjProxy->getInvokeSetName()<<"]" << endl);
+        TLOGTARS("[ServantProxy::invoke, " << msg->request.sServantName << ", invoke with set,"<<pObjProxy->getInvokeSetName()<<"]" << endl);
     }
 
     //同步调用 new 一个ReqMonitor
@@ -640,7 +724,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
                 }
                 else
                 {
-                    TLOGERROR("[TARS][ServantProxy::invoke use coroutine's callback not set CoroParallelBasePtr]"<<endl);
+                    TLOGERROR("[ServantProxy::invoke use coroutine's callback not set CoroParallelBasePtr]"<<endl);
                     delete msg;
                     msg = NULL;
                     throw TarsUseCoroException("use coroutine's callback not set CoroParallelBasePtr");
@@ -648,7 +732,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
             }
             else
             {
-                TLOGERROR("[TARS][ServantProxy::invoke coroutine mode invoke not open]"<<endl);
+                TLOGERROR("[ServantProxy::invoke coroutine mode invoke not open]"<<endl);
                 delete msg;
                 msg = NULL;
                 throw TarsUseCoroException("coroutine mode invoke not open");
@@ -662,7 +746,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 
     if(!pReqQ->push_back(msg,bEmpty))
     {
-        TLOGERROR("[TARS][ServantProxy::invoke msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
+        TLOGERROR("[ServantProxy::invoke msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
 
         delete msg;
         msg = NULL;
@@ -699,7 +783,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         //判断eStatus来判断状态
         assert(msg->eStatus != ReqMessage::REQ_REQ);
 
-        TLOGTARS("[TARS]ServantProxy::invoke line: " << __LINE__ << " status: " << msg->eStatus << ", ret: " <<msg->response->iRet << endl);
+//        TLOGTARS("[ServantProxy::invoke line: " << __LINE__ << " status: " << msg->eStatus << ", ret: " <<msg->response->iRet << endl);
 
         if(msg->eStatus == ReqMessage::REQ_RSP && msg->response->iRet == TARSSERVERSUCCESS)
         {
@@ -771,15 +855,16 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
     msg->request.status       = status;
     msg->request.iTimeout     = _asyncTimeout;
     
-    // 在RequestPacket中的context设置主调信息
-    if(_masterFlag)
-    {
-        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName)); //TARS_MASTER_KEY  clientConfig.ModuleName
-    }
+//    // 在RequestPacket中的context设置主调信息
+//    if(_masterFlag)
+//    {
+//        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName)); //TARS_MASTER_KEY  clientConfig.ModuleName
+//    }
 
     checkDye(msg->request);
 
-    invoke(msg, bCoro);
+    checkCookie(msg->request);
+	servant_invoke(msg, bCoro);
 }
 
 shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
@@ -803,14 +888,15 @@ shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
     msg->request.status       = status;
     msg->request.iTimeout     = _syncTimeout;
 
-    // 在RequestPacket中的context设置主调信息
-    if(_masterFlag)
-    {
-        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName));
-    }
-
+//    // 在RequestPacket中的context设置主调信息
+//    if(_masterFlag)
+//    {
+//        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName));
+//    }
 
     checkDye(msg->request);
+
+    checkCookie(msg->request);
 
     invoke(msg);
 
@@ -835,13 +921,13 @@ void ServantProxy::rpc_call(uint32_t iRequestId,
 
     msg->init(ReqMessage::SYNC_CALL);
     msg->bFromRpc = true;
-	msg->request.sFuncName = sFuncName;
-
+	msg->request.sServantName = (*_objectProxy)->name();
+    msg->request.sFuncName = sFuncName;
     msg->request.iRequestId  = iRequestId;
 
     msg->request.sBuffer.assign(buff, buff + len);
 
-    invoke(msg);
+	servant_invoke(msg, false);
 
     rsp = *msg->response.get();
 
@@ -859,66 +945,180 @@ void ServantProxy::rpc_call_async(uint32_t iRequestId,
     ReqMessage * msg = new ReqMessage();
 
     msg->init(callback?ReqMessage::ASYNC_CALL:ReqMessage::ONE_WAY);
-	msg->request.sFuncName = sFuncName;
+
     msg->bFromRpc = true;
     msg->callback = callback;
+	msg->request.sServantName = (*_objectProxy)->name();
+	msg->request.sFuncName = sFuncName;
 
     msg->request.iRequestId = iRequestId;
 
     msg->request.sBuffer.assign(buff, buff + len);
 
-    invoke(msg, bCoro);
+	servant_invoke(msg, bCoro);
 }
 
-void ServantProxy::http_call(const std::string& method,
-                              const std::string& uri,
-                              const std::map<std::string, std::string>& headers,
-                              const std::string& body,
-                              std::map<std::string, std::string>& rheaders,
-                              std::string& rbody)
+ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
 {
-    ReqMessage* msg = new ReqMessage();
+	if(_servantId == 0)
+	{
+		std::lock_guard<std::mutex> m(_servantMutex);
 
-    msg->init(ReqMessage::SYNC_CALL);
+        if(_servantId == 0 && _servantList.empty())
+        {
+            for(int i = 0; i < _connectionSerial; ++i)
+            {
+                string obj = tars_name() + "#" + TC_Common::tostr(i);
+                if (!(*_objectProxy)->address().empty())
+                {
+                    obj += "@" + (*_objectProxy)->address();
+                }
 
-    msg->bFromRpc = true;
-    msg->request.sServantName = uri;
-    msg->request.sFuncName = method;
-    // 使用下面两个字段保存头部和包体
-    msg->request.context = headers;
+                ServantPrx prx = _communicator->stringToProxy<ServantPrx>(obj);
+                prx->tars_set_protocol(tars_get_protocol());
+                prx->_rootPrx = this;
 
-    msg->request.sBuffer.assign(body.begin(), body.end());
+                _servantList.push_back(prx);
+            }
+        }
+	}
 
-    invoke(msg);
+//    assert((int)_servantList.size() == _connectionSerial);
 
-    rheaders.swap(msg->response->status);
-    rbody.assign(msg->response->sBuffer.begin(), msg->response->sBuffer.end());
+    int id = _servantId % (_servantList.size() + 1);
 
-    delete msg;
-    msg = NULL;
+    ++_servantId;
+
+    if(id == 0)
+    {
+        return this;
+    }
+
+    return _servantList[(id-1)];
+//	return _servantList[(_servantId++) % _servantList.size()];
 }
 
-void ServantProxy::http_call_async(const std::string& method,
-                                   const std::string& uri,
-                                   const std::map<std::string, std::string>& headers,
-                                    const std::string& body,
-                                    const HttpCallbackPtr &cb)
+void ServantProxy::onNotifyEndpoints(size_t netThreadSeq, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
 {
-    ReqMessage * msg = new ReqMessage();
+    for (size_t i = 0; i < _servantList.size(); i++)
+    {
+        _servantList[i]->_objectProxy[netThreadSeq]->getEndpointManager()->updateEndpoints(active, inactive);
+    }
 
-    msg->init(ReqMessage::ASYNC_CALL);
+//    _objectProxy[netThreadSeq]->getEndpointManager()->updateEndpoints(active, inactive);
+}
 
-    msg->bFromRpc = true;
-	msg->request.sServantName = uri;
-	msg->request.sFuncName = method;
-    // 使用下面两个字段保存头部和包体
-    msg->request.context = headers;
-    msg->request.sBuffer.assign(body.begin(), body.end());
+void ServantProxy::onSetInactive(const EndpointInfo& ep)
+{
+	if(!_rootPrx)
+		return;
 
-    ServantProxyCallbackPtr callback = new HttpServantProxyCallback(cb);
-    msg->callback = callback;
+	for (size_t i = 0; i < _rootPrx->_servantList.size(); i++)
+	{
+		ServantPrx &prx = _rootPrx->_servantList[i];
 
-    invoke(msg);
+		for (size_t i = 0; i < prx->_objectProxyNum; ++i)
+		{
+			prx->_objectProxy[i]->onSetInactive(ep);
+		}
+	}
+}
+
+int ServantProxy::servant_invoke(ReqMessage *msg, bool bCoroAsync)
+{
+	ServantPrx prx = getServantPrx(msg);
+
+	if(msg->callback)
+	{
+		msg->callback->setServantPrx(prx);
+	}
+
+	prx->invoke(msg, bCoroAsync);
+
+	return 0;
+}
+
+void ServantProxy::http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response)
+{
+	// if(_connectionSerial <= 0) {
+	// 	_connectionSerial = DEFAULT_CONNECTION_SERIAL;
+	// }
+
+	ReqMessage* msg = new ReqMessage();
+
+	msg->init(ReqMessage::SYNC_CALL);
+
+	msg->bFromRpc = true;
+
+	msg->request.sServantName = (*_objectProxy)->name();
+	msg->request.sFuncName = funcName;
+
+	msg->request.sBuffer.resize(sizeof(shared_ptr<TC_HttpRequest>));
+
+	msg->deconstructor = [msg] {
+		shared_ptr<TC_HttpRequest> & data = *(shared_ptr<TC_HttpRequest> *) (msg->request.sBuffer.data());
+		data.reset();
+
+		if(!msg->response->sBuffer.empty())
+		{
+			shared_ptr<TC_HttpResponse> & rsp = *(shared_ptr<TC_HttpResponse> *) (msg->response->sBuffer.data());
+			//主动reset一次
+			rsp.reset();
+
+			msg->response->sBuffer.clear();
+		}
+	};
+
+	shared_ptr<TC_HttpRequest> & data = *(shared_ptr<TC_HttpRequest> *) (msg->request.sBuffer.data());
+
+	data = request;
+
+	servant_invoke(msg, false);
+
+	response = *(shared_ptr<TC_HttpResponse>*)(msg->response->sBuffer.data());
+
+	delete msg;
+	msg = NULL;
+}
+
+void ServantProxy::http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro)
+{
+	// if(_connectionSerial <= 0) {
+	// 	_connectionSerial = DEFAULT_CONNECTION_SERIAL;
+	// }
+
+	ReqMessage* msg = new ReqMessage();
+
+	msg->init(ReqMessage::ASYNC_CALL);
+
+	msg->bFromRpc = true;
+
+	msg->request.sServantName = (*_objectProxy)->name();
+	msg->request.sFuncName = funcName;
+
+	msg->request.sBuffer.resize(sizeof(shared_ptr<TC_HttpRequest>));
+
+	msg->deconstructor = [msg] {
+		shared_ptr<TC_HttpRequest> & data = *(shared_ptr<TC_HttpRequest> *) (msg->request.sBuffer.data());
+		data.reset();
+
+		if(!msg->response->sBuffer.empty())
+		{
+			shared_ptr<TC_HttpResponse> & rsp = *(shared_ptr<TC_HttpResponse> *) (msg->response->sBuffer.data());
+			//主动reset一次
+			rsp.reset();
+
+			msg->response->sBuffer.clear();
+		}
+	};
+
+	*(shared_ptr<TC_HttpRequest>*)(msg->request.sBuffer.data()) = request;
+
+	ServantProxyCallbackPtr callback = new HttpServantProxyCallback(cb);
+
+	msg->callback = callback;
+
+	servant_invoke(msg, bCoro);
 }
 
 //选取一个网络线程对应的信息
@@ -975,6 +1175,17 @@ void ServantProxy::checkDye(RequestPacket& req)
 
         req.status[ServantProxy::STATUS_DYED_KEY] = pSptd->_dyeingKey;
     }
+}
+
+void ServantProxy::checkCookie(RequestPacket& req)
+{
+    //线程私有数据
+    ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
+    assert(pSptd != NULL);
+
+    std::for_each(pSptd->_cookie.begin(), pSptd->_cookie.end(),[&](map<string, string>::value_type& p){
+	    req.status.insert(make_pair(p.first, p.second));
+    });
 }
 
 

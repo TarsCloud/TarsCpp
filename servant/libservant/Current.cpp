@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#include "servant/TarsCurrent.h"
+#include "servant/Current.h"
 #include "servant/ServantHandle.h"
 #include "servant/BaseF.h"
 #include "servant/Application.h"
@@ -24,7 +24,7 @@
 namespace tars
 {
 //////////////////////////////////////////////////////////////////
-TarsCurrent::TarsCurrent(ServantHandle *pServantHandle)
+Current::Current(ServantHandle *pServantHandle)
 : _servantHandle(pServantHandle)
 // , _bindAdapter(NULL)
 // , _uid(0)
@@ -39,7 +39,7 @@ TarsCurrent::TarsCurrent(ServantHandle *pServantHandle)
 {
 }
 
-TarsCurrent::~TarsCurrent()
+Current::~Current()
 {
     //TUP调用或单向调用，从服务端上报调用信息
     if(_reportStat)
@@ -60,65 +60,75 @@ TarsCurrent::~TarsCurrent()
     }
 }
 
-const string &TarsCurrent::getIp() const
+const string &Current::getHostName() const
 {
-    return _data->ip();
-    // return _ip;
+	auto it = _request.context.find("node_name");
+	if(it != _request.context.end())
+	{
+		return it->second;
+	}
+	return _data->ip();
+
 }
 
-int TarsCurrent::getPort() const
+const string &Current::getIp() const
+{
+	return _data->ip();
+}
+
+int Current::getPort() const
 {
     return _data->port();
     // return _port;
 }
 
-uint32_t TarsCurrent::getUId() const
+uint32_t Current::getUId() const
 {
     return _data->uid();
     // return _uid;
 }
 
-string TarsCurrent::getServantName() const
+string Current::getServantName() const
 {
     return _request.sServantName;
 }
 
-short TarsCurrent::getRequestVersion() const
+short Current::getRequestVersion() const
 {
     return _request.iVersion;
 }
 
-map<string, string>& TarsCurrent::getContext()
+map<string, string>& Current::getContext()
 {
     return _request.context;
 }
 
-const map<string, string>& TarsCurrent::getRequestStatus() const
+const map<string, string>& Current::getRequestStatus() const
 {
     return _request.status;
 }
 
-string TarsCurrent::getFuncName() const
+string Current::getFuncName() const
 {
     return _request.sFuncName;
 }
 
-uint32_t TarsCurrent::getRequestId() const
+uint32_t Current::getRequestId() const
 {
     return _request.iRequestId;
 }
 
-char TarsCurrent::getPacketType() const
+char Current::getPacketType() const
 {
     return _request.cPacketType;
 }
 
-tars::Int32 TarsCurrent::getMessageType() const
+tars::Int32 Current::getMessageType() const
 {
     return _request.iMessageType;
 }
 
-struct timeval TarsCurrent::getRecvTime() const
+struct timeval Current::getRecvTime() const
 {
     timeval tm;
     tm.tv_sec  = _data->recvTimeStamp()/1000;
@@ -127,12 +137,12 @@ struct timeval TarsCurrent::getRecvTime() const
     return tm;
 }
 
-void TarsCurrent::setReportStat(bool bReport)
+void Current::setReportStat(bool bReport)
 {
     _reportStat = bReport;
 }
 
-const vector<char>& TarsCurrent::getRequestBuffer() const
+const vector<char>& Current::getRequestBuffer() const
 {
 	if (_data->adapter()->isTarsProtocol())
 	{
@@ -146,23 +156,23 @@ const vector<char>& TarsCurrent::getRequestBuffer() const
     // return _request.sBuffer;
 }
 
-bool TarsCurrent::isResponse() const
+bool Current::isResponse() const
 {
     return _response;
 }
 
-void TarsCurrent::setCloseType(int type)
+void Current::setCloseType(int type)
 {
     _data->setCloseType(type);
 }
 
-int TarsCurrent::getCloseType() const
+int Current::getCloseType() const
 {
     return _data->closeType();
 }
 
-void TarsCurrent::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
-// void TarsCurrent::initialize(const TC_EpollServer::tagRecvData &stRecvData)
+void Current::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
+// void Current::initialize(const TC_EpollServer::tagRecvData &stRecvData)
 {
 	_data = data;
 
@@ -176,7 +186,7 @@ void TarsCurrent::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data
 }
 
 
-void TarsCurrent::initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &data)
+void Current::initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
 	_data = data;
 
@@ -184,7 +194,7 @@ void TarsCurrent::initializeClose(const shared_ptr<TC_EpollServer::RecvContext> 
 
 }
 
-void TarsCurrent::initialize(const vector<char>& sRecvBuffer)
+void Current::initialize(const vector<char>& sRecvBuffer)
 {
     TarsInputStream<BufferReader> is;
 
@@ -193,7 +203,7 @@ void TarsCurrent::initialize(const vector<char>& sRecvBuffer)
     _request.readFrom(is);
 }
 
-// void TarsCurrent::initialize(const TC_EpollServer::tagRecvData &stRecvData, int64_t beginTime)
+// void Current::initialize(const TC_EpollServer::tagRecvData &stRecvData, int64_t beginTime)
 // {
 //      _ip         = stRecvData.ip;
 
@@ -223,7 +233,7 @@ void TarsCurrent::initialize(const vector<char>& sRecvBuffer)
 //     }
 // }
 
-// void TarsCurrent::initializeClose(const TC_EpollServer::tagRecvData &stRecvData)
+// void Current::initializeClose(const TC_EpollServer::tagRecvData &stRecvData)
 // {
 //     _ip   = stRecvData.ip;
 
@@ -240,7 +250,7 @@ void TarsCurrent::initialize(const vector<char>& sRecvBuffer)
 //     _begintime = TNOWMS;
 // }
 
-// void TarsCurrent::initialize(const string &sRecvBuffer)
+// void Current::initialize(const string &sRecvBuffer)
 // {
 //     TarsInputStream<BufferReader> is;
 
@@ -249,7 +259,7 @@ void TarsCurrent::initialize(const vector<char>& sRecvBuffer)
 //     _request.readFrom(is);
 // }
 
-void TarsCurrent::sendResponse(const char* buff, uint32_t len)
+void Current::sendResponse(const char* buff, uint32_t len)
 {
     // _servantHandle->sendResponse(_uid, string(buff, len), _ip, _port, _fd);
 	shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
@@ -258,7 +268,7 @@ void TarsCurrent::sendResponse(const char* buff, uint32_t len)
 }
 
 
-void TarsCurrent::sendResponse(int iRet, const vector<char> &buff)
+void Current::sendResponse(int iRet, const vector<char> &buff)
 {
 	//单向调用不需要返回
 	if (_request.cPacketType == TARSONEWAY)
@@ -271,27 +281,27 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buff)
 	sendResponse(iRet, buff, TARS_STATUS(), "");
 }
 
-void TarsCurrent::sendResponse(int iRet)
+void Current::sendResponse(int iRet)
 {
 	// ResponsePacket response;
 	sendResponse(iRet, vector<char>(), TARS_STATUS(), "");
 }
 
-void TarsCurrent::sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os)
+void Current::sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os)
 {
 	// ResponsePacket response;
 	// os.swap(response.sBuffer);
 	sendResponse(iRet, os.getByteBuffer(), TARS_STATUS(), "");
 }
 
-void TarsCurrent::sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr)
+void Current::sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr)
 {
 	ResponsePacket response;
 	attr.encode(response.sBuffer);
 	sendResponse(iRet, response.sBuffer, TARS_STATUS(), "");
 }
 
-void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<string, string>& status, const string & sResultDesc)
+void Current::sendResponse(int iRet, const vector<char> &buffer,  const map<string, string>& status, const string & sResultDesc)
 {
     _ret = iRet;
 
@@ -325,7 +335,7 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<
         response.context        = _responseContext;
         response.iRet           = iRet;
 
-        TLOGTARS("[TARS]TarsCurrent::sendResponse :"
+        TLOGTARS("Current::sendResponse :"
                    << response.iMessageType << "|"
                    << _request.sServantName << "|"
                    << _request.sFuncName << "|"
@@ -367,7 +377,7 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<
             response.status[ServantProxy::STATUS_RESULT_DESC] = sResultDesc;
         }
 
-        TLOGTARS("[TARS]TarsCurrent::sendResponse :"
+        TLOGTARS("Current::sendResponse :"
                    << response.iMessageType << "|"
                    << _request.sServantName << "|"
                    << _request.sFuncName << "|"
@@ -389,7 +399,7 @@ void TarsCurrent::sendResponse(int iRet, const vector<char> &buffer,  const map<
 }
 
 
-void TarsCurrent::close()
+void Current::close()
 {
     if (_servantHandle)
     {
@@ -397,17 +407,17 @@ void TarsCurrent::close()
     }
 }
 
-ServantHandle* TarsCurrent::getServantHandle()
+ServantHandle* Current::getServantHandle()
 {
     return _servantHandle;
 }
 
-TC_EpollServer::BindAdapter* TarsCurrent::getBindAdapter()
+TC_EpollServer::BindAdapter* Current::getBindAdapter()
 {
     return _data->adapter().get();
 }
 
-void TarsCurrent::reportToStat(const string& sObj)
+void Current::reportToStat(const string& sObj)
 {
     StatReport* stat = Application::getCommunicator()->getStatReport();
 

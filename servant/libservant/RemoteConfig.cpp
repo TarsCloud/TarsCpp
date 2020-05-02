@@ -14,16 +14,17 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#include "servant/TarsConfig.h"
+#include "servant/RemoteConfig.h"
 #include "util/tc_file.h"
 #include "servant/Communicator.h"
-#include "servant/TarsNotify.h"
+#include "servant/RemoteNotify.h"
+#include "servant/Application.h"
 #include <fstream>
 
 namespace tars
 {
 
-int TarsRemoteConfig::setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath,const string& setdivision, int maxBakNum)
+int RemoteConfig::setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath,const string& setdivision, int maxBakNum)
 {
     _comm           = comm;
     if(!obj.empty())
@@ -38,7 +39,7 @@ int TarsRemoteConfig::setConfigInfo(const CommunicatorPtr &comm, const string &o
     return 0;
 }
 
-bool TarsRemoteConfig::addConfig(const string & sFileName, string &buffer, bool bAppConfigOnly)
+bool RemoteConfig::addConfig(const string & sFileName, string &buffer, bool bAppConfigOnly)
 {
     TC_LockT<TC_ThreadMutex> lock(_mutex);
 
@@ -96,7 +97,7 @@ bool TarsRemoteConfig::addConfig(const string & sFileName, string &buffer, bool 
     return false;
 }
 
-string TarsRemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigOnly)
+string RemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigOnly)
 {
     if (_configPrx)
     {
@@ -108,7 +109,7 @@ string TarsRemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigO
            {
                 if(_setdivision.empty())
                 {
-                    ret = _configPrx->loadConfig(_app, (bAppConfigOnly ? "" : _serverName), sFileName, stream);
+                    ret = _configPrx->loadConfig(_app, (bAppConfigOnly ? "" : _serverName), sFileName, stream, ServerConfig::Context);
                 }
                 else
                 {
@@ -118,7 +119,7 @@ string TarsRemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigO
                     confInfo.filename    = sFileName;
                     confInfo.bAppOnly    = bAppConfigOnly;
                     confInfo.setdivision = _setdivision;
-                    ret = _configPrx->loadConfigByInfo(confInfo,stream);
+                    ret = _configPrx->loadConfigByInfo(confInfo,stream, ServerConfig::Context);
                 }
                 
                 break;
@@ -148,7 +149,7 @@ string TarsRemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigO
             {
                 out.close();
                 result = "[fail] copy stream to disk error." ;
-                TarsRemoteNotify::getInstance()->report(result);
+                RemoteNotify::getInstance()->report(result);
                 return "";
             }
             else
@@ -161,12 +162,12 @@ string TarsRemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigO
     return "";
 }
 
-string TarsRemoteConfig::index2file(const string & sFullFileName, int index)
+string RemoteConfig::index2file(const string & sFullFileName, int index)
 {
     return   sFullFileName + "." + TC_Common::tostr(index) + ".bak";
 }
 
-void TarsRemoteConfig::localRename(const string& oldFile, const string& newFile)
+void RemoteConfig::localRename(const string& oldFile, const string& newFile)
 {
 #if TARGET_PLATFORM_WINDOWS
 	//by goodenpei，windows下面先remove后rename，否则rename会失败
@@ -181,7 +182,7 @@ void TarsRemoteConfig::localRename(const string& oldFile, const string& newFile)
     }
 }
 
-string TarsRemoteConfig::recoverSysConfig(const string & sFullFileName)
+string RemoteConfig::recoverSysConfig(const string & sFullFileName)
 {
     try
     {

@@ -17,8 +17,9 @@
 #include "servant/StatReport.h"
 #include "util/tc_common.h"
 #include "util/tc_timeprovider.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/Communicator.h"
+#include "servant/Application.h"
 #include <iostream>
 
 namespace tars
@@ -81,7 +82,7 @@ void StatReport::report(size_t iSeq,MapStatMicMsg * pmStatMicMsg)
         delete pmStatMicMsg;
         pmStatMicMsg = NULL;
 
-        TLOGERROR("[TARS][StatReport::report] queue full." << endl);
+        TLOGERROR("[StatReport::report] queue full]" << endl);
     }
 }
 
@@ -465,7 +466,7 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
            msg.swap(mStatMsg);
        }
 
-       TLOGTARS("[TARS][StatReport::reportMicMsg get size:" << mStatMsg.size()<<"]"<< endl);
+       TLOGTARS("[StatReport::reportMicMsg get size:" << mStatMsg.size()<<"]"<< endl);
        for(MapStatMicMsg::iterator it = mStatMsg.begin(); it != mStatMsg.end(); it++)
        {
            const StatMicMsgHead &head = it->first;
@@ -476,30 +477,30 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
            {
                if(_statPrx)
                {
-                   TLOGTARS("[TARS][StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
-                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient);
+                   TLOGTARS("[StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
+                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient, ServerConfig::Context);
                }
                iLen = iTemLen;
                mTemp.clear();
            }
 
            mTemp[head] = it->second;
-           if(LOG->isNeedLog(TarsRollLogger::INFO_LOG))
+           if(LOG->isNeedLog(LocalRollLogger::INFO_LOG))
            {
                ostringstream os;
                os.str("");
                head.displaySimple(os);
                os << "  ";
                mTemp[head].displaySimple(os);
-               TLOGTARS("[TARS][StatReport::reportMicMsg display:" << os.str() << endl);
+               TLOGTARS("[StatReport::reportMicMsg display:" << os.str() << "]" << endl);
            }
        }
        if(0 != (int)mTemp.size())
        {
            if(_statPrx)
            {
-               TLOGTARS("[TARS][StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
-               _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient);
+               TLOGTARS("[StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
+               _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient, ServerConfig::Context);
            }
        }
        return 0;
@@ -606,19 +607,19 @@ int StatReport::reportPropMsg()
                    }
                }
                mStatMsg[head]  = body;
-               if(LOG->isNeedLog(TarsRollLogger::INFO_LOG))
+               if(LOG->isNeedLog(LocalRollLogger::INFO_LOG))
                {
                       ostringstream os;
                    os.str("");
                       head.displaySimple(os);
                    os << "  ";
                    mStatMsg[head].displaySimple(os);
-                   TLOGTARS("[TARS][StatReport::reportPropMsg display:" << os.str() << endl);
+                   TLOGTARS("[StatReport::reportPropMsg display:" << os.str() << "]" << endl);
                }
            }
        }
 
-       TLOGTARS("[TARS][StatReport::reportPropMsg get size:" << mStatMsg.size()<<"]"<< endl);
+       TLOGTARS("[StatReport::reportPropMsg get size:" << mStatMsg.size()<<"]"<< endl);
        int iLen = 0;
        MapStatPropMsg mTemp;
        for(MapStatPropMsg::iterator it = mStatMsg.begin(); it != mStatMsg.end(); it++)
@@ -637,7 +638,7 @@ int StatReport::reportPropMsg()
            {
                if(_propertyPrx)
                {
-                   TLOGTARS("[TARS][StatReport::reportPropMsg send size:" << mTemp.size()<<"]"<< endl);
+                   TLOGTARS("[StatReport::reportPropMsg send size:" << mTemp.size()<<"]"<< endl);
                    _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL,mTemp);
                }
                iLen = iTemLen;
@@ -649,7 +650,7 @@ int StatReport::reportPropMsg()
        {
            if(_propertyPrx)
            {
-               TLOGTARS("[TARS][StatReport::reportPropMsg send size:" << mTemp.size()<< "]"<< endl);
+               TLOGTARS("[StatReport::reportPropMsg send size:" << mTemp.size()<< "]"<< endl);
                _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL,mTemp);
            }
        }
@@ -676,7 +677,7 @@ int StatReport::reportSampleMsg()
             _statSampleMsg.swap(mmStatSampleMsg);
         }
 
-        TLOGTARS("[TARS][StatReport::reportSampleMsg get size:" << mmStatSampleMsg.size()<<"]"<< endl);
+        TLOGTARS("[StatReport::reportSampleMsg get size:" << mmStatSampleMsg.size()<<"]"<< endl);
 
         int iLen = 0;
         vector<StatSampleMsg> vTemp;
@@ -689,8 +690,8 @@ int StatReport::reportSampleMsg()
            {
                if(_statPrx)
                {
-                   TLOGTARS("[TARS][StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
-                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp);
+                   TLOGTARS("[StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
+                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp, ServerConfig::Context);
                }
                iLen = iTemLen;
                vTemp.clear();
@@ -701,8 +702,8 @@ int StatReport::reportSampleMsg()
         {
            if(_statPrx)
            {
-               TLOGTARS("[TARS][StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
-               _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp);
+               TLOGTARS("[StatReport::reportSampleMsg send size:" << vTemp.size()<< "]"<< endl);
+               _statPrx->tars_set_timeout(_reportTimeout)->async_reportSampleMsg(NULL,vTemp, ServerConfig::Context);
            }
         }
 
@@ -710,11 +711,11 @@ int StatReport::reportSampleMsg()
     }
     catch ( exception& e )
     {
-        TLOGERROR("StatReport::reportSampleMsg catch exception:" << e.what() << endl);
+        TLOGERROR("[StatReport::reportSampleMsg catch exception:" << e.what() << "]" << endl);
     }
     catch ( ... )
     {
-        TLOGERROR("StatReport::reportSampleMsg catch unkown exception" << endl);
+        TLOGERROR("[StatReport::reportSampleMsg catch unkown exception]" << endl);
     }
     return -1;
 }

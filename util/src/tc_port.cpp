@@ -28,8 +28,31 @@
 #include "util/tc_strptime.h"
 #endif
 
+#include <string.h>
+
+using namespace std;
+
 namespace tars
 {
+
+int TC_Port::strcmp(const char *s1, const char *s2)
+{
+#if TARGET_PLATFORM_WINDOWS
+	return ::strcmp(s1, s2);
+#else
+	return ::strcmp(s1, s2);
+#endif
+}
+
+int TC_Port::strncmp(const char *s1, const char *s2, size_t n)
+{
+#if TARGET_PLATFORM_WINDOWS
+	return ::strncmp(s1, s2, n);
+#else
+	return ::strncmp(s1, s2, n);
+#endif
+}
+
 int TC_Port::strcasecmp(const char *s1, const char *s2)
 {
 #if TARGET_PLATFORM_WINDOWS
@@ -169,6 +192,46 @@ int64_t TC_Port::getpid()
     int64_t pid = ::getpid();
 #endif
 	return pid;
+}
+
+string TC_Port::getEnv(const string &name)
+{
+	char* p = getenv(name.c_str());
+    string str = p ? string(p) : "";
+
+	return str;
+}
+
+void TC_Port::setEnv(const string &name, const string &value)
+{
+#if TARGET_PLATFORM_WINDOWS
+	SetEnvironmentVariable(name.c_str(), value.c_str());
+#else
+	setenv(name.c_str(), value.c_str(), true);
+#endif
+}
+
+string TC_Port::exec(const char *cmd)
+{
+	string fileData;
+#if TARGET_PLATFORM_WINDOWS
+    FILE* fp = _popen(cmd, "r");
+#else
+    FILE* fp = popen(cmd, "r");
+#endif
+    static size_t buf_len = 2 * 1024 * 1024;
+    char *buf = new char[buf_len];
+    memset(buf, 0, buf_len);
+    fread(buf, sizeof(char), buf_len - 1, fp);
+#if TARGET_PLATFORM_WINDOWS
+    _pclose(fp);
+#else
+    pclose(fp);
+#endif
+    fileData = string(buf);
+    delete []buf;
+
+	return fileData;
 }
 
 }

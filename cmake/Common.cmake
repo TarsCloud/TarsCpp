@@ -14,24 +14,33 @@ ENDIF()
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/lib)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/lib)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/bin)
+endforeach()   
 
-set(_USE_OPENTRACKING $ENV{_USE_OPENTRACKING})
-if(_USE_OPENTRACKING)
-set(OPENTRACKING_INC "/usr/local/include")
-add_definitions(-D_USE_OPENTRACKING=${_USE_OPENTRACKING})
-endif()
+option(TARS_OPENTRACKING "option for open tracking" OFF)
+
+if (TARS_OPENTRACKING)
+    add_definitions(-DTARS_OPENTRACKING=1)
+    set(OPENTRACKING_INC "/usr/local/include")
+endif ()
+
+# set(TARS_OPENTRACKING $ENV{TARS_OPENTRACKING})
+# if(TARS_OPENTRACKING)
+# set(OPENTRACKING_INC "/usr/local/include")
+# add_definitions(-D_USE_OPENTRACKING=${TARS_OPENTRACKING})
+# endif()
 
 #-------------------------------------------------------------
 
-if("${INSTALL_PREFIX}" STREQUAL "")
-    IF (UNIX)
-        set(INSTALL_PREFIX "/usr/local/tars/cpp")
-    ELSE()
-        set(INSTALL_PREFIX "c:\\tars\\cpp")
-    ENDIF()
-
-    set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
-endif()
+IF (UNIX)
+    set(CMAKE_INSTALL_PREFIX "/usr/local/tars/cpp" CACHE STRING "set install path" FORCE)
+ELSE()
+    set(CMAKE_INSTALL_PREFIX "c:\\tars\\cpp" CACHE STRING "set install path" FORCE)
+ENDIF()
 
 #-------------------------------------------------------------
 IF (APPLE)
@@ -74,11 +83,7 @@ ELSE ()
 ENDIF (UNIX)
 
 #-------------------------------------------------------------
-IF(WIN32)
-set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/tars2cpp.exe")
-ELSE()
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
-ENDIF()
 
 message("----------------------------------------------------")
 
@@ -87,8 +92,10 @@ message("CMAKE_BINARY_DIR:          ${CMAKE_BINARY_DIR}")
 message("PROJECT_SOURCE_DIR:        ${PROJECT_SOURCE_DIR}")
 message("CMAKE_BUILD_TYPE:          ${CMAKE_BUILD_TYPE}")
 message("PLATFORM:                  ${PLATFORM}")
-message("INSTALL_PREFIX:            ${INSTALL_PREFIX}")
+message("CMAKE_INSTALL_PREFIX:      ${CMAKE_INSTALL_PREFIX}")
 message("BIN:                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}") 
 message("TARS2CPP:                  ${TARS2CPP}") 
+message("TARS_OPENTRACKING:         ${TARS_OPENTRACKING}") 
+
 #-------------------------------------------------------------
 

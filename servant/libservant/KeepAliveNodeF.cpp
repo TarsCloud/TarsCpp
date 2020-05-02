@@ -15,14 +15,14 @@
  */
 
 #include "util/tc_port.h"
-#include "servant/TarsNodeF.h"
-#include "servant/TarsLogger.h"
+#include "servant/KeepAliveNodeF.h"
+#include "servant/RemoteLogger.h"
 #include "servant/Communicator.h"
 
 namespace tars
 {
 
-void TarsNodeFHelper::setNodeInfo(const CommunicatorPtr &comm, const string &obj, const string &app, const string &server)
+void KeepAliveNodeFHelper::setNodeInfo(const CommunicatorPtr &comm, const string &obj, const string &app, const string &server)
 {
     _comm           = comm;
     if(!obj.empty())
@@ -35,7 +35,7 @@ void TarsNodeFHelper::setNodeInfo(const CommunicatorPtr &comm, const string &obj
 	_si.pid = TC_Port::getpid();
 }
 
-void TarsNodeFHelper::keepAlive(const string &adapter)
+void KeepAliveNodeFHelper::keepAlive(const string &adapter)
 {
         try
         {
@@ -66,15 +66,15 @@ void TarsNodeFHelper::keepAlive(const string &adapter)
         }
         catch(exception &ex)
         {
-                TLOGERROR("TarsNodeFHelper::keepAlive error:" << ex.what() << endl);
+                TLOGERROR("KeepAliveNodeFHelper::keepAlive error:" << ex.what() << endl);
         }
         catch(...)
         {
-                TLOGERROR("TarsNodeFHelper::keepAlive unknown error" << endl);
+                TLOGERROR("KeepAliveNodeFHelper::keepAlive unknown error" << endl);
         }
 }
 
-void TarsNodeFHelper::keepActiving()
+void KeepAliveNodeFHelper::keepActiving()
 {
     try
     {
@@ -85,31 +85,31 @@ void TarsNodeFHelper::keepActiving()
     }
     catch(exception &ex)
     {
-        LOG->error() << "TafNodeFHelper::keepAlive error:" << ex.what() << endl;
+	    TLOGERROR("[KeepAliveNodeFHelper::keepAlive error:" << ex.what() << "]" << endl);
     }
     catch(...)
     {
-        LOG->error() << "TafNodeFHelper::keepAlive unknown error" << endl;
+	    TLOGERROR("[KeepAliveNodeFHelper::keepAlive unknown error]" << endl);
     }
 }
 
-void TarsNodeFHelper::reportVersion(const string &version)
+void KeepAliveNodeFHelper::reportVersion(const string &version)
 {
-        try
-        {
+    try
+    {
         if(_nodePrx)
         {
             _nodePrx->async_reportVersion(NULL, _si.application, _si.serverName, version);
         }
-        }
-        catch(exception &ex)
-        {
-                TLOGERROR("TarsNodeFHelper::reportVersion error:" << ex.what() << endl);
-        }
-        catch(...)
-        {
-                TLOGERROR("TarsNodeFHelper::reportVersion unknown error" << endl);
-        }
+    }
+    catch(exception &ex)
+    {
+        TLOGERROR("[KeepAliveNodeFHelper::reportVersion error:" << ex.what() << "]" << endl);
+    }
+    catch(...)
+    {
+        TLOGERROR("[KeepAliveNodeFHelper::reportVersion unknown error" << "]" << endl);
+    }
 }
 
 }

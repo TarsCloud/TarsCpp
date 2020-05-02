@@ -26,7 +26,7 @@
 #include "util/tc_timeprovider.h"
 #include "util/tc_file.h"
 #include "util/tc_thread_mutex.h"
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 
 #define APPCACHE_ROOT_PATH "/cache"
 
@@ -38,7 +38,7 @@ namespace tars
 /**
  * 缓存
  */
-class AppCache : public TC_Singleton<AppCache>, public TC_ThreadMutex
+class SVT_DLL_API AppCache : public TC_Singleton<AppCache>, public TC_ThreadMutex
 {    
 public:
     AppCache()

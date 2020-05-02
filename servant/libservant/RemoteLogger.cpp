@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#include "servant/TarsLogger.h"
+#include "servant/RemoteLogger.h"
 #include "servant/Communicator.h"
 #include "servant/Application.h"
 
@@ -84,11 +84,11 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
     {
         try
         {
-            _logPrx->logger(DYEING_DIR, DYEING_FILE, "roll", "%Y%m%d", vRemoteDyeing);
+            _logPrx->logger(DYEING_DIR, DYEING_FILE, "roll", "%Y%m%d", vRemoteDyeing, ServerConfig::Context);
         }
         catch(exception &ex)
         {
-            TLOGERROR("[TARS] dyeing log write to remote log server error:" << ex.what() << endl);
+            TLOGERROR("[dyeing log write to remote log server error:" << ex.what() << "]" << endl);
         }
     }
 }
@@ -112,7 +112,7 @@ void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, con
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void TarsRollLogger::setLogInfo(const string &sApp, const string &sServer, const string &sLogpath, int iMaxSize, int iMaxNum, const CommunicatorPtr &comm, const string &sLogObj)
+void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, const string &sLogpath, int iMaxSize, int iMaxNum, const CommunicatorPtr &comm, const string &sLogObj)
 {
     _app       = sApp;
     _server    = sServer;
@@ -138,7 +138,7 @@ void TarsRollLogger::setLogInfo(const string &sApp, const string &sServer, const
 }
 
 
-void TarsRollLogger::sync(bool bSync)
+void LocalRollLogger::sync(bool bSync)
 {
     if(bSync)
     {
@@ -150,7 +150,7 @@ void TarsRollLogger::sync(bool bSync)
     }
 }
 
-void TarsRollLogger::enableDyeing(bool bEnable, const string& sDyeingKey/* = ""*/)
+void LocalRollLogger::enableDyeing(bool bEnable, const string& sDyeingKey/* = ""*/)
 {
     _logger.getRoll()->enableDyeing(bEnable, sDyeingKey);
 }
@@ -254,7 +254,7 @@ void RemoteTimeWriteT::sync2remote(const vector<string> &v)
         stInfo.sSepar            = _timeWrite->_separ;
         stInfo.sLogType          = _timeWrite->_logType;
 
-        _timeWrite->_logPrx->loggerbyInfo(stInfo,v);
+        _timeWrite->_logPrx->loggerbyInfo(stInfo,v, ServerConfig::Context);
 
         if (_timeWrite->_reportSuccPtr)
         {
@@ -263,7 +263,7 @@ void RemoteTimeWriteT::sync2remote(const vector<string> &v)
     }
     catch(exception &ex)
     {
-        TLOGERROR("[TARS] write to remote log server error:" << ex.what() << ": buffer size:" << v.size() << endl);
+        TLOGERROR("[write to remote log server error:" << ex.what() << ": buffer size:" << v.size() << "]"<< endl);
         _timeWrite->writeError(v);
         if (_timeWrite->_reportFailPtr)
         {
@@ -276,11 +276,11 @@ void RemoteTimeWriteT::sync2remoteDyeing(const vector<string> &v)
 {
     try
     {
-        _timeWrite->_logPrx->logger(DYEING_DIR, DYEING_FILE, "", _timeWrite->_format, v);
+        _timeWrite->_logPrx->logger(DYEING_DIR, DYEING_FILE, "", _timeWrite->_format, v, ServerConfig::Context);
     }
     catch(exception &ex)
     {
-        TLOGERROR("[TARS] write dyeing log to remote log server error:" << ex.what() << ": buffer size:" << v.size() << endl);
+        TLOGERROR("[write dyeing log to remote log server error:" << ex.what() << ": buffer size:" << v.size() << "]" << endl);
         _timeWrite->writeError(v);
     }
 }
@@ -418,11 +418,11 @@ void TimeWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &buf
     {
         try
         {
-            _logPrx->logger(DYEING_DIR, DYEING_FILE, "day", "%Y%m%d", vDyeingLog);
+            _logPrx->logger(DYEING_DIR, DYEING_FILE, "day", "%Y%m%d", vDyeingLog, ServerConfig::Context);
         }
         catch(exception &ex)
         {
-            TLOGERROR("[TARS] dyeing log write to remote log server error:" << ex.what() << endl);
+            TLOGERROR("[dyeing log write to remote log server error:" << ex.what() << "]" << endl);
         }
     }
 }
@@ -437,10 +437,10 @@ void TimeWriteT::writeError(const vector<string> &buffer)
         }
     }
 
-    //告警
-    string sInfo = _app + "." + _server + "|";
-    sInfo += ServerConfig::LocalIp + "|sync log to remote tarslog error";
-    FDLOG("tarserror") << sInfo <<endl;
+    // //告警
+    // string sInfo = _app + "." + _server + "|";
+    // sInfo += ServerConfig::LocalIp + "|sync log to remote tarslog error";
+    // FDLOG("tarserror") << sInfo <<endl;
     //TARS_NOTIFY_ERROR(sInfo);
 }
 
@@ -456,21 +456,21 @@ void TimeWriteT::writeError(const deque<pair<size_t, string> > &buffer)
         }
     }
 
-    //告警
-    string sInfo = _app + "." + _server + "|";
-    sInfo += ServerConfig::LocalIp + "|sync log to remote tarslog error(buffer.size>500000)";
-    FDLOG("tarserror") << sInfo <<endl;
+    // //告警
+    // string sInfo = _app + "." + _server + "|";
+    // sInfo += ServerConfig::LocalIp + "|sync log to remote tarslog error(buffer.size>500000)";
+    // FDLOG("tarserror") << sInfo <<endl;
     //TARS_NOTIFY_ERROR(sInfo);
 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-TarsTimeLogger::TarsTimeLogger() : _defaultLogger(NULL),_hasSufix(true),_hasAppNamePrefix(true),_concatStr("_"),_separ("|"),_hasSquareBracket(false),_local(true),_remote(true)
+RemoteTimeLogger::RemoteTimeLogger() : _defaultLogger(NULL),_hasSufix(true),_hasAppNamePrefix(true),_concatStr("_"),_separ("|"),_hasSquareBracket(false),_local(true),_remote(true)
 {
 }
 
-TarsTimeLogger::~TarsTimeLogger()
+RemoteTimeLogger::~RemoteTimeLogger()
 {
     if(_defaultLogger != NULL)
     {
@@ -486,7 +486,7 @@ TarsTimeLogger::~TarsTimeLogger()
     _loggers.clear();
 }
 
-void TarsTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFile, const string &sFormat,const TarsLogTypePtr& logTypePtr)
+void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFile, const string &sFormat,const LogTypePtr& logTypePtr)
 {
     string sAppSrvName = _hasAppNamePrefix?(_app + "." + _server):"";
     string sFilePath   = _logpath + "/" + _app + "/" + _server + "/" + sAppSrvName;
@@ -531,7 +531,7 @@ void TarsTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFile
     pTimeLogger->getWriteT().setLogInfo(_logPrx, _app, _server, sFile, _logpath, sFormat, _setDivision, sLogType, reportSuccPtr, reportFailPtr);
 }
 
-void TarsTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp, const string &sServer, const string &sFile, const string &sFormat,const TarsLogTypePtr& logTypePtr)
+void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp, const string &sServer, const string &sFile, const string &sFormat,const LogTypePtr& logTypePtr)
 {
     string sAppSrvName = _hasAppNamePrefix?(sApp + "." + sServer):"";
     string sFilePath = _logpath + "/" + sApp + "/" + sServer + "/" + sAppSrvName;
@@ -576,7 +576,7 @@ void TarsTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp, 
     pTimeLogger->getWriteT().setLogInfo(_logPrx, sApp, sServer, sFile, _logpath, sFormat, _setDivision, sLogType, reportSuccPtr, reportFailPtr);
 }
 
-void TarsTimeLogger::setLogInfo(const CommunicatorPtr &comm, const string &obj, const string &sApp, const string &sServer, const string &sLogpath, const string& setdivision, const bool &bLogStatReport)
+void RemoteTimeLogger::setLogInfo(const CommunicatorPtr &comm, const string &obj, const string &sApp, const string &sServer, const string &sLogpath, const string& setdivision, const bool &bLogStatReport)
 {
     _app         = sApp;
     _server      = sServer;
@@ -600,7 +600,7 @@ void TarsTimeLogger::setLogInfo(const CommunicatorPtr &comm, const string &obj, 
     TC_File::makeDirRecursive(_logpath + "/" + _app + "/" + _server);
 }
 
-void TarsTimeLogger::initFormat(const string &sFile, const string &sFormat,const TarsLogTypePtr& logTypePtr)
+void RemoteTimeLogger::initFormat(const string &sFile, const string &sFormat,const LogTypePtr& logTypePtr)
 {
     if(sFile.empty())
     {
@@ -627,7 +627,7 @@ void TarsTimeLogger::initFormat(const string &sFile, const string &sFormat,const
         initTimeLogger(it->second, sFile, sFormat,logTypePtr);
     }
 }
-void TarsTimeLogger::initFormat(const string &sApp, const string &sServer,const string &sFile, const string &sFormat,const TarsLogTypePtr& logTypePtr)
+void RemoteTimeLogger::initFormat(const string &sApp, const string &sServer,const string &sFile, const string &sFormat,const LogTypePtr& logTypePtr)
 {
     string s = sApp + "/" + sServer + "/"+ sFile;
     Lock lock(*this);
@@ -643,7 +643,7 @@ void TarsTimeLogger::initFormat(const string &sApp, const string &sServer,const 
     initTimeLogger(it->second, sApp, sServer, sFile, sFormat,logTypePtr);
 }
 
-TarsTimeLogger::TimeLogger* TarsTimeLogger::logger(const string &sFile)
+RemoteTimeLogger::TimeLogger* RemoteTimeLogger::logger(const string &sFile)
 {
     if(sFile.empty())
     {
@@ -669,7 +669,7 @@ TarsTimeLogger::TimeLogger* TarsTimeLogger::logger(const string &sFile)
     return it->second;
 }
 
-TarsTimeLogger::TimeLogger* TarsTimeLogger::logger(const string &sApp, const string &sServer,const string &sFile)
+RemoteTimeLogger::TimeLogger* RemoteTimeLogger::logger(const string &sApp, const string &sServer,const string &sFile)
 {
     string s = sApp + "/" + sServer + "/"+ sFile;
 
@@ -687,7 +687,7 @@ TarsTimeLogger::TimeLogger* TarsTimeLogger::logger(const string &sApp, const str
 }
 
 
-void TarsTimeLogger::sync(const string &sFile, bool bSync)
+void RemoteTimeLogger::sync(const string &sFile, bool bSync)
 {
     if(bSync)
     {
@@ -699,22 +699,22 @@ void TarsTimeLogger::sync(const string &sFile, bool bSync)
     }
 }
 
-void TarsTimeLogger::enableRemote(const string &sFile, bool bEnable)
+void RemoteTimeLogger::enableRemote(const string &sFile, bool bEnable)
 {
     logger(sFile)->getWriteT().enableRemote(bEnable);
 }
 
-void TarsTimeLogger::enableRemoteEx(const string &sApp, const string &sServer,const string &sFile, bool bEnable)
+void RemoteTimeLogger::enableRemoteEx(const string &sApp, const string &sServer,const string &sFile, bool bEnable)
 {
     logger(sApp,sServer,sFile)->getWriteT().enableRemote(bEnable);
 }
-void TarsTimeLogger::enableLocal(const string &sFile, bool bEnable)
+void RemoteTimeLogger::enableLocal(const string &sFile, bool bEnable)
 {
     logger(sFile)->getWriteT().enableLocal(bEnable);
     logger(sFile)->setRemote(!bEnable);
 }
 
-void TarsTimeLogger::enableLocalEx(const string &sApp, const string &sServer,const string &sFile, bool bEnable)
+void RemoteTimeLogger::enableLocalEx(const string &sApp, const string &sServer,const string &sFile, bool bEnable)
 {
     logger(sApp,sServer,sFile)->getWriteT().enableLocal(bEnable);
     logger(sApp,sServer,sFile)->setRemote(!bEnable);

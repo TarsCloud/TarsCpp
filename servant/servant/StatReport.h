@@ -42,6 +42,11 @@
 namespace tars
 {
 
+/**
+ * 状态上报类, 上报的信息包括:
+ * 1 模块间调用的信息
+ * 2 业务自定义的属性统计
+ */
 struct StatSampleMsgHead
 {
     string slaveName;

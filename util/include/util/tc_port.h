@@ -31,8 +31,11 @@ namespace tars
 class TC_Port
 {
 public:
+	static int strcmp(const char *s1, const char *s2);
 
-    static int strcasecmp(const char *s1, const char *s2);
+	static int strncmp(const char *s1, const char *s2, size_t n);
+
+	static int strcasecmp(const char *s1, const char *s2);
 
     static int strncasecmp(const char *s1, const char *s2, size_t n);    
 
@@ -62,6 +65,12 @@ public:
     static int closeSocket(int fd);
 
     static int64_t getpid();
+
+    static std::string getEnv(const std::string &name);
+
+    static void setEnv(const std::string &name, const std::string &value);
+
+    static std::string exec(const char* cmd);
 };
 
 }

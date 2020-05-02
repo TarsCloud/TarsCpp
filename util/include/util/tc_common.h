@@ -51,18 +51,18 @@ namespace tars
 */
 /////////////////////////////////////////////////
 
- /**
- * @brief  基础工具类，提供了一些非常基本的函数使用.
- *
- * 这些函数都是以静态函数提供。 包括以下几种函数:
- *
- * Trim类函数,大小写转换函数,分隔字符串函数（直接分隔字符串，
- *
- * 数字等）,时间相关函数,字符串转换函数,二进制字符串互转函数,
- *
- * 替换字符串函数,Ip匹配函数,判断一个数是否是素数等
- */
-class TC_Common
+/**
+* @brief  基础工具类，提供了一些非常基本的函数使用.
+*
+* 这些函数都是以静态函数提供。 包括以下几种函数:
+*
+* Trim类函数,大小写转换函数,分隔字符串函数（直接分隔字符串，
+*
+* 数字等）,时间相关函数,字符串转换函数,二进制字符串互转函数,
+*
+* 替换字符串函数,Ip匹配函数,判断一个数是否是素数等
+*/
+class UTIL_DLL_API TC_Common
 {
 public:
 
@@ -572,6 +572,19 @@ namespace p
             if(!sStr.empty())
             {
                 return sStr[0];
+            }
+            return 0;
+        }
+    };
+
+    template<>
+    struct strto1<unsigned char>
+    {
+        unsigned char operator()(const string &sStr)
+        {
+            if(!sStr.empty())
+            {
+                return (unsigned char)sStr[0];
             }
             return 0;
         }

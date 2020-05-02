@@ -69,6 +69,10 @@ public:
     {
     }
 
+	typename list_type::iterator begin() { return _list.begin(); }
+	typename list_type::iterator end() { return _list.end(); }
+
+
     /**
      * @brief 取出队列第一个数据
      *

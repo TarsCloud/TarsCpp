@@ -256,9 +256,11 @@ public:
 	//json类型到字符串的转换
 	static string writeValue(const JsonValuePtr & p);
 	static void writeValue(const JsonValuePtr & p, string& ostr);
+	static void writeValue(const JsonValuePtr & p, vector<char>& buf);
 
 	//json字符串到json结构的转换
 	static JsonValuePtr getValue(const string & str);
+    static JsonValuePtr getValue(const vector<char>& buf);
 private:
 	//string 类型到json字符串
 	static void writeString(const JsonValueStringPtr & p, string& ostr);

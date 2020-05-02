@@ -8,7 +8,7 @@
 #include <string>
 #include <stdexcept>
 #include <string.h>
-
+#include "tup/TarsType.h"
 #include "util/tc_json.h"
 #include "util/tc_common.h"
 
@@ -17,7 +17,7 @@ namespace tars
 class JsonInput
 {
 public:
-    static void readJson(Bool& b, const JsonValuePtr & p, bool isRequire = true)
+    static void readJson(tars::Bool& b, const JsonValuePtr & p, bool isRequire = true)
     {
         if(NULL != p.get() && p->getType() == eJsonTypeBoolean)
         {

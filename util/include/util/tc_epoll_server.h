@@ -168,8 +168,10 @@ public:
 		int64_t         _recvTimeStamp;  /**接收到数据的时间*/
 	};
 
-	typedef TC_CasQueue<shared_ptr<RecvContext>> recv_queue;
-	typedef TC_CasQueue<shared_ptr<SendContext>> send_queue;
+//	typedef TC_CasQueue<shared_ptr<RecvContext>> recv_queue;
+	typedef TC_ThreadQueue<shared_ptr<RecvContext>> recv_queue;
+//	typedef TC_CasQueue<shared_ptr<SendContext>> send_queue;
+	typedef TC_ThreadQueue<shared_ptr<SendContext>> send_queue;
 	typedef recv_queue::queue_type recv_queue_type;
 
 	////////////////////////////////////////////////////////////////////////////
@@ -1170,6 +1172,12 @@ public:
 		 */
 		TC_NetWorkBuffer &getSendBuffer() { return _sendBuffer; }
 
+		/**
+		 * 发送buffer里面数据
+		 * @return
+		 */
+		int sendBuffer();
+
 	    friend class NetThread;
 
     protected:
@@ -1196,12 +1204,6 @@ public:
 		 * @return int, -1:发送出错, 0:无数据, 1:发送完毕, 2:还有数据
 		 */
 		int send(const shared_ptr<SendContext> &data);
-
-		/**
-		 * 发送buffer里面数据
-		 * @return
-		 */
-		int sendBuffer();
 
 		/**
 		 * 读取数据

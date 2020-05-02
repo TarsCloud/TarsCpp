@@ -134,7 +134,8 @@ namespace tars
 	/**
 	 * @brief 具体写日志基类
 	 */
-	class TC_LoggerRoll : public TC_HandleBase
+
+	class UTIL_DLL_API TC_LoggerRoll : public TC_HandleBase
 	{
 	public:
 		/**
@@ -1231,7 +1232,7 @@ namespace tars
 
 					//抛异常前继续进入_t 以便打远程日志
 					_t(_of, buffer);
-					TARS_THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
+					THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
 					// throw TC_Logger_Exception("[TC_RollBySize::roll]:fopen fail: " + sLogFileName, TC_Exception::getSystemCode());
 				}
 			}
@@ -1281,7 +1282,7 @@ namespace tars
 			_of.open(sLogFileName.c_str(), ios::app);
 			if (!_of)
 			{
-				TARS_THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
+				THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
 				// throw TC_Logger_Exception("[TC_RollBySize::roll]:fopen fail: " + sLogFileName, TC_Exception::getSystemCode());
 			}
 		}
@@ -1329,16 +1330,16 @@ namespace tars
 	/**
 	 * @brief 根据时间滚动日志分隔类型
 	 */
-	class TarsLogType : public TC_HandleBase
+	class LogType : public TC_HandleBase
 	{
 	public:
-		TarsLogType() : _next_time_t(0), _format("%Y%m%d"), _frequency(1), _des("day")
+		LogType() : _next_time_t(0), _format("%Y%m%d"), _frequency(1), _des("day")
 		{
 			_next_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 			_next_cut_time = TC_Common::tm2str(_next_time_t, "%Y%m%d");
 		}
 
-		virtual ~TarsLogType() {}
+		virtual ~LogType() {}
 		//频率值
 		virtual size_t frequence() = 0;
 
@@ -1391,15 +1392,15 @@ namespace tars
 		size_t _frequency;
 		string _des;
 	};
-	typedef TC_AutoPtr<TarsLogType> TarsLogTypePtr;
+	typedef TC_AutoPtr<LogType> LogTypePtr;
 
-	class TarsLogByDay : public TarsLogType
+	class LogByDay : public LogType
 	{
 	public:
 		static const string FORMAT;
 
 	public:
-		explicit TarsLogByDay(const string &format = "%Y%m%d", size_t frequency = 1)
+		explicit LogByDay(const string &format = "%Y%m%d", size_t frequency = 1)
 		{
 			init(format, frequency);
 			_des = TC_Common::tostr(_frequency) + "day";
@@ -1411,13 +1412,13 @@ namespace tars
 		}
 	};
 
-	class TarsLogByHour : public TarsLogType
+	class LogByHour : public LogType
 	{
 	public:
 		static const string FORMAT;
 
 	public:
-		explicit TarsLogByHour(const string &format = "%Y%m%d%H", size_t frequency = 1)
+		explicit LogByHour(const string &format = "%Y%m%d%H", size_t frequency = 1)
 		{
 			init(format, frequency);
 			_des = TC_Common::tostr(_frequency) + "hour";
@@ -1430,13 +1431,13 @@ namespace tars
 		}
 	};
 
-	class TarsLogByMinute : public TarsLogType
+	class LogByMinute : public LogType
 	{
 	public:
 		static const string FORMAT;
 
 	public:
-		explicit TarsLogByMinute(const string &format = "%Y%m%d%H%M", size_t frequency = 1)
+		explicit LogByMinute(const string &format = "%Y%m%d%H%M", size_t frequency = 1)
 		{
 			init(format, frequency);
 			_des = TC_Common::tostr(_frequency) + "minute";
@@ -1470,10 +1471,10 @@ namespace tars
 			 * @param format，日志文件记录格式，按天，小时，分钟
 			 * @param bHasSufix,日志文件是否添加".log"后缀
 			 * @param sConcatstr,日志路径和时间字串之间的连接符,例如：app_log/test_20121210.log
-			 * @param logTypePtr,日志记录类型，详见TarsLogType
+			 * @param logTypePtr,日志记录类型，详见LogType
 			 * @param bIsRemote,是否是远程日志实例
 			 */
-			void init(const string &path, const string &format = "%Y%m%d", bool bHasSufix = true, const string &sConcatstr = "_", const TarsLogTypePtr &logTypePtr = NULL, bool bIsRemote = false)
+			void init(const string &path, const string &format = "%Y%m%d", bool bHasSufix = true, const string &sConcatstr = "_", const LogTypePtr &logTypePtr = NULL, bool bIsRemote = false)
 			{
 				this->_roll->init(path, format, bHasSufix, sConcatstr, logTypePtr, bIsRemote);
 			}
@@ -1539,7 +1540,7 @@ namespace tars
 		 * @param bIsRemote
 		 */
 
-		void init(const string &path, const string &format = "%Y%m%d", bool bHasSufix = true, const string &sConcatstr = "_", const TarsLogTypePtr &logTypePtr = NULL, bool bIsRemote = false)
+		void init(const string &path, const string &format = "%Y%m%d", bool bHasSufix = true, const string &sConcatstr = "_", const LogTypePtr &logTypePtr = NULL, bool bIsRemote = false)
 		{
 			std::lock_guard<std::mutex> lock(*this);
 
@@ -1692,7 +1693,7 @@ namespace tars
 				{
 					//抛异常前继续进入_t 以便打远程日志
 					_t(_of, buffer);
-					TARS_THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollByTime::roll]:fopen fail: " + sLogFileName);
+					THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollByTime::roll]:fopen fail: " + sLogFileName);
 					// throw TC_Logger_Exception("[TC_RollByTime::roll]:fopen fail: " + sLogFileName, TC_Exception::getSystemCode());
 				}
 			}
@@ -1744,7 +1745,7 @@ namespace tars
 		 * 按天/小时/分钟输出日志时的记录类型
 		 */
 
-		TarsLogTypePtr _logTypePtr;
+		LogTypePtr _logTypePtr;
 		/**
 		 * 是否是远程日志实例
 		 */

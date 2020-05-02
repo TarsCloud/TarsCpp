@@ -183,8 +183,8 @@ public:
     /*
      * 获取端口信息
      */
-    EndpointInfo& getEndpointInfo()
-    { 
+    const EndpointInfo& getEndpointInfo() const
+    {
         return _ep;
     }
 
