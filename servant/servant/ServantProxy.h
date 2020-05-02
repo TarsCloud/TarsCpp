@@ -718,23 +718,41 @@ public:
 	 */
 	void http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro = false);
 
-protected:
-
     /**
      * TARS协议同步方法调用
      */
-    virtual shared_ptr<ResponsePacket> tars_invoke(char cPacketType,
+    shared_ptr<ResponsePacket> tars_invoke(char cPacketType,
                             const string& sFuncName,
                             tars::TarsOutputStream<tars::BufferWriterVector>& buf,
                             const map<string, string>& context,
                             const map<string, string>& status);
 
     /**
+     * TARS协议同步方法调用
+     */
+    shared_ptr<ResponsePacket> tars_invoke(char cPacketType,
+                            const string& sFuncName,
+                            const vector<char>& buf,
+                            const map<string, string>& context,
+                            const map<string, string>& status);
+
+    /**
      * TARS协议异步方法调用
      */
-    virtual void tars_invoke_async(char cPacketType,
+    void tars_invoke_async(char cPacketType,
                                   const string& sFuncName,
                                   tars::TarsOutputStream<tars::BufferWriterVector> &buf,
+                                  const map<string, string>& context,
+                                  const map<string, string>& status,
+                                  const ServantProxyCallbackPtr& callback,
+                                  bool bCoro = false);
+
+    /**
+     * TARS协议异步方法调用
+     */
+    void tars_invoke_async(char cPacketType,
+                                  const string& sFuncName,
+                                  const vector<char> &buf,
                                   const map<string, string>& context,
                                   const map<string, string>& status,
                                   const ServantProxyCallbackPtr& callback,

@@ -867,6 +867,86 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
 	servant_invoke(msg, bCoro);
 }
 
+
+//////////////////////////////////////////////////////////////////
+void ServantProxy::tars_invoke_async(char  cPacketType,
+                                    const string &sFuncName,
+                                    const vector<char> &buf,
+                                    const map<string, string>& context,
+                                    const map<string, string>& status,
+                                    const ServantProxyCallbackPtr& callback,
+                                    bool  bCoro)
+{
+    ReqMessage * msg = new ReqMessage();
+
+    msg->init(callback?ReqMessage::ASYNC_CALL:ReqMessage::ONE_WAY);
+    msg->callback = callback;
+
+    msg->request.iVersion = TARSVERSION;
+    msg->request.cPacketType = (callback ? cPacketType : TARSONEWAY);
+	msg->request.sFuncName = sFuncName;
+    msg->request.sServantName = (*_objectProxy)->name();
+    msg->request.sBuffer = buf;
+    msg->request.context      = context;
+    msg->request.status       = status;
+    msg->request.iTimeout     = _asyncTimeout;
+    
+//    // 在RequestPacket中的context设置主调信息
+//    if(_masterFlag)
+//    {
+//        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName)); //TARS_MASTER_KEY  clientConfig.ModuleName
+//    }
+
+    checkDye(msg->request);
+
+    checkCookie(msg->request);
+	servant_invoke(msg, bCoro);
+}
+
+shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
+                              const string& sFuncName,
+                              const vector<char>& buf,
+                              const map<string, string>& context,
+                              const map<string, string>& status)
+                            //   ResponsePacket& rsp)
+{
+    ReqMessage * msg = new ReqMessage();
+
+    msg->init(ReqMessage::SYNC_CALL);
+
+    msg->request.iVersion = TARSVERSION;
+    msg->request.cPacketType = cPacketType;
+	msg->request.sFuncName = sFuncName;
+    msg->request.sServantName = (*_objectProxy)->name();
+
+    msg->request.sBuffer = buf;
+    msg->request.context      = context;
+    msg->request.status       = status;
+    msg->request.iTimeout     = _syncTimeout;
+
+//    // 在RequestPacket中的context设置主调信息
+//    if(_masterFlag)
+//    {
+//        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName));
+//    }
+
+    checkDye(msg->request);
+
+    checkCookie(msg->request);
+
+    invoke(msg);
+
+    shared_ptr<ResponsePacket> rsp = msg->response;
+    // rsp = msg->response;
+
+    delete msg;
+    msg = NULL;
+
+    return rsp;
+
+}
+
+
 shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
                               const string& sFuncName,
                               TarsOutputStream<BufferWriterVector>& buf,

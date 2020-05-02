@@ -828,9 +828,9 @@ protected:
 
 #if TARGET_PLATFORM_WINDOWS
 #define _filename(x) (strrchr(x,'\\')?strrchr(x,'\\')+1:x)
-#define TARS_FILE_FUNC_LINE          " [" << _filename(__FILE__) << "::" << __FUNCTION__ << "::" << __LINE__ << "] " 
+#define FILE_FUNC_LINE          " [" << _filename(__FILE__) << "::" << __FUNCTION__ << "::" << __LINE__ << "] " 
 #else
-#define TARS_FILE_FUNC_LINE          " [" << __FILE__ << "::" << __FUNCTION__ << "::" << __LINE__ << "] " 
+#define FILE_FUNC_LINE          " [" << __FILE__ << "::" << __FUNCTION__ << "::" << __LINE__ << "] " 
 #endif
 
 /**
