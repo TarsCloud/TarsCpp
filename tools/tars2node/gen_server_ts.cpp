@@ -38,7 +38,7 @@ string CodeGenerator::generateTSServerAsync(const NamespacePtr &nPtr, const Inte
         sParams += ": " + getTsType(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
     }
 
-    str << TAB << "protected static __" << oPtr->getId() << "_responser(this: " << IDL_NAMESPACE_STR << "Rpc.Current, " << sParams << ") {" << endl;
+    str << TAB << "protected static __" << oPtr->getId() << "_responser(this: " << IDL_NAMESPACE_STR << "Rpc.TarsCurrent, " << sParams << ") {" << endl;
 
     INC_TAB;
 
@@ -105,7 +105,7 @@ string CodeGenerator::generateTSServerDispatch(const NamespacePtr &nPtr, const I
     ostringstream str;
     vector<ParamDeclPtr> & vParamDecl = oPtr->getAllParamDeclPtr();
 
-    str << TAB << "protected __" << oPtr->getId() << "(current: " << IDL_NAMESPACE_STR << "Rpc.Current";
+    str << TAB << "protected __" << oPtr->getId() << "(current: " << IDL_NAMESPACE_STR << "Rpc.TarsCurrent";
     if (vParamDecl.size() != 0) str << ", binBuffer: " << IDL_NAMESPACE_STR << "Stream.BinBuffer";
     str << ") {" << endl;
 
@@ -228,7 +228,7 @@ string CodeGenerator::generateTSServer(const InterfacePtr &pPtr, const Namespace
     str << TAB << "initialize(): PromiseLike<any> | void {}" << endl << endl;
 
     // generate the dispatch function
-    str << TAB << "onDispatch(current: " << IDL_NAMESPACE_STR << "Rpc.Current, funcName: string, binBuffer: " << IDL_NAMESPACE_STR << "Stream.BinBuffer) { " << endl;
+    str << TAB << "onDispatch(current: " << IDL_NAMESPACE_STR << "Rpc.TarsCurrent, funcName: string, binBuffer: " << IDL_NAMESPACE_STR << "Stream.BinBuffer) { " << endl;
     INC_TAB;
     str << TAB << "if (\"__\" + funcName in this) {" << endl;
     INC_TAB;
@@ -243,7 +243,7 @@ string CodeGenerator::generateTSServer(const InterfacePtr &pPtr, const Namespace
     str << TAB << "}" << endl << endl;
 
     // generate the ping function
-    str << TAB << "__" << TC_Common::lower(IDL_NAMESPACE_STR) << "_ping(current: " << IDL_NAMESPACE_STR << "Rpc.Current) { " << endl;
+    str << TAB << "__" << TC_Common::lower(IDL_NAMESPACE_STR) << "_ping(current: " << IDL_NAMESPACE_STR << "Rpc.TarsCurrent) { " << endl;
     INC_TAB;
     str << TAB << "const _ret = 0;" << endl;
     str << TAB << "if (current.getRequestVersion() === " << PROTOCOL_SIMPLE << " || current.getRequestVersion() === " << PROTOCOL_COMPLEX << ") {" << endl;
