@@ -1,3 +1,15 @@
+## v2.4.1 2020.05.06
+### en:
+1 fix windows tars proto, define long bug, change to long long
+2 fix windows, longlong tars_ntohll bug 
+3 fix windows, tc_ex system message pointer may be null cause crash 
+4 fix windows tc_epoll_server when send pending add epoll mod
+### cn:
+1 修复windows 64位 tars协议中, long 定义的问题(为32位,改成long long)
+2 修复windows 64位整形, 字节序转换的问题
+3 修复windows tc_ex中系统消息指针为NULL的bug
+4 修复windows windows tc_epoll_server when send pending add epoll mod
+
 ## v2.4.0 2020.04.24
 ### en:
 - fix tars2json bug of array
