@@ -73,7 +73,7 @@ typedef long long   Int64;
     | (((x) & 0x000000000000ff00ull) << 40)                     \
     | (((x) & 0x00000000000000ffull) << 56))
 */
-#ifdef __APPLE__
+#if (defined(__APPLE__) || defined(_WIN32))
 #   ifndef __LITTLE_ENDIAN
 #       define __LITTLE_ENDIAN 1234
 #   endif

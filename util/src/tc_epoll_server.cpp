@@ -1031,6 +1031,9 @@ int TC_EpollServer::Connection::sendBuffer()
 		{
 			if (TC_Socket::isPending())
 			{
+#if TARGET_PLATFORM_WINDOWS
+	            _pBindAdapter->getNetThreadOfFd(_sock.getfd())->getEpoller()->mod(_sock.getfd(), getId(), EPOLLIN|EPOLLOUT);
+#endif
 				break;
 			}
 			else
