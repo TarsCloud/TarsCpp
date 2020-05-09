@@ -461,7 +461,7 @@ void TC_Json::writeValue(const JsonValuePtr & p, string& ostr)
 {
 	if(!p)
 	{
-		ostr = "null";
+		ostr += "null";
 		return;
 	}
 	switch(p->getType())
