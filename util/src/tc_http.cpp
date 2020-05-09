@@ -2317,15 +2317,15 @@ size_t TC_Http::parseHeaderString(const char *beginIt, const char *headerIt, TC_
 
 	bool first      = true;
 	auto lineStartIt= beginIt;
-    bool isLastLine = false;
+	bool isLastLine = false;
 
 	while (true)
 	{
 		auto it = strnstr(lineStartIt, "\r\n", headerIt - lineStartIt);
 		if(it == NULL)
 		{
-            it = headerIt;
-            isLastLine = true;
+			it = headerIt;
+			isLastLine = true;
 		}
 
 		//first line ignore
@@ -2366,10 +2366,10 @@ size_t TC_Http::parseHeaderString(const char *beginIt, const char *headerIt, TC_
 			first = false;
 		}
 
-        if (isLastLine)
-        {
-            break;
-        }
+ 		if (isLastLine)
+		{
+			break;
+		}
 
 		lineStartIt = it + 2;//sep.size();
 	}
