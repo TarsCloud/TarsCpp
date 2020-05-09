@@ -137,7 +137,7 @@ public:
 	{
 		return eJsonTypeArray;
 	}
-	void push_back(JsonValuePtr & p)
+	void push_back(const JsonValuePtr & p)
 	{
 		value.push_back(p);
 	}
