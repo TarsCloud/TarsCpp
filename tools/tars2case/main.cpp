@@ -22,7 +22,8 @@
 void usage()
 {
     cout << "Usage : tars2case [OPTION] tarsfile" << endl;
-	cout << "  --dir=DIRECTORY  generate source file to DIRECTORY(create tars protocol file to DIRECTORY, default is current directory)" << endl;
+	cout << "  --web generate web need casefile" << endl;
+	cout << "  --dir=DIRECTORY  generate casefile to DIRECTORY" << endl;
 
     cout << endl;
     exit(0);
@@ -55,16 +56,10 @@ void check(vector<string> &vTars)
 void doTars2Test(TC_Option& option, const vector<string>& vTars)
 {
 	Tars2Case j2t;
-	//设置生成文件的根目录
-	if (option.getValue("dir") != "")
-	{
-		j2t.setBaseDir(option.getValue("dir"));
-	}
-	else
-	{
-		j2t.setBaseDir(".");
-	}
+	j2t.setWebSupport(option.hasParam("web") ? true : false);
+	j2t.setBaseDir(option.getValue("dir").empty() ? "." : option.getValue("dir"));
 
+	g_parse->setUseCurrentPath(true);
 	for(size_t i = 0; i < vTars.size(); i++)
 	{
 		g_parse->parse(vTars[i]);

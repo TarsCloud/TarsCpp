@@ -43,11 +43,17 @@ public:
     void setBaseDir(const string &dir);
 
     /**
+     * 生成WEB平台需要的用例
+     * @param webCase
+     */
+    void setWebSupport(bool webCase);
+
+    /**
      * 生成
      * @param file
      * @param isFramework 是否是框架
      */
-    void createFile(const string &jcefile, const string& outfile = "");
+    void createFile(const string &tarsfile, const string& outfile = "");
 
 protected:
     /**
@@ -59,7 +65,7 @@ protected:
     string getFilePath(const string &ns) const;
 
     string 	_baseDir;
-
+    bool    _webCase;
 
     //下面是类型描述的源码生成
 protected:
@@ -180,7 +186,7 @@ protected:
 
 
     /**
-     * 生成每个jce文件的java文件源码
+     * 生成每个tars文件的用例文件
      * @param pPtr
      *
      * @return string
@@ -191,7 +197,6 @@ protected:
 	* 生成tag和require、optional信息
 	*/
 	string genratePrefix(const TypeIdPtr &ptr) const;
-
 };
 
 #endif

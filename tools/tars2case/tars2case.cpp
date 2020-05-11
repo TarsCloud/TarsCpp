@@ -22,7 +22,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 //
-Tars2Case::Tars2Case()
+Tars2Case::Tars2Case() : _webCase(false)
 {
 }
 
@@ -334,22 +334,11 @@ string Tars2Case::generateTest(const InterfacePtr &pPtr, const string& outfile) 
 		for (size_t j = 0; j < vParamDecl.size(); j++)
 		{
 			if(vParamDecl[j]->isOut()) {
-				if(!sOutParams.empty()) {
-					sOutParams += "|";
-				}
-				sOutParams += generateTest(vParamDecl[j]);
+				sOutParams += (sOutParams.empty() ? "" : "|") + generateTest(vParamDecl[j]);
 			}
 			else {
-				if(!sInParams.empty()) {
-					sInParams += "|";
-				}
-				sInParams += generateTest(vParamDecl[j]);
-
-				//测试用例每个参数一行
-				if(!sCase.empty()) {
-					sCase += "\r\n";
-				}
-				sCase += generateCase(vParamDecl[j]);
+				sCase += (sCase.empty() ? "" : "\r\n") + generateCase(vParamDecl[j]);
+				sInParams += (sInParams.empty() ? "" : "|") + generateTest(vParamDecl[j]);
 			}
 		}
 
@@ -470,9 +459,14 @@ string Tars2Case::generateJson(const InterfacePtr &pPtr, const string& outfile) 
 	std::sort(vOperation.begin(), vOperation.end(), SortOperation());
 
 	// 生成客户端接口的声明
-	JsonValueArrayPtr v = new JsonValueArray();
+	JsonValueObjPtr v = new JsonValueObj();
+	// JsonValueArrayPtr v = new JsonValueArray();
 	for (size_t i = 0; i < vOperation.size(); i++)
 	{
+		string intCaseValues = "";
+		string intCaseParams = "";
+		string outCaseParams = "";
+
 		JsonValueObjPtr inParam = new JsonValueObj();
 		JsonValueObjPtr outParam = new JsonValueObj();
 
@@ -482,22 +476,29 @@ string Tars2Case::generateJson(const InterfacePtr &pPtr, const string& outfile) 
             string sTypeName(vParamDecl[j]->getTypeIdPtr()->getId());
 			if(vParamDecl[j]->isOut())
             {
+				outCaseParams += (outCaseParams.empty() ? "" : "|") + generateTest(vParamDecl[j]);
                 outParam->value[sTypeName] = generateJson(vParamDecl[j]->getTypeIdPtr()->getTypePtr());
 			}
 			else
             {
+				intCaseValues += (intCaseValues.empty() ? "" : "<br>") + generateCase(vParamDecl[j]);
+				intCaseParams += (intCaseParams.empty() ? "" : "|") + generateTest(vParamDecl[j]);
                 inParam->value[sTypeName]  = generateJson(vParamDecl[j]->getTypeIdPtr()->getTypePtr());
 			}
 		}
 
 		JsonValueObjPtr p = new JsonValueObj();
-		p->value["function"]  = JsonOutput::writeJson(vOperation[i]->getId());
-		p->value["funinput"]  = inParam;
-		p->value["funoutput"] = outParam;
-		p->value["rettype"]   = JsonOutput::writeJson(toStr(vOperation[i]->getReturnPtr()->getTypePtr()));
+		//p->value["function"]   = JsonOutput::writeJson(vOperation[i]->getId());
+		p->value["funinput"]   = inParam;
+		p->value["funoutput"]  = outParam;
+		p->value["rettype"]    = JsonOutput::writeJson(toStr(vOperation[i]->getReturnPtr()->getTypePtr()));
+		p->value["funintpara"] = JsonOutput::writeJson(intCaseParams);
+		p->value["funintvals"] = JsonOutput::writeJson(intCaseValues);
+		p->value["funoutpara"] = JsonOutput::writeJson(outCaseParams);
 
-		JsonValuePtr pp = p;
-		v->push_back(pp);
+		//JsonValuePtr pp = p;
+		//v->push_back(pp);
+		v->value[vOperation[i]->getId()] = JsonValuePtr::dynamicCast(p);
 	}
 
 	string filetest  = _baseDir + "/" + (outfile.empty() ? pPtr->getId() : outfile) + ".json";
@@ -519,21 +520,26 @@ void Tars2Case::generateFile(const ContextPtr &pPtr, const string& outfile) cons
 		vector<InterfacePtr>  &is  = namespaces[i]->getAllInterfacePtr();
 		for (size_t j = 0; j < is.size(); j++)
 		{
-			// 生成SRF TEST 测试用例的文件
-			generateTest(is[j], outfile);
-
-            // 生成前台访问的JSON串
-            generateJson(is[j], outfile);
+			if (_webCase)
+			{
+				// 生成TarsWeb需要的用例
+            	generateJson(is[j], outfile);
+			}
+			else
+			{
+				// 生成Tars压测用例的文件
+				generateTest(is[j], outfile);
+			}
 		}
 	}
 }
 
-void Tars2Case::createFile(const string &jcefile, const string& outfile)
+void Tars2Case::createFile(const string &tarsfile, const string& outfile)
 {
 	std::vector<ContextPtr> contexts = g_parse->getContexts();
 	for (size_t i = 0; i < contexts.size(); i++)
 	{
-		if (jcefile == contexts[i]->getFileName())
+		if (tarsfile == contexts[i]->getFileName())
 		{
 			generateFile(contexts[i], outfile);
 		}
@@ -543,6 +549,11 @@ void Tars2Case::createFile(const string &jcefile, const string& outfile)
 void Tars2Case::setBaseDir(const string &dir)
 {
 	_baseDir = dir;
+}
+
+void Tars2Case::setWebSupport(bool webCase)
+{
+	_webCase = webCase;
 }
 
 string Tars2Case::getFilePath(const string &ns) const
