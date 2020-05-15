@@ -26,7 +26,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Bool' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Bool' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -40,7 +40,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Char' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Char' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -54,7 +54,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Uint8' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Uint8' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -68,7 +68,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Short' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Short' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -82,7 +82,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Uint16' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Uint16' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -96,7 +96,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Int32' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Int32' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -110,7 +110,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'UInt32' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'UInt32' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -124,7 +124,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Int64' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Int64' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -138,7 +138,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Float' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Float' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -152,7 +152,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Double' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Double' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -166,7 +166,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'string' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'string' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -188,7 +188,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'char *' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'char *' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -212,7 +212,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -235,7 +235,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -258,7 +258,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -280,7 +280,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -302,7 +302,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -325,7 +325,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -348,7 +348,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -371,7 +371,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -394,7 +394,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -417,7 +417,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -440,7 +440,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -468,7 +468,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'vector' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'vector' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -495,7 +495,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'T *' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'T *' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
@@ -520,7 +520,7 @@ public:
         else if (isRequire)
         {
             char s[128];
-            snprintf(s, sizeof(s), "read 'Char' type mismatch, get type: %d.", p->getType());
+            snprintf(s, sizeof(s), "read 'Char' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
             throw TC_Json_Exception(s);
         }
     }
