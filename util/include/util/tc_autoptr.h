@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -26,6 +26,7 @@ namespace tars
 {
 
 /**
+* @brief Null Pointer Exception
 * @brief 空指针异常
 */
 struct TC_AutoPtrNull_Exception : public TC_Exception
@@ -35,9 +36,11 @@ struct TC_AutoPtrNull_Exception : public TC_Exception
 };
 
 /**
- *  @brief 智能指针基类.
- *  
- *  所有需要智能指针支持的类都需要从该对象继承，
+ * @brief Smart Pointer Base Class
+ * @brief 智能指针基类
+ * 
+ * All classes that require smart pointer support need to inherit from this object. 
+ * 所有需要智能指针支持的类都需要从该对象继承，
  *  
  */
 class UTIL_DLL_API TC_HandleBase
@@ -45,7 +48,8 @@ class UTIL_DLL_API TC_HandleBase
 public:
 
     /**
-     * @brief 复制.
+     * @brief Copy
+     * @brief 复制
      *
      * @return TC_HandleBase&
      */
@@ -55,12 +59,17 @@ public:
     }
 
     /**
+     * @brief Increase Count
      * @brief 增加计数
      */
     void incRef() { ++_atomic; }
 
     /**
-     * @brief 减少计数, 当计数==0时, 且需要删除数据时, 释放对象
+     * @brief Decrease Count/减少计数
+     * 
+     * 当计数==0时, 且需要删除数据时, 释放对象
+     * When 'count==0' and you need to delete data, you can use this to release object.
+     * 
      */
     void decRef()
     {
@@ -72,15 +81,19 @@ public:
     }
 
     /**
+     * @brief Get Count
      * @brief 获取计数.
      *
+     * @return int value of count
      * @return int 计数值
      */
     int getRef() const        { return _atomic; }
 
     /**
-	 * @brief 设置不自动释放. 
+	 * @brief Set Automatically-Release Off
+     * @brief 设置不自动释放. 
 	 *  
+     * @param b Determine whether to be deleted automatically or not, true or false.
      * @param b 是否自动删除,true or false
      */
     void setNoDelete(bool b)  { _bNoDelete = b; }
@@ -88,13 +101,15 @@ public:
 protected:
 
     /**
-     * @brief 构造函数
+     * @brief Constructor
+     * @brief 构造函数    
      */
     TC_HandleBase() : _atomic(0), _bNoDelete(false)
     {
     }
 
     /**
+     * @brief Copy Constructor
      * @brief 拷贝构造
      */
     TC_HandleBase(const TC_HandleBase&) : _atomic(0), _bNoDelete(false)
@@ -102,7 +117,8 @@ protected:
     }
 
     /**
-     * @brief 析够
+     * @brief Destructor
+     * @brief 析构
      */
     virtual ~TC_HandleBase()
     {
@@ -111,25 +127,32 @@ protected:
 protected:
 
     /**
+     * Count
      * 计数
      */
     std::atomic<int>	  _atomic;
 
     /**
+     * Determine whether to be deleted automatically or not
      * 是否自动删除
      */
     bool        _bNoDelete;
 };
 
 /**
+ * @brief Smart Pointer Template Class
  * @brief 智能指针模板类. 
  *  
+ * This template class an product thread-safe smart pointer which can be placed in a container.
+ * The smart pointer which is defined by this class can be implemented by reference counting.
+ * The pointer can be passed in a container.
+ * 
+ * template<typename T> T MUST BE inherited from TC_HandleBase
+ * 
  * 可以放在容器中,且线程安全的智能指针. 
- *  
  * 通过它定义智能指针，该智能指针通过引用计数实现， 
- *  
- * 可以放在容器中传递. 
- *  
+ * 可以放在容器中传递.   
+ * 
  * template<typename T> T必须继承于TC_HandleBase 
  */
 template<typename T>
@@ -138,11 +161,13 @@ class TC_AutoPtr
 public:
 
     /**
+     * Element Type
      * 元素类型
      */
     typedef T element_type;
 
     /**
+     * @brief Initialize with native pointer, count +1
 	 * @brief 用原生指针初始化, 计数+1. 
 	 *  
      * @param p
@@ -158,6 +183,7 @@ public:
     }
 
     /**
+     * @brief Initialize with the native pointer of other smart pointer r, count +1.
 	 * @brief 用其他智能指针r的原生指针初始化, 计数+1. 
 	 *  
      * @param Y
@@ -175,6 +201,7 @@ public:
     }
 
     /**
+     * @brief Copy constructor, count +1
 	 * @brief 拷贝构造, 计数+1. 
 	 *  
      * @param r
@@ -190,6 +217,7 @@ public:
     }
 
     /**
+     * @brief Destructor
      * @brief 析构
      */
     ~TC_AutoPtr()
@@ -201,6 +229,7 @@ public:
     }
 
     /**
+     * @brief Assignment, normal pointer
 	 * @brief 赋值, 普通指针. 
 	 *  
 	 * @param p 
@@ -227,6 +256,7 @@ public:
     }
 
     /**
+     * @brief Assignment, other type of smart pointer
 	 * @brief 赋值, 其他类型智能指针. 
 	 *  
      * @param Y
@@ -255,6 +285,7 @@ public:
     }
 
     /**
+     * @brief Assignment, other ruling pointer of this type.
 	 * @brief 赋值, 该类型其他执政指针. 
 	 *  
 	 * @param r 
@@ -281,6 +312,7 @@ public:
     }
 
     /**
+     * @brief Replace other types of smart pointers with current types of smart pointers
 	 * @brief 将其他类型的智能指针换成当前类型的智能指针. 
 	 *  
      * @param Y
@@ -294,6 +326,7 @@ public:
     }
 
     /**
+     * @brief Convert pointers of other native types into smart pointers of the current type
 	 * @brief 将其他原生类型的指针转换成当前类型的智能指针. 
 	 *  
      * @param Y
@@ -307,6 +340,7 @@ public:
     }
 
     /**
+     * @brief Get Native Pointer
      * @brief 获取原生指针.
      *
      * @return T*
@@ -317,6 +351,7 @@ public:
     }
 
     /**
+     * @brief Transfer
      * @brief 调用.
      *
      * @return T*
@@ -332,6 +367,7 @@ public:
     }
 
     /**
+     * @brief Reference
      * @brief 引用.
      *
      * @return T&
@@ -347,6 +383,7 @@ public:
     }
 
     /**
+     * @brief To define whether it is effective or not.
      * @brief 是否有效.
      *
      * @return bool
@@ -357,7 +394,8 @@ public:
     }
 
     /**
-	 * @brief  交换指针. 
+     * @brief Swap pointer
+	 * @brief 交换指针. 
 	 *  
      * @param other
      */
@@ -369,6 +407,7 @@ public:
 protected:
 
     /**
+     * @brief Throw Exception
      * @brief 抛出异常
      */
     void throwNullHandleException() const;
@@ -379,6 +418,7 @@ public:
 };
 
 /**
+ * @brief Throw Exception
  * @brief 抛出异常. 
  *  
  * @param T
@@ -392,6 +432,7 @@ TC_AutoPtr<T>::throwNullHandleException() const
 }
 
 /**
+ * @brief Determine '=='.
  * @brief ==判断. 
  *  
  * @param T
@@ -407,11 +448,13 @@ inline bool operator==(const TC_AutoPtr<T>& lhs, const TC_AutoPtr<U>& rhs)
     T* l = lhs.get();
     U* r = rhs.get();
 
-	// 改为直接比较指针，而不是比较值
+	// Compare pointers directly instead of comparing values of the two pointers.
+    // 改为直接比较指针，而不是比较值
 	return (l == r);
 }
 
 /**
+ * @brief Determine '!='.
  * @brief 不等于判断. 
  *  
  * @param T
@@ -427,11 +470,13 @@ inline bool operator!=(const TC_AutoPtr<T>& lhs, const TC_AutoPtr<U>& rhs)
     T* l = lhs.get();
     U* r = rhs.get();
 
-	// 改为直接比较指针，而不是比较值
+	// Compare pointers directly instead of comparing values of the two pointers.
+    // 改为直接比较指针，而不是比较值
 	return (l != r);
 }
 
 /**
+ * @brief Determine '<', can be used in map and other conrainers.
  * @brief 小于判断, 用于放在map等容器中. 
  *  
  * @param T
@@ -448,7 +493,8 @@ inline bool operator<(const TC_AutoPtr<T>& lhs, const TC_AutoPtr<U>& rhs)
     U* r = rhs.get();
     if(l && r)
     {
-        //return *l < *r;
+        // return *l < *r;
+        // Compare pointers directly instead of comparing values of the two pointers.
 		// 改为直接比较指针，而不是比较值
 		return (l < r);
     }
