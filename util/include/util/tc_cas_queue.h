@@ -14,7 +14,9 @@ namespace tars
 /////////////////////////////////////////////////
 /**
  * @file tc_cas_queue.h
+ * @brief No Lock Threads
  * @brief 线程无锁
+ * 
  *  
  * @author ruanshudong@qq.com
  */
@@ -34,9 +36,12 @@ public:
     typedef D queue_type;
 
 	/**
-	 * @brief 从头部获取数据, 没有数据抛异常
+	 * @brief Get data from the head, if there's no data, throw exception.
+     * @brief 从头部获取数据, 没有数据抛异常
 	 *
 	 * @param t
+     * 
+     * @return bool:true-> get data successfully, false-> no data
 	 * @return bool: true, 获取了数据, false, 无数据
 	 */
 	T front();
@@ -45,26 +50,32 @@ public:
      * @brief 从头部获取数据
      *
      * @param t 
+     * 
+     * @return bool:true-> get data successfully, false-> no data
      * @return bool: true, 获取了数据, false, 无数据
      */
     bool pop_front(T& t);
 
 	/**
-	 * @brief 从头部获取数据
+	 * @brief Get data from the head
+     * @brief 从头部获取数据
 	 *
+     * @return bool:true-> get data successfully, false-> no data
 	 * @return bool: true, 获取了数据, false, 无数据
 	 */
 	bool pop_front();
 
     /**
-	 * @brief 放数据到队列后端. 
+	 * @brief Set data at the bottom of the queue
+     * @brief 放数据到队列后端. 
 	 *  
      * @param t
      */
     void push_back(const T& t);
 
     /**
-	 * @brief  放数据到队列后端. 
+	 * @brief 
+     * @brief 放数据到队列后端. 
 	 *  
      * @param vt
      */
