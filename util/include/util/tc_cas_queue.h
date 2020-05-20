@@ -14,6 +14,7 @@ namespace tars
 /////////////////////////////////////////////////
 /**
  * @file tc_cas_queue.h
+ * @brief Lock-Free Thread
  * @brief 线程无锁
  *  
  * @author ruanshudong@qq.com
@@ -21,6 +22,7 @@ namespace tars
        
 /////////////////////////////////////////////////
 /**
+ * @brief Thread Safe Queue
  * @brief 线程安全队列
  */
 template<typename T, typename D = deque<T> >
@@ -34,80 +36,96 @@ public:
     typedef D queue_type;
 
 	/**
-	 * @brief 从头部获取数据, 没有数据抛异常
+	 * @brief Getting data from the head without data throwing exception
+     * @brief 从头部获取数据, 没有数据抛出异常
 	 *
 	 * @param t
-	 * @return bool: true, 获取了数据, false, 无数据
+	 * @return bool: true, get data ; false, no data
+     * @return bool: true, 获取了数据, false, 无数据
 	 */
 	T front();
 
     /**
+     * @brief Get data from the head
      * @brief 从头部获取数据
      *
      * @param t 
+     * @return bool: true, get data ; false, no data
      * @return bool: true, 获取了数据, false, 无数据
      */
     bool pop_front(T& t);
 
 	/**
-	 * @brief 从头部获取数据
+	 * @brief Get data from the head
+     * @brief 从头部获取数据
 	 *
-	 * @return bool: true, 获取了数据, false, 无数据
+	 * @return bool: true, get data ; false, no data
+     * @return bool: true, 获取了数据, false, 无数据
 	 */
 	bool pop_front();
 
     /**
-	 * @brief 放数据到队列后端. 
+	 * @brief Put data to the back end of the queue. 
+     * @brief 放数据到队列后端. 
 	 *  
      * @param t
      */
     void push_back(const T& t);
 
     /**
-	 * @brief  放数据到队列后端. 
+	 * @brief Put data to the back end of the queue.
+     * @brief  放数据到队列后端. 
 	 *  
      * @param vt
      */
     void push_back(const queue_type &qt);
 
     /**
-	 * @brief  放数据到队列前端. 
+	 * @brief Put data to the front end of the queue.
+     * @brief  放数据到队列前端. 
 	 *  
      * @param t
      */
     void push_front(const T& t);
 
     /**
-	 * @brief  放数据到队列前端. 
+	 * @brief Put data to the front end of the queue.
+     * @brief  放数据到队列前端. 
 	 *  
      * @param vt
      */
     void push_front(const queue_type &qt);
 
     /**
-	 * @brief  交换数据
+	 * @brief  Exchange Data
+     * @brief  交换数据
 	 *  
      * @param q
+     * @return bool: true, data returned ; false, no data returned
      * @return 有数据返回true, 无数据返回false
      */
     bool swap(queue_type &q);
 
     /**
+     * @brief  Size of the Queue
      * @brief  队列大小.
      *
+     * @return size_t the size of the queue
      * @return size_t 队列大小
      */
     size_t size() const;
 
     /**
+     * @brief  Clear Up the Queue
      * @brief  清空队列
      */
     void clear();
 
     /**
      * @brief  是否数据为空.
-     *
+     * @brief  Determine whether the data is null or not.
      * @return bool 为空返回true，否则返回false
+     * @return bool: true, is null ; false, not null
      */
     bool empty() const;
 
@@ -120,15 +138,17 @@ protected:
 protected:
     /**
      * 队列
+     * Queue
      */
     queue_type          _queue;
 
     /**
      * 队列长度
+     * The length of a queue
      */
     size_t              _size;
 
-	//锁
+	//锁Lock
 	TC_SpinLock         _mutex;
 };
 
