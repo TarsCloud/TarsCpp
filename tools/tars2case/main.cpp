@@ -22,11 +22,12 @@
 void usage()
 {
     cout << "Usage : tars2case [OPTION] tarsfile" << endl;
-	cout << "  --web generate web need casefile" << endl;
-	cout << "  --dir=DIRECTORY  generate casefile to DIRECTORY" << endl;
+	cout << "  		--json generate json casefile" << endl;
+	cout << "  		--web generate webadmin casefile" << endl;
+	cout << "  		--dir=DIRECTORY generate casefile to DIRECTORY" << endl;
 
     cout << endl;
-    exit(0);
+    exit(100);
 }
 
 
@@ -41,13 +42,12 @@ void check(vector<string> &vTars)
             {
                 cerr << "file '" << vTars[i] << "' not exists" << endl;
 				usage();
-                exit(0);
             }
         }
         else
         {
             cerr << "only support tars file." << endl;
-            exit(0);
+            exit(100);
         }
     }
 }
@@ -56,6 +56,7 @@ void check(vector<string> &vTars)
 void doTars2Test(TC_Option& option, const vector<string>& vTars)
 {
 	Tars2Case j2t;
+	j2t.setJsonCase(option.hasParam("json") ? true : false);
 	j2t.setWebSupport(option.hasParam("web") ? true : false);
 	j2t.setBaseDir(option.getValue("dir").empty() ? "." : option.getValue("dir"));
 
@@ -69,9 +70,10 @@ void doTars2Test(TC_Option& option, const vector<string>& vTars)
 
 int main(int argc, char* argv[]){
 
-    if(argc < 2)
+    if (argc < 2)
 	{
         usage();
+		return 100;
     }
 
 	try
@@ -85,7 +87,6 @@ int main(int argc, char* argv[]){
 		if (option.hasParam("help"))
 		{
 			usage();
-			return 0;
 		}
 		doTars2Test(option, vTars);
 	}
@@ -93,7 +94,6 @@ int main(int argc, char* argv[]){
 	{
 		cerr<<e.what()<<endl;
 	}
-
     return 0;
 }
 

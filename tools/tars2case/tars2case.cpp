@@ -22,9 +22,44 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 //
-Tars2Case::Tars2Case() : _webCase(false)
+Tars2Case::Tars2Case() : _jsonCase(false), _webCase(false)
 {
 }
+
+string Tars2Case::toDescStr(const TypePtr &pPtr) const
+{
+	BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
+	if (bPtr)
+	{
+		switch (bPtr->kind())
+		{
+			case Builtin::KindByte:   return bPtr->isUnsigned() ? "byte_u" : "byte"; break;
+			case Builtin::KindShort:  return bPtr->isUnsigned() ? "short_u" : "short"; break;
+			case Builtin::KindInt:    return bPtr->isUnsigned() ? "int_u" : "int"; break;
+			case Builtin::KindLong:   return "long";  break;
+			case Builtin::KindBool:   return "bool"; break;
+			case Builtin::KindFloat:  return "float"; break;
+			case Builtin::KindDouble: return "double"; break;
+			case Builtin::KindString: return "string"; break;
+			default: assert(false); break;
+		}
+	}
+
+	VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
+	if (vPtr) return "vector";
+
+	MapPtr mPtr = MapPtr::dynamicCast(pPtr);
+	if (mPtr) return "map";
+
+	StructPtr sPtr = StructPtr::dynamicCast(pPtr);
+	if (sPtr) return "struct";
+
+	EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
+	if (ePtr) return "int";
+
+	return "void";
+}
+
 
 string Tars2Case::toStr(const TypePtr &pPtr) const
 {
@@ -71,6 +106,7 @@ string Tars2Case::toCase(const TypePtr &pPtr, const string& varName) const
 	assert(false);
 	return "";
 }
+
 
 /*******************************BuiltinPtr********************************/
 string Tars2Case::tostrBuiltin(const BuiltinPtr &pPtr) const
@@ -450,6 +486,106 @@ JsonValuePtr Tars2Case::generateJson(const TypePtr &pPtr) const
 	return NULL;
 }
 
+JsonValuePtr Tars2Case::toJsonDescEnum(const EnumPtr &pPtr) const
+{
+    return JsonOutput::writeJson(string("0"));
+}
+
+JsonValuePtr Tars2Case::toJsonDescVector(const VectorPtr &pPtr) const
+{
+    JsonValueObjPtr p = new JsonValueObj();
+	string name = "0_vector_" + toDescStr(pPtr->getTypePtr());
+	p->value[name] = generateJsonDesc(pPtr->getTypePtr());
+	return p;
+}
+
+JsonValuePtr Tars2Case::toJsonDescMap(const MapPtr &pPtr) const
+{
+    string name;
+    JsonValueObjPtr p = new JsonValueObj();
+	name = "0_map_" + toDescStr(pPtr->getLeftTypePtr());
+	p->value[name] = generateJsonDesc(pPtr->getLeftTypePtr());
+	name = "1_map_" + toDescStr(pPtr->getRightTypePtr());
+	p->value[name] = generateJsonDesc(pPtr->getRightTypePtr());
+	return p;
+}
+
+JsonValuePtr Tars2Case::toJsonDescStruct(const StructPtr &pPtr) const
+{
+    JsonValueObjPtr p = new JsonValueObj();
+	vector<TypeIdPtr>& members = pPtr->getAllMemberPtr();
+
+	//是否生成tag和require等信息
+	for(size_t i = 0; i < members.size(); i++)
+    {
+		ostringstream osd;
+        osd << members[i]->getTag() << "_" << members[i]->getId() << "_" << toDescStr(members[i]->getTypePtr());
+        p->value[osd.str()] = generateJsonDesc(members[i]);
+	}
+	return p;
+}
+
+JsonValuePtr Tars2Case::generateJsonDesc(const TypePtr &pPtr) const
+{
+	BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
+	if (bPtr) return JsonOutput::writeJson(bPtr->def());
+
+	VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
+	if (vPtr) return toJsonDescVector(vPtr);
+
+	MapPtr mPtr = MapPtr::dynamicCast(pPtr);
+	if (mPtr) return toJsonDescMap(mPtr);
+
+	StructPtr sPtr = StructPtr::dynamicCast(pPtr);
+	if (sPtr) return toJsonDescStruct(sPtr);
+
+	EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
+	if (ePtr) return toJsonDescEnum(ePtr);
+
+    assert(false);
+	return NULL;
+}
+
+JsonValuePtr Tars2Case::generateJsonDesc(const TypeIdPtr &pPtr) const
+{
+	BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
+	if (bPtr) return JsonOutput::writeJson(pPtr->hasDefault() ? pPtr->def() : bPtr->def());
+	return generateJsonDesc(pPtr->getTypePtr());
+}
+
+string Tars2Case::generateDesc(const InterfacePtr &pPtr, const string& outfile) const
+{
+	ostringstream s;
+	vector<OperationPtr>& vOperation = pPtr->getAllOperationPtr();
+	std::sort(vOperation.begin(), vOperation.end(), SortOperation());
+
+	//生成客户端接口的声明
+	TC_File::makeDirRecursive(_baseDir);
+	for (size_t i = 0; i < vOperation.size(); i++)
+	{
+		JsonValueObjPtr inDesc  = new JsonValueObj();
+		JsonValueObjPtr inParam = new JsonValueObj();
+
+		vector<ParamDeclPtr>& vParamDecl = vOperation[i]->getAllParamDeclPtr();
+		for (size_t j = 0; j < vParamDecl.size(); j++)
+		{
+			ostringstream osd;
+			TypeIdPtr& p = vParamDecl[j]->getTypeIdPtr();
+			osd << p->getTag() << "_" << p->getId() << "_" << toDescStr(p->getTypePtr());
+			if(!vParamDecl[j]->isOut())
+            {
+				inDesc->value[osd.str()]   = generateJsonDesc(p);
+                inParam->value[p->getId()] = generateJson(vParamDecl[j]->getTypeIdPtr()->getTypePtr());
+			}
+		}
+
+		string filedesc  = _baseDir + "/" + vOperation[i]->getId() + ".desc";
+		string filecase  = _baseDir + "/" + vOperation[i]->getId() + ".case";
+		TC_File::save2file(filedesc, TC_Json::writeValue(inDesc));
+		TC_File::save2file(filecase, TC_Json::writeValue(inParam));
+	}
+	return s.str();
+}
 
 string Tars2Case::generateJson(const InterfacePtr &pPtr, const string& outfile) const
 {
@@ -467,49 +603,59 @@ string Tars2Case::generateJson(const InterfacePtr &pPtr, const string& outfile) 
 		string intCaseParams = "";
 		string outCaseParams = "";
 
-		JsonValueObjPtr inParam = new JsonValueObj();
+		JsonValueObjPtr inDesc  = new JsonValueObj();
+		JsonValueObjPtr outDesc = new JsonValueObj();
+		JsonValueObjPtr inParam  = new JsonValueObj();
 		JsonValueObjPtr outParam = new JsonValueObj();
 
 		vector<ParamDeclPtr>& vParamDecl = vOperation[i]->getAllParamDeclPtr();
 		for (size_t j = 0; j < vParamDecl.size(); j++)
 		{
-            string sTypeName(vParamDecl[j]->getTypeIdPtr()->getId());
+			ostringstream osd;
+			TypeIdPtr& p = vParamDecl[j]->getTypeIdPtr();
+			osd << p->getTag() << "_" << p->getId() << "_" << toDescStr(p->getTypePtr());
+
 			if(vParamDecl[j]->isOut())
             {
 				outCaseParams += (outCaseParams.empty() ? "" : "|") + generateTest(vParamDecl[j]);
-                outParam->value[sTypeName] = generateJson(vParamDecl[j]->getTypeIdPtr()->getTypePtr());
+				outDesc->value[osd.str()]   = generateJsonDesc(p->getTypePtr());
+                outParam->value[p->getId()] = generateJson(p->getTypePtr());
 			}
 			else
             {
 				intCaseValues += (intCaseValues.empty() ? "" : "<br>") + generateCase(vParamDecl[j]);
 				intCaseParams += (intCaseParams.empty() ? "" : "|") + generateTest(vParamDecl[j]);
-                inParam->value[sTypeName]  = generateJson(vParamDecl[j]->getTypeIdPtr()->getTypePtr());
+				inDesc->value[osd.str()]   = generateJsonDesc(p->getTypePtr());
+                inParam->value[p->getId()] = generateJson(vParamDecl[j]->getTypeIdPtr()->getTypePtr());
 			}
 		}
 
 		JsonValueObjPtr p = new JsonValueObj();
-		//p->value["function"]   = JsonOutput::writeJson(vOperation[i]->getId());
 		p->value["funinput"]   = inParam;
 		p->value["funoutput"]  = outParam;
+		p->value["descinput"]  = inDesc;
+		p->value["descoutput"] = outParam;
 		p->value["rettype"]    = JsonOutput::writeJson(toStr(vOperation[i]->getReturnPtr()->getTypePtr()));
 		p->value["funintpara"] = JsonOutput::writeJson(intCaseParams);
 		p->value["funintvals"] = JsonOutput::writeJson(intCaseValues);
 		p->value["funoutpara"] = JsonOutput::writeJson(outCaseParams);
-
-		//JsonValuePtr pp = p;
-		//v->push_back(pp);
 		v->value[vOperation[i]->getId()] = JsonValuePtr::dynamicCast(p);
 	}
 
-	string filetest  = _baseDir + "/" + (outfile.empty() ? pPtr->getId() : outfile) + ".json";
-	TC_File::makeDirRecursive(_baseDir);
-	TC_File::save2file(filetest, TC_Json::writeValue(v));
-
+	if (_baseDir.empty())
+	{
+		cout << TC_Json::writeValue(v) << endl;
+	}
+	else
+	{
+		string filetest  = _baseDir + "/" + (outfile.empty() ? pPtr->getId() : outfile) + ".json";
+		TC_File::makeDirRecursive(_baseDir);
+		TC_File::save2file(filetest, TC_Json::writeValue(v));
+	}
 	return TC_Json::writeValue(v);
 }
 
 /******************************Tars2Case***************************************/
-
 void Tars2Case::generateFile(const ContextPtr &pPtr, const string& outfile) const
 {
 	ostringstream s;
@@ -524,6 +670,10 @@ void Tars2Case::generateFile(const ContextPtr &pPtr, const string& outfile) cons
 			{
 				// 生成TarsWeb需要的用例
             	generateJson(is[j], outfile);
+			}
+			else if (_jsonCase)
+			{
+				generateDesc(is[j], outfile);
 			}
 			else
 			{
@@ -549,6 +699,11 @@ void Tars2Case::createFile(const string &tarsfile, const string& outfile)
 void Tars2Case::setBaseDir(const string &dir)
 {
 	_baseDir = dir;
+}
+
+void Tars2Case::setJsonCase(bool jsonCase)
+{
+	_jsonCase = jsonCase;
 }
 
 void Tars2Case::setWebSupport(bool webCase)
