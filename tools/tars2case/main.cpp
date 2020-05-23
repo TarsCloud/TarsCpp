@@ -58,7 +58,7 @@ void doTars2Test(TC_Option& option, const vector<string>& vTars)
 	Tars2Case j2t;
 	j2t.setJsonCase(option.hasParam("json") ? true : false);
 	j2t.setWebSupport(option.hasParam("web") ? true : false);
-	j2t.setBaseDir(option.getValue("dir").empty() ? "." : option.getValue("dir"));
+	j2t.setBaseDir(option.getValue("dir").empty() ? "" : option.getValue("dir"));
 
 	g_parse->setUseCurrentPath(true);
 	for(size_t i = 0; i < vTars.size(); i++)
