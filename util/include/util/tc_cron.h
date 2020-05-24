@@ -43,10 +43,14 @@ public:
 public: 
     /**
      * @brief  创建一个cron对象
+     * @brief  Create a cron object
      * @return  cron 对象
+     * @return  cron object
      */
      // 字段分别为  <seconds> <minutes> <hours> <days of month> <months> <days of week> 
+     // The fields are: <seconds> <minutes> <hours> <days of month> <months> <days of week>
      // 通配符以及含义
+     // Wildcards and their meanings:
      // *	all values	selects all values within a field
      // -	range	specify ranges
      // ,	comma	specify additional values
@@ -54,6 +58,7 @@ public:
      // DAYS = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
      // MONTHS = { "NIL", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
      // 各类例子
+     // Examples:
      // CRON	Description
      // * * * * * *	Every second
      // */5 * * * * *	Every 5 seconds
@@ -69,15 +74,21 @@ public:
 
     /**
      * @brief 获取cron对象的下一个时间点
+     * @brief Get the next point in time for the cron object
      * @param  cron 对象
+     * @param  cron object
      * @return 如果返回 INVALID_TIME，则是错误时间，否则返回正确的时间戳
+     * @return If INVALID_TIME is returned, it is the wrong time. Otherwise the correct timestamp is returned.
      */
     static std::time_t nextcron( const TC_Cron& cron, std::time_t timestamp);
    
     /**
      * @brief 获取cron对象的下一个时间点
+     * @brief Get the next point in time for the cron object.
      * @param  cron 对象
+     * @param  cron object
      * @return 如果返回 INVALID_TIME，则是错误时间，否则返回正确的时间戳
+     * @return If INVALID_TIME is returned, it is the wrong time. Otherwise the correct timestamp is returned.
      */
     static std::time_t nextcron(const TC_Cron& cron);
 
@@ -117,18 +128,22 @@ public:
 protected:
     /**
      * @brief 判断是否包含字符
+     * @brief Determine whether it includes characters.
      * @return true 包含;false 不包含
+     * @return true include; false not include
      */
     static bool contains(const std::string &text, char ch) ;
 
     /**
      * @brief 转换成crontab合法数字
+     * @brief Convert to crontab legal number
      * @return cron_int
      */
     static cron_int to_cron_int(const std::string& text);
 
     /**
      * @brief 时间格式转换函数
+     * @brief Time format conversion function
      */
     static std::time_t tm_to_time(std::tm& tmt);
     static std::tm* time_to_tm(std::time_t const* date, std::tm* const out);
@@ -136,16 +151,19 @@ protected:
  protected:
     /**
     * @brief 替换周/月的字符为下标
+    * @brief Replace week/month characters as Subscripts
     */
     static std::string replaceOrdinals(std::string text, const std::vector<std::string> & replacement);
 
     /**
     * @brief 获取时间范围，用于计算通配符
+    * @brief Gets the time range for calculating wildcards.
     */
     static std::pair<cron_int, cron_int> makeRange(std::string field, cron_int minval, cron_int maxval);
 
     /**
     * @brief 设置crontab不同的位置标记
+    * @brief Set different crontab location tags
     */
     template <size_t N>
     static void setCronField(std::string value, std::bitset<N>& target, cron_int minval, cron_int maxval);
@@ -155,6 +173,7 @@ protected:
 
     /**
     * @brief 计算下一个时间戳
+    * @brief Calculate the next timestamp
     */
     template <size_t N>
     static size_t findNext(const std::bitset<N> & target, std::tm& tmt, unsigned int minimum, unsigned int maximum, unsigned int value,
@@ -164,6 +183,7 @@ protected:
 
     /**
     * @brief 位图控制函数
+    * @brief Bitmap control function
     */
     template <size_t N>
     static size_t nextSetbit(const std::bitset<N> & target, size_t minimum, size_t maximum, size_t offset);
