@@ -43,11 +43,23 @@ public:
     void setBaseDir(const string &dir);
 
     /**
+     * 生成JSON2TARS用例
+     * @param jsonCase
+     */
+    void setJsonCase(bool jsonCase);
+
+    /**
+     * 生成WEB平台需要的用例
+     * @param webCase
+     */
+    void setWebSupport(bool webCase);
+
+    /**
      * 生成
      * @param file
      * @param isFramework 是否是框架
      */
-    void createFile(const string &jcefile, const string& outfile = "");
+    void createFile(const string &tarsfile, const string& outfile = "");
 
 protected:
     /**
@@ -59,11 +71,11 @@ protected:
     string getFilePath(const string &ns) const;
 
     string 	_baseDir;
-
+    bool    _jsonCase;
+    bool    _webCase;
 
     //下面是类型描述的源码生成
 protected:
-
     /**
      * 生成某类型的字符串描述源码
      * @param pPtr
@@ -71,6 +83,15 @@ protected:
      * @return string
      */
     string toStr(const TypePtr &pPtr) const;
+
+
+    /**
+     * 生成某类型的字符串描述源码
+     * @param pPtr
+     *
+     * @return string
+     */
+    string toDescStr(const TypePtr &pPtr) const;
 
     /**
      * 生成内建类型的字符串源码
@@ -130,6 +151,18 @@ protected:
 
     JsonValueArrayPtr toJsonVector(const VectorPtr &pPtr) const;
 
+    JsonValuePtr generateJsonDesc(const TypeIdPtr &pPtr) const;
+
+    JsonValuePtr generateJsonDesc(const TypePtr &pPtr) const;
+
+    JsonValuePtr toJsonDescEnum(const EnumPtr &pPtr) const;
+
+    JsonValuePtr toJsonDescMap(const MapPtr &pPtr) const;
+
+    JsonValuePtr toJsonDescStruct(const StructPtr &pPtr) const;
+
+    JsonValuePtr toJsonDescVector(const VectorPtr &pPtr) const;
+
 protected:
 
 	string tocaseBuiltin(const BuiltinPtr &pPtr, const string& varName) const;
@@ -169,6 +202,15 @@ protected:
      */
     string generateJson(const InterfacePtr &pPtr, const string& outfile = "") const;
 
+   /**
+     * 生成WEB代理请求访问的JSON串, JSON用例
+     * @param pPtr
+     * @param outfile
+     *
+     * @return string
+     */
+    string generateDesc(const InterfacePtr &pPtr, const string& outfile = "") const;
+
     /**
      * 生成TEST接口访问的测试
      * @param pPtr
@@ -178,9 +220,8 @@ protected:
      */
     string generateTest(const InterfacePtr &pPtr, const string& outfile = "") const;
 
-
     /**
-     * 生成每个jce文件的java文件源码
+     * 生成每个tars文件的用例文件
      * @param pPtr
      *
      * @return string
@@ -191,7 +232,6 @@ protected:
 	* 生成tag和require、optional信息
 	*/
 	string genratePrefix(const TypeIdPtr &ptr) const;
-
 };
 
 #endif
