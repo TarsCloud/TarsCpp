@@ -1,19 +1,14 @@
 ## v2.4.2 2020.06.02
 ### en:
-1 Add English commet to some header file commet
-2 tars2case support json format
-3 fix tc_http bug, ignore last header line
-4 fix tc_json null bug and add interface
-
-1 fix windows tars proto, define long bug, change to long long
-2 fix windows, longlong tars_ntohll bug 
-3 fix windows, tc_ex system message pointer may be null cause crash 
-4 fix windows tc_epoll_server when send pending add epoll mod
+- Add English commet to some header file commet
+- tars2case support json format
+- fix tc_http bug, ignore last header line
+- fix tc_json null bug and add interface
 ### cn:
-1 部分头文件注释增加英文注释
-2 tars2case支持json格式
-3 修复tc_http解析头, 漏掉最后一行的bug
-4 修复tc_json null的bug 以及修改tc_json的函数接口, 更易用
+- 部分头文件注释增加英文注释
+- tars2case支持json格式
+- 修复tc_http解析头, 漏掉最后一行的bug
+- 修复tc_json null的bug 以及修改tc_json的函数接口, 更易用
 
 
 ## v2.4.1 2020.05.06
