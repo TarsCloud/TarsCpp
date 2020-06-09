@@ -731,7 +731,7 @@ void Application::main(const TC_Option &option)
 
                     //等待initialize初始化完毕
                     std::unique_lock<std::mutex> lock(mtx);
-                    cond.wait_for(lock, std::chrono::seconds(5));
+                    cond.wait_for(lock, std::chrono::seconds(2));
 
                 }while(initing);
             });
