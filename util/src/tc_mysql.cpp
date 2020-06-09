@@ -238,7 +238,7 @@ string TC_Mysql::buildBatchSQLNoSafe(const string &sTableName, const string &com
     }
 
     ostringstream os;
-    os << command << " into `" << sTableName << "` (" << sColumnNames.str() << ") values " << sColumnValues.str();
+    os << command << " into " << sTableName << " (" << sColumnNames.str() << ") values " << sColumnValues.str();
     return os.str();
 }
 
@@ -341,7 +341,7 @@ string TC_Mysql::buildSQL(const string &sTableName, const string &command, const
         }
     }
     ostringstream os;
-    os << command << " into `" << sTableName << "` (" << sColumnNames.str() << ") values (" << sColumnValues.str() << ")";
+    os << command << " into " << sTableName << " (" << sColumnNames.str() << ") values (" << sColumnValues.str() << ")";
     return os.str();
 }
 string TC_Mysql::buildBatchSQL(const string &sTableName, const string &command, const map<string, pair<FT, vector<string> >> &mpColumns)
@@ -389,7 +389,7 @@ string TC_Mysql::buildBatchSQL(const string &sTableName, const string &command, 
             sColumnValues << ",";
     }
     ostringstream os;
-    os << command << " into `" << sTableName << "` (" << sColumnNames.str() << ") values " << sColumnValues.str();
+    os << command << " into " << sTableName << " (" << sColumnNames.str() << ") values " << sColumnValues.str();
     return os.str();
 }
 string TC_Mysql::buildUpdateSQL(const string &sTableName,const RECORD_DATA &mpColumns, const string &sWhereFilter)
@@ -416,7 +416,7 @@ string TC_Mysql::buildUpdateSQL(const string &sTableName,const RECORD_DATA &mpCo
         }
     }
     ostringstream os;
-    os << "update `" << sTableName << "` set " << sColumnNameValueSet.str() << " " << sWhereFilter;
+    os << "update " << sTableName << " set " << sColumnNameValueSet.str() << " " << sWhereFilter;
 
     return os.str();
 }
