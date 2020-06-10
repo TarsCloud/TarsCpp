@@ -634,7 +634,7 @@ string Tars2Case::generateJson(const InterfacePtr &pPtr, const string& outfile) 
 		p->value["funinput"]   = inParam;
 		p->value["funoutput"]  = outParam;
 		p->value["descinput"]  = inDesc;
-		p->value["descoutput"] = outParam;
+		p->value["descoutput"] = outDesc;
 		p->value["rettype"]    = JsonOutput::writeJson(toStr(vOperation[i]->getReturnPtr()->getTypePtr()));
 		p->value["funintpara"] = JsonOutput::writeJson(intCaseParams);
 		p->value["funintvals"] = JsonOutput::writeJson(intCaseValues);
