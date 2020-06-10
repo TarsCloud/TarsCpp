@@ -1,3 +1,18 @@
+## v2.4.3 2020.06.10
+### en:
+- tc_spin_lock support arm
+- fix tc_http security problem
+- fix tc_mysql table name with database name bug
+- tarscpp create tars protocol, default package optional field
+- fix tars2case 的bug
+
+### cn:
+- tc_spin_lock 支持arm
+- tc_http解析安全问题
+- tc_mysql 表名带db名称时 bug的问题
+- tarscpp协议缺省值默认打包
+- fix tars2case 的bug
+
 ## v2.4.2 2020.06.02
 ### en:
 - Add English commet to some header file commet
