@@ -563,6 +563,140 @@ public:
         return TC_NetWorkBuffer::PACKET_FULL;
     }
 
+    template <uint32_t iMinLength, uint32_t iMaxLength>
+    static TC_NetWorkBuffer::PACKET_TYPE totalResponseLen(TC_NetWorkBuffer &in, ResponsePacket &rsp)
+    {
+        uint32_t len = (uint32_t)in.getBufferLength();
+
+        //收到的字节数太少, 还需要继续接收
+        if (len < sizeof(uint32_t))
+            return TC_NetWorkBuffer::PACKET_LESS;
+
+        //获取包总体长度
+        uint32_t iHeaderLen = in.getValueOf4();
+
+        //做一下保护,长度大于10M
+        if (iHeaderLen < iMinLength || iHeaderLen > iMaxLength)
+        {
+            throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
+        }
+
+        //包没有接收全
+        if (len < iHeaderLen)
+        {
+            //看看包头是否正确
+            static const uint32_t head = 20;
+
+            if (len >= head)
+            {
+                string buffer;
+                in.getHeader(head, buffer);
+
+                TarsInputStream<BufferReader> is;
+                is.setBuffer(buffer.c_str() + sizeof(tars::Int32), head);
+
+                // ResponsePacket rsp;
+                is.read(rsp.iVersion, 1, false);
+
+                if (rsp.iVersion != TARSVERSION && rsp.iVersion != TUPVERSION && rsp.iVersion != JSONVERSION)
+                {
+                    throw TarsDecodeException("version not correct, version:" + TC_Common::tostr(rsp.iVersion));
+                }
+
+                is.read(rsp.cPacketType, 2, false);
+
+                if (rsp.cPacketType != TARSNORMAL)
+                {
+                    throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
+                }
+
+                is.read(rsp.iRequestId, 3, false);
+                is.read(rsp.iMessageType, 4, false);
+                is.read(rsp.iRet, 5, false);
+
+                if (rsp.iRet < TARSSERVERUNKNOWNERR)
+                {
+                    throw TarsDecodeException("response value not correct, value:" + TC_Common::tostr(rsp.iRet));
+                }
+            }
+
+            return TC_NetWorkBuffer::PACKET_LESS;
+        }
+        else
+        {
+            //看看包头是否正确
+            static const uint32_t head = 20;
+
+            string buffer;
+            in.getHeader(head, buffer);
+
+            TarsInputStream<BufferReader> is;
+            is.setBuffer(buffer.c_str() + sizeof(tars::Int32), head);
+
+            is.read(rsp.iVersion, 1, false);
+
+            if (rsp.iVersion == TUPVERSION)
+            {
+                vector<char> buffer;
+                buffer.resize(iHeaderLen);
+
+                in.getHeader(iHeaderLen, buffer);
+                TarsInputStream<BufferReader> is;
+
+                is.setBuffer(buffer.data() + sizeof(tars::Int32), buffer.size() - sizeof(tars::Int32));
+
+                //TUP的响应包其实也是返回包
+                RequestPacket req;
+                req.readFrom(is);
+
+                if (req.cPacketType != TARSNORMAL)
+                {
+                    throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)req.cPacketType));
+                }
+
+                rsp.cPacketType = req.cPacketType;
+                rsp.iMessageType = req.iMessageType;
+                rsp.iRequestId = req.iRequestId;
+                rsp.iVersion = req.iVersion;
+                rsp.context = req.context;
+                //tup的响应包直接放入到sBuffer里面
+                rsp.sBuffer = buffer;
+
+                in.moveHeader(iHeaderLen);
+            }
+            else if (rsp.iVersion == TARSVERSION || rsp.iVersion == JSONVERSION)
+            {
+                vector<char> buffer;
+                bool ret = in.parseBufferOf4(buffer, iMinLength, iMaxLength);
+                if (!ret)
+                {
+                    throw TarsDecodeException("parse buffer exception");
+                }
+
+                TarsInputStream<BufferReader> is;
+                is.setBuffer(buffer.data(), buffer.size());
+
+                rsp.readFrom(is);
+
+                if (rsp.cPacketType != TARSNORMAL)
+                {
+                    throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
+                }
+
+                if (rsp.iRet < TARSSERVERUNKNOWNERR)
+                {
+                    throw TarsDecodeException("response value not correct, value:" + TC_Common::tostr(rsp.iRet));
+                }
+            }
+            else
+            {
+                throw TarsDecodeException("===>version not correct, version:" + TC_Common::tostr(rsp.iVersion));
+            }
+        }
+
+        return TC_NetWorkBuffer::PACKET_FULL;
+    }
+
 public:
     request_protocol  requestFunc;
 
