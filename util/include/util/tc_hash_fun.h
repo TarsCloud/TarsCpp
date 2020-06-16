@@ -28,7 +28,9 @@ namespace tars
 /** 
  * @file tc_hash_fun.h 
  * @brief hash算法.
+ * @brief hash algorithm
  *可以对输入的字节流进行hash得到相当均匀的hash值 
+ *You can hash the input byte stream to get fairly even hash values
  *  
  *
  */             
@@ -49,8 +51,10 @@ inline size_t hash_string(const char* s)
 //////////////////////////////////////////////////////////
 /**
  * @brief 尽量采用hash_new, 更均衡一些.
+ * @brief try to use hash_new, it will be more balanced 
  *  
  *可以对输入的字节流进行hash得到相当均匀的hash值
+ *You can hash the input byte stream to get fairly even hash values
  */
 //////////////////////////////////////////////////////////
 template <>
@@ -166,8 +170,11 @@ struct hash<unsigned long>
 
 /**
 * @brief 一个奇妙的hash算法.
+* @brief A fantastic hash algorithm.
 *  
 *可以对输入的字节流进行hash得到相当均匀的hash值
+*You can hash the input byte stream to get fairly even hash values.
+*
 */
 struct magic_string_hash
 {
