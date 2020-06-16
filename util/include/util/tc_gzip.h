@@ -33,12 +33,14 @@ namespace tars
 /** 
 * @file tc_gzip.h 
 * @brief  gzip类, 封装的zlib库
+* @brief  Gzip Class, Encapsulated zlib Library
 */
 
 /////////////////////////////////////////////////
 
 /**
 * @brief 该类提供标准GZIP压缩和解压算法
+* @brief This class provides standard GZIP compression and decompression algorithms
 */
 class TC_GZip
 {
@@ -67,31 +69,46 @@ protected:
 public:
     /**
     * @brief  对数据进行压缩
+    * @brief  Compress data
     *  
     * @param src         需要压缩的数据
+    * @param src         Data that needs to be compressed
     * @param length      数据长度
+    * @param length      Data length
     * @param buffer      输出buffer
+    * @param buffer      output buffer 
     * @return bool       成功失败
+    * @return bool       sucessfull or failed
     */
     static bool compress(const char *src, size_t length, vector<char>& buffer);
 
     /**
     * @brief  对数据进行压缩
+    * @brief  Compress data
     *  
     * @param src         需要压缩的数据
+    * @param src         data need to be compressed
     * @param length      数据长度
+    * @param length      data length
     * @param buffer      输出buffer
+    * @param buffer      output buffer
     * @return bool       成功失败
+    * @return bool       sucessfull or failed
     */    
     static bool compress(const char *src, size_t length, string& buffer);
     
     /**
     * @brief  对数据进行解压
+    * @brief  Unzip data
     *  
     * @param src         需要解压的数据
+    * @param src         data need to be decompressed
     * @param length      数据长度
+    * @param length      data length
     * @param buffer      输出buffer
+    * @param buffer      output buffer
     * @return bool       成功失败
+    * @return bool       sucessfull or failed
     */
     static bool uncompress(const char *src, size_t length, vector<char>& buffer)
     {
@@ -102,11 +119,16 @@ public:
 
     /**
     * @brief  对数据进行解压
+    * @brief  Unzip data
     *  
     * @param src         需要解压的数据
+    * @param src         data need to be decompressed
     * @param length      数据长度
+    * @param length      data length
     * @param buffer      输出buffer
+    * @param buffer      output buffer
     * @return bool       成功失败
+    * @return bool       sucessfull or failed
     */
     static bool uncompress(const char *src, size_t length, string& buffer)
     {
@@ -118,16 +140,22 @@ public:
     /**
     * @brief  对数据进行分片解压, 
     *         每次解压的数据调用Output输出
+    * @brief  Decompress data in pieces, 
+    *         Output output is invoked for each decompressed data call
     *  
     * @param src         需要解压的数据
+    * @param src         data need to be decompressed
     * @param length      数据长度
+    * @param length      data length
     * @param o           输出buffer的函数对象 
+    * @param o           function project for output buffer
     *                    struct Output
     *                    {
     *                        void operator()(char *begin, size_t
     *                      length);
     *                      }
     * @return bool       成功失败
+    * @return bool       sucessfull or failed
     */
     static bool uncompress(const char *src, size_t length, Output* o);
 };
