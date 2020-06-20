@@ -563,6 +563,16 @@ public:
         return TC_NetWorkBuffer::PACKET_FULL;
     }
 
+	 /**
+	  * tars各种协议响应包解析
+	  * @param recvBuffer
+	  * @param done
+	  */
+	static TC_NetWorkBuffer::PACKET_TYPE totalResponse(TC_NetWorkBuffer &in, ResponsePacket &done)
+	{
+		return totalResponseLen<TARS_NET_MIN_PACKAGE_SIZE, TARS_NET_MAX_PACKAGE_SIZE>(in, done);
+	}
+
     template <uint32_t iMinLength, uint32_t iMaxLength>
     static TC_NetWorkBuffer::PACKET_TYPE totalResponseLen(TC_NetWorkBuffer &in, ResponsePacket &rsp)
     {
