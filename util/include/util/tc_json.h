@@ -18,6 +18,7 @@ namespace tars
 
 /**
 * 编解码抛出的异常
+* Exception thrown by codec
 */
 struct TC_Json_Exception : public TC_Exception
 {
@@ -36,6 +37,7 @@ enum eJsonType
 
 /*
  * json类型的基类。没有任何意义
+ * Base class of type json.No meaning.
  */
 class JsonValue : public TC_HandleBase
 {
@@ -49,6 +51,7 @@ typedef TC_AutoPtr<JsonValue> JsonValuePtr;
 
 /*
  * json类型 string类型 例如"dd\ndfd"
+ * json type   string type   for example: "dd\ndfd"
  */
 class JsonValueString : public JsonValue
 {
@@ -74,6 +77,7 @@ typedef TC_AutoPtr<JsonValueString> JsonValueStringPtr;
 
 /*
  * json类型 number类型 例如 1.5e8
+ * json type   number type   for example: 1.5e8
  */
 class JsonValueNum : public JsonValue
 {
@@ -99,6 +103,7 @@ typedef TC_AutoPtr<JsonValueNum> JsonValueNumPtr;
 
 /*
  * json类型 object类型 例如 {"aa","bb"} 
+ * json type   object type  for example: {"aa","bb"} 
  */
 class JsonValueObj: public JsonValue
 {
@@ -129,6 +134,7 @@ typedef TC_AutoPtr<JsonValueObj> JsonValueObjPtr;
 
 /*
  * json类型 array类型 例如 ["aa","bb"] 
+ * json type  array type  for example: ["aa","bb"] 
  */
 class JsonValueArray: public JsonValue
 {
@@ -148,7 +154,8 @@ public:
 typedef TC_AutoPtr<JsonValueArray> JsonValueArrayPtr;
 
 /*
- * json类型 boolean类型 例如 true 
+ * json类型 boolean类型 例如 true
+ * json type  boolean type  for example: true 
  */
 class JsonValueBoolean : public JsonValue
 {
@@ -169,11 +176,15 @@ typedef TC_AutoPtr<JsonValueBoolean> JsonValueBooleanPtr;
 
 /*
  * 分析json字符串用到的 读字符的类
+ * Classes for parsing read characters used in JSON strings
  */
 class BufferJsonReader
 {
+	/*buffer*/
 	const char *        _buf;		///< 缓冲区
+	/*buffer length*/
 	size_t              _buf_len;	///< 缓冲区长度
+	/*current location*/
 	size_t              _cur;		///< 当前位置
 
 public:
@@ -249,52 +260,69 @@ public:
 
 /*
  * 分析json的类。都是static
+ * Analyze json's classes.All static.
  */
 class TC_Json
 {
 public:
 	//json类型到字符串的转换
+	//Conversion of JSON type to string
 	static string writeValue(const JsonValuePtr & p);
 	static void writeValue(const JsonValuePtr & p, string& ostr);
 	static void writeValue(const JsonValuePtr & p, vector<char>& buf);
 
 	//json字符串到json结构的转换
+	//Conversion of JSON string to JSON structure
 	static JsonValuePtr getValue(const string & str);
     static JsonValuePtr getValue(const vector<char>& buf);
 private:
 	//string 类型到json字符串
+	//string type to json string
 	static void writeString(const JsonValueStringPtr & p, string& ostr);
 	static void writeString(const string & s, string& ostr);
 
 	//num 类型到json字符串
+	//num type to json string
 	static void writeNum(const JsonValueNumPtr & p, string& ostr);
 
 	//obj 类型到json字符串
+	//obj type to json string
 	static void writeObj(const JsonValueObjPtr & p, string& ostr);
 
 	//array 类型到json字符串
+	//array type to json string
 	static void writeArray(const JsonValueArrayPtr & p, string& ostr);
 
 	//boolean 类型到json字符串
+	//boolean type to json string
 	static void writeBoolean(const JsonValueBooleanPtr & p, string& ostr);
 
 	//读取json的value类型 也就是所有的json类型 如果不符合规范会抛异常
+	//Reading json's value type means that all JSON types throw an exception if they do not conform to the specification
 	static JsonValuePtr getValue(BufferJsonReader & reader);
 	//读取json的object 如果不符合规范会抛异常
+	//Reading json's object throws an exception if it does not conform to the specification
 	static JsonValueObjPtr getObj(BufferJsonReader & reader);
 	//读取json的array(数组) 如果不符合规范会抛异常
+	//Reading json's array (array) throws an exception if it does not conform to the specification
 	static JsonValueArrayPtr getArray(BufferJsonReader & reader);
 	//读取json的string 如 "dfdf" 如果不符合规范会抛异常
+	//A string reading json, such as "dfdf", throws an exception if it does not conform to the specification
 	static JsonValueStringPtr getString(BufferJsonReader & reader,char head='\"');
 	//读取json的数字 如 -213.56 如果不符合规范会抛异常
+	//Reading JSON numbers such as -213.56 throws an exception if it does not conform to the specification
 	static JsonValueNumPtr getNum(BufferJsonReader & reader,char head);
 	//读取json的boolean值  如 true false 如果不符合规范会抛异常
+	//Reading json's Boolean value such as true false throws an exception if it does not conform to the specification
 	static JsonValueBooleanPtr getBoolean(BufferJsonReader & reader,char c);
 	//读取json的 null 如果不符合规范会抛异常
+	//Reading json's null throws an exception if it does not conform to the specification
 	static JsonValuePtr getNull(BufferJsonReader & reader,char c);
 	//获取16进制形式的值 如\u003f 如果不符合规范会抛异常
+	//Judging whether a character meets json's definition of a blank character Gets a value in hexadecimal form such as \u003f Throws an exception if it does not conform to the specification
 	static uint32_t getHex(BufferJsonReader & reader);
 	//判断一个字符是否符合json定义的空白字符
+	//Determines whether a character matches a json-defined blank character
 	static bool isspace(char c);
 };
 
@@ -305,19 +333,24 @@ public:
 	static void writeValue(const JsonValuePtr & p, ostream& ostr);
 private:
 	//string 类型到json字符串
+	//stirng type to json string
 	static void writeString(const JsonValueStringPtr & p, ostream& ostr);
 	static void writeString(const string & s, ostream& ostr);
 
 	//num 类型到json字符串
+	//num type to json string
 	static void writeNum(const JsonValueNumPtr & p, ostream& ostr);
 
 	//obj 类型到json字符串
+	//obj type to json string
 	static void writeObj(const JsonValueObjPtr & p, ostream& ostr);
 
 	//array 类型到json字符串
+	//array type to json string
 	static void writeArray(const JsonValueArrayPtr & p, ostream& ostr);
 
 	//boolean 类型到json字符串
+	//boolean type to json string
 	static void writeBoolean(const JsonValueBooleanPtr & p, ostream& ostr);
 };
 }
