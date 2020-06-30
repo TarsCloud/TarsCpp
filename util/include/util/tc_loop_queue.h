@@ -29,6 +29,7 @@ namespace tars
 /**
  * @file tc_loop_queue.h 
  * @brief 循环队列,大小固定 . 
+ * @brief Circular queue, fixed size.
  *  
  */
 /////////////////////////////////////////////////
@@ -42,6 +43,7 @@ public:
     TC_LoopQueue(size_t iSize)
     {
         //做个保护 最多不能超过 1000000
+        //Make a protection. No more than 1000000.
         // assert(iSize<1000000);
         _iBegin = 0;
         _iEnd = 0;
