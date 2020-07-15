@@ -42,6 +42,9 @@ public:
      *
      **/
     virtual void destroyApp();
+
+private:
+    void onNewClient(TC_EpollServer::Connection*);
 };
 
 extern HttpServer g_app;

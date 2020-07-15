@@ -2253,6 +2253,14 @@ public:
      */
     size_t getLogicThreadNum();
 
+    // 接收新的客户端链接时的回调
+    typedef std::function<void (TC_EpollServer::Connection*)> accept_callback_functor;
+
+    /*
+     * 设置接收链接的回调
+     */
+    void setOnAccept(const accept_callback_functor& f) { _acceptFunc = f; }
+
 	//回调给应用服务
     //Callback to application service
 	typedef std::function<void(TC_EpollServer*)> application_callback_functor;
@@ -2369,6 +2377,10 @@ private:
      */
     heartbeat_callback_functor _heartFunc;
 
+    /**
+     * 接收链接的回调函数
+     */
+    accept_callback_functor _acceptFunc;
 };
 
 typedef TC_AutoPtr<TC_EpollServer> TC_EpollServerPtr;
