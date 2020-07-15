@@ -144,6 +144,8 @@ macro(gen_server APP TARGET)
 		add_dependencies(${TARGET} tars-${TARGET})
 	endif()
 
+	target_link_libraries(${TARGET}  ${LIB_TARS_SERVANT} ${LIB_TARS_UTIL})
+
 	if(TARS_SSL)
 		target_link_libraries(${TARGET} ${LIB_SSL} ${LIB_CRYPTO})
 
@@ -155,8 +157,6 @@ macro(gen_server APP TARGET)
 	if(TARS_HTTP2)
 		target_link_libraries(${TARGET} ${LIB_HTTP2})
 	endif()
-
-	target_link_libraries(${TARGET}  ${LIB_TARS_SERVANT} ${LIB_TARS_UTIL})
 
 	#make tar #########################################################################
 	#must create tmp directory, avoid linux cmake conflict!
