@@ -1337,7 +1337,7 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
                 bindAdapter->setProtocol(AppProtocol::parse);
             }
 
-            bindAdapter->setHandle<ServantHandle>(TC_Common::strto<int>(_conf.get(sLastPath + "<threads>", "0")));
+            bindAdapter->setHandle<ServantHandle>(TC_Common::strto<int>(_conf.get(sLastPath + "<threads>", "1")));
 
             if(ServerConfig::ManualListen) {
                 //手工监听
