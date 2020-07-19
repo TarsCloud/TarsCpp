@@ -1,3 +1,38 @@
+
+## v2.4.7 2020.07.19
+### en
+- fix tars-tools.cmake, support ssl link order bug
+- tars2cpp delete routerkey support (for grid, not use now)
+- epoll server add onNewClient callback
+- fix tc_gzip memory leak
+- solve the default threads num problem 
+### cn
+- tars-tools.cmake, 修改ssl 连接顺序不对的问题
+- tars2cpp去掉routerkey(给灰度使用, 目前版本都不再支持)
+- epoll server 增加onNewClient回调
+- fix tc_gzip在某情况下的内存泄露
+- 修改threads缺省参数值为0的bug
+
+## v2.4.6 2020.07.09
+### en
+- fix http parse repsonse bug to support TarsGateway
+### cn
+- 修改http解析响应包的bug
+
+## v2.4.5 2020.07.07
+### en:
+- tars2node support JSON_VERSION.
+### cn:
+- tars2node 工具支持JSON_VERSION 协议。
+
+## v2.4.4 2020.06.19
+### en:
+- add totalResponse for all protocol response;
+- modity tars2cpp for json protocol: gen json protocol default && gen async_response_xx json protocol;
+### cn:
+- 增加 totalResponse，对tars所有协议（tars、tup、json）回包都支持；
+- 修改tars2cpp，默认都生成json协议支持，并修改了 async_response_xx 也支持json回包。
+
 ## v2.4.3 2020.06.10
 ### en:
 - tc_spin_lock support arm
