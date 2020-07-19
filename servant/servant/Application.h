@@ -20,6 +20,7 @@
 #include <iostream>
 #include <set>
 #include <signal.h>
+#include <vector>
 
 #include "util/tc_autoptr.h"
 #include "util/tc_config.h"
@@ -243,6 +244,13 @@ public:
      */
     void addServantProtocol(const string &servant, const TC_NetWorkBuffer::protocol_functor &protocol);
 
+    /**
+     * @desc 添加接收新链接的回调
+     * 
+     * @param cb
+     */
+    void addAcceptCallback(const TC_EpollServer::accept_callback_functor& cb);
+
 protected:
     /**
      * 初始化, 只会进程调用一次
@@ -399,6 +407,13 @@ protected:
 protected:
 
     /**
+     * @desc callback when accept new client
+     * 
+     * @param cPtr
+     */
+    void onAccept(TC_EpollServer::Connection* cPtr);
+
+    /**
      *
      *
      * @param command
@@ -497,6 +512,8 @@ protected:
      * communicator
      */
     static CommunicatorPtr     _communicator;
+
+    std::vector<TC_EpollServer::accept_callback_functor> _acceptFuncs;
 
 #if TARS_SSL
     /**
