@@ -30,6 +30,7 @@ HttpServer::initialize()
 
     addServant<HttpImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj");
     addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj",&TC_NetWorkBuffer::parseHttp);
+    addAcceptCallback(std::bind(&HttpServer::onNewClient, this, std::placeholders::_1));
 }
 /////////////////////////////////////////////////////////////////
 void
@@ -38,6 +39,12 @@ HttpServer::destroyApp()
     //destroy application here:
     //...
 }
+
+void HttpServer::onNewClient(TC_EpollServer::Connection* conn)
+{
+    std::cout << "New client from " << conn->getIp() << ":" << conn->getPort() << std::endl;
+}
+
 /////////////////////////////////////////////////////////////////
 int
 main(int argc, char* argv[])
