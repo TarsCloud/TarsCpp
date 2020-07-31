@@ -191,7 +191,7 @@ public:
     * @param func: function
     * @param pParam: 参数,传入func中
     * @param pParam: parameter, passed into func
-    * @return voipParamd
+    * @return void
     */
     void traverse(TC_ParseparaTraverseFunc func, void *pParam);
 
