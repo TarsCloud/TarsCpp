@@ -5,9 +5,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(WIN32)
 	set(TARS2CPP "c:/tars/cpp/tools/tars2cpp.exe")
+	set(TARSMERGE "c:/tars/cpp/tools/tarsmerge")
 	set(TARS_PATH "c:/tars/cpp")
 else()
 	set(TARS2CPP "/usr/local/tars/cpp/tools/tars2cpp")
+	set(TARSMERGE "/usr/local/tars/cpp/tools/tarsmerge")
 	set(TARS_PATH "/usr/local/tars/cpp")
 endif()
 
@@ -87,10 +89,12 @@ ENDIF (UNIX)
 
 set(TARS_RELEASE "${PROJECT_BINARY_DIR}/run-release.cmake")
 set(TARS_UPLOAD "${PROJECT_BINARY_DIR}/run-upload.cmake")
+set(TARS_UPLOAD_TARS "${PROJECT_BINARY_DIR}/run-upload-tars.cmake")
 set(TARS_TAR "${PROJECT_BINARY_DIR}/run-tar.cmake")
 
 FILE(WRITE ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo release all)\n")
 FILE(WRITE ${TARS_UPLOAD} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo upload all)\n")
+FILE(WRITE ${TAF_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND cmake -E  echo upload tars all)\n")
 FILE(WRITE ${TARS_TAR} "")
 
 function(gen_tars TARGET)
@@ -221,6 +225,36 @@ macro(gen_server APP TARGET)
 
 	FILE(APPEND ${TARS_UPLOAD} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -P ${RUN_UPLOAD_COMMAND_FILE})\n")
 
+	#make upload-tars #########################################################################
+	if (TARS_INPUT)
+		SET(RUN_UPLOAD_TARS_COMMAND_FILE "${PROJECT_BINARY_DIR}/run-upload-tars-${TARGET}.cmake")
+
+		IF(WIN32)
+			FILE(WRITE ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo ${TARS_WEB_HOST}/api/upload_tars_file -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
+			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${TAF_PATH}/thirdparty/bin/curl.exe ${TARS_WEB_HOST}/api/upload_tars_file?ticket=${TAF_TOKEN} -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
+			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND -E echo \n---------------------------------------------------------------------------)\n")
+		ELSE()
+			FILE(WRITE ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo ${TARS_WEB_HOST}/api/upload_tars_file -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
+			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND curl ${TARS_WEB_HOST}/api/upload_tars_file?ticket=${TAF_TOKEN} -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
+			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo \n---------------------------------------------------------------------------)\n")
+		ENDIF()
+
+		add_custom_target(${TARGET}-tars-merge
+				WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+				DEPENDS ${TARGET}-tar
+				COMMAND ${TARSMERGE} ${TARS_INPUT} --out=${CMAKE_BINARY_DIR}/${TARGET}-merge.tars
+				COMMENT "merge tars")
+
+		#执行命令
+		add_custom_target(${TARGET}-upload-tars
+				WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+				DEPENDS ${TARGET}-tars-merge
+				COMMAND cmake -P ${RUN_UPLOAD_TARS_COMMAND_FILE}
+				COMMENT "call ${RUN_UPLOAD_TARS_COMMAND_FILE}")
+
+		FILE(APPEND ${TAF_UPLOAD_JCE} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_UPLOAD_TARS_COMMAND_FILE})\n")
+	endif ()
+
 	#make release #########################################################################
 	SET(RUN_RELEASE_COMMAND_FILE "${PROJECT_BINARY_DIR}/run-release-${TARGET}.cmake")
 
@@ -264,6 +298,10 @@ add_custom_target(release
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMAND cmake -P ${TARS_RELEASE})
 
+add_custom_target(upload-tars
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		COMMAND cmake -P ${TAF_UPLOAD_TARS})
+
 add_custom_target(tar
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMAND cmake -P ${TARS_TAR})
@@ -275,6 +313,7 @@ message("PROJECT_SOURCE_DIR:        ${PROJECT_SOURCE_DIR}")
 message("CMAKE_BUILD_TYPE:          ${CMAKE_BUILD_TYPE}")
 message("PLATFORM:                  ${PLATFORM}")
 message("TARS2CPP:                  ${TARS2CPP}")
+message("TARSMERGE:                 ${TARSMERGE}")
 message("TARS_MYSQL:                ${TARS_MYSQL}")
 message("TARS_HTTP2:                ${TARS_HTTP2}")
 message("TARS_SSL:                  ${TARS_SSL}")
