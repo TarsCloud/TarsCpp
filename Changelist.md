@@ -1,4 +1,12 @@
 
+## v2.4.8 2020.08.05
+### en
+- add tarsmerge, can merge mutil tars file to one
+- fix tars-tools.cmake, support: make xxxx-upload-tars, upload tars to web, for test
+### cn
+- 添加 tarsmerge工具, 支持合并多个tars文件到一个
+- 修改tars-tools.cmake, 支持make xxx-upload-tars, 上传本服务的tars文件到web, 方便自动测试
+
 ## v2.4.7 2020.07.19
 ### en
 - fix tars-tools.cmake, support ssl link order bug
