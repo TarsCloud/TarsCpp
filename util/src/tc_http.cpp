@@ -1281,7 +1281,7 @@ bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer &buff)
 				setContentLength(_iRecvContentLength);
 			}
 
-			return true;
+			return false;
 		}
 		else
 		{
