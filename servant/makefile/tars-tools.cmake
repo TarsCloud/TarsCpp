@@ -94,7 +94,7 @@ set(TARS_TAR "${PROJECT_BINARY_DIR}/run-tar.cmake")
 
 FILE(WRITE ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo release all)\n")
 FILE(WRITE ${TARS_UPLOAD} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo upload all)\n")
-FILE(WRITE ${TAF_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND cmake -E  echo upload tars all)\n")
+FILE(WRITE ${TARS_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND}  -E echo upload tars all)\n")
 FILE(WRITE ${TARS_TAR} "")
 
 function(gen_tars TARGET)
@@ -252,7 +252,7 @@ macro(gen_server APP TARGET)
 				COMMAND cmake -P ${RUN_UPLOAD_TARS_COMMAND_FILE}
 				COMMENT "call ${RUN_UPLOAD_TARS_COMMAND_FILE}")
 
-		FILE(APPEND ${TAF_UPLOAD_JCE} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_UPLOAD_TARS_COMMAND_FILE})\n")
+		FILE(APPEND ${TARS_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_UPLOAD_TARS_COMMAND_FILE})\n")
 	endif ()
 
 	#make release #########################################################################
@@ -300,7 +300,7 @@ add_custom_target(release
 
 add_custom_target(upload-tars
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-		COMMAND cmake -P ${TAF_UPLOAD_TARS})
+		COMMAND cmake -P ${TARS_UPLOAD_TARS})
 
 add_custom_target(tar
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
