@@ -61,6 +61,19 @@ class TC_Encoder
 {
 public:
 
+	/**
+	 * @brief 编码转换过程中的模式,转换模式只在LINUX中生效，WINDOWS环境
+	 * 下可忽略该参数
+	 */
+	typedef enum{
+		//一般模式，当遇到未知字符时会抛出异常
+		ICONV_NORMAL,
+		//转换模式，当遇到未知字符时，会查找目标字符集中相似的字符来替代
+		ICONV_TRANSLIT,
+		//忽略模式，当遇到未知字符是，会跳过该字符，继续转换下一字符
+		ICONV_IGNORE
+	}ICONV_MODE;
+
     /**
 	* @brief  gbk 转换到 utf8. 
 	* @brief  The transformation from GBK to UTF8.
@@ -71,7 +84,7 @@ public:
     * @return      转换后的utf8编码
 	* @return      the UTF8 encodeing after transformation
     */
-    static string gbk2utf8(const string &sIn);
+    static string gbk2utf8(const string &sIn,int mode=ICONV_NORMAL);
 
     /**
 	* @brief  gbk 转换到 utf8. 
@@ -84,7 +97,7 @@ public:
     * @throws       TC_Encoder_Exception
     * @return
     */
-    static void gbk2utf8(const string &sIn, vector<string> &vtStr);
+    static void gbk2utf8(const string &sIn, vector<string> &vtStr,int mode=ICONV_NORMAL);
 
 
     /**
@@ -97,7 +110,7 @@ public:
     * @return    转换后的gbk编码
 	* @return    the GBK encodeing after transformation
     */
-    static string utf82gbk(const string &sIn);
+    static string utf82gbk(const string &sIn,int mode=ICONV_NORMAL);
 
 	/**	
 	* @brief  将string的\n替换掉,转义字符串中的某个字符 
@@ -160,7 +173,7 @@ protected:
     * @throws           TC_Encoder_Exception
     * @return
     */
-    static void utf82gbk(char *sOut, int &iMaxOutLen, const char *sIn, int iInLen);
+    static void utf82gbk(char *sOut, int &iMaxOutLen, const char *sIn, int iInLen,int mode);
 };
 
 }
