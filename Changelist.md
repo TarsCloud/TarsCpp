@@ -1,7 +1,17 @@
 
+## v2.4.9 2020.08.19
+### en
+- Fix tars-tool.cmake `make upload` bug in linux
+- Update tars-tools.cmake, support multi tars file
+- tc_encoder optimize
+### cn
+- 修改tars-tool.cmake `make upload` 在linux上bug, cmake用${CMAKE_COMMAND}代替 
+- 修改tars-tools.cmake, 支持多个tars文件
+- 优化tc_encoder
+
 ## v2.4.8 2020.08.05
 ### en
-- add tarsmerge, can merge mutil tars file to one
+- add tarsmerge, can merge multi tars file to one
 - fix tars-tools.cmake, support: make xxxx-upload-tars, upload tars to web, for test
 - fix when http header has not content-length, tc_http decode bug
 - fix refresh endpoint crash
