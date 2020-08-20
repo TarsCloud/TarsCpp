@@ -52,7 +52,8 @@ public:
     {
         PACKET_LESS = 0,
         PACKET_FULL = 1,
-        PACKET_ERR  = -1,
+		PACKET_FULL_CLOSE = 2,  ///< get whole package, and need close connection, for example: http
+        PACKET_ERR  = -1,   
     };
 
     /**

@@ -666,7 +666,7 @@ namespace tars
 		 * @brief 日志级别名称
 		 * @brief Log Level Name
 		 */
-		static const string LN[7];
+		static const string LN[];
 
 		/**
 		 * @brief 构造函数
@@ -1424,6 +1424,9 @@ namespace tars
 				}
 			}
 
+			//需要先关闭当前文件，再进行rename操作
+			_of.close();
+
 			//将log文件命名shift, xxx1.log=>xxx2.log,第一文件还是为xxx.log
 			//Name the log file shift, xxx1.log=>xxx2.log, or the first file is xxx.log
 			for (int i = _maxNum - 2; i >= 0; i--)
@@ -1444,7 +1447,6 @@ namespace tars
 				}
 			}
 
-			_of.close();
 			_of.open(sLogFileName.c_str(), ios::app);
 			if (!_of)
 			{

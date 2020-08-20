@@ -14,10 +14,8 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_OPENSSL_H
-#define __TC_OPENSSL_H
+#pragma once
 
-#if TARS_SSL
 
 #include <string>
 #include <vector>
@@ -34,7 +32,7 @@ typedef struct ssl_ctx_st SSL_CTX;
 
 namespace tars
 {
-
+#if TARS_SSL
 /////////////////////////////////////////////////
 /** 
  *@file   tc_openssl.h
@@ -195,10 +193,34 @@ private:
     TC_NetWorkBuffer _plainBuf;
 
 };
+#else
+//未开启openssl得时候，定义一个空得对象保留指针占位符
+class TC_OpenSSL
+{
+public:
 
-} // end namespace tars
+    /**
+     * @brief constructor.
+     */
+    TC_OpenSSL(SSL* ssl) {};
+
+    /**
+     * @brief deconstructor.
+     */
+    ~TC_OpenSSL() {};
+
+    struct CTX
+    {
+        CTX(SSL_CTX* x) : ctx(x) {}
+        SSL_CTX* ctx;
+    };
+};
 
 #endif
 
-#endif
+} // end namespace taf
+
+
+
+
 

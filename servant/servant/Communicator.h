@@ -289,7 +289,6 @@ protected:
      * @return
      */
     void doStat();
-#if TARS_SSL
 
 	/**
 	 * get openssl of trans
@@ -297,7 +296,6 @@ protected:
 	 * @return vector<TC_Endpoint>
 	 */
 	shared_ptr<TC_OpenSSL> newClientSSL(const string & objName);
-#endif
 
 	/**
      * 框架内部需要直接访问通信器的类
@@ -369,8 +367,6 @@ protected:
      */
     int64_t                _minTimeout;
 
-#if TARS_SSL
-
 	/**
 	 * ssl ctx
 	 */
@@ -380,7 +376,6 @@ protected:
 	 * ssl
 	 */
 	unordered_map<string, shared_ptr<TC_OpenSSL::CTX>> _objCtx;
-#endif
 
 	/**
 	 *

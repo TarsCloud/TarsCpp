@@ -353,6 +353,11 @@ int ServantProxy::tars_timeout() const
     return _syncTimeout;
 }
 
+int ServantProxy::tars_connect_timeout() const
+{
+    return _connTimeout;
+}
+
 void ServantProxy::tars_connect_timeout(int conTimeout)
 {
     if(conTimeout < 100)
@@ -1056,6 +1061,10 @@ ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
 
                 ServantPrx prx = _communicator->stringToProxy<ServantPrx>(obj);
                 prx->tars_set_protocol(tars_get_protocol());
+                prx->taf_connect_timeout(taf_connect_timeout());
+                prx->taf_timeout(taf_timeout());
+                prx->taf_async_timeout(taf_async_timeout());
+
                 prx->_rootPrx = this;
 
                 _servantList.push_back(prx);
