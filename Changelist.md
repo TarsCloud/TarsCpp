@@ -4,10 +4,24 @@
 - Fix tars-tool.cmake `make upload` bug in linux
 - Update tars-tools.cmake, support multi tars file
 - tc_encoder optimize
+- fix servant http call context release bug
+- fix servant connection reconnect dead cycle
+- fix http servant set timeout bug
+- fix windows roll log bug
+- fix tc_time postAtTime bug
+- remove TARS_SSL in header
+- fix windows gtest build bug
 ### cn
 - 修改tars-tool.cmake `make upload` 在linux上bug, cmake用${CMAKE_COMMAND}代替 
 - 修改tars-tools.cmake, 支持多个tars文件
 - 优化tc_encoder
+- 修复http servant 短连接模式下context释放的bug(貌似只会在windows下出现)
+- 修复prx重连可能导致的死循环的问题
+- 修复http servant 设置timeout不正确的问题
+- 修复windows下循环日志不启用的问题
+- 修复tc_time postAtTime的bug
+- 头文件中删除TARS_SSL的宏, 避免内存模型不一致
+- 修改windows gtest编译连接不争取的问题
 
 ## v2.4.8 2020.08.05
 ### en
