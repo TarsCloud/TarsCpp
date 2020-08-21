@@ -1061,9 +1061,9 @@ ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
 
                 ServantPrx prx = _communicator->stringToProxy<ServantPrx>(obj);
                 prx->tars_set_protocol(tars_get_protocol());
-                prx->taf_connect_timeout(taf_connect_timeout());
-                prx->taf_timeout(taf_timeout());
-                prx->taf_async_timeout(taf_async_timeout());
+                prx->tars_connect_timeout(tars_connect_timeout());
+                prx->tars_timeout(tars_timeout());
+                prx->tars_async_timeout(tars_async_timeout());
 
                 prx->_rootPrx = this;
 
