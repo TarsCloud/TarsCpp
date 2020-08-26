@@ -545,6 +545,12 @@ public:
     int tars_timeout() const;
 
     /**
+     * 获取连接超时时间
+     * @return int
+     */
+    int tars_connect_timeout() const;
+
+    /**
      * 设置连接超时时间
      * @return int
      */
@@ -903,6 +909,12 @@ private:
 	 *
 	 */
 	vector<ServantPrx>          _servantList;
+
+    /**
+     * 链接超时
+     */
+    int _connTimeout            = DEFAULT_ASYNCTIMEOUT;
+
 };
 }
 #endif

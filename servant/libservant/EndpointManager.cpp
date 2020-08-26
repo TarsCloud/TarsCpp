@@ -555,7 +555,7 @@ void QueryEpBase::doEndpoints(const vector<EndpointF>& activeEp, const vector<En
     {
         //  tars istcp意思和这里枚举值对应
 //        EndpointInfo::EType type = EndpointInfo::EType(inactiveEp[i].istcp);
-        EndpointInfo ep(inactiveEp[i].host, inactiveEp[i].port, (TC_Endpoint::EType)activeEp[i].istcp, inactiveEp[i].grid, inactiveEp[i].setId, inactiveEp[i].qos, inactiveEp[i].weight, inactiveEp[i].weightType, inactiveEp[i].authType);
+        EndpointInfo ep(inactiveEp[i].host, inactiveEp[i].port, (TC_Endpoint::EType)inactiveEp[i].istcp, inactiveEp[i].grid, inactiveEp[i].setId, inactiveEp[i].qos, inactiveEp[i].weight, inactiveEp[i].weightType, inactiveEp[i].authType);
 
         inactiveEps.insert(ep);
     }

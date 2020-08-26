@@ -1933,6 +1933,7 @@ TC_EpollServer::TC_EpollServer(unsigned int iNetThreadNum)
 , _bTerminate(false)
 , _handleStarted(false)
 , _pLocalLogger(NULL)
+, _acceptFunc(NULL)
 {
 #if TARGET_PLATFORM_WINDOWS
     WSADATA wsadata;
@@ -2273,6 +2274,11 @@ void TC_EpollServer::addConnection(TC_EpollServer::Connection *cPtr, int fd, TC_
     else
     {
         netThread->addUdpConnection(cPtr);
+    }
+    // 回调
+    if (_acceptFunc != NULL)
+    {
+        _acceptFunc(cPtr);
     }
 }
 

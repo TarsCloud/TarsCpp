@@ -20,6 +20,7 @@
 #include <iostream>
 #include <set>
 #include <signal.h>
+#include <vector>
 
 #include "util/tc_autoptr.h"
 #include "util/tc_config.h"
@@ -33,10 +34,7 @@
 #include "servant/RemoteLogger.h"
 #include "servant/RemoteConfig.h"
 #include "servant/RemoteNotify.h"
-
-#if TARS_SSL
 #include "util/tc_openssl.h"
-#endif
 
 namespace tars
 {
@@ -135,13 +133,11 @@ struct SVT_DLL_API ServerConfig
 	static bool        MergeNetImp;                //网络线程和IMP线程合并(以网络线程个数为准)
 	static int         BackPacketLimit;     //回包积压检查
 	static int         BackPacketMin;       //回包速度检查
-#if TARS_SSL
 	static std::string CA;
 	static std::string Cert;
 	static std::string Key;
 	static bool VerifyClient;
 	static std::string Ciphers;
-#endif
 	static map<string, string> Context;     //框架内部用, 传递节点名称(以域名形式部署时)
 };
 
@@ -242,6 +238,13 @@ public:
      * @param servant
      */
     void addServantProtocol(const string &servant, const TC_NetWorkBuffer::protocol_functor &protocol);
+
+    /**
+     * @desc 添加接收新链接的回调
+     * 
+     * @param cb
+     */
+    void addAcceptCallback(const TC_EpollServer::accept_callback_functor& cb);
 
 protected:
     /**
@@ -399,6 +402,13 @@ protected:
 protected:
 
     /**
+     * @desc callback when accept new client
+     * 
+     * @param cPtr
+     */
+    void onAccept(TC_EpollServer::Connection* cPtr);
+
+    /**
      *
      *
      * @param command
@@ -498,12 +508,12 @@ protected:
      */
     static CommunicatorPtr     _communicator;
 
-#if TARS_SSL
+    std::vector<TC_EpollServer::accept_callback_functor> _acceptFuncs;
+
     /**
      * ssl ctx
      */
 	shared_ptr<TC_OpenSSL::CTX> _ctx;
-#endif
 
     PropertyReport * _pReportQueue;
     PropertyReport * _pReportConRate;

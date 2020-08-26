@@ -1182,7 +1182,7 @@ bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer &buff)
 
 		_headLength = p - data.first + 4;
 
-		_iTmpContentLength = parseResponseHeaderString(data.first, data.first + data.second);
+		_iTmpContentLength = parseResponseHeaderString(data.first, data.first + _headLength);
 
 		//304的返回码中头里本来就没有Content-Length，也不会有数据体，头收全了就是真正的收全了
 		if ( (204 == _status) || (304 == _status) )
@@ -1281,7 +1281,7 @@ bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer &buff)
 				setContentLength(_iRecvContentLength);
 			}
 
-			return true;
+			return false;
 		}
 		else
 		{

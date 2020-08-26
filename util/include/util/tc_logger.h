@@ -49,36 +49,51 @@ namespace tars
 	/**
 	 * @file tc_logger.h
 	 * @brief 日志类.
+	 * @brief Log Class.
 	 *
 	 * 说明:可扩展的日志类,可以自定义滚动策略和写方法.
+	 * Description: An extensible log class that allows you to customize scrolling policies and writing methods.
 	 *
 	 *  提供了两种方式的滚动方式:
+	 *  There are two ways to scroll:
 	 *
 	 *  1 按文件大小,文件数目滚动;
+	 *  1 Scroll by file size and number of files;
 	 *
 	 *  2 按时间滚动(按天/小时/分钟等)
+	 *  2 Scroll by time (by day/hour/minute, etc.)
 	 *
 	 *   上述两种默认的策略中,都是默认写入文件的,当没有初始化,则默认写入到cout
+	 *   Of the two default strategies described above, both are written to files by default, and when not initialized, to cout by default
 	 *
 	 *  自定义滚动方式的步骤如下:
+	 *  The steps to customize scrolling are as follows:
 	 *
 	 *  1 实现自定义模板类,继承于TC_LoggerRoll,实现roll函数,该函数实现写逻辑,
+	 *  1 Implement a custom template class that inherits from TC_LoggerRoll, which implements the roll function, which implements write logic
 	 *
 	 *  例如:template<typename WriteT>
+	 *  for example: template<typename WriteT>
 	 *
 	 *  class MyRoll : public TC_LoggerRoll, public TC_ThreadMutex
 	 *
 	 *  2 模板中的WriteT是具体的写入逻辑,提供缺省的:TC_DefaultWriteT
+	 *  2 WriteT in the template is the specific write logic that provides the default: TC_DefaultWriteT
 	 *
 	 *  3 可以自定义实现WriteT, 例如:实现发送到网络的逻辑.
+	 *  3 You can customize the implementation of WriteT, for example, to implement logic sent to the network.
 	 *
 	 *  4 在MyRoll中实现内部类RollWrapperI, 并继承RollWrapperBase<MyRoll<WriteT> >
+	 *  4 Implement the internal class RollWrapperI in MyRoll and inherit RollWrapperBase<MyRoll<WriteT>>
 	 *
 	 *  5 RollWrapperI主要就是提供MyRoll的初始化接口, 这些接口最后会直接反应到TC_Logger中.
+	 *  5 RollWrapperI mainly provides MyRoll's initialization interfaces, which will eventually be reflected directly in TC_Logger.
 	 *
 	 *  6 RollWrapperI构造时, 构造MyRoll对象(采用智能指针),并且接口的操作直接转发到MyRoll对象中.
+	 *  6 When RollWrapperI is constructed, MyRoll objects are constructed (using smart pointers), and the operations of the interface are forwarded directly to the MyRoll objects.
 	 *
 	 *  实现这些逻辑后, 采用模板方式定义出类型:
+	 *  Once these logic are implemented, the types are defined as templates:
 	 *
 	 *  typedef TC_Logger<MyWriteT, MyRoll> MyLogger;
 	 *
@@ -102,6 +117,7 @@ namespace tars
 	}
 	/**
 	* @brief 日志异常类
+	* @brief Log Exception Class
 	*/
 	struct TC_Logger_Exception : public TC_Exception
 	{
@@ -112,6 +128,7 @@ namespace tars
 
 	/**
 	 * @brief 写操作
+	 * @brief Write operation
 	 */
 	class TC_DefaultWriteT
 	{
@@ -133,6 +150,7 @@ namespace tars
 	//////////////////////////////////////////////////////////////////////////////
 	/**
 	 * @brief 具体写日志基类
+	 * @brief Specific Write Log Base Class
 	 */
 
 	class UTIL_DLL_API TC_LoggerRoll : public TC_HandleBase
@@ -140,6 +158,7 @@ namespace tars
 	public:
 		/**
 		 * @brief 构造函数
+		 * @brief Constructor
 		 */
 		TC_LoggerRoll() : _pThreadGroup(NULL)
 		{
@@ -147,14 +166,17 @@ namespace tars
 
 		/**
 		 * @brief 实时记日志, 并且滚动.
+		 * @brief Keep a real-time log and scroll.
 		 *
 		 * 不同的策略日志类,实现不同的逻辑
+		 * Different policy log classes, implementing different logic
 		 * @param buffer
 		 */
 		virtual void roll(const deque<pair<size_t, string> > &ds) = 0;
 
 		/**
 		 * @brief 安装线程.
+		 * @brief Install Threads.
 		 *
 		 * @param ltg
 		 */
@@ -162,12 +184,14 @@ namespace tars
 
 		/**
 		 * @brief 取消线程.
+		 * @brief Cancel Thread.
 		 *
 		 */
 		void unSetupThread();
 
 		/**
 		 * @brief 写到日志.
+		 * @brief Write to Log
 		 *
 		 * @param 日志内容
 		 */
@@ -175,11 +199,13 @@ namespace tars
 
 		/**
 		 * @brief 刷新缓存到文件
+		 * @brief Refresh Cache to File
 		 */
 		void flush();
 
 		/**
 		 * @brief 设置染色是否生效.
+		 * @brief Set whether the dye works.
 		 *
 		 * @param bEnable
 		 */
@@ -209,21 +235,25 @@ namespace tars
 
 		/**
 		 * 锁
+		 * Lock
 		 */
 		std::mutex _mutex;
 
 		/**
 		 * 线程组
+		 * Thread Group
 		 */
 		TC_LoggerThreadGroup *_pThreadGroup;
 
 		/**
 		 * 是否已经染色的标志
+		 * A mark that has been stained or not
 		 */
 		static bool _bDyeingFlag;
 
 		/**
 		 * 染色用锁
+		 * Dyeing lock
 		 *
 		 */
 //		static std::mutex _mutexDyeing;
@@ -231,6 +261,7 @@ namespace tars
 
 		/**
 		 * 染色的线程ID集合
+		 * Stained thread ID collection
 		 *
 		 */
 		static unordered_map<size_t, string> _mapThreadID;
@@ -242,24 +273,29 @@ namespace tars
 	//
 	/**
 	 * @brief 写日志线程组.
+	 * @brief Write Log Thread Group
 	 *
 	 * 关键点:注册日志后,会保存职能指针,保证日志对象一直存在
+	 * Key point: After registering the log, the function pointer is saved to ensure that the log object always exists
 	 */
 	class TC_LoggerThreadGroup
 	{
 	public:
 		/**
 		 * @brief 构造函数
+		 * @brief Constructor
 		 */
 		TC_LoggerThreadGroup();
 
 		/**
 		 * @brief 析够函数
+		 * @brief Destructor
 		 */
 		~TC_LoggerThreadGroup();
 
 		/**
 		 * @brief 启动线程.
+		 * @brief Start Thread
 		 *
 		 * @param iThreadNum线程数
 		 */
@@ -267,20 +303,25 @@ namespace tars
 
 		/**
 		 * @brief 注册logger对象.
+		 * @brief Register logger object.
 		 *
 		 * @param l TC_LoggerRollPtr对象
+		 * @param l TC_LoggerRollPtr Object
 		 */
 		void registerLogger(TC_LoggerRollPtr &l);
 
 		/**
 		 * @brief 卸载logger对象.
+		 * @brief Unload logger object.
 		 *
 		 * @param l TC_LoggerRollPtr对象
+		 * @param l TC_LoggerRollPtr Object
 		 */
 		void unRegisterLogger(TC_LoggerRollPtr &l);
 
 		/**
 		 * @brief 刷新所有的数据
+		 * @brief Refresh all data
 		 */
 		void flush();
 
@@ -289,11 +330,13 @@ namespace tars
 	protected:
 		/**
 		 * @brief 写日志
+		 * @brief Write a log
 		 */
 		void run();
 
 		/**
 		 * @brief 指针比较
+		 * @brief Pointer comparison
 		 */
 		struct KeyComp
 		{
@@ -308,32 +351,39 @@ namespace tars
 	protected:
 		/**
 		 * 结束
+		 * End
 		 */
 		bool _bTerminate;
 
 		//锁
+		//Lock
 		std::mutex _mutex;
 
 		//条件变量
+		//Conditional variable
 		std::condition_variable _cond;
 
 		/**
 		 * logger对象
+		 * logger object
 		 */
 		logger_set _logger;
 
 		//线程
+		//Thread
 		std::thread *_thread;
 	};
 
 	/**
 	 * @brief 自定义logger buffer
+	 * @brief Custom logger buffer
 	 */
 	class LoggerBuffer : public std::basic_streambuf<char>
 	{
 	public:
 		/**
 		 * @brief 定义最大的buffer大小(10M)
+		 * @brief Define the maximum buffer size (10M)
 		 */
 		enum
 		{
@@ -342,25 +392,31 @@ namespace tars
 
 		/**
 		 * @brief 构造函数
+		 * @brief Constructor
 		 */
 		LoggerBuffer();
 
 		/**
 		 * @brief 构造函数.
+		 * @brief Constructor.
 		 *
 		 * @param roll        TC_LoggerRollPtr对象
+		 * @param roll        TC_LoggerRollPtr object
 		 * @param buffer_len  buffer大小
+		 * @param buffer_len  buffer size
 		 */
 		LoggerBuffer(TC_LoggerRollPtr roll, size_t buffer_len);
 
 		/**
 		 * @brief 析构函数
+		 * @brief Destructor
 		 */
 		~LoggerBuffer();
 
 	protected:
 		/**
 		 * @brief 分配空间.
+		 * @brief Allocate space.
 		 *
 		 * @param n
 		 */
@@ -368,6 +424,7 @@ namespace tars
 
 		/**
 		 * @brief 放数据.
+		 * @brief Place data.
 		 *
 		 * @param s
 		 * @param n
@@ -378,6 +435,7 @@ namespace tars
 
 		/**
 		 * @brief buffer满了, 具体写数据.
+		 * @brief Buffer is full, and data should be written specifically.
 		 *
 		 * @param c
 		 * @return int_type
@@ -386,6 +444,7 @@ namespace tars
 
 		/**
 		 * @brief 读空间empty了(不实现).
+		 * @brief Empty read space (not implemented)
 		 *
 		 * @return int_type
 		 */
@@ -393,6 +452,7 @@ namespace tars
 
 		/**
 		 * @brief 具体写逻辑.
+		 * @brief Write logic concretely.
 		 *
 		 * @return int
 		 */
@@ -405,28 +465,33 @@ namespace tars
 	protected:
 		/**
 		 * @brief 写日志
+		 * @brief Write a journal
 		 */
 		TC_LoggerRollPtr _roll;
 
 		/**
 		 * 缓冲区
+		 * buffer
 		 */
 		char *_buffer;
 
 		/**
 		 * 缓冲区大小
+		 * buffer size
 		 */
 		std::streamsize _buffer_len;
 	};
 
 	/**
 	 * @brief 临时类, 析够的时候写日志
+	 * @brief Temporary class, log when enough analysis
 	 */
 	class LoggerStream
 	{
 	public:
 		/**
 		 * @brief 构造.
+		 * @brief Constructor.
 		 *
 		 * @param stream
 		 * @param mutex
@@ -441,6 +506,7 @@ namespace tars
 
 		/**
 		 * @brief 析构
+		 * @brief Destructor
 		 */
 		~LoggerStream()
 		{
@@ -455,6 +521,7 @@ namespace tars
 
 		/**
 		* @brief 重载<<
+		* @brief Reload<<
 		*/
 		template <typename P>
 		LoggerStream &operator<<(const P &t)
@@ -469,6 +536,7 @@ namespace tars
 
 		/**
 		 * @brief endl,flush等函数
+		 * @brief Endl, flush and other functions
 		 */
 		typedef ostream &(*F)(ostream &os);
 		LoggerStream &operator<<(F f)
@@ -482,6 +550,7 @@ namespace tars
 
 		/**
 		 * @brief  hex等系列函数
+		 * @brief  Series of functions such as hex
 		 */
 		typedef ios_base &(*I)(ios_base &os);
 		LoggerStream &operator<<(I f)
@@ -495,6 +564,7 @@ namespace tars
 
 		/**
 		 * @brief 字段转换成ostream类型.
+		 * @brief Field is converted to ostream type.
 		 *
 		 * @return ostream&
 		 */
@@ -509,17 +579,20 @@ namespace tars
 		}
 
 		//不实现
+		//Not implemented
 		LoggerStream(const LoggerStream &lt);
 		LoggerStream &operator=(const LoggerStream &lt);
 
 	protected:
 		/**
 		* 缓冲区
+		* Buffer
 		*/
 		std::stringstream _buffer;
 
 		/**
 		 * 输出流
+		 * Output stream
 		 */
 		std::ostream *_stream;
 
@@ -530,12 +603,14 @@ namespace tars
 
 		/**
 		 * 锁
+		 * Lock
 		 */
 		TC_SpinLock &_mutex;
 	};
 
 	/**
 	 * @brief 日志基类
+	 * @brief Log Base Class
 	 */
 	template <typename WriteT, template <class> class RollPolicy>
 	class TC_Logger : public RollPolicy<WriteT>::RollWrapperI
@@ -543,45 +618,59 @@ namespace tars
 	public:
 		/**
 		 * @brief 设置显示标题
+		 * @brief Set Display Title
 		 */
 		enum
 		{
 			//秒级别时间
+			//Seconds level time
 			HAS_TIME = 0x01, 
 			//进程ID
+			//Process ID
 			HAS_PID = 0x02, 
 			//日志等级
+			//Log Level
 			HAS_LEVEL = 0x04, 
 			//毫秒级别时间(不建议使用, 会影响性能)
+			//Millisecond level time (not recommended, performance will be affected)
 			HAS_MTIME = 0x08,
 		};
 
 		/**
 		* @brief 枚举类型,定义日志的四种等级 . 此处级别被修改了，与taf标准不一样
+		* @brief Enumeration type, defines four levels of logs. This level has been modified and is different from the TAF standard
 		*/
 		enum
 		{
 			//所有的log都不写
+			//All logs are not written
 			NONE_LOG_LEVEL = 1, 
 			//写错误log
+			//Writing-error log
 			ERROR_LOG_LEVEL = 2,
 			//写错误,警告log
+			//Write error, warning log
 			WARN_LOG_LEVEL = 3, 
 			//写错误,警告,调试,Info log
+			//Write errors, warnings, debugging, Info log
 			INFO_LOG_LEVEL = 4,			
 			//写错误,警告,调试log
+			//Write error, warning, debug log
 			DEBUG_LOG_LEVEL = 5,
 			//给TARS框架打日志用
+			//Logging TARS Framework
 			TARS_LOG_LEVEL = 6, 
 		};
 
 		/**
 		 * @brief 日志级别名称
+		 * @brief Log Level Name
 		 */
-		static const string LN[7];
+		static const string LN[];
 
 		/**
 		 * @brief 构造函数
+		 * @brief Constructor
 		 */
 		TC_Logger()
 			: _flag(HAS_TIME), _level(DEBUG_LOG_LEVEL), _buffer(TC_LoggerRollPtr::dynamicCast(this->_roll), 1024), _stream(&_buffer), _ebuffer(NULL, 0), _estream(&_ebuffer), _sSepar("|"), _bHasSquareBracket(false)
@@ -590,6 +679,7 @@ namespace tars
 
 		/**
 		 * @brief 析够函数
+		 * @brief Disjunctive Function
 		 */
 		~TC_Logger()
 		{
@@ -597,6 +687,7 @@ namespace tars
 
 		/**
 		 * @brief 修改标题.
+		 * @brief Modify Title
 		 *
 		 * @param flag
 		 * @param add
@@ -615,6 +706,7 @@ namespace tars
 
 		/**
 		 * @brief 是否有某标示.
+		 * @brief Is there an indication.
 		 *
 		 * @return bool
 		 */
@@ -622,22 +714,29 @@ namespace tars
 
 		/**
 		 * @brief 获取flag
+		 * @brief Get flag
 		 * @return flag的值
+		 * @return Value of flag
 		 */
 		int getFlag() const { return _flag; }
 
 		/**
 		* @brief 获取日志等级.
+		* @brief Get Log Level.
 		*
 		* @return int 等级
+		* @return int level
 		*/
 		int getLogLevel() const { return _level; }
 
 		/**
 		* @brief 设置日志等级.
+		* @brief Set log level.
 		*
 		* @param level 等级
+		* @param level level
 		* @return      成功设置返回0，否则返回-1
+		* @return      Successfully set to return 0, otherwise return -1
 		*/
 		int setLogLevel(int level)
 		{
@@ -652,6 +751,7 @@ namespace tars
 
 		/**
 		 * @brief 设置等级.
+		 * @brief Set level.
 		 *
 		 * @param level
 		 * @param int
@@ -722,43 +822,51 @@ namespace tars
 		}
 		/**
 		 * @brief 框架中增加的日志内容之间的分割符，默认是"|"
+		 * @brief Separator between added log contents in the framework, default is'|'
 		 * @param str
 		 */
 		void setSeparator(const string &str) { _sSepar = str; }
 
 		/**
 		 * @brief 框架中日期和时间之间是否需要加中括号[],有些统计有特殊需求；默认不加
+		 * @brief Whether brackets [] are required between dates and times in the framework, some statistics have special requirements; no brackets are added by default
 		 * @param bEnable
 		 */
 		void enableSqareWrapper(bool bEnable) { _bHasSquareBracket = bEnable; }
 
 		/**
 		* @brief TARS记日志
+		* @brief TARS Log
 		*/
 		LoggerStream tars() { return stream(TARS_LOG_LEVEL); }
 
 		/**
 		* @brief DEBUG记日志
+		* @brief DEBUG Log
 		*/
 		LoggerStream info() { return stream(INFO_LOG_LEVEL); }
 
 		/**
 		* @brief DEBUG记日志
+		* @brief TARS Log
 		*/
 		LoggerStream debug() { return stream(DEBUG_LOG_LEVEL); }
 
 		/**
 		* @brief WARNING记日志
+		* @brief WARNING Log
 		*/
 		LoggerStream warn() { return stream(WARN_LOG_LEVEL); }
 
 		/**
 		* @brief ERROR记日志
+		* @brief ERROR Log
 		*/
 		LoggerStream error() { return stream(ERROR_LOG_LEVEL); }
 
 		/**
 		* @brief 记所有日志, 与等级无关
+		* @brief Keep all logs, regardless of rank
 		*/
 		LoggerStream any() { return stream(0); }
 
@@ -766,6 +874,7 @@ namespace tars
 	protected:
 		/**
 		 * @brief 获取头部信息.
+		 * @brief Get header information.
 		 *
 		 * @param c
 		 * @param len
@@ -836,9 +945,12 @@ namespace tars
 
 		/**
 		* @brief 进程等级是否有效.
+		* @brief Is the process level valid.
 		*
 		* @param level : 进程等级
+		* @param level : process level
 		* @return bool,等级是否有效
+		* @return bool, Is the rating valid
 		*/
 		bool isLogLevelValid(int level)
 		{
@@ -860,11 +972,13 @@ namespace tars
 	protected:
 		/**
 		 * 显示头
+		 * Display Head
 		 */
 		int _flag;
 
 		/**
 		* 日志最高等级
+		* Log Highest Level
 		*/
 		int _level;
 
@@ -875,31 +989,37 @@ namespace tars
 
 		/**
 		 * logger临时流
+		 * Logger temporary stream
 		 */
 		std::ostream _stream;
 
 		/**
 		 * 空buffer
+		 * empty buffer
 		 */
 		LoggerBuffer _ebuffer;
 
 		/**
 		 * 空流
+		 * empty flow
 		 */
 		std::ostream _estream;
 
 		/**
 		 * 锁
+		 * Lock
 		 */
 //		std::mutex _mutex;
 		TC_SpinLock _spinMutex;
 
 		/**
 		 * 分隔符
+		 * Separator
 		 */
 		string _sSepar;
 		/**
 		 * 日期部分是否加上[]
+		 * Is [] added to the date part
 		 */
 		bool _bHasSquareBracket;
 	};
@@ -916,40 +1036,48 @@ namespace tars
 
 		/**
 		* @brief TARS记日志
+		* @brief TARS Log
 		*/
 		virtual LoggerStream tars() = 0;
 
 		/**
 		* @brief INFO记日志
+		* @brief INFO Log
 		*/
 		virtual LoggerStream info() = 0;
 
 		/**
 		* @brief DEBUG记日志
+		* @brief DEBUG Log
 		*/
 		virtual LoggerStream debug() = 0;
 
 		/**
 		* @brief WARNING记日志
+		* @brief WARNING Log
 		*/
 		virtual LoggerStream warn() = 0;
 
 		/**
 		* @brief ERROR记日志
+		* @brief ERROR Log
 		*/
 		virtual LoggerStream error() = 0;
 
 		/**
 		* @brief 记所有日志, 与等级无关
+		* @brief Keep all logs, regardless of rank
 		*/
 		virtual LoggerStream any() = 0;
 
 		/**
 		 *@brief 按照等级来输出日志
+		 *@brief Output log by level
 		 */
 		virtual LoggerStream log(int level) = 0;
 		/**
 		 * @brief 如果是异步调用，则马上进行刷新
+		 * @brief If it is an asynchronous call, refresh immediately.
 		 */
 		virtual void flush() = 0;
 	};
@@ -962,6 +1090,7 @@ namespace tars
 
 		/**
 		 * @brief 构造
+		 * @brief Constructor
 		 */
 		RollWrapperBase()
 		{
@@ -970,6 +1099,7 @@ namespace tars
 
 		/**
 		 * @brief 安装线程.
+		 * @brief Install Threads
 		 *
 		 * @param ltg
 		 */
@@ -977,11 +1107,13 @@ namespace tars
 
 		/**
 		 * @brief 取消线程
+		 * @brief Cancel Thread
 		 */
 		void unSetupThread() { _roll->unSetupThread(); }
 
 		/**
 		 * @brief 获取写对象.
+		 * @brief Get Write Object
 		 *
 		 * @return WriteT&
 		 */
@@ -989,6 +1121,7 @@ namespace tars
 
 		/**
 		 * @brief 写日志.
+		 * @brief Write Log
 		 *
 		 * @param buffer
 		 */
@@ -996,6 +1129,7 @@ namespace tars
 
 		/**
 		* @brief 获取roll实例.
+		* @brief Get roll instance
 		*
 		* @return RollPolicyWriteTPtr&
 		*/
@@ -1003,12 +1137,14 @@ namespace tars
 
 		/**
 		 * @brief 异步刷新
+		 * @brief Asynchronous refresh
 		 */
 		void flush() { _roll->flush(); }
 
 	protected:
 		/**
 		 * @brief 具体写日志操作类
+		 * @brief Specific Write Log Action Class
 		 */
 		RollPolicyWriteTPtr _roll;
 	};
@@ -1016,6 +1152,7 @@ namespace tars
 	////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * @brief 日志滚动方法, 根据日志大小滚动
+	 * @brief Log scrolling method, scrolling according to log size.
 	 */
 	template <typename WriteT>
 	class TC_RollBySize : public TC_LoggerRoll, public std::mutex
@@ -1025,15 +1162,18 @@ namespace tars
 
 		/**
 		 * @brief 封装类(提供接口)
+		 * @brief Encapsulation classes (providing interfaces)
 		 */
 		class RollWrapperI : public RollWrapperBase<TC_RollBySize<WriteT> >
 		{
 		public:
 			/**
 			 * @brief 初始化.
+			 * @brief Initialize
 			 *
 			 * @param path
 			 * @param iMaxSize, 字节
+			 * @param iMaxSize, byte
 			 * @param iMaxNum
 			 */
 			void init(const string &path, int iMaxSize = 5000000, int iMaxNum = 10)
@@ -1043,6 +1183,7 @@ namespace tars
 
 			/**
 			 * @brief 获取日志路径.
+			 * @brief Get Log Path
 			 *
 			 * @return string
 			 */
@@ -1050,11 +1191,13 @@ namespace tars
 
 			/**
 			 * @brief 设置文件路径
+			 * @brief Set File Path
 			 */
 			void setPath(const string &path) { this->_roll->setPath(path); }
 
 			/**
 			 * @brief 获取最大大小.
+			 * @brief Get maximum size
 			 *
 			 * @return int
 			 */
@@ -1062,6 +1205,7 @@ namespace tars
 
 			/**
 			 * @brief 设置最大大小.
+			 * @brief Set maximum size
 			 *
 			 * @param maxSize
 			 */
@@ -1069,6 +1213,7 @@ namespace tars
 
 			/**
 			 * @brief 获取最大个数.
+			 * @brief Get the maximum number
 			 *
 			 * @return int
 			 */
@@ -1076,6 +1221,7 @@ namespace tars
 
 			/**
 			 * @brief 设置文件个数.
+			 * @brief Set the number of files.
 			 *
 			 * @param maxNum
 			 */
@@ -1084,6 +1230,7 @@ namespace tars
 
 		/**
 		 * @brief 构造函数
+		 * @brief Constructor
 		 */
 		TC_RollBySize() : _maxSize(5000000), _maxNum(10), _iUpdateCount(0), _lt(time(NULL))
 		{
@@ -1091,6 +1238,7 @@ namespace tars
 
 		/**
 		 * @brief 析够
+		 * @brief Destructor
 		 */
 		~TC_RollBySize()
 		{
@@ -1102,10 +1250,14 @@ namespace tars
 
 		/**
 		 * @brief 初始化.
+		 * @brief Initialize
 		 *
 		 * @param path, 文件名
+		 * @param path, file name
 		 * @param iMaxSize, 最大大小
+		 * @param iMaxSize, the maximun size
 		 * @param iMaxNum, 最大个数
+		 * @param iMaxNum. maximum number
 		 */
 		void init(const string &path, int iMaxSize = 5000000, int iMaxNum = 10)
 		{
@@ -1118,6 +1270,7 @@ namespace tars
 
 		/**
 		 * @brief 获取日志路径.
+		 * @brief Get log path.
 		 *
 		 * @return string
 		 */
@@ -1129,6 +1282,7 @@ namespace tars
 
 		/**
 		 * @brief 设置路径.
+		 * @brief Set log path.
 		 */
 		void setPath(const string &path)
 		{
@@ -1138,6 +1292,7 @@ namespace tars
 
 		/**
 		 * @brief 获取最大大小.
+		 * @brief Get maximum size.
 		 *
 		 * @return int
 		 */
@@ -1149,6 +1304,7 @@ namespace tars
 
 		/**
 		 * @brief 设置最大大小.
+		 * @brief Set maximum size.
 		 *
 		 * @param maxSize
 		 * @return void
@@ -1161,6 +1317,7 @@ namespace tars
 
 		/**
 		 * @brief 获取最大个数.
+		 * @brief Get the maximum number.
 		 *
 		 * @return int
 		 */
@@ -1172,6 +1329,7 @@ namespace tars
 
 		/**
 		 * @brief 设置最大个数.
+		 * @brief Set maximum number.
 		 *
 		 * @param maxNum
 		 */
@@ -1183,6 +1341,7 @@ namespace tars
 
 		/**
 		 * @brief 获取写示例.
+		 * @brief Get Write Samples.
 		 *
 		 * @return T&
 		 */
@@ -1190,6 +1349,7 @@ namespace tars
 
 		/**
 		 * 函数对象
+		 * Function object
 		 *
 		 * @param string
 		 */
@@ -1206,6 +1366,7 @@ namespace tars
 			time_t t = TNOW;
 			time_t tt = t - _lt;
 			//每隔5, 重新打开一次文件, 避免文件被删除后句柄不释放
+			//Every 5, reopen the file to prevent the handle from being released after the file is deleted.
 			if (tt > 5 || tt < 0)
 			{
 				_lt = t;
@@ -1213,6 +1374,7 @@ namespace tars
 			}
 
 			//检查日志文件是否打开
+			//Check that the log file is open
 			if (!_of.is_open())
 			{
 				string sLogFileName = _path + ".log";
@@ -1231,6 +1393,7 @@ namespace tars
 					// cout << "write roll4:" << sLogFileName << ", " << strerror(errno)<< endl;
 
 					//抛异常前继续进入_t 以便打远程日志
+					//Continue to _t for remote logging before throwing an exception
 					_t(_of, buffer);
 					THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
 					// throw TC_Logger_Exception("[TC_RollBySize::roll]:fopen fail: " + sLogFileName, TC_Exception::getSystemCode());
@@ -1245,12 +1408,14 @@ namespace tars
 			}
 
 			//文件大小小于限制, 直接返回
+			//File size less than limit, return directly
 			if (_of.tellp() < _maxSize)
 			{
 				return;
 			}
 
 			//文件大小超出限制,删除最后一个文件
+			//File size exceeds limit, delete last file
 			string sLogFileName = _path + TC_Common::tostr(_maxNum - 1) + ".log";
 			{
 				if (TC_File::isFileExist(sLogFileName) && TC_File::removeFile(sLogFileName, true))
@@ -1259,7 +1424,11 @@ namespace tars
 				}
 			}
 
+			//需要先关闭当前文件，再进行rename操作
+			_of.close();
+
 			//将log文件命名shift, xxx1.log=>xxx2.log,第一文件还是为xxx.log
+			//Name the log file shift, xxx1.log=>xxx2.log, or the first file is xxx.log
 			for (int i = _maxNum - 2; i >= 0; i--)
 			{
 				if (i == 0)
@@ -1278,7 +1447,6 @@ namespace tars
 				}
 			}
 
-			_of.close();
 			_of.open(sLogFileName.c_str(), ios::app);
 			if (!_of)
 			{
@@ -1290,37 +1458,44 @@ namespace tars
 	protected:
 		/**
 		 * 文件路径
+		 * File Path
 		 */
 		string _path;
 
 		/**
 		* 日志文件的最大大小
+		* Maximum size of log file
 		*/
 		int _maxSize;
 
 		/**
 		* log文件最大数log文件命名为:xxx.log xxx1.log ...
+		* Log file maximum log file name: xxx.log xxx1.log ...
 		* xxx[_maxNum-1].log,_maxNum<=1 ?xxx.log
 		*/
 		int _maxNum;
 
 		/**
 		 * 日志文件
+		 * log file
 		 */
 		ofstream _of;
 
 		/**
 		 * 具体写操作
+		 * Write operation
 		 */
 		WriteT _t;
 
 		/**
 		 * 多长时间检查一次文件大小
+		 * How often to check file size
 		 */
 		short _iUpdateCount;
 
 		/**
 		 * 多长时间检查一次文件大小
+		 * How often to check file size
 		 */
 		time_t _lt;
 	};
@@ -1329,6 +1504,7 @@ namespace tars
 
 	/**
 	 * @brief 根据时间滚动日志分隔类型
+	 * @brief Separation type based on scrolling log
 	 */
 	class LogType : public TC_HandleBase
 	{
@@ -1341,6 +1517,7 @@ namespace tars
 
 		virtual ~LogType() {}
 		//频率值
+		//Frequency value
 		virtual size_t frequence() = 0;
 
 		virtual std::string get_init_time()
@@ -1350,11 +1527,13 @@ namespace tars
 		}
 
 		//返回空表示没有到下一个记录点
+		//Returning null indicates that no next record point has been reached
 		virtual std::string get_new_time(time_t t)
 		{
 			if (t >= _next_time_t && TC_Common::tm2str(t, _format) >= _next_cut_time)
 			{
 				//时间规整
+				//Time regulation
 				time_t new_nt = _next_time_t + ((t - _next_time_t) / frequence()) * frequence();
 				_next_time_t = new_nt + frequence();
 				_next_cut_time = TC_Common::tm2str(_next_time_t, _format);
@@ -1367,6 +1546,7 @@ namespace tars
 		}
 
 		//转换成相应的字符串形式:1day,1hour,2minute
+		//Convert to the corresponding string: 1day, 1hour, 2minute
 		inline std::string &toString()
 		{
 			return _des;
@@ -1374,6 +1554,7 @@ namespace tars
 
 	protected:
 		//计算下一个时间点
+		//Calculate the next point in time
 		void init(const string &format = "%Y%m%d", size_t frequency = 1)
 		{
 			_frequency = (frequency == 0 ? 1 : frequency);
@@ -1451,6 +1632,7 @@ namespace tars
 
 	/**
 	 * @brief 根据时间滚动日志
+	 * @brief Scroll Log by Time
 	 */
 	template <typename WriteT>
 	class TC_RollByTime : public TC_LoggerRoll, public std::mutex
@@ -1460,19 +1642,27 @@ namespace tars
 
 		/**
 		 * @brief 封装类(接口类)
+		 * @brief Encapsulation class (interface class)
 		 */
 		class RollWrapperI : public RollWrapperBase<TC_RollByTime<WriteT> >
 		{
 		public:
 			/**
 			 * @brief 初始化.
+			 * @brief Initialization
 			 *
 			 * @param path,日志路径
+			 * @param path log path
 			 * @param format，日志文件记录格式，按天，小时，分钟
+			 * @param format，Log file record format, by day, hour, minute
 			 * @param bHasSufix,日志文件是否添加".log"后缀
+			 * @param bHasSufix, Does the log file add a '.log' suffix
 			 * @param sConcatstr,日志路径和时间字串之间的连接符,例如：app_log/test_20121210.log
+			 * @param sConcatstr,Connector between log path and time string, for example: app_Log/test_20121210.log
 			 * @param logTypePtr,日志记录类型，详见LogType
+			 * @param logTypePtr,Log record type, see LogType for details
 			 * @param bIsRemote,是否是远程日志实例
+			 * @param bIsRemote,Is it a remote log instance
 			 */
 			void init(const string &path, const string &format = "%Y%m%d", bool bHasSufix = true, const string &sConcatstr = "_", const LogTypePtr &logTypePtr = NULL, bool bIsRemote = false)
 			{
@@ -1481,6 +1671,7 @@ namespace tars
 
 			/**
 			 * @brief 获取日志路径.
+			 * @brief Get log path.
 			 *
 			 * @return string
 			 */
@@ -1488,11 +1679,13 @@ namespace tars
 
 			/**
 			 * @brief 设置文件路径
+			 * @brief Set file path
 			 */
 			void setPath(const string &path) { this->_roll->setPath(path); }
 
 			/**
 			 * @brief 获取格式.
+			 * @brief Get  format.
 			 *
 			 * @return string
 			 */
@@ -1500,8 +1693,10 @@ namespace tars
 
 			/**
 			 * @brief 设置格式.
+			 * @brief Set format.
 			 *
 			 * @param format,支持按天，按小时，按分钟格式
+			 * @param format,Supports day-by-day, hour-by-minute formats
 			 */
 			void setFormat(const string &format) { this->_roll->setFormat(format); }
 
@@ -1510,6 +1705,7 @@ namespace tars
 
 		/**
 		 * @brief 构造
+		 * @brief Construction
 		 */
 		TC_RollByTime() : _lt(0), _logTypePtr(NULL), _bRemoteType(false)
 		{
@@ -1519,7 +1715,8 @@ namespace tars
 		}
 
 		/**
-		 * @brief 析够
+		 * @brief 析构
+		 * @brief Destruction
 		 */
 		~TC_RollByTime()
 		{
@@ -1531,9 +1728,12 @@ namespace tars
 
 		/**
 		 * @brief 初始化.
+		 * @brief Initialization
 		 *
 		 * @param path, 文件路径
+		 * @param path, file path
 		 * @param format, 格式
+		 * @param format, format
 		 * @param bHasSufix
 		 * @param sConcatstr
 		 * @param logTypePtr
@@ -1563,6 +1763,7 @@ namespace tars
 
 		/**
 		 * @brief 获取日志路径.
+		 * @brief Get log path.
 		 *
 		 * @return string
 		 */
@@ -1574,6 +1775,7 @@ namespace tars
 
 		/**
 		 * @brief 设置文件路径
+		 * @brief Set log path
 		 */
 		void setPath(const string &path)
 		{
@@ -1583,6 +1785,7 @@ namespace tars
 
 		/**
 		 * @brief 获取格式.
+		 * @brief Get  format
 		 *
 		 * @return string
 		 */
@@ -1594,8 +1797,10 @@ namespace tars
 
 		/**
 		 * @brief 设置格式.
+		 * @brief Set format.
 		 *
 		 * @param format,支持按天，按小时，按分钟格式
+		 * @param format,Supports day-by-day, hour-by-minute formats
 		 */
 		void setFormat(const string &format)
 		{
@@ -1606,7 +1811,9 @@ namespace tars
 		/**
 		  *
 		  * 如果是关闭了本地日志，则不生成文件
+		  * If the local log is closed, no files will be generated
 		  * 如果是远程日志实例，本地不生成文件
+		  * If it is a remote log instance, no files are generated locally
 		  */
 		void setRemote(bool en)
 		{
@@ -1614,6 +1821,7 @@ namespace tars
 		}
 		/**
 		 * @brief 获取写示例.
+		 * @brief Get Write Samples
 		 *
 		 * @return WriteT&
 		 */
@@ -1621,6 +1829,7 @@ namespace tars
 
 		/**
 		 * @brief 函数对象.
+		 * @brief Function object.
 		 *
 		 * @param path
 		 * @param of
@@ -1636,6 +1845,7 @@ namespace tars
 				return;
 			}
 			//远程日志在本地不用打开文件
+			//Remote log does not need to open files locally
 			if (_bRemoteType)
 			{
 				_t(_of, buffer);
@@ -1646,10 +1856,12 @@ namespace tars
 
 			string nowTime = "";
 			//如果设置了记录类型,则使用记录类型来计算时间
+			//If record type is set, use record type to calculate time
 			if (_logTypePtr)
 			{
 				nowTime = _logTypePtr->get_new_time(t);
 				//时间跨越了
+				//Time has crossed
 				if (nowTime != "")
 				{
 					_currentTime = nowTime;
@@ -1664,6 +1876,7 @@ namespace tars
 			{
 				nowTime = TC_Common::tm2str(t, _format);
 				//检查时间是否跨时间了, 跨时间后关闭文件
+				//Check if time is crossed and close the file after crossing time
 				if (_currentTime != nowTime)
 				{
 					_currentTime = nowTime;
@@ -1672,6 +1885,7 @@ namespace tars
 			}
 
 			//每隔10s, 重新打开一次文件, 避免文件被删除后句柄不释放
+			//Reopen the file every 10s to prevent the handle from being released after the file is deleted
 			if (t - _lt > 10 || t - _lt < 0)
 			{
 				_lt = t;
@@ -1692,6 +1906,7 @@ namespace tars
 				if (!_of)
 				{
 					//抛异常前继续进入_t 以便打远程日志
+					//Continue to _t for remote logging before throwing an exception
 					_t(_of, buffer);
 					THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollByTime::roll]:fopen fail: " + sLogFileName);
 					// throw TC_Logger_Exception("[TC_RollByTime::roll]:fopen fail: " + sLogFileName, TC_Exception::getSystemCode());
@@ -1699,55 +1914,66 @@ namespace tars
 			}
 
 			//写
+			//write
 			_t(_of, buffer);
 		}
 
 	protected:
 		/**
 		 * 文件路径
+		 * file path
 		 */
 		string _path;
 
 		/**
 		 * 时间格式
+		 * time format
 		 */
 		string _format;
 
 		/**
 		 * 上次roll时的时间
+		 * Last roll time
 		 */
 		string _currentTime;
 
 		/**
 		 * 日志文件
+		 * log file
 		 */
 		ofstream _of;
 
 		/**
 		 * 具体写操作
+		 * Write operation
 		 */
 		WriteT _t;
 
 		/**
 		 * 多长时间检查一次文件大小
+		 * How often to check file size
 		 */
 		time_t _lt;
 		/**
 		 * 日志文件名是否带.log后缀
+		 * Is the log file name suffixed with .log
 		 */
 		bool _bHasSufix;
 		/**
 		 * 日志文件名中用户自定义字符与日期字符间的连接符，默认是"_"
+		 * Connector between user-defined character and date character in log file name, default is "_"
 		 */
 		string _sConcatStr;
 
 		/**
 		 * 按天/小时/分钟输出日志时的记录类型
+		 * Record type when exporting log by day/hour/minute
 		 */
 
 		LogTypePtr _logTypePtr;
 		/**
 		 * 是否是远程日志实例
+		 * Is it a remote log instance
 		 */
 		bool _bRemoteType;
 	};
