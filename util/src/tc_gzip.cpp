@@ -57,6 +57,7 @@ bool TC_GZip::compress(const char *src, size_t length, string& buffer)
     int r = deflate(&stream, Z_FINISH);
     if (r != Z_STREAM_END)
     {
+        deflateEnd(&stream);
         delete[] out;
         return false;
     }
@@ -114,6 +115,7 @@ bool TC_GZip::compress(const char *src, size_t length, vector<char>& buffer)
     int r = deflate(&stream, Z_FINISH);
     if (r != Z_STREAM_END)
     {
+        deflateEnd(&stream); 
         delete[] out;
         return false;
     }

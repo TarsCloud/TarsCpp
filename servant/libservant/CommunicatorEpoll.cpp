@@ -385,6 +385,15 @@ void CommunicatorEpoll::pushAsyncThreadQueue(ReqMessage * msg)
 
 void CommunicatorEpoll::reConnect(int64_t ms, Transceiver*p)
 {
+    //如果节点已经存在，则不重复加入
+    for ( auto & item : _reconnect)
+    {
+        if (item.second == p)
+        {
+            return;
+        }
+    }
+
 	_reconnect[ms] = p;
 }
 
@@ -422,6 +431,7 @@ void CommunicatorEpoll::reConnect()
 {
 	int64_t iNow = TNOWMS;
 
+    set<Transceiver*> does;
 	while(!_reconnect.empty())
 	{
 		auto it = _reconnect.begin();
@@ -430,11 +440,19 @@ void CommunicatorEpoll::reConnect()
 		{
 			return;
 		}
-
-		it->second->reconnect();
-
-		_reconnect.erase(it++);
+        //一次循环同一个节点只尝试一次重试,以避免多次触发close，导致重连的间隔无效
+        if (does.find(it->second) != does.end())
+        {
+            _reconnect.erase(it++);
+        }
+        else
+        {
+            does.insert(it->second);
+            it->second->reconnect();
+            _reconnect.erase(it++);
+        }
 	}
+
 }
 
 void CommunicatorEpoll::run()

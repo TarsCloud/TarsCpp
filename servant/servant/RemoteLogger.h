@@ -101,9 +101,9 @@ public:
         NONE_LOG    = 1,    /**所有的log都不写*/
         ERROR_LOG   = 2,    /**写错误log*/
         WARN_LOG    = 3,    /**写错误,警告log*/
-        DEBUG_LOG   = 4,    /**写错误,警告,调试log*/
-        INFO_LOG    = 5,        /**写错误,警告,调试,Info log*/
-        TARS_LOG    = 6        /**写错误,警告,调试,Info log*/
+        INFO_LOG    = 4,    /**写错误,警告,调试,Info log*/
+        DEBUG_LOG   = 5,    /**写错误,警告,调试log*/
+        TARS_LOG    = 6     /**写错误,警告,调试,Info log*/
     };
 public:
     typedef TC_Logger<RollWriteT, TC_RollBySize> RollLogger;

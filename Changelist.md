@@ -1,3 +1,74 @@
+
+## v2.4.9 2020.08.19
+### en
+- Fix tars-tool.cmake `make upload` bug in linux
+- Update tars-tools.cmake, support multi tars file
+- tc_encoder optimize
+- fix servant http call context release bug
+- fix servant connection reconnect dead cycle
+- fix http servant set timeout bug
+- fix windows roll log bug
+- fix tc_time postAtTime bug
+- remove TARS_SSL in header
+- fix windows gtest build bug
+### cn
+- 修改tars-tool.cmake `make upload` 在linux上bug, cmake用${CMAKE_COMMAND}代替 
+- 修改tars-tools.cmake, 支持多个tars文件
+- 优化tc_encoder
+- 修复http servant 短连接模式下context释放的bug(貌似只会在windows下出现)
+- 修复prx重连可能导致的死循环的问题
+- 修复http servant 设置timeout不正确的问题
+- 修复windows下循环日志不启用的问题
+- 修复tc_time postAtTime的bug
+- 头文件中删除TARS_SSL的宏, 避免内存模型不一致
+- 修改windows gtest编译连接不争取的问题
+
+## v2.4.8 2020.08.05
+### en
+- add tarsmerge, can merge multi tars file to one
+- fix tars-tools.cmake, support: make xxxx-upload-tars, upload tars to web, for test
+- fix when http header has not content-length, tc_http decode bug
+- fix refresh endpoint crash
+### cn
+- 添加 tarsmerge工具, 支持合并多个tars文件到一个
+- 修改tars-tools.cmake, 支持make xxx-upload-tars, 上传本服务的tars文件到web, 方便自动测试
+- 修改当http头没有content-length时的解析bug
+- 修改endpoint更新时可能导致的crash
+
+## v2.4.7 2020.07.19
+### en
+- fix tars-tools.cmake, support ssl link order bug
+- tars2cpp delete routerkey support (for grid, not use now)
+- epoll server add onNewClient callback
+- fix tc_gzip memory leak
+- solve the default threads num problem 
+### cn
+- tars-tools.cmake, 修改ssl 连接顺序不对的问题
+- tars2cpp去掉routerkey(给灰度使用, 目前版本都不再支持)
+- epoll server 增加onNewClient回调
+- fix tc_gzip在某情况下的内存泄露
+- 修改threads缺省参数值为0的bug
+
+## v2.4.6 2020.07.09
+### en
+- fix http parse repsonse bug to support TarsGateway
+### cn
+- 修改http解析响应包的bug
+
+## v2.4.5 2020.07.07
+### en:
+- tars2node support JSON_VERSION.
+### cn:
+- tars2node 工具支持JSON_VERSION 协议。
+
+## v2.4.4 2020.06.19
+### en:
+- add totalResponse for all protocol response;
+- modity tars2cpp for json protocol: gen json protocol default && gen async_response_xx json protocol;
+### cn:
+- 增加 totalResponse，对tars所有协议（tars、tup、json）回包都支持；
+- 修改tars2cpp，默认都生成json协议支持，并修改了 async_response_xx 也支持json回包。
+
 ## v2.4.3 2020.06.10
 ### en:
 - tc_spin_lock support arm

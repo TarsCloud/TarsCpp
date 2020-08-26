@@ -103,6 +103,30 @@ string CodeGenerator::generateAsync(const NamespacePtr &nPtr, const InterfacePtr
     str << endl;
     str << TAB << "this.doResponse(" << PROTOCOL_VAR << ".encode());" << endl;
     DEL_TAB;
+
+    //// ========= 增加对 JSON_VERSION 支持
+    str << TAB << "} else if (this.getRequestVersion() === " << PROTOCOL_JSON << ") {" << endl;
+
+    INC_TAB;
+    str << TAB << "var _data_ = {};" << endl;
+    if (oPtr->getReturnPtr()->getTypePtr())
+    {
+        str << TAB << "_data_[\"tars_ret\"] = _ret;" << endl;
+    }
+    for (size_t i = 0; i < vParamDecl.size(); i++)
+    {
+        if (!vParamDecl[i]->isOut())
+            continue;
+
+        str << TAB << "_data_[\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"] = " << vParamDecl[i]->getTypeIdPtr()->getId()
+            << ".toObject ? " << vParamDecl[i]->getTypeIdPtr()->getId() << ".toObject() : "
+            << vParamDecl[i]->getTypeIdPtr()->getId() << ";" << endl;
+    }
+    str << endl;
+    str << TAB << " this.doResponse(new TarsStream.BinBuffer(Buffer.from(JSON.stringify(_data_))));" << endl;
+    DEL_TAB;
+    //// =========
+
     str << TAB << "} else {" << endl;
 
     INC_TAB;
@@ -178,6 +202,30 @@ string CodeGenerator::generateDispatch(const NamespacePtr &nPtr, const Interface
         dstr << ");" << endl;
     }
     DEL_TAB;
+
+    //// ========= 增加对 JSON_VERSION 支持
+    dstr << TAB << "} else if (current.getRequestVersion() === " << PROTOCOL_JSON << ") {" << endl;
+    INC_TAB;
+    dstr << TAB << "var _data_ = JSON.parse(binBuffer.toNodeBuffer());" << endl;
+
+    for (size_t i = 0; i < vParamDecl.size(); i++)
+    {
+        if (vParamDecl[i]->isOut())
+        {
+            dstr << TAB << vParamDecl[i]->getTypeIdPtr()->getId()
+                 << " = _data_." << vParamDecl[i]->getTypeIdPtr()->getId() << " || " << getDefault(vParamDecl[i]->getTypeIdPtr(), "", nPtr->getId(), true)
+                 << ";" << endl;
+        }
+        else
+        {
+            dstr << TAB << vParamDecl[i]->getTypeIdPtr()->getId()
+                 << " = _data_." << vParamDecl[i]->getTypeIdPtr()->getId()
+                 << ";" << endl;
+        }
+    }
+    DEL_TAB;
+    //// ========= 
+
     dstr << TAB << "} else {" << endl;
 
     INC_TAB;

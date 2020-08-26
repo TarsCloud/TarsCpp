@@ -50,6 +50,20 @@ TEST_F(HttpTest, testCheckRequestURL)   //此时使用的是TEST_F宏
 	ASSERT_TRUE(req.getURL().getDomain() == "www.qq.com");
 }
 
+TEST_F(HttpTest, testHttp)   //此时使用的是TEST_F宏
+{
+	TC_HttpRequest stHttpReq;
+	stHttpReq.setCacheControl("no-cache");
+	stHttpReq.setGetRequest("http://118.89.197.217/", true);
+	TC_HttpResponse stHttpRsp;
+	int ret = stHttpReq.doRequest(stHttpRsp, 3000);
+
+	cout << ret << ":" << stHttpRsp.getContent() << endl;
+
+	cout << "\n\n==============================\n" << stHttpRsp.getContent().size() << endl;
+	cout << stHttpRsp.genHeader() << endl;
+}
+
 TEST_F(HttpTest, testEncodeString)   //此时使用的是TEST_F宏
 {
 	string s = string("GET /a/b?name=value&ccc=ddd HTTP/1.1\r\n")
