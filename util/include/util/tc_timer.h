@@ -22,7 +22,7 @@ namespace tars
  * 可以设定回调线程数, 默认只有一个, 底层用tc_thread_pool实现线程池的
  * 任何可以丢进tc_thread_pool的function对象(std::bind的对象), 都可以丢该tc_timer
  *
- * @author ruanshuodong@qq.com  
+ * @author ruanshudong@qq.com  
  */          
 /////////////////////////////////////////////////
 
@@ -74,7 +74,7 @@ public:
 	template <class F, class... Args>
 	int64_t postAtTime(int64_t fireMillseconds, F &&f, Args &&... args)
 	{
-		return post(create(fireMillseconds, 0, f, args...));
+		return post(create(fireMillseconds, 0, "", f, args...));
 	}
 
 	/**

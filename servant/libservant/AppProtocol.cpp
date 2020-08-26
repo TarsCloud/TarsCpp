@@ -83,7 +83,7 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
     {
         context = new shared_ptr<TC_HttpResponse>();
         *context = std::make_shared<TC_HttpResponse>();
-        in.setContextData(context, [=]{ delete context; }); 
+        in.setContextData(context, [context]{ delete context; }); 
     }
 
     if((*context)->incrementDecode(in))
@@ -94,18 +94,18 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
 
 	    data = *context;
 
+		auto ret = TC_NetWorkBuffer::PACKET_FULL;
 	    if(!data->checkHeader("Connection", "keep-alive"))
 	    {
-		    Transceiver* session = (Transceiver*)(in.getConnection());
-
-		    session->close();
+			// 如果非keep-alive，返回PACKET_FULL_CLOSE，外层结束连接
+			ret = TC_NetWorkBuffer::PACKET_FULL_CLOSE;
 	    }
 
 		(*context) = NULL;
 		delete context;
 		in.setContextData(NULL);
 
-	    return TC_NetWorkBuffer::PACKET_FULL;
+	    return ret;
 
     }
 
@@ -113,82 +113,6 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
-// vector<char> ProxyProtocol::httpJceRequest(taf::BasePacket& request, Transceiver *trans)
-// {
-// 	TC_HttpRequest httpRequest;
-
-// 	string uri;
-// 	if(trans->isSSL())
-// 		uri = "https://";
-// 	else
-// 		uri = "http://";
-
-// 	uri += trans->getEndpointInfo().getEndpoint().getHost();
-
-// 	vector<char> buff = tafRequest(request, trans);
-
-// 	for(auto it = request.context.begin(); it != request.context.end(); ++it)
-// 	{
-// 		if(it->second == ":path")
-// 		{
-// 			uri += "/" + it->second;
-// 		}
-// 		else
-// 		{
-// 			httpRequest.setHeader(it->first, it->second);
-// 		}
-// 	}
-
-// 	httpRequest.setPostRequest(uri, buff.data(), buff.size(), true);
-
-// 	vector<char> buffer;
-
-// 	httpRequest.encode(buffer);
-
-// 	return buffer;
-// }
-
-// TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::httpJceResponse(TC_NetWorkBuffer &in, BasePacket& rsp)
-// {
-// 	TC_HttpResponse *context = (TC_HttpResponse*)(in.getContextData());
-
-// 	if(!context)
-// 	{
-// 		context = new TC_HttpResponse();
-// 		in.setContextData(context, [=]{ delete context; });
-// 	}
-
-// 	if(context->incrementDecode(in))
-// 	{
-// 		if(context->getStatus() != 200)
-// 		{
-// 			rsp.iRet = taf::JCESERVERUNKNOWNERR;
-// 			rsp.sResultDesc = context->getContent();
-// 			return TC_NetWorkBuffer::PACKET_FULL;
-// 		}
-
-// 		JceInputStream<> is;
-// 		is.setBuffer(context->getContent().c_str() + 4, context->getContent().size() - 4);
-
-// 		rsp.readFrom(is);
-
-// 		if(!context->checkHeader("Connection", "keep-alive"))
-// 		{
-// 			Transceiver* session = (Transceiver*)(in.getConnection());
-
-// 			session->close();
-// 		}
-
-// 		context = NULL;
-// 		delete context;
-// 		in.setContextData(NULL);
-
-// 		return TC_NetWorkBuffer::PACKET_FULL;
-// 	}
-
-// 	return TC_NetWorkBuffer::PACKET_LESS;
-// }
 
 #if TARS_HTTP2
 

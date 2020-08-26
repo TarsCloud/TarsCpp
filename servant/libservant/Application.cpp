@@ -963,6 +963,19 @@ void Application::addServantProtocol(const string& servant, const TC_NetWorkBuff
     getEpollServer()->getBindAdapter(adapterName)->setProtocol(protocol);
 }
 
+void Application::addAcceptCallback(const TC_EpollServer::accept_callback_functor& cb)
+{
+    _acceptFuncs.push_back(cb);
+}
+
+void Application::onAccept(TC_EpollServer::Connection* cPtr)
+{
+    for (size_t i = 0; i < _acceptFuncs.size(); ++i)
+    {
+        _acceptFuncs[i](cPtr);
+    }
+}
+
 void Application::addServantOnClose(const string& servant, const TC_EpollServer::close_functor& cf)
 {
     string adapterName = ServantHelperManager::getInstance()->getServantAdapter(servant);
@@ -1134,6 +1147,8 @@ void Application::initializeServer()
     }
 
     _epollServer = new TC_EpollServer(ServerConfig::NetThread);
+
+    _epollServer->setOnAccept(std::bind(&Application::onAccept, this, std::placeholders::_1));
 
     //初始化服务是否对空链接进行超时检查
     bool bEnable = (_conf.get("/tars/application/server<emptyconcheck>","0")=="1")?true:false;
@@ -1337,7 +1352,7 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
                 bindAdapter->setProtocol(AppProtocol::parse);
             }
 
-            bindAdapter->setHandle<ServantHandle>(TC_Common::strto<int>(_conf.get(sLastPath + "<threads>", "0")));
+            bindAdapter->setHandle<ServantHandle>(TC_Common::strto<int>(_conf.get(sLastPath + "<threads>", "1")));
 
             if(ServerConfig::ManualListen) {
                 //手工监听

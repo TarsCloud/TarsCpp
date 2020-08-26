@@ -647,6 +647,11 @@ int TcpTransceiver::doResponse()
 				    else if (ret == TC_NetWorkBuffer::PACKET_FULL) {
 	                    finishInvoke(rsp);
 				    }
+                    else if (ret == TC_NetWorkBuffer::PACKET_FULL_CLOSE) {
+	                    finishInvoke(rsp);
+						close();
+						break;
+					}
 				    else {
 					    break;
 				    }

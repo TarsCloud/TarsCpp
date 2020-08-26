@@ -68,6 +68,30 @@ string CodeGenerator::toFunctionName(const TypeIdPtr& pPtr, const string& sActio
     return "";
 }
 
+string CodeGenerator::toObjectString(const TypeIdPtr &pPtr)
+{
+    string nameId = pPtr->getId();
+    VectorPtr vPtr = VectorPtr::dynamicCast(pPtr->getTypePtr());
+    if (vPtr)
+    {
+        return nameId + ".toObject()";
+    }
+
+    StructPtr sPtr = StructPtr::dynamicCast(pPtr->getTypePtr());
+    if (sPtr)
+    {
+        return nameId + ".toObject()";
+    }
+
+    MapPtr mPtr = MapPtr::dynamicCast(pPtr->getTypePtr());
+    if (mPtr)
+    {
+        return nameId + ".toObject()";
+    }
+
+    return nameId;
+}
+
 string CodeGenerator::representArgument(const TypePtr& pPtr) const
 {
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);

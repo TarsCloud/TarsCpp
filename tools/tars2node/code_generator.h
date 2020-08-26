@@ -60,6 +60,10 @@
 #define PROTOCOL_COMPLEX PROTOCOL_V(IDL_NAMESPACE_STR, PROTOCOL_NAME, "COMPLEX")
 #define PROTOCOL_VAR TO_LOWER_STRING(PROTOCOL_NAME)
 
+#define PROTOCOL_VJ(space, protocol, type) \
+    space + "Stream." + protocol + "." + type + "_VERSION"
+#define PROTOCOL_JSON PROTOCOL_VJ(IDL_NAMESPACE_STR, PROTOCOL_NAME, "JSON")
+
 #define DISABLE_ESLINT "/* eslint-disable */"
 #define DISABLE_TSLINT "/* tslint:disable */"
 
@@ -152,6 +156,8 @@ private:
 
 private:
     string toFunctionName(const TypeIdPtr & pPtr, const string &sAction);
+
+    string toObjectString(const TypeIdPtr &pPtr);
 
     string getDataType(const TypePtr& pPtr, const bool &bCastEnumAsAny = false);
 
