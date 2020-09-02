@@ -1,3 +1,10 @@
+## v2.4.10 2020.09.02
+### en
+- fix ssl EndpointManager.cpp bug 
+- gbk2utf8 mode default set to ICONV_IGNORE
+### cn
+- 修复ssl下, EndpointManager.cpp 的bug 
+- 将gbk2utf8 mode 缺省值设置为ICONV_IGNORE
 
 ## v2.4.9 2020.08.19
 ### en
