@@ -251,7 +251,7 @@ vector<string> QueryEpBase::sepEndpoint(const string& sEndpoints)
 				continue;
 			}
 
-			if(TC_Port::strncasecmp("tcp", (sEndpoints.c_str() + pos), 3) == 0 || TC_Port::strncasecmp("udp", (sEndpoints.c_str() + pos), 3) == 0)
+			if(TC_Port::strncasecmp("tcp", (sEndpoints.c_str() + pos), 3) == 0 || TC_Port::strncasecmp("udp", (sEndpoints.c_str() + pos), 3) == 0 || TC_Port::strncasecmp("ssl", (sEndpoints.c_str() + pos), 3) == 0)
 			{
 				string ep = TC_Common::trim(string(sEndpoints.c_str() + startPos, sepPos - startPos));
 				if(!ep.empty()) {
