@@ -123,14 +123,14 @@ string TC_Encoder::gbk2utf8(const string &sIn,int mode)
     size_t ret = iconv(cd,&pIn,&isize,&pOut,&osize);
     if(-1 == ret && TC_Encoder::ICONV_NORMAL == mode){
         iconv_close(cd);
-        delete []pOut;
+        delete []buf;
         THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv error");
         return sOut;
     }
     iconv_close(cd);
     pOut[bufsize-osize]=0;
     sOut.assign(pOut);
-    delete []pOut;
+    delete []buf;
 	return sOut;
 }
 
