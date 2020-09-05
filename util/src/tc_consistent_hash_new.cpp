@@ -199,11 +199,15 @@ int TC_ConsistentHashNew::getIndex(const string & key, unsigned int & iIndex)
     vector<char> data = TC_MD5::md5bin(key);
     int32_t iCode = _ptrHashAlg->hash(data.data(), data.size());
 
-    return getIndex(iCode, iIndex);
+    return getIndexBase(iCode, iIndex);
 }
 
+int TC_ConsistentHashNew::getIndex(int32_t key, unsigned int & iIndex)
+{
+    return getIndex(std::to_string(key), iIndex);
+}
 
-int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
+int TC_ConsistentHashNew::getIndexBase(int32_t hashcode, unsigned int & iIndex)
 {
     if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
     {
@@ -211,13 +215,10 @@ int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
         return -1;
     }
 
-    // 只保留32位
-    size_t iCode = (hashcode & 0xFFFFFFFFL);
-
     int low = 0;
     int high = (int)_vHashList.size();
 
-    if(iCode <= (size_t)_vHashList[0].iHashCode || iCode > (size_t)_vHashList[high-1].iHashCode)
+    if(hashcode <= _vHashList[0].iHashCode || hashcode > _vHashList[high-1].iHashCode)
     {
         iIndex = _vHashList[0].iIndex;
         return 0;
@@ -227,7 +228,7 @@ int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
     while (low < high - 1)
     {
         int mid = (low + high) / 2;
-        if ((size_t)_vHashList[mid].iHashCode > iCode)
+        if (_vHashList[mid].iHashCode > hashcode)
         {
             high = mid;
         }

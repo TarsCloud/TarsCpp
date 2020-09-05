@@ -163,6 +163,18 @@ public:
     int getIndex(const string & key, unsigned int & iIndex);
 
     /**
+     * @brief 获取某key对应到的节点node的下标.
+     * @brief Gets the subscript of the node to which a certain key corresponds
+     *
+     * @param key      key
+     * @param iIndex  对应到的节点下标
+     * @param iIndex  the subscript of the node to which corresponds
+     * @return        0:获取成功   -1:没有被添加的节点
+     * @return        0:obtain successfully  -1:no nodes added
+     */
+    int getIndex(int32_t key, unsigned int & iIndex);
+
+    /**
      * @brief 获取某hashcode对应到的节点node的下标.
      * @brief Gets the subscript of the node to which a certain hashcode corresponds
      *
@@ -172,7 +184,7 @@ public:
      * @return        0:获取成功   -1:没有被添加的节点
      * @return        0:obtain successfully  -1:no nodes added
      */
-    int getIndex(int32_t hashcode, unsigned int & iIndex);
+    int getIndexBase(int32_t hashcode, unsigned int & iIndex);
 
     /**
      * @brief 获取当前hash列表的长度.
