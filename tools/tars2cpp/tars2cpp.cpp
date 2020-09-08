@@ -568,7 +568,7 @@ string Tars2Cpp::tostrBuiltin(const BuiltinPtr& pPtr) const
         s = _namespace + "::Char";
         break;
     case Builtin::KindShort:
-        //为了兼容java无unsigned, 编结码时把tars问件中 unsigned char 对应到short
+        //为了兼容java无unsigned, 编解码时把tars文件中 unsigned char 对应到short
         //c++中需要还原回来
         s = (pPtr->isUnsigned() ? _namespace + "::UInt8" : _namespace + "::Short");
         break;
