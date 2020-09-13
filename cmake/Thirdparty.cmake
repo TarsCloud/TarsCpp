@@ -112,11 +112,9 @@ endif(WIN32)
 if (WIN32)
     set(LIB_GTEST "gtest")
 
-	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-   		set(LIB_GTEST "${LIB_GTEST}d")
-	endif()
-
-    message("CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(LIB_GTEST "${LIB_GTEST}d")
+    endif()
 
     ExternalProject_Add(ADD_${LIB_GTEST}
             URL http://cdn.tarsyun.com/src/release-1.10.0.zip
@@ -131,7 +129,7 @@ if (WIN32)
             URL_MD5 82358affdd7ab94854c8ee73a180fc53
             )
 else()
-    set(LIB_GTEST "libgtest")
+    set(LIB_GTEST "gtest")
 
     ExternalProject_Add(ADD_${LIB_GTEST}
             URL http://cdn.tarsyun.com/src/release-1.10.0.tar.gz
