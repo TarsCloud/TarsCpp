@@ -401,6 +401,8 @@ int TC_TCPClient::recv(char *sRecvBuffer, size_t &iRecvLen)
     {
         return iRet;
     }
+    
+    _epoller->mod(_socket.getfd(), 0, EPOLLIN);
 
     int iRetCode = _epoller->wait(_timeout);
 
@@ -456,6 +458,8 @@ int TC_TCPClient::recvBySep(string &sRecvBuffer, const string &sSep)
         return iRet;
     }
 
+    _epoller->mod(_socket.getfd(), 0, EPOLLIN);
+    
     while(true)
     {
         int iRetCode = _epoller->wait(_timeout);
@@ -518,6 +522,8 @@ int TC_TCPClient::recvAll(string &sRecvBuffer)
     {
         return iRet;
     }
+    
+    _epoller->mod(_socket.getfd(), 0, EPOLLIN);
 
     while(true)
     {

@@ -844,6 +844,19 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
                 s << TAB << member[j]->getId() << " = " << member[j]->def() << ";" << endl;
             }
         }
+        else
+        {   //没有提供初始值才会走到这里,提供枚举类型初始化值
+            EnumPtr ePtr = EnumPtr::dynamicCast(member[j]->getTypePtr());
+            if (ePtr)
+            {
+                vector<TypeIdPtr>& eMember = ePtr->getAllMemberPtr();
+                if (eMember.size() > 0)
+                {
+                    string sid = ePtr->getSid();
+                    s << TAB << member[j]->getId() << " = " << sid.substr(0, sid.find_first_of("::")) << "::" << eMember[0]->getId() << ";" << endl;
+                }
+            }
+        }
     }
 
     DEL_TAB;
