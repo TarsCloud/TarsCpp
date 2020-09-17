@@ -25,17 +25,10 @@ namespace tars
 {
 //////////////////////////////////////////////////////////////////
 Current::Current(ServantHandle *pServantHandle)
-: _servantHandle(pServantHandle)
-// , _bindAdapter(NULL)
-// , _uid(0)
-// , _ip("NULL")
-// , _port(0)
-// , _fd(-1)
-, _response(true)
-// , _begintime(0)
-, _ret(0)
-, _reportStat(true)
-// , _closeType(-1)
+    : _servantHandle(pServantHandle)
+    , _response(true)
+    , _ret(0)
+    , _reportStat(true)
 {
 }
 
@@ -73,19 +66,17 @@ const string &Current::getHostName() const
 
 const string &Current::getIp() const
 {
-	return _data->ip();
+    return _data->ip();
 }
 
 int Current::getPort() const
 {
     return _data->port();
-    // return _port;
 }
 
 uint32_t Current::getUId() const
 {
     return _data->uid();
-    // return _uid;
 }
 
 string Current::getServantName() const
@@ -123,7 +114,7 @@ char Current::getPacketType() const
     return _request.cPacketType;
 }
 
-tars::Int32 Current::getMessageType() const
+int Current::getMessageType() const
 {
     return _request.iMessageType;
 }
@@ -131,8 +122,8 @@ tars::Int32 Current::getMessageType() const
 struct timeval Current::getRecvTime() const
 {
     timeval tm;
-    tm.tv_sec  = _data->recvTimeStamp()/1000;
-    tm.tv_usec = (_data->recvTimeStamp()%1000)*1000;
+    tm.tv_sec  = _data->recvTimeStamp() / 1000;
+    tm.tv_usec = (_data->recvTimeStamp() % 1000) * 1000;
 
     return tm;
 }
@@ -152,8 +143,6 @@ const vector<char>& Current::getRequestBuffer() const
 	{
 		return _data->buffer();
 	}
-
-    // return _request.sBuffer;
 }
 
 bool Current::isResponse() const
@@ -172,7 +161,6 @@ int Current::getCloseType() const
 }
 
 void Current::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
-// void Current::initialize(const TC_EpollServer::tagRecvData &stRecvData)
 {
 	_data = data;
 
@@ -182,16 +170,13 @@ void Current::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
     {
         initialize(_data->buffer());
     }
-    // initialize(stRecvData, begintime);
 }
-
 
 void Current::initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
 	_data = data;
 
     _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(_data->adapter()->getName());
-
 }
 
 void Current::initialize(const vector<char>& sRecvBuffer)
@@ -203,70 +188,12 @@ void Current::initialize(const vector<char>& sRecvBuffer)
     _request.readFrom(is);
 }
 
-// void Current::initialize(const TC_EpollServer::tagRecvData &stRecvData, int64_t beginTime)
-// {
-//      _ip         = stRecvData.ip;
-
-//     _port        = stRecvData.port;
-
-//     _uid         = stRecvData.uid;
-
-//     _fd          = stRecvData.fd;
-
-//     _bindAdapter = stRecvData.adapter.get();
-
-//     _begintime   = beginTime;
-
-//     _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(stRecvData.adapter->getName());
-
-//     if (_bindAdapter->isTarsProtocol())
-//     {
-//         initialize(stRecvData.buffer);
-//     }
-//     else
-//     {
-//         _request.sBuffer.reserve(stRecvData.buffer.length());
-
-//         _request.sBuffer.resize(stRecvData.buffer.length());
-
-//         ::memcpy(&_request.sBuffer[0], stRecvData.buffer.c_str(), stRecvData.buffer.length());
-//     }
-// }
-
-// void Current::initializeClose(const TC_EpollServer::tagRecvData &stRecvData)
-// {
-//     _ip   = stRecvData.ip;
-
-//     _port = stRecvData.port;
-
-//     _uid  = stRecvData.uid;
-
-//     _fd   = stRecvData.fd;
-
-//     _bindAdapter = stRecvData.adapter.get();
-
-//     _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(stRecvData.adapter->getName());
-
-//     _begintime = TNOWMS;
-// }
-
-// void Current::initialize(const string &sRecvBuffer)
-// {
-//     TarsInputStream<BufferReader> is;
-
-//     is.setBuffer(sRecvBuffer.c_str(), sRecvBuffer.length());
-
-//     _request.readFrom(is);
-// }
-
-void Current::sendResponse(const char* buff, uint32_t len)
+void Current::sendResponse(const char *buff, uint32_t len)
 {
-    // _servantHandle->sendResponse(_uid, string(buff, len), _ip, _port, _fd);
 	shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
 	send->buffer()->assign(buff, len);
 	_servantHandle->sendResponse(send);
 }
-
 
 void Current::sendResponse(int iRet, const vector<char> &buff)
 {
@@ -276,32 +203,32 @@ void Current::sendResponse(int iRet, const vector<char> &buff)
 		return;
 	}
 
-	// ResponsePacket response;
-	// response.sBuffer = buff;
-	sendResponse(iRet, buff, TARS_STATUS(), "");
+	ResponsePacket response;
+	response.sBuffer = buff;
+	sendResponse(iRet, response, TARS_STATUS(), "");
 }
 
 void Current::sendResponse(int iRet)
 {
-	// ResponsePacket response;
-	sendResponse(iRet, vector<char>(), TARS_STATUS(), "");
+	ResponsePacket response;
+	sendResponse(iRet, response, TARS_STATUS(), "");
 }
 
 void Current::sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os)
 {
-	// ResponsePacket response;
-	// os.swap(response.sBuffer);
-	sendResponse(iRet, os.getByteBuffer(), TARS_STATUS(), "");
+	ResponsePacket response;
+	os.swap(response.sBuffer);
+	sendResponse(iRet, response, TARS_STATUS(), "");
 }
 
 void Current::sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr)
 {
 	ResponsePacket response;
 	attr.encode(response.sBuffer);
-	sendResponse(iRet, response.sBuffer, TARS_STATUS(), "");
+	sendResponse(iRet, response, TARS_STATUS(), "");
 }
 
-void Current::sendResponse(int iRet, const vector<char> &buffer,  const map<string, string>& status, const string & sResultDesc)
+void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string, string>& status, const string & sResultDesc)
 {
     _ret = iRet;
 
@@ -313,7 +240,7 @@ void Current::sendResponse(int iRet, const vector<char> &buffer,  const map<stri
 
 	shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
 
-	tars::Int32 iHeaderLen = 0;
+	Int32 iHeaderLen = 0;
 
 	TarsOutputStream<BufferWriterVector> os;
 
@@ -322,17 +249,15 @@ void Current::sendResponse(int iRet, const vector<char> &buffer,  const map<stri
 
     if (_request.iVersion != TUPVERSION)
     {
-        ResponsePacket response;
-
         response.iRequestId     = _request.iRequestId;
-        response.iMessageType   = _request.iMessageType;
 		response.cPacketType    = TARSNORMAL;
-
+        response.iMessageType   = _request.iMessageType;
         response.iVersion       = _request.iVersion;
         response.status         = status;
-        response.sBuffer        = std::move(buffer);
-        response.sResultDesc    = sResultDesc;
         response.context        = _responseContext;
+//        response.sBuffer        = std::move(buffer);
+        response.sResultDesc    = sResultDesc;
+
         response.iRet           = iRet;
 
         TLOGTARS("Current::sendResponse :"
@@ -346,21 +271,21 @@ void Current::sendResponse(int iRet, const vector<char> &buffer,  const map<stri
     else
     {
         //tup回应包用请求包的结构(这里和新版本TAF是有区别的)
-        RequestPacket response;
+        RequestPacket tupResponse;
 
-        response.iRequestId     = _request.iRequestId;
-        response.iMessageType   = _request.iMessageType;
-		response.cPacketType    = TARSNORMAL;
+	    tupResponse.iRequestId     = _request.iRequestId;
+	    tupResponse.iMessageType   = _request.iMessageType;
+	    tupResponse.cPacketType    = TARSNORMAL;
 
-        response.iVersion       = _request.iVersion;
-        response.status         = status;
-        response.context        = _responseContext;
-        response.sBuffer        = std::move(buffer);
-        response.sServantName   = _request.sServantName;
-        response.sFuncName      = _request.sFuncName;
+	    tupResponse.iVersion       = _request.iVersion;
+	    tupResponse.status         = status;
+	    tupResponse.context        = _responseContext;
+	    tupResponse.sBuffer.swap(response.sBuffer);
+	    tupResponse.sServantName   = _request.sServantName;
+	    tupResponse.sFuncName      = _request.sFuncName;
 
         //异常的情况下buffer可能为空，要保证有一个空UniAttribute的编码内容
-        if(response.sBuffer.size() == 0)
+        if(tupResponse.sBuffer.size() == 0)
         {
             tup::UniAttribute<> tarsAttr;
             tarsAttr.setVersion(_request.iVersion);
@@ -369,21 +294,21 @@ void Current::sendResponse(int iRet, const vector<char> &buffer,  const map<stri
         //iRet为0时,不记录在status里面,节省空间
         if(iRet != 0)
         {
-            response.status[ServantProxy::STATUS_RESULT_CODE] = TC_Common::tostr(iRet);
+	        tupResponse.status[ServantProxy::STATUS_RESULT_CODE] = TC_Common::tostr(iRet);
         }
         //sResultDesc为空时,不记录在status里面,节省空间
         if(!sResultDesc.empty())
         {
-            response.status[ServantProxy::STATUS_RESULT_DESC] = sResultDesc;
+	        tupResponse.status[ServantProxy::STATUS_RESULT_DESC] = sResultDesc;
         }
 
         TLOGTARS("Current::sendResponse :"
-                   << response.iMessageType << "|"
+                   << tupResponse.iMessageType << "|"
                    << _request.sServantName << "|"
                    << _request.sFuncName << "|"
-                   << response.iRequestId << endl);
+                   << tupResponse.iRequestId << endl);
 
-        response.writeTo(os);
+	    tupResponse.writeTo(os);
     }
 
 	assert(os.getLength() >= 4);
@@ -397,7 +322,6 @@ void Current::sendResponse(int iRet, const vector<char> &buffer,  const map<stri
 	_servantHandle->sendResponse(send);
 
 }
-
 
 void Current::close()
 {
@@ -423,12 +347,6 @@ void Current::reportToStat(const string& sObj)
 
     if(stat && stat->getStatPrx())
     {
-        // int64_t endtime = TNOWMS;
-        // int sptime = endtime - _begintime;
-
-        //被调上报自己的set信息，set信息在setReportInfo设置
-        // stat->report(sObj, "" , _request.sServantName, _data->ip(), 0, _request.sFuncName, (StatReport::StatResult)_ret, TNOWMS - _data->recvTimeStamp(), 0);
-
         stat->report(sObj, "", _request.sFuncName, _data->ip(), 0, (StatReport::StatResult)_ret, TNOWMS - _data->recvTimeStamp(), 0, false);
     }
 }

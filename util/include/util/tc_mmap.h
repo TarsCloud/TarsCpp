@@ -37,7 +37,6 @@ namespace tars
 * @brief  MMAP Encapsulation Class
 *         Windows uses file mapping (does not seem to write files back!!?)
 *  
-* @author  jarodruan@tencent.com   
 */           
 /////////////////////////////////////////////////
 /**

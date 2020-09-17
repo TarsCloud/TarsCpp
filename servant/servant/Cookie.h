@@ -17,6 +17,7 @@
 #ifndef __TARS_COOKIE_H__
 #define __TARS_COOKIE_H__
 
+#include "servant/ServantProxy.h"
 
 /**
  * cookie操作类

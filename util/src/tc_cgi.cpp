@@ -224,7 +224,7 @@ void TC_Cgi::parseNormal(multimap<string, string> &mmpParams, const string& sBuf
 
         if(iFlag == 0)
         {
-            while ( (pos < len) && (sBuffer[pos] != '=') )
+            while ( (sBuffer[pos] != '=') && (pos < len) )
             {
                 sTmp += (sBuffer[pos] == '+') ? ' ' : sBuffer[pos];
 
@@ -233,7 +233,7 @@ void TC_Cgi::parseNormal(multimap<string, string> &mmpParams, const string& sBuf
         }
         else
         {
-            while ( (pos < len) && (sBuffer[pos] != '&') )
+            while ( (sBuffer[pos] != '&') && (pos < len) )
             {
                 sTmp += (sBuffer[pos] == '+') ? ' ' : sBuffer[pos];
 
@@ -462,10 +462,10 @@ void TC_Cgi::parseFormData(multimap<string, string> &mmpParams, const string &sB
             {
                 if(sLastBuffer.length() < 2)
                 {
-                    if(fp)
-                    {
-                        fclose(fp);
-                    }
+					if(fp)
+					{
+                    	fclose(fp);
+					}
                     throw TC_Cgi_Exception("[TC_Cgi::parseFormData] 'multipart/form-data' Format is error");
                 }
 
@@ -488,8 +488,8 @@ void TC_Cgi::parseFormData(multimap<string, string> &mmpParams, const string &sB
                 {
                     return;
                 }
-                {
-                    throw TC_Cgi_Exception("[TC_Cgi::parseFormData] 'multipart/form-data' Format is error");
+				{
+                	throw TC_Cgi_Exception("[TC_Cgi::parseFormData] 'multipart/form-data' Format is error");
                 }
             }
 
@@ -500,11 +500,11 @@ void TC_Cgi::parseFormData(multimap<string, string> &mmpParams, const string &sB
 
             sLastBuffer = sBuffer + "\n";
         }
-        if(fp)
-        {
-            fclose(fp);
-            fp = NULL;
-        }
+		if(fp)
+		{
+			fclose(fp);
+			fp = NULL;
+		}
     }
     else
     {
@@ -650,7 +650,7 @@ const map<string, string> &TC_Cgi::getCookiesMap() const
 
 bool  TC_Cgi::isUploadOverSize() const
 {
-    return _bUploadFileOverSize;
+	return _bUploadFileOverSize;
 }
 
 bool  TC_Cgi::isUploadOverSize(vector<TC_Cgi_Upload> &vtUploads) const
@@ -801,7 +801,7 @@ void TC_Cgi::setCgiEnv(const string &sName, const string &sValue)
 
 string TC_Cgi::htmlHeader(const string &sHeader)
 {
-    return "Content-type: " + sHeader + "\n\n";
+	return "Content-type: " + sHeader + "\n\n";
 }
 
 string TC_Cgi::decodeURL(const string &sUrl)
@@ -814,11 +814,11 @@ string TC_Cgi::decodeURL(const string &sUrl)
 
     while (pos < len)
     {
-        if(sUrl[pos] == '+')
-        {
-            sDecodeUrl += ' ';
-            ++pos;
-        }
+		if(sUrl[pos] == '+')
+		{
+			sDecodeUrl += ' ';
+			++pos;
+		}
         else if(sUrl[pos] == '%')
         {
             sDecodeUrl += TC_Common::x2c(sUrl.substr(pos + 1));
@@ -844,13 +844,7 @@ string TC_Cgi::encodeURL(const string &sUrl)
     {
         char c = sUrl[i];
         if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
-        {
             result.append(1, c);
-        }
-        // else if(c == ' ')
-        // {
-        //     result.append(1, '+');
-        // }
         else
         {
             result.append(1, '%');

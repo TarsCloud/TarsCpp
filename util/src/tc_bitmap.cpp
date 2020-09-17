@@ -144,7 +144,7 @@ int TC_BitMap::BitMap::load5file(const string &sFile)
     char *pBuffer  = new char[iSize];
     while(true)
     {
-        int ret = fread(pBuffer, 1, iSize, fp); 
+        size_t ret = fread(pBuffer, 1, iSize, fp); 
         if(ret == 0)
         {
             break;

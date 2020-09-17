@@ -101,11 +101,7 @@ public:
 		 */ 
 		int notifyFd();
 
-		/**
-		 * 清除通知, 否则会一直响应
-		 * Clear up notice, otherwise, it will always respond
-		 */ 
-		// void clear();
+
 	protected:
         //通知fd
         TC_Socket _notify;
@@ -141,6 +137,11 @@ public:
 	 * @param max_connections Maximum number of connections the epoll service needs to support
 	 */
 	void create(int max_connections);
+
+	/**
+	 * disable et模式
+	 */
+	void enableET(bool enable) { _enableET = enable; };
 
 	/**
 	 * @brief 释放资源
@@ -270,6 +271,10 @@ protected:
  	void ctrl(SOCKET_TYPE fd, uint64_t data, uint32_t events, int op);
 
 protected:
+	/**
+	 * 默认开启ET模式
+	 */
+	bool    _enableET = true;
 
     /**
      * 	epoll

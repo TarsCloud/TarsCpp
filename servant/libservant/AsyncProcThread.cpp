@@ -99,7 +99,7 @@ void AsyncProcThread::run()
 
 void AsyncProcThread::callback(ReqMessage * msg)
 {
-	TLOGTARS("[TARS][AsyncProcThread::run] get one msg." << endl);
+	TLOGTARS("[AsyncProcThread::run] get one msg." << endl);
 
 	//从回调对象把线程私有数据传递到回调线程中
 	ServantProxyThreadData * pServantProxyThreadData = ServantProxyThreadData::getData();
@@ -123,11 +123,11 @@ void AsyncProcThread::callback(ReqMessage * msg)
 	}
 	catch (exception& e)
 	{
-		TLOGERROR("[TARS][AsyncProcThread exception]:" << e.what() << endl);
+		TLOGERROR("[AsyncProcThread exception]:" << e.what() << endl);
 	}
 	catch (...)
 	{
-		TLOGERROR("[TARS][AsyncProcThread exception.]" << endl);
+		TLOGERROR("[AsyncProcThread exception.]" << endl);
 	}
 }
 /////////////////////////////////////////////////////////////////////////

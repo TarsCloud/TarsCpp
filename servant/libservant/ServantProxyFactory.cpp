@@ -35,33 +35,31 @@ ServantPrx::element_type* ServantProxyFactory::getServantProxy(const string& nam
 
     string tmpObjName = name + ":" + setName;
 
-    map<string, ServantPrx>::iterator it = _servantProxy.find(tmpObjName);
-    if(it != _servantProxy.end())
-    {
-        return it->second.get();
-    }
+	map<string, ServantPrx>::iterator it = _servantProxy.find(tmpObjName);
+	if(it != _servantProxy.end())
+		return it->second.get();
 
     ObjectProxy ** ppObjectProxy = new ObjectProxy * [_comm->getClientThreadNum()];
     assert(ppObjectProxy != NULL);
 
     for(size_t i = 0; i < _comm->getClientThreadNum(); ++i)
     {
-        ppObjectProxy[i] = _comm->getCommunicatorEpoll(i)->getObjectProxy(name, setName);
+        ppObjectProxy[i] = _comm->getCommunicatorEpoll(i)->getObjectProxy(name,setName);
     }
 
     ServantPrx sp = new ServantProxy(_comm, ppObjectProxy, _comm->getClientThreadNum());
 
-    int syncTimeout  = TC_Common::strto<int>(_comm->getProperty("sync-invoke-timeout", "3000"));
-    int asyncTimeout = TC_Common::strto<int>(_comm->getProperty("async-invoke-timeout", "5000"));
-    int conTimeout   = TC_Common::strto<int>(_comm->getProperty("connect-timeout", "1500"));
+    int syncTimeout = TC_Common::strto<int>(_comm->getProperty("sync-invoke-timeout", "3000"));
+	int asyncTimeout = TC_Common::strto<int>(_comm->getProperty("async-invoke-timeout", "5000"));
+	int conTimeout = TC_Common::strto<int>(_comm->getProperty("connect-timeout", "1500"));
 
     sp->tars_timeout(syncTimeout);
     sp->tars_async_timeout(asyncTimeout);
     sp->tars_connect_timeout(conTimeout);
 
-    _servantProxy[tmpObjName] = sp;
+	_servantProxy[tmpObjName] = sp;
 
-    return sp.get();
+	return sp.get();
 }
 ///////////////////////////////////////////////////////////////////////////////
 }

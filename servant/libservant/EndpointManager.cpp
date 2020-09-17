@@ -196,7 +196,6 @@ void QueryEpBase::setObjName(const string & sObjName)
 		    _objName = _objName.substr(0, pos);
 	    }
 
-
         _queryFPrx = _communicator->stringToProxy<QueryFPrx>(_locator);
 
         string sLocatorKey = _locator;
@@ -213,22 +212,22 @@ void QueryEpBase::setObjName(const string & sObjName)
         if(!_interfaceReq)
         {
             sEndpoints = AppCache::getInstance()->get(objName,sLocatorKey);
-            sInactiveEndpoints = AppCache::getInstance()->get("inactive_" + objName, sLocatorKey);
+            sInactiveEndpoints = AppCache::getInstance()->get("inactive_"+objName,sLocatorKey);
         }
     }
 
-    setEndpoints(sEndpoints, _activeEndpoints);
-    setEndpoints(sInactiveEndpoints, _inactiveEndpoints);
+    setEndpoints(sEndpoints,_activeEndpoints);
+    setEndpoints(sInactiveEndpoints,_inactiveEndpoints);
 
-    if(_activeEndpoints.size() > 0)
+    if(_activeEndpoints.size()>0)
     {
         _valid = true;
     }
 
-    if(_activeEndpoints.size() > 0 || _inactiveEndpoints.size() > 0)
+    if(_activeEndpoints.size()>0 || _inactiveEndpoints.size()>0)
     {
-        notifyEndpoints(_activeEndpoints, _inactiveEndpoints, true);
-    } 
+        notifyEndpoints(_activeEndpoints,_inactiveEndpoints,true);
+    }
 }
 
 vector<string> QueryEpBase::sepEndpoint(const string& sEndpoints)
@@ -286,7 +285,6 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
     bool         bFirstWeightType = true;
     unsigned int iWeightType      = 0;
 
-    // vector<string>  vEndpoints    = TC_Common::sepstr<string>(sEndpoints, ":", false, isRealEndpoint);
     vector<string>  vEndpoints = sepEndpoint(sEndpoints);
 
     for (size_t i = 0; i < vEndpoints.size(); ++i)
@@ -295,16 +293,7 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
         {
             TC_Endpoint ep(vEndpoints[i]);
 
-//	        TC_Endpoint::EType type = ep.getType();
-//            if (ep.isSSL())
-//                type = TC_Endpoint::SSL;
-//            else if (ep.isTcp())
-//                type = TC_Endpoint::TCP;
-//            else
-//                type = TC_Endpoint::UDP;
-
             string sSetDivision;
-
             //解析set分组信息
             if (!_direct)
             {
@@ -336,7 +325,8 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
                 }
             }
 
-            EndpointInfo epi(ep.getHost(), ep.getPort(), ep.getType(), ep.getGrid(), sSetDivision, ep.getQos(), ep.getWeight(), ep.getWeightType(), ep.getAuthType());
+	        EndpointInfo epi(ep, sSetDivision);
+//            EndpointInfo epi(ep.getHost(), ep.getPort(), ep.getType(), ep.getGrid(), sSetDivision, ep.getQos(), ep.getWeight(), ep.getWeightType(), ep.getAuthType());
 
             setEndpoints.insert(epi);
         }
@@ -396,6 +386,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
 	    //如果是异步且不是根servant(通过#1创建的servant, 不主动更新主控信息)
         if(!bSync && !_rootServant)
 	        return;
+
         try
         {
             if(bSync)
@@ -542,22 +533,21 @@ void QueryEpBase::doEndpoints(const vector<EndpointF>& activeEp, const vector<En
             }
         }
 
-
-        //  tars istcp意思和这里枚举值对应
+        //  taf istcp意思和这里枚举值对应
 //        EndpointInfo::EType type = EndpointInfo::EType(activeEp[i].istcp);
-        EndpointInfo ep(activeEp[i].host, activeEp[i].port, (TC_Endpoint::EType)activeEp[i].istcp, activeEp[i].grid, activeEp[i].setId, activeEp[i].qos, activeEp[i].weight, activeEp[i].weightType, activeEp[i].authType);
+//        EndpointInfo ep(activeEp[i].host, activeEp[i].port, (TC_Endpoint::EType)activeEp[i].istcp, activeEp[i].grid, activeEp[i].setId, activeEp[i].qos, activeEp[i].weight, activeEp[i].weightType, activeEp[i].authType);
 
-        activeEps.insert(ep);
+        activeEps.insert(EndpointInfo(activeEp[i]));
     }
 
     //生成inactive set 用于比较
     for (uint32_t i = 0; i < inactiveEp.size(); ++i)
     {
-        //  tars istcp意思和这里枚举值对应
+        //  taf istcp意思和这里枚举值对应
 //        EndpointInfo::EType type = EndpointInfo::EType(inactiveEp[i].istcp);
-        EndpointInfo ep(inactiveEp[i].host, inactiveEp[i].port, (TC_Endpoint::EType)inactiveEp[i].istcp, inactiveEp[i].grid, inactiveEp[i].setId, inactiveEp[i].qos, inactiveEp[i].weight, inactiveEp[i].weightType, inactiveEp[i].authType);
+//        EndpointInfo ep(inactiveEp[i].host, inactiveEp[i].port, (TC_Endpoint::EType)activeEp[i].istcp, inactiveEp[i].grid, inactiveEp[i].setId, inactiveEp[i].qos, inactiveEp[i].weight, inactiveEp[i].weightType, inactiveEp[i].authType);
 
-        inactiveEps.insert(ep);
+        inactiveEps.insert(EndpointInfo(inactiveEp[i]));
     }
 
     if(bSameWeightType)
@@ -600,7 +590,7 @@ void QueryEpBase::doEndpoints(const vector<EndpointF>& activeEp, const vector<En
 
     if(bNeedNotify)
     {
-        notifyEndpoints(_activeEndpoints, _inactiveEndpoints, bSync);
+        notifyEndpoints(_activeEndpoints,_inactiveEndpoints,bSync);
     }
 
     if(!_valid)
@@ -652,7 +642,6 @@ void QueryEpBase::setEndPointToCache(bool bInactive)
     {
         doEndpoints = _inactiveEndpoints;
     }
-
     set<EndpointInfo>::iterator iter;
     iter = doEndpoints.begin();
 
@@ -681,7 +670,7 @@ void QueryEpBase::setEndPointToCache(bool bInactive)
     {
         sLocatorKey += "_" + ClientConfig::SetDivision;
     }
-    string objName = _objName + string(_invokeSetId.empty() ? "" : ":") + _invokeSetId;
+    string objName = _objName + string(_invokeSetId.empty()?"":":") + _invokeSetId;
     if(bInactive)
     {
         AppCache::getInstance()->set("inactive_"+objName,sEndpoints,sLocatorKey);
@@ -694,7 +683,7 @@ void QueryEpBase::setEndPointToCache(bool bInactive)
     TLOGTARS("[setEndPointToCache,obj:" << _objName << ",invokeSetId:" << _invokeSetId << ",endpoint:" << sEndpoints << "]" << endl);
 }
 
-/////////////////////////////////////////////////////////////////////////////
+
 EndpointManager::EndpointManager(ObjectProxy * pObjectProxy, Communicator* pComm, const string & sObjName, bool bFirstNetThread,const string& setName)
 : QueryEpBase(pComm, bFirstNetThread, false)
 ,_objectProxy(pObjectProxy)
@@ -706,7 +695,7 @@ EndpointManager::EndpointManager(ObjectProxy * pObjectProxy, Communicator* pComm
 ,_consistentHash(E_TC_CONHASH_KETAMAHASH)
 {
     setNetThreadProcess(true);
-    init(sObjName,_communicator->getProperty("locator"),setName);
+    init(sObjName, _communicator->getProperty("locator"), setName);
 }
 
 EndpointManager::~EndpointManager()
@@ -724,92 +713,92 @@ EndpointManager::~EndpointManager()
 
 void EndpointManager::updateEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive)
 {
-    set<EndpointInfo>::const_iterator iter;
-    map<string,AdapterProxy*>::iterator iterAdapter;
-    pair<map<string,AdapterProxy*>::iterator,bool> result;
+	set<EndpointInfo>::const_iterator iter;
+	map<string,AdapterProxy*>::iterator iterAdapter;
+	pair<map<string,AdapterProxy*>::iterator,bool> result;
 
-    _activeProxys.clear();
-    _regProxys.clear();
+	_activeProxys.clear();
+	_regProxys.clear();
 
-    //更新active
-    iter = active.begin();
-    for(;iter != active.end();++iter)
-    {
-        if(!_direct && _weightType == E_STATIC_WEIGHT && iter->weight() <= 0)
-        {
-            continue;
-        }
+	//更新active
+	iter = active.begin();
+	for(;iter != active.end();++iter)
+	{
+		if(!_direct && _weightType == E_STATIC_WEIGHT && iter->weight() <= 0)
+		{
+			continue;
+		}
 
-        iterAdapter = _allProxys.find(iter->desc());
-        if(iterAdapter == _allProxys.end())
-        {
-            AdapterProxy* ap = new AdapterProxy(_objectProxy, *iter, _communicator);
+		iterAdapter = _allProxys.find(iter->cmpDesc());
+		if(iterAdapter == _allProxys.end())
+		{
+			AdapterProxy* ap = new AdapterProxy(_objectProxy, *iter, _communicator);
 
-            result = _allProxys.insert(make_pair(iter->desc(),ap));
-            assert(result.second);
+			result = _allProxys.insert(make_pair(iter->cmpDesc(),ap));
+			assert(result.second);
 
-            iterAdapter = result.first;
+			iterAdapter = result.first;
 
-            _vAllProxys.push_back(ap);
-        }
+			_vAllProxys.push_back(ap);
+		}
 
-        //该节点在主控的状态为active
-        iterAdapter->second->setActiveInReg(true);
+		//该节点在主控的状态为active
+		iterAdapter->second->setActiveInReg(true);
 
-        _activeProxys.push_back(iterAdapter->second);
+		_activeProxys.push_back(iterAdapter->second);
 
-        _regProxys.insert(make_pair(iter->desc(),iterAdapter->second));
+		_regProxys.insert(make_pair(iter->cmpDesc(),iterAdapter->second));
 
-        //设置该节点的静态权重值
-        iterAdapter->second->setWeight(iter->weight());
-    }
+		//设置该节点的静态权重值
+		iterAdapter->second->setWeight(iter->weight());
+	}
 
-    //更新inactive
-    iter = inactive.begin();
-    for(;iter != inactive.end();++iter)
-    {
-        if(!_direct && _weightType == E_STATIC_WEIGHT && iter->weight() <= 0)
-        {
-            continue;
-        }
+	//更新inactive
+	iter = inactive.begin();
+	for(;iter != inactive.end();++iter)
+	{
+		if(!_direct && _weightType == E_STATIC_WEIGHT && iter->weight() <= 0)
+		{
+			continue;
+		}
 
-        iterAdapter = _allProxys.find(iter->desc());
-        if(iterAdapter == _allProxys.end())
-        {
-            AdapterProxy* ap = new AdapterProxy(_objectProxy, *iter, _communicator);
+		iterAdapter = _allProxys.find(iter->cmpDesc());
+		if(iterAdapter == _allProxys.end())
+		{
+			AdapterProxy* ap = new AdapterProxy(_objectProxy, *iter, _communicator);
 
-            result = _allProxys.insert(make_pair(iter->desc(),ap));
-            assert(result.second);
+			result = _allProxys.insert(make_pair(iter->cmpDesc(),ap));
+			assert(result.second);
 
-            iterAdapter = result.first;
+			iterAdapter = result.first;
 
-            _vAllProxys.push_back(ap);
-        }
+			_vAllProxys.push_back(ap);
+		}
 
-        //该节点在主控的状态为inactive
-        iterAdapter->second->setActiveInReg(false);
+		//该节点在主控的状态为inactive
+		iterAdapter->second->setActiveInReg(false);
 
-        _regProxys.insert(make_pair(iter->desc(),iterAdapter->second));
+		_regProxys.insert(make_pair(iter->cmpDesc(),iterAdapter->second));
 
-        //设置该节点的静态权重值
-        iterAdapter->second->setWeight(iter->weight());
-    }
+		//设置该节点的静态权重值
+		iterAdapter->second->setWeight(iter->weight());
+	}
 
-    //_vRegProxys 需要按顺序来 重排
-    _vRegProxys.clear();
-    iterAdapter = _regProxys.begin();
-    for(;iterAdapter != _regProxys.end();++iterAdapter)
-    {
-        _vRegProxys.push_back(iterAdapter->second);
-    }
+	//_vRegProxys 需要按顺序来 重排
+	_vRegProxys.clear();
+	iterAdapter = _regProxys.begin();
+	for(;iterAdapter != _regProxys.end();++iterAdapter)
+	{
+		_vRegProxys.push_back(iterAdapter->second);
+	}
 
-    _update = true;
+	_update = true;
 }
 
 void EndpointManager::notifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive,bool bNotify)
 {
 	updateEndpoints(active, inactive);
-
+	//丢给外层统一做
     _objectProxy->onNotifyEndpoints(active, inactive);
 }
 
@@ -818,28 +807,23 @@ void EndpointManager::doNotify()
     _objectProxy->doInvoke();
 }
 
-bool EndpointManager::selectAdapterProxy(ReqMessage * msg,AdapterProxy * & pAdapterProxy, bool onlyCheck)
+bool EndpointManager::selectAdapterProxy(ReqMessage * msg,AdapterProxy * & pAdapterProxy)
 {
-
     pAdapterProxy = NULL;
 
-	if(!onlyCheck) 
-	{
-	    //刷新主控
-	    refreshReg(E_DEFAULT,"");
+    //刷新主控
+    refreshReg(E_DEFAULT, "");
 
-	    //无效的数据 返回true
-	    if(!_valid)
-	    {
-	        return true;
-	    }
-	}
+    //无效的数据 返回true
+    if (!_valid) 
+    {
+        return true;
+    }
 
     //如果有hash，则先使用hash策略
     if (msg->bHash)
     {
-        pAdapterProxy = getHashProxy(msg->iHashCode, msg->bConHash, onlyCheck);
-
+        pAdapterProxy = getHashProxy(msg->iHashCode, msg->bConHash);
         return false;
     }
     
@@ -850,22 +834,22 @@ bool EndpointManager::selectAdapterProxy(ReqMessage * msg,AdapterProxy * & pAdap
         if(_weightType == E_STATIC_WEIGHT || msg->eType == ReqMessage::ONE_WAY)
             bStaticWeighted = true;
 
-        pAdapterProxy = getWeightedProxy(bStaticWeighted, onlyCheck);
+        pAdapterProxy = getWeightedProxy(bStaticWeighted);
     }
     else
     {
         //普通轮询模式
-        pAdapterProxy = getNextValidProxy(onlyCheck);
+        pAdapterProxy = getNextValidProxy();
     }
 
     return false;
 }
 
-AdapterProxy * EndpointManager::getNextValidProxy(bool onlyCheck)
+AdapterProxy * EndpointManager::getNextValidProxy()
 {
     if (_activeProxys.empty())
     {
-        TLOGERROR("[EndpointManager::getNextValidProxy activeEndpoints is empty][obj:"<<_objName<<"]" << endl);
+        TLOGERROR("[TAF][EndpointManager::getNextValidProxy activeEndpoints is empty][obj:"<<_objName<<"]" << endl);
         return NULL;
     }
 
@@ -877,64 +861,62 @@ AdapterProxy * EndpointManager::getNextValidProxy(bool onlyCheck)
         if(_lastRoundPosition >= _activeProxys.size())
             _lastRoundPosition = 0;
 
-        if(_activeProxys[_lastRoundPosition]->checkActive(false, onlyCheck))
+	    if(_activeProxys[_lastRoundPosition]->checkActive(false))
         {
-            return _activeProxys[_lastRoundPosition];
+	        return _activeProxys[_lastRoundPosition];
         }
 
-        if(!_activeProxys[_lastRoundPosition]->isConnTimeout() &&
-            !_activeProxys[_lastRoundPosition]->isConnExc())
-            conn.push_back(_activeProxys[_lastRoundPosition]);
+        if(!_activeProxys[_lastRoundPosition]->isConnTimeout() && !_activeProxys[_lastRoundPosition]->isConnExc()) {
+	        conn.push_back(_activeProxys[_lastRoundPosition]);
+        }
     }
 
-	if(!onlyCheck) {
-	    if(conn.size() > 0)
-	    {
-	        //都有问题, 随机选择一个没有connect超时或者链接异常的发送
-	        AdapterProxy * adapterProxy = conn[((uint32_t)rand() % conn.size())];
+    if(conn.size() > 0)
+    {
+        //都有问题, 随机选择一个没有connect超时或者链接异常的发送
+        AdapterProxy * adapterProxy = conn[((uint32_t)rand() % conn.size())];
 
-	        //该proxy可能已经被屏蔽,需重新连一次
-	        adapterProxy->checkActive(true, false);
-	        return adapterProxy;
-	    }
+        //该proxy可能已经被屏蔽,需重新连一次
+        adapterProxy->checkActive(true);
+        return adapterProxy;
+    }
 
-	    //所有adapter都有问题 选不到结点,随机找一个重试
-	    AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
+    //所有adapter都有问题 选不到结点,随机找一个重试
+    AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
 
-	    //该proxy可能已经被屏蔽,需重新连一次
-	    adapterProxy->checkActive(true, false);
-	}
+    //该proxy可能已经被屏蔽,需重新连一次
+    adapterProxy->checkActive(true);
 
-    return NULL;
+    return adapterProxy;
 }
 
-AdapterProxy* EndpointManager::getHashProxy(int64_t hashCode, bool bConsistentHash, bool onlyCheck)
+AdapterProxy* EndpointManager::getHashProxy(int64_t hashCode, bool bConsistentHash)
 {
     if(_weightType == E_STATIC_WEIGHT)
     {
         if(bConsistentHash)
         {
-            return getConHashProxyForWeight(hashCode, true, onlyCheck);
+            return getConHashProxyForWeight(hashCode, true);
         }
         else
         {
-            return getHashProxyForWeight(hashCode, true, _hashStaticRouterCache, onlyCheck);
+            return getHashProxyForWeight(hashCode, true, _hashStaticRouterCache);
         }
     }
     else
     {
         if(bConsistentHash)
         {
-            return getConHashProxyForNormal(hashCode, onlyCheck);
+            return getConHashProxyForNormal(hashCode);
         }
         else
         {
-            return getHashProxyForNormal(hashCode, onlyCheck);
+            return getHashProxyForNormal(hashCode);
         }
     }
 }
 
-AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bStatic, vector<size_t> &vRouterCache, bool onlyCheck)
+AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bStatic, vector<size_t> &vRouterCache)
 {
     if(_vRegProxys.empty())
     {
@@ -997,7 +979,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
                     hash = hash % thisHash.size();
                 }
 
-                if (thisHash[hash]->checkActive(false, onlyCheck))
+                if (thisHash[hash]->checkActive(false))
                 {
                     return thisHash[hash];
                 }
@@ -1010,40 +992,38 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
             }
             while(!thisHash.empty());
 
-			if(!onlyCheck) {
-	            if(conn.size() > 0)
-	            {
-	                hash = ((int64_t)hashCode) % conn.size();
+            if(conn.size() > 0)
+            {
+                hash = ((int64_t)hashCode) % conn.size();
 
-	                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-	                if(hash >= conn.size())
-	                {
-	                    hash = hash % conn.size();
-	                }
+                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
+                if(hash >= conn.size())
+                {
+                    hash = hash % conn.size();
+                }
 
-	                //都有问题, 随机选择一个没有connect超时或者链接异常的发送
-	                AdapterProxy *adapterProxy = conn[hash];
+                //都有问题, 随机选择一个没有connect超时或者链接异常的发送
+                AdapterProxy *adapterProxy = conn[hash];
 
-	                //该proxy可能已经被屏蔽,需重新连一次
-	                adapterProxy->checkActive(true, false);
-	                return adapterProxy;
-	            }
+                //该proxy可能已经被屏蔽,需重新连一次
+                adapterProxy->checkActive(true);
+                return adapterProxy;
+            }
 
-	            //所有adapter都有问题 选不到结点,随机找一个重试
-	            AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
-	            //该proxy可能已经被屏蔽,需重新连一次
-	            adapterProxy->checkActive(true, false);
-			}
+            //所有adapter都有问题 选不到结点,随机找一个重试
+            AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
+            //该proxy可能已经被屏蔽,需重新连一次
+            adapterProxy->checkActive(true);
 
-            return NULL;
+            return adapterProxy;
         }
     }
 
-    return getHashProxyForNormal(hashCode, onlyCheck);
+    return getHashProxyForNormal(hashCode);
 }
 
 
-AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool bStatic, bool onlyCheck)
+AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool bStatic)
 {
     if(_vRegProxys.empty())
     {
@@ -1137,11 +1117,11 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
             //该proxy可能已经被屏蔽,需重新连一次
             adapterProxy->checkActive(true);
 
-            return NULL;
+            return adapterProxy;
         }
     }
 
-    return getHashProxyForNormal(hashCode, onlyCheck);
+    return getHashProxyForNormal(hashCode);
 }
 
 bool EndpointManager::checkHashStaticWeightChange(bool bStatic)
@@ -1346,7 +1326,7 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, vector<AdapterPro
     conHash.sortNode();
 }
 
-AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode, bool onlyCheck)
+AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
 {
     if(_vRegProxys.empty())
     {
@@ -1428,11 +1408,11 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode, bool only
         //该proxy可能已经被屏蔽,需重新连一次
         adapterProxy->checkActive(true);
 
-        return NULL;
+        return adapterProxy;
     }
 }
 
-AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode, bool onlyCheck)
+AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
 {
     if(_vRegProxys.empty())
     {
@@ -1527,19 +1507,19 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode, bool o
             //该proxy可能已经被屏蔽,需重新连一次
             adapterProxy->checkActive(true);
 
-            return NULL;
+            return adapterProxy;
         }
     }
 
-    return getHashProxyForNormal(hashCode, onlyCheck);
+    return getHashProxyForNormal(hashCode);
 }
 
-AdapterProxy* EndpointManager::getWeightedProxy(bool bStaticWeighted, bool onlyCheck)
+AdapterProxy* EndpointManager::getWeightedProxy(bool bStaticWeighted)
 {
-    return getWeightedForNormal(bStaticWeighted, onlyCheck);
+    return getWeightedForNormal(bStaticWeighted);
 }
 
-AdapterProxy* EndpointManager::getWeightedForNormal(bool bStaticWeighted, bool onlyCheck)
+AdapterProxy* EndpointManager::getWeightedForNormal(bool bStaticWeighted)
 {
     if (_activeProxys.empty())
     {
@@ -1625,7 +1605,7 @@ AdapterProxy* EndpointManager::getWeightedForNormal(bool bStaticWeighted, bool o
             //该proxy可能已经被屏蔽,需重新连一次
             adapterProxy->checkActive(true);
 
-            return NULL;
+            return adapterProxy;
         }
     }
 
@@ -1662,7 +1642,7 @@ AdapterProxy* EndpointManager::getWeightedForNormal(bool bStaticWeighted, bool o
     //该proxy可能已经被屏蔽,需重新连一次
     adapterProxy->checkActive(true);
 
-    return NULL;
+    return adapterProxy;
 }
 
 void EndpointManager::updateProxyWeighted()
@@ -1874,7 +1854,7 @@ void EndpointThread::getTCEndpoints(vector<TC_Endpoint> &activeEndPoint, vector<
     }
 }
 
-void EndpointThread::notifyEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive, bool bSync)
+void EndpointThread::notifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive,bool bSync)
 {
     if(!bSync)
     {
@@ -1899,9 +1879,9 @@ void EndpointThread::update(const set<EndpointInfo> & active, const set<Endpoint
     set<EndpointInfo>::iterator iter= active.begin();
     for(;iter != active.end(); ++iter)
     {
-        TC_Endpoint ep(iter->host(), iter->port(), 3000, iter->type(), iter->grid());
+//        TC_Endpoint ep = (iter->host(), iter->port(), 3000, iter->type(), iter->grid());
 
-        _activeTCEndPoint.push_back(ep);
+        _activeTCEndPoint.push_back(iter->getEndpoint());
 
         _activeEndPoint.push_back(*iter);
     }
@@ -1909,9 +1889,9 @@ void EndpointThread::update(const set<EndpointInfo> & active, const set<Endpoint
     iter = inactive.begin();
     for(;iter != inactive.end(); ++iter)
     {
-        TC_Endpoint ep(iter->host(), iter->port(), 3000, iter->type(), iter->grid());
+//        TC_Endpoint ep(iter->host(), iter->port(), 3000, iter->type(), iter->grid());
 
-        _inactiveTCEndPoint.push_back(ep);
+        _inactiveTCEndPoint.push_back(iter->getEndpoint());
 
         _inactiveEndPoint.push_back(*iter);
     }
@@ -1922,7 +1902,6 @@ EndpointManagerThread::EndpointManagerThread(Communicator * pComm,const string &
 ,_objName(sObjName)
 {
 }
-
 EndpointManagerThread::~EndpointManagerThread()
 {
     map<string,EndpointThread*>::iterator iter;
@@ -1959,6 +1938,7 @@ void EndpointManagerThread::getEndpointBySet(const string sName, vector<Endpoint
 
 void EndpointManagerThread::getEndpointByStation(const string sName, vector<EndpointInfo> &activeEndPoint, vector<EndpointInfo> &inactiveEndPoint)
 {
+
     EndpointThread * pThread  = getEndpointThread(E_STATION,sName);
 
     pThread->getEndpoints(activeEndPoint,inactiveEndPoint);
@@ -1973,6 +1953,7 @@ void EndpointManagerThread::getTCEndpoint(vector<TC_Endpoint> &activeEndPoint, v
 
 void EndpointManagerThread::getTCEndpointByAll(vector<TC_Endpoint> &activeEndPoint, vector<TC_Endpoint> &inactiveEndPoint)
 {
+
     EndpointThread * pThread  = getEndpointThread(E_ALL,"");
 
     pThread->getTCEndpoints(activeEndPoint,inactiveEndPoint);
@@ -1987,6 +1968,7 @@ void EndpointManagerThread::getTCEndpointBySet(const string sName, vector<TC_End
 
 void EndpointManagerThread::getTCEndpointByStation(const string sName, vector<TC_Endpoint> &activeEndPoint, vector<TC_Endpoint> &inactiveEndPoint)
 {
+
     EndpointThread * pThread  = getEndpointThread(E_STATION,sName);
 
     pThread->getTCEndpoints(activeEndPoint,inactiveEndPoint);
@@ -2012,3 +1994,5 @@ EndpointThread * EndpointManagerThread::getEndpointThread(GetEndpointType type,c
 }
 
 }
+
+

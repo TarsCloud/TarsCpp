@@ -244,27 +244,27 @@ bool Application::cmdCloseCoreDump(const string& command, const string& params, 
 {
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     struct rlimit tlimit;
-    int ret=0;
+    int ret = 0;
     ostringstream os;
 
-    ret = getrlimit(RLIMIT_CORE,&tlimit);
-    if(ret != 0)
+    ret = getrlimit(RLIMIT_CORE, &tlimit);
+    if (ret != 0)
     {
         TLOGERROR("error: "<<strerror(errno)<<endl);
         return false;
     }
 
-    TLOGDEBUG("before :cur:"<<tlimit.rlim_cur<<";max: "<<tlimit.rlim_max<<endl);
+    TLOGDEBUG("before :cur:" << tlimit.rlim_cur << ";max: " << tlimit.rlim_max << endl);
 
-    os<<(ServerConfig::Application+"."+ServerConfig::ServerName);
+    os << (ServerConfig::Application + "." + ServerConfig::ServerName);
 
-    os<<"|before set:cur:"<<tlimit.rlim_cur<<";max: "<<tlimit.rlim_max;
+    os << "|before set:cur:" << tlimit.rlim_cur << ";max: " << tlimit.rlim_max;
 
     string param = TC_Common::lower(TC_Common::trim(params));
 
-    bool bClose = (param == "yes")?true:false;
+    bool bClose = (param == "yes") ? true : false;
 
-    if(bClose)
+    if (bClose)
     {
         tlimit.rlim_cur = 0;
     }
@@ -274,22 +274,22 @@ bool Application::cmdCloseCoreDump(const string& command, const string& params, 
     }
 
 
-    ret =setrlimit(RLIMIT_CORE,&tlimit);
-    if(ret != 0)
+    ret = setrlimit(RLIMIT_CORE, &tlimit);
+    if (ret != 0)
     {
         TLOGERROR("error: "<<strerror(errno)<<endl);
        return false;
     }
 
-    ret = getrlimit(RLIMIT_CORE,&tlimit);
-    if(ret != 0)
+    ret = getrlimit(RLIMIT_CORE, &tlimit);
+    if (ret != 0)
     {
         TLOGERROR("error: "<<strerror(errno)<<endl);
         return false;
     }
 
-    TLOGDEBUG("after cur:"<<tlimit.rlim_cur<<";max: "<<tlimit.rlim_max<<endl);
-    os <<"|after set cur:"<<tlimit.rlim_cur<<";max: "<<tlimit.rlim_max<<endl;
+    TLOGDEBUG("after cur:" << tlimit.rlim_cur << ";max: " << tlimit.rlim_max << endl);
+    os << "|after set cur:" << tlimit.rlim_cur << ";max: " << tlimit.rlim_max << endl;
 
     result = os.str();
 #else
@@ -305,13 +305,13 @@ bool Application::cmdSetLogLevel(const string& command, const string& params, st
 
     int ret = LocalRollLogger::getInstance()->logger()->setLogLevel(level);
 
-    if(ret == 0)
+    if (ret == 0)
     {
         ServerConfig::LogLevel = TC_Common::upper(level);
 
         result = "set log level [" + level + "] ok";
 
-        AppCache::getInstance()->set("logLevel",level);
+        AppCache::getInstance()->set("logLevel", level);
     }
     else
     {
@@ -325,11 +325,11 @@ bool Application::cmdEnableDayLog(const string& command, const string& params, s
 {
     TLOGTARS("Application::cmdEnableDayLog:" << command << " " << params << endl);
 
-    vector<string> vParams = TC_Common::sepstr<string>(TC_Common::trim(params),"|");
+    vector<string> vParams = TC_Common::sepstr<string>(TC_Common::trim(params), "|");
 
     size_t nNum = vParams.size();
 
-    if(!(nNum == 2 || nNum == 3))
+    if (!(nNum == 2 || nNum == 3))
     {
         result = "usage: tars.enabledaylog {remote|local}|[logname]|{true|false}";
         return false;
@@ -588,7 +588,7 @@ bool Application::cmdReloadLocator(const string& command, const string& params, 
         reloadConf.parseFile(ServerConfig::ConfigFile);
         string sLocator = reloadConf.get("/tars/application/client/<locator>", "");
 
-        TLOGTARS(__FUNCTION__ << "|" << __LINE__ << "|conf file:" << ServerConfig::ConfigFile << "\n"
+        TLOGDEBUG(__FUNCTION__ << "|" << __LINE__ << "|conf file:" << ServerConfig::ConfigFile << "\n"
             << "|sLocator:" << sLocator << endl);
 
         if (sLocator.empty())
@@ -707,7 +707,7 @@ void Application::main(const TC_Option &option)
         //初始化Server部分
         initializeServer();
 
-        vector<TC_EpollServer::BindAdapterPtr> adapters;
+        vector <TC_EpollServer::BindAdapterPtr> adapters;
 
         //绑定对象和端口
         bindAdapter(adapters);
@@ -716,6 +716,7 @@ void Application::main(const TC_Option &option)
         outAllAdapter(cout);
 
         cout << "\n" << TC_Common::outfill("[initialize server] ", '.')  << " [Done]" << endl;
+
         cout << OUT_LINE_LONG << endl;
 
         {
@@ -812,8 +813,11 @@ void Application::main(const TC_Option &option)
 
         //ctrl + c能够完美结束服务
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-		std::thread th(signal, SIGINT, sighandler);
-		th.detach();
+		std::thread th1(signal, SIGINT, sighandler);
+		th1.detach();
+		//k8s pod完美退出
+		std::thread th2(signal, SIGTERM, sighandler);
+		th2.detach();
 #else
 		std::thread th([] {SetConsoleCtrlHandler(HandlerRoutine, TRUE); });
 		th.detach();
@@ -958,7 +962,7 @@ void Application::addServantProtocol(const string& servant, const TC_NetWorkBuff
 
     if (adapterName == "")
     {
-        throw runtime_error("[TARS]addServantProtocol fail, no found adapter for servant:" + servant);
+        throw runtime_error("addServantProtocol fail, no found adapter for servant:" + servant);
     }
     getEpollServer()->getBindAdapter(adapterName)->setProtocol(protocol);
 }
@@ -982,7 +986,7 @@ void Application::addServantOnClose(const string& servant, const TC_EpollServer:
 
     if (adapterName.empty())
     {
-        throw runtime_error("[TARS]setServantOnClose fail, no found adapter for servant:" + servant);
+        throw runtime_error("setServantOnClose fail, no found adapter for servant:" + servant);
     }
 
     getEpollServer()->getBindAdapter(adapterName)->setOnClose(cf);
@@ -1112,8 +1116,10 @@ void Application::initializeServer()
 	}
 #endif
 
-    if(ServerConfig::LocalIp.empty())
+
+    if (ServerConfig::LocalIp.empty())
     {
+        // ServerConfig::LocalIp = "127.0.0.1";
         vector<string> v = TC_Socket::getLocalHosts();
 
         ServerConfig::LocalIp = "127.0.0.1";
@@ -1133,15 +1139,15 @@ void Application::initializeServer()
     //输出信息
     outServer(cout);
 
-    if(ServerConfig::NetThread < 1)
-    {    
+    if (ServerConfig::NetThread < 1)
+    {
         ServerConfig::NetThread = 1;
         cout << OUT_LINE << "\nwarning:netThreadNum < 1." << endl;
     }
 
     //网络线程的配置数目不能15个
-    if(ServerConfig::NetThread > 15)
-    {    
+    if (ServerConfig::NetThread > 15)
+    {
         ServerConfig::NetThread = 15;
         cout << OUT_LINE << "\nwarning:netThreadNum > 15." << endl;
     }
@@ -1332,11 +1338,11 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
 
             bindAdapter->setMaxConns(TC_Common::strto<int>(_conf.get(sLastPath + "<maxconns>", "128")));
 
-            bindAdapter->setOrder(parseOrder(_conf.get(sLastPath + "<order>","allow,deny")));
+            bindAdapter->setOrder(parseOrder(_conf.get(sLastPath + "<order>", "allow,deny")));
 
             bindAdapter->setAllow(TC_Common::sepstr<string>(_conf[sLastPath + "<allow>"], ";,", false));
 
-            bindAdapter->setDeny(TC_Common::sepstr<string>(_conf.get(sLastPath + "<deny>",""), ";,", false));
+            bindAdapter->setDeny(TC_Common::sepstr<string>(_conf.get(sLastPath + "<deny>", ""), ";,", false));
 
             bindAdapter->setQueueCapacity(TC_Common::strto<int>(_conf.get(sLastPath + "<queuecap>", "1024")));
 
@@ -1352,6 +1358,14 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
                 bindAdapter->setProtocol(AppProtocol::parse);
             }
 
+            //校验ssl正常初始化
+#if TARS_SSL
+            if (bindAdapter->getEndpoint().isSSL() && (!(bindAdapter->getSSLCtx())))
+            {
+                cout << "load server ssl error, no cert config!" << bindAdapter->getEndpoint().toString() << endl;
+                exit(-1);
+            }
+#endif
             bindAdapter->setHandle<ServantHandle>(TC_Common::strto<int>(_conf.get(sLastPath + "<threads>", "1")));
 
             if(ServerConfig::ManualListen) {
@@ -1382,7 +1396,7 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
 
 void Application::checkServantNameValid(const string& servant, const string& sPrefix)
 {
-    if((servant.length() <= sPrefix.length()) || (servant.substr(0, sPrefix.length()) != sPrefix))
+    if ((servant.length() <= sPrefix.length()) || (servant.substr(0, sPrefix.length()) != sPrefix))
     {
         ostringstream os;
 
@@ -1391,8 +1405,8 @@ void Application::checkServantNameValid(const string& servant, const string& sPr
         RemoteNotify::getInstance()->report("exit:" + os.str());
 
 	    std::this_thread::sleep_for(std::chrono::milliseconds(100)); //稍微休息一下, 让当前处理包能够回复
+        cout << os.str() << endl;
 
-	    cout << os.str() << endl;
 
         exit(-1);
     }
@@ -1406,7 +1420,7 @@ void Application::outAdapter(ostream &os, const string &v, TC_EpollServer::BindA
     os << TC_Common::outfill("maxconns")         << lsPtr->getMaxConns() << endl;
     os << TC_Common::outfill("queuecap")         << lsPtr->getQueueCapacity() << endl;
     os << TC_Common::outfill("queuetimeout")     << lsPtr->getQueueTimeout() << "ms" << endl;
-    os << TC_Common::outfill("order")            << (lsPtr->getOrder()==TC_EpollServer::BindAdapter::ALLOW_DENY?"allow,deny":"deny,allow") << endl;
+    os << TC_Common::outfill("order")            << (lsPtr->getOrder() == TC_EpollServer::BindAdapter::ALLOW_DENY ? "allow,deny" : "deny,allow") << endl;
     os << TC_Common::outfill("allow")            << TC_Common::tostr(lsPtr->getAllow()) << endl;
     os << TC_Common::outfill("deny")             << TC_Common::tostr(lsPtr->getDeny()) << endl;
     // os << outfill("queuesize")        << lsPtr->getRecvBufferSize() << endl;

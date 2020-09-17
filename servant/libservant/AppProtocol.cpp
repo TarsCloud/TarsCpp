@@ -36,7 +36,7 @@ vector<char> ProxyProtocol::tarsRequest(RequestPacket& request, Transceiver *)
 {
 	TarsOutputStream<BufferWriterVector> os;
 
-	tars::Int32 iHeaderLen = 0;
+	int iHeaderLen = 0;
 
 //	先预留4个字节长度
 	os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
@@ -60,10 +60,6 @@ vector<char> ProxyProtocol::tarsRequest(RequestPacket& request, Transceiver *)
 
 vector<char> ProxyProtocol::http1Request(tars::RequestPacket& request, Transceiver *trans)
 {
-//	assert(trans->getAdapterProxy()->getObjProxy()->getServantProxy()->taf_connection_serial() > 0);
-
-//	request.iRequestId = trans->getAdapterProxy()->getId();
-
 	shared_ptr<TC_HttpRequest> &data = *(shared_ptr<TC_HttpRequest>*)request.sBuffer.data();
 
 	vector<char> buffer;
@@ -83,7 +79,7 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
     {
         context = new shared_ptr<TC_HttpResponse>();
         *context = std::make_shared<TC_HttpResponse>();
-        in.setContextData(context, [context]{ delete context; }); 
+		in.setContextData(context, [](TC_NetWorkBuffer*nb){ shared_ptr<TC_HttpResponse> *p = (shared_ptr<TC_HttpResponse>*)(nb->getContextData()); if(!p) { nb->setContextData(NULL); delete p; }});
     }
 
     if((*context)->incrementDecode(in))
@@ -124,7 +120,7 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
 	{
 		session = new TC_Http2Client();
 
-		trans->getSendBuffer()->setContextData(session, [=]{delete session;});
+		trans->getSendBuffer()->setContextData(session, [=](TC_NetWorkBuffer*nb){ delete session; });
 
 		session->settings(3000);
 	}
@@ -141,6 +137,8 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
 		TLOGERROR("http2Request::Fatal submit error: " << session->getErrMsg() << endl);
 		return vector<char>();
 	}
+
+//	cout << "http2Request id:" << request.iRequestId << endl;
 
 	vector<char> out;
 	session->swap(out);

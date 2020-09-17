@@ -33,7 +33,8 @@ namespace tars
 /** 
 * @file tc_rbtree.h 
 * @brief rbtree map类
-* 
+*  
+* @author  ruanshudong@qq.com
 */           
 /////////////////////////////////////////////////
 /**
@@ -73,8 +74,8 @@ public:
     friend struct RBTreeLockItem;
 
     /**
-    * @brief 操作数据
-    */
+	* @brief 操作数据
+	*/
     struct BlockData
     {
         string  _key;       /**数据Key*/
@@ -99,6 +100,7 @@ public:
         /**
          * @brief block数据头
          */
+        #pragma pack(1) 
         struct tagBlockHead
         {
             uint16_t    _iSize;         /**block的容量大小*/
@@ -121,10 +123,12 @@ public:
             };
             char        _cData[0];      /**数据开始部分*/
         };
+        #pragma pack() 
 
         /**
          * @brief 非头部的block, 称为chunk
          */
+        #pragma pack(1)  
         struct tagChunkHead
         {
             uint16_t    _iSize;         /**block的容量大小*/
@@ -136,6 +140,7 @@ public:
             };
             char        _cData[0];      /**数据开始部分*/
         };
+        #pragma pack() 
 
         /**
          * @brief 构造函数

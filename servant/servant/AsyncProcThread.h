@@ -67,6 +67,7 @@ public:
 
 protected:
 	void callback(ReqMessage * msg);
+
 private:
     /**
      * 是否需要退出

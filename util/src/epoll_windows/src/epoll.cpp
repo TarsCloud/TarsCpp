@@ -87,6 +87,7 @@ protected:
     void remove(epoll_sock_data_t *sock_data)
     {
         _sock_data_tree.erase(sock_data->_sock);
+        _attn_list.erase(sock_data);
     }
     void add(epoll_sock_data_t *sock_data)
     {
@@ -354,10 +355,12 @@ int epoll_port_data_t::epoll_del(SOCKET sock, struct epoll_event *ev)
     /* Remove from attention list. */
     remove(sock_data);
 
-    sock_data->_registered_events = ev->events | EPOLLERR | EPOLLHUP;
-    sock_data->_user_data         = ev->data.u64;
+    return 0;
+    // 以下代码不能有, 否则短链接模式下句柄复用会有问题！！！！
+    // sock_data->_registered_events = ev->events | EPOLLERR | EPOLLHUP;
+    // sock_data->_user_data         = ev->data.u64;
 
-    return sock_data->submit();    
+    // return sock_data->submit();    
 }
 
 int epoll_port_data_t::epoll_close()
@@ -536,7 +539,6 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
             ev->events             = reported_events;
         }
     }
-
     return num_events;
 }
 

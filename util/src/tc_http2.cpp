@@ -199,7 +199,7 @@ void TC_Http2Server::onFrameRecvCallback(int32_t streamId)
 {
 	shared_ptr<Http2Context> context = getContext(streamId);
 
-    if(context->request.getHeaders().find(":method") != context->request.getHeaders().end() ||
+	if(context->request.getHeaders().find(":method") != context->request.getHeaders().end() ||
         context->request.getHeaders().find(":path") != context->request.getHeaders().end() ||
         context->request.getHeaders().find(":scheme") != context->request.getHeaders().end())
     {
@@ -502,23 +502,26 @@ int TC_Http2Client::submit(const TC_HttpRequest &request)
 {
 	std::vector<nghttp2_nv> nva;
 
+	//注意MAKE_STRING_NV不能用临时变量, 这里出过几次问题了!
 	const std::string smethod(":method");
-	nghttp2_nv nv1 = MAKE_STRING_NV(smethod, request.getMethod());
+	const std::string vmethod(request.getMethod());
+	nghttp2_nv nv1 = MAKE_STRING_NV(smethod, vmethod);
 	nva.push_back(nv1);
 
 	const std::string spath(":path");
-	nghttp2_nv nv2 = MAKE_STRING_NV(spath, request.getRequest());
+	const std::string vpath(request.getRequest());
+	nghttp2_nv nv2 = MAKE_STRING_NV(spath, vpath);
 	nva.push_back(nv2);
 
 	const std::string sauthority(":authority");
-	nghttp2_nv nv3 = MAKE_STRING_NV(sauthority, request.getURL().getDomain());
+	const std::string vauthority(request.getURL().getDomain());
+	nghttp2_nv nv3 = MAKE_STRING_NV(sauthority, vauthority);
 	nva.push_back(nv3);
 
 	const std::string sscheme(":scheme");
-	nghttp2_nv nv4 = MAKE_STRING_NV(sscheme, request.getURL().getScheme());
+	const std::string vscheme(request.getURL().getScheme());
+	nghttp2_nv nv4 = MAKE_STRING_NV(sscheme, vscheme);
 	nva.push_back(nv4);
-
-// cout << "submit:" << request.getMethod() << ", " << request.getRequest() << ", " << request.getURL().getDomain() << ", " << request.getURL().getScheme() << endl;
 
 	const TC_Http::http_header_type &header = request.getHeaders();
 	for (auto it = header.begin(); it != header.end(); ++ it)

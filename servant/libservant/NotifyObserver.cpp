@@ -78,13 +78,13 @@ void NotifyObserver::unregisterPrefix(const string& command, BaseNotify* obj)
     unregisterObject(command, obj, _prefix);
 }
 
-string NotifyObserver::notify(const string& command, TarsCurrentPtr current)
+string NotifyObserver::notify(const string& command, CurrentPtr current)
 {
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 
-    string str    = TC_Common::trim(command);
+    string str = TC_Common::trim(command);
 
-    string name   = str;
+    string name = str;
 
     string params = "";
 

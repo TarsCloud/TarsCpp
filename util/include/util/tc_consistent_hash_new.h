@@ -21,7 +21,6 @@
 #include "util/tc_autoptr.h"
 #include "util/tc_hash_fun.h"
 
-using namespace tars;
 
 namespace tars
 {

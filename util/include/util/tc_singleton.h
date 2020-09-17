@@ -20,6 +20,7 @@
 #include "util/tc_monitor.h"
 #include <cassert>
 #include <cstdlib>
+#include <mutex>
 
 namespace tars
 {

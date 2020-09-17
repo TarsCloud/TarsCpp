@@ -43,7 +43,7 @@ namespace tars
  *
  */
 
-class RemoteConfig : public TC_Singleton<RemoteConfig>
+class SVT_DLL_API RemoteConfig : public TC_Singleton<RemoteConfig>
 {
 public:
     /**
@@ -104,6 +104,11 @@ private:
      * @param newFile   新文件逻辑和名称
      */
     inline void localRename(const string& oldFile, const string& newFile);
+
+	/**
+	*   获取hostname， 给k8s版本使用
+	*/
+	string getHostName();
 
 protected:
 

@@ -59,7 +59,7 @@ bool ServantHelperManager::setDyeing(const string & sDyeingKey, const string & s
     return true;
 }
 
-bool ServantHelperManager::isDyeingReq(const string & sKey, const string & sServant, const string & sInterface)
+bool ServantHelperManager::isDyeingReq(const string & sKey, const string & sServant, const string & sInterface) const
 {
     TC_LockT<TC_SpinLock> lock(_mutex);
 

@@ -1026,7 +1026,8 @@ public:
 
         std::string getSk(const std::string& ak) const { return (_accessKey == ak) ? _secretKey : ""; }
 
-        void setSSLCtx(const shared_ptr<TC_OpenSSL::CTX> &ctx) { _ctx = ctx; }
+        void setSSLCtx(const shared_ptr<TC_OpenSSL::CTX>& ctx) { _ctx = ctx; }
+        shared_ptr<TC_OpenSSL::CTX> getSSLCtx() { return _ctx; };
 
 	private:
 		/**
@@ -1394,18 +1395,6 @@ public:
 		 * @param fd
 		 */
 		void close();
-
-//		/**
-//		* 发送TCP
-//      * Send TCP
-//		*/
-//		int sendTcp(const shared_ptr<SendContext> &data);
-//
-//		/**
-//		* 发送Udp
-//      * Send UDP
-//		*/
-//		int sendUdp(const shared_ptr<SendContext> &data);
 
 		/**
 		 * 添加发送buffer
@@ -1890,12 +1879,6 @@ public:
          */
         void setUdpRecvBufferSize(size_t nSize=DEFAULT_RECV_BUFFERSIZE);
 
-//		/**
-//		 * 发送队列的大小
-//		 * Size of sending queue
-//		 * @return size_t
-//		 */
-//		size_t getSendRspSize();
 
     protected:
 

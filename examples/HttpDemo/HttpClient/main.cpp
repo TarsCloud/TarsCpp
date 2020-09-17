@@ -166,7 +166,7 @@ void asyncRpcCallback(int c)
 {
 	int64_t t = TC_Common::now2us();
 
-	_comm->setServantCustomCallback(param.servantPrx->tars_name(), [](ReqMessagePtr msg) {
+	param.servantPrx->tars_set_custom_callback([](ReqMessagePtr msg) {
 		msg->callback->dispatch(msg);
 	});
 
