@@ -759,7 +759,10 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 
 //        TLOGTARS("[ServantProxy::invoke line: " << __LINE__ << " status: " << msg->eStatus << ", ret: " <<msg->response->iRet << endl);
 
-        pSptd->_szHost = msg->adapter->endpoint().desc();
+        if(msg->adapter)
+        {
+            pSptd->_szHost = msg->adapter->endpoint().desc();
+        }
         if(msg->eStatus == ReqMessage::REQ_RSP && msg->response->iRet == TARSSERVERSUCCESS)
         {
             //成功
