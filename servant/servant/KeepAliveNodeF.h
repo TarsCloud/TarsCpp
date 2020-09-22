@@ -28,7 +28,7 @@ namespace tars
  * 给node发送心跳
  * 调用keepAlive异步发送心跳给node
  */
-class KeepAliveNodeFHelper : public TC_Singleton<KeepAliveNodeFHelper>,public TC_ThreadMutex 
+class SVT_DLL_API KeepAliveNodeFHelper : public TC_Singleton<KeepAliveNodeFHelper>,public TC_ThreadMutex 
 {
 public:
 
@@ -46,6 +46,9 @@ public:
      */
     void keepAlive(const string &adapter = "");
 
+    /**
+     * Activing状态
+     */
     void keepActiving();
     
     /**

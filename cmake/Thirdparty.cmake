@@ -88,9 +88,9 @@ if (TARS_GPERF)
 
 endif (TARS_GPERF)
 
-set(LIB_GTEST "libgtest")
 
 if(WIN32)
+
     ExternalProject_Add(ADD_CURL
         URL http://cdn.tarsyun.com/src/curl-7.69.1.tar.gz 
         DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
@@ -110,20 +110,27 @@ if(WIN32)
 endif(WIN32)
 
 if (WIN32)
+    set(LIB_GTEST "gtest")
+
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(LIB_GTEST "${LIB_GTEST}d")
+    endif()
 
     ExternalProject_Add(ADD_${LIB_GTEST}
             URL http://cdn.tarsyun.com/src/release-1.10.0.zip
             DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
             PREFIX ${CMAKE_BINARY_DIR}
             INSTALL_DIR ${CMAKE_SOURCE_DIR}
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest -Dgtest_force_shared_crt=ON
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest -A x64 -Dgtest_force_shared_crt=on
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
-            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
-            INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
+            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} 
+            INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config  ${CMAKE_BUILD_TYPE}  --target install
             URL_MD5 82358affdd7ab94854c8ee73a180fc53
             )
 else()
+    set(LIB_GTEST "gtest")
+
     ExternalProject_Add(ADD_${LIB_GTEST}
             URL http://cdn.tarsyun.com/src/release-1.10.0.tar.gz
             DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download

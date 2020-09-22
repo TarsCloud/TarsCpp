@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 
         _comm = new Communicator();
 
-        // TarsRollLogger::getInstance()->logger()->setLogLevel(6);
+//         TarsRollLogger::getInstance()->logger()->setLogLevel(6);
 
         _comm->setProperty("sendqueuelimit", "1000000");
         _comm->setProperty("asyncqueuecap", "1000000");

@@ -50,27 +50,6 @@ struct stack_context
     {}
 };
 
-/////////////////////////////////////////////
-/**
- * 协程使用的栈内存分配器
- */
-// class standard_stack_allocator
-// {
-// public:
-//     static bool is_stack_unbound();
-
-//     static std::size_t default_stacksize();
-
-//     static std::size_t minimum_stacksize();
-
-//     static std::size_t maximum_stacksize();
-
-//     int allocate( stack_context &, std::size_t);
-
-//     void deallocate( stack_context &);
-// };
-
-
 struct stack_traits
 {
 	static bool is_unbounded();
@@ -322,7 +301,7 @@ private:
     /*
      * 协程具体执行函数
      */
-    std::function<void ()> _callback;
+    std::function<void ()> 		_callback;
 };
 
 ///////////////////////////////////////////
@@ -717,7 +696,7 @@ private:
     CoroutineScheduler *_coroSched;
     uint32_t            _num;
     uint32_t            _maxNum;
-    size_t                _stackSize;
+    size_t              _stackSize;
 };
 
 }

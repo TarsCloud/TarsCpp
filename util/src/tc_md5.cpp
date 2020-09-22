@@ -279,6 +279,7 @@ vector<char> TC_MD5::md5bin(const string &buffer)
 {
     return md5bin(buffer.c_str(), buffer.size());
 }
+
 vector<char> TC_MD5::md5bin(const char *buffer, size_t length)
 {
     vector<char> sOutBuffer;

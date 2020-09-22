@@ -28,13 +28,12 @@ using namespace std;
 
 namespace tars
 {
-#if TARS_SSL
-    class TC_OpenSSL;
-#endif
+
+class TC_OpenSSL;
 
 class AdapterProxy;
+class ProxyBase;
 
-//////////////////////////////////////////////////////////
 /**
  * 网络传输基类，主要提供send/recv接口
  */
@@ -56,31 +55,24 @@ public:
      */
     enum ReturnStatus
     {
-        eRetError = -1,
-        eRetOk =0,
-        eRetFull=1,
-        eRetTimeout=2,
-	    eRetPacket=3,
-
+        eRetError   = -1,   //发送错误
+        eRetOk      = 0,    //发送成功
+        eRetFull    = 1,    //数据发送一半, 队列满了, 等事件过来继续发送
+        eRetNotSend = 2,    //连接还没有ok(ssl没有握手, 没有完成鉴权, 上一个数据包还没有发送完, 没有完成代理鉴权等), 数据没有发送
     };
 
-    /*
+    /**
      * 构造函数
      * @param ep
      * @param fd
      */
-    Transceiver(AdapterProxy * pAdapterProxy, const EndpointInfo &ep);
+    Transceiver(AdapterProxy * pAdapterProxy,const EndpointInfo &ep);
 
-    /*
+    /**
      *
      *析构函数
      */
     virtual ~Transceiver();
-
-    /**
-     * 初始化
-     */
-    virtual void init(){}
 
     /**
      * 是否ssl
@@ -92,12 +84,12 @@ public:
      */
     void checkTimeout();
 
-    /*
+    /**
      * 重新创建连接
      */
     void reconnect();
 
-    /*
+    /**
      * 创建连接，初始化
      */
     void connect();
@@ -105,7 +97,7 @@ public:
     /*
      * 关闭连接
      */
-    virtual void close();
+    virtual void close(bool destructor=false);
 
     /*
      * 设置当前连接态
@@ -225,7 +217,7 @@ public:
     /**
      * 设置鉴权状态
      */
-    void setAuthState(tars::AUTH_STATE newstate) { _authState = newstate; }
+    void setAuthState(AUTH_STATE newstate) { _authState = newstate; }
 
     /*
      * 获取鉴权状态
@@ -238,10 +230,28 @@ public:
     bool sendAuthData(const BasicAuthInfo& );
 
 protected:
+	/*
+	 * 设置当前连接态
+	 */
+	void onSetConnected();
+
     /** 
      ** 物理连接成功回调
      **/
     void                     onConnect();
+
+	/**
+	 ** 发送打通代理请求
+	 **/
+	void                     connectProxy();
+
+	/**
+	 * 检查是否代理创建成功
+	 * @param buff
+	 * @param length
+	 * @return <0: 失败, 0: 成功: 1: 需要验证
+	 */
+	int                      doCheckProxy(const char *buff, size_t length);
 
     /** 
      ** 鉴权初始化请求
@@ -284,12 +294,10 @@ protected:
     AUTH_STATE              _authState;
 
 protected:
-#if TARS_SSL
+
     std::shared_ptr<TC_OpenSSL> _openssl;
-#endif
-	//同步调用的fd
-//	TC_ClientSocket *_syncSock = NULL;
-	
+
+
     /*
      * 发送buffer
      */
@@ -299,6 +307,11 @@ protected:
      * 接收buffer
      */
     TC_NetWorkBuffer _recvBuffer;
+
+	/**
+	 * 代理
+	 */
+	ProxyBase*       _proxyPointer = NULL;
 };
 
 //////////////////////////////////////////////////////////
@@ -335,21 +348,11 @@ public:
     virtual int recv(void* buf, uint32_t len, uint32_t flag);
 
     /**
-     * TCP 接收实现
-     * @param iovec
-     * @param count
-     *
-     * @return int
-     */
-    // int readv(const struct iovec*, int32_t count);
-    /**
-     * 处理返回，判断接收是否有完整的包
+     * 处理返回，判断Recv BufferCache是否有完整的包
      * @param done
      * @return int, =1,表示有数据就包
      */
-    // virtual int doResponse(list<ResponsePacket>& done);
-    virtual int doResponse();
-
+	virtual int doResponse();
 };
 //////////////////////////////////////////////////////////
 /**
@@ -392,7 +395,7 @@ public:
     virtual int recv(void* buf, uint32_t len, uint32_t flag);
 
     /**
-     * 处理返回，判断接收缓存是否有完整的包
+     * 处理返回，判断Recv BufferCache是否有完整的包
      * @param done
      * @return int
      */

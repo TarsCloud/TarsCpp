@@ -16,6 +16,7 @@
 
 #include "servant/Global.h"
 #include "servant/BaseF.h"
+#include "servant/RemoteLogger.h"
 
 namespace tars
 {

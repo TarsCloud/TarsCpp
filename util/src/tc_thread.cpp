@@ -35,7 +35,10 @@ void TC_ThreadControl::join()
         throw TC_ThreadThreadControl_Exception("[TC_ThreadControl::join] can't be called in the same thread");
     }
 
-    _th->join();
+    if (_th->joinable())
+    {
+    	_th->join();
+    }
 }
 
 void TC_ThreadControl::detach()

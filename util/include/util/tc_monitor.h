@@ -28,7 +28,7 @@ namespace tars
  * @brief 锁监控器类.
  * @brief Lock Monitor Class.
  *  
- * @author jarodruan@upchina.com
+ * @author ruanshudong@qq.com
  */           
 /////////////////////////////////////////////////
 /**

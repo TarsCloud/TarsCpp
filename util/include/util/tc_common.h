@@ -35,9 +35,13 @@
 #include <stdexcept>
 #include <algorithm>
 #include <map>
+#include <set>
 #include <unordered_map>
+#include <unordered_set>
 #include <stack>
 #include <vector>
+#include <list>
+#include <thread>
 
 using namespace std;
 
@@ -74,6 +78,10 @@ public:
 
     static const float  _EPSILON_FLOAT;
     static const double _EPSILON_DOUBLE;
+    static const int64_t ONE_DAY_MS = 24 * 3600 * 1000L;
+    static const int64_t ONE_HOUR_MS = 1 * 3600 * 1000L;
+    static const int64_t ONE_MIN_MS = 60 * 1000L;
+    static const int64_t ONE_DAY_SEC = 86400;
 
     /**
     * @brief  跨平台sleep
@@ -101,6 +109,16 @@ public:
     static bool equal(const vector<float>& vx, const vector<float> & vy, float epsilon = _EPSILON_FLOAT);
     static bool equal(const vector<float>& vx, const vector<float>& vy, double epsilon );
 
+	static bool equal(const set<double> & vx, const set<double>& vy, double epsilon = _EPSILON_DOUBLE);
+	static bool equal(const set<double>& vx, const set<double>& vy, float epsilon );
+	static bool equal(const set<float>& vx, const set<float> & vy, float epsilon = _EPSILON_FLOAT);
+	static bool equal(const set<float>& vx, const set<float>& vy, double epsilon );
+
+	static bool equal(const unordered_set<double> & vx, const unordered_set<double>& vy, double epsilon = _EPSILON_DOUBLE);
+	static bool equal(const unordered_set<double>& vx, const unordered_set<double>& vy, float epsilon );
+	static bool equal(const unordered_set<float>& vx, const unordered_set<float> & vy, float epsilon = _EPSILON_FLOAT);
+	static bool equal(const unordered_set<float>& vx, const unordered_set<float>& vy, double epsilon );
+
     /**
     * @brief  map中如果key或者value为double/float字段，则用此模板函数比较
     * @brief  In map, if the key or value is the double/float field, use this template function to compare.
@@ -109,6 +127,8 @@ public:
     static bool equal(const V& x, const V& y, E eps);
     template<typename K, typename V, typename D, typename A , typename E=double>
     static bool equal(const map<K, V, D, A>& mx , const map<K, V, D, A>& my, E epsilon = _EPSILON_DOUBLE);
+	template<typename K, typename V, typename D, typename A , typename E=double>
+	static bool equal(const unordered_map<K, V, D, A>& mx , const unordered_map<K, V, D, A>& my, E epsilon = _EPSILON_DOUBLE);
 
     /**
      * 固定宽度填充字符串, 用于输出对齐格式用(默认右填充)
@@ -326,6 +346,12 @@ public:
     */
     static string now2str(const string &sFormat = "%Y%m%d%H%M%S");
 
+    /**
+    * @brief  毫秒时间, 一般用于调试输出
+    * @return string 转换后的时间字符串
+    */
+    static string now2msstr();
+    static string ms2str(int64_t ms);
     /**
     * @brief  时间转换成GMT字符串，GMT格式:Fri, 12 Jan 2001 18:18:18 GMT
     * @brief  Convert time into GMT string, GMT格式:Fri, 12 Jan 2001 18:18:18 GMT
@@ -640,6 +666,15 @@ public:
      */
     static bool matchPeriod(const string& s, const string& pat);
 
+    /**
+     * 判断在同一个周期的时间是否相等
+     * @param lastDate 日期:%Y%m%d格式
+     * @param date 日期:%Y%m%d格式
+     * @param period: W(周)/M(月)/Q(季)/S(半年)/Y(年)
+     * @return
+     */
+	static bool matchPeriod(int lastDate, int date, const std::string &period);
+
      /**
      * @brief  匹配以.分隔的字符串.
      * @brief  Match strings separated by '.'
@@ -718,6 +753,93 @@ public:
     * @return string    machine name. if failed returns null
 	*/
 	static string getHostName();
+
+    //下一天日期, sDate是:%Y%m%d
+    static string nextDate(const string &sDate);
+    //上一天日期, sDate是:%Y%m%d
+    static string prevDate(const string &sDate);
+    //下一天日期, iDate是:%Y%m%d
+    static int nextDate(int iDate);
+    //上一天日期, iDate是:%Y%m%d
+    static int prevDate(int iDate);
+
+    //下一个月份 sMonth是:%Y%m
+    static string nextMonth(const string &sMonth);
+    //上一个月份 sMonth是:%Y%m
+    static string prevMonth(const string &sMonth);
+    //下一个年份 sYear是:%Y
+    static string nextYear(const string &sYear);
+    //上一个年份 sYear是:%Y
+    static string prevYear(const string &sYear);
+
+    //秒到日期%Y%m%d
+    static int secondsToDateInt(time_t seconds);
+    //秒到日期%Y%m%d
+    static string secondsToDateString(time_t seconds);
+
+    //秒到周一%Y%m%d
+    static string secondsToMondayString(time_t seconds);
+    //秒到月 %Y-%m
+    static string secondsToMonthString(time_t seconds);
+
+    //日期(%Y%m%d)到毫秒
+    static int64_t dateToMs(const string &sDate);
+
+    static int64_t dateToSecond(const string &sDate);
+
+    static int dateTo(const string &sDate, const string &sPeriod);
+
+    //日期(%Y%m%d)到周几
+    static int dateToWeekday(const string &sDate);
+
+    //日期(%Y%m%d)到第几周
+    static int dateToWeek(const string &sDate);
+
+    //日期(%Y%m%d)到x月
+    static int dateToMonth(const string &sDate);
+
+    //日期(%Y%m%d)到x季度
+    static int dateToSeason(const string &sDate);
+
+    //日期(%Y%m%d)到上下半年
+    static int dateToHalfYear(const string &sDate);
+
+    //日期(%Y%m%d)到x年
+    static int dateToYear(const string &sDate);
+
+    //MS到字符串 %Y%m%d-%H%M%S-xxx
+    static string msToTimeString(int64_t ms);
+    //字符串到MS %Y%m%d-%H%M%S-xxx，转换失败返回0
+    static int64_t timeStringToMs(const string & timeStr);
+
+    //MS 中取出日期(%Y%m%d)、时间字符串(%H%M%S)、MS字符串(xxx)
+    static bool getSectionFromMs(int64_t ms,string &date,string& time,string &mstick);
+    //MS 中取出日期(%Y%m%d)，失败返回"00000000"
+    static string getDateFromMs(int64_t ms);
+    //MS 中取出时间(%H%M%S)，失败返回"000000"
+    static string getTimeFromMs(int64_t ms);
+
+    //毫秒换成当天的秒钟
+    static int msToNowSeconds(int64_t ms);
+    static int nowDaySeconds();
+    //换成当天开始的毫秒
+    static int64_t msToNowMs(int64_t ms);
+
+    static int64_t us();
+
+    //当前的小时换成日期秒数 0 ~ (86400-1),hour 0~23 ;min 0~59
+    static int64_t timeToDaySec(int64_t hour, int64_t min);
+
+    //获取下一个通知的绝对时间，clockSec为当天换成秒钟
+    static int64_t getNextAbsClockMs( int64_t clockSec);
+
+    static int nextDate(int iDate, int offset);
+    static int prevDate(int iDate, int offset);
+    // 取日期所在的周期中的最后一天
+    static int lastDate(int iDate, const char period = 'D');
+    // 获取日期列表内和period匹配的日期
+    // period: ('W', 1) ('M', -2), ('Q', 5) // 取每周/每月/每季度第几天 (负数则是倒数地几天)
+    static int getMatchPeriodDays(const std::vector<int>& days, const std::pair<string, int>& period, std::vector<int>& matchDays);
 
 };
 
@@ -1205,6 +1327,64 @@ bool TC_Common::equal(const map<K, V, D, A>& mx, const map<K, V, D, A>& my, E ep
     return true;
 }
 
+template<typename K, typename V, typename D, typename A , typename E>
+bool TC_Common::equal(const unordered_map<K, V, D, A>& mx , const unordered_map<K, V, D, A>& my, E epsilon)
+{
+	auto first1= mx.begin();
+	auto last1 = mx.end();
+	auto first2 = my.begin();
+	auto last2 = my.end();
+
+	if (distance(first1, last1) != distance(first2, last2))
+	{
+		return false;
+	}
+
+	bool doubleKey = (std::is_same<K, double>::value || std::is_same<K, float>::value);
+	bool doubleValue = (std::is_same<V, double>::value || std::is_same<V, float>::value);
+
+	for (; first2 != last2; ++first1, ++first2)
+	{
+		if (doubleKey )
+		{
+			if (!TC_Common::equal(first1->first ,first2->first, epsilon) )
+			{
+				return false;
+			}
+		}
+		else
+		{
+			if (first1->first != first2->first)
+			{
+				return false;
+			}
+		}
+
+		if (doubleValue)
+		{
+			if (!TC_Common::equal(first1->second, first2->second, epsilon))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			if ( first1->second != first2->second)
+			{
+				return false;
+			}
+		}
+	}
+	return true;
 }
+
+#if TARGET_PLATFORM_WINDOWS
+#define __filename__(x) (strrchr(x, '\\') ? strrchr(x, '\\') + 1 : x)
+#define FILE_FUNC_LINE "[" << __filename__(__FILE__) << "::" << __FUNCTION__ << "::" << __LINE__ << "]"
+#else
+#define FILE_FUNC_LINE "[" << __FILE__ << "::" << __FUNCTION__ << "::" << __LINE__ << "]"
 #endif
 
+}
+
+#endif

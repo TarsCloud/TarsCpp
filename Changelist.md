@@ -1,3 +1,59 @@
+## v2.4.11 2020.09.18
+### en
+- fix gtest compiler bug
+- fix epoll memory leak in windows
+- fix tc_encoder crash bug
+- fix tc_clientsocket bug
+- fix tc_timer memory leak
+- fix tc_openssl mode not be used
+- fix TC_ Http2 failure problem (header cannot use temporary variables)
+- always set thread data host info
+- Adding the initialization of enumeration value in the resetDefautlt function
+- Part of the file encoding format is adjusted to utf8 BOM to ensure that there is no problem in Windows compilation
+- tc_common add various date processing functions
+- tc_common add floating point comparison function 
+- tc_thread add multi thread hash logic
+- tc_port add environment variable acquisition and system event registration callback (compatible with multi platform)
+- Adjust tc_sem_mutex event name (under Windows) to facilitate subsequent maintenance
+- rpc add support for http/sock4/sock5 proxy
+- application add ssl bind check
+- Fix the bug of RPC in HTTP short SSL package connection  (under Windows)
+- communicator add update endpoint
+- fix communicator exit logic to avoid possible crash in exit
+- optimize the memory copy problem, reduce the memory copy, and improve the performance
+- Adjust the custom callback and put it in servantproxy
+
+### cn
+- 修复gtest编译错误
+- 修复windows下, epoll.cpp中的内存泄露
+- 修改tc_encoder crash 的bug
+- 修复tc_clientsocket在大包下的bug
+- 修复tc_timer内存泄露问题
+- 修复tc_openssl 代码中mode没生效的bug
+- 修复rpc在http短连接以及ssl大包下的bug(windows下)
+- 修复tc_http2 失败的问题(header不能用临时变量)
+- ServantProxy调用时总是在线程私有变量中设置host info
+- 在resetDefautlt函数中增加枚举值的初始化
+- 部分文件编码格式调整成utf8 bom
+- tc_common增加各类时间处理函数
+- tc_common增加浮点数比较算法
+- tc_thread增加多线程hash逻辑
+- tc_port增加环境变量获取以及系统事件注册回调(兼容多平台)
+- 调整tc_sem_mutex事件名称(windows下), 便于后续维护
+- rpc增加http/sock4/sock5支持
+- application 增加ssl效验
+- communicator增加主动更新endpoint的功能
+- communicator完善退出逻辑, 避免退出时可能的crash
+- 进一步优化内存copy问题, 减少内存copy,提升性能
+- 调整自定义回调, 放在ServantProxy中
+
+## v2.4.10 2020.09.02
+### en
+- fix ssl EndpointManager.cpp bug 
+- gbk2utf8 mode default set to ICONV_IGNORE
+### cn
+- 修复ssl下, EndpointManager.cpp 的bug 
+- 将gbk2utf8 mode 缺省值设置为ICONV_IGNORE
 
 ## v2.4.9 2020.08.19
 ### en

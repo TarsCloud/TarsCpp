@@ -84,7 +84,7 @@ public:
     * @return      转换后的utf8编码
 	* @return      the UTF8 encodeing after transformation
     */
-    static string gbk2utf8(const string &sIn,int mode=ICONV_NORMAL);
+    static string gbk2utf8(const string &sIn,int mode=ICONV_IGNORE);
 
     /**
 	* @brief  gbk 转换到 utf8. 
@@ -97,7 +97,7 @@ public:
     * @throws       TC_Encoder_Exception
     * @return
     */
-    static void gbk2utf8(const string &sIn, vector<string> &vtStr,int mode=ICONV_NORMAL);
+    static void gbk2utf8(const string &sIn, vector<string> &vtStr,int mode=ICONV_IGNORE);
 
 
     /**

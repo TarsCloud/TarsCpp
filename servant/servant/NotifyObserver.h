@@ -30,7 +30,7 @@ class BaseNotify;
 /**
  * 全局接收管理命令，并通知到已注册的对象
  */
-class NotifyObserver : public TC_Singleton<NotifyObserver>, public TC_ThreadRecMutex
+class SVT_DLL_API NotifyObserver : public TC_Singleton<NotifyObserver>, public TC_ThreadRecMutex
 {
 public:
     /**
@@ -51,7 +51,7 @@ public:
      * @param current
      * @return string
      */
-    string notify(const string& command, TarsCurrentPtr current);
+    string notify(const string& command, CurrentPtr current);
 
 public:
     /**

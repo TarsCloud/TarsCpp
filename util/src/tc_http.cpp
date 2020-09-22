@@ -2007,10 +2007,7 @@ size_t TC_Http::parseHeaderString(const char *beginIt, const char *headerIt, TC_
 					contentLength = TC_Common::strto<size_t>(value);
 				}
 
-				if(name.empty())
-				{
-					assert(false);
-				}
+
 				sHeader.insert(multimap<string, string>::value_type(std::move(name), std::move(value)));
 			}
 		}

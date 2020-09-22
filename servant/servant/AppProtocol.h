@@ -40,11 +40,11 @@ class Transceiver;
 template<typename T>
 T net2host(T len)
 {
-    switch(sizeof(T))
+    switch (sizeof(T))
     {
-        case sizeof(uint8_t): return len;
-        case sizeof(uint16_t): return ntohs(len);
-        case sizeof(uint32_t): return ntohl(len);
+    case sizeof(uint8_t): return len;
+    case sizeof(uint16_t): return ntohs(len);
+    case sizeof(uint32_t): return ntohl(len);
     }
     assert(true);
     return 0;
@@ -161,7 +161,7 @@ public:
      */
     static vector<char> streamRequest(RequestPacket& request, Transceiver *)
     {
-        return request.sBuffer;
+	    return request.sBuffer;
     }
 
     /**

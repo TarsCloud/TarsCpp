@@ -42,7 +42,6 @@ typedef TC_AutoPtr<ServantHelperCreation> ServantHelperCreationPtr;
 /**
  * Servant
  */
-
 template<class T>
 struct ServantCreation : public ServantHelperCreation
 {
@@ -130,11 +129,12 @@ public:
         }
         return s;
     }
+
     /**
      * 获取Adapter/Servant对应表
      * @return map<string, string>
      */
-    const map<string, string> & getAdapterServant() const {return _adapter_servant;}
+    const map<string, string> &getAdapterServant() const {return _adapter_servant;}
 
     /**
      * 设置染色信息
@@ -153,7 +153,7 @@ public:
      * @param sInterface:接口名称
      * @return string: 设置结果
      */
-    bool isDyeingReq(const string & sKey, const string & sServant, const string & sInterface);
+    bool isDyeingReq(const string & sKey, const string & sServant, const string & sInterface) const;
 
     /**
      * 是否是已经被染色

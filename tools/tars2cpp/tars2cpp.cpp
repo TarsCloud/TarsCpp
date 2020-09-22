@@ -568,7 +568,7 @@ string Tars2Cpp::tostrBuiltin(const BuiltinPtr& pPtr) const
         s = _namespace + "::Char";
         break;
     case Builtin::KindShort:
-        //为了兼容java无unsigned, 编结码时把tars问件中 unsigned char 对应到short
+        //为了兼容java无unsigned, 编解码时把tars文件中 unsigned char 对应到short
         //c++中需要还原回来
         s = (pPtr->isUnsigned() ? _namespace + "::UInt8" : _namespace + "::Short");
         break;
@@ -842,6 +842,19 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
             else
             {
                 s << TAB << member[j]->getId() << " = " << member[j]->def() << ";" << endl;
+            }
+        }
+        else
+        {   //没有提供初始值才会走到这里,提供枚举类型初始化值
+            EnumPtr ePtr = EnumPtr::dynamicCast(member[j]->getTypePtr());
+            if (ePtr)
+            {
+                vector<TypeIdPtr>& eMember = ePtr->getAllMemberPtr();
+                if (eMember.size() > 0)
+                {
+                    string sid = ePtr->getSid();
+                    s << TAB << member[j]->getId() << " = " << sid.substr(0, sid.find_first_of("::")) << "::" << eMember[0]->getId() << ";" << endl;
+                }
             }
         }
     }

@@ -1765,30 +1765,9 @@ public:
      */
     void parseRequestHeader(const char* szBuffer, const char *header);
 
-//    /**
-//     * @brief 请求类型到字符串.
-//     * @brief Request Type to String
-//     *
-//     * @param iRequestType  请求
-//     * @param iRequestType  request    
-//     * @return              解析后的字符串
-//     * @return              Parsed string
-//     */
-//    const char *requestType2str(int iRequestType) const;
 
 protected:
 
-    /**
-     * @brief 对http请求编码.
-     * @brief Encoding HTTP requests
-     *
-     * @param sUrl         需要进行编码的http请求
-     * @param sUrl         HTTP requests that need to be encoded
-     * @param iRequestType 编码后的输出流
-     * @param iRequestType Coded Output Stream
-     * @return void
-     */
-//    void encode(int iRequestType, ostream &os);
 
     /**
      * @brief 解析URL

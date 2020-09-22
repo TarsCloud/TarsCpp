@@ -30,6 +30,7 @@
 
 namespace tars
 {
+
 /////////////////////////////////////////////////
 /**
 * @file tc_hashmap.h 
@@ -75,6 +76,13 @@ class TC_HashMap
 public:
     struct HashMapIterator;
     struct HashMapLockIterator;
+
+    friend struct Block;
+    friend struct BlockAllocator;
+    friend struct HashMapIterator;
+    friend struct HashMapItem;
+    friend struct HashMapLockIterator;
+    friend struct HashMapLockItem;
 
     /**
      * @brief 操作数据
@@ -162,7 +170,7 @@ public:
             union
             {
                 /*next data block, it is valid when _bNextChunk=true, tagChunkHead*/
-                size_t  _iNextChunk;    /**下一个数据块, _bNextChunk=true时有效, tagChunkHead*/\
+                size_t  _iNextChunk;    /**下一个数据块, _bNextChunk=true时有效, tagChunkHead*/
                 /*Length used in current data block, it is valid when _bNextChunk=true*/
                 size_t  _iDataLen;      /**当前数据块中使用了的长度, _bNextChunk=false时有效*/
             };
@@ -2055,13 +2063,6 @@ public:
     void doUpdate(bool bUpdate = false);
 
 protected:
-
-    friend class Block;
-    friend class BlockAllocator;
-    friend struct HashMapIterator;
-    friend class HashMapItem;
-    friend struct HashMapLockIterator;
-    friend class HashMapLockItem;
 
     //禁止copy构造
     //Prohibit copy construction
