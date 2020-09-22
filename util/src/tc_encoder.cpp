@@ -110,27 +110,26 @@ string TC_Encoder::gbk2utf8(const string &sIn,int mode)
         THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv_open error");
     }
 
-    string sOut;
-    size_t bufsize = sIn.size()*2+1;
-    char* buf = new char[bufsize];
-    if(NULL == buf){
-        return sOut;
-    }
-    char* pOut = buf;
-    size_t isize = sIn.length();
-    size_t osize = bufsize;
-    char* pIn = (char*)sIn.c_str();
-    size_t ret = iconv(cd,&pIn,&isize,&pOut,&osize);
-    if(-1 == ret && TC_Encoder::ICONV_NORMAL == mode){
-        iconv_close(cd);
-        delete []buf;
-        THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv error");
-        return sOut;
-    }
-    iconv_close(cd);
-    pOut[bufsize-osize]=0;
-    sOut.assign(pOut);
-    delete []buf;
+	string sOut;
+	size_t bufsize = sIn.size()*2+1;
+	char* buf = new char[bufsize];
+	char* pOut = buf;
+	size_t isize = sIn.length();
+	size_t osize = bufsize;
+	char* pIn = (char*)sIn.c_str();
+
+	size_t ret = iconv(cd, &pIn, &isize, &pOut, &osize);
+	if(-1 == ret && TC_Encoder::ICONV_NORMAL == mode){
+		iconv_close(cd);
+		delete []buf;
+		THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv error");
+		return sOut;
+	}
+
+	iconv_close(cd);
+	buf[bufsize-osize]=0;
+	sOut.assign(buf);
+	delete []buf;
 	return sOut;
 }
 

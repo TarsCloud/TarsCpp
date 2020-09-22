@@ -759,7 +759,10 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 
 //        TLOGTARS("[ServantProxy::invoke line: " << __LINE__ << " status: " << msg->eStatus << ", ret: " <<msg->response->iRet << endl);
 
-        pSptd->_szHost = msg->adapter->endpoint().desc();
+		if(msg->adapter) {
+			pSptd->_szHost = msg->adapter->endpoint().desc();
+		}
+
         if(msg->eStatus == ReqMessage::REQ_RSP && msg->response->iRet == TARSSERVERSUCCESS)
         {
             //成功
@@ -1105,11 +1108,6 @@ int ServantProxy::servant_invoke(ReqMessage *msg, bool bCoroAsync)
 
 void ServantProxy::http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response)
 {
-//    if (_connectionSerial <= 0)
-//    {
-//        _connectionSerial = DEFAULT_CONNECTION_SERIAL;
-//    }
-
     ReqMessage *msg = new ReqMessage();
 
     msg->init(ReqMessage::SYNC_CALL);
@@ -1149,11 +1147,6 @@ void ServantProxy::http_call(const string &funcName, shared_ptr<TC_HttpRequest> 
 
 void ServantProxy::http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro)
 {
-//    if (_connectionSerial <= 0)
-//    {
-//        _connectionSerial = DEFAULT_CONNECTION_SERIAL;
-//    }
-
     ReqMessage *msg = new ReqMessage();
 
     msg->init(ReqMessage::ASYNC_CALL);
