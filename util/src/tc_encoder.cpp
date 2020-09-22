@@ -111,49 +111,26 @@ string TC_Encoder::gbk2utf8(const string &sIn,int mode)
     }
 
     string sOut;
-    for(string::size_type pos = 0; pos < sIn.length(); ++pos)
-    {
-		if((unsigned char)sIn[pos] == 0x80)
-        {
-            //注意GBK的0x80转换为UTF-8时为E2 82 AC
-            sOut += 0xe2;
-            sOut += 0x82;
-            sOut += 0xac;
-		}
-		else if((unsigned char)sIn[pos] < 0x80)
-        {
-            //单字节(GBK: 0x00-0x7F)
-			sOut += sIn[pos];
-		}
-        else
-        {
-            //双字节
-			size_t sizeGbkLen = 2;
-            char pIn[128] = "\0";
-
-            strncpy(pIn, sIn.c_str() + pos, sizeGbkLen);
-            char *p = pIn;
-
-            size_t sizeLeftLen = 128;
-            char pOut[128] = "\0";
-            char *o = pOut;
-            int iRet = iconv(cd, &p, &sizeGbkLen, (char **)&o, &sizeLeftLen);
-			if(iRet < 0)
-            {
-                //转换不了, 暂时替换为空格
-				sOut += ' ';
-			}
-            else
-            {
-                sOut += pOut;
-            }
-
-            ++pos;
-
-		}
-	}
-
-	iconv_close(cd);
+    size_t bufsize = sIn.size()*2+1;
+    char* buf = new char[bufsize];
+    if(NULL == buf){
+        return sOut;
+    }
+    char* pOut = buf;
+    size_t isize = sIn.length();
+    size_t osize = bufsize;
+    char* pIn = (char*)sIn.c_str();
+    size_t ret = iconv(cd,&pIn,&isize,&pOut,&osize);
+    if(-1 == ret && TC_Encoder::ICONV_NORMAL == mode){
+        iconv_close(cd);
+        delete []pOut;
+        THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv error");
+        return sOut;
+    }
+    iconv_close(cd);
+    pOut[bufsize-osize]=0;
+    sOut.assign(pOut);
+    delete []pOut;
 	return sOut;
 }
 
