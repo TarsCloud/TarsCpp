@@ -1,3 +1,16 @@
+
+## v2.4.12 2020.09.23
+### en
+- tarsregistry sync internel code
+- tc_timer fix compiler warning
+- fix dye bug
+- fix http keep-alive bug
+### cn
+- 主控同步内部代码
+- tc_timer修复编译警告
+- 修复染色的bug
+- 修复http keep-alive bug
+
 ## v2.4.11 2020.09.18
 ### en
 - fix gtest compiler bug
