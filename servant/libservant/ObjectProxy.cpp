@@ -246,8 +246,12 @@ void ObjectProxy::finishInvoke(ReqMessage * msg, AdapterProxy *adapterProxy)
 
         if(!adapterProxy->getTimeoutQueue()->sendListEmpty())
         {
-        	//并行连接模式, 继续发起连接, 建立连接后, 会自动doInvoke发包 
-         	adapterProxy->checkActive(true);
+	        //并行连接模式, 继续发起连接, 建立连接后, 会自动doInvoke发包
+	        if(adapterProxy->getTransceiver()->hasConnected()) {
+		        adapterProxy->doInvoke(true);
+	        }else {
+		        adapterProxy->checkActive(true);
+	        }
         }
     }
 }
