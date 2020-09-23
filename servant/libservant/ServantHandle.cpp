@@ -681,6 +681,22 @@ bool ServantHandle::processDye(const CurrentPtr &current, string& dyeingKey)
         return true;
     }
 
+	//servant已经被染色, 开启染色日志
+	if (ServantHelperManager::getInstance()->isDyeing())
+	{
+		map<string, string>::const_iterator dyeingKeyIt = current->getRequestStatus().find(ServantProxy::STATUS_GRID_KEY);
+
+		if (dyeingKeyIt != current->getRequestStatus().end() &&
+			ServantHelperManager::getInstance()->isDyeingReq(dyeingKeyIt->second, current->getServantName(), current->getFuncName()))
+		{
+			TLOGTARS("[TARS] dyeing servant got a dyeing req, key:" << dyeingKeyIt->second << endl);
+
+			dyeingKey = dyeingKeyIt->second;
+
+			return true;
+		}
+	}
+
     return false;
 }
 

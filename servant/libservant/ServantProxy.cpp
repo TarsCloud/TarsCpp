@@ -235,9 +235,7 @@ void coroWhenAll(const CoroParallelBasePtr &ptr)
 ///////////////////////////////////////////////////////////////
 string ServantProxy::STATUS_DYED_KEY      = "STATUS_DYED_KEY";
 
-//string ServantProxy::STATUS_GRID_KEY      = "STATUS_GRID_KEY";
-
-//string ServantProxy::STATUS_SAMPLE_KEY    = "STATUS_SAMPLE_KEY";
+string ServantProxy::STATUS_GRID_KEY      = "STATUS_GRID_KEY";
 
 string ServantProxy::STATUS_RESULT_CODE   = "STATUS_RESULT_CODE";
 
@@ -245,12 +243,7 @@ string ServantProxy::STATUS_RESULT_DESC   = "STATUS_RESULT_DESC";
 
 string ServantProxy::STATUS_SETNAME_VALUE = "STATUS_SETNAME_VALUE";
 
-//string ServantProxy::TARS_MASTER_KEY      = "TARS_MASTER_KEY";
-
 string ServantProxy::STATUS_TRACK_KEY     = "STATUS_TRACK_KEY";
-
-// string ServantProxy::STATUS_COOKIE        = "STATUS_COOKIE";
-
 
 ////////////////////////////////////
 ServantProxy::ServantProxy(Communicator * pCommunicator, ObjectProxy ** ppObjectProxy, size_t iClientThreadNum)

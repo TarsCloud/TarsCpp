@@ -175,7 +175,7 @@ protected:
 		//单次任务
 		if (repeatTime == 0 && !fPtr->_cron.isset)
 		{
-            fPtr->_func = [task, this]() {
+            fPtr->_func = [task]() {
                 (*task)();
                 task->reset();
             };
