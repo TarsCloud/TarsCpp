@@ -150,6 +150,10 @@ macro(gen_server APP TARGET)
 
 	target_link_libraries(${TARGET}  ${LIB_TARS_SERVANT} ${LIB_TARS_UTIL})
 
+	if(TARS_MYSQL)
+		target_link_libraries(${TARGET} ${LIB_MYSQL})
+	endif()
+
 	if(TARS_SSL)
 		target_link_libraries(${TARGET} ${LIB_SSL} ${LIB_CRYPTO})
 
