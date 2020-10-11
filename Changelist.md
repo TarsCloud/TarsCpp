@@ -3,9 +3,11 @@
 ### en
 - Fix Windows compilation errors (missing bison / flex generated files)
 - Network epoll notification handle is changed to UDP handle instead of socket pipe mode to save the number of handles
+- Fix tars-tools.cmake support mysql link
 ### cn
 - 修复windows编译错误(漏提交bison/flex生成的文件) 
 - 网络epoll通知句柄改成udp句柄, 不采用socket pipe模式, 节省句柄数量
+- 修复tars-tools.cmake 支持mysql的link
 
 ## v2.4.12 2020.09.23
 ### en
