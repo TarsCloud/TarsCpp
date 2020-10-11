@@ -105,7 +105,7 @@ public:
 	protected:
         //通知fd
         TC_Socket _notify;
-		TC_Socket _notifyClient;
+//		TC_Socket _notifyClient;
 		// bool      _clear = true;
 		TC_Epoller *_ep;
 

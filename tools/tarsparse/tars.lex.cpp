@@ -9,7 +9,7 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 37
+#define YY_FLEX_SUBMINOR_VERSION 35
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
@@ -47,6 +47,7 @@ typedef int16_t flex_int16_t;
 typedef uint16_t flex_uint16_t;
 typedef int32_t flex_int32_t;
 typedef uint32_t flex_uint32_t;
+typedef uint64_t flex_uint64_t;
 #else
 typedef signed char flex_int8_t;
 typedef short int flex_int16_t;
@@ -54,6 +55,7 @@ typedef int flex_int32_t;
 typedef unsigned char flex_uint8_t; 
 typedef unsigned short int flex_uint16_t;
 typedef unsigned int flex_uint32_t;
+#endif /* ! C99 */
 
 /* Limits of integral types. */
 #ifndef INT8_MIN
@@ -83,8 +85,6 @@ typedef unsigned int flex_uint32_t;
 #ifndef UINT32_MAX
 #define UINT32_MAX             (4294967295U)
 #endif
-
-#endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
 
@@ -176,7 +176,7 @@ extern FILE *yyin, *yyout;
      */
     #define  YY_LESS_LINENO(n) \
             do { \
-                int yyl;\
+                yy_size_t yyl;\
                 for ( yyl = n; yyl < yyleng; ++yyl )\
                     if ( yytext[yyl] == '\n' )\
                         --yylineno;\
@@ -369,7 +369,7 @@ static void yy_fatal_error (yyconst char msg[]  );
  */
 #define YY_DO_BEFORE_ACTION \
 	(yytext_ptr) = yy_bp; \
-	yyleng = (size_t) (yy_cp - yy_bp); \
+	yyleng = (yy_size_t) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
@@ -513,7 +513,7 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 1 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 /**
  * Tencent is pleased to support the open source community by making Tars available.
  *
@@ -529,7 +529,7 @@ char *yytext;
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-#line 20 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 20 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 #include <map>
 #include <string>
 #include <sstream>
@@ -649,7 +649,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO do { if (fwrite( yytext, yyleng, 1, yyout )) {} } while (0)
+#define ECHO fwrite( yytext, yyleng, 1, yyout )
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -660,7 +660,7 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		size_t n; \
+		yy_size_t n; \
 		for ( n = 0; n < max_size && \
 			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -742,7 +742,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 67 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 67 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 
 
 #line 749 "tars.lex.cpp"
@@ -840,12 +840,12 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 69 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 69 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 { BEGIN(INCL); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 71 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 71 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     if ( include_file_stack_ptr >= MAX_INCLUDE_DEPTH )
     {
@@ -878,7 +878,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(INCL):
-#line 101 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 101 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     --include_file_stack_ptr;
     if ( include_file_stack_ptr < 0 )
@@ -897,14 +897,14 @@ case YY_STATE_EOF(INCL):
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 117 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 117 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     return TARS_SCOPE_DELIMITER;
 }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 121 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 121 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     // C++ comment
     bool e = false;
@@ -925,7 +925,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 139 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 139 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     // C comment
     bool e = false;
@@ -976,7 +976,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 187 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 187 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     StringGrammarPtr ident  = new StringGrammar;
     ident->v            = yytext;
@@ -987,7 +987,7 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 194 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 194 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     StringGrammarPtr ident  = new StringGrammar;
     ident->v            = yytext;
@@ -1000,7 +1000,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 204 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 204 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     StringGrammarPtr str = new StringGrammar;
     bool e = false;
@@ -1115,7 +1115,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 316 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 316 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     errno = 0;
     IntergerGrammarPtr ptr = new IntergerGrammar;
@@ -1140,7 +1140,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 338 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 338 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     errno = 0;
     FloatGrammarPtr ptr = new FloatGrammar;
@@ -1175,7 +1175,7 @@ YY_RULE_SETUP
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 369 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 369 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     if(yytext[0] == '\n')
     {
@@ -1185,7 +1185,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 376 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 376 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 {
     if(yytext[0] < 32 || yytext[0] > 126)
     {
@@ -1204,7 +1204,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 392 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 392 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 ECHO;
 	YY_BREAK
 #line 1211 "tars.lex.cpp"
@@ -1398,7 +1398,7 @@ static int yy_get_next_buffer (void)
 			{ /* Not enough room in the buffer - grow it. */
 
 			/* just a shorter name for the current buffer */
-			YY_BUFFER_STATE b = YY_CURRENT_BUFFER_LVALUE;
+			YY_BUFFER_STATE b = YY_CURRENT_BUFFER;
 
 			int yy_c_buf_p_offset =
 				(int) ((yy_c_buf_p) - b->yy_ch_buf);
@@ -1531,7 +1531,7 @@ static int yy_get_next_buffer (void)
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 	yy_is_jam = (yy_current_state == 51);
 
-		return yy_is_jam ? 0 : yy_current_state;
+	return yy_is_jam ? 0 : yy_current_state;
 }
 
     static void yyunput (int c, register char * yy_bp )
@@ -1623,7 +1623,7 @@ static int yy_get_next_buffer (void)
 				case EOB_ACT_END_OF_FILE:
 					{
 					if ( yywrap( ) )
-						return EOF;
+						return 0;
 
 					if ( ! (yy_did_buffer_switch_on_eof) )
 						YY_NEW_FILE;
@@ -1764,6 +1764,10 @@ static void yy_load_buffer_state  (void)
 	yyfree((void *) b  );
 }
 
+#ifndef __cplusplus
+extern int isatty (int );
+#endif /* __cplusplus */
+    
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
  * such as during a yyrestart() or at EOF.
@@ -1968,8 +1972,8 @@ YY_BUFFER_STATE yy_scan_string (yyconst char * yystr )
 
 /** Setup the input buffer state to scan the given bytes. The next call to yylex() will
  * scan from a @e copy of @a bytes.
- * @param yybytes the byte buffer to scan
- * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
+ * @param bytes the byte buffer to scan
+ * @param len the number of bytes in the buffer pointed to by @a bytes.
  * 
  * @return the newly allocated buffer state object.
  */
@@ -1977,8 +1981,7 @@ YY_BUFFER_STATE yy_scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len 
 {
 	YY_BUFFER_STATE b;
 	char *buf;
-	yy_size_t n;
-	yy_size_t i;
+	yy_size_t n, i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
@@ -2211,7 +2214,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 392 "/root/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
+#line 392 "/Volumes/MyData/centos/Tars/framework/tarscpp/tools/tarsgrammar/tars.l"
 
 
 
