@@ -25,7 +25,8 @@ using namespace TestApp;
 
 Communicator* _comm;
 
-static string helloObj = "TestApp.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 8999";
+//static string helloObj = "TestApp.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 8999";
+static string helloObj = "TestApp.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 8199:tcp -h 127.0.0.1 -p 8299 -t 10000";
 
 struct Param
 {
@@ -34,6 +35,7 @@ struct Param
 	int thread;
 	int buffersize;
 	int netthread;
+	bool hash = false;
 
 	HelloPrx pPrx;
 	ServantPrx servantPrx;
@@ -85,8 +87,11 @@ void syncCall(int c)
 
         try
         {
-
-		    param.pPrx->testHello(buffer, r);
+			if(param.hash) {
+				param.pPrx->tars_hash(i)->testHello(buffer + "-" + TC_Common::tostr(i), r);
+			} else {
+				param.pPrx->testHello(buffer, r);
+			}
         }
         catch(exception& e)
         {
@@ -113,7 +118,11 @@ void asyncCall(int c)
 
 		try
 		{
-			param.pPrx->async_testHello(p, buffer);
+			if(param.hash) {
+				param.pPrx->tars_hash(i)->async_testHello(p, buffer + "-" + TC_Common::tostr(i));
+			} else {
+				param.pPrx->async_testHello(p, buffer);
+			}
 		}
 		catch(exception& e)
 		{
@@ -282,6 +291,7 @@ int main(int argc, char *argv[])
 	    TC_Option option;
         option.decode(argc, argv);
 
+	    param.hash = TC_Common::strto<bool>(option.getValue("hash"));
 		param.count = TC_Common::strto<int>(option.getValue("count"));
 	    if(param.count <= 0) param.count = 1000;
 	    param.buffersize = TC_Common::strto<int>(option.getValue("buffersize"));
