@@ -47,7 +47,7 @@ void TC_Shm::init(size_t iShmSize, key_t iKey, bool bOwner)
     if (NULL == hMap)
     {    
         // 打开失败，创建之
-        hMap = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL,PAGE_READWRITE,0, iShmSize, TC_Common::tostr(iKey).c_str());
+        hMap = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL,PAGE_READWRITE,0, (DWORD)iShmSize, TC_Common::tostr(iKey).c_str());
         // 映射对象的一个视图，得到指向共享内存的指针，设置里面的数据
         _pshm = ::MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
     }
@@ -97,6 +97,7 @@ int TC_Shm::detach()
     {
         UnmapViewOfFile(_pshm);
         CloseHandle(_shemID);
+        _pshm = NULL;
     }
     return 0;
 #else
