@@ -40,6 +40,8 @@ void TC_Shm::init(size_t iShmSize, key_t iKey, bool bOwner)
     assert(_pshm == NULL);
 
 #if TARGET_PLATFORM_WINDOWS
+    _bOwner     = bOwner;
+
     // 首先试图打开一个命名的内存映射文件对象  
     HANDLE hMap = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, TC_Common::tostr(iKey).c_str());
     if (NULL == hMap)
