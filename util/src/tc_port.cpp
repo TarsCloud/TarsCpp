@@ -238,7 +238,7 @@ void TC_Port::setEnv(const string &name, const string &value)
 #endif
 }
 
-string TC_Port::exec(const char *cmd)
+string TC_Port::exec(const char *cmd, std::string &errstr)
 {
 	string fileData;
 #if TARGET_PLATFORM_WINDOWS
@@ -246,6 +246,10 @@ string TC_Port::exec(const char *cmd)
 #else
     FILE* fp = popen(cmd, "r");
 #endif
+	if (fp == NULL) {
+		errstr = "ERROR: thread pool used up, somebody create thread but never free.";
+		return fileData;
+	}
     static size_t buf_len = 2 * 1024 * 1024;
     char *buf = new char[buf_len];
     memset(buf, 0, buf_len);
