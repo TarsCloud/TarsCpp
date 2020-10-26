@@ -155,15 +155,17 @@ void StatReport::addStatInterv(int iInterv)
 
     sort(_timePoint.begin(),_timePoint.end());
 
-    unique(_timePoint.begin(),_timePoint.end());
+    auto it = unique(_timePoint.begin(),_timePoint.end());
+
+	_timePoint.resize(std::distance(_timePoint.begin(),it));
 }
 
-void StatReport::getIntervCount(int time,StatMicMsgBody& body)
+void StatReport::getIntervCount(int time, StatMicMsgBody& body)
 {
     int iTimePoint = 0;
     bool bNeedInit = false;
     bool bGetIntev = false;
-    if(body.intervalCount.size() == 0)  //第一次需要将所有描点值初始化为0
+    if (body.intervalCount.size() == 0)  //第一次需要将所有描点值初始化为0
     {
         bNeedInit = true;
     }
@@ -236,22 +238,23 @@ tars.tarsstat to tarsstat
 string StatReport::getServerName(string sModuleName)
 {
     string::size_type pos =  sModuleName.find(".");
-    if(pos != string::npos)
+    if (pos != string::npos)
     {
-         return sModuleName.substr(pos + 1); //+1:过滤.
+        return sModuleName.substr(pos + 1); //+1:过滤.
     }
     return  sModuleName;
 }
 
+
 void StatReport::report(const string& strModuleName,
-                      const string& setdivision,
-                      const string& strInterfaceName,
-                      const string& strModuleIp,
-                      uint16_t iPort,
-                      StatResult eResult,
-                      int iSptime,
-                      int iReturnValue,
-                      bool bFromClient)
+                        const string& setdivision,
+                        const string& strInterfaceName,
+                        const string& strModuleIp,
+                        uint16_t iPort,
+                        StatResult eResult,
+                        int iSptime,
+                        int iReturnValue,
+                        bool bFromClient)
 {
     //包头信息,trim&substr 防止超长导致udp包发送失败
     //masterIp为空服务端自己获取。
@@ -260,9 +263,9 @@ void StatReport::report(const string& strModuleName,
     StatMicMsgBody body;
     string sMaterServerName = "";
     string sSlaveServerName = "";
-    string appName = "";// 由setdivision生成
+    string appName = ""; // 由setdivision生成
 
-    if(bFromClient)
+    if (bFromClient)
     {
         if (!_setName.empty())
         {
@@ -367,13 +370,13 @@ void StatReport::report(const string& strMasterName,
     head.returnValue    = iReturnValue;
 
     //包体信息.
-    if(eResult == STAT_SUCC)
+    if (eResult == STAT_SUCC)
     {
         body.count = 1;
 
         body.totalRspTime = body.minRspTime = body.maxRspTime = iSptime;
     }
-    else if(eResult == STAT_TIMEOUT)
+    else if (eResult == STAT_TIMEOUT)
     {
         body.timeoutCount = 1;
     }
@@ -403,7 +406,7 @@ void StatReport::report(const string& strMasterName,
 //    return TC_Common::bin2str(string(s, 14));
 //}
 
-void StatReport::submit( StatMicMsgHead& head, StatMicMsgBody& body,bool bFromClient )
+void StatReport::submit(StatMicMsgHead& head, StatMicMsgBody& body, bool bFromClient)
 {
     Lock lock(*this);
 
@@ -416,12 +419,12 @@ void StatReport::submit( StatMicMsgHead& head, StatMicMsgBody& body,bool bFromCl
         stBody.timeoutCount         += body.timeoutCount;
         stBody.execCount            += body.execCount;
         stBody.totalRspTime         += body.totalRspTime;
-        if ( stBody.maxRspTime < body.maxRspTime )
+        if (stBody.maxRspTime < body.maxRspTime)
         {
             stBody.maxRspTime = body.maxRspTime;
         }
         //非0最小值
-        if ( stBody.minRspTime == 0 ||(stBody.minRspTime > body.minRspTime && body.minRspTime != 0))
+        if (stBody.minRspTime == 0 || (stBody.minRspTime > body.minRspTime && body.minRspTime != 0))
         {
             stBody.minRspTime = body.minRspTime;
         }
@@ -451,20 +454,20 @@ size_t StatReport::getQueueSize(size_t epollIndex)
 //{
 //}
 
-int StatReport::reportMicMsg(MapStatMicMsg& msg,bool bFromClient)
+int StatReport::reportMicMsg(MapStatMicMsg& msg, bool bFromClient)
 {
     if (msg.empty()) return 0;
     try
     {
-       int iLen = 0;
-       MapStatMicMsg  mTemp;
-       MapStatMicMsg  mStatMsg;
-       mStatMsg.clear();
-       mTemp.clear();
-       {
-           Lock lock(*this);
-           msg.swap(mStatMsg);
-       }
+        int iLen = 0;
+        MapStatMicMsg  mTemp;
+        MapStatMicMsg  mStatMsg;
+        mStatMsg.clear();
+        mTemp.clear();
+        {
+            Lock lock(*this);
+            msg.swap(mStatMsg);
+        }
 
        TLOGTARS("[StatReport::reportMicMsg get size:" << mStatMsg.size()<<"]"<< endl);
        for(MapStatMicMsg::iterator it = mStatMsg.begin(); it != mStatMsg.end(); it++)
@@ -720,18 +723,18 @@ int StatReport::reportSampleMsg()
     return -1;
 }
 
-void StatReport::addMicMsg(MapStatMicMsg & old,MapStatMicMsg & add)
+void StatReport::addMicMsg(MapStatMicMsg& old, MapStatMicMsg& add)
 {
     MapStatMicMsg::iterator iter;
     MapStatMicMsg::iterator iterOld;
     iter = add.begin();
-    for(;iter != add.end();++iter)
+    for (; iter != add.end(); ++iter)
     {
         iterOld = old.find(iter->first);
-        if(iterOld == old.end())
+        if (iterOld == old.end())
         {
             //直接insert
-            old.insert(make_pair(iter->first,iter->second));
+            old.insert(make_pair(iter->first, iter->second));
         }
         else
         {
@@ -740,16 +743,16 @@ void StatReport::addMicMsg(MapStatMicMsg & old,MapStatMicMsg & add)
             iterOld->second.timeoutCount += iter->second.timeoutCount;
             iterOld->second.execCount += iter->second.execCount;
 
-            map<int,int>::iterator iterOldInt,iterInt;
-            map<int,int> & mCount = iter->second.intervalCount;
-            map<int,int> & mCountOld = iterOld->second.intervalCount;
+            map<int, int>::iterator iterOldInt, iterInt;
+            map<int, int>& mCount = iter->second.intervalCount;
+            map<int, int>& mCountOld = iterOld->second.intervalCount;
             iterInt = mCount.begin();
-            for(;iterInt != mCount.end();++iterInt)
+            for (; iterInt != mCount.end(); ++iterInt)
             {
                 iterOldInt = mCountOld.find(iterInt->first);
-                if(iterOldInt == mCountOld.end())
+                if (iterOldInt == mCountOld.end())
                 {
-                    mCountOld.insert(make_pair(iterInt->first,iterInt->second));
+                    mCountOld.insert(make_pair(iterInt->first, iterInt->second));
                 }
                 else
                 {
@@ -803,21 +806,7 @@ void StatReport::run()
                         delete pStatMsg;
                     }
                 }
-#if 0
 
-                ostringstream os;
-                MapStatMicMsg::iterator iter;
-                iter = mStatMsg.begin();
-                for(;iter != mStatMsg.end();++iter)
-                {
-                    iter->first.display(os);
-                    os<<endl;
-                    iter->second.display(os);
-                    os<<endl<<endl;
-                }
-
-                TLOGDEBUG("StatReport::run() msg:"<<os.str()<<endl);
-#endif
                 reportMicMsg(mStatMsg, true);
 
                 reportPropMsg();

@@ -17,6 +17,7 @@
 #include "servant/RemoteNotify.h"
 #include "servant/Communicator.h"
 #include "servant/RemoteLogger.h"
+#include "servant/Application.h"
 
 namespace tars
 {
@@ -53,11 +54,11 @@ void RemoteNotify::report(const string &sResult, bool bSync)
             info.sNodeName = _nodeName;
             if(!bSync)
             {
-                _notifyPrx->async_reportNotifyInfo(NULL, info);
+                _notifyPrx->async_reportNotifyInfo(NULL, info, ServerConfig::Context);
             }
             else
             {
-                _notifyPrx->reportNotifyInfo(info);
+                _notifyPrx->reportNotifyInfo(info, ServerConfig::Context);
             }
         }
     }

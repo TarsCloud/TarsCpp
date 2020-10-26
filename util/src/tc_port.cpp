@@ -15,8 +15,12 @@
  */
 
 #include "util/tc_port.h"
+#include "util/tc_common.h"
+#include <thread>
+#include <string.h>
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+#include <signal.h>
 #include <limits.h>
 #include <sys/time.h>
 #else
@@ -27,10 +31,6 @@
 #include <sys/timeb.h>
 #include "util/tc_strptime.h"
 #endif
-
-#include <string.h>
-
-using namespace std;
 
 namespace tars
 {
@@ -51,6 +51,33 @@ int TC_Port::strncmp(const char *s1, const char *s2, size_t n)
 #else
 	return ::strncmp(s1, s2, n);
 #endif
+}
+
+const char* TC_Port::strnstr(const char* s1, const char* s2, int pos1)
+{
+	int l1 = 0;
+	int l2;
+
+	l2 = strlen(s2);
+	if (!l2)
+		return (char *)s1;
+
+	const char *p = s1;
+	while(l1 < pos1 && *p++ != '\0')
+	{
+		++l1;
+	}	
+	// l1 = strlen(s1);
+
+	// pos1 = (pos1 > l1)?l1:pos1;
+
+	while (pos1 >= l2) {
+		pos1--;
+		if (!memcmp(s1, s2, l2))
+			return s1;
+		s1++;
+	}
+	return NULL;
 }
 
 int TC_Port::strcasecmp(const char *s1, const char *s2)
@@ -233,5 +260,50 @@ string TC_Port::exec(const char *cmd)
 
 	return fileData;
 }
+
+vector<std::function<void()>> TC_Port::_callbacks;
+std::mutex   TC_Port::_mutex;
+
+void TC_Port::registerCtrlC(std::function<void()> callback)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+
+	if(_callbacks.empty())
+	{
+ 	   registerCtrlC();
+	}
+
+    _callbacks.push_back(callback);
+}
+
+void TC_Port::registerCtrlC()
+{
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+    std::thread th(signal, SIGINT, TC_Port::sighandler);
+    th.detach();
+#else
+    std::thread th([] {SetConsoleCtrlHandler(TC_Port::HandlerRoutine, TRUE); });
+	th.detach();
+#endif
+}
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+void TC_Port::sighandler( int sig_no )
+{
+    for(auto f : TC_Port::_callbacks)
+    {
+        try {f(); } catch(...) {}
+    }
+}
+#else
+BOOL WINAPI TC_Port::HandlerRoutine(DWORD dwCtrlType)
+{
+    for(auto f : TC_Port::_callbacks)
+    {
+        try {f(); } catch(...) {}
+    }
+	return TRUE;
+}
+#endif
 
 }

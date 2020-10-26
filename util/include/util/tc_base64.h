@@ -25,21 +25,30 @@ namespace tars
 {
 /////////////////////////////////////////////////
 /** 
-* @file tc_base64.h 
-* @brief  base64编解码类. 
+* @file tc_base64.h
+* @brief base64 Codec Class
+* @brief base64编解码类. 
 */
 
 /////////////////////////////////////////////////
 
 /**
-* @brief 该类提供标准的Base64的编码解码 
+* @brief This class provides standard base64 encoding and decoding methods.
+* @brief 该类提供标准的base64的编码解码 
 */
 class TC_Base64
 {
 public:
     /**
-    * @brief  对字符串进行base64编码. 
-    *  
+    * @brief Encode the string by base64
+    * @brief 对字符串进行base64编码. 
+    * 
+    * @param data         Data to be encoded
+    * @param bChangeLine  Add line breaks in the final encoded data if necessary,
+    *                     (In the RFC, it is recommended to add an 'Enter' after every 76 characters. 
+    *                      No newline is added by default.)
+    * @return string      the encoded data
+    * 
     * @param data         需要编码的数据
     * @param bChangeLine  是否需要在最终编码数据加入换行符 ，
     *                     (RFC中建议每76个字符后加入回车换行，默认为不添加换行
@@ -48,16 +57,28 @@ public:
     static string encode(const string &data, bool bChangeLine = false);
     
     /**
-    * @brief  对字符串进行base64解码. 
-    *  
+    * @brief Decode the string by base64
+    * @brief 对字符串进行base64解码. 
+    * 
+    * @param data     Data to be decoded
+    * @return string  the decoded data
+    * 
     * @param data     需要解码的数据
     * @return string  解码后的数据
     */    
     static string decode(const string &data);
 
     /**
-    * @brief  对字符串进行base64编码. 
-    *  
+    * @brief  Encode the string by base64 
+    * @brief  对字符串进行base64编码.   
+    * 
+    * @param buffer       buffer pointer
+    * @param length       length
+    * @param bChangeLine  Add line breaks in the final encoded data if necessary,
+    *                     (In the RFC, it is recommended to add an 'Enter' after every 76 characters. 
+    *                      No newline is added by default.)
+    * @return string      the encoded data
+    * 
     * @param buffer       buffer指针
     * @param length       长度
     * @param bChangeLine  是否需要在最终编码数据加入换行符 ，
@@ -67,7 +88,16 @@ public:
     static string encode(const char *buffer, size_t length, bool bChangeLine = false);
 
     /**
+    * @brief  Encode the string by base64 
     * @brief  对字符串进行base64编码 . 
+    * 
+    * @param pSrc        the data to be encoded
+    * @param nSrcLen     the length of the data to be encoded
+    * @param pDst        the encoded data      
+    * @param bChangeLine Add line breaks in the final encoded data if necessary,
+    *                     (In the RFC, it is recommended to add an 'Enter' after every 76 characters. 
+    *                      No newline is added by default.)
+    * @return            the length of the encoded string
     *  
     * @param pSrc        需要编码的数据
     * @param nSrcLen     需要编码的数据长度
@@ -79,8 +109,14 @@ public:
     static int encode(const unsigned char* pSrc, size_t nSrcLen, char* pDst, bool bChangeLine = false);
     
     /**
-    * @brief  对字符串进行base64解码. 
-    *  
+    * @brief Decode the string by base64
+    * @brief 对字符串进行base64解码
+    * 
+    * @param pSrc    the data to be decoded    
+    * @param nSrcLe  the length of the data to be decoded
+    * @param pDst    the decoded data
+    * @return        the length of the decoded string
+    * 
     * @param pSrc    需要解码的数据    
     * @param nSrcLe  需要解码的数据长度
     * @param pDst   解码后的数据
@@ -91,11 +127,13 @@ public:
 protected:
 
     /**
-    * base64编码表
+    *  base64 Code Table
+    *  base64编码表
     */
     static const char EnBase64Tab[];
     /**
-    * base64解码表
+    *  base64 Decode Table
+    *  base64解码表
     */
     static const char DeBase64Tab[];
 };

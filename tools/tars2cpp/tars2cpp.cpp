@@ -568,7 +568,7 @@ string Tars2Cpp::tostrBuiltin(const BuiltinPtr& pPtr) const
         s = _namespace + "::Char";
         break;
     case Builtin::KindShort:
-        //为了兼容java无unsigned, 编结码时把tars问件中 unsigned char 对应到short
+        //为了兼容java无unsigned, 编解码时把tars文件中 unsigned char 对应到short
         //c++中需要还原回来
         s = (pPtr->isUnsigned() ? _namespace + "::UInt8" : _namespace + "::Short");
         break;
@@ -842,6 +842,19 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
             else
             {
                 s << TAB << member[j]->getId() << " = " << member[j]->def() << ";" << endl;
+            }
+        }
+        else
+        {   //没有提供初始值才会走到这里,提供枚举类型初始化值
+            EnumPtr ePtr = EnumPtr::dynamicCast(member[j]->getTypePtr());
+            if (ePtr)
+            {
+                vector<TypeIdPtr>& eMember = ePtr->getAllMemberPtr();
+                if (eMember.size() > 0)
+                {
+                    string sid = ePtr->getSid();
+                    s << TAB << member[j]->getId() << " = " << sid.substr(0, sid.find_first_of("::")) << "::" << eMember[0]->getId() << ";" << endl;
+                }
             }
         }
     }
@@ -1576,7 +1589,8 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     s << TAB << "}" << endl;
 
     // 支持JSON协议分发
-    if (_bJsonSupport && tars::TC_Common::matchPeriod(pPtr->getId(), _vJsonIntf))
+    //if (_bJsonSupport && tars::TC_Common::matchPeriod(pPtr->getId(), _vJsonIntf))
+    if (_bJsonSupport)
     {
         s << TAB << "else if (_current->getRequestVersion() == JSONVERSION)" << endl;
         s << TAB << "{" << endl;
@@ -1664,7 +1678,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     s << TAB << "{" << endl;
     INC_TAB;
 
-    s << TAB << "if (_current->getRequestVersion() == TUPVERSION )" << endl;
+    s << TAB << "if (_current->getRequestVersion() == TUPVERSION)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
 
@@ -1674,6 +1688,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     {
         string sEnum2Int = (EnumPtr::dynamicCast(pPtr->getReturnPtr()->getTypePtr())) ? "(" + _namespace + "::Int32)" : "";
         s << TAB << "tarsAttr.put(\"\", " << sEnum2Int << "_ret);" << endl;
+        s << TAB << "tarsAttr.put(\"tars_ret\", " << sEnum2Int << "_ret);" << endl;
     }
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
@@ -1690,7 +1705,8 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     s << TAB << "}" << endl;
 
     // 支持JSON协议分发
-    if (_bJsonSupport && tars::TC_Common::matchPeriod(pPtr->getId(), _vJsonIntf))
+    if (_bJsonSupport)
+    //if (_bJsonSupport && tars::TC_Common::matchPeriod(pPtr->getId(), _vJsonIntf))
     {
         s << TAB << "else if (_current->getRequestVersion() == JSONVERSION)" << endl;
         s << TAB << "{" << endl;
@@ -1705,14 +1721,17 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
             }
         }
 
+        
         if (pPtr->getReturnPtr()->getTypePtr())
         {
-            BuiltinPtr retPtr = BuiltinPtr::dynamicCast(pPtr->getReturnPtr()->getTypePtr());
-            if (retPtr->kind() >= Builtin::KindBool && retPtr->kind() <= Builtin::KindLong)
-            {
-                s << TAB << "_p->value[\"ret\"] = "<< _namespace << "::JsonOutput::writeJson(" << pPtr->getReturnPtr()->getId() << ");" << endl;
-            }
+            s << TAB << "_p->value[\"tars_ret\"] = "<< _namespace << "::JsonOutput::writeJson(_ret);" << endl;
+            // BuiltinPtr retPtr = BuiltinPtr::dynamicCast(pPtr->getReturnPtr()->getTypePtr());
+            // if (retPtr->kind() >= Builtin::KindBool && retPtr->kind() <= Builtin::KindLong)
+            // {
+            //     s << TAB << "_p->value[\"tars_ret\"] = "<< _namespace << "::JsonOutput::writeJson(" << pPtr->getReturnPtr()->getId() << ");" << endl;
+            // }
         }
+        
 
         s << TAB << _namespace << "::TC_Json::writeValue(_p, _sResponseBuffer);" << endl;
         DEL_TAB;
@@ -1981,7 +2000,6 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
     }
 
     s << TAB << "std::map<string, string> _mStatus;" << endl;
-
     if (!routekey.empty())
     {
         ostringstream os;
@@ -1990,7 +2008,6 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
 
         s << TAB << "_mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, " << os.str() << "));" << endl;
     }
-
     s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os, context, _mStatus, callback, true);" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
@@ -2141,6 +2158,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
         {
 	        string sEnum2Int = (EnumPtr::dynamicCast(pPtr->getReturnPtr()->getTypePtr())) ? "(" + _namespace + "::Int32)" : "";
 	        s << TAB << "tarsAttr.put(\"\", " << sEnum2Int << "_ret);" << endl;
+            s << TAB << "tarsAttr.put(\"tars_ret\", " << sEnum2Int << "_ret);" << endl;
         }
         for(size_t i = 0; i < vParamDecl.size(); i++)
         {
@@ -2158,6 +2176,44 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
 
         DEL_TAB;
         s << TAB << "}" << endl;
+
+        if (_bJsonSupport)
+        {
+            
+                s << TAB << "else if (current->getRequestVersion() == JSONVERSION)" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << _namespace << "::JsonValueObjPtr _p = new " << _namespace << "::JsonValueObj();" << endl;
+            for (size_t i = 0; i < vParamDecl.size(); i++)
+            {
+                string sParamName = vParamDecl[i]->getTypeIdPtr()->getId();
+                if (vParamDecl[i]->isOut())
+                {
+                    s << TAB << "_p->value[\"" << sParamName << "\"] = " << _namespace << "::JsonOutput::writeJson(" << sParamName << ");" << endl;
+                }
+            }
+
+
+            if (pPtr->getReturnPtr()->getTypePtr())
+            {
+                s << TAB << "_p->value[\"tars_ret\"] = " << _namespace << "::JsonOutput::writeJson(_ret);" << endl;
+                // BuiltinPtr retPtr = BuiltinPtr::dynamicCast(pPtr->getReturnPtr()->getTypePtr());
+                // if (retPtr && retPtr->kind() >= Builtin::KindBool && retPtr->kind() <= Builtin::KindLong)
+                // {
+                //     s << TAB << "_p->value[\"tars_ret\"] = " << _namespace << "::JsonOutput::writeJson(" << pPtr->getReturnPtr()->getId() << ");" << endl;
+                //     //s << TAB << "_p->value[\"\"] = " << _namespace << "::JsonOutput::writeJson(" << pPtr->getReturnPtr()->getId() << ");" << endl;
+                // }
+            }
+
+            s << TAB << "vector<char> sJsonResponseBuffer;" << endl;
+
+            s << TAB << _namespace << "::TC_Json::writeValue(_p, sJsonResponseBuffer);" << endl;
+            s << TAB << "current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);" << endl;
+            DEL_TAB;
+            s << TAB << "}" << endl;
+            
+        }
+
         s << TAB << "else" << endl;
         s << TAB << "{" << endl;
 

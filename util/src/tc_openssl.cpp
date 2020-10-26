@@ -276,7 +276,7 @@ shared_ptr<TC_OpenSSL::CTX> TC_OpenSSL::newCtx(const std::string& cafile, const 
 	if (!cafile.empty())
 		mode |= SSL_VERIFY_PEER;
 
-	SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+	SSL_CTX_set_verify(ctx, mode, NULL);
 
 	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_OFF);
 	SSL_CTX_clear_options(ctx, SSL_OP_LEGACY_SERVER_CONNECT);

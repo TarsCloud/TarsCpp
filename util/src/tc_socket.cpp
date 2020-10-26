@@ -602,7 +602,7 @@ void TC_Socket::setCloseWaitDefault()
 
     if(setSockOpt(SO_LINGER, (const void *)&stLinger, sizeof(linger), SOL_SOCKET) == -1)
     {
-        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setCloseWait] error");
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setCloseWaitDefault] error");
     }
 }
 
@@ -664,7 +664,6 @@ int TC_Socket::getRecvBufferSize() const
 
     return sz;
 }
-
 
 void TC_Socket::ignoreSigPipe() {
 #ifdef TARGET_PLATFORM_IOS

@@ -246,9 +246,9 @@ TC_SemMutex::~TC_SemMutex()
 }
 void TC_SemMutex::init(key_t iKey)
 {
-    string key = "tars-mutex-" + TC_Common::tostr(iKey);
-    string rkey = "tars-readEvent-" + TC_Common::tostr(iKey);
-    string wkey = "tars-writeEvent-" + TC_Common::tostr(iKey);
+    string key = "tc-mutex-" + TC_Common::tostr(iKey);
+    string rkey = "tc-readEvent-" + TC_Common::tostr(iKey);
+    string wkey = "tc-writeEvent-" + TC_Common::tostr(iKey);
     _mutex = CreateMutex(NULL, FALSE, key.c_str());  
     if (_mutex == NULL)  
     {
@@ -285,6 +285,7 @@ void TC_SemMutex::addWriter() const
         THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::addWriter] WaitForSingleObject error");
     }  
 }  
+  
 void TC_SemMutex::removeWriter() const 
 {  
     switch (WaitForSingleObject(_mutex, INFINITE))  
@@ -298,6 +299,7 @@ void TC_SemMutex::removeWriter() const
         THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::removeWriter] WaitForSingleObject error");
     }
 }  
+
 void TC_SemMutex::rlock() const
 {
     HANDLE h[2];  
@@ -316,16 +318,19 @@ void TC_SemMutex::rlock() const
         THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::rlock] WaitForSingleObject error");
     }  
 }
+
 void TC_SemMutex::unrlock( ) const
 {
     unlockImp();
 }
+
 bool TC_SemMutex::tryrlock() const
 {
     for (;;)  
     {  
         if (_writers != 0 || _writersWaiting != 0)  
             return false;  
+  
         DWORD result = tryReadLockOnce();  
         switch (result)  
         {  
@@ -339,6 +344,7 @@ bool TC_SemMutex::tryrlock() const
         }  
     } 
 }
+
 void TC_SemMutex::wlock() const
 {
     addWriter();  
@@ -362,10 +368,12 @@ void TC_SemMutex::wlock() const
         THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::wlock] WaitForSingleObject error");
     }  
 }
+
 void TC_SemMutex::unwlock() const
 {
     unlockImp();
 }
+
 bool TC_SemMutex::trywlock() const
 {
     addWriter();  
@@ -390,6 +398,7 @@ bool TC_SemMutex::trywlock() const
     }  
     return false;  
 }
+
 void TC_SemMutex::unlockImp() const 
 {  
     switch (WaitForSingleObject(_mutex, INFINITE))  
@@ -404,6 +413,7 @@ void TC_SemMutex::unlockImp() const
         THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::unlockImp] WaitForSingleObject error");
     }  
 }  
+
 DWORD TC_SemMutex::tryReadLockOnce() const 
 {  
     HANDLE h[2];  
@@ -425,5 +435,8 @@ DWORD TC_SemMutex::tryReadLockOnce() const
     }  
     return result;  
 }  
+
 #endif
 }
+
+

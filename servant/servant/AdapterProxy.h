@@ -33,7 +33,6 @@
 #endif
 namespace tars
 {
-////////////////////////////////////////////////////////////////////////
 /**
  * 每个Adapter对应一个Endpoint，也就是一个服务端口
  */
@@ -45,7 +44,7 @@ public:
      * @param ep
      * @param op
      */
-    AdapterProxy(ObjectProxy * pObjectProxy, const EndpointInfo &ep, Communicator* pCom);
+    AdapterProxy(ObjectProxy * pObjectProxy, const EndpointInfo &ep,Communicator* pCom);
 
     /**
      * 析构函数
@@ -58,13 +57,6 @@ public:
      * @return int
      */
 	int invoke(ReqMessage * msg);
-
-//	/**
-//	 * 同步阻塞调用server
-//	 * @param msg
-//	 * @return
-//	 */
-//	bool invoke_sync(ReqMessage * msg);
 
 	/**
 	 *
@@ -86,11 +78,10 @@ public:
 
     /**
      * 端口是否有效,当连接全部失效时返回false
-     * @param bForceConnect : 是否强制发起连接,为true时不对状态进行判断就发起连接
-     * @onlyCheck: 只判断是否已经连接上 
+     * @bForceConnect : 是否强制发起连接,为true时不对状态进行判断就发起连接(onlyCheck = true有效)
      * @return bool
      */
-    bool checkActive(bool bForceConnect = false, bool onlyCheck = false);
+    bool checkActive(bool bForceConnect = false);
 
     /**
      * 记录连接是否异常
@@ -129,7 +120,7 @@ public:
      * 获取端口信息
      * @return const EndpointInfo&
      */
-    inline const EndpointInfo & endpoint() const { return _endpoint; }
+    inline const EndpointInfo & endpoint() const { return _trans->getEndpointInfo(); }
 
     /**
      * 连接超时的时间
@@ -198,6 +189,9 @@ public:
 	 */
 	void onSetInactive();
 
+	void doInvoke_serial();
+
+    TC_TimeoutQueueNew<ReqMessage*> * getTimeoutQueue() { return _timeoutQueue.get(); }
 private:
 
     /**
@@ -246,18 +240,31 @@ private:
 	 */
 	int invoke_connection_parallel(ReqMessage * msg);
 
+    /**
+     * 完成串行连接请求
+     * @param msg
+     * @return
+     */
 	void finishInvoke_serial(shared_ptr<ResponsePacket> & rsp);
 
+    /**
+     * 完成连接复用请求
+     * @param msg
+     * @return
+     */
 	void finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp);
 
-	void doInvoke_serial();
-
+	/**
+	 * 并行发送的情况(连接复用)
+	 */
 	void doInvoke_parallel();
 
-   /**
-    * 获取被调名
-    */
-   string getSlaveName(const string& sSlaveName);
+	/**
+	 * slave 名称(去掉set等信息)
+	 * @param sSlaveName
+	 * @return
+	 */
+	string getSlaveName(const string& sSlaveName);
 
 private:
 
@@ -270,11 +277,6 @@ private:
      * ObjectProxy
      */
     ObjectProxy*                           _objectProxy;
-
-    /*
-     * 节点信息
-     */
-    EndpointInfo                           _endpoint;
 
     /**
      * in request

@@ -215,11 +215,13 @@ private:
 
     /**
      * 收到的响应
+	 * Responses received
      */
     std::unordered_map<int, shared_ptr<TC_HttpResponse>> _responses;
 
     /**
      * 收到的完整响应
+	 * Complete response received
      */
     std::unordered_map<int, shared_ptr<TC_HttpResponse>> _doneResponses;
 };

@@ -71,13 +71,13 @@ public:
      * 获取uid
      * @return uint32
      */
-    uint32_t getUId() const;
+	uint32_t getUId() const;
 
-    /**
+	/**
      * 获取fd
      * @return int
      */
-    int getFd() const { return _data->fd(); }
+	int getFd() const { return _data->fd(); }
 
     /**
      * 是否函数返回时发送响应包给客户端
@@ -179,17 +179,17 @@ public:
      * 获取消息类型(仅TARS协议有效)
      * @return tars::Int32
      */
-    tars::Int32 getMessageType() const;
+    Int32 getMessageType() const;
 
-    /**
-     * 获取接收到请求的时间
-     */
-    struct timeval getRecvTime() const;
+	/**
+	 * 获取接收到请求的时间
+	 */
+	struct timeval getRecvTime() const;
 
-    /**
-     * 设置是否上报状态报告
-     */
-    void setReportStat(bool bReport);
+	/**
+	 * 设置是否上报状态报告
+	 */
+	void setReportStat(bool bReport);
 
     /**
      * taf协议的发送响应数据(仅TAF协议有效)
@@ -230,6 +230,44 @@ public:
     void sendResponse(const char* buff, uint32_t len);
 
     /**
+     *
+     * @param iRet
+     * @param response
+     * @param status
+     * @param sResultDesc
+     * @param push
+     */
+	void sendResponse(int iRet, ResponsePacket &response, const map<string, string>& status, const string& sResultDesc);
+protected:
+
+    friend class ServantHandle;
+
+    friend class Application;
+
+    /**
+     * 初始化
+     * @param stRecvData
+     */
+    void initialize(const shared_ptr<TC_EpollServer::RecvContext> &data);
+
+	/**
+     * 初始化
+     * @param stRecvData
+     */
+    void initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &data);
+
+    /**
+     * 初始化
+     * @param sRecvBuffer
+     */
+    void initialize(const vector<char> &sRecvBuffer);
+
+    /**
+     * 服务端上报状态，针对单向调用及WUP调用(仅对TAF协议有效)
+     */
+    void reportToStat(const string & sObj);
+
+    /**
      * 设置cookie
      */
     void setCookie(const map<string, string> &cookie)
@@ -244,45 +282,6 @@ public:
     {
         return _cookie;
     }
-
-protected:
-
-    friend class ServantHandle;
-
-    friend class Application;
-
-    /**
-     * 初始化
-     * @param data
-     */
-    void initialize(const shared_ptr<TC_EpollServer::RecvContext> &data);
-
-    /**
-     * 初始化
-     * @param data
-     */
-    void initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &data);
-
-    /**
-     * 初始化
-     * @param sRecvBuffer
-     */
-    void initialize(const vector<char> &sRecvBuffer);
-
-    /**
-     * 服务端上报状态，针对单向调用及TUP调用(仅对TARS协议有效)
-     */
-    void reportToStat(const string & sObj);
-
-    /**
-     * 发送消息
-     * @param iRet
-     * @param response
-     * @param status
-     * @param sResultDesc
-     * @param push
-     */
-	void sendResponse(int iRet, const vector<char> &buffer, const map<string, string>& status, const string& sResultDesc);
 
 protected:
     /**

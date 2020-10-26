@@ -124,7 +124,6 @@ void ServantHandle::run()
 	}
 }
 
-
 void ServantHandle::handleRequest()
 {
     bool bYield = false;
@@ -223,9 +222,9 @@ void ServantHandle::handleRecvData(const shared_ptr<TC_EpollServer::RecvContext>
 {
     try
     {
-        TarsCurrentPtr current = createCurrent(data);
+	    CurrentPtr current = createCurrent(data);
 
-        if (!current) 
+	    if (!current)
         {
             return;
         }
@@ -430,9 +429,9 @@ void ServantHandle::heartbeat()
     }
 }
 
-TarsCurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
+CurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = new Current(this);
+    CurrentPtr current = new Current(this);
 
     try
     {
@@ -474,9 +473,9 @@ TarsCurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::Rec
     return current;
 }
 
-TarsCurrentPtr ServantHandle::createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
+CurrentPtr ServantHandle::createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = new Current(this);
+    CurrentPtr current = new Current(this);
 
     current->initializeClose(data);
     current->setReportStat(false);
@@ -488,7 +487,7 @@ void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &d
 {
     TLOGTARS("[ServantHandle::handleClose,adapter:" << data->adapter()->getName() << ",peer:" << data->ip() << ":" << data->port() << "]"<< endl);
 
-    TarsCurrentPtr current = createCloseCurrent(data);
+    CurrentPtr current = createCloseCurrent(data);
 
     auto sit = _servants.find(current->getServantName());
 
@@ -499,7 +498,6 @@ void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &d
 
         return;
     }
-
 
     try
     {
@@ -522,7 +520,7 @@ void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &d
 
 void ServantHandle::handleTimeout(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = createCurrent(data);
+    CurrentPtr current = createCurrent(data);
 
     if (!current) return;
 
@@ -544,7 +542,7 @@ void ServantHandle::handleTimeout(const shared_ptr<TC_EpollServer::RecvContext> 
 
 void ServantHandle::handleOverload(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = createCurrent(data);
+    CurrentPtr current = createCurrent(data);
 
     if (!current) return;
 
@@ -562,9 +560,9 @@ void ServantHandle::handleOverload(const shared_ptr<TC_EpollServer::RecvContext>
 
 void ServantHandle::handle(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    TarsCurrentPtr current = createCurrent(data);
+    CurrentPtr current = createCurrent(data);
 
-    if (!current) return;
+	if (!current) return;
 
     if (current->getBindAdapter()->isTarsProtocol())
     {
@@ -657,7 +655,7 @@ void ServantHandle::finishTracking(int ret, const TarsCurrentPtr &current)
 
 #endif
 
-bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
+bool ServantHandle::processDye(const CurrentPtr &current, string& dyeingKey)
 {
     //当前线程的线程数据
     ServantProxyThreadData* sptd = ServantProxyThreadData::getData();
@@ -683,11 +681,27 @@ bool ServantHandle::processDye(const TarsCurrentPtr &current, string& dyeingKey)
         return true;
     }
 
+	//servant已经被染色, 开启染色日志
+	if (ServantHelperManager::getInstance()->isDyeing())
+	{
+		map<string, string>::const_iterator dyeingKeyIt = current->getRequestStatus().find(ServantProxy::STATUS_GRID_KEY);
+
+		if (dyeingKeyIt != current->getRequestStatus().end() &&
+			ServantHelperManager::getInstance()->isDyeingReq(dyeingKeyIt->second, current->getServantName(), current->getFuncName()))
+		{
+			TLOGTARS("[TARS] dyeing servant got a dyeing req, key:" << dyeingKeyIt->second << endl);
+
+			dyeingKey = dyeingKeyIt->second;
+
+			return true;
+		}
+	}
+
     return false;
 }
 
 
-bool ServantHandle::processCookie(const TarsCurrentPtr &current, map<string, string> &cookie)
+bool ServantHandle::processCookie(const CurrentPtr &current, map<string, string> &cookie)
 {
 	const static string STATUS = "STATUS_";
 
@@ -701,7 +715,7 @@ bool ServantHandle::processCookie(const TarsCurrentPtr &current, map<string, str
 	return !cookie.empty();
 }
 
-bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
+bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
 {
     /*是否允许检查合法性*/
     if (ServerConfig::IsCheckSet == 0)
@@ -781,7 +795,7 @@ bool ServantHandle::checkValidSetInvoke(const TarsCurrentPtr &current)
     return true;
 }
 
-void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
+void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 {
     TLOGTARS("[ServantHandle::handleTarsProtocol current:"
                 << current->getIp() << "|"
@@ -834,11 +848,12 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
 
     string sResultDesc = "";
 
-    vector<char> buffer;
+	ResponsePacket response;
+//    vector<char> buffer;
     try
     {
         //业务逻辑处理
-        ret = sit->second->dispatch(current, buffer);
+        ret = sit->second->dispatch(current, response.sBuffer);
     }
     catch(TarsDecodeException &ex)
     {
@@ -876,7 +891,7 @@ void ServantHandle::handleTarsProtocol(const TarsCurrentPtr &current)
     //单向调用或者业务不需要同步返回
     if (current->isResponse())
     {
-        current->sendResponse(ret, buffer, Current::TARS_STATUS(), sResultDesc);
+        current->sendResponse(ret, response, Current::TARS_STATUS(), sResultDesc);
     }
 #ifdef TARS_OPENTRACKING
     finishTracking(ret, current);
@@ -892,9 +907,9 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
 
 	auto sit = _servants.find(current->getServantName());
 
-    assert(sit != _servants.end());
+	assert(sit != _servants.end());
 
-    vector<char> buffer;
+	vector<char> buffer;
 
     try
     {
@@ -910,10 +925,10 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
         TLOGERROR("[ServantHandle::handleNoTarsProtocol unknown error]" << endl);
     }
 
-    if (current->isResponse() && !buffer.empty())
-    {
-        current->sendResponse((const char*)buffer.data(), buffer.size());
-    }
+	if (current->isResponse() && !buffer.empty())
+	{
+		current->sendResponse((const char *)(buffer.data()), (uint32_t)buffer.size());
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////

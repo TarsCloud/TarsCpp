@@ -28,7 +28,7 @@ namespace tars
 #if TARGET_PLATFORM_WINDOWS
 #include <windows.h>
 
-void TC_Encoder::gbk2utf8(const string &sIn, vector<string> &vtStr)
+void TC_Encoder::gbk2utf8(const string &sIn, vector<string> &vtStr,int mode)
 {
     string sOut;
 
@@ -55,7 +55,7 @@ void TC_Encoder::gbk2utf8(const string &sIn, vector<string> &vtStr)
     }
 }
 
-std::string TC_Encoder::gbk2utf8(const std::string &strGbk)
+std::string TC_Encoder::gbk2utf8(const std::string &strGbk,int mode)
 {
     string outUtf8 = "";
     int n = MultiByteToWideChar(CP_ACP, 0, strGbk.c_str(), -1, NULL, 0);
@@ -72,7 +72,7 @@ std::string TC_Encoder::gbk2utf8(const std::string &strGbk)
     return outUtf8;
 }
 
-std::string TC_Encoder::utf82gbk(const std::string &strUtf8)
+std::string TC_Encoder::utf82gbk(const std::string &strUtf8,int mode)
 {
     string outGBK = "";
     int n = MultiByteToWideChar(CP_UTF8, 0, strUtf8.c_str(), -1, NULL, 0);
@@ -90,239 +90,95 @@ std::string TC_Encoder::utf82gbk(const std::string &strUtf8)
 }
 
 #else
-// void TC_Encoder::gbk2utf8(char *sOut, int &iMaxOutLen, const char *sIn, int iInLen)
-// {
-// 	char * pIn = (char*)sIn;
-// 	char * pEnd = pIn+iInLen;
-// 	char * pOut = sOut;
-// 	size_t iLeftLen;
-//     size_t iGbkLen;
-// 	iconv_t cd;
 
-// 	if (iInLen > iMaxOutLen)
-// 	{
-// 		throw TC_Encoder_Exception("[TC_Encoder::gbk2utf8] iInLen > iMaxOutLen error : ", errno);
-// 	}
-
-// 	cd = iconv_open("UTF-8","GBK");
-// 	if (cd == (iconv_t)-1)
-//     {
-//         throw TC_Encoder_Exception("[TC_Encoder::gbk2utf8] iconv_open error : ", errno);
-// 	}
-
-// 	iLeftLen = iMaxOutLen;
-// 	while(pIn < pEnd)
-//     {
-// 		if((unsigned char)(*pIn)==0x80)
-//         {
-//             //注意GBK的0x80转换为UTF-8时为E2 82 AC
-// 			*pOut = 0xe2; pOut++; iLeftLen--;
-// 			*pOut = 0x82; pOut++; iLeftLen--;
-// 			*pOut = 0xac; pOut++; iLeftLen--;
-// 			pIn++;
-// 		}
-// 		else if((unsigned char)(*pIn)<0x80)
-//         {
-//             //单字节(GBK: 0x00-0x7F)
-// 			*pOut = *pIn;
-// 			pIn++;pOut++;iLeftLen--;
-// 		}
-//         else
-//         {
-//             //双字节
-// 			iGbkLen=2;
-//             int iRet=iconv(cd, &pIn, (size_t *)&iGbkLen, (char **)&pOut, (size_t *)&iLeftLen);
-//             if(iRet < 0)
-//             {
-// 				*pOut = ' '; //转换不了替换为空格
-// 				pIn+=2; pOut++; iLeftLen--;
-// 			}
-// 		}
-// 	}
-
-// 	iconv_close(cd);
-// 	sOut[iMaxOutLen - iLeftLen] = '\0';
-//     iMaxOutLen = iMaxOutLen - iLeftLen;
-// }
-
-string TC_Encoder::gbk2utf8(const string &sIn)
+string TC_Encoder::gbk2utf8(const string &sIn,int mode)
 {
 	iconv_t cd;
 
-	cd = iconv_open("UTF-8","GBK");
-	if (cd == (iconv_t)-1)
-    {
+    switch(mode){
+    case TC_Encoder::ICONV_TRANSLIT:
+        cd = iconv_open("UTF-8//TRANSLIT", "GBK");
+        break;
+    case TC_Encoder::ICONV_IGNORE:
+        cd = iconv_open("UTF-8//IGNORE", "GBK");
+        break;
+    default:
+        cd = iconv_open("UTF-8", "GBK");
+        break;
+    }
+	if (cd == (iconv_t)-1){
         THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv_open error");
- 
-        // throw TC_Encoder_Exception("[TC_Encoder::gbk2utf8] iconv_open error", TC_Exception::getSystemCode());
     }
 
-    string sOut;
+	string sOut;
+	size_t bufsize = sIn.size()*2+1;
+	char* buf = new char[bufsize];
+	char* pOut = buf;
+	size_t isize = sIn.length();
+	size_t osize = bufsize;
+	char* pIn = (char*)sIn.c_str();
 
-    for(string::size_type pos = 0; pos < sIn.length(); ++pos)
-    {
-		if((unsigned char)sIn[pos] == 0x80)
-        {
-            //注意GBK的0x80转换为UTF-8时为E2 82 AC
-            sOut += 0xe2;
-            sOut += 0x82;
-            sOut += 0xac;
-		}
-		else if((unsigned char)sIn[pos] < 0x80)
-        {
-            //单字节(GBK: 0x00-0x7F)
-			sOut += sIn[pos];
-		}
-        else
-        {
-            //双字节
-			size_t sizeGbkLen = 2;
-            char pIn[128] = "\0";
-
-            strncpy(pIn, sIn.c_str() + pos, sizeGbkLen);
-            char *p = pIn;
-
-            size_t sizeLeftLen = 128;
-            char pOut[128] = "\0";
-            char *o = pOut;
-            int iRet = iconv(cd, &p, &sizeGbkLen, (char **)&o, &sizeLeftLen);
-			if(iRet < 0)
-            {
-                //转换不了, 暂时替换为空格
-				sOut += ' ';
-			}
-            else
-            {
-                sOut += pOut;
-            }
-
-            ++pos;
-
-		}
+	size_t ret = iconv(cd, &pIn, &isize, &pOut, &osize);
+	if(-1 == ret && TC_Encoder::ICONV_NORMAL == mode){
+		iconv_close(cd);
+		delete []buf;
+		THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv error");
+		return sOut;
 	}
 
 	iconv_close(cd);
+	buf[bufsize-osize]=0;
+	sOut.assign(buf);
+	delete []buf;
 	return sOut;
 }
 
-void TC_Encoder::gbk2utf8(const string &sIn, vector<string> &vtStr)
-{
-	iconv_t cd;
-
-	cd = iconv_open("UTF-8","GBK");
-	if (cd == (iconv_t)-1)
-    {
-        THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv_open error");
-        // throw TC_Encoder_Exception("[TC_Encoder::gbk2utf8] iconv_open error", TC_Exception::getSystemCode());
+void TC_Encoder::gbk2utf8(const string &sIn, vector<string> &vtStr,int mode){
+	string out = TC_Encoder::gbk2utf8(sIn,mode);
+	for (size_t i = 0; i < out.size();) {
+		unsigned char uc = out[i];
+		if (uc >= 0xF0 && (i + 4) <= out.size()) {
+			vtStr.push_back(out.substr(i, 4));
+			i += 4;
+			continue;
+		}
+		if (uc >= 0xE0 && (i + 3) <= out.size()) {
+			vtStr.push_back(out.substr(i,3));
+			i += 3;
+			continue;
+		}
+		if (uc >= 0xC0 && (i + 2) <= out.size()) {
+			vtStr.push_back(out.substr(i,2));
+			i += 2;
+			continue;
+		}
+		if ((i + 1) <= out.size()) {
+			vtStr.push_back(out.substr(i,1));
+			i++;
+			continue;
+		}
+		else {
+            THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] invalid utf8 string | conversion error");
+		}
 	}
-
-    vtStr.clear();
-
-    for(string::size_type pos = 0; pos < sIn.length(); ++pos)
-    {
-        string sOut;
-
-		if((unsigned char)sIn[pos] == 0x80)
-        {
-            //注意GBK的0x80转换为UTF-8时为E2 82 AC
-            sOut += 0xe2;
-            sOut += 0x82;
-            sOut += 0xac;
-		}
-		else if((unsigned char)sIn[pos] < 0x80)
-        {
-            //单字节(GBK: 0x00-0x7F)
-			sOut += sIn[pos];
-		}
-        else
-        {
-            //双字节
-			size_t iGbkLen = 2;
-            char pIn[128] = "\0";
-
-            strncpy(pIn, sIn.c_str() + pos, iGbkLen);
-            char *p = pIn;
-
-            size_t iLeftLen = 128;
-            char pOut[128] = "\0";
-            char *o = pOut;
-            int iRet = iconv(cd, &p, (size_t *)&iGbkLen, (char **)&o, (size_t *)&iLeftLen);
-			if(iRet < 0)
-            {
-                //转换不了, 暂时替换为空格
-				sOut += ' ';
-			}
-            else
-            {
-                sOut += pOut;
-            }
-
-            ++pos;
-
-		}
-
-        vtStr.push_back(sOut);
-	}
-
-	iconv_close(cd);
 }
 
-// string TC_Encoder::utf82gbk(const string &sIn)
-// {
-//     if(sIn.length() == 0)
-//     {
-//         return "";
-//     }    
-
-// 	iconv_t cd;
-
-// 	cd = iconv_open("GBK","UTF-8");
-// 	if (cd == (iconv_t)-1)
-//     {
-//         throw TC_Encoder_Exception("[TC_Encoder::utf82gbk] iconv_open error", errno);
-// 	}
-
-//     size_t sizeLeftLen = sIn.length() * 2 + 1;
-//     size_t iMaxOutLen  = sizeLeftLen;
-//     // char *pOut = new char[iMaxOutLen];
-//     char pOut[255];
-//     // memset(pOut, iMaxOutLen, 0x00);
-//     const char * pIn = sIn.c_str();
-//     size_t sizeInLen   = sIn.length();
-
-//     char *out = pOut;
-//     cout << sizeInLen << ", " << iMaxOutLen << endl;
-//     size_t ret = iconv(cd, (char**)&pIn, (size_t*)&sizeInLen, (char **)&out, (size_t*)&sizeLeftLen);
-//     if (ret == (size_t) - 1)
-//     {
-//         // delete[] pOut;
-//         iconv_close(cd);
-//         throw TC_Encoder_Exception("[TC_Encoder::utf82gbk] iconv error", errno);
-//     }
-
-// 	iconv_close(cd);
-
-//     out[iMaxOutLen - sizeLeftLen] = '\0';
-
-//     cout << sIn << ", " <<  iMaxOutLen << "," << sizeLeftLen << "," << out << endl;
-
-//     string sOut;
-//     sOut.assign(out, (iMaxOutLen - sizeLeftLen));
-
-//     // delete[] pOut;
-
-// 	return sOut;
-// }
-
-void TC_Encoder::utf82gbk(char *sOut, int &iMaxOutLen, const char *sIn, int iInLen)
+void TC_Encoder::utf82gbk(char *sOut, int &iMaxOutLen, const char *sIn, int iInLen,int mode)
 {
-    iconv_t cd;
-
-    cd = iconv_open("GBK","UTF-8");
-    if (cd == (iconv_t)-1)
-    {
-        THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::utf82gbk] iconv_open error");
-        // throw TC_Encoder_Exception("[TC_Encoder::utf82gbk] iconv_open error", TC_Exception::getSystemCode());
+	iconv_t cd;
+    switch(mode){
+    case TC_Encoder::ICONV_TRANSLIT:
+        cd = iconv_open("GBK//TRANSLIT", "UTF-8");
+        break;
+    case TC_Encoder::ICONV_IGNORE:
+        cd = iconv_open("GBK//IGNORE", "UTF-8");
+        break;
+    default:
+        cd = iconv_open("GBK", "UTF-8");
+        break;
+    }
+	if (cd == (iconv_t)-1){
+        THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv_open error");
     }
 
     char * pIn = (char*)sIn;
@@ -331,23 +187,18 @@ void TC_Encoder::utf82gbk(char *sOut, int &iMaxOutLen, const char *sIn, int iInL
     char* pOut = sOut;
 
     size_t ret = iconv(cd, &pIn, &sizeInLen, (char **)&sOut, &sizeLeftLen);
-    if (ret == (size_t) - 1)
-    {
-        iMaxOutLen = 0;
+    if (ret == (size_t) - 1 && TC_Encoder::ICONV_NORMAL == mode){
         iconv_close(cd);
         THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::utf82gbk] iconv error");
-        // throw TC_Encoder_Exception("[TC_Encoder::utf82gbk] iconv error", TC_Exception::getSystemCode());
         return;
     }
 
     iconv_close(cd);
-
     pOut[iMaxOutLen - (int)sizeLeftLen] = '\0';
-
     iMaxOutLen = iMaxOutLen - (int)sizeLeftLen;
 }
 
-string TC_Encoder::utf82gbk(const string &sIn)
+string TC_Encoder::utf82gbk(const string &sIn,int mode)
 {
     if(sIn.length() == 0)
     {
@@ -361,7 +212,7 @@ string TC_Encoder::utf82gbk(const string &sIn)
 
     try
     {
-        utf82gbk(pOut, iLen, sIn.c_str(), sIn.length());
+        utf82gbk(pOut, iLen, sIn.c_str(), sIn.length(),mode);
     }
     catch (TC_Encoder_Exception& e)
     {

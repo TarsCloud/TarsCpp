@@ -31,7 +31,7 @@ namespace tars
  * @file tc_thread.h 
  * @brief  线程类(兼容TAF4.x版本, 底层直接封装了c++11 thread, 从而跨平台兼容)
  *  
- * @author jarodruan@upchina.com  
+ * @author ruanshudong@qq.com  
  */          
 /////////////////////////////////////////////////
 

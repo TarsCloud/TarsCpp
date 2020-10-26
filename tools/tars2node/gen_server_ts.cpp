@@ -21,24 +21,28 @@ string CodeGenerator::generateTSServerAsync(const NamespacePtr &nPtr, const Inte
     ostringstream str;
 
     string sParams = "";
+    int rspNum = 0;
     if (oPtr->getReturnPtr()->getTypePtr())
     {
         sParams += "_ret: " + getTsType(oPtr->getReturnPtr()->getTypePtr());
 
         // push the symbol into dependent list
         getDataType(oPtr->getReturnPtr()->getTypePtr());
+        ++rspNum;
     }
 
-    vector<ParamDeclPtr> & vParamDecl = oPtr->getAllParamDeclPtr();
+    vector<ParamDeclPtr> &vParamDecl = oPtr->getAllParamDeclPtr();
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
-        if (!vParamDecl[i]->isOut()) continue;
+        if (!vParamDecl[i]->isOut())
+            continue;
 
-        sParams += (sParams.empty() ? "": ", ") + vParamDecl[i]->getTypeIdPtr()->getId();
+        sParams += (sParams.empty() ? "" : ", ") + vParamDecl[i]->getTypeIdPtr()->getId();
         sParams += ": " + getTsType(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+        ++rspNum;
     }
 
-    str << TAB << "protected static __" << oPtr->getId() << "_responser(this: " << IDL_NAMESPACE_STR << "Rpc.Current, " << sParams << ") {" << endl;
+    str << TAB << "protected static __" << oPtr->getId() << "_responser(this: " << IDL_NAMESPACE_STR << "Rpc.TarsCurrent, " << sParams << ") {" << endl;
 
     INC_TAB;
 
@@ -62,7 +66,8 @@ string CodeGenerator::generateTSServerAsync(const NamespacePtr &nPtr, const Inte
     }
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
-        if (!vParamDecl[i]->isOut()) continue;
+        if (!vParamDecl[i]->isOut())
+            continue;
 
         str << TAB << PROTOCOL_VAR << "." << toFunctionName(vParamDecl[i]->getTypeIdPtr(), "write") << "(\""
             << vParamDecl[i]->getTypeIdPtr()->getId() << "\", " << vParamDecl[i]->getTypeIdPtr()->getId()
@@ -71,6 +76,42 @@ string CodeGenerator::generateTSServerAsync(const NamespacePtr &nPtr, const Inte
     str << endl;
     str << TAB << "this.doResponse(" << PROTOCOL_VAR << ".encode());" << endl;
     DEL_TAB;
+
+    //// ========= 增加对 JSON_VERSION 支持
+    str << TAB << "} else if (this.getRequestVersion() === " << PROTOCOL_JSON << ") {" << endl;
+
+    INC_TAB;
+    str << TAB << "const _data_ = {" << endl;
+    INC_TAB;
+    if (oPtr->getReturnPtr()->getTypePtr())
+    {
+        str << TAB << "\"tars_ret\": _ret";
+        --rspNum;
+        if (rspNum > 0)
+        {
+            str << ", " << endl;
+        }
+    }
+    for (size_t i = 0; i < vParamDecl.size(); i++)
+    {
+        if (!vParamDecl[i]->isOut())
+            continue;
+
+        str << TAB << "\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\": " << toObjectString(vParamDecl[i]->getTypeIdPtr());
+        --rspNum;
+        if (rspNum > 0)
+        {
+            str << ", " << endl;
+        }
+    }
+    DEL_TAB;
+    str << endl;
+    str << TAB << "};" << endl;
+    str << endl;
+    str << TAB << "this.doResponse(new TarsStream.BinBuffer(Buffer.from(JSON.stringify(_data_))));" << endl;
+    DEL_TAB;
+    //// ========= 
+    
     str << TAB << "} else {" << endl;
 
     INC_TAB;
@@ -82,7 +123,8 @@ string CodeGenerator::generateTSServerAsync(const NamespacePtr &nPtr, const Inte
     }
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
-        if (!vParamDecl[i]->isOut()) continue;
+        if (!vParamDecl[i]->isOut())
+            continue;
 
         str << TAB << "os." << toFunctionName(vParamDecl[i]->getTypeIdPtr(), "write") << "("
             << (i + 1) << ", " << vParamDecl[i]->getTypeIdPtr()->getId()
@@ -105,7 +147,7 @@ string CodeGenerator::generateTSServerDispatch(const NamespacePtr &nPtr, const I
     ostringstream str;
     vector<ParamDeclPtr> & vParamDecl = oPtr->getAllParamDeclPtr();
 
-    str << TAB << "protected __" << oPtr->getId() << "(current: " << IDL_NAMESPACE_STR << "Rpc.Current";
+    str << TAB << "protected __" << oPtr->getId() << "(current: " << IDL_NAMESPACE_STR << "Rpc.TarsCurrent";
     if (vParamDecl.size() != 0) str << ", binBuffer: " << IDL_NAMESPACE_STR << "Stream.BinBuffer";
     str << ") {" << endl;
 
@@ -148,6 +190,30 @@ string CodeGenerator::generateTSServerDispatch(const NamespacePtr &nPtr, const I
         dstr << ");" << endl;
     }
     DEL_TAB;
+
+    //// ========= 增加对 JSON_VERSION 支持
+    dstr << TAB << "} else if (current.getRequestVersion() === " << PROTOCOL_JSON << ") {" << endl;
+    INC_TAB;
+    dstr << TAB << "const _data_ = JSON.parse(binBuffer.toNodeBuffer().toString());" << endl;
+
+    for (size_t i = 0; i < vParamDecl.size(); i++)
+    {
+        if (vParamDecl[i]->isOut())
+        {
+            dstr << TAB << vParamDecl[i]->getTypeIdPtr()->getId()
+                 << " = _data_." << vParamDecl[i]->getTypeIdPtr()->getId() << " || " << getDefault(vParamDecl[i]->getTypeIdPtr(), "", nPtr->getId(), true)
+                 << ";" << endl;
+        }
+        else
+        {
+            dstr << TAB << vParamDecl[i]->getTypeIdPtr()->getId()
+                 << " = _data_." << vParamDecl[i]->getTypeIdPtr()->getId()
+                 << ";" << endl;
+        }
+    }
+    DEL_TAB;
+    //// =========
+
     dstr << TAB << "} else {" << endl;
 
     INC_TAB;
@@ -228,7 +294,7 @@ string CodeGenerator::generateTSServer(const InterfacePtr &pPtr, const Namespace
     str << TAB << "initialize(): PromiseLike<any> | void {}" << endl << endl;
 
     // generate the dispatch function
-    str << TAB << "onDispatch(current: " << IDL_NAMESPACE_STR << "Rpc.Current, funcName: string, binBuffer: " << IDL_NAMESPACE_STR << "Stream.BinBuffer) { " << endl;
+    str << TAB << "onDispatch(current: " << IDL_NAMESPACE_STR << "Rpc.TarsCurrent, funcName: string, binBuffer: " << IDL_NAMESPACE_STR << "Stream.BinBuffer) { " << endl;
     INC_TAB;
     str << TAB << "if (\"__\" + funcName in this) {" << endl;
     INC_TAB;
@@ -243,7 +309,7 @@ string CodeGenerator::generateTSServer(const InterfacePtr &pPtr, const Namespace
     str << TAB << "}" << endl << endl;
 
     // generate the ping function
-    str << TAB << "__" << TC_Common::lower(IDL_NAMESPACE_STR) << "_ping(current: " << IDL_NAMESPACE_STR << "Rpc.Current) { " << endl;
+    str << TAB << "__" << TC_Common::lower(IDL_NAMESPACE_STR) << "_ping(current: " << IDL_NAMESPACE_STR << "Rpc.TarsCurrent) { " << endl;
     INC_TAB;
     str << TAB << "const _ret = 0;" << endl;
     str << TAB << "if (current.getRequestVersion() === " << PROTOCOL_SIMPLE << " || current.getRequestVersion() === " << PROTOCOL_COMPLEX << ") {" << endl;

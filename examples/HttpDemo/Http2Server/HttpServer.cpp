@@ -24,6 +24,7 @@ HttpServer g_app;
 
 TC_NetWorkBuffer::PACKET_TYPE parseHttp2(TC_NetWorkBuffer&in, vector<char> &out)
 {
+//	cout << "parseHttp2:" << in.getBufferLength() << endl;
     TC_Http2Server*sessionPtr = (TC_Http2Server*)(in.getContextData());
 
     if(sessionPtr == NULL)

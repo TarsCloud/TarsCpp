@@ -24,49 +24,54 @@ namespace tars
 EndpointInfo::EndpointInfo()
 {
     _setDivision.clear();
-//    memset(&_addr,0,sizeof(struct sockaddr_in));
+
 	memset(&_addr,0,sizeof(_addr));
-    //7暂时写死 修改默认值一定要修改这个7
-//    memcpy(_host,"0.0.0.0",7);
-	//snprintf(_host, sizeof(_host), "%s", "0.0.0.0");
+
 }
 
-
-EndpointInfo::EndpointInfo(const string& host, uint16_t port, TC_Endpoint::EType type, int32_t grid, const string & setDivision, int qos, int weight, unsigned int weighttype, int authType)
-: _ep(host, port, 60000, type, grid, qos, weight, weighttype, authType)
+EndpointInfo::EndpointInfo(const TC_Endpoint &ep, const string &setDivision)
+: _ep(ep)
 , _setDivision(setDivision)
 , _addressSucc(false)
 {
-
-
-    _cmpDesc = createCompareDesc();
-
-    _desc = createDesc();
+	_cmpDesc = createCompareDesc();
+	_desc = createDesc();
 }
 
-void EndpointInfo::parseAddress()
+EndpointInfo::EndpointInfo(const EndpointF &ep)
+: _setDivision(ep.setId), _addressSucc(false)
 {
-    // try
-    // {
-        if (isIPv6())
-        {
-            TC_Socket::parseAddrWithPort(_ep.getHost(), _ep.getPort(), _addr.in6);
-        }
-        else
-        {
-            TC_Socket::parseAddrWithPort(_ep.getHost(), _ep.getPort(), _addr.in);
-        }
-    // }
-    // catch (...)
-    // {
-    //     TLOGERROR("EndpointInfo::parseAddress fail:" << _host << ":" << _port << "]" << endl);
-    // }
+	_ep.setHost(ep.host);
+	_ep.setPort(ep.port);
+	_ep.setTimeout(ep.timeout);
+	_ep.setType((TC_Endpoint::EType)ep.istcp);
+	_ep.setGrid(ep.grid);
+	_ep.setQos(ep.qos);
+	_ep.setWeight(ep.weight);
+	_ep.setWeightType(ep.weightType);
+	_ep.setAuthType(ep.authType);
+	_cmpDesc = createCompareDesc();
+	_desc = createDesc();
+}
+
+void EndpointInfo::parseConnectAddress()
+{
+    if (isConnectIPv6())
+    {
+        TC_Socket::parseAddrWithPort(getConnectEndpoint()->getHost(), getConnectEndpoint()->getPort(), _addr.in6);
+    }
+    else
+    {
+        TC_Socket::parseAddrWithPort(getConnectEndpoint()->getHost(), getConnectEndpoint()->getPort(), _addr.in);
+    }
 }
 
 string EndpointInfo::createCompareDesc()
 {
-	return _ep.toString();
+	stringstream ss;
+	ss << _ep.getType() << ":" << _ep.getHost() << ":" << _ep.getPort();
 
+	return ss.str();
 }
 
 string EndpointInfo::createDesc() const
@@ -94,7 +99,6 @@ int32_t EndpointInfo::grid() const
     return _ep.getGrid();
 }
 
-
 uint16_t EndpointInfo::port() const
 {
     return _ep.getPort();
@@ -105,20 +109,15 @@ bool EndpointInfo::isTcp() const
 	return _ep.isTcp();
 }
 
-const struct sockaddr_in& EndpointInfo::addr() const
-{
-    return _addr.in;
-}
-
-const struct sockaddr * EndpointInfo::addrPtr() const
-{
-	return _ep.isIPv6() ? (struct sockaddr *)&_addr.in6 : (struct sockaddr *)&_addr.in;
-}
-//
-//EndpointInfo::EType EndpointInfo::type() const
+//const struct sockaddr_in& EndpointInfo::addr() const
 //{
-//    return _type;
+//    return _addr.in;
 //}
+
+const struct sockaddr * EndpointInfo::connectAddrPtr() const
+{
+	return getConnectEndpoint()->isIPv6() ? (struct sockaddr *)&_addr.in6 : (struct sockaddr *)&_addr.in;
+}
 
 const string& EndpointInfo::setDivision() const
 {

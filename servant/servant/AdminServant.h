@@ -25,7 +25,6 @@ namespace tars
 class Current;
 class Application;
 
-////////////////////////////////////////////////////////////////////////
 /**
  * 管理Servant
  */
@@ -58,13 +57,13 @@ public:
      * 关闭服务
      * @param current
      */
-    void shutdown(TarsCurrentPtr current);
+    void shutdown(CurrentPtr current);
 
     /**
-     * 管理命令通知
+     * 通知
      * @param command
      */
-    string notify(const string &command, TarsCurrentPtr current);
+    string notify(const string &command, CurrentPtr current);
 
 };
 ////////////////////////////////////////////////////////////////

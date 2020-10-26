@@ -30,7 +30,7 @@ namespace tars
  * 上报信息给Notify服务
  * 异步上报给notify服务
  */
-class RemoteNotify : public TC_Singleton<RemoteNotify>
+class SVT_DLL_API RemoteNotify : public TC_Singleton<RemoteNotify>
 {
 public:
     /**

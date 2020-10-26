@@ -35,9 +35,9 @@ bool TC_SpinLock::tryLock() const
     int trys = 100;
     for (; trys > 0 && _flag.test_and_set(std::memory_order_acquire); --trys)
     {
-#if TARGET_PLATFORM_LINUX
-        asm volatile("rep; nop" ::: "memory");
-#endif
+//#if TARGET_PLATFORM_LINUX
+//        asm volatile("rep; nop" ::: "memory");
+//#endif
 
     }
 

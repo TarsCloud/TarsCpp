@@ -100,7 +100,7 @@ bool processAuth(TC_EpollServer::Connection *conn, const shared_ptr<TC_EpollServ
         response.iRet = 0;
         response.sBuffer.assign(out.begin(), out.end());
 
-        tars::Int32 iHeaderLen = 0;
+        int iHeaderLen = 0;
 
     //	先预留4个字节长度
         os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
@@ -174,11 +174,9 @@ int processAuthReqHelper(const BasicAuthPackage& pkg, const BasicAuthInfo& info)
 
     string secret1;
     {
-//        vector<char> dec;
         try
         {
 	        secret1 = TC_Des::decrypt3(tmpKey.data(), pkg.sSignature.data(), pkg.sSignature.size());
-//            secret1.assign(dec.begin(), dec.end());
         }
         catch (const TC_DES_Exception& )
         {
@@ -260,13 +258,8 @@ string defaultCreateAuthReq(const BasicAuthInfo& info /*, const string& hashMeth
         tmpKey = TC_MD5::md5str(tmp);
     }
 
-    // then use tmpKey to enc secret1, show server that I know secret1, ie, I know secret.
-//    vector<char> secret1Enc;
-    
-//    TC_Tea::encrypt(tmpKey.data(), secret1.data(), secret1.size(), secret1Enc);
 	pkg.sSignature = TC_Des::encrypt3(tmpKey.data(), secret1.data(), secret1.size());
 
-//	pkg.sSignature.assign(secret1Enc.begin(), secret1Enc.end());
     pkg.writeTo(os);
 
     return os.getByteBuffer();

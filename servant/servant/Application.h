@@ -20,6 +20,7 @@
 #include <iostream>
 #include <set>
 #include <signal.h>
+#include <vector>
 
 #include "util/tc_autoptr.h"
 #include "util/tc_config.h"
@@ -33,10 +34,7 @@
 #include "servant/RemoteLogger.h"
 #include "servant/RemoteConfig.h"
 #include "servant/RemoteNotify.h"
-
-#if TARS_SSL
 #include "util/tc_openssl.h"
-#endif
 
 namespace tars
 {
@@ -125,23 +123,23 @@ struct SVT_DLL_API ServerConfig
     static std::string Notify;              //信息通知中心
     static std::string ConfigFile;          //框架配置文件路径
     static bool        CloseCout;
-    static int         ReportFlow;          //是否服务端上报所有接口stat流量 0不上报 1上报(用于非tars协议服务流量统计)
+    static int         ReportFlow;          //是否服务端上报所有接口stat流量 0不上报 1上报(用于非taf协议服务流量统计)
     static int         IsCheckSet;          //是否对按照set规则调用进行合法性检查 0,不检查，1检查
-    static bool        OpenCoroutine;        //是否启用协程处理方式
+    static bool        OpenCoroutine;       //是否启用协程处理方式
     static size_t      CoroutineMemSize;    //协程占用内存空间的最大大小
-    static uint32_t    CoroutineStackSize;    //每个协程的栈大小(默认128k)
-	static int         NetThread;               //servernet thread
-	static bool        ManualListen;               //是否启用手工端口监听
-	static bool        MergeNetImp;                //网络线程和IMP线程合并(以网络线程个数为准)
+    static uint32_t    CoroutineStackSize;  //每个协程的栈大小(默认128k)
+	static int         NetThread;           //servernet thread
+	static bool        ManualListen;        //是否启用手工端口监听
+	static bool        MergeNetImp;         //网络线程和IMP线程合并(以网络线程个数为准)
 	static int         BackPacketLimit;     //回包积压检查
 	static int         BackPacketMin;       //回包速度检查
-#if TARS_SSL
+
 	static std::string CA;
 	static std::string Cert;
 	static std::string Key;
 	static bool VerifyClient;
 	static std::string Ciphers;
-#endif
+
 	static map<string, string> Context;     //框架内部用, 传递节点名称(以域名形式部署时)
 };
 
@@ -151,7 +149,7 @@ class PropertyReport;
 /**
  * 服务的基类
  */
-class Application : public BaseNotify
+class Application: public BaseNotify
 {
 public:
     /**
@@ -182,7 +180,7 @@ public:
      *
      * @return TC_Config&
      */
-    static TC_Config& getConfig();
+    static TC_Config &getConfig();
 
     /**
      * 获取通信器
@@ -196,7 +194,7 @@ public:
      *
      * @return TC_EpollServerPtr&
      */
-    static TC_EpollServerPtr& getEpollServer();
+    static TC_EpollServerPtr &getEpollServer();
 
     /**
      *  中止应用
@@ -243,6 +241,13 @@ public:
      */
     void addServantProtocol(const string &servant, const TC_NetWorkBuffer::protocol_functor &protocol);
 
+    /**
+     * @desc 添加接收新链接的回调
+     * 
+     * @param cb
+     */
+    void addAcceptCallback(const TC_EpollServer::accept_callback_functor& cb);
+
 protected:
     /**
      * 初始化, 只会进程调用一次
@@ -258,7 +263,8 @@ protected:
      * 解析服务的网络配置(业务可以在里面变更网络配置)
      */  
     virtual void onParseConfig(TC_Config &conf){};
-     /**
+    
+    /**
      * 初始化ServerConfig之后, 给app调整自定义配置值的机会
      */    
     virtual void onServerConfig(){};
@@ -268,7 +274,7 @@ protected:
      * 处理完成后继续通知Servant
      * @param filename
      */
-    bool cmdLoadConfig(const string& command, const string& params, string& result);
+    bool cmdLoadConfig(const string &command, const string &params, string &result);
 
     /**
      * 设置滚动日志等级
@@ -278,7 +284,7 @@ protected:
      *
      * @return bool
      */
-    bool cmdSetLogLevel(const string& command, const string& params, string& result);
+    bool cmdSetLogLevel(const string &command, const string &params, string &result);
 
     /**
      * 设置服务的core limit
@@ -298,7 +304,7 @@ protected:
      *
      * @return bool
      */
-    bool cmdEnableDayLog(const string& command, const string& params, string& result);
+    bool cmdEnableDayLog(const string &command, const string &params, string &result);
 
     /**
      * 查看服务状态
@@ -308,7 +314,7 @@ protected:
      *
      * @return bool
      */
-    bool cmdViewStatus(const string& command, const string& params, string& result);
+    bool cmdViewStatus(const string &command, const string &params, string &result);
 
     /**
      * 查看链接状态
@@ -318,7 +324,7 @@ protected:
      *
      * @return bool
      */
-    bool cmdConnections(const string& command, const string& params, string& result);
+    bool cmdConnections(const string &command, const string &params, string &result);
 
     /**
      * 查看编译的版本
@@ -348,7 +354,7 @@ protected:
      *
      * @return bool
      */
-    bool cmdLoadProperty(const string& command, const string& params, string& result);
+    bool cmdLoadProperty(const string &command, const string &params, string &result);
 
     /**
      *查看服务支持的管理命令
@@ -357,7 +363,7 @@ protected:
      *
      * @return bool
      */
-    bool cmdViewAdminCommands(const string& command, const string& params, string& result);
+    bool cmdViewAdminCommands(const string &command, const string &params, string &result);
 
     /**
      * 设置染色消息
@@ -367,7 +373,7 @@ protected:
      *
      * @return bool
      */
-    bool cmdSetDyeing(const string& command, const string& params, string& result);
+    bool cmdSetDyeing(const string &command, const string &params, string &result);
 
 
     /**
@@ -397,6 +403,13 @@ protected:
 	bool cmdViewResource(const string& command, const string& params, string& result);
 
 protected:
+
+    /**
+     * @desc callback when accept new client
+     * 
+     * @param cPtr
+     */
+    void onAccept(TC_EpollServer::Connection* cPtr);
 
     /**
      *
@@ -459,13 +472,13 @@ protected:
      */
     void bindAdapter(vector<TC_EpollServer::BindAdapterPtr> &adapters);
 
-    void setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const string &name);
+	void setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const string &name);
 
-    /**
+	/**
      * @param servant
      * @param sPrefix
      */
-    void checkServantNameValid(const string& servant, const string& sPrefix);
+    void checkServantNameValid(const string &servant, const string &sPrefix);
 
     /**
      * 换成缺省值
@@ -480,13 +493,13 @@ protected:
      *
      * @return string 没有按set分组则返回空""
      */
-     string setDivision(void);
+    string setDivision(void);
 
 protected:
     /**
      * config
      */
-    static TC_Config           _conf;
+    static TC_Config _conf;
 
     /**
      * epoll server
@@ -498,12 +511,12 @@ protected:
      */
     static CommunicatorPtr     _communicator;
 
-#if TARS_SSL
+    std::vector<TC_EpollServer::accept_callback_functor> _acceptFuncs;
+
     /**
      * ssl ctx
      */
-	shared_ptr<TC_OpenSSL::CTX> _ctx;
-#endif
+	shared_ptr<TC_OpenSSL::CTX> _ctx = nullptr;
 
     PropertyReport * _pReportQueue;
     PropertyReport * _pReportConRate;

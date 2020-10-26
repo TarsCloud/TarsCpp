@@ -28,6 +28,7 @@ namespace tars
 /**
  * @file tc_consistent_hash.h
  * @brief 一致性hash算法类.
+ * @brief Consistency hash algorithm class.
  */
 /////////////////////////////////////////////////
 
@@ -35,11 +36,13 @@ struct node_T
 {
     /**
      *节点hash值
+     *node hash value
      */
     unsigned int iHashCode;
 
     /**
      *节点下标
+     *node subscript
      */
     unsigned int iIndex;
 };
@@ -48,6 +51,7 @@ struct node_T
 
 /**
  *  @brief 一致性hash算法类
+ *  @brief Consistency hash algorithm class.
  */
 class  TC_ConsistentHash
 {
@@ -55,6 +59,7 @@ class  TC_ConsistentHash
 
         /**
          *  @brief 构造函数
+         *  @brief Constructor
          */
         TC_ConsistentHash()
         {
@@ -62,10 +67,14 @@ class  TC_ConsistentHash
 
         /**
          * @brief 节点比较.
+         * @brief Node comparison.
          *
          * @param m1 node_T类型的对象，比较节点之一
+         * @param m1 node_T type object, one of the compared nodes
          * @param m2 node_T类型的对象，比较节点之一
+         * @param m2 node_T type object, one of the compared nodes
          * @return less or not 比较结果，less返回ture，否则返回false
+         * @return less or not. The result. If the result is 'less', returns true, else returns false.
          */
         static bool less_hash(const node_T & m1, const node_T & m2)
         {
@@ -74,10 +83,14 @@ class  TC_ConsistentHash
 
         /**
          * @brief 增加节点.
+         * @brief the added node
          *
          * @param node  节点名称
+         * @param node  node name
          * @param index 节点的下标值
+         * @param index the node subscript
          * @return      节点的hash值
+         * @return      node hash value
          */
         unsigned addNode(const string & node, unsigned int index)
         {
@@ -93,9 +106,12 @@ class  TC_ConsistentHash
 
         /**
          * @brief 删除节点.
+         * @brief Delete the node.
          *
          * @param node  节点名称
+         * @param node  node name
          * @return       0 : 删除成功  -1 : 没有对应节点
+         * @return       0 : delete successfully   -1 : no corresponding nodes
          */
         int removeNode(const string & node)
         {
@@ -114,10 +130,14 @@ class  TC_ConsistentHash
 
         /**
          * @brief 获取某key对应到的节点node的下标.
+         * @brief Get the node subscript which corresponds to a certain key.
          *
          * @param key      key名称
+         * @param key      key name
          * @param iIndex  对应到的节点下标
+         * @param iIndex  the corresponding node subscript 
          * @return        0:获取成功   -1:没有被添加的节点
+         * @return        0:obtain successfully   -1:no added nodes
          */
         int getIndex(const string & key, unsigned int & iIndex)
         {
@@ -156,9 +176,12 @@ class  TC_ConsistentHash
    protected:
         /**
          * @brief 计算md5值的hash，分布范围在 0 -- 2^32-1.
+         * @brief Calculate the hash of the MD5 value, and the distribution range is 0--2^32-1.
          *
          * @param  sMd5 md5值
+         * @param  sNd5 md5 value
          * @return      hash值
+         * @return      hash value
          */
         unsigned int hash_md5(const string & sMd5)
         {

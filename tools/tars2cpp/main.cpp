@@ -129,16 +129,16 @@ int main(int argc, char* argv[])
         t2c.setXmlSupport(true, vXmlIntf);
     }
 
-    if (option.hasParam("json"))
-    {
-        t2c.setJsonSupport(true);
-        string sJson = tars::TC_Common::trim(option.getValue("json"));
-        sJson = tars::TC_Common::trimleft(tars::TC_Common::trimright(sJson, "]"), "[");
-        if (!sJson.empty())
-        {
-            t2c.setJsonSupport(tars::TC_Common::sepstr<string>(sJson, ",", false));
-        }
-    }
+    // if (option.hasParam("json"))
+    // {
+    //     t2c.setJsonSupport(true);
+    //     string sJson = tars::TC_Common::trim(option.getValue("json"));
+    //     sJson = tars::TC_Common::trimleft(tars::TC_Common::trimright(sJson, "]"), "[");
+    //     if (!sJson.empty())
+    //     {
+    //         t2c.setJsonSupport(tars::TC_Common::sepstr<string>(sJson, ",", false));
+    //     }
+    // }
 
     t2c.setTarsMaster(option.hasParam("tarsMaster"));
 

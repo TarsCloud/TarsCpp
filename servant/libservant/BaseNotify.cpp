@@ -46,7 +46,7 @@ void BaseNotify::addAdminCommandNormal(const string& command, TAdminFunc func)
     NotifyObserver::getInstance()->registerNotify(command, this);
 }
 
-bool BaseNotify::notify(const string& cmd, const string& params, TarsCurrentPtr current, string& result)
+bool BaseNotify::notify(const string& cmd, const string& params, CurrentPtr current, string& result)
 {
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 

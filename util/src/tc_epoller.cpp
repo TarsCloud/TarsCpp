@@ -30,18 +30,21 @@ TC_Epoller::NotifyInfo::NotifyInfo() : _ep(NULL)
 TC_Epoller::NotifyInfo::~NotifyInfo()
 {
     _notify.close();
-    _notifyClient.close(); 
+//    _notifyClient.close();
 }
 
 void TC_Epoller::NotifyInfo::init(TC_Epoller *ep)
 {
     _ep = ep;
-    int fd[2];
-    TC_Socket::createPipe(fd, false);
-    _notify.init(fd[0], true);
-    _notifyClient.init(fd[1], true);
-    _notifyClient.setKeepAlive();
-    _notifyClient.setTcpNoDelay();         
+
+	_notify.createSocket(SOCK_DGRAM, AF_INET);
+//
+//	int fd[2];
+//    TC_Socket::createPipe(fd, false);
+//    _notify.init(fd[0], true);
+//    _notifyClient.init(fd[1], true);
+//    _notifyClient.setKeepAlive();
+//    _notifyClient.setTcpNoDelay();
 }
 
 void TC_Epoller::NotifyInfo::add(uint64_t data)
@@ -59,7 +62,7 @@ void TC_Epoller::NotifyInfo::release()
 {
     _ep->del(_notify.getfd(), 0, EPOLLIN | EPOLLOUT);
     _notify.close();
-    _notifyClient.close(); 
+//    _notifyClient.close();
 }
 
 int TC_Epoller::NotifyInfo::notifyFd()
@@ -107,14 +110,18 @@ void TC_Epoller::ctrl(SOCKET_TYPE fd, uint64_t data, uint32_t events, int op)
     int n = 0;
     struct kevent64_s ev[2];
 
-    if (events & EPOLLIN)
+	if(_enableET) {
+		op = op | EV_CLEAR;
+	}
+
+	if (events & EPOLLIN)
     {
-        EV_SET64(&ev[n++], fd, EVFILT_READ, op | EV_CLEAR, 0, 0, data, 0, 0);
+        EV_SET64(&ev[n++], fd, EVFILT_READ, op, 0, 0, data, 0, 0);
     }
 
     if (events & EPOLLOUT)
     {
-        EV_SET64(&ev[n++], fd, EVFILT_WRITE, op | EV_CLEAR, 0, 0, data, 0, 0);
+        EV_SET64(&ev[n++], fd, EVFILT_WRITE, op, 0, 0, data, 0, 0);
     }
 
     int ret = kevent64(_iEpollfd, ev, n, nullptr, 0, 0, nullptr);
@@ -137,7 +144,12 @@ void TC_Epoller::ctrl(SOCKET_TYPE fd, uint64_t data, uint32_t events, int op)
 #if TARGET_PLATFORM_WINDOWS
 	ev.events = events;
 #else
-    ev.events   = events | EPOLLET;
+    if (_enableET)
+    {
+        events = events | EPOLLET;
+    }
+
+    ev.events   = events;
 #endif
 
 	epoll_ctl(_iEpollfd, op, fd, &ev);

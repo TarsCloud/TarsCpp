@@ -25,12 +25,14 @@ namespace tars
 /** 
  * @file tc_dyn_object.h
  * @brief 动态生成类. 
+ * @brief Dynamic Generation Class.
 */             
 /////////////////////////////////////////////////
 
 
 /**
  * @brief 动态生成类
+ * @brief Dynamic Generation Class.
  */
 class TC_DYN_Object;
 struct TC_DYN_RuntimeClass;

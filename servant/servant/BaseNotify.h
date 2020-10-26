@@ -49,7 +49,7 @@ public:
      * @param result
      * @return bool
      */
-    bool notify(const string& command, const string& params, TarsCurrentPtr current, string& result);
+    bool notify(const string& command, const string& params, CurrentPtr current, string& result);
 
     /**
      * 处理命令的函数类型

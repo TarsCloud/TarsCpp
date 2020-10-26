@@ -22,7 +22,6 @@ namespace tars
  * 可以设定回调线程数, 默认只有一个, 底层用tc_thread_pool实现线程池的
  * 任何可以丢进tc_thread_pool的function对象(std::bind的对象), 都可以丢该tc_timer
  *
- * @author ruanshuodong@qq.com  
  */          
 /////////////////////////////////////////////////
 
@@ -35,7 +34,7 @@ protected:
 	struct Func
 	{
 		Func( uint64_t fireMillseconds) :  _fireMillseconds(fireMillseconds) { }
-
+		~Func() {}
 		std::function<void()>   _func;
 		uint64_t                _fireMillseconds = 0;	//事件触发时间
         TC_Cron                 _cron;  //crontab
@@ -74,7 +73,7 @@ public:
 	template <class F, class... Args>
 	int64_t postAtTime(int64_t fireMillseconds, F &&f, Args &&... args)
 	{
-		return post(create(fireMillseconds, 0, f, args...));
+		return post(create(fireMillseconds, 0,"", f, args...));
 	}
 
 	/**
@@ -173,20 +172,31 @@ protected:
             fPtr->_fireMillseconds = TC_Cron::nextcron(fPtr->_cron) * 1000;
         }
 
-		fPtr->_func = [task, this, fPtr, repeatTime]() {
- 			(*task)();
-			task->reset();
-            if (fPtr->_cron.isset)
-            {
-                fPtr->_fireMillseconds = TC_Cron::nextcron(fPtr->_cron,fPtr->_fireMillseconds/1000) * 1000;
-                this->post(fPtr);
-            }
-			else if(repeatTime > 0) 
-            {
-				fPtr->_fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + repeatTime;
-				this->post(fPtr);
-			} 
-        };
+		//单次任务
+		if (repeatTime == 0 && !fPtr->_cron.isset)
+		{
+            fPtr->_func = [task]() {
+                (*task)();
+                task->reset();
+            };
+		}
+		else
+		{
+            fPtr->_func = [task, this, fPtr, repeatTime]() {
+                (*task)();
+                task->reset();
+                if (fPtr->_cron.isset)
+                {
+                    fPtr->_fireMillseconds = TC_Cron::nextcron(fPtr->_cron, fPtr->_fireMillseconds / 1000) * 1000;
+                    this->post(fPtr);
+                }
+                else if (repeatTime > 0)
+                {
+                    fPtr->_fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + repeatTime;
+                    this->post(fPtr);
+                }
+            };
+		}
 
 		return fPtr;
 	}

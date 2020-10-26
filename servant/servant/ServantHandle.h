@@ -138,14 +138,15 @@ protected:
      * @param stRecvData
      * @return Current*
      */
-    TarsCurrentPtr createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data);
+//    CurrentPtr createCurrent(const TC_EpollServer::RecvContext &stRecvData);
+	CurrentPtr createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
-    /**
+	/**
      * 创建闭连接时的关上下文
      * @param stRecvData
-     * @return Current*
+     * @return JceCurrent*
      */
-    TarsCurrentPtr createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data);
+    CurrentPtr createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
     /**
      * 处理Tars协议
@@ -178,12 +179,12 @@ protected:
      *
      * @param current
      */
-    bool processDye(const TarsCurrentPtr &current, string& dyeingKey);
+    bool processDye(const CurrentPtr &current, string& dyeingKey);
 
     /**
      * 处理cookie
      */
-    bool processCookie(const TarsCurrentPtr &current, map<string, string> &cookie);
+    bool processCookie(const CurrentPtr &current, map<string, string> &cookie);
 
     /**
      * 检查set调用合法性
@@ -191,7 +192,7 @@ protected:
      * @param current
      * @return bool 如果调用合法返回true，如果调用非法则返回false
      */
-    bool checkValidSetInvoke(const TarsCurrentPtr &current);
+	bool checkValidSetInvoke(const CurrentPtr &current);
 protected:
 
     /**

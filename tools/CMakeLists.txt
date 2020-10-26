@@ -30,6 +30,7 @@ add_subdirectory(tarsgrammar)
 ENDIF(UNIX)
 
 add_subdirectory(tarsparse)
+add_subdirectory(tarsmerge)
 add_subdirectory(tars2cpp)
 add_subdirectory(tars2python)
 add_subdirectory(tars2cs)
