@@ -30,7 +30,7 @@ class BaseNotify;
 /**
  * 全局接收管理命令，并通知到已注册的对象
  */
-class SVT_DLL_API NotifyObserver : public TC_Singleton<NotifyObserver>, public TC_ThreadRecMutex
+class SVT_DLL_API NotifyObserver : public TC_ThreadRecMutex
 {
 public:
     /**

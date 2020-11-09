@@ -24,6 +24,8 @@
 
 namespace tars
 {
+class NotifyObserver;
+
 //////////////////////////////////////////////////////////////////////
 /**
  * 需要接收到管理命令的对象从该类派生
@@ -74,10 +76,19 @@ public:
     void addAdminCommandPrefix(const string& command, TAdminFunc func);
 
 protected:
+	void setNotifyObserver(const shared_ptr<NotifyObserver> &notifyObserver) { _observer = notifyObserver; }
+
+protected:
     /**
      * 命令处理方法
      */
     map<string, TAdminFunc> _procFunctors;
+
+	/**
+	 * notify observer
+	 */
+	shared_ptr<NotifyObserver> _observer;
+
 };
 /////////////////////////////////////////////////////////////////////
 }

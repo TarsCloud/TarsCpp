@@ -27,7 +27,7 @@
 namespace tars
 {
 
-bool processAuth(TC_EpollServer::Connection *conn, const shared_ptr<TC_EpollServer::RecvContext> &data)
+bool processAuth(TC_EpollServer::Connection *conn, const shared_ptr<TC_EpollServer::RecvContext> &data, const string &objName)
 {
 	conn->tryInitAuthState(AUTH_INIT);
 
@@ -71,7 +71,8 @@ bool processAuth(TC_EpollServer::Connection *conn, const shared_ptr<TC_EpollServ
     }
 
     int currentState = conn->_authState;
-    int newstate = tars::defaultProcessAuthReq(request.sBuffer.data(), request.sBuffer.size(), adapter->getName());
+//    int newstate = tars::defaultProcessAuthReq(request.sBuffer.data(), request.sBuffer.size(), adapter->getName());
+	int newstate = tars::defaultProcessAuthReq(request.sBuffer.data(), request.sBuffer.size(), adapter, objName);
     std::string out = tars::etos((tars::AUTH_STATE)newstate);
 
     if (newstate < 0)
@@ -197,7 +198,8 @@ int processAuthReqHelper(const BasicAuthPackage& pkg, const BasicAuthInfo& info)
 
 // 只需要传入 expect 的objname；
 // 内部根据obj查找access账号集
-int defaultProcessAuthReq(const char* request, size_t len, const string& expectObj)
+//int defaultProcessAuthReq(const char* request, size_t len, const string& expectObj)
+int defaultProcessAuthReq(const char* request, size_t len, const TC_EpollServer::BindAdapterPtr &adapter, const string &objName)
 {
     if (len <= 20)
         return AUTH_PROTO_ERR;
@@ -212,25 +214,25 @@ int defaultProcessAuthReq(const char* request, size_t len, const string& expectO
         return AUTH_PROTO_ERR;
     }
 
-    TC_EpollServer::BindAdapterPtr bap = Application::getEpollServer()->getBindAdapter(expectObj);
-    if (!bap)
-        return AUTH_WRONG_OBJ;
+//    TC_EpollServer::BindAdapterPtr bap = Application::getEpollServer()->getBindAdapter(expectObj);
+//    if (!bap)
+//        return AUTH_WRONG_OBJ;
 
     BasicAuthInfo info;
-    string expectServantName = ServantHelperManager::getInstance()->getAdapterServant(expectObj);
-    info.sObjName = expectServantName;
+//    string expectServantName = ServantHelperManager::getInstance()->getAdapterServant(expectObj);
+    info.sObjName = objName;
     info.sAccessKey = pkg.sAccessKey;
-    info.sHashSecretKey2 = bap->getSk(info.sAccessKey);
+    info.sHashSecretKey2 = adapter->getSk(info.sAccessKey);
     if (info.sHashSecretKey2.empty())
         return AUTH_WRONG_AK;
 
     return processAuthReqHelper(pkg, info);
 }
 
-int defaultProcessAuthReq(const string& request, const string& expectObj)
-{
-    return defaultProcessAuthReq(request.data(), request.size(), expectObj);
-}
+//int defaultProcessAuthReq(const string& request, const string& expectObj)
+//{
+//    return defaultProcessAuthReq(request.data(), request.size(), expectObj);
+//}
 
 string defaultCreateAuthReq(const BasicAuthInfo& info /*, const string& hashMethod*/ )
 {

@@ -901,7 +901,8 @@ public:
 		 * 初始化处理线程,线程将会启动
          * Initialize the processing thread, which will start
 		 */
-		template<typename T> void setHandle(size_t n)
+		template<typename T, typename ...Args>
+		void setHandle(size_t n, Args&&... args)
 		{
 			if(!_handles.empty())
 			{
@@ -921,7 +922,7 @@ public:
 
 			for (int32_t i = 0; i < _iHandleNum ; ++i)
 			{
-				HandlePtr handle = new T();
+				HandlePtr handle = new T(args...);
 
 				handle->setHandleIndex(i);
 
