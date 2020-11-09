@@ -29,6 +29,8 @@ void TC_Timer::startTimer(int numThread)
 	if (numThread <= 0)
 		numThread = 1;
 
+	_terminate = false;
+
 	_tpool.init(numThread + 1);
 	_tpool.start();
 	_tpool.exec(std::bind(&TC_Timer::run, this));
