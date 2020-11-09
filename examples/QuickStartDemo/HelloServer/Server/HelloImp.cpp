@@ -36,6 +36,10 @@ void HelloImp::destroy()
 int HelloImp::testHello(const std::string &sReq, std::string &sRsp, tars::TarsCurrentPtr current)
 {
 //    TLOGDEBUG("HelloImp::testHellosReq:"<<sReq<<endl);
+<<<<<<< HEAD
+=======
+//cout << sReq << endl;
+>>>>>>> fix helloserver config bug
     sRsp = sReq;
     return 0;
 }
