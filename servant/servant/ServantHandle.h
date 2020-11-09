@@ -33,6 +33,8 @@
 
 namespace tars
 {
+class Application;
+
 //////////////////////////////////////////////////////////////////////////////
 /**
  * 处理网络请求线程
@@ -51,7 +53,7 @@ public:
     /**
      * 构造
      */
-    ServantHandle();
+    ServantHandle(Application *application);
 
     /**
      * 析够
@@ -67,6 +69,12 @@ public:
      * 获取协程调度器
      */
     CoroutineScheduler* getCoroSched() { return _coroSched; }
+
+	/**
+	 * get Application
+	 * @return
+	*/
+	Application *getApplication() { return _application; }
 
 protected:
 
@@ -194,6 +202,10 @@ protected:
      */
 	bool checkValidSetInvoke(const CurrentPtr &current);
 protected:
+	/**
+	 * application
+	 */
+	Application *_application = NULL;
 
     /**
      * 处理对象

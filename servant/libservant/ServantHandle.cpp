@@ -23,6 +23,7 @@
 #include "servant/BaseF.h"
 #include "servant/KeepAliveNodeF.h"
 #include "servant/Cookie.h"
+#include "servant/Application.h"
 #ifdef TARS_OPENTRACKING
 #include "servant/text_map_carrier.h"
 #endif
@@ -32,8 +33,8 @@ namespace tars
 
 /////////////////////////////////////////////////////////////////////////
 //
-ServantHandle::ServantHandle()
-: _coroSched(NULL)
+ServantHandle::ServantHandle(Application *application)
+: _application(application),_coroSched(NULL)
 {
     
 }
@@ -340,7 +341,7 @@ bool ServantHandle::allFilterIsEmpty()
 
 void ServantHandle::initialize()
 {
-    ServantPtr servant = ServantHelperManager::getInstance()->create(_bindAdapter->getName());
+    ServantPtr servant = _application->getServantHelper()->create(_bindAdapter->getName());
 
     if (servant)
     {
@@ -682,12 +683,12 @@ bool ServantHandle::processDye(const CurrentPtr &current, string& dyeingKey)
     }
 
 	//servant已经被染色, 开启染色日志
-	if (ServantHelperManager::getInstance()->isDyeing())
+	if (_application->getServantHelper()->isDyeing())
 	{
 		map<string, string>::const_iterator dyeingKeyIt = current->getRequestStatus().find(ServantProxy::STATUS_GRID_KEY);
 
 		if (dyeingKeyIt != current->getRequestStatus().end() &&
-			ServantHelperManager::getInstance()->isDyeingReq(dyeingKeyIt->second, current->getServantName(), current->getFuncName()))
+			_application->getServantHelper()->isDyeingReq(dyeingKeyIt->second, current->getServantName(), current->getFuncName()))
 		{
 			TLOGTARS("[TARS] dyeing servant got a dyeing req, key:" << dyeingKeyIt->second << endl);
 

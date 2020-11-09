@@ -261,28 +261,51 @@ string TC_Port::exec(const char *cmd)
 	return fileData;
 }
 
-vector<std::function<void()>> TC_Port::_callbacks;
+unordered_map<int, vector<std::function<void()>>> TC_Port::_callbacks;
 std::mutex   TC_Port::_mutex;
+
+void TC_Port::registerSig(int sig, std::function<void()> callback)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	auto it = _callbacks.find(sig);
+
+	if(it == _callbacks.end())
+	{
+		//没有注册过, 才注册
+		registerSig(sig);
+	}
+
+	_callbacks[SIGINT].push_back(callback);
+}
 
 void TC_Port::registerCtrlC(std::function<void()> callback)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
-
-	if(_callbacks.empty())
-	{
- 	   registerCtrlC();
-	}
-
-    _callbacks.push_back(callback);
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+	registerSig(SIGINT, callback);
+#else
+	registerSig(CTRL_C_EVENT, callback);
+#endif
 }
 
-void TC_Port::registerCtrlC()
+void TC_Port::registerTerm(std::function<void()> callback)
 {
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-    std::thread th(signal, SIGINT, TC_Port::sighandler);
-    th.detach();
+
+	registerSig(SIGTERM, callback);
 #else
-    std::thread th([] {SetConsoleCtrlHandler(TC_Port::HandlerRoutine, TRUE); });
+	registerSig(CTRL_SHUTDOWN_EVENT, callback);
+#endif
+}
+
+
+void TC_Port::registerSig(int sig)
+{
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+	std::thread th(signal, sig, TC_Port::sighandler);
+	th.detach();
+#else
+	std::thread th([] {SetConsoleCtrlHandler(TC_Port::HandlerRoutine, TRUE); });
 	th.detach();
 #endif
 }
@@ -290,20 +313,33 @@ void TC_Port::registerCtrlC()
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 void TC_Port::sighandler( int sig_no )
 {
-    for(auto f : TC_Port::_callbacks)
-    {
-        try {f(); } catch(...) {}
-    }
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	auto it = TC_Port::_callbacks.find(sig_no);
+	if(it != TC_Port::_callbacks.end())
+	{
+		for (auto f : it->second)
+		{
+			try { f(); } catch (...) {}
+		}
+	}
 }
 #else
 BOOL WINAPI TC_Port::HandlerRoutine(DWORD dwCtrlType)
 {
-    for(auto f : TC_Port::_callbacks)
-    {
-        try {f(); } catch(...) {}
-    }
-	return TRUE;
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	auto it = TC_Port::_callbacks.find(sig_no);
+	if(it != TC_Port::_callbacks.end())
+	{
+		for (auto f : it->second)
+		{
+			try { f(); } catch (...) {}
+		}
+	}
+	return TRUE:
 }
 #endif
+
 
 }

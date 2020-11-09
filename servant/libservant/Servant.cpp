@@ -48,6 +48,8 @@ string Servant::getName() const
 void Servant::setApplication(Application *application)
 {
     _application = application;
+
+	setNotifyObserver(application->getNotifyObserver());
 }
 
 Application* Servant::getApplication() const

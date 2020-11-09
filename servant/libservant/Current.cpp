@@ -164,7 +164,11 @@ void Current::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
 	_data = data;
 
-    _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(_data->adapter()->getName());
+	Application *application = (Application*)this->_servantHandle->getApplication();
+
+	_request.sServantName = application->getServantHelper()->getAdapterServant(_data->adapter()->getName());
+
+//    _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(_data->adapter()->getName());
 
     if (_data->adapter()->isTarsProtocol())
     {
@@ -176,7 +180,9 @@ void Current::initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &dat
 {
 	_data = data;
 
-    _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(_data->adapter()->getName());
+	Application *application = (Application*)this->_servantHandle->getApplication();
+
+    _request.sServantName = application->getServantHelper()->getAdapterServant(_data->adapter()->getName());
 }
 
 void Current::initialize(const vector<char>& sRecvBuffer)

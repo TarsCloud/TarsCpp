@@ -27,6 +27,7 @@ typedef unsigned short mode_t;
 #include <vector>
 #include <functional>
 #include <mutex>
+#include <unordered_map>
 
 using namespace std;
 
@@ -85,13 +86,20 @@ public:
 	
     static void registerCtrlC(std::function<void()> callback);
 
+	static void registerTerm(std::function<void()> callback);
+
 protected:
 
-    static void registerCtrlC();
+//    static void registerCtrlC();
+
+	static void registerSig(int sig, std::function<void()> callback);
+
+	static void registerSig(int sig);
 
     static std::mutex   _mutex;
 
-    static vector<std::function<void()>> _callbacks;
+//    static vector<std::function<void()>> _callbacks;
+	static unordered_map<int, vector<std::function<void()>>> _callbacks;
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     static void sighandler( int sig_no );

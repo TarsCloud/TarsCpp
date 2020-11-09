@@ -55,7 +55,7 @@ struct ServantCreation : public ServantHelperCreation
 /**
  * Servant管理
  */
-class SVT_DLL_API ServantHelperManager : public TC_Singleton<ServantHelperManager>
+class SVT_DLL_API ServantHelperManager
 {
 public:
     /**
