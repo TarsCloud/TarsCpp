@@ -385,7 +385,7 @@ void ObjectProxy::doTimeout()
     ReqMessage * reqInfo = NULL;
     while(_reqTimeoutQueue.timeout(reqInfo))
     {
-        TLOGERROR("[ObjectProxy::doTimeout, objname:" << _name << ", queue timeout error]" << endl);
+//        TLOGERROR("[ObjectProxy::doTimeout, objname:" << _name << ", queue timeout error]" << endl);
 
         reqInfo->response->iRet = TARSINVOKETIMEOUT;
 
