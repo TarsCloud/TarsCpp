@@ -30,7 +30,6 @@ TC_Epoller::NotifyInfo::NotifyInfo() : _ep(NULL)
 TC_Epoller::NotifyInfo::~NotifyInfo()
 {
     _notify.close();
-//    _notifyClient.close();
 }
 
 void TC_Epoller::NotifyInfo::init(TC_Epoller *ep)

@@ -25,8 +25,8 @@ using namespace TestApp;
 
 Communicator* _comm;
 
-//static string helloObj = "TestApp.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 8999";
-static string helloObj = "TestApp.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 8199:tcp -h 127.0.0.1 -p 8299 -t 10000";
+static string helloObj = "TestApp.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 8999";
+//static string helloObj = "TestApp.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 8199:tcp -h 127.0.0.1 -p 8299 -t 10000";
 
 struct Param
 {
