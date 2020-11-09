@@ -168,10 +168,11 @@ public:
      */
     void main(int argc, char *argv[]);
     void main(const TC_Option &option);
+	void main(const string &config);
 
-    /**
-     * 运行
-     */
+	/**
+	 * 运行
+	 */
     void waitForShutdown();
 
 public:
@@ -460,7 +461,7 @@ protected:
     /**
      * 解析配置文件
      */
-    void parseConfig(const TC_Option &op);
+    void parseConfig(const string &config);
 
      /**
      * 解析ip权限allow deny 次序
