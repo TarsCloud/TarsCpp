@@ -81,7 +81,11 @@ public:
 protected:
     bool find(epoll_sock_data_t *sock_data)
     {
-        return _sock_data_tree.find(sock_data->_sock) != _sock_data_tree.end();
+	    auto it = _sock_data_tree.find(sock_data->_sock);
+	    if (it != _sock_data_tree.end()) {
+		    return it->second == sock_data;
+	    }
+	    return false;
     }
 
     void remove(epoll_sock_data_t *sock_data)
@@ -458,9 +462,10 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
         /* Check for error. */
         if (!NT_SUCCESS(entries[i].lpOverlapped->Internal))
         {
-            struct epoll_event *ev = events + (num_events++);
+            struct epoll_event *ev = events + num_events;
             ev->data.u64 = sock_data->_user_data;
             ev->events = EPOLLERR;
+            ++num_events;
             continue;
         }
 
@@ -534,9 +539,10 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
 
         if (reported_events)
         {
-            struct epoll_event *ev = events + (num_events++);
+            struct epoll_event *ev = events + num_events;
             ev->data.u64           = sock_data->_user_data;
             ev->events             = reported_events;
+            ++num_events;
         }
     }
     return num_events;

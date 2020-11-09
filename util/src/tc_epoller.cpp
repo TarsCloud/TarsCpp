@@ -38,13 +38,6 @@ void TC_Epoller::NotifyInfo::init(TC_Epoller *ep)
     _ep = ep;
 
 	_notify.createSocket(SOCK_DGRAM, AF_INET);
-//
-//	int fd[2];
-//    TC_Socket::createPipe(fd, false);
-//    _notify.init(fd[0], true);
-//    _notifyClient.init(fd[1], true);
-//    _notifyClient.setKeepAlive();
-//    _notifyClient.setTcpNoDelay();
 }
 
 void TC_Epoller::NotifyInfo::add(uint64_t data)
@@ -62,7 +55,6 @@ void TC_Epoller::NotifyInfo::release()
 {
     _ep->del(_notify.getfd(), 0, EPOLLIN | EPOLLOUT);
     _notify.close();
-//    _notifyClient.close();
 }
 
 int TC_Epoller::NotifyInfo::notifyFd()
