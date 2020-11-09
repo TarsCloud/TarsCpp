@@ -689,8 +689,29 @@ void Application::main(int argc, char *argv[])
     op.decode(argc, argv);
     main(op);
 }
-    
+
 void Application::main(const TC_Option &option)
+{
+	//直接输出编译的TARS版本
+	if(option.hasParam("version"))
+	{
+		cout << "TARS:" << TARS_VERSION << endl;
+		exit(0);
+	}
+
+	//加载配置文件
+	ServerConfig::ConfigFile = option.getValue("config");
+
+	if(ServerConfig::ConfigFile == "")
+	{
+		cerr << "start server with config, for example: exe --config=config.conf" << endl;
+
+		exit(-1);
+	}
+
+}
+
+void Application::main(const string &config)
 {
     try
     {
@@ -699,7 +720,7 @@ void Application::main(const TC_Option &option)
 #endif
 
         //解析配置文件
-        parseConfig(option);
+        parseConfig(config);
 
         //初始化Proxy部分
         initializeClient();
@@ -857,29 +878,11 @@ void Application::main(const TC_Option &option)
     LocalRollLogger::getInstance()->sync(false);
 }
 
-void Application::parseConfig(const TC_Option &op)
+void Application::parseConfig(const string &config)
 {
-    //直接输出编译的TARS版本
-    if(op.hasParam("version"))
-    {
-        cout << "TARS:" << TARS_VERSION << endl;
-        exit(0);
-    }
-
-    //加载配置文件
-    ServerConfig::ConfigFile = op.getValue("config");
-
-    if(ServerConfig::ConfigFile == "")
-    {
-        cerr << "start server with config, for example: exe --config=config.conf" << endl;
-
-        exit(-1);
-    }
-
-    _conf.parseFile(ServerConfig::ConfigFile);
+    _conf.parseString(config);
 
     onParseConfig(_conf);
-
 }
 
 TC_EpollServer::BindAdapter::EOrder Application::parseOrder(const string &s)
