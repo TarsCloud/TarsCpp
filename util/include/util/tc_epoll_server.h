@@ -1385,16 +1385,16 @@ public:
 		 */
 		int sendBuffer();
 
+	    /**
+		 * 关闭连接
+		 * Close the connection
+		 * @param fd
+		 */
+	    void close();
+
 	    friend class NetThread;
 
     protected:
-
-		/**
-		 * 关闭连接
-         * Close the connection
-		 * @param fd
-		 */
-		void close();
 
 		/**
 		 * 添加发送buffer
@@ -1592,7 +1592,20 @@ public:
          * 析够函数
          * Destructor
          */
-        ~ConnectionList() { if(_vConn) { delete[] _vConn; } }
+        ~ConnectionList()
+        {
+	        if(_vConn)
+	        {
+		        //服务停止时, 主动关闭一下连接, 这样客户端会检测到, 不需要等下一个发送包时, 发送失败才知道连接被关闭
+		        for (auto it = _tl.begin(); it != _tl.end(); ++it) {
+			        if (_vConn[it->second].first != NULL) {
+				        _vConn[it->second].first->close();
+			        }
+		        }
+		        delete[] _vConn;
+	        }
+//        	if(_vConn) { delete[] _vConn; }
+        }
 
         /**
          * 初始化大小
