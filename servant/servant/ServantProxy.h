@@ -103,7 +103,7 @@ public:
     /**
      * reset
      */
-	void ServantProxyThreadData::reset();
+	static void reset();
 
 public:
     /*

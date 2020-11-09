@@ -42,7 +42,6 @@ Transceiver::Transceiver(AdapterProxy * pAdapterProxy,const EndpointInfo &ep)
 {
     _fdInfo.iType = FDInfo::ET_C_NET;
     _fdInfo.p     = (void *)this;
-    _fdInfo.fd    = -1;
 }
 
 Transceiver::~Transceiver()
@@ -85,8 +84,6 @@ void Transceiver::connect()
         return;
     }
 
-    int fd = -1;
-
 	_proxyPointer = _adapterProxy->getObjProxy()->getRootServantProxy()->getProxyInfo();
     
 	if(_proxyPointer)
@@ -99,20 +96,20 @@ void Transceiver::connect()
 
     if (_ep.type() == TC_Endpoint::UDP)
     {
-        fd = NetworkUtil::createSocket(true, false, _ep.isConnectIPv6());
+        _fd = NetworkUtil::createSocket(true, false, _ep.isConnectIPv6());
 
         _connStatus = eConnected;
 
-        _adapterProxy->getObjProxy()->getCommunicatorEpoll()->addFd(fd, &_fdInfo, EPOLLIN | EPOLLOUT);
+        _adapterProxy->getObjProxy()->getCommunicatorEpoll()->addFd(_fd, &_fdInfo, EPOLLIN | EPOLLOUT);
     }
     else
     {
-        fd = NetworkUtil::createSocket(false, false, _ep.isConnectIPv6());
+	    _fd = NetworkUtil::createSocket(false, false, _ep.isConnectIPv6());
 
-        _adapterProxy->getObjProxy()->getCommunicatorEpoll()->addFd(fd, &_fdInfo, EPOLLIN | EPOLLOUT);
+        _adapterProxy->getObjProxy()->getCommunicatorEpoll()->addFd(_fd, &_fdInfo, EPOLLIN | EPOLLOUT);
 
         socklen_t len = _ep.isIPv6() ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in);
-        bool bConnected = NetworkUtil::doConnect(fd, _ep.connectAddrPtr(), len);
+        bool bConnected = NetworkUtil::doConnect(_fd, _ep.connectAddrPtr(), len);
         if(bConnected)
         {
             setConnected();
@@ -123,8 +120,6 @@ void Transceiver::connect()
             _conTimeoutTime = TNOWMS + _adapterProxy->getConTimeout();
         }
     }
-
-    _fd = fd;
 
     TLOGTARS("[Transceiver::connect obj:" << _adapterProxy->getObjProxy()->name()
         << ",connect:" << _ep.getConnectEndpoint()->toString() << ", fd:" << _fd << "]" << endl);

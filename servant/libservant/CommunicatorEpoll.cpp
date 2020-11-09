@@ -111,19 +111,19 @@ ObjectProxy * CommunicatorEpoll::getObjectProxy(const string & sObjectProxyName,
     return _objectProxyFactory->getObjectProxy(sObjectProxyName,setName);
 }
 
-void CommunicatorEpoll::addFd(int fd,FDInfo * info, uint32_t events)
+int CommunicatorEpoll::addFd(int fd,FDInfo * info, uint32_t events)
 {
-    _ep.add(fd, (uint64_t)info, events);
+    return _ep.add(fd, (uint64_t)info, events);
 }
 
-void CommunicatorEpoll::modFd(int fd,FDInfo * info, uint32_t events)
+int CommunicatorEpoll::modFd(int fd,FDInfo * info, uint32_t events)
 {
-    _ep.mod(fd, (uint64_t)info, events);
+    return _ep.mod(fd, (uint64_t)info, events);
 }
 
-void CommunicatorEpoll::delFd(int fd,FDInfo * info, uint32_t events)
+int CommunicatorEpoll::delFd(int fd,FDInfo * info, uint32_t events)
 {
-    _ep.del(fd, (uint64_t)info, events);
+    return _ep.del(fd, (uint64_t)info, events);
 }
 
 //业务线程调用, 通知对应的网络线程醒过来
