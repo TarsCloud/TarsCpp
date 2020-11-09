@@ -709,6 +709,7 @@ EndpointManager::~EndpointManager()
             iterAdapter->second = NULL;
         }
     }
+	_allProxys.clear();
 }
 
 void EndpointManager::updateEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive)
