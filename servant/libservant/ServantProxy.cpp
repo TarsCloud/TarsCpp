@@ -153,6 +153,11 @@ ServantProxyThreadData *ServantProxyThreadData::getData()
     return g_sp.get();
 }
 
+void ServantProxyThreadData::reset()
+{
+	return g_sp.reset();
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 ServantProxyCallback::ServantProxyCallback()
