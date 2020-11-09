@@ -100,6 +100,11 @@ public:
      */
     static ServantProxyThreadData * getData();
 
+    /**
+     * reset
+     */
+	void ServantProxyThreadData::reset();
+
 public:
     /*
      * 每个线程跟客户端网络线程通信的队列
