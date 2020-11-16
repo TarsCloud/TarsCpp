@@ -276,7 +276,7 @@ void TC_Port::registerSig(int sig, std::function<void()> callback)
 		registerSig(sig);
 	}
 
-	_callbacks[SIGINT].push_back(callback);
+	_callbacks[sig].push_back(callback);
 }
 
 void TC_Port::registerCtrlC(std::function<void()> callback)
@@ -337,7 +337,7 @@ BOOL WINAPI TC_Port::HandlerRoutine(DWORD dwCtrlType)
 			try { f(); } catch (...) {}
 		}
 	}
-	return TRUE:
+	return TRUE;
 }
 #endif
 
