@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#include <errno.h>
+#include <cerrno>
 #include <fstream>
 #include "util/tc_config.h"
 #include "util/tc_common.h"

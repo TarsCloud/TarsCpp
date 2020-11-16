@@ -329,7 +329,7 @@ BOOL WINAPI TC_Port::HandlerRoutine(DWORD dwCtrlType)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 
-	auto it = TC_Port::_callbacks.find(sig_no);
+	auto it = TC_Port::_callbacks.find(dwCtrlType);
 	if(it != TC_Port::_callbacks.end())
 	{
 		for (auto f : it->second)
