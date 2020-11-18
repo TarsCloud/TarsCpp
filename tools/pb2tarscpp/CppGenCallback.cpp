@@ -115,18 +115,18 @@ std::string GenPrxCallback(const ::google::protobuf::ServiceDescriptor* desc, in
         out += LineFeed(indent);
         out += "case " + std::to_string((long long)i) + ":" + LineFeed(indent);
         out += "{" + LineFeed(++indent);
-        out += "if (msg->response.iRet != tars::TARSSERVERSUCCESS)" + LineFeed(indent);
+        out += "if (msg->response->iRet != tars::TARSSERVERSUCCESS)" + LineFeed(indent);
         out += "{" + LineFeed(++indent);
-        out += "callback_" + method->name() + "_exception(msg->response.iRet);" + LineFeed(indent);
-        out += "return msg->response.iRet;" + LineFeed(--indent) + "}";
+        out += "callback_" + method->name() + "_exception(msg->response->iRet);" + LineFeed(indent);
+        out += "return msg->response->iRet;" + LineFeed(--indent) + "}";
     
         out += LineFeed(indent);
         out += ToCppNamespace(method->output_type()->full_name()) + " _ret;" + LineFeed(indent);
-        out += "_ret.ParseFromArray(msg->response.sBuffer.data(), msg->response.sBuffer.size());" + LineFeed(indent);
+        out += "_ret.ParseFromArray(msg->response->sBuffer.data(), msg->response->sBuffer.size());" + LineFeed(indent);
         out += "CallbackThreadData * pCbtd = CallbackThreadData::getData();" + LineFeed(indent);
         out += "assert(pCbtd != NULL);" + LineFeed(indent);
         out += LineFeed(indent);
-        out += "pCbtd->setResponseContext(msg->response.context);" + LineFeed(indent);
+        out += "pCbtd->setResponseContext(msg->response->context);" + LineFeed(indent);
         out += "callback_" + method->name() + "(_ret);" + LineFeed(indent);
         out += "pCbtd->delResponseContext();" + LineFeed(indent);
         out += LineFeed(indent);
