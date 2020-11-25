@@ -13,14 +13,6 @@ else()
 	set(TARS_PATH "/usr/local/tars/cpp")
 endif()
 
-if(APPLE)
-	link_libraries(iconv)
-endif()
-
-IF (UNIX)
-	link_libraries(pthread dl)
-ENDIF ()
-
 set(TARS_INC "${TARS_PATH}/include")
 set(TARS_LIB_DIR "${TARS_PATH}/lib" )
 
@@ -165,6 +157,14 @@ macro(gen_server APP TARGET)
 	if(TARS_HTTP2)
 		target_link_libraries(${TARGET} ${LIB_HTTP2})
 	endif()
+
+	if(APPLE)
+		target_link_libraries(${TARGET} iconv)
+	endif()
+
+	IF (UNIX)
+		target_link_libraries(${TARGET} pthread dl)
+	ENDIF ()
 
 	#make tar #########################################################################
 	#must create tmp directory, avoid linux cmake conflict!
