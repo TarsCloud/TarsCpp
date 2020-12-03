@@ -209,7 +209,7 @@ int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
     }
 
     // 只保留32位
-    long iCode = (hashcode & 0xFFFFFFFFL);
+    int32_t iCode = (hashcode & 0xFFFFFFFFL);
 
     int low = 0;
     int high = (int)_vHashList.size();
