@@ -209,12 +209,12 @@ int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
     }
 
     // 只保留32位
-    size_t iCode = (hashcode & 0xFFFFFFFFL);
+    int32_t iCode = (hashcode & 0xFFFFFFFFL);
 
     int low = 0;
     int high = (int)_vHashList.size();
 
-    if(iCode <= (size_t)_vHashList[0].iHashCode || iCode > (size_t)_vHashList[high-1].iHashCode)
+    if(iCode <= _vHashList[0].iHashCode || iCode > _vHashList[high-1].iHashCode)
     {
         iIndex = _vHashList[0].iIndex;
         return 0;
@@ -224,7 +224,7 @@ int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
     while (low < high - 1)
     {
         int mid = (low + high) / 2;
-        if ((size_t)_vHashList[mid].iHashCode > iCode)
+        if (_vHashList[mid].iHashCode > iCode)
         {
             high = mid;
         }
