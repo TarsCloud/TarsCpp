@@ -896,7 +896,6 @@ void TC_Common::ignorePipe()
 bool TC_Common::isPrimeNumber(size_t n)
 {
     size_t nn = (size_t)sqrt((double)n);
-    for(size_t i = 2; i <= nn;i++)
     {
         if (n % i == 0)
         {
