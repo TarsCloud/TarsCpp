@@ -47,10 +47,12 @@ void KeepAliveNodeFHelper::keepAlive(const string &adapter)
 
                     _adapterSet.insert(adapter);
 
-                    if(adapter != "AdminAdapter")
+                    //admin心跳来的时候才上报(减小上报次数)
+                    if(!adapter.empty() && adapter != "AdminAdapter")
                     {
                         return;
                     }
+
                     s.swap(_adapterSet);
                 }
                 ServerInfo si   = _si;

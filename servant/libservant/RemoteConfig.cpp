@@ -103,6 +103,8 @@ string RemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigOnly)
     {
        string stream;
        int ret = -1;
+
+
        for(int i = 0; i < 2;i++)
        {
            try
@@ -136,7 +138,7 @@ string RemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigOnly)
        }
 
 
-        string newFile = _basePath + "/" + sFileName + "." + TC_Common::tostr(time(NULL));
+        string newFile = _basePath + FILE_SEP + sFileName + "." + TC_Common::tostr(time(NULL));
 
         std::ofstream out(newFile.c_str());
         
@@ -170,11 +172,11 @@ string RemoteConfig::index2file(const string & sFullFileName, int index)
 void RemoteConfig::localRename(const string& oldFile, const string& newFile)
 {
 #if TARGET_PLATFORM_WINDOWS
-	//by goodenpei，windows下面先remove后rename，否则rename会失败
-	if (TC_File::isFileExist(oldFile) && TC_File::isFileExist(newFile))
-	{
-		::remove(newFile.c_str());
-	}
+    //by goodenpei，windows下面先remove后rename，否则rename会失败
+    if(TC_File::isFileExist(oldFile) && TC_File::isFileExist(newFile))
+    {
+        ::remove(newFile.c_str());
+    }
 #endif
     if (::rename(oldFile.c_str(), newFile.c_str()) != 0)
     {

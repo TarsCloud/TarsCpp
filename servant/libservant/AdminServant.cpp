@@ -38,9 +38,9 @@ void AdminServant::destroy()
 {
 }
 
-void AdminServant::shutdown(TarsCurrentPtr current)
+void AdminServant::shutdown(CurrentPtr current)
 {
-	TLOGERROR("[TARS][AdminServant::shutdown]" << endl);
+	TLOGERROR("[TARS][AdminServant::shutdown] from node" << endl);
 
 #if TARGET_PLATFORM_WINDOWS
 	HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
@@ -52,15 +52,16 @@ void AdminServant::shutdown(TarsCurrentPtr current)
 	::TerminateProcess(hProcess, 0);
 #else
     kill(getpid(), SIGINT); //通过给自己发信号的方式结束, 避免处理线程结束时自己join自己
-//     Application::terminate();
+    // Application::terminate();
 #endif
 }
 
-string AdminServant::notify(const string &command, TarsCurrentPtr current)
+string AdminServant::notify(const string &command, CurrentPtr current)
 {
     RemoteNotify::getInstance()->report("AdminServant::notify:" + command);
 
-    return NotifyObserver::getInstance()->notify(command, current);
+//    return NotifyObserver::getInstance()->notify(command, current);
+    return this->getApplication()->getNotifyObserver()->notify(command, current);
 }
 
 ///////////////////////////////////////////////////////////////////////

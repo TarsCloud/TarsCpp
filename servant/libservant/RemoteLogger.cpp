@@ -53,9 +53,9 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
             if(!_dyeingRollLogger)
             {
                 string sDyeingDir = _logPath;
-                sDyeingDir += "/";
+                sDyeingDir += FILE_SEP;
                 sDyeingDir += DYEING_DIR;
-                sDyeingDir += "/";
+                sDyeingDir += FILE_SEP;
 
                 string sDyeingFile = sDyeingDir;
                 sDyeingFile += DYEING_FILE;
@@ -80,7 +80,7 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
     }
     of.flush();
 
-    if(_logPrx && vRemoteDyeing.size() > 0)
+    if(_logPrx && !vRemoteDyeing.empty())
     {
         try
         {
@@ -112,6 +112,15 @@ void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, con
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+void LocalRollLogger::terminate()
+{
+    if (!_terminate)
+    {
+        _terminate = true;
+        _local.terminate();
+    }
+}
+
 void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, const string &sLogpath, int iMaxSize, int iMaxNum, const CommunicatorPtr &comm, const string &sLogObj)
 {
     _app       = sApp;
@@ -119,18 +128,17 @@ void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, cons
     _logpath   = sLogpath;
 
     //生成目录
-    TC_File::makeDirRecursive(_logpath + "/" + _app + "/" + _server);
+    TC_File::makeDirRecursive(_logpath + FILE_SEP + _app + FILE_SEP + _server);
 
     _local.start(1);
 
     //初始化本地循环日志
-    _logger.init(_logpath + "/" + _app + "/" + _server + "/" + _app + "." + _server, iMaxSize, iMaxNum);
+    _logger.init(_logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + _app + "." + _server, iMaxSize, iMaxNum);
     _logger.modFlag(TC_DayLogger::HAS_TIME, false);
     _logger.modFlag(TC_DayLogger::HAS_TIME|TC_DayLogger::HAS_LEVEL|TC_DayLogger::HAS_PID, true);
 
     //设置为异步
     sync(false);
-
 
     //设置染色日志信息
     _logger.getWriteT().setDyeingLogInfo(sApp, sServer, sLogpath, iMaxSize, iMaxNum, comm, sLogObj);
@@ -165,11 +173,25 @@ TarsLoggerThread::TarsLoggerThread()
 
 TarsLoggerThread::~TarsLoggerThread()
 {
-    //先刷新本地日志
-    _local.flush();
+    terminate();
+}
 
-    //再刷新远程日志, 保证不会丢日志
-    _remote.flush();
+void TarsLoggerThread::terminate()
+{
+    if (!_terminate)
+    {
+        _terminate = true;
+
+        //先刷新本地日志
+        _local.flush();
+
+        //再刷新远程日志, 保证不会丢日志
+        _remote.flush();
+
+        //终止
+        _local.terminate();
+        _remote.terminate();
+    }
 }
 
 TC_LoggerThreadGroup* TarsLoggerThread::local()
@@ -313,16 +335,16 @@ void TimeWriteT::setLogInfo(const LogPrx &logPrx, const string &sApp, const stri
 
     string sAppSrvName = _hasAppNamePrefix?(_app + "." + _server):"";
 
-    _filePath = sLogpath + "/" + _app + "/" + _server + "/" + sAppSrvName;
+    _filePath = sLogpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + sAppSrvName;
     if(!_file.empty())
     {
         _filePath += (_hasAppNamePrefix?_concatStr:"") + sFile;
     }
 
     string sDyeingDir = sLogpath;
-    sDyeingDir += "/";
+    sDyeingDir += FILE_SEP;
     sDyeingDir += DYEING_DIR;
-    sDyeingDir += "/";
+    sDyeingDir += FILE_SEP;
 
     _dyeingFilePath = sDyeingDir;
 
@@ -345,7 +367,7 @@ void TimeWriteT::initDyeingLog()
     TC_File::makeDirRecursive(_dyeingFilePath);
 
     string sDyeingFile = _dyeingFilePath;
-    sDyeingFile += "/";
+    sDyeingFile += FILE_SEP;
     sDyeingFile += DYEING_FILE;
 
     _dyeingTimeLogger = new DyeingTimeLogger();
@@ -472,24 +494,56 @@ RemoteTimeLogger::RemoteTimeLogger() : _defaultLogger(NULL),_hasSufix(true),_has
 
 RemoteTimeLogger::~RemoteTimeLogger()
 {
-    if(_defaultLogger != NULL)
-    {
-        delete _defaultLogger;
-    }
+    terminate();
+}
 
-    map<string, TimeLogger*>::iterator it = _loggers.begin();
-    while(it != _loggers.end())
+void RemoteTimeLogger::terminate()
+{
+    if (!_terminate)
     {
-        delete it->second;
-        ++it;
+        _terminate = true;
+        if (_defaultLogger != NULL)
+        {
+            delete _defaultLogger;
+        }
+
+        auto it = _loggers.begin();
+        while (it != _loggers.end())
+        {
+            delete it->second;
+            ++it;
+        }
+        _loggers.clear();
+
     }
-    _loggers.clear();
 }
 
 void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFile, const string &sFormat,const LogTypePtr& logTypePtr)
 {
-    string sAppSrvName = _hasAppNamePrefix?(_app + "." + _server):"";
-    string sFilePath   = _logpath + "/" + _app + "/" + _server + "/" + sAppSrvName;
+	string sAppSrvName;
+    string sFilePath;
+    
+    if(_app.empty() && _server.empty())
+    {
+        sAppSrvName = "";
+        if(_logpath.empty())
+        {
+            sFilePath = sAppSrvName;
+        }
+        else
+        {
+            sFilePath = _logpath + FILE_SEP + sAppSrvName;
+        }
+
+        _hasAppNamePrefix = false;
+    }
+    else
+    {
+        sAppSrvName = _hasAppNamePrefix?(_app + "." + _server):"";
+        sFilePath = _logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + sAppSrvName;
+    }
+//    string sAppSrvName = _hasAppNamePrefix?(_app + "." + _server):"";
+//    string sFilePath   = _logpath + "/" + _app + "/" + _server + "/" + sAppSrvName;
 
     if(!sFile.empty())
     {
@@ -519,6 +573,7 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFi
         sLogType = logTypePtr->toString();
     }
     
+	////////////
     PropertyReportPtr reportSuccPtr = NULL;
     PropertyReportPtr reportFailPtr = NULL;
     if (_remote && _logStatReport)
@@ -531,10 +586,35 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFi
     pTimeLogger->getWriteT().setLogInfo(_logPrx, _app, _server, sFile, _logpath, sFormat, _setDivision, sLogType, reportSuccPtr, reportFailPtr);
 }
 
+
 void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp, const string &sServer, const string &sFile, const string &sFormat,const LogTypePtr& logTypePtr)
 {
-    string sAppSrvName = _hasAppNamePrefix?(sApp + "." + sServer):"";
-    string sFilePath = _logpath + "/" + sApp + "/" + sServer + "/" + sAppSrvName;
+
+ //   string sAppSrvName = _hasAppNamePrefix?(sApp + "." + sServer):"";
+ //   string sFilePath = _logpath + "/" + sApp + "/" + sServer + "/" + sAppSrvName;
+	
+	string sAppSrvName;
+    string sFilePath;
+    
+    if(_app.empty() && _server.empty())
+    {
+        sAppSrvName = "";
+        if(_logpath.empty())
+        {
+            sFilePath = sAppSrvName;
+        }
+        else
+        {
+            sFilePath = _logpath + FILE_SEP + sAppSrvName;
+        }
+
+        _hasAppNamePrefix = false;
+    }
+    else
+    {
+        sAppSrvName = _hasAppNamePrefix?(_app + "." + _server):"";
+        sFilePath = _logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + sAppSrvName;
+    }
 
     if(!sFile.empty())
     {
@@ -597,7 +677,7 @@ void RemoteTimeLogger::setLogInfo(const CommunicatorPtr &comm, const string &obj
     }
 
     //创建本地目录
-    TC_File::makeDirRecursive(_logpath + "/" + _app + "/" + _server);
+    TC_File::makeDirRecursive(_logpath + FILE_SEP + _app + FILE_SEP + _server);
 }
 
 void RemoteTimeLogger::initFormat(const string &sFile, const string &sFormat,const LogTypePtr& logTypePtr)
@@ -613,9 +693,9 @@ void RemoteTimeLogger::initFormat(const string &sFile, const string &sFormat,con
     }
     else
     {
-        string s = _app + "/" + _server + "/"+ sFile;
+        string s = _app + FILE_SEP + _server + FILE_SEP + sFile;
         Lock lock(*this);
-        map<string, TimeLogger*>::iterator it = _loggers.find(s);
+        auto it = _loggers.find(s);
         if( it == _loggers.end())
         {
             TimeLogger *p = new TimeLogger();
@@ -629,18 +709,29 @@ void RemoteTimeLogger::initFormat(const string &sFile, const string &sFormat,con
 }
 void RemoteTimeLogger::initFormat(const string &sApp, const string &sServer,const string &sFile, const string &sFormat,const LogTypePtr& logTypePtr)
 {
-    string s = sApp + "/" + sServer + "/"+ sFile;
-    Lock lock(*this);
-    map<string, TimeLogger*>::iterator it = _loggers.find(s);
-    if( it == _loggers.end())
+    string s = sApp + FILE_SEP + sServer + FILE_SEP+ sFile;
+    if (sFile.empty())
     {
-        TimeLogger *p = new TimeLogger();
-        initTimeLogger(p, sApp, sServer, sFile, sFormat,logTypePtr);
-        _loggers[s] = p;
-        return;
+        if (!_defaultLogger)
+        {
+            _defaultLogger = new TimeLogger();
+            initTimeLogger(_defaultLogger, "", "%Y%m%d");
+        }
     }
+    else
+    {
+        Lock lock(*this);
+        auto it = _loggers.find(s);
+        if (it == _loggers.end())
+        {
+            TimeLogger *p = new TimeLogger();
+            initTimeLogger(p, sApp, sServer, sFile, sFormat, logTypePtr);
+            _loggers[s] = p;
+            return;
+        }
 
-    initTimeLogger(it->second, sApp, sServer, sFile, sFormat,logTypePtr);
+        initTimeLogger(it->second, sApp, sServer, sFile, sFormat, logTypePtr);
+    }
 }
 
 RemoteTimeLogger::TimeLogger* RemoteTimeLogger::logger(const string &sFile)
@@ -655,10 +746,10 @@ RemoteTimeLogger::TimeLogger* RemoteTimeLogger::logger(const string &sFile)
         return _defaultLogger;
     }
 
-    string s = _app + "/" + _server + "/"+ sFile;
+    string s = _app + FILE_SEP + _server + FILE_SEP + sFile;
     Lock lock(*this);
-    map<string, TimeLogger*>::iterator it = _loggers.find(s);
-    if( it == _loggers.end())
+    auto it = _loggers.find(s);
+    if (it == _loggers.end())
     {
         TimeLogger *p = new TimeLogger();
         initTimeLogger(p, sFile, "%Y%m%d");
@@ -671,19 +762,31 @@ RemoteTimeLogger::TimeLogger* RemoteTimeLogger::logger(const string &sFile)
 
 RemoteTimeLogger::TimeLogger* RemoteTimeLogger::logger(const string &sApp, const string &sServer,const string &sFile)
 {
-    string s = sApp + "/" + sServer + "/"+ sFile;
-
-    Lock lock(*this);
-    map<string, TimeLogger*>::iterator it = _loggers.find(s);
-    if( it == _loggers.end())
+    string s = sApp + FILE_SEP + sServer + FILE_SEP+ sFile;
+    if (sFile.empty())
     {
-        TimeLogger *p = new TimeLogger();
-        initTimeLogger(p, sApp, sServer, sFile, "%Y%m%d");
-        _loggers[s] = p;
-        return p;
+        if (!_defaultLogger)
+        {
+            _defaultLogger = new TimeLogger();
+            initTimeLogger(_defaultLogger, "", "%Y%m%d");
+        }
+        return _defaultLogger;
+    }
+    else
+    {
+        Lock lock(*this);
+        auto it = _loggers.find(s);
+        if (it == _loggers.end())
+        {
+            TimeLogger *p = new TimeLogger();
+            initTimeLogger(p, sApp, sServer, sFile, "%Y%m%d");
+            _loggers[s] = p;
+            return p;
+        }
+
+        return it->second;
     }
 
-    return it->second;
 }
 
 

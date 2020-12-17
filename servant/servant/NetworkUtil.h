@@ -31,7 +31,7 @@ struct NetworkUtil
     static int createSocket(bool udp, bool isLocal = false, bool isIpv6 = false);
     static void closeSocketNoThrow(int);
 	static bool doConnect(int, const struct sockaddr *, socklen_t len);
-    static std::string errorToString(int);
+
 };
 
 }

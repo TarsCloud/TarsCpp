@@ -101,16 +101,10 @@ public:
 		 */ 
 		int notifyFd();
 
-		/**
-		 * 清除通知, 否则会一直响应
-		 * Clear up notice, otherwise, it will always respond
-		 */ 
-		// void clear();
+
 	protected:
         //通知fd
         TC_Socket _notify;
-		TC_Socket _notifyClient;
-		// bool      _clear = true;
 		TC_Epoller *_ep;
 
 		/*Events associated with the notification handle*/
@@ -143,6 +137,11 @@ public:
 	void create(int max_connections);
 
 	/**
+	 * disable et模式
+	 */
+	void enableET(bool enable) { _enableET = enable; };
+
+	/**
 	 * @brief 释放资源
 	 *  
      * @param 
@@ -161,7 +160,7 @@ public:
 	 * @param event Events to be listened on EPOLLIN|EPOLLOUT
      *              
 	 */
-	void add(SOCKET_TYPE fd, uint64_t data, int32_t event);
+	int add(SOCKET_TYPE fd, uint64_t data, int32_t event);
 
 	/**
 	 * @brief 修改句柄事件. 
@@ -174,7 +173,7 @@ public:
      * @param event 需要监听的事件EPOLLIN|EPOLLOUT
 	 * @param event Events to be listened on EPOLLIN|EPOLLOUT
 	 */
-	void mod(SOCKET_TYPE fd, uint64_t data, int32_t event);
+	int mod(SOCKET_TYPE fd, uint64_t data, int32_t event);
 
 	/**
 	 * @brief 删除句柄事件. 
@@ -187,7 +186,7 @@ public:
      * @param event 需要监听的事件EPOLLIN|EPOLLOUT
 	 * @param event Events to be listened on EPOLLIN|EPOLLOUT
 	 */
-	void del(SOCKET_TYPE fd, uint64_t data, int32_t event);
+	int del(SOCKET_TYPE fd, uint64_t data, int32_t event);
 
 	/**
 	 * @brief 等待时间. 
@@ -267,9 +266,13 @@ protected:
 	 * 				EPOLL_CTL_DEL：Delete an FD from epfd
 	 *  
 	 */
- 	void ctrl(SOCKET_TYPE fd, uint64_t data, uint32_t events, int op);
+ 	int ctrl(SOCKET_TYPE fd, uint64_t data, uint32_t events, int op);
 
 protected:
+	/**
+	 * 默认开启ET模式
+	 */
+	bool    _enableET = true;
 
     /**
      * 	epoll

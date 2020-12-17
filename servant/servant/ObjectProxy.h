@@ -37,13 +37,13 @@ class EndpointManager;
  */
 struct SocketOpt
 {
-    int        level;
+	int level;
 
-    int        optname;
+	int optname;
 
-    const void *optval;
+	const void *optval;
 
-    SOCKET_LEN_TYPE  optlen;
+	SOCKET_LEN_TYPE optlen;
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -68,30 +68,21 @@ public:
     ~ObjectProxy();
 
     /**
-     * 初始化
-     */
-    void initialize();
-
-    /**
      * 加载locator
      */
     int loadLocator();
-
+	
     /**
      * 方法调用
+     * @param req
+     * @return int
      */
-    void invoke(ReqMessage* msg);
+    void invoke(ReqMessage *  msg);
 
     /**
      * 发送积攒在obj的数据
      */
     void doInvoke();
-
-    /**
-     *
-     * @param adapterProxy
-     */
-//	void doInvoke(AdapterProxy *adapterProxy);
 
 	/**
      *
@@ -251,6 +242,18 @@ public:
         return _servantProxy;
     }
 
+	/**
+	 * 获取servantproxy
+	 */
+	inline ServantProxy * getRootServantProxy()
+	{
+		if(_servantProxy->_rootPrx)
+		{
+			return _servantProxy->_rootPrx.get();
+		}
+		return _servantProxy;
+	}
+
     /**
      * 设置servantproxy
      */
@@ -280,6 +283,11 @@ public:
 	 */
 	void onSetInactive(const EndpointInfo& ep);
 
+	/**
+	 * 完成一个包的调用(正常返回或者超时)
+	 * @param ep
+	 */    
+    void finishInvoke(ReqMessage * msg, AdapterProxy *adapterProxy);
 protected:
 
 	/**
@@ -288,6 +296,7 @@ protected:
 	 */
 	void doInvokeException(ReqMessage * msg);
 
+    void prepareConnection(AdapterProxy *adapterProxy);
 private:
     /*
      * 客户端网络线程的指针
@@ -310,6 +319,11 @@ private:
 	 * ever hash has one connection
 	 */
     string                                _address;
+
+    /**
+     * obj full name
+     */
+    string                                _sObjectProxyName;
 
     /*
      * 按set规则调用的set名称
@@ -363,14 +377,14 @@ private:
     std::unique_ptr<EndpointManager>      _endpointManger;
 
     /*
-     * 超时队列
+     * 超时队列(连接建立前)
      */
     TC_TimeoutQueueNoID<ReqMessage *>     _reqTimeoutQueue;
-
+    
     /*
      * ServantProxy
      */
-    ServantProxy *                        _servantProxy;
+    ServantProxy *                        _servantProxy = NULL;
 };
 ///////////////////////////////////////////////////////////////////////////////////
 }

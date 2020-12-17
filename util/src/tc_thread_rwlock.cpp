@@ -22,7 +22,6 @@
 namespace tars
 {
 
-
 TC_ThreadRWLocker::TC_ThreadRWLocker()
 {
 }

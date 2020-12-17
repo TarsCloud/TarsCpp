@@ -22,6 +22,7 @@
 #include "util/tc_epoller.h"
 #include "util/tc_loop_queue.h"
 #include "servant/Message.h"
+#include "servant/EndpointInfo.h"
 #include <set>
 
 namespace tars
@@ -44,6 +45,7 @@ struct FDInfo
         ET_C_NOTIFY = 1,
         ET_C_NET    = 2,
         ET_C_TERMINATE  = 3,
+	    ET_C_UPDATE_LIST= 4,
     };
 
     /**
@@ -51,7 +53,6 @@ struct FDInfo
      */
     FDInfo()
     : iSeq(0)
-    , fd(-1)
     , iType(ET_C_NOTIFY)
     , p(NULL)
     {
@@ -65,10 +66,16 @@ struct FDInfo
     }
 
     size_t iSeq;
-    int fd;
     int iType;
     void * p;
     TC_Epoller::NotifyInfo notify;
+};
+
+struct UpdateListInfo
+{
+	ServantPrx prx;
+	set<EndpointInfo> active;
+	set<EndpointInfo> inactive;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -151,7 +158,7 @@ public:
      * @param event
      * @param handle
      */
-    void addFd(int fd,FDInfo * info, uint32_t events);
+    int addFd(int fd,FDInfo * info, uint32_t events);
 
     /**
      * 取消已注册的handle
@@ -160,9 +167,16 @@ public:
      * @param event
      * @param handle
      */
-    void delFd(int fd,FDInfo * info, uint32_t events);
+    int delFd(int fd,FDInfo * info, uint32_t events);
 
-    void modFd(int fd,FDInfo * info, uint32_t events);
+    /**
+     * mod handle
+     * @param fd
+     * @param info
+     * @param events
+     * @return
+     */
+    int modFd(int fd,FDInfo * info, uint32_t events);
 
     /**
      * 通知事件过来
@@ -170,6 +184,13 @@ public:
      */
     void notify(size_t iSeq,ReqInfoQueue * pReqQueue);
     void notifyDel(size_t iSeq);
+
+    /**
+     * 主动更新ip list
+     * @param active
+     * @param inactive
+     */
+    void notifyUpdateEndpoints(const ServantPrx &prx, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
 
     /**
      * 数据加入到异步线程队列里面
@@ -233,15 +254,22 @@ protected:
      */
     Communicator *         _communicator;
 
+    /**
+     * notify
+     */
     FDInfo*                 _notify[MAX_CLIENT_NOTIFYEVENT_NUM];
+
     /*
-     * 线程是否终止
+     * terminate thread
      */
     bool                   _terminate;
 
+    /**
+     * terminate fd info
+     */
     FDInfo                 _terminateFDInfo;
 
-    /*
+	/*
      * epoll
      */
     TC_Epoller             _ep;
@@ -279,8 +307,7 @@ protected:
     /**
      * auto reconnect Transceiver
      */
-	unordered_map<int64_t, Transceiver*> _reconnect;
-
+    map<int64_t, Transceiver*> _reconnect;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////

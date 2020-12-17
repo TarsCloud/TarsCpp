@@ -42,7 +42,7 @@ HttpServer::destroyApp()
 
 void HttpServer::onNewClient(TC_EpollServer::Connection* conn)
 {
-    std::cout << "New client from " << conn->getIp() << ":" << conn->getPort() << std::endl;
+//    std::cout << "New client from " << conn->getIp() << ":" << conn->getPort() << std::endl;
 }
 
 /////////////////////////////////////////////////////////////////

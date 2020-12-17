@@ -20,6 +20,18 @@
 // #include <endian.h>
 #include <limits.h>
 
+#if (defined(__APPLE__) || defined(_WIN32))
+#   ifndef __LITTLE_ENDIAN
+#       define __LITTLE_ENDIAN 1234
+#   endif
+#   ifndef __BIG_ENDIAN
+#       define __BIG_ENDIAN    4321
+#   endif
+#   ifndef __BYTE_ORDER
+#       define __BYTE_ORDER __LITTLE_ENDIAN
+#   endif
+#endif
+
 namespace tars
 {
 

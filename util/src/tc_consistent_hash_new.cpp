@@ -15,15 +15,12 @@
  */
 
 #include "util/tc_consistent_hash_new.h"
-// #include "util/tc_autoptr.h"
-// #include "util/tc_hash_fun.h"
 
-using namespace tars;
 
 namespace tars
 {
 
-int32_t TC_KetamaHashAlg::hash(const char *sKey, size_t length)
+int32_t TC_KetamaHashAlg::hash(const char* sKey, size_t length)
 {
     vector<char> sMd5 = TC_MD5::md5bin(sKey, length);
     const char *p = (const char *) sMd5.data();
@@ -41,9 +38,9 @@ TC_HashAlgorithmType TC_KetamaHashAlg::getHashType()
     return E_TC_CONHASH_KETAMAHASH;
 }
 
-int32_t TC_DefaultHashAlg::hash(const char *sKey, size_t length)
+int32_t TC_DefaultHashAlg::hash(const char* sKey, size_t length)
 {
-    vector<char> sMd5 = TC_MD5::md5bin(sKey, length);
+	vector<char> sMd5 = TC_MD5::md5bin(sKey, length);
     const char *p = (const char *) sMd5.data();
 
     int32_t hash = (*(int*)(p)) ^ (*(int*)(p+4)) ^ (*(int*)(p+8)) ^ (*(int*)(p+12));
@@ -165,7 +162,7 @@ int TC_ConsistentHashNew::addNode(const string & node, unsigned int index, int w
         // TODO: 其中KEMATA 为参考memcached client 的hash 算法，default 为原有的hash 算法，测试结论在表格里有
         if (_ptrHashAlg->getHashType() == E_TC_CONHASH_KETAMAHASH)
         {
-            vector<char> sMd5 = TC_MD5::md5bin(virtualNode);
+	        vector<char> sMd5 = TC_MD5::md5bin(virtualNode);
             char *p = (char *) sMd5.data();
 
             for (int i = 0; i < 4; i++)

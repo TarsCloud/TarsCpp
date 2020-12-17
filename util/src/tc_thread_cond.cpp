@@ -44,6 +44,5 @@ void TC_ThreadCond::broadcast()
     _cond.notify_all();
 }
 
-
 }
 

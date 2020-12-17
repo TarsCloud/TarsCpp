@@ -15,6 +15,7 @@
  */
 
 #include "servant/ObjectProxyFactory.h"
+#include <string.h>
 
 namespace tars
 {
@@ -23,7 +24,6 @@ ObjectProxyFactory::ObjectProxyFactory(CommunicatorEpoll * pCommunicatorEpoll)
 : _communicatorEpoll(pCommunicatorEpoll)
 , _objNum(0)
 {
-//    memset(_vpObjectProxys,0,sizeof(_vpObjectProxys));
 }
 
 ObjectProxyFactory::~ObjectProxyFactory()
@@ -50,8 +50,6 @@ ObjectProxy * ObjectProxyFactory::getObjectProxy(const string& sObjectProxyName,
     }
 
     ObjectProxy * pObjectProxy = new ObjectProxy(_communicatorEpoll, sObjectProxyName,setName);
-
-    pObjectProxy->initialize();
 
     _objectProxys[tmpObjName] = pObjectProxy;
 

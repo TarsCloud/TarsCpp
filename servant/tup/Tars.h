@@ -999,7 +999,7 @@ public:
 			{
 				UInt32 size = 0;
 				read(size, 0);
-				for (Int32 i = 0; i < size * 2; ++i)
+				for (UInt32 i = 0; i < size * 2; ++i)
 					skipField();
 			}
 				break;
@@ -1007,7 +1007,7 @@ public:
 			{
 				UInt32 size = 0;
 				read(size, 0);
-				for (Int32 i = 0; i < size; ++i)
+				for (UInt32 i = 0; i < size; ++i)
 					skipField();
 			}
 				break;

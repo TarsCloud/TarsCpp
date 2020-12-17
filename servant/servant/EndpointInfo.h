@@ -17,9 +17,11 @@
 #ifndef __TARS_ENDPOINT_INFO_H_
 #define __TARS_ENDPOINT_INFO_H_
 
-#include "servant/Global.h"
+//#include "servant/Global.h"
 #include "util/tc_socket.h"
-#include "AuthF.h"
+#include "util/tc_clientsocket.h"
+#include "EndpointF.h"
+//#include "AuthF.h"
 
 #if TARGET_PLATFORM_WINDOWS
 #include <WS2tcpip.h>
@@ -29,16 +31,12 @@ using namespace std;
 
 namespace tars
 {
-
-//enum AUTH_STATE;
-//////////////////////////////////////////////////////////////////////////////
 /**
  * 地址信息IP:Port
  */
 class EndpointInfo
 {
 public:
-//    enum EType { UDP = TC_ClientSocket::, TCP = 1, SSL = 2};
 
     /**
      * 构造函数
@@ -46,26 +44,70 @@ public:
     EndpointInfo();
 
     /**
+     *
+     * @param ep
+     */
+	EndpointInfo(const TC_Endpoint &ep, const string &setDivision="");
+
+	/**
      * 构造函数
      * @param host
      * @param port
      * @param type
      */
-    EndpointInfo(const string& host, uint16_t port, TC_Endpoint::EType type, int32_t grid, const string & setDivision, int qos, int weight = -1, unsigned int weighttype = 0, int authType = 0);
+	EndpointInfo(const EndpointF &ep);
 
     /**
      * get endpoint
      * @return
      */
 	const TC_Endpoint &getEndpoint() const { return _ep; }
-//    /**
-//     * 地址的字符串描述,不带set信息
-//     *
-//     * @return string
-//     */
-//     const string& descNoSetInfo() const;
 
-    /**
+	/**
+	 *
+	 * @return
+	 */
+	TC_Endpoint &getEndpoint() { return _ep; }
+
+	/**
+	 * 设置代理地址
+	 * @param ep
+	 */
+	void setProxyEndpoint(const TC_Endpoint &ep) { _epProxy.reset(new TC_Endpoint(ep)); }
+
+	/**
+	 * 获取代理地址, 没有则为NULL
+	 */
+	const TC_Endpoint *getProxyEndpoint() const { return _epProxy.get(); }
+
+	/**
+	 * 获取连接地址
+	 * @return
+	 */
+	const TC_Endpoint *getConnectEndpoint() const { return _epProxy? _epProxy.get() : &_ep; }
+
+	/**
+	 * @brief is ipv6 socket or not
+	 * @return true if is ipv6
+	 */
+	bool isConnectIPv6() const  { return getConnectEndpoint()->isIPv6(); }
+
+	/**
+	 * 解析域名
+	 */
+	void parseConnectAddress();
+
+	/**
+     * 地址的字符串描述(用于比较)
+     *
+     * @return string
+     */
+	const string & cmpDesc() const
+	{
+		return _cmpDesc;
+	}
+
+	/**
      * 地址的字符串描述
      *
      * @return string
@@ -75,24 +117,13 @@ public:
         return _desc;
     }
 
-//    /**
-//     * 比较的地址的字符串描述
-//     *
-//     * @return string
-//     */
-//    const string & compareDesc() const
-//    {
-//        return _cmpDesc;
-//    }
-
     /**
-     * 详细地址字符串描述
-     * 
-     * @return string 
+     *
+     * @return
      */
 	bool isTcp() const;
 
-    /**
+	/**
      * 获取主机名
      *
      * @return const string&
@@ -127,24 +158,19 @@ public:
      */
     unsigned int getWeightType() const { return _ep.getWeightType(); }
 
-    /**
-     * 解析域名 
-     */
-    void parseAddress();
-
-    /**
-     * 获取主机地址
-     *
-     * @return const struct sockaddr_in&
-     */
-    const struct sockaddr_in& addr() const;
+//    /**
+//     * 获取主机地址
+//     *
+//     * @return const struct sockaddr_in&
+//     */
+//    const struct sockaddr_in& addr() const;
 
     /**
      * Get ipv4 or ipv6 struct sockaddr
      *
      * @return const struct sockaddr *
      */
-    const struct sockaddr * addrPtr() const;
+    const struct sockaddr * connectAddrPtr() const;
 
     /**
      * 返回端口类型
@@ -186,14 +212,6 @@ public:
      */
     bool operator == (const EndpointInfo& r) const;
 
-//    /**
-//    *等于,set信息不参与比较
-//    *@param r
-//    *
-//    *@return bool
-//    */
-//    bool equalNoSetInfo(const EndpointInfo& r) const;
-
     /**
      * 小于
      * @param r
@@ -219,13 +237,20 @@ protected:
     string createCompareDesc();
 
 private:
+	/**
+	 * 服务地址
+	 */
     TC_Endpoint _ep;
 
-   /**
-    *set分组信息
-    */
-    string                 _setDivision;
+    /**
+     * 代理地址
+     */
+	shared_ptr<TC_Endpoint> _epProxy;
 
+	/**
+	 *set分组信息
+	 */
+    string                 _setDivision;
 
     /**
      * 地址

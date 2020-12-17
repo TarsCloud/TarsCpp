@@ -16,6 +16,7 @@
 #include "servant/NetworkUtil.h"
 #include "servant/Global.h"
 #include "util/tc_epoller.h"
+#include "servant/RemoteLogger.h"
 #include "util/tc_port.h"
 
 #include <sstream>
@@ -33,7 +34,6 @@ int NetworkUtil::createSocket(bool udp, bool isLocal, bool isIpv6)
 #endif
 
 	int type = udp ? SOCK_DGRAM : SOCK_STREAM;
-//	int protocol = udp ? IPPROTO_UDP : IPPROTO_TCP;
 
     TC_Socket s;
     s.createSocket(type, domain);
@@ -78,10 +78,10 @@ bool NetworkUtil::doConnect(int fd, const struct sockaddr *addr, socklen_t len)
     return bConnected;
 }
 
-string NetworkUtil::errorToString(int error)
-{
-    return strerror(error);
-}
+// string NetworkUtil::errorToString(int error)
+// {
+//     return strerror(error);
+// }
 
 
 

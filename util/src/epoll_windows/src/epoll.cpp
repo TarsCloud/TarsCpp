@@ -69,7 +69,11 @@ public:
         
         for(auto entry : _attn_list)
         {
-            entry->submit();
+            if(entry->_op_count == 0) {
+            // printf("before epoll_wait submit: %d\n", entry->_op_count);
+                //no focus any event, then submit keep attn, otherwise cause op leak
+                entry->submit();
+            }
         }
 
         _attn_list.clear();
@@ -77,12 +81,17 @@ public:
 protected:
     bool find(epoll_sock_data_t *sock_data)
     {
-        return _sock_data_tree.find(sock_data->_sock) != _sock_data_tree.end();
+	    auto it = _sock_data_tree.find(sock_data->_sock);
+	    if (it != _sock_data_tree.end()) {
+		    return it->second == sock_data;
+	    }
+	    return false;
     }
 
     void remove(epoll_sock_data_t *sock_data)
     {
         _sock_data_tree.erase(sock_data->_sock);
+        _attn_list.erase(sock_data);
     }
     void add(epoll_sock_data_t *sock_data)
     {
@@ -135,10 +144,15 @@ epoll_op_t::epoll_op_t(epoll_sock_data_t *sock_data, uint32_t afd_events)
 
     _sock_data = sock_data;
     _sock_data->_op_count++;
+
+    // printf("submit new: %p, %d\n", this, _sock_data->_op_count);
+ 
 }
 
 epoll_op_t::~epoll_op_t()
 {
+    // printf("~epoll_op_t: %p, %d\n", this, _sock_data->_op_count  );
+
     _sock_data->_op_count--; 
     assert(_sock_data->_op_count >= 0);
 }
@@ -302,6 +316,7 @@ int epoll_port_data_t::epoll_add(SOCKET sock, struct epoll_event *ev)
         SetLastError(ERROR_OUTOFMEMORY);
         return -1;
     }
+    // printf("add new, %d\n", sock_data->_op_count);
 
     add(sock_data);
 
@@ -321,6 +336,7 @@ int epoll_port_data_t::epoll_mod(SOCKET sock, struct epoll_event *ev)
         SetLastError(ERROR_NOT_FOUND);
         return -1;
     }
+    // printf("mod new, %d\n", sock_data->_op_count);
 
     sock_data->_registered_events = ev->events | EPOLLERR | EPOLLHUP;
     sock_data->_user_data         = ev->data.u64;
@@ -330,6 +346,8 @@ int epoll_port_data_t::epoll_mod(SOCKET sock, struct epoll_event *ev)
 int epoll_port_data_t::epoll_del(SOCKET sock, struct epoll_event *ev)
 {
     std::lock_guard<std::mutex> lck (_mutex);
+
+    // printf("del new\n");
 
     epoll_sock_data_t *sock_data = get(sock);
     if(sock_data == NULL)
@@ -341,10 +359,12 @@ int epoll_port_data_t::epoll_del(SOCKET sock, struct epoll_event *ev)
     /* Remove from attention list. */
     remove(sock_data);
 
-    sock_data->_registered_events = ev->events | EPOLLERR | EPOLLHUP;
-    sock_data->_user_data         = ev->data.u64;
+    return 0;
+    // 以下代码不能有, 否则短链接模式下句柄复用会有问题！！！！
+    // sock_data->_registered_events = ev->events | EPOLLERR | EPOLLHUP;
+    // sock_data->_user_data         = ev->data.u64;
 
-    return sock_data->submit();    
+    // return sock_data->submit();    
 }
 
 int epoll_port_data_t::epoll_close()
@@ -442,9 +462,10 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
         /* Check for error. */
         if (!NT_SUCCESS(entries[i].lpOverlapped->Internal))
         {
-            struct epoll_event *ev = events + (num_events++);
+            struct epoll_event *ev = events + num_events;
             ev->data.u64 = sock_data->_user_data;
             ev->events = EPOLLERR;
+            ++num_events;
             continue;
         }
 
@@ -472,6 +493,8 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
                 delete sock_data;
             continue;
         }
+
+        delete op;
 
  //       int registered_events = sock_data->_registered_events;
         int reported_events = 0;
@@ -516,12 +539,12 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
 
         if (reported_events)
         {
-            struct epoll_event *ev = events + (num_events++);
+            struct epoll_event *ev = events + num_events;
             ev->data.u64           = sock_data->_user_data;
             ev->events             = reported_events;
+            ++num_events;
         }
     }
-
     return num_events;
 }
 
@@ -588,6 +611,7 @@ int epoll_wait(epoll_t port_handle, struct epoll_event *events, int maxevents, i
     }
 
     epoll_port_data_t *port_data = (epoll_port_data_t *)port_handle;
+
     port_data->submit();
 
     OVERLAPPED_ENTRY entries[64];
@@ -603,7 +627,7 @@ int epoll_wait(epoll_t port_handle, struct epoll_event *events, int maxevents, i
         DWORD error = GetLastError();
         if (error == WAIT_TIMEOUT)
         {
- //           printf("%d, GetQueuedCompletionStatusEx:%d\n", std::this_thread::get_id() , count);
+        //    printf("%d, GetQueuedCompletionStatusEx:%d\n", std::this_thread::get_id() , count);
 
             return 0;
         }

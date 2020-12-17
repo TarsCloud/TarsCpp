@@ -232,6 +232,7 @@ public:
      * @brief Get the protocol type
      */
     EType getType() const                { return _type; }
+	
     /**
      * @brief 获取路由状态
      * @brief Get route status 
@@ -330,7 +331,8 @@ public:
         else 
             os << "ssl";
 
-        os << " -h " << _host << " -p " << _port << " -t " << _timeout;
+        os << " -h " << _host << " -p " << _port;
+        if(_timeout != 0) os << " -t " << _timeout;
         if (_grid != 0) os << " -g " << _grid;
         if (_qos != 0) os << " -q " << _qos;
         if (_weight != -1) os << " -w " << _weight;
@@ -376,13 +378,13 @@ protected:
      * 端口
      * Port
      */
-    int         _port;
+    int         _port = 0;
 
     /**
      * 超时时间
      * Timeout
      */
-    int         _timeout;
+    int         _timeout = 3000;
 
     /**
      * 类型
@@ -394,30 +396,30 @@ protected:
      * 路由状态
      * Route Status
      */
-    int         _grid;
+    int         _grid = 0;
 
     /**
      *  网络QoS的dscp值
      *  DSCP value of network QoS
      */
-    int         _qos;
+    int         _qos = 0;
 
     /**
      *  节点的静态权重值
      *  the static weight value of node
      */
-    int            _weight;
+    int        _weight = -1;
 
     /**
      *  节点的权重使用方式
      *  the weight usage of nodes
      */
-    unsigned int    _weighttype;
+    unsigned int  _weighttype = 0;
     /**
      *  鉴权类型
      *  Authentication Type
      */
-    int         _authType;
+    int         _authType = 0;
 
     /**
      * _host is ipv6 or not

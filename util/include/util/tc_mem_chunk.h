@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef    __TC_MEM_CHUNK_H__
+#ifndef __TC_MEM_CHUNK_H__
 #define __TC_MEM_CHUNK_H__
 
 #include <string>

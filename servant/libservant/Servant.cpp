@@ -48,6 +48,8 @@ string Servant::getName() const
 void Servant::setApplication(Application *application)
 {
     _application = application;
+
+	setNotifyObserver(application->getNotifyObserver());
 }
 
 Application* Servant::getApplication() const
@@ -65,7 +67,7 @@ TC_EpollServer::Handle* Servant::getHandle()
     return _handle;
 }
 
-int Servant::dispatch(TarsCurrentPtr current, vector<char> &buffer)
+int Servant::dispatch(CurrentPtr current, vector<char> &buffer)
 {
     int ret = TARSSERVERUNKNOWNERR;
 
@@ -96,7 +98,7 @@ TC_CasQueue<ReqMessagePtr>& Servant::getResponseQueue()
 }
 
 ///////////////////////////////////////////////////////////////////////////
-ServantCallback::ServantCallback(const string& type, const ServantPtr& servant, const TarsCurrentPtr& current)
+ServantCallback::ServantCallback(const string& type, const ServantPtr& servant, const CurrentPtr& current)
 : _servant(servant)
 , _current(current)
 {
@@ -117,7 +119,7 @@ const ServantPtr& ServantCallback::getServant()
     return _servant;
 }
 
-const TarsCurrentPtr& ServantCallback::getCurrent()
+const CurrentPtr& ServantCallback::getCurrent()
 {
     return _current;
 }

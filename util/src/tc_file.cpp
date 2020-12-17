@@ -293,7 +293,6 @@ string TC_File::simplifyDirectory(const string& path)
 #endif    
 
     string sep(FILE_SEP);
-
     string::size_type pos;
 
     pos = 0;
@@ -382,10 +381,9 @@ string TC_File::simplifyDirectory(const string& path)
 
 string TC_File::load2str(const string &sFullFileName)
 {
-    FILE *fd = TC_Port::fopen(sFullFileName.data(), "r");
+    FILE *fd = TC_Port::fopen(sFullFileName.data(), "rb");
     if (fd == NULL)
         return "";
-
     string s;
     int nread = -1;
     do {
@@ -399,9 +397,6 @@ string TC_File::load2str(const string &sFullFileName)
     fclose(fd);
     return s;
 
-    // ifstream ifs(sFullFileName.c_str());
-
-    // return string(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
 }
 
 bool TC_File::load2str(const string &sFullFileName, vector<char> &data)
@@ -421,13 +416,7 @@ bool TC_File::load2str(const string &sFullFileName, vector<char> &data)
     } while (nread > 0);
     fclose(fd);
     return true;
-    //  ifstream ifs(sFullFileName.c_str());
-    //  if(ifs.is_open())
-    //  {
-    //      data.assign(istreambuf_iterator<char>(ifs), istreambuf_iterator<char>());
-    //      return true;
-    //  }
-    //  return false;
+
 }
 
 void TC_File::save2file(const string &sFullFileName, const string &sFileData)
@@ -461,7 +450,6 @@ string TC_File::extractFileName(const string &sFullFileName)
     }
 
     string::size_type found = sFullFileName.find_last_of("/\\");
-
     // string::size_type pos = sFullFileName.rfind(FILE_SEP);
     if(found == string::npos)
     {
@@ -491,16 +479,6 @@ string TC_File::extractFilePath(const string &sFullFileName)
     }
 
     return sFullFileName.substr(0, found+1);
-
-    // string::size_type pos = 0;
-
-    // for (pos = sFullFileNameTmp.length(); pos != 0; --pos)
-    // {
-    //     if (sFullFileNameTmp[pos - 1] == FILE_SEP[0])
-    //     {
-    //         return sFullFileNameTmp.substr(0, pos);
-    //     }
-    // }
 
     // return string(".") + FILE_SEP;
 }
@@ -543,13 +521,6 @@ string TC_File::excludeFileExt(const string &sFullFileName)
     }
 
     return sFullFileName;
-
-    // string::size_type pos;
-    // if ((pos = sFullFileName.rfind('.')) == string::npos)
-    // {
-    //     return sFullFileName;
-    // }
-
     // return sFullFileName.substr(0, pos);
 }
 
@@ -757,3 +728,4 @@ bool TC_File::isPanfu(const string & sPath)
     return isalpha(c) && (sPath[1] == ':');
 }
 }
+

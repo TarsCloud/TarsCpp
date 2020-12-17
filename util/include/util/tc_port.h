@@ -17,13 +17,19 @@
 
 typedef unsigned short mode_t;
 
-#define S_IFREG _S_IFREG		//表示为普通文件，为了跨平台，一律使用S_IFREG
+#define S_IFREG _S_IFREG			//表示为普通文件，为了跨平台，一律使用S_IFREG
 #define S_IFDIR _S_IFDIR			//表示为目录，为了跨平台，一律使用S_IFDIR
 
 #endif
 
 #include <stdio.h>
 #include <string>
+#include <vector>
+#include <functional>
+#include <mutex>
+#include <unordered_map>
+
+using namespace std;
 
 namespace tars
 {
@@ -31,6 +37,12 @@ namespace tars
 class TC_Port
 {
 public:
+    /**
+     * @brief 在s1的长度n中搜索s2
+     * @return 搜索到的指针, 找不到返回NULL
+     */ 
+    static const char* strnstr(const char* s1, const char* s2, int pos1);
+
 	static int strcmp(const char *s1, const char *s2);
 
 	static int strncmp(const char *s1, const char *s2, size_t n);
@@ -71,6 +83,29 @@ public:
     static void setEnv(const std::string &name, const std::string &value);
 
     static std::string exec(const char* cmd);
+	
+    static void registerCtrlC(std::function<void()> callback);
+
+	static void registerTerm(std::function<void()> callback);
+
+protected:
+
+//    static void registerCtrlC();
+
+	static void registerSig(int sig, std::function<void()> callback);
+
+	static void registerSig(int sig);
+
+    static std::mutex   _mutex;
+
+//    static vector<std::function<void()>> _callbacks;
+	static unordered_map<int, vector<std::function<void()>>> _callbacks;
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+    static void sighandler( int sig_no );
+#else
+    static BOOL WINAPI HandlerRoutine(DWORD dwCtrlType);
+#endif
 };
 
 }

@@ -29,11 +29,11 @@ namespace tars
 {
 
 class EndpointInfo;
+class ProxyBase;
 
 /////////////////////////////////////////////////////////////////////////
-/*
- * seq 管理的类
- */
+
+//seq 管理的类
 class SeqManager
 {
 public:
@@ -99,6 +99,11 @@ public:
      * @return ServantProxyThreadData*
      */
     static ServantProxyThreadData * getData();
+
+    /**
+     * reset
+     */
+	static void reset();
 
 public:
     /*
@@ -285,7 +290,7 @@ public:
     /**
      * 设置coro并行请求的共享智能指针
      */
-    virtual void setCoroParallelBasePtr(tars::CoroParallelBasePtr pPtr) { _pPtr = pPtr; }
+    virtual void setCoroParallelBasePtr(CoroParallelBasePtr pPtr) { _pPtr = pPtr; }
 
     /**
      * 获取coro并行请求的共享智能指针
@@ -323,9 +328,10 @@ protected:
     virtual int onDispatch(ReqMessagePtr msg) = 0;
 
     /**
-     * 连接关闭掉了(push callback 才有效)
-     */    
+     * 连接关闭掉了(push callback 才有效)，老版本的onClose不带ep，为了兼容并且带上ep
+     */
     virtual void onClose(){};
+    virtual void onClose(const TC_Endpoint &ep) { onClose(); };
 
 	/**
 	 * 连接已建立(push callback 才有效)
@@ -342,7 +348,7 @@ protected:
 
     /**
      * 异步请求是否在网络线程处理
-     * tars内部用的到 业务不能设置这个值
+     * 内部用的到 业务不能设置这个值
      * */
     bool _bNetThreadProcess;
 
@@ -414,9 +420,7 @@ public:
      */
     static string STATUS_DYED_KEY;  //需要染色的用户ID
 
-//    static string STATUS_GRID_KEY;  //需要灰度的用户ID
-
-//    static string STATUS_SAMPLE_KEY; //stat 采样的信息
+    static string STATUS_GRID_KEY;  //需要灰度染色的用户ID
 
     static string STATUS_RESULT_CODE; //处理结果码,tup使用
 
@@ -424,11 +428,7 @@ public:
 
     static string STATUS_SETNAME_VALUE; //set调用
 
-//    static string TARS_MASTER_KEY; //透传主调名称信息
-
     static string STATUS_TRACK_KEY; //track信息
-
-    // static string STATUS_COOKIE; //cookie信息
 
     /**
      * 缺省的同步调用超时时间
@@ -441,16 +441,27 @@ public:
      */
     const static int DEFAULT_CONNECTION_SERIAL = 10;
 
-	/**
+    //自定义回调
+    typedef std::function<void(ReqMessagePtr)> custom_callback;
+
+    /**
 	 * 内置四种协议支持
 	 */
     enum SERVANT_PROTOCOL
     {
     	PROTOCOL_TARS,              //默认tars服务的协议
     	PROTOCOL_HTTP1,             //http协议
-#if TARS_HTTP2
 	    PROTOCOL_HTTP2,             //http2协议
-#endif
+    };
+
+    /**
+     * 代理设置
+     */
+    enum SERVANT_PROXY
+    {
+        PROXY_SOCK4, //支持sock4代理
+        PROXY_SOCK5, //支持sock5代理
+        PROXY_HTTP,  //支持http代理
     };
 
     /**
@@ -533,9 +544,18 @@ public:
 	void tars_async_ping();
 
     /**
-     * 设置同步调用超时时间，对该proxy上所有方法都有效
-     * @param msecond
-     */
+	 * 设置代理
+	 * @param type
+	 * @param ep
+	 * @param user
+	 * @param pass
+	 */
+    void tars_set_proxy(SERVANT_PROXY type, const TC_Endpoint &ep, const string &user, const string &pass);
+
+    /**
+	 * 设置同步调用超时时间，对该proxy上所有方法都有效
+	 * @param msecond
+	 */
     void tars_timeout(int msecond);
 
     /**
@@ -543,6 +563,12 @@ public:
      * @return int
      */
     int tars_timeout() const;
+
+    /**
+     * 获取连接超时时间
+     * @return int
+     */
+    int tars_connect_timeout() const;
 
     /**
      * 设置连接超时时间
@@ -669,6 +695,25 @@ public:
     int tars_async_timeout() const;
 
     /**
+     * 主动更新端口
+     * @param active
+     * @param inactive
+     */
+    void tars_update_endpoints(const set<EndpointInfo> &active, const set<EndpointInfo> &inactive);
+
+    /**
+	 * 设置自定义回调(注意不在异步回调线程执行, 而是在网络线程中回调, 注意不要阻塞)
+     * (这种模式下callback hash无效)
+	 * @param callback
+	 */
+    void tars_set_custom_callback(custom_callback callback);
+
+    /**
+     * callback启用hash模式, 根据到服务端连接hash, 即同一个服务端连接过来的请求落入到一个异步回调线程中
+     */
+    void tars_enable_callback_hash();
+
+    /*
      * 用proxy产生一个该object上的序列号
      * @return uint32_t
      */
@@ -694,25 +739,14 @@ public:
                                 const char* buff, uint32_t len,
                                 const ServantProxyCallbackPtr& callback,
                                 bool bCoro = false);
-//
-//
-//	/**
-//	 * http1同步远程调用
-//	 */
-//	void http1_call(const std::string& method,
-//	               const std::string& uri,
-//	               const std::map<std::string, std::string>& headers,
-//	               const std::string& body,
-//	               std::map<std::string, std::string>& rheaders,
-//	               std::string& rbody);
 
 	/**
 	 * http1/2协议同步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
-	void http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response);
+    void http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response);
 
-	/**
+    /**
 	 * http1/2协议异步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
@@ -758,13 +792,24 @@ public:
                                   const ServantProxyCallbackPtr& callback,
                                   bool bCoro = false);
 
-	/**
+protected:
+    /**
 	 * 获得可以复用的servant
 	 * @return
 	 */
-	ServantPrx getServantPrx(ReqMessage *msg);
+    ServantPrx getServantPrx(ReqMessage *msg);
 
-	friend class ServantProxyCallback;
+    /**
+     * get proxy pointer 
+     */
+    inline ProxyBase *getProxyInfo()
+    {
+        return _proxyPointer ? _proxyPointer.get() : NULL;
+    }
+
+    friend class ServantProxyCallback;
+    friend class Transceiver;
+    friend class Communicator;
 
 private:
     /**
@@ -781,24 +826,7 @@ private:
      */
 	int servant_invoke(ReqMessage *msg, bool bCoroAsync);
 
-//    /**
-//     * invoke 异步
-//     * @param msg
-//     * @param pSptd
-//     * @param pReqQ
-//     * @param bCoroAsync
-//     */
-//    void invoke_async(ReqMessage *msg, ServantProxyThreadData *pSptd,  ReqInfoQueue *pReqQ, bool bCoroAsync);
-
-//    /**
-//     * invoke 同步
-//     * @param msg
-//     * @param pSptd
-//     * @param pReqQ
-//     */
-//	void invoke_sync(ReqMessage *msg, ServantProxyThreadData *pSptd,  ReqInfoQueue *pReqQ);
-
-	/**
+    /**
      * 选取一个网络线程对应的信息
      * @param pSptd
      * @return void
@@ -816,12 +844,12 @@ private:
      * @param active
      * @param inactive
      */
-	void onNotifyEndpoints(size_t netThreadSeq, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
+    void onNotifyEndpoints(size_t netThreadSeq, const set<EndpointInfo> &active, const set<EndpointInfo> &inactive, bool fromInner);
 
-	/**
+    /**
 	 * 端口不活跃
 	 */
-	void onSetInactive(const EndpointInfo& ep);
+    void onSetInactive(const EndpointInfo &ep);
     /**
      * 检查是否需要设置cookie
      * @param  req
@@ -831,6 +859,7 @@ private:
 private:
     friend class ObjectProxy;
     friend class AdapterProxy;
+    friend class CommunicatorEpoll;
 
     /**
      * 通信器
@@ -889,10 +918,10 @@ private:
      */
 	ServantPrx                  _rootPrx;
 
-	/**
+    /**
 	 *
 	 */
-	int                         _servantId = 0;
+    std::atomic<int> _servantId{0};
 
 	/**
 	 *
@@ -903,6 +932,27 @@ private:
 	 *
 	 */
 	vector<ServantPrx>          _servantList;
+
+    /**
+	 *
+	 */
+    std::shared_ptr<ProxyBase> _proxyPointer;
+
+    /**
+	 * custom callback
+	 */
+    custom_callback _callback;
+
+    /**
+     * callback hash
+     */
+    bool _callbackHash = false;
+
+    /**
+     * 链接超时
+     */
+    int _connTimeout            = DEFAULT_ASYNCTIMEOUT;
+
 };
 }
 #endif

@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#include <errno.h>
+#include <cerrno>
 #include <fstream>
 #include "util/tc_config.h"
 #include "util/tc_common.h"
@@ -24,12 +24,12 @@ namespace tars
 
 TC_ConfigDomain::TC_ConfigDomain(const string &sLine)
 {
-    _name = TC_Common::trim(sLine);
+	_name = TC_Common::trim(sLine);
 }
 
 TC_ConfigDomain::~TC_ConfigDomain()
 {
-    destroy();
+	destroy();
 }
 
 TC_ConfigDomain::TC_ConfigDomain(const TC_ConfigDomain &tcd)
@@ -484,7 +484,7 @@ void TC_Config::parse(istream &is)
 
 				if(stkTcCnfDomain.size() <= 0)
                 {
-                    throw TC_Config_Exception("[TC_Config::parse]:parse error! <" + sName + "> hasn't matched domain.");
+					throw TC_Config_Exception("[TC_Config::parse]:parse error! <" + sName + "> hasn't matched domain.");
                 }
 
                 if(stkTcCnfDomain.top()->getName() != sName)
@@ -523,8 +523,8 @@ void TC_Config::parseFile(const string &sFileName)
 
     ifstream ff;
     ff.open(sFileName.c_str());
-    if (!ff)
-    {
+	if (!ff)
+	{
         THROW_EXCEPTION_SYSCODE(TC_Config_Exception, "[TC_Config::parseFile]:fopen fail: " + sFileName);
 		// throw TC_Config_Exception("[TC_Config::parseFile]:fopen fail: " + sFileName, TC_Exception::getSystemCode());
     }

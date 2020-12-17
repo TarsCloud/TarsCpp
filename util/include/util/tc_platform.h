@@ -14,8 +14,8 @@
  * specific language governing permissions and limitations under the License.
  */
  
-#ifndef _TC_PLATFORM_H_
-#define _TC_PLATFORM_H_
+#pragma once
+
 
 #if defined _WIN32 || defined _WIN64
 #define TARGET_PLATFORM_WINDOWS		1
@@ -37,9 +37,15 @@
 
 
 #if TARGET_PLATFORM_WINDOWS
-#include <winsock2.h>
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <windows.h>
-#else
+#include <winsock2.h>
+
+#elif TARGET_PLATFORM_LINUX
 #include <unistd.h>
 #endif
 
@@ -82,4 +88,3 @@
 #define SVT_DLL_API 
 #endif
 
-#endif

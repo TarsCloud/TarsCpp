@@ -32,10 +32,7 @@
 #include "util/tc_common.h"
 #include "util/tc_network_buffer.h"
 #include "util/tc_cas_queue.h"
-
-#if TARS_SSL
 #include "util/tc_openssl.h"
-#endif
 
 using namespace std;
 
@@ -904,7 +901,8 @@ public:
 		 * 初始化处理线程,线程将会启动
          * Initialize the processing thread, which will start
 		 */
-		template<typename T> void setHandle(size_t n)
+		template<typename T, typename ...Args>
+		void setHandle(size_t n, Args&&... args)
 		{
 			if(!_handles.empty())
 			{
@@ -924,7 +922,7 @@ public:
 
 			for (int32_t i = 0; i < _iHandleNum ; ++i)
 			{
-				HandlePtr handle = new T();
+				HandlePtr handle = new T(args...);
 
 				handle->setHandleIndex(i);
 
@@ -1029,9 +1027,8 @@ public:
 
         std::string getSk(const std::string& ak) const { return (_accessKey == ak) ? _secretKey : ""; }
 
-#if TARS_SSL
-        void setSSLCtx(const shared_ptr<TC_OpenSSL::CTX> &ctx) { _ctx = ctx; }
-#endif
+        void setSSLCtx(const shared_ptr<TC_OpenSSL::CTX>& ctx) { _ctx = ctx; }
+        shared_ptr<TC_OpenSSL::CTX> getSSLCtx() { return _ctx; };
 
 	private:
 		/**
@@ -1221,13 +1218,11 @@ public:
         std::string              _accessKey;
         std::string              _secretKey;
 
-#if TARS_SSL
-
         /**
          * ssl ctx
          */
 	    shared_ptr<TC_OpenSSL::CTX> _ctx;
-#endif
+
         //连接关闭的回调函数 
         //Callback function with connection closed
         close_functor           _closeFunc;
@@ -1391,28 +1386,16 @@ public:
 		 */
 		int sendBuffer();
 
+	    /**
+		 * 关闭连接
+		 * Close the connection
+		 * @param fd
+		 */
+	    void close();
+
 	    friend class NetThread;
 
     protected:
-
-		/**
-		 * 关闭连接
-         * Close the connection
-		 * @param fd
-		 */
-		void close();
-
-//		/**
-//		* 发送TCP
-//      * Send TCP
-//		*/
-//		int sendTcp(const shared_ptr<SendContext> &data);
-//
-//		/**
-//		* 发送Udp
-//      * Send UDP
-//		*/
-//		int sendUdp(const shared_ptr<SendContext> &data);
 
 		/**
 		 * 添加发送buffer
@@ -1589,9 +1572,8 @@ public:
         *该连接的鉴权状态是否初始化了
         */
         bool                _authInit;
-#if TARS_SSL
+
         std::shared_ptr<TC_OpenSSL> _openssl;
-#endif
     };
     ////////////////////////////////////////////////////////////////////////////
     /**
@@ -1611,7 +1593,20 @@ public:
          * 析够函数
          * Destructor
          */
-        ~ConnectionList() { if(_vConn) { delete[] _vConn; } }
+        ~ConnectionList()
+        {
+	        if(_vConn)
+	        {
+		        //服务停止时, 主动关闭一下连接, 这样客户端会检测到, 不需要等下一个发送包时, 发送失败才知道连接被关闭
+		        for (auto it = _tl.begin(); it != _tl.end(); ++it) {
+			        if (_vConn[it->second].first != NULL) {
+				        _vConn[it->second].first->close();
+			        }
+		        }
+		        delete[] _vConn;
+	        }
+//        	if(_vConn) { delete[] _vConn; }
+        }
 
         /**
          * 初始化大小
@@ -1898,12 +1893,6 @@ public:
          */
         void setUdpRecvBufferSize(size_t nSize=DEFAULT_RECV_BUFFERSIZE);
 
-//		/**
-//		 * 发送队列的大小
-//		 * Size of sending queue
-//		 * @return size_t
-//		 */
-//		size_t getSendRspSize();
 
     protected:
 

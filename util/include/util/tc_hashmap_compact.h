@@ -58,6 +58,13 @@ public:
     struct HashMapIterator;
     struct HashMapLockIterator;
 
+    friend struct Block;
+    friend struct BlockAllocator;
+    friend struct HashMapIterator;
+    friend struct HashMapItem;
+    friend struct HashMapLockIterator;
+    friend struct HashMapLockItem;
+
     /**
      * @brief 操作数据
      * string  _key      数据Key
@@ -1756,13 +1763,6 @@ public:
 
 protected:
 
-    friend class Block;
-    friend class BlockAllocator;
-    friend struct HashMapIterator;
-    friend class HashMapItem;
-    friend struct HashMapLockIterator;
-    friend class HashMapLockItem;
-
     /**
      * @brief 禁止copy构造
      *  */
@@ -1809,7 +1809,7 @@ protected:
      */
     void delOnlyKeyCount()    { saveValue(&_pHead->_iOnlyKeyCount, _pHead->_iOnlyKeyCount-1); }
 
-    /*
+    /** 
      * @brief 增加Chunk数
      * 以选择是否可直接更新, 因为有可能一次分配的chunk个数
      * 多余更新区块的内存空间, 导致越界错误

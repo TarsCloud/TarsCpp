@@ -93,7 +93,7 @@ protected:
  * 循环日志单件是永生不死的, 保证任何地方都可以使用
  * 当该对象析够以后, 则直接cout出来
  */
-class LocalRollLogger : public TC_Singleton<LocalRollLogger, CreateUsingNew, PhoneixLifetime>
+class SVT_DLL_API LocalRollLogger : public TC_Singleton<LocalRollLogger, CreateUsingNew, PhoneixLifetime>
 {
 public:
     enum
@@ -101,9 +101,9 @@ public:
         NONE_LOG    = 1,    /**所有的log都不写*/
         ERROR_LOG   = 2,    /**写错误log*/
         WARN_LOG    = 3,    /**写错误,警告log*/
-        DEBUG_LOG   = 4,    /**写错误,警告,调试log*/
-        INFO_LOG    = 5,        /**写错误,警告,调试,Info log*/
-        TARS_LOG    = 6        /**写错误,警告,调试,Info log*/
+        INFO_LOG    = 4,    /**写错误,警告,调试,Info log*/
+        DEBUG_LOG   = 5,    /**写错误,警告,调试log*/
+        TARS_LOG    = 6     /**写错误,警告,调试,Info log*/
     };
 public:
     typedef TC_Logger<RollWriteT, TC_RollBySize> RollLogger;
@@ -138,8 +138,12 @@ public:
      */
     void enableDyeing(bool bEnable, const string& sDyeingKey = "");
 
-protected:
+    /**
+     * 终止
+     */
+    void terminate();
 
+  protected:
     /**
      * 应用
      */
@@ -165,6 +169,7 @@ protected:
      */
     TC_LoggerThreadGroup    _local;
 
+    bool _terminate = false;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +179,7 @@ protected:
  * 将写本地日志和远程分开到不同的线程
  * 作为单件存在, 且是永生不死的单件
  */
-class TarsLoggerThread : public TC_Singleton<TarsLoggerThread, CreateUsingNew, PhoneixLifetime>
+class SVT_DLL_API TarsLoggerThread : public TC_Singleton<TarsLoggerThread, CreateUsingNew, PhoneixLifetime>
 {
 public:
     /**
@@ -190,26 +195,35 @@ public:
     /**
      * 本地写日志线程
      */
-    TC_LoggerThreadGroup* local();
+    TC_LoggerThreadGroup *local();
 
     /**
      * 远程写日志线程
      *
      * @return TC_LoggerThreadGroup*
      */
-    TC_LoggerThreadGroup* remote();
+    TC_LoggerThreadGroup *remote();
 
-protected:
+    /**
+    * 终止
+    */
+    void terminate();
 
+  protected:
     /**
      * 本地线程组
      */
-    TC_LoggerThreadGroup    _local;
+    TC_LoggerThreadGroup _local;
 
     /**
      * 远程写线程组
      */
-    TC_LoggerThreadGroup    _remote;
+    TC_LoggerThreadGroup _remote;
+
+    /**
+     * 是否已经终止
+     */
+    bool _terminate = false;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -339,7 +353,6 @@ public:
      * @param bEnable
      */
     void enableSqareWrapper(bool bEnable) {_hasSquareBracket = bEnable;}
-
 
     /**
      * 设置时间格式("%Y%m%d")
@@ -502,7 +515,7 @@ protected:
 /**
  * 远程日志帮助类, 单件
  */
-class RemoteTimeLogger : public TC_HandleBase
+class SVT_DLL_API RemoteTimeLogger : public TC_HandleBase
                     , public TC_ThreadLock
                     , public TC_Singleton<RemoteTimeLogger, CreateUsingNew, DefaultLifetime>
 {
@@ -649,6 +662,10 @@ public:
      * @param bEnable
      */
     void enableRemoteLog(bool bEnable) {_remote = bEnable;}
+    /**
+     * 终止
+     */
+    void terminate();
 protected:
 
     /**
@@ -747,6 +764,11 @@ protected:
     * 服务日志上报logser是否上报成功数量
     */
     bool                     _logStatReport;
+	
+    /**
+     * 是否已经终止
+     */
+    bool _terminate = false;	
 };
 
 /**
@@ -825,18 +847,13 @@ protected:
     string _dyeingKey;
 };
 
-
-#if TARGET_PLATFORM_WINDOWS
-#define _filename(x) (strrchr(x,'\\')?strrchr(x,'\\')+1:x)
-#define FILE_FUNC_LINE          " [" << _filename(__FILE__) << "::" << __FUNCTION__ << "::" << __LINE__ << "] " 
-#else
-#define FILE_FUNC_LINE          " [" << __FILE__ << "::" << __FUNCTION__ << "::" << __LINE__ << "] " 
-#endif
-
 /**
  * 循环日志
  */
-#define LOG             (LocalRollLogger::getInstance()->logger())
+#define LOG (LocalRollLogger::getInstance()->logger())
+
+#define LOG_DEBUG LOG->debug() << FILE_FUNC_LINE << "|"
+#define LOG_ERROR LOG->error() << FILE_FUNC_LINE << "|"
 
 /**
  * @brief 按级别循环日志宏
@@ -849,9 +866,31 @@ protected:
  *       框架宏方式:     LOGMSG(LocalRollLogger::INFO_LOG,"I have " << vApple.size() << " apples!"<<endl);
  */
 #if TARGET_PLATFORM_WINDOWS
-#define LOGMSG(level,...) do{ if(LOG->isNeedLog(level)) LOG->log(level)<<__VA_ARGS__;}while(0)
+#define LOGMSG(level, ...)                  \
+    do                                      \
+    {                                       \
+        if (LOG->isNeedLog(level))          \
+            LOG->log(level) << __VA_ARGS__; \
+    } while (0)
+#define LOG_MSG(level, ...)                                          \
+    do                                                               \
+    {                                                                \
+        if (LOG->isNeedLog(level))                                   \
+            LOG->log(level) << FILE_FUNC_LINE << "|" << __VA_ARGS__; \
+    } while (0)
 #else
-#define LOGMSG(level,msg...) do{ if(LOG->isNeedLog(level)) LOG->log(level)<<msg;}while(0)
+#define LOGMSG(level, msg...)       \
+    do                              \
+    {                               \
+        if (LOG->isNeedLog(level))  \
+            LOG->log(level) << msg; \
+    } while (0)
+#define LOG_MSG(level, msg...)                               \
+    do                                                       \
+    {                                                        \
+        if (LOG->isNeedLog(level))                           \
+            LOG->log(level) << FILE_FUNC_LINE << "|" << msg; \
+    } while (0)
 #endif
 
 /**
@@ -869,12 +908,22 @@ protected:
 #define TLOGWARN(...)    LOGMSG(LocalRollLogger::WARN_LOG,__VA_ARGS__)
 #define TLOGERROR(...)   LOGMSG(LocalRollLogger::ERROR_LOG,__VA_ARGS__)
 #define TLOGTARS(...)    LOGMSG(LocalRollLogger::TARS_LOG,__VA_ARGS__)
+#define TLOG_INFO(...)    LOG_MSG(LocalRollLogger::INFO_LOG,__VA_ARGS__)
+#define TLOG_DEBUG(...)   LOG_MSG(LocalRollLogger::DEBUG_LOG,__VA_ARGS__)
+#define TLOG_WARN(...)    LOG_MSG(LocalRollLogger::WARN_LOG,__VA_ARGS__)
+#define TLOG_ERROR(...)   LOG_MSG(LocalRollLogger::ERROR_LOG,__VA_ARGS__)
+#define TLOG_TARS(...)    LOG_MSG(LocalRollLogger::TARS_LOG,__VA_ARGS__)
 #else
 #define TLOGINFO(msg...)    LOGMSG(LocalRollLogger::INFO_LOG,msg)
 #define TLOGDEBUG(msg...)   LOGMSG(LocalRollLogger::DEBUG_LOG,msg)
 #define TLOGWARN(msg...)    LOGMSG(LocalRollLogger::WARN_LOG,msg)
 #define TLOGERROR(msg...)   LOGMSG(LocalRollLogger::ERROR_LOG,msg)
 #define TLOGTARS(msg...)    LOGMSG(LocalRollLogger::TARS_LOG,msg)
+#define TLOG_INFO(msg...)    LOG_MSG(LocalRollLogger::INFO_LOG,msg)
+#define TLOG_DEBUG(msg...)   LOG_MSG(LocalRollLogger::DEBUG_LOG,msg)
+#define TLOG_WARN(msg...)    LOG_MSG(LocalRollLogger::WARN_LOG,msg)
+#define TLOG_ERROR(msg...)   LOG_MSG(LocalRollLogger::ERROR_LOG,msg)
+#define TLOG_TARS(msg...)    LOG_MSG(LocalRollLogger::TARS_LOG,msg)
 #endif
 
 /**
@@ -887,15 +936,15 @@ protected:
 /**
  *  按天日志局部使能开关，针对单个日志文件进行使能，请在所有按天日志输出前调用
  */
-#define TENREMOTE_FDLOG(swith,sApp,sServer,sFile) (RemoteTimeLogger::getInstance()->enableRemoteEx(sApp,sServer,sFile,swith))
-#define TENLOCAL_FDLOG(swith,sApp,sServer,sFile)  (RemoteTimeLogger::getInstance()->enableLocalEx(sApp,sServer,sFile,swith))
+#define TENREMOTE_FDLOG(swith, sApp, sServer, sFile) (RemoteTimeLogger::getInstance()->enableRemoteEx(sApp, sServer, sFile, swith))
+#define TENLOCAL_FDLOG(swith, sApp, sServer, sFile) (RemoteTimeLogger::getInstance()->enableLocalEx(sApp, sServer, sFile, swith))
 
 /**
  * 按天日志全局使能开关，请在所有按天日志输出前调用
  */
 #define TENREMOTE(swith) (RemoteTimeLogger::getInstance()->enableRemoteLog(swith))
-#define TENLOCAL(swith)  (RemoteTimeLogger::getInstance()->enableLocalLog(swith))
-}
+#define TENLOCAL(swith) (RemoteTimeLogger::getInstance()->enableLocalLog(swith))
+} 
 
 #endif
 

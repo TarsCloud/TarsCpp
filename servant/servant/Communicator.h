@@ -68,7 +68,7 @@ struct ClientConfig
    static string           SetDivision;
 
    /**
-    * 客户端的tars版本号
+    * 客户端的版本号
     */
    static string           TarsVersion;
 };
@@ -82,10 +82,11 @@ class SVT_DLL_API Communicator : public TC_HandleBase, public TC_ThreadRecMutex
 public:
 
 	typedef std::function<void(ReqMessagePtr)> custom_callback;
-    /**
-     * 构造函数
-     */
-    Communicator();
+
+   /**
+    * 构造函数
+    */
+   Communicator();
 
     /**
      * 采用配置构造
@@ -112,23 +113,24 @@ public:
    {
       T prx = NULL;
 
-        stringToProxy<T>(objectName, prx,setName);
+      stringToProxy<T>(objectName, prx, setName);
 
-        return prx;
+      return prx;
+   }
+
+   /**
+    * 生成代理
+    * @param T
+    * @param objectName
+    * @param setName 指定set调用的setid
+    * @param proxy
+    */
+   	template<class T> void stringToProxy(const string& objectName, T& proxy, const string& setName = "")
+   	{
+        ServantProxy *pServantProxy = getServantProxy(objectName, setName);
+        proxy = (typename T::element_type *)(pServantProxy);
     }
 
-    /**
-     * 生成代理
-     * @param T
-     * @param objectName
-     * @param setName 指定set调用的setid
-     * @param proxy
-     */
-    template<class T> void stringToProxy(const string& objectName, T& proxy,const string& setName="")
-    {
-        ServantProxy * pServantProxy = getServantProxy(objectName,setName);
-        proxy = (typename T::element_type*)(pServantProxy);
-    }
 
     /*
      *获取客户端网络线程的个数
@@ -196,11 +198,6 @@ public:
 	 */
 	string getServantProperty(const string &sObj, const string& name);
 
-	/**
-	 * 设置自动回调对象
-	 */
-	void setServantCustomCallback(const string &sObj, custom_callback callback);
-
     /**
      * 上报统计
      * @return StatReport*
@@ -252,6 +249,14 @@ public:
      */
 	string getResourcesInfo();
 
+	/**
+	 * 更新prx的端口
+	 * @param prx
+	 * @param active
+	 * @param inactive
+	 */
+	void notifyUpdateEndpoints(const ServantPrx &prx, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
+
 protected:
     /**
      * 初始化
@@ -289,7 +294,6 @@ protected:
      * @return
      */
     void doStat();
-#if TARS_SSL
 
 	/**
 	 * get openssl of trans
@@ -297,7 +301,6 @@ protected:
 	 * @return vector<TC_Endpoint>
 	 */
 	shared_ptr<TC_OpenSSL> newClientSSL(const string & objName);
-#endif
 
 	/**
      * 框架内部需要直接访问通信器的类
@@ -369,8 +372,6 @@ protected:
      */
     int64_t                _minTimeout;
 
-#if TARS_SSL
-
 	/**
 	 * ssl ctx
 	 */
@@ -380,17 +381,7 @@ protected:
 	 * ssl
 	 */
 	unordered_map<string, shared_ptr<TC_OpenSSL::CTX>> _objCtx;
-#endif
 
-	/**
-	 *
-	 */
-	TC_SpinLock                                    _callbackLock;
-
-	/**
-	 * callback
-	 */
-	unordered_map<string, custom_callback>         _callback;
 
     /*
      * 异步线程数组

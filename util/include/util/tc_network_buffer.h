@@ -52,7 +52,8 @@ public:
     {
         PACKET_LESS = 0,
         PACKET_FULL = 1,
-        PACKET_ERR  = -1,
+		PACKET_FULL_CLOSE = 2,  ///< get whole package, and need close connection, for example: http
+        PACKET_ERR  = -1,   
     };
 
     /**
@@ -372,7 +373,7 @@ public:
     {
         if(_deconstruct)
         {
-            _deconstruct();
+            _deconstruct(this);
         }
     }
 
@@ -395,7 +396,7 @@ public:
 	 * Set up context data to allow business to store data
      * @param buff
      */
-    void setContextData(void *contextData, std::function<void()> deconstruct = std::function<void()>() ) { _contextData = contextData; _deconstruct = deconstruct; }
+    void setContextData(void *contextData, std::function<void(TC_NetWorkBuffer*)> deconstruct = std::function<void(TC_NetWorkBuffer*)>() ) { _contextData = contextData; _deconstruct = deconstruct; }
 
     /**
      * 获取上下文数据,  给业务存放数据
@@ -818,7 +819,7 @@ protected:
     /**
      * deconstruct contextData
      */
-    std::function<void()> _deconstruct;
+    std::function<void(TC_NetWorkBuffer*)> _deconstruct;
 
     /**
      * buffer list

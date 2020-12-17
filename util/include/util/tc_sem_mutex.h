@@ -33,8 +33,11 @@ namespace tars
 /////////////////////////////////////////////////
 /** 
 * @file tc_sem_mutex.h 
-* @brief 信号量锁类. 
-* 
+* @brief 进程间的读写锁
+* linux下采用信号量来实现
+* windows下采用Mutex来实现(key相同即可实现不同进程间的同步)
+*  
+* @author ruanshudong@qq.com 
 */              
 /////////////////////////////////////////////////
 
@@ -80,8 +83,8 @@ public:
     TC_SemMutex(key_t iKey);
 
     /**
-    * @brief 初始化. 
-    *  
+	* @brief 初始化. 
+	*  
     * @param iKey, key
     * @throws TC_SemMutex_Exception
     * @return 无
@@ -89,8 +92,8 @@ public:
     void init(key_t iKey);
 
     /**
-    * @brief 获取共享内存Key. 
-    *  
+	* @brief 获取共享内存Key. 
+	*  
     * @return key_t ,共享内存key
     */
     key_t getkey() const {return _semKey;}
@@ -110,15 +113,15 @@ public:
     void rlock() const;
 
     /**
-    * @brief 解读锁. 
-    *  
+	* @brief 解读锁. 
+	*  
     * @return int
     */
     void unrlock() const;
 
     /**
-    * @brief 尝试读锁. 
-    *  
+	* @brief 尝试读锁. 
+	*  
     * @return bool : 加锁成功则返回false, 否则返回false
     */
     bool tryrlock() const;
@@ -178,6 +181,7 @@ protected:
     mutable unsigned _writersWaiting;  
     mutable unsigned _writers; 
 #endif 
+
    /**
      * 信号量ID
      */

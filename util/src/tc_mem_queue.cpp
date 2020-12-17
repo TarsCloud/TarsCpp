@@ -131,6 +131,50 @@ size_t TC_MemQueue::elementCount()
     return numeric_limits<size_t>::max() - iPopCount + iPushCount;
 }
 
+bool TC_MemQueue::front(string &sOut)
+{
+    if(isEmpty())
+    {
+        return false;
+    }
+    doUpdate();
+
+    //大小没有分隔
+    if(_pctrlBlock->iBotIndex + sizeof(size_t) <= queueSize())
+    {
+        size_t iSize;
+        memcpy((char*)&iSize, (const char*)_paddr + _pctrlBlock->iBotIndex, sizeof(size_t));
+
+        sOut.reserve(iSize);
+
+        //文件没有分隔
+        if(_pctrlBlock->iBotIndex + sizeof(size_t) + iSize <= queueSize())
+        {
+            sOut.assign((char*)_paddr + _pctrlBlock->iBotIndex + sizeof(size_t), iSize);
+        }
+        else
+        {
+            //前面的数据长度
+            size_t iLeftSize = queueSize() -  _pctrlBlock->iBotIndex - sizeof(size_t);
+
+            sOut.assign((char*)_paddr + _pctrlBlock->iBotIndex + sizeof(size_t), iLeftSize);
+            sOut.append((char*)_paddr, iSize - iLeftSize);
+        }
+    }
+    else
+    {
+        size_t iSize;
+
+        size_t iLeftSize = queueSize() -  _pctrlBlock->iBotIndex;
+
+        memcpy((char*)&iSize, (const char*)_paddr + _pctrlBlock->iBotIndex, iLeftSize);
+        memcpy((char*)&iSize + iLeftSize, (const char*)_paddr, sizeof(size_t) - iLeftSize);
+
+        sOut.assign((char*)_paddr + sizeof(size_t) - iLeftSize, iSize);
+    }
+    return true;
+}
+
 bool TC_MemQueue::pop_front(string &sOut)
 {
     if(isEmpty())
