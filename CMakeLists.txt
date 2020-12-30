@@ -36,7 +36,10 @@ ENDIF()
 add_subdirectory(util)
 add_subdirectory(tools)
 add_subdirectory(servant)
+
+IF (NOT ${ONLY_LIB})
 add_subdirectory(examples)
+ENDIF()
 
 #add_subdirectory(test_deprecated)
 
