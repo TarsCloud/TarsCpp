@@ -21,6 +21,8 @@ foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/bin)
 endforeach()   
 
+option(ONLY_LIB "option for only lib" ON)
+
 option(TARS_OPENTRACKING "option for open tracking" OFF)
 
 if (TARS_OPENTRACKING)
@@ -96,6 +98,6 @@ message("CMAKE_INSTALL_PREFIX:      ${CMAKE_INSTALL_PREFIX}")
 message("BIN:                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}") 
 message("TARS2CPP:                  ${TARS2CPP}") 
 message("TARS_OPENTRACKING:         ${TARS_OPENTRACKING}") 
-
+message("ONLY_LIB:                  ${ONLY_LIB}" )
 #-------------------------------------------------------------
 
