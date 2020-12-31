@@ -895,13 +895,8 @@ void TC_Common::ignorePipe()
 
 bool TC_Common::isPrimeNumber(size_t n)
 {
-<<<<<<< HEAD
-    size_t nn = (size_t) sqrt((double) n);
-    for (size_t i = 2; i < nn; i++)
-=======
     size_t nn = (size_t)sqrt((double)n);
     for(size_t i = 2; i <= nn;i++)
->>>>>>> fix tc_common prime judgment bug
     {
         if (n % i == 0)
         {
