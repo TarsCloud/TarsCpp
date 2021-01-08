@@ -954,7 +954,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
         }
 
         //被hash到的节点在主控是active的才走在流程
-        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive())
+        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive(_vRegProxys[iIndex]->isActive()))
         {
             return _vRegProxys[iIndex];
         }
@@ -1056,7 +1056,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
         }
 
         //被hash到的节点在主控是active的才走在流程
-        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive())
+        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive(_vRegProxys[iIndex]->isActive()))
         {
             return _vRegProxys[iIndex];
         }
@@ -1347,7 +1347,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
     }
 
     //被hash到的节点在主控是active的才走在流程
-    if (_vRegProxys[hash]->isActiveInReg() && _vRegProxys[hash]->checkActive())
+    if (_vRegProxys[hash]->isActiveInReg() && _vRegProxys[hash]->checkActive(_vRegProxys[hash]->isActive()))
     {
         return _vRegProxys[hash];
     }
@@ -1445,7 +1445,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
         }
 
         //被hash到的节点在主控是active的才走在流程
-        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive())
+        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive(_vRegProxys[iIndex]->isActive()))
         {
             return _vRegProxys[iIndex];
         }

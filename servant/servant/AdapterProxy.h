@@ -158,6 +158,11 @@ public:
     inline void setActiveInReg(bool bActive) { _activeStateInReg = bActive; }
 
     /**
+     * 节点当前的存活状态是否为active
+     */
+    inline bool isActive() { return _activeStatus; }
+
+    /**
      * 获取连接
      *
      * @return Transceiver*
