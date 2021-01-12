@@ -1320,7 +1320,10 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, vector<AdapterPro
             {
                 iWeight = 1;
             }
-            conHash.addNode(_vRegProxys[i]->endpoint().desc(), i, iWeight);
+            // 同一服务有多个obj的情况
+            // 同一hash值调用不同的obj会hash到不同的服务器
+            // 因为addNode会根据desc(ip+port)计算md5,导致顺序不一致
+            conHash.addNode(_vRegProxys[i]->endpoint().host(), i, iWeight);
         }
     }
 
