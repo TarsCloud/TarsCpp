@@ -167,12 +167,34 @@ public:
     /**
      * 设置节点的静态权重值
      */
-    inline void setWeight(int iWeight) { _staticWeight = iWeight; }
+    inline void setWeight(int iWeight)
+    {
+        if(_staticWeight != iWeight)
+            _staticWeightChanged = true;
+        _staticWeight = iWeight;
+    }
 
     /**
      * 获取节点的静态权重值
      */
     inline int getWeight() { return _staticWeight; }
+
+    /**
+     * 将权重变化标识重置为false
+     */
+    inline void resetWeightChanged() { _staticWeightChanged = false; }
+
+    /**
+     * 判断权重静态权重值是否变化, 参数reset为true时将权重变化标识重置为false
+     */
+     inline bool checkWeightChanged(bool reset = false)
+     {
+         bool changed = _staticWeightChanged;
+         if(reset)
+             _staticWeightChanged = false;
+         return changed;
+     }
+
     /**
      * 获取id
      */
