@@ -1136,7 +1136,8 @@ bool EndpointManager::checkHashStaticWeightChange(bool bStatic)
 
         for(size_t i = 0; i < _vRegProxys.size(); i++)
         {
-            if(_lastHashStaticProxys[i]->getWeight() != _vRegProxys[i]->getWeight() || _lastHashStaticProxys[i]->endpoint().desc() != _vRegProxys[i]->endpoint().desc())
+            //解决服务权重更新时哈希表不更新的问题
+            if((_lastHashStaticProxys[i]->endpoint().desc() != _vRegProxys[i]->endpoint().desc()) || _vRegProxys[i]->checkWeightChanged(true))
             {
                 return true;
             }
@@ -1155,19 +1156,15 @@ bool EndpointManager::checkConHashChange(bool bStatic, const vector<AdapterProxy
 
     for(size_t i = 0; i < _vRegProxys.size(); i++)
     {
-        if(bStatic)
+        if(vLastConHashProxys[i]->endpoint().desc() != _vRegProxys[i]->endpoint().desc())
         {
-            if(vLastConHashProxys[i]->getWeight() != _vRegProxys[i]->getWeight() || vLastConHashProxys[i]->endpoint().desc() != _vRegProxys[i]->endpoint().desc())
-            {
-                return true;
-            }
+            return true;
         }
-        else
+
+        //解决服务权重更新时一致性哈希环不更新的问题
+        if(bStatic && _vRegProxys[i]->checkWeightChanged(true))
         {
-            if(vLastConHashProxys[i]->endpoint().desc() != _vRegProxys[i]->endpoint().desc())
-            {
-                return true;
-            }
+            return true;
         }
     }
 
@@ -1197,6 +1194,8 @@ void EndpointManager::updateHashProxyWeighted(bool bStatic)
             vRegProxys.push_back(_vRegProxys[i]);
             vIndex.push_back(i);
         }
+        //防止多个服务节点权重同时更新时哈希表多次更新
+        _vRegProxys[i]->resetWeightChanged();
     }
 
     if(vRegProxys.size() <= 0)
@@ -1265,7 +1264,7 @@ void EndpointManager::updateHashProxyWeighted(bool bStatic)
                 _hashStaticRouterCache.push_back(vIndex[i]);
             }
         }
-        
+
         TLOGTARS("EndpointManager::updateHashProxyWeighted bStatic:" << bStatic << "|_objName:" << _objName << "|endpoint:" << vRegProxys[i]->endpoint().desc() << "|iWeight:" << vRegProxys[i]->getWeight() << "|iWeightR:" << iWeight << "|iIndex:" << vIndex[i] << endl);
     }
 
@@ -1322,6 +1321,8 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, vector<AdapterPro
             }
             conHash.addNode(_vRegProxys[i]->endpoint().desc(), i, iWeight);
         }
+        //防止多个服务节点权重同时更新时一致性哈希环多次更新
+        _vRegProxys[i]->resetWeightChanged();
     }
 
     conHash.sortNode();
