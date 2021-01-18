@@ -34,7 +34,7 @@ void BaseNotify::addAdminCommandPrefix(const string& command, TAdminFunc func)
 
     _procFunctors.insert(std::make_pair(command, func));
 
-    NotifyObserver::getInstance()->registerPrefix(command, this);
+	_observer->registerPrefix(command, this);
 }
 
 void BaseNotify::addAdminCommandNormal(const string& command, TAdminFunc func)
@@ -43,7 +43,7 @@ void BaseNotify::addAdminCommandNormal(const string& command, TAdminFunc func)
 
     _procFunctors.insert(std::make_pair(command, func));
 
-    NotifyObserver::getInstance()->registerNotify(command, this);
+	_observer->registerNotify(command, this);
 }
 
 bool BaseNotify::notify(const string& cmd, const string& params, CurrentPtr current, string& result)

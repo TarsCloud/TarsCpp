@@ -45,7 +45,7 @@
 #include <windows.h>
 #include <winsock2.h>
 
-#else
+#elif TARGET_PLATFORM_LINUX
 #include <unistd.h>
 #endif
 

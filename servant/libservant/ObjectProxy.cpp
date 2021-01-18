@@ -205,7 +205,8 @@ void ObjectProxy::prepareConnection(AdapterProxy *adapterProxy)
 
         assert(msg != NULL);
 
-        if(msg->adapter != NULL && msg->adapter != adapterProxy)
+	    if(msg->adapter == NULL && msg->bHash)
+//		    if(msg->adapter != NULL && msg->adapter != adapterProxy)
         {
             //选取的adapter和之前的不一样(hash的原因), 需要重新选择一个远程服务的Adapter来调用
             _endpointManger->selectAdapterProxy(msg, adapterProxy);
@@ -385,7 +386,7 @@ void ObjectProxy::doTimeout()
     ReqMessage * reqInfo = NULL;
     while(_reqTimeoutQueue.timeout(reqInfo))
     {
-        TLOGERROR("[ObjectProxy::doTimeout, objname:" << _name << ", queue timeout error]" << endl);
+//        TLOGERROR("[ObjectProxy::doTimeout, objname:" << _name << ", queue timeout error]" << endl);
 
         reqInfo->response->iRet = TARSINVOKETIMEOUT;
 

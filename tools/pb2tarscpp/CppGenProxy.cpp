@@ -25,15 +25,14 @@ static std::string GenSyncCall(const ::google::protobuf::MethodDescriptor* metho
            "req.SerializeToString(&_os);" + LineFeed(indent) +
            "std::vector<char> _vc(_os.begin(), _os.end());" + LineFeed(indent);
     out += LineFeed(indent);
-    out += "tars::ResponsePacket rep;" + LineFeed(indent) +
-           "std::map<std::string, std::string> _mStatus;" + LineFeed(indent);
-    out += "tars_invoke(tars::TARSNORMAL, \"" + method->name() + "\", _vc, context, _mStatus, rep);" + LineFeed(indent);
+    out += "std::map<std::string, std::string> _mStatus;" + LineFeed(indent);
+    out += "shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL, \"" + method->name() + "\", _vc, context, _mStatus);" + LineFeed(indent);
     out += "if (pResponseContext)" + LineFeed(++indent);
-    out += "*pResponseContext = rep.context;" + LineFeed(--indent);
+    out += "*pResponseContext = rep->context;" + LineFeed(--indent);
 
     out += LineFeed(indent);
     out += ToCppNamespace(method->output_type()->full_name()) + " _ret;" + LineFeed(indent);
-    out += "_ret.ParseFromArray(rep.sBuffer.data(), rep.sBuffer.size());" + LineFeed(indent) + 
+    out += "_ret.ParseFromArray(rep->sBuffer.data(), rep->sBuffer.size());" + LineFeed(indent) + 
            "return _ret;";
     out += LineFeed(--indent) + "}";
     out += LineFeed(indent);

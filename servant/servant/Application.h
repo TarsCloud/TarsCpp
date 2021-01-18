@@ -144,6 +144,7 @@ struct SVT_DLL_API ServerConfig
 };
 
 class PropertyReport;
+class NotifyObserver;
 
 //////////////////////////////////////////////////////////////////////
 /**
@@ -168,10 +169,11 @@ public:
      */
     void main(int argc, char *argv[]);
     void main(const TC_Option &option);
+	void main(const string &config);
 
-    /**
-     * 运行
-     */
+	/**
+	 * 运行
+	 */
     void waitForShutdown();
 
 public:
@@ -180,26 +182,28 @@ public:
      *
      * @return TC_Config&
      */
-    static TC_Config &getConfig();
+    TC_Config &getConfig() { return _conf; }
+	const TC_Config &getConfig() const { return _conf; }
 
-    /**
-     * 获取通信器
-     *
-     * @return CommunicatorPtr&
-     */
+	/**
+	 * 获取通信器
+	 *
+	 * @return CommunicatorPtr&
+	 */
     static CommunicatorPtr& getCommunicator();
 
-    /**
-     * 获取服务Server对象
-     *
-     * @return TC_EpollServerPtr&
-     */
-    static TC_EpollServerPtr &getEpollServer();
+	/**
+	 * 获取服务Server对象
+	 *
+	 * @return TC_EpollServerPtr&
+	 */
+    TC_EpollServerPtr &getEpollServer() { return _epollServer; }
+	const TC_EpollServerPtr &getEpollServer() const { return _epollServer; }
 
-    /**
-     *  中止应用
-     */
-    static void terminate();
+	/**
+	 *  中止应用
+	 */
+    void terminate();
 
     /**
      * 获取tarsservant框架的版本
@@ -231,8 +235,28 @@ public:
     template<typename T>
     void addServant(const string &id)
     {
-        ServantHelperManager::getInstance()->addServant<T>(id, this, true);
+	    _servantHelper->addServant<T>(id, this, true);
     }
+
+	template<typename T, typename P>
+	void addServantWithParams(const string &id, const P &p)
+	{
+#ifndef GEN_PYTHON_MASK
+		_servantHelper->addServant<T>(id, this, p, true);
+#endif
+	}
+
+	/**
+	 * get servant helper
+	 * @return
+	 */
+	const shared_ptr<ServantHelperManager> &getServantHelper() { return _servantHelper; }
+
+	/**
+	 * get notify observer
+	 * @return
+	 */
+	const shared_ptr<NotifyObserver> &getNotifyObserver() { return _notifyObserver; }
 
     /**
      * 非taf协议server，设置Servant的协议解析器
@@ -460,7 +484,7 @@ protected:
     /**
      * 解析配置文件
      */
-    void parseConfig(const TC_Option &op);
+    void parseConfig(const string &config);
 
      /**
      * 解析ip权限allow deny 次序
@@ -472,6 +496,11 @@ protected:
      */
     void bindAdapter(vector<TC_EpollServer::BindAdapterPtr> &adapters);
 
+    /**
+     * set adapter
+     * @param adapter
+     * @param name
+     */
 	void setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const string &name);
 
 	/**
@@ -499,19 +528,32 @@ protected:
     /**
      * config
      */
-    static TC_Config _conf;
+    TC_Config _conf;
 
     /**
      * epoll server
      */
-    static TC_EpollServerPtr   _epollServer;
+    TC_EpollServerPtr   _epollServer;
 
     /**
      * communicator
      */
     static CommunicatorPtr     _communicator;
 
+    /**
+     * accept
+     */
     std::vector<TC_EpollServer::accept_callback_functor> _acceptFuncs;
+
+	/**
+	 * servant helper
+	 */
+	shared_ptr<ServantHelperManager>    _servantHelper;
+
+	/**
+	 * notify observer
+	 */
+	shared_ptr<NotifyObserver>          _notifyObserver;
 
     /**
      * ssl ctx

@@ -13,14 +13,6 @@ else()
 	set(TARS_PATH "/usr/local/tars/cpp")
 endif()
 
-if(APPLE)
-	link_libraries(iconv)
-endif()
-
-IF (UNIX)
-	link_libraries(pthread dl)
-ENDIF ()
-
 set(TARS_INC "${TARS_PATH}/include")
 set(TARS_LIB_DIR "${TARS_PATH}/lib" )
 
@@ -166,6 +158,14 @@ macro(gen_server APP TARGET)
 		target_link_libraries(${TARGET} ${LIB_HTTP2})
 	endif()
 
+	if(APPLE)
+		target_link_libraries(${TARGET} iconv)
+	endif()
+
+	IF (UNIX)
+		target_link_libraries(${TARGET} pthread dl)
+	ENDIF ()
+
 	#make tar #########################################################################
 	#must create tmp directory, avoid linux cmake conflict!
 	SET(RUN_TAR_COMMAND_FILE "${CMAKE_BINARY_DIR}/run-tar-${TARGET}.cmake")
@@ -264,7 +264,7 @@ macro(gen_server APP TARGET)
 
 	if (TARS_INPUT)
 		if(WIN32)
-			FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory c:\\tarsproto\\protocol\\${APP}\\${TARGET})\n")
+			FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory c:/tarsproto/protocol/${APP}/${TARGET})\n")
 		elseif(APPLE)
 			FILE(WRITE ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
 		elseif(UNIX)
@@ -278,14 +278,20 @@ macro(gen_server APP TARGET)
 			set(CUR_TARS_GEN ${TARS_PATH}/${TARS_NAME}.h)
 
 			if(WIN32)
-				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${CUR_TARS_GEN} c:\\tarsproto\\protocol\\${APP}\\${TARGET})\n")
-				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${CUR_TARS_GEN} c:\\tarsproto\\protocol\\${APP}\\${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${CUR_TARS_GEN} c:/tarsproto/protocol/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${CUR_TARS_GEN} c:/tarsproto/protocol/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${TARS_FILE} c:/tarsproto/protocol/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${TARS_FILE} c:/tarsproto/protocol/${APP}/${TARGET})\n")
 			elseif(APPLE)
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${CUR_TARS_GEN} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${TARS_FILE} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${TARS_FILE} $ENV{HOME}/tarsproto/protocol/${APP}/${TARGET})\n")
 			elseif(UNIX)
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
 				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${CUR_TARS_GEN} /home/tarsproto/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo cp -rf ${TARS_FILE} /home/tarsproto/${APP}/${TARGET})\n")
+				FILE(APPEND ${RUN_RELEASE_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy ${TARS_FILE} /home/tarsproto/${APP}/${TARGET})\n")
 			endif()
 		endforeach(TARS_FILE ${TARS_INPUT})
 

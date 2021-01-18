@@ -504,7 +504,9 @@ void Communicator::terminate()
         {
             for (size_t i = 0; i < _clientThreadNum; ++i)
             {
-                _communicatorEpoll[i]->terminate();
+            	if(_communicatorEpoll[i]) {
+		            _communicatorEpoll[i]->terminate();
+	            }
             }
 
             if (_statReport)
@@ -515,7 +517,10 @@ void Communicator::terminate()
         }
     }
 
-    //把锁释放掉, 再来等待线程停止, 避免死锁
+	// 释放当前线程数据
+	ServantProxyThreadData::reset();
+
+	//把锁释放掉, 再来等待线程停止, 避免死锁
     //因为通信器线程运行过程中, 有可能加上上面那把锁
     if (_initialized)
     {
@@ -535,9 +540,11 @@ void Communicator::terminate()
 	    //停止掉网络线程
         for (size_t i = 0; i < _clientThreadNum; ++i)
         {
-            _communicatorEpoll[i]->getThreadControl().join();
-            delete _communicatorEpoll[i];
-            _communicatorEpoll[i] = NULL;
+        	if(_communicatorEpoll[i]) {
+		        _communicatorEpoll[i]->getThreadControl().join();
+		        delete _communicatorEpoll[i];
+		        _communicatorEpoll[i] = NULL;
+	        }
         }
 
         //都停止了, 再把异步线程析构掉(因为异步线程中会调用网络线程的数据)

@@ -53,7 +53,6 @@ struct FDInfo
      */
     FDInfo()
     : iSeq(0)
-    , fd(-1)
     , iType(ET_C_NOTIFY)
     , p(NULL)
     {
@@ -67,7 +66,6 @@ struct FDInfo
     }
 
     size_t iSeq;
-    int fd;
     int iType;
     void * p;
     TC_Epoller::NotifyInfo notify;
@@ -160,7 +158,7 @@ public:
      * @param event
      * @param handle
      */
-    void addFd(int fd,FDInfo * info, uint32_t events);
+    int addFd(int fd,FDInfo * info, uint32_t events);
 
     /**
      * 取消已注册的handle
@@ -169,9 +167,16 @@ public:
      * @param event
      * @param handle
      */
-    void delFd(int fd,FDInfo * info, uint32_t events);
+    int delFd(int fd,FDInfo * info, uint32_t events);
 
-    void modFd(int fd,FDInfo * info, uint32_t events);
+    /**
+     * mod handle
+     * @param fd
+     * @param info
+     * @param events
+     * @return
+     */
+    int modFd(int fd,FDInfo * info, uint32_t events);
 
     /**
      * 通知事件过来

@@ -1,3 +1,49 @@
+# v2.4.15 2020.12.30
+### en
+- fix tc_consistent_hash_new.cpp hash bug
+- add ONLY_LIB, not build examples/servers by default, if you want build examples, please cmake .. -DONLY_LIB=ON && make -j4
+- change format of some files to UTF-8 BOM to fix compile errors under windows without changing any codes in these files.
+- fix tc_common prime judgment bug
+- fix tars-tools.cmake link pthread bug in ubuntu
+### cn
+- 修改tc_consistent_hash_new.cpp hash的bug
+- 添加ONLY_LIB编译选项, 默认不再编译examples服务, 如果有需要请: cmake .. -DONLY_LIB=ON && make -j4
+- 修改部分文件的utf8格式, 避免windows下的编译错误
+- 修改tc_common prime judgment bug
+- 修改ubuntu下, tars-tools.cmake link pthread bug
+
+## v2.4.14 2020.11.09
+### en
+- fix TC_Shm::init windows not set _bOwner
+- cmake copy .tars to tarsproto/protocol in windows
+- epoll add/del/mod and return value
+- ServantProxyThreadData reset when communicator terminate
+- get rid of the singleton. You can start multiple applications in a process!
+- when epoll server exit, close all fd.
+- fix EndpointManager decontructor
+- fix communicator terminate
+- application support parse string config
+- fix hash bug in first connection
+- fix tc_sha, __LITTLE_ENDIAN bug in windows/mac
+- hello server add hash test
+- fix compiler warning
+- tc_shm when detach, set _pshm = NULL
+
+### cn
+- 修改 TC_Shm::init in windows 没有设置 _bOwner变量的bug
+- 修改tars-tools.cmake, 在windows 平台下cmake 复制 .tars 到 tarsproto/protocol
+- epoll add/del/mod 等接口增加返回值
+- communicator 结束时调用ServantProxyThreadData reset
+- 尽量去掉libservant中的单例, 这样在一个进程中可以启动多个Application
+- 当epoll server退出时, 关闭所有的句柄
+- 修复EndpointManager析构函数
+- 修改communicator结束时可能的crash
+- Application内部增加直接初始化函数, 支持string类型的配置
+- 修改第一次创建连接时hash不准的bug
+- 修复windows/mac平台上, tc_sha, __LITTLE_ENDIAN不支持的bug
+- Hello server增加hash测试
+- 修复编译警告
+- tc_shm当调用detach时, 设置_pshm = NULL
 
 ## v2.4.13 2020.10.11
 ### en

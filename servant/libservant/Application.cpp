@@ -44,22 +44,22 @@
 namespace tars
 {
 
-#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-static void sighandler( int sig_no )
-{
-	TLOGERROR("[TARS][sighandler] sig_no :" << sig_no << endl);
-
-    Application::terminate();
-}
-#else
-static BOOL WINAPI HandlerRoutine(DWORD dwCtrlType)
-{
-	TLOGERROR("[TARS][sighandler] dwCtrlType :" << dwCtrlType << endl);
-	Application::terminate();
-	ExitProcess(0);
-	return TRUE;
-}
-#endif
+//#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+//static void sighandler( int sig_no )
+//{
+//	TLOGERROR("[TARS][sighandler] sig_no :" << sig_no << endl);
+//
+//    Application::terminate();
+//}
+//#else
+//static BOOL WINAPI HandlerRoutine(DWORD dwCtrlType)
+//{
+//	TLOGERROR("[TARS][sighandler] dwCtrlType :" << dwCtrlType << endl);
+//	Application::terminate();
+//	ExitProcess(0);
+//	return TRUE;
+//}
+//#endif
 
 
 std::string ServerConfig::TarsPath;         //服务路径
@@ -101,8 +101,8 @@ std::string ServerConfig::Ciphers;
 map<string, string> ServerConfig::Context;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-TC_Config                       Application::_conf;
-TC_EpollServerPtr               Application::_epollServer  = NULL;
+//TC_Config                       Application::_conf;
+//TC_EpollServerPtr               Application::_epollServer  = NULL;
 CommunicatorPtr                 Application::_communicator = NULL;
 
 PropertyReportPtr g_pReportRspQueue;
@@ -117,6 +117,12 @@ Application::Application()
     WSADATA wsadata;
     WSAStartup(MAKEWORD(2, 2), &wsadata);
 #endif
+	_servantHelper = std::make_shared<ServantHelperManager>();
+
+	_notifyObserver = std::make_shared<NotifyObserver>();
+
+	setNotifyObserver(_notifyObserver);
+
 }
 
 Application::~Application()
@@ -131,16 +137,16 @@ string Application::getTarsVersion()
 {
     return TARS_VERSION;
 }
-
-TC_Config& Application::getConfig()
-{
-    return _conf;
-}
-
-TC_EpollServerPtr& Application::getEpollServer()
-{
-    return _epollServer;
-}
+//
+//TC_Config& Application::getConfig()
+//{
+//    return _conf;
+//}
+//
+//TC_EpollServerPtr& Application::getEpollServer()
+//{
+//    return _epollServer;
+//}
 
 CommunicatorPtr& Application::getCommunicator()
 {
@@ -530,7 +536,7 @@ bool Application::cmdViewAdminCommands(const string& command, const string& para
 {
     TLOGTARS("Application::cmdViewAdminCommands:" << command << " " << params << endl);
 
-    result =result +  NotifyObserver::getInstance()->viewRegisterCommand();
+    result =result +  _notifyObserver->viewRegisterCommand();
 
     return true;
 }
@@ -541,7 +547,7 @@ bool Application::cmdSetDyeing(const string& command, const string& params, stri
 
     if(vDyeingParams.size() == 2 || vDyeingParams.size() == 3)
     {
-        ServantHelperManager::getInstance()->setDyeing(vDyeingParams[0], vDyeingParams[1], vDyeingParams.size() == 3 ? vDyeingParams[2] : "");
+        _servantHelper->setDyeing(vDyeingParams[0], vDyeingParams[1], vDyeingParams.size() == 3 ? vDyeingParams[2] : "");
 
         result = "DyeingKey="       + vDyeingParams[0] + "\r\n" +
                  "DyeingServant="   + vDyeingParams[1] + "\r\n" +
@@ -626,7 +632,7 @@ bool Application::cmdViewResource(const string& command, const string& params, s
 	vector<TC_EpollServer::BindAdapterPtr> adapters = _epollServer->getBindAdapters();
 	for(auto adapter : adapters)
 	{
-		outAdapter(os, ServantHelperManager::getInstance()->getAdapterServant(adapter->getName()), adapter);
+		outAdapter(os, _servantHelper->getAdapterServant(adapter->getName()), adapter);
 		os << TC_Common::outfill("recv-buffer-count") << adapter->getRecvBufferSize() << endl;
 		os << TC_Common::outfill("send-buffer-count") << adapter->getSendBufferSize() << endl;
 	}
@@ -644,7 +650,7 @@ void Application::outAllAdapter(ostream &os)
 
     for (auto it = m.begin(); it != m.end(); ++it)
     {
-        outAdapter(os, ServantHelperManager::getInstance()->getAdapterServant(it->second->getName()), it->second);
+        outAdapter(os, _servantHelper->getAdapterServant(it->second->getName()), it->second);
 
         os << OUT_LINE << endl;
     }
@@ -689,8 +695,32 @@ void Application::main(int argc, char *argv[])
     op.decode(argc, argv);
     main(op);
 }
-    
+
 void Application::main(const TC_Option &option)
+{
+	//直接输出编译的TARS版本
+	if(option.hasParam("version"))
+	{
+		cout << "TARS:" << TARS_VERSION << endl;
+		exit(0);
+	}
+
+	//加载配置文件
+	ServerConfig::ConfigFile = option.getValue("config");
+
+	if(ServerConfig::ConfigFile == "")
+	{
+		cerr << "start server with config, for example: exe --config=config.conf" << endl;
+
+		exit(-1);
+	}
+
+	string config = TC_File::load2str(ServerConfig::ConfigFile);
+
+	main(config);
+}
+
+void Application::main(const string &config)
 {
     try
     {
@@ -699,7 +729,7 @@ void Application::main(const TC_Option &option)
 #endif
 
         //解析配置文件
-        parseConfig(option);
+        parseConfig(config);
 
         //初始化Proxy部分
         initializeClient();
@@ -812,16 +842,30 @@ void Application::main(const TC_Option &option)
         RemoteNotify::getInstance()->report("restart");
 
         //ctrl + c能够完美结束服务
-#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-		std::thread th1(signal, SIGINT, sighandler);
-		th1.detach();
-		//k8s pod完美退出
-		std::thread th2(signal, SIGTERM, sighandler);
-		th2.detach();
-#else
-		std::thread th([] {SetConsoleCtrlHandler(HandlerRoutine, TRUE); });
-		th.detach();
+//#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+//		std::thread th1(signal, SIGINT, sighandler);
+//		th1.detach();
+//		//k8s pod完美退出
+//		std::thread th2(signal, SIGTERM, sighandler);
+//		th2.detach();
+//#else
+//		std::thread th([] {SetConsoleCtrlHandler(HandlerRoutine, TRUE); });
+//		th.detach();
+//#endif
+//#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+	    TC_Port::registerCtrlC([=]{
+		    this->terminate();
+#if TARGET_PLATFORM_WINDOWS
+		    ExitProcess(0);
 #endif
+	    });
+	    TC_Port::registerTerm([=]{
+		    this->terminate();
+#if TARGET_PLATFORM_WINDOWS
+		    ExitProcess(0);
+#endif
+	    });
+
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
         if(_conf.get("/tars/application/server<closecout>",AppCache::getInstance()->get("closeCout")) != "0")
         {
@@ -857,29 +901,11 @@ void Application::main(const TC_Option &option)
     LocalRollLogger::getInstance()->sync(false);
 }
 
-void Application::parseConfig(const TC_Option &op)
+void Application::parseConfig(const string &config)
 {
-    //直接输出编译的TARS版本
-    if(op.hasParam("version"))
-    {
-        cout << "TARS:" << TARS_VERSION << endl;
-        exit(0);
-    }
-
-    //加载配置文件
-    ServerConfig::ConfigFile = op.getValue("config");
-
-    if(ServerConfig::ConfigFile == "")
-    {
-        cerr << "start server with config, for example: exe --config=config.conf" << endl;
-
-        exit(-1);
-    }
-
-    _conf.parseFile(ServerConfig::ConfigFile);
+    _conf.parseString(config);
 
     onParseConfig(_conf);
-
 }
 
 TC_EpollServer::BindAdapter::EOrder Application::parseOrder(const string &s)
@@ -958,7 +984,7 @@ string Application::setDivision()
 
 void Application::addServantProtocol(const string& servant, const TC_NetWorkBuffer::protocol_functor& protocol)
 {
-    string adapterName = ServantHelperManager::getInstance()->getServantAdapter(servant);
+    string adapterName = _servantHelper->getServantAdapter(servant);
 
     if (adapterName == "")
     {
@@ -982,7 +1008,7 @@ void Application::onAccept(TC_EpollServer::Connection* cPtr)
 
 void Application::addServantOnClose(const string& servant, const TC_EpollServer::close_functor& cf)
 {
-    string adapterName = ServantHelperManager::getInstance()->getServantAdapter(servant);
+    string adapterName = _servantHelper->getServantAdapter(servant);
 
     if (adapterName.empty())
     {
@@ -1217,9 +1243,9 @@ void Application::initializeServer()
 
     if(!ServerConfig::Local.empty())
     {
-        ServantHelperManager::getInstance()->addServant<AdminServant>("AdminObj", this);
+        _servantHelper->addServant<AdminServant>("AdminObj", this);
 
-        ServantHelperManager::getInstance()->setAdapterServant("AdminAdapter", "AdminObj");
+        _servantHelper->setAdapterServant("AdminAdapter", "AdminObj");
 
         TC_EpollServer::BindAdapterPtr lsPtr = new TC_EpollServer::BindAdapter(_epollServer.get());
 
@@ -1237,7 +1263,7 @@ void Application::initializeServer()
 
         lsPtr->setProtocol(AppProtocol::parse);
 
-        lsPtr->setHandle<ServantHandle>(1);
+        lsPtr->setHandle<ServantHandle>(1, this);
 
         _epollServer->bind(lsPtr);
     }
@@ -1268,7 +1294,8 @@ void Application::setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const stri
 		if (!accKey.empty())
 			adapter->setAkSk(accKey, secretKey);
 
-		adapter->setAuthProcessWrapper(&tars::processAuth);
+//		adapter->setAuthProcessWrapper(&tars::processAuth);
+		adapter->setAuthProcessWrapper(std::bind(tars::processAuth, std::placeholders::_1, std::placeholders::_2, _servantHelper->getAdapterServant(name)));
 	}
 
 #if TARS_SSL
@@ -1317,7 +1344,7 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
 
             checkServantNameValid(servant, sPrefix);
 
-            ServantHelperManager::getInstance()->setAdapterServant(adapterName[i], servant);
+            _servantHelper->setAdapterServant(adapterName[i], servant);
 
             TC_EpollServer::BindAdapterPtr bindAdapter = new TC_EpollServer::BindAdapter(_epollServer.get());
 
@@ -1366,7 +1393,7 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
                 exit(-1);
             }
 #endif
-            bindAdapter->setHandle<ServantHandle>(TC_Common::strto<int>(_conf.get(sLastPath + "<threads>", "1")));
+            bindAdapter->setHandle<ServantHandle>(TC_Common::strto<int>(_conf.get(sLastPath + "<threads>", "1")), this);
 
             if(ServerConfig::ManualListen) {
                 //手工监听
