@@ -404,6 +404,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                     case E_STATION:
                         {
                             iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
+			    break;
                         }
                     case E_SET:
                         {
