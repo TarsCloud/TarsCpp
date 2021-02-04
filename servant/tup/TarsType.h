@@ -33,7 +33,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <limits.h>
-#include "util/tc_platform.h"
 
 namespace tars
 {

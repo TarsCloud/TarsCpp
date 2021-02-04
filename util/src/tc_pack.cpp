@@ -14,7 +14,7 @@ namespace tars
 #pragma comment(lib,"ws2_32.lib")
 #endif
 
-#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_WINDOWS||TARGET_PLATFORM_LINUX
+#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_WINDOWS
 #   ifndef __LITTLE_ENDIAN
 #       define __LITTLE_ENDIAN 1234
 #   endif

@@ -1,7 +1,0 @@
-.vs
-out
-CMakeSettings.json
-download
-.idea
-cmake-build*
-clear-install.cmake
