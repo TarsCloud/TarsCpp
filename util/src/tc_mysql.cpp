@@ -95,6 +95,26 @@ void TC_Mysql::connect()
     }
     
 
+    //设置连接超时
+    if(_dbConf._connectTimeout > 0)  {
+        if (mysql_options(_pstMql, MYSQL_OPT_CONNECT_TIMEOUT, &_dbConf._connectTimeout)) {
+            throw TC_Mysql_Exception(string("TC_Mysql::connect: mysql_options MYSQL_OPT_CONNECT_TIMEOUT ") + TC_Common::tostr(_dbConf._connectTimeout) + ":" + string(mysql_error(_pstMql)));
+        }
+    }
+
+    
+    if(_dbConf._writeReadTimeout > 0)  {
+        //设置读超时
+        if (mysql_options(_pstMql, MYSQL_OPT_READ_TIMEOUT, &_dbConf._writeReadTimeout)) {
+            throw TC_Mysql_Exception(string("TC_Mysql::connect: mysql_options MYSQL_OPT_READ_TIMEOUT ") + TC_Common::tostr(_dbConf._writeReadTimeout) + ":" + string(mysql_error(_pstMql)));
+        }
+        //设置写超时
+        if (mysql_options(_pstMql, MYSQL_OPT_WRITE_TIMEOUT, &_dbConf._writeReadTimeout)) {
+            throw TC_Mysql_Exception(string("TC_Mysql::connect: mysql_options MYSQL_OPT_WRITE_TIMEOUT ") + TC_Common::tostr(_dbConf._writeReadTimeout) + ":" + string(mysql_error(_pstMql)));
+        }
+    }
+
+
     if (mysql_real_connect(_pstMql, _dbConf._host.c_str(), _dbConf._user.c_str(), _dbConf._password.c_str(), _dbConf._database.c_str(), _dbConf._port, NULL, _dbConf._flag) == NULL) 
     {
         throw TC_Mysql_Exception("[TC_Mysql::connect]: mysql_real_connect: " + string(mysql_error(_pstMql)));
