@@ -95,6 +95,18 @@ struct TC_DBConf
     int _flag;
 
     /**
+    * 连接超时
+    * Port
+    */
+    int _connectTimeout;
+
+    /**
+    * 读写超时
+    * Port
+    */
+    int _writeReadTimeout;
+
+    /**
     * @brief 构造函数
     * @brief Constructor
     */
@@ -125,17 +137,29 @@ struct TC_DBConf
     {
         map<string, string> mpTmp = mpParam;
 
-        _host        = mpTmp["dbhost"];
-        _user        = mpTmp["dbuser"];
-        _password    = mpTmp["dbpass"];
-        _database    = mpTmp["dbname"];
-        _charset     = mpTmp["charset"];
-        _port        = atoi(mpTmp["dbport"].c_str());
-        _flag        = 0;
+        _host               = mpTmp["dbhost"];
+        _user               = mpTmp["dbuser"];
+        _password           = mpTmp["dbpass"];
+        _database           = mpTmp["dbname"];
+        _charset            = mpTmp["charset"];
+        _port               = atoi(mpTmp["dbport"].c_str());
+        _flag               = 0;        
+        _connectTimeout     = atoi(mpTmp["connectTimeout"].c_str());
+        _writeReadTimeout   = atoi(mpTmp["writeReadTimeout"].c_str());
 
         if(mpTmp["dbport"] == "")
         {
             _port = 3306;
+        }
+
+        if(mpTmp["connectTimeout"] == "")
+        {
+            _connectTimeout = 5;
+        }
+
+        if(mpTmp["writeReadTimeout"] == "")
+        {
+            _writeReadTimeout = 15;
         }
     }
 
