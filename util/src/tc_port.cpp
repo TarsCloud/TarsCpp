@@ -238,6 +238,13 @@ void TC_Port::setEnv(const string &name, const string &value)
 #endif
 }
 
+std::string TC_Port::exec(const char* cmd)
+{
+	string err;
+
+	return TC_Port::exec(cmd, err);
+}
+
 string TC_Port::exec(const char *cmd, std::string &errstr)
 {
 	string fileData;
@@ -247,7 +254,7 @@ string TC_Port::exec(const char *cmd, std::string &errstr)
     FILE* fp = popen(cmd, "r");
 #endif
 	if (fp == NULL) {
-		errstr = "ERROR: thread pool used up, somebody create thread but never free.";
+		errstr = "popen '" + string(cmd) + "' error.";
 		return fileData;
 	}
     static size_t buf_len = 2 * 1024 * 1024;
