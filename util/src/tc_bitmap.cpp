@@ -245,7 +245,7 @@ int TC_BitMap::set(size_t i, unsigned iBit)
 
     if(iBit > _bitmaps.size())
     {
-        throw TC_BitMap_Exception("[TC_BitMap::get] bit beyond range:"+TC_Common::tostr(iBit)+">"+TC_Common::tostr(_bitmaps.size())); 
+        throw TC_BitMap_Exception("[TC_BitMap::set] bit beyond range:"+TC_Common::tostr(iBit)+">"+TC_Common::tostr(_bitmaps.size())); 
     }
 
     return _bitmaps[iBit-1].set(i);
@@ -257,7 +257,7 @@ int TC_BitMap::clear(size_t i, unsigned iBit)
 
     if(iBit > _bitmaps.size())
     {
-        throw TC_BitMap_Exception("[TC_BitMap::get] bit beyond range:"+TC_Common::tostr(iBit)+">"+TC_Common::tostr(_bitmaps.size())); 
+        throw TC_BitMap_Exception("[TC_BitMap::clear] bit beyond range:"+TC_Common::tostr(iBit)+">"+TC_Common::tostr(_bitmaps.size())); 
     }
 
     return _bitmaps[iBit-1].clear(i);
