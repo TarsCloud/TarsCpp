@@ -82,7 +82,7 @@ public:
 
     static void setEnv(const std::string &name, const std::string &value);
 
-    static std::string exec(const char* cmd);
+    static std::string exec(const char* cmd, std::string &errstr);
 	
     static void registerCtrlC(std::function<void()> callback);
 
