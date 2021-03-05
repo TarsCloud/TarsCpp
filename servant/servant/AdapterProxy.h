@@ -375,6 +375,8 @@ private:
      */
     int                                       _staticWeight;
 
+    bool                                      _staticWeightChanged;
+
     /*
      * 超时请求的回包回来后，是否打印超时的日志信息
      */
