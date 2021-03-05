@@ -238,7 +238,14 @@ void TC_Port::setEnv(const string &name, const string &value)
 #endif
 }
 
-string TC_Port::exec(const char *cmd)
+std::string TC_Port::exec(const char* cmd)
+{
+	string err;
+
+	return TC_Port::exec(cmd, err);
+}
+
+string TC_Port::exec(const char *cmd, std::string &errstr)
 {
 	string fileData;
 #if TARGET_PLATFORM_WINDOWS
@@ -246,6 +253,10 @@ string TC_Port::exec(const char *cmd)
 #else
     FILE* fp = popen(cmd, "r");
 #endif
+	if (fp == NULL) {
+		errstr = "popen '" + string(cmd) + "' error.";
+		return fileData;
+	}
     static size_t buf_len = 2 * 1024 * 1024;
     char *buf = new char[buf_len];
     memset(buf, 0, buf_len);

@@ -82,7 +82,21 @@ public:
 
     static void setEnv(const std::string &name, const std::string &value);
 
-    static std::string exec(const char* cmd);
+    /**
+     * exec command
+     * @param cmd
+     * @return string
+     */
+	static std::string exec(const char* cmd);
+
+	/**
+	 * exec command
+	 *
+	 * @param cmd
+	 * @param errstr, if error, get error message
+	 * @return string
+	 */
+    static std::string exec(const char* cmd, std::string &errstr);
 	
     static void registerCtrlC(std::function<void()> callback);
 
@@ -90,15 +104,12 @@ public:
 
 protected:
 
-//    static void registerCtrlC();
-
 	static void registerSig(int sig, std::function<void()> callback);
 
 	static void registerSig(int sig);
 
     static std::mutex   _mutex;
 
-//    static vector<std::function<void()>> _callbacks;
 	static unordered_map<int, vector<std::function<void()>>> _callbacks;
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
