@@ -622,7 +622,6 @@ public:
 
                 is.read(rsp.iRequestId, 3, false);
                 is.read(rsp.iMessageType, 4, false);
-                is.read(rsp.iRet, 5, false);
 
                 if (rsp.iRet < TARSSERVERUNKNOWNERR)
                 {
