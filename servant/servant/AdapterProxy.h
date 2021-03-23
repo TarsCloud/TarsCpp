@@ -77,11 +77,11 @@ public:
     void finishInvoke(shared_ptr<ResponsePacket> &rsp);
 
     /**
-     * 端口是否有效,当连接全部失效时返回false
-     * @bForceConnect : 是否强制发起连接,为true时不对状态进行判断就发起连接(onlyCheck = true有效)
-     * @return bool
+     * 发起建立连接请求, 并返回是否成功
+     * @connecting : false: 已经建立连接的才返回true(hash模式下使用, 保证hash不会乱), true: 发起连接就返回true
+     * @return bool, 没有可用连接则返回false, 否则返回true
      */
-    bool checkActive(bool bForceConnect = false);
+    bool checkActive(bool connecting);
 
     /**
      * 记录连接是否异常
@@ -374,7 +374,9 @@ private:
      * 静态权重值
      */
     int                                       _staticWeight;
-
+    /*
+     * 静态权重是否变更过
+     */
     bool                                      _staticWeightChanged;
 
     /*
