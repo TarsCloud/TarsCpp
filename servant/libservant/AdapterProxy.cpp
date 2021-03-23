@@ -485,14 +485,14 @@ int AdapterProxy::getConTimeout()
     return _objectProxy->getConTimeout();
 }
 
-bool AdapterProxy::checkActive(bool bForceConnect)
+bool AdapterProxy::checkActive(bool connecting)
 {
     time_t now = TNOW;
 
     TLOGTARS("[AdapterProxy::checkActive,"
                 << _objectProxy->name() << "," << _trans->getEndpointInfo().desc() << ","
                 << (_activeStatus ? "active" : "inactive")
-                << (bForceConnect ? ",forceConnect" : "")
+                << (connecting ? ", connecting" : "")
                 << ",freqtimeout:" << _frequenceFailInvoke
                 << ",timeout:" << _timeoutInvoke
                 << ",connExcCnt:" << _connExcCnt
@@ -500,35 +500,35 @@ bool AdapterProxy::checkActive(bool bForceConnect)
 
     _trans->checkTimeout();
 
-    //强制重试
-    if (bForceConnect) 
-    {
-        //正在连接也算有效的连接, 避免第一次都没有连接上时, 没有办法发送数据
-        if (_trans->isConnecting() || _trans->hasConnected()) 
-        {
-            return true;
-        }
+    // //强制重试
+    // if (bForceConnect) 
+    // {
+    //     //正在连接也算有效的连接, 避免第一次都没有连接上时, 没有办法发送数据
+    //     if (_trans->isConnecting() || _trans->hasConnected()) 
+    //     {
+    //         return true;
+    //     }
 
-        _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
+    //     _nextRetryTime = now + _objectProxy->checkTimeoutInfo().tryTimeInterval;
 
-        //连接没有建立或者连接无效, 重新建立连接
-        if (!_trans->isValid()) 
-        {
-            try 
-            {
-                _trans->reconnect();
-            }
-            catch (exception & ex) 
-            {
-                _activeStatus = false;
-                _trans->close();
+    //     //连接没有建立或者连接无效, 重新建立连接
+    //     if (!_trans->isValid()) 
+    //     {
+    //         try 
+    //         {
+    //             _trans->reconnect();
+    //         }
+    //         catch (exception & ex) 
+    //         {
+    //             _activeStatus = false;
+    //             _trans->close();
 
-                TLOGERROR("[AdapterProxy::checkActive connect obj:" << _objectProxy->name() << ",desc:" << _trans->getEndpointInfo().desc() << " ex:" << ex.what() << endl);
-            }
-        }
+    //             TLOGERROR("[AdapterProxy::checkActive connect obj:" << _objectProxy->name() << ",desc:" << _trans->getEndpointInfo().desc() << " ex:" << ex.what() << endl);
+    //         }
+    //     }
 
-        return (_trans->hasConnected() || _trans->isConnecting());
-    }
+    //     return (_trans->hasConnected() || _trans->isConnecting());
+    // }
 
     //失效且没有到下次重试时间, 直接返回不可用
     if ((!_activeStatus) && (now < _nextRetryTime)) 
@@ -559,8 +559,16 @@ bool AdapterProxy::checkActive(bool bForceConnect)
         }
     }
 
+    if(connecting && _activeStatus) {
+    	//hash模式, 且是第一次连接(_activeStatus=true, 即没有失败过), 返回已经连接或者正在连接的, 这样保证第一次hash不会错且连接挂过以后, 不会马上就使用, 直到连接成功才使用!
+	    return (_trans->hasConnected() || _trans->isConnecting());
+    }
+    else {
+	    return _trans->hasConnected();
+    }
+
     //已经建立连接了才返回
-    return _trans->hasConnected();
+    // return _trans->hasConnected();
 }
 
 void AdapterProxy::setConTimeout(bool bConTimeout)
