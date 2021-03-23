@@ -404,7 +404,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                     case E_STATION:
                         {
                             iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
-			    break;
+                            break;
                         }
                     case E_SET:
                         {
@@ -955,7 +955,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
         }
 
         //被hash到的节点在主控是active的才走在流程
-        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive())
+        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive(true))
         {
             return _vRegProxys[iIndex];
         }
@@ -981,7 +981,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
                     hash = hash % thisHash.size();
                 }
 
-                if (thisHash[hash]->checkActive(false))
+                if (thisHash[hash]->checkActive(true))
                 {
                     return thisHash[hash];
                 }
@@ -1057,7 +1057,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
         }
 
         //被hash到的节点在主控是active的才走在流程
-        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive())
+        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive(true))
         {
             return _vRegProxys[iIndex];
         }
@@ -1084,7 +1084,7 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
                     hash = hash % thisHash.size();
                 }
 
-                if (thisHash[hash]->checkActive())
+                if (thisHash[hash]->checkActive(false))
                 {
                     return thisHash[hash];
                 }
@@ -1352,7 +1352,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
     }
 
     //被hash到的节点在主控是active的才走在流程
-    if (_vRegProxys[hash]->isActiveInReg() && _vRegProxys[hash]->checkActive())
+    if (_vRegProxys[hash]->isActiveInReg() && _vRegProxys[hash]->checkActive(true))
     {
         return _vRegProxys[hash];
     }
@@ -1378,7 +1378,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
                 hash = hash % thisHash.size();
             }
 
-            if (thisHash[hash]->checkActive())
+            if (thisHash[hash]->checkActive(true))
             {
                 return thisHash[hash];
             }
@@ -1450,7 +1450,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
         }
 
         //被hash到的节点在主控是active的才走在流程
-        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive())
+        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive(true))
         {
             return _vRegProxys[iIndex];
         }
@@ -1477,7 +1477,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
                     hash = hash % thisHash.size();
                 }
 
-                if (thisHash[hash]->checkActive())
+                if (thisHash[hash]->checkActive(true))
                 {
                     return thisHash[hash];
                 }
@@ -1568,7 +1568,7 @@ AdapterProxy* EndpointManager::getWeightedForNormal(bool bStaticWeighted)
 
                 iProxyIndex = _staticRouterCache[_lastSWeightPosition];
 
-                if(_activeWeightProxy[iProxyIndex]->checkActive())
+                if(_activeWeightProxy[iProxyIndex]->checkActive(false))
                 {
                     return _activeWeightProxy[iProxyIndex];
                 }
@@ -1623,7 +1623,7 @@ AdapterProxy* EndpointManager::getWeightedForNormal(bool bStaticWeighted)
         if(_lastRoundPosition >= _activeProxys.size())
             _lastRoundPosition = 0;
 
-        if(_activeProxys[_lastRoundPosition]->checkActive())
+        if(_activeProxys[_lastRoundPosition]->checkActive(false))
         {
             return _activeProxys[_lastRoundPosition];
         }
