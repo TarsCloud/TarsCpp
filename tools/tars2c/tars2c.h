@@ -24,29 +24,29 @@
 using namespace tars;
 
 /**
- * ����tars����c�ļ�
- * �����ṹ�ı�����Լ�����Proxy��Servant
+ * 根据tars生成c文件
+ * 包括结构的编解码以及生成Proxy和Servant
  */
 class Tars2C
 {
 public:
 
     /**
-     * ����
+     * 生成
      * @param file
      */
     void createFile(const string &file);
 
 
     /**
-    * ���������ļ���Ŀ¼
+    * 设置生成文件的目录
     *
     */
     void setBaseDir(const std::string & sPath) { m_sBaseDir = sPath; }
 
 
 	/**
-	 * �����Ƿ���Ĭ��ֵ
+	 * 设置是否检查默认值
 	 * 
 	 * @author kevintian (2010-10-8)
 	 * 
@@ -54,11 +54,11 @@ public:
 	 */
 	void setCheckDefault(const bool bCheck) { m_bCheckDefault = bCheck; }
 
-    //�����Ǳ�����Դ������
+    //下面是编解码的源码生成
 protected:
 
     /**
-     * ����ĳ���͵Ľ���Դ��
+     * 生成某类型的解码源码
      * @param pPtr
      *
      * @return string
@@ -66,7 +66,7 @@ protected:
     string writeTo(const TypeIdPtr &pPtr,const string& namespaceId = "") const;
 
     /**
-     * ����ĳ���͵ı���Դ��
+     * 生成某类型的编码源码
      * @param pPtr
      *
      * @return string
@@ -89,10 +89,10 @@ protected:
      */
     string displaySimple(const TypeIdPtr &pPtr, bool bSep) const;
 
-    //����������������Դ������
+    // 下面是类型描述的源码生成
 protected:
     /**
-     * ����ĳ���͵��ַ�������Դ��
+     * 生成某类型的字符串描述源码
      * @param pPtr
      *
      * @return string
@@ -100,14 +100,14 @@ protected:
     string tostr(const TypePtr &pPtr) const;
 
     /**
-     * �����ڽ����͵��ַ���Դ��
+     * 生成内建类型的字符串源码
      * @param pPtr
      *
      * @return string
      */
     string tostrBuiltin(const BuiltinPtr &pPtr) const;
     /**
-     * ����vector���ַ�������
+     * 生成vector的字符串描述
      * @param pPtr
      *
      * @return string
@@ -115,7 +115,7 @@ protected:
     string tostrVector(const VectorPtr &pPtr) const;
 
     /**
-     * ����map���ַ�������
+     * 生成map的字符串描述
      * @param pPtr
      *
      * @return string
@@ -123,7 +123,7 @@ protected:
     string tostrMap(const MapPtr &pPtr) const;
 
     /**
-     * ����ĳ�ֽṹ�ķ�������
+     * 生成某种结构的符串描述
      * @param pPtr
      *
      * @return string
@@ -132,7 +132,7 @@ protected:
 
 
     /**
-     * ����ĳ��ö�ٵķ�������
+     * 生成某种枚举的符串描述
      * @param pPtr
      *
      * @return string
@@ -140,7 +140,7 @@ protected:
     string tostrEnum(const EnumPtr &pPtr) const;
 
     /**
-     * ���ɽӿ�����
+     * 生成接口名称
      * @param pPtr
      *
      * @return string
@@ -150,7 +150,7 @@ protected:
 
     string toClassName(const TypePtr &pPtr) const;
     /**
-     * �������ͱ����Ľ���Դ��
+     * 生成类型变量的解码源码
      * @param pPtr
      *
      * @return string
@@ -158,17 +158,17 @@ protected:
     string decode(const TypeIdPtr &pPtr) const;
 
     /**
-     * �������ͱ����ı���Դ��
+     * 生成类型变量的编码源码
      * @param pPtr
      *
      * @return string
      */
     string encode(const TypeIdPtr &pPtr) const;
 
-    //������h��c�ļ��ľ�������
+    // 以下是h和c文件的具体生成
 protected:
     /**
-     * �ṹ��md5
+     * 结构的md5
      * @param pPtr
      *
      * @return string
@@ -176,7 +176,7 @@ protected:
     string MD5(const StructPtr &pPtr) const;
 
     /**
-     * ���ɽṹ��ͷ�ļ�����
+     * 生成结构的头文件内容
      * @param pPtr
      *
      * @return string
@@ -184,7 +184,7 @@ protected:
     string generateH(const StructPtr &pPtr, const string& namespaceId) const;
 
     /**
-     * ���ɽṹ��cpp�ļ�����
+     * 生成结构的cpp文件内容
      * @param pPtr
      *
      * @return string
@@ -192,7 +192,7 @@ protected:
     string generateC(const StructPtr &pPtr, const string& namespaceId) const;
 
     /**
-     * ����������ͷ�ļ�Դ��
+     * 生成容器的头文件源码
      * @param pPtr
      *
      * @return string
@@ -200,7 +200,7 @@ protected:
     string generateH(const ContainerPtr &pPtr) const;
 
     /**
-     * ����������cԴ��
+     * 生成容器的c源码
      * @param pPtr
      *
      * @return string
@@ -208,7 +208,7 @@ protected:
     string generateCpp(const ContainerPtr &pPtr) const;
 
     /**
-     * ���ɲ���������ͷ�ļ�����
+     * 生成参数声明的头文件内容
      * @param pPtr
      *
      * @return string
@@ -233,7 +233,7 @@ protected:
     //string generateAsyncResponseCpp(const OperationPtr &pPtr, const string &cn) const;
 
     /**
-     * ���ɲ���������cpp�ļ�����
+     * 生成参数声明的cpp文件内容
      * @param pPtr
      *
      * @return string
@@ -241,7 +241,7 @@ protected:
     string generateCpp(const ParamDeclPtr &pPtr) const;
 
     /**
-     * ������������proxy��cpp�ļ�����
+     * 生成作操作的proxy的cpp文件内容
      * @param pPtr
      * @param cn
      *
@@ -250,7 +250,7 @@ protected:
     string generateCpp(const OperationPtr &pPtr, const string &cn) const;
 
     /**
-     * ���ɲ�����servant��ͷ�ļ�Դ��
+     * 生成操作的servant的头文件源码
      * @param pPtr
      * @param bVirtual
      *
@@ -259,7 +259,7 @@ protected:
     string generateH(const OperationPtr &pPtr, bool bVirtual, const string& interfaceId) const;
 
     /**
-     * ���ɽӿڵ�ͷ�ļ�Դ��
+     * 生成接口的头文件源码
      * @param pPtr
      *
      * @return string
@@ -267,7 +267,7 @@ protected:
     string generateH(const InterfacePtr &pPtr) const;
 
     /**
-     * ���Ľӿڵ�cpp�ļ���Դ��
+     * 生的接口的cpp文件的源码
      * @param pPtr
      *
      * @return string
@@ -275,7 +275,7 @@ protected:
     string generateCpp(const InterfacePtr &pPtr, const NamespacePtr &nPtr) const;
 
     /**
-     * ����ö�ٵ�ͷ�ļ�Դ��
+     * 生成枚举的头文件源码
      * @param pPtr
      *
      * @return string
@@ -283,7 +283,7 @@ protected:
     string generateH(const EnumPtr &pPtr, const string& namespaceId) const;
 
     /**
-     * ���ɳ���ͷ�ļ�Դ��
+     * 生成常量头文件源码
      * @param pPtr
      *
      * @return string
@@ -291,7 +291,7 @@ protected:
     string generateH(const ConstPtr &pPtr) const;
 
     /**
-     * �������ֿռ��ͷ�ļ�Դ��
+     * 生成名字空间的头文件源码
      * @param pPtr
      *
      * @return string
@@ -299,7 +299,7 @@ protected:
     string generateH(const NamespacePtr &pPtr) const;
 
     /**
-     * �������ֿռ�cpp�ļ�Դ��
+     * 生成名字空间cpp文件源码
      * @param pPtr
      *
      * @return string
@@ -307,7 +307,7 @@ protected:
     string generateC(const NamespacePtr &pPtr) const;
 
     /**
-     * �������ֿռ��ͷ�ļ�Դ��
+     * 生成名字空间的头文件源码
      * @param pPtr
      *
      * @return string
@@ -315,7 +315,7 @@ protected:
     void generateH(const ContextPtr &pPtr) const;
 
     /**
-     * �������ֿռ�cpp�ļ�Դ��
+     * 生成名字空间cpp文件源码
      * @param pPtr
      *
      * @return string
@@ -324,7 +324,7 @@ protected:
 
     /**
      *  
-     * �������ֲ��ҽṹ 
+     * 根据名字查找结构 
      * @param pPtr 
      * @param id 
      * 
@@ -336,7 +336,7 @@ protected:
 
 
 	/**
-	 * �Ƿ���Ĭ��ֵ
+	 * 是否检查默认值
 	 * 
 	 * @author kevintian (2010-10-8)
 	 */

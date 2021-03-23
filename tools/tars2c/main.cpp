@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     j2c.setCheckDefault(tars::TC_Common::lower(option.getValue("check-default")) == "false"?false:true);
     try
     {
-        //�Ƿ������tars��ͷ
+        // 是否可以以tars开头
         g_parse->setTars(option.hasParam("with-tars"));
         g_parse->setHeader(option.getValue("header"));
 
