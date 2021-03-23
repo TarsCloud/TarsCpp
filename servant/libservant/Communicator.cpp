@@ -518,7 +518,7 @@ void Communicator::terminate()
     }
 
 	// 释放当前线程数据
-	ServantProxyThreadData::reset();
+	// ServantProxyThreadData::reset();
 
 	//把锁释放掉, 再来等待线程停止, 避免死锁
     //因为通信器线程运行过程中, 有可能加上上面那把锁
