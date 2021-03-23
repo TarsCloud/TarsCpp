@@ -1662,8 +1662,6 @@ void TC_EpollServer::NetThread::delConnection(TC_EpollServer::Connection *cPtr, 
             cPtr->getBindAdapter()->insertRecvQueue(recv);
         }
 
-        cPtr->getBindAdapter()->decreaseNowConnection();
-
         //从epoller删除句柄放在close之前, 否则重用socket时会有问题
         _epoller.del(cPtr->getfd(), uid, 0);
 
@@ -1674,6 +1672,8 @@ void TC_EpollServer::NetThread::delConnection(TC_EpollServer::Connection *cPtr, 
         {
             _list.del(uid);
         }
+        
+        cPtr->getBindAdapter()->decreaseNowConnection();
     }
 }
 
