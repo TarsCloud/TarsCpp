@@ -343,7 +343,7 @@ string Tars2C::generateH(const StructPtr &pPtr, const string& namespaceId) const
     s << TAB << "Int32 (*writeTo)( const "<<sStructName<<"*, TarsOutputStream *);" << endl;
     s << TAB << "Int32 (*readFrom)( "<<sStructName<<"*, TarsInputStream *);" << endl;
 
-    //�����Ա����
+    // 定义成员变量
     vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
     for (size_t j = 0; j < member.size(); j++)
     {
@@ -374,7 +374,7 @@ string Tars2C::generateC(const StructPtr &pPtr, const string& namespaceId) const
     ostringstream s;
     string sStructName = namespaceId + "_" + pPtr->getId();
 
-    //�����Ա����
+    // 定义成员变量
     vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
 
     ////////////////////////////////////////////////////////////
@@ -463,7 +463,7 @@ string Tars2C::generateC(const StructPtr &pPtr, const string& namespaceId) const
     for (size_t j = 0; j < member.size(); j++)
     {
         BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
-        //stringֵҪת��
+        // stringֵ 值要转义
         if (bPtr && bPtr->kind() == Builtin::KindString)
         {
             s << TAB << "this->" << member[j]->getId() << " = JString_new();" << endl;
@@ -537,7 +537,7 @@ string Tars2C::generateC(const StructPtr &pPtr, const string& namespaceId) const
     for (size_t j = 0; j < member.size(); j++)
     {
         BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
-        //stringֵҪת��
+        // string 值要转义
         if (bPtr && bPtr->kind() == Builtin::KindString)
         {
             if (member[j]->hasDefault())
@@ -758,7 +758,7 @@ StructPtr Tars2C::findStruct(const ContextPtr &pPtr,const string &id)
 {
     string sid = id;
 
-    //�ڵ�ǰnamespace�в���
+    // 在当前namespace中查找
     vector<NamespacePtr> namespaces = pPtr->getNamespaces();
     for (size_t i = 0; i < namespaces.size(); i++)
     {
