@@ -257,7 +257,7 @@ public:
      * 需要extern long timezone;
      * need extern long timezone;
      *
-     * @param sString  GMT格式的时间
+     * @param sString  GMT格式的时间，本地时间
      * @param sString  time in GMT format
      * @param stTm     转换后的时间结构
      * @param stTm     converted Time Structure
@@ -270,7 +270,7 @@ public:
     * @brief  格式化的字符串时间转为时间戳.
     * @brief  Format time string to timestamp
     *
-    * @param sString  格式化的字符串时间
+    * @param sString  格式化的字符串时间，本地时间
     * @param sString  format time string
     * @param sFormat  格式化的字符串时间的格式，默认为紧凑格式
     * @param sFormat  format of formatted string time
@@ -309,7 +309,7 @@ public:
     * @brief  时间转换tm.
     * @brief  Convert time into tm.
     *
-    * @param t        时间结构
+    * @param t        时间结构，UTC时间戳
     * @param t        time structure
     */
     static void tm2time(const time_t &t, struct tm &tt);
@@ -318,7 +318,7 @@ public:
     * @brief  time_t转换成tm(不用系统的localtime_r, 否则很慢!!!)
     * @brief  Convert time_t to tm (Don't use system's localtime_r. The function will be slowed down.)
     *
-    * @param t        时间结构
+    * @param t        时间结构，UTC时间戳
     * @param t        time structure
     * @param sFormat  需要转换的目标格式，默认为紧凑格式
     * @param sFormat  Target format to be converted, default to compact format

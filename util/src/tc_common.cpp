@@ -488,12 +488,14 @@ public:
     {
         struct tm timeinfo;
         time_t secs, local_secs, gmt_secs;
+
+        // UTC时间戳
         time(&secs);
 
         //带时区时间
         TC_Port::localtime_r(&secs, &timeinfo);
-
         local_secs = ::mktime(&timeinfo);
+        timezone_local = string(timeinfo.tm_zone);
 
         //不带时区时间
         TC_Port::gmtime_r(&secs, &timeinfo);
@@ -502,9 +504,13 @@ public:
         timezone_diff_secs = local_secs - gmt_secs;
     }
 
+    static string timezone_local;
+
+
     static int64_t timezone_diff_secs;
 };
 
+string TimezoneHelper::timezone_local;
 int64_t TimezoneHelper::timezone_diff_secs = 0;
 
 
@@ -554,6 +560,10 @@ void TC_Common::tm2time(const time_t &t, struct tm &tt)
 
     TC_Port::gmtime_r(&localt, &tt);
 
+    static string local_timezone = TimezoneHelper::timezone_local;
+    tt.tm_zone = const_cast<char *>(local_timezone.c_str());
+    // tt.tm_zone = TimezoneHelper::timezone_local.c_str();
+    tt.tm_gmtoff = TimezoneHelper::timezone_diff_secs;
 }
 
 string TC_Common::tm2str(const time_t &t, const string &sFormat)
@@ -566,10 +576,10 @@ string TC_Common::tm2str(const time_t &t, const string &sFormat)
 
 void TC_Common::tm2tm(const time_t &t, struct tm &tt)
 {
-    static TimezoneHelper helper;
-    time_t localt = t + TimezoneHelper::timezone_diff_secs;
-
-    TC_Port::gmtime_r(&localt, &tt);
+    tm2time(t, tt);
+    // static TimezoneHelper helper;
+    // time_t localt = t + TimezoneHelper::timezone_diff_secs;
+    // TC_Port::gmtime_r(&localt, &tt);
 
 }
 
