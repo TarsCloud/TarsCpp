@@ -1,3 +1,29 @@
+
+# v2.4.16 2021.03.24
+### en
+- fix tc_common time zone bug
+- fix hash call bug
+- fix EndpoingManager.cpp add missing break
+- Fix bug that Popen fails to return null pointer and uses it directly without judgment.
+- fix to avoid coredump while application exit
+- fix hash table and consistent hash ring are not updated when service node weight is updated
+- fix crash When the number of processing pressure test connections is greater than the maximum number of service connections, and the connections are established and disconnected frequently
+- fix In Linux and windows, it is a small end. It corrects the definition error of byte order conversion function, such as tars_ ntonll
+- set timeout options to prevent "connnect", "real_query" to be blocked for tens of minutes
+- Fix the function name (tc_bitmap) in the exception
+### cn
+- 修复 tc_common 中时区函数的时区的bug
+- 修复hash第一次建立连接不稳定的bug
+- 修复EndpoingManager.cpp 缺少 missing break的bug
+- 修复服务退出时可能的crash
+- 修复 popen 失败返回空指针 没有判断就直接使用的BUG。
+- 修复解决服务节点权重更新时哈希表和一致性哈希环不更新的问题
+- 修复同一服务有多个obj的情况，同一hash值调用不同的obj会hash到不同的服务器，因为addNode会根据desc(ip+port)计算md5,导致顺序不一致
+- 修复处理压测连接数大于服务最大连接数,并且有连接频繁建立、断开时
+- 修复windows下大小端的问题
+- mysql 增加超时的参数设置
+- 修复tc_bitmap异常字符串处理的bug
+
 # v2.4.15 2020.12.30
 ### en
 - fix tc_consistent_hash_new.cpp hash bug
