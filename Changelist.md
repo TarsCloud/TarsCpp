@@ -1,17 +1,3 @@
-# v2.4.15 2020.12.30
-### en
-- fix tc_consistent_hash_new.cpp hash bug
-- add ONLY_LIB, not build examples/servers by default, if you want build examples, please cmake .. -DONLY_LIB=ON && make -j4
-- change format of some files to UTF-8 BOM to fix compile errors under windows without changing any codes in these files.
-- fix tc_common prime judgment bug
-- fix tars-tools.cmake link pthread bug in ubuntu
-### cn
-- 修改tc_consistent_hash_new.cpp hash的bug
-- 添加ONLY_LIB编译选项, 默认不再编译examples服务, 如果有需要请: cmake .. -DONLY_LIB=ON && make -j4
-- 修改部分文件的utf8格式, 避免windows下的编译错误
-- 修改tc_common prime judgment bug
-- 修改ubuntu下, tars-tools.cmake link pthread bug
-
 # v2.4.16 2021.03.24
 ### en
 - tc_epoll_server add sendBufferDirect 
