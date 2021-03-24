@@ -1170,6 +1170,40 @@ int TC_EpollServer::Connection::sendBuffer()
 }
 
 
+int TC_EpollServer::Connection::sendBufferDirect(const std::string& buff)
+{
+    _pBindAdapter->increaseSendBufferSize();
+    
+    if(getBindAdapter()->getEndpoint().isTcp())
+    {
+#if TAF_SSL
+        if (getBindAdapter()->getEndpoint().isSSL())
+        {
+            //assert(_openssl->isHandshaked());
+            
+            int ret = _openssl->write(buff.c_str(), buff.length(), _sendBuffer);
+            if (ret != 0)
+            {
+                _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send direct error! " + TC_Common::tostr(ret));
+                return -1; // should not happen
+            }
+    
+        }
+        else
+#endif
+        {
+            _sendBuffer.addBuffer(buff);
+        }
+
+        return sendBuffer();
+    }
+    else
+    {
+        _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send direct not support udp! ");
+        return -2;
+    }
+}
+
 int TC_EpollServer::Connection::send(const shared_ptr<SendContext> &sc)
 {
 	assert(sc);
@@ -1597,6 +1631,7 @@ void TC_EpollServer::NetThread::addTcpConnection(TC_EpollServer::Connection *cPt
             return;
         }
 
+        cPtr->_openssl->recvBuffer()->setConnection(cPtr);
         cPtr->_openssl->init(true);
         cPtr->_openssl->setReadBufferSize(1024 * 8);
         cPtr->_openssl->setWriteBufferSize(1024 * 8);
@@ -2149,14 +2184,25 @@ void TC_EpollServer::bind(const TC_Endpoint &ep, TC_Socket &s, bool manualListen
     int type = ep.isUnixLocal() ? AF_LOCAL : ep.isIPv6() ? AF_INET6 : AF_INET;
 #endif
 
+#if TARGET_PLATFORM_LINUX
     if (ep.isTcp())
     {
-        s.createSocket(SOCK_STREAM, type);
+        s.createSocket(SOCK_STREAM | SOCK_CLOEXEC, type);
     }
     else
     {
-        s.createSocket(SOCK_DGRAM, type);
+        s.createSocket(SOCK_DGRAM | SOCK_CLOEXEC, type);
     }
+#else
+	if (ep.isTcp())
+	{
+		s.createSocket(SOCK_STREAM, type);
+	}
+	else
+	{
+		s.createSocket(SOCK_DGRAM, type);
+	}
+#endif
 
 #if TARGET_PLATFORM_WINDOWS
     s.bind(ep.getHost(), ep.getPort());

@@ -1385,6 +1385,16 @@ public:
 		 * @return
 		 */
 		int sendBuffer();
+    
+        /**
+         * 直接发送裸得应答数据，业务层一般不直接使用，仅仅tcp支持
+         * send naked response data
+         * @param buffer
+         * @return int, -1:发送出错, 0:无数据, 1:发送完毕, 2:还有数据
+         * @return int, -1: sending error, 0: no data, 1: send completely, 2: data retains
+         * @return
+         */
+        int sendBufferDirect(const std::string& buff);
 
 	    /**
 		 * 关闭连接
@@ -1605,7 +1615,6 @@ public:
 		        }
 		        delete[] _vConn;
 	        }
-//        	if(_vConn) { delete[] _vConn; }
         }
 
         /**
