@@ -1,6 +1,8 @@
 
 # v2.4.16 2021.03.24
 ### en
+- tc_epoll_server add sendBufferDirect 
+- tc_epoll_server fd auto closed when forked
 - fix tc_common time zone bug
 - fix hash call bug
 - fix EndpoingManager.cpp add missing break
@@ -12,6 +14,8 @@
 - set timeout options to prevent "connnect", "real_query" to be blocked for tens of minutes
 - Fix the function name (tc_bitmap) in the exception
 ### cn
+- tc_epoll_server 添加 sendBufferDirect 
+- tc_epoll_server fd添加fork后自动close属性
 - 修复 tc_common 中时区函数的时区的bug
 - 修复hash第一次建立连接不稳定的bug
 - 修复EndpoingManager.cpp 缺少 missing break的bug
