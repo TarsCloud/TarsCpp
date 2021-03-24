@@ -55,6 +55,9 @@ namespace tars
 # define MIN_STACKSIZE  4 * 1024
 #endif
 
+#define MAX_WAIT_TIME_MS 1000
+#define MIN_WAIT_TIME_MS 1
+
 void system_info_( SYSTEM_INFO * si) {
     ::GetSystemInfo( si);
 }
@@ -512,19 +515,27 @@ void CoroutineScheduler::run()
 {
     while(!_terminal)
     {
-        if(CoroutineInfo::CoroutineHeadEmpty(&_avail) && CoroutineInfo::CoroutineHeadEmpty(&_active))
-        {
-            TC_ThreadLock::Lock lock(_monitor);
+        wakeupbyself();
 
-            if(_activeCoroQueue.size() <= 0)
-            {
-                _monitor.timedWait(1000);
-            }
+        if(!CoroutineInfo::CoroutineHeadEmpty(&_avail))
+        {
+            CoroutineInfo *coro = _avail._next;
+
+            assert(coro != NULL);
+
+            // switchCoro(&_mainCoro, coro);
+            switchCoro(coro);
+
         }
 
-        wakeupbytimeout();
+        int waitTime = wakeupbytimeout();
 
-        wakeupbyself();
+        if(CoroutineInfo::CoroutineHeadEmpty(&_active) && (_activeCoroQueue.size() <= 0))
+        {
+            waitTime = min(max(waitTime, MIN_WAIT_TIME_MS), MAX_WAIT_TIME_MS);
+            TC_ThreadLock::Lock lock(_monitor);
+            _monitor.timedWait(waitTime);
+        }
 
         wakeup();
 
@@ -542,17 +553,6 @@ void CoroutineScheduler::run()
 
                 --iLoop;
             }
-
-        }
-
-        if(!CoroutineInfo::CoroutineHeadEmpty(&_avail))
-        {
-            CoroutineInfo *coro = _avail._next;
-
-            assert(coro != NULL);
-
-            // switchCoro(&_mainCoro, coro);
-            switchCoro(coro);
 
         }
 
@@ -711,8 +711,9 @@ void CoroutineScheduler::wakeup()
     }
 }
 
-void CoroutineScheduler::wakeupbytimeout()
+int CoroutineScheduler::wakeupbytimeout()
 {
+    int leftTime = MAX_WAIT_TIME_MS;
     if(!_terminal)
     {
         if(_timeoutCoroId.size() > 0)
@@ -722,7 +723,11 @@ void CoroutineScheduler::wakeupbytimeout()
             {
                 multimap<int64_t, uint32_t>::iterator it = _timeoutCoroId.begin();
 
-                if(it == _timeoutCoroId.end() || it->first > iNow)
+                if(it == _timeoutCoroId.end())
+                    break;
+
+                leftTime = it->first - iNow;
+                if(leftTime > 0)
                     break;
 
                 CoroutineInfo *coro = _all_coro[it->second];
@@ -736,6 +741,7 @@ void CoroutineScheduler::wakeupbytimeout()
 
         }
     }
+    return leftTime;
 }
 
 void CoroutineScheduler::terminate()
