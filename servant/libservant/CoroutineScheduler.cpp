@@ -39,6 +39,9 @@
 namespace tars 
 {
 
+#define MAX_WAIT_TIME_MS 1000
+#define MIN_WAIT_TIME_MS 1
+
 #if TARGET_PLATFORM_WINDOWS
 
 // x86_64
@@ -54,9 +57,6 @@ namespace tars
 #else
 # define MIN_STACKSIZE  4 * 1024
 #endif
-
-#define MAX_WAIT_TIME_MS 1000
-#define MIN_WAIT_TIME_MS 1
 
 void system_info_( SYSTEM_INFO * si) {
     ::GetSystemInfo( si);
@@ -528,12 +528,14 @@ void CoroutineScheduler::run()
 
         }
 
+        //获取第一个即将timeout的剩余时长
         int waitTime = wakeupbytimeout();
 
         if(CoroutineInfo::CoroutineHeadEmpty(&_active) && (_activeCoroQueue.size() <= 0))
         {
             waitTime = min(max(waitTime, MIN_WAIT_TIME_MS), MAX_WAIT_TIME_MS);
             TC_ThreadLock::Lock lock(_monitor);
+            //限定最多等待时长为waitTime,尽量保证sleep的协程及时被唤醒
             _monitor.timedWait(waitTime);
         }
 
