@@ -1,4 +1,4 @@
-# v2.4.16 2021.03.24
+# v2.4.16 2021.03.28
 ### en
 - tc_epoll_server add sendBufferDirect 
 - tc_epoll_server fd auto closed when forked
@@ -12,6 +12,7 @@
 - fix In Linux and windows, it is a small end. It corrects the definition error of byte order conversion function, such as tars_ ntonll
 - set timeout options to prevent "connnect", "real_query" to be blocked for tens of minutes
 - Fix the function name (tc_bitmap) in the exception
+- update protocol
 ### cn
 - tc_epoll_server 添加 sendBufferDirect 
 - tc_epoll_server fd添加fork后自动close属性
@@ -26,6 +27,7 @@
 - 修复windows下大小端的问题
 - mysql 增加超时的参数设置
 - 修复tc_bitmap异常字符串处理的bug
+- 更新protocol引用
 
 # v2.4.15 2020.12.30
 ### en
