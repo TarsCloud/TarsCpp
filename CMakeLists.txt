@@ -8,6 +8,8 @@ if("${TARS_CPP_COMMON}" STREQUAL "")
 
     set(TARS_CPP_COMMON "1")
 
+    include("${PROJECT_SOURCE_DIR}/cmake/GenVersion.cmake")
+
     include("${PROJECT_SOURCE_DIR}/cmake/Common.cmake")
 
     include("${PROJECT_SOURCE_DIR}/cmake/BuildTarsCpp.cmake")
@@ -17,6 +19,17 @@ if("${TARS_CPP_COMMON}" STREQUAL "")
     include("${PROJECT_SOURCE_DIR}/cmake/ParseAsm.cmake")
 
 endif()
+
+set(major "")
+set(minor "")
+set(patch "")
+get_version(major minor patch)
+
+set(TARS_VERSION ${major}.${minor}.${patch})
+
+add_definitions(-DTARS_VERSION="${TARS_VERSION}")
+
+message("TARS_VERSION:              ${TARS_VERSION}")
 
 set(CLEAR_INCLUDE "clear-install.cmake")
 FILE(WRITE ${CLEAR_INCLUDE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_INSTALL_PREFIX}/include)\n")

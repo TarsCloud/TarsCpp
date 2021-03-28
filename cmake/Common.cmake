@@ -1,6 +1,7 @@
 
-set(TARS_VERSION "2.4.16")
-add_definitions(-DTARS_VERSION="${TARS_VERSION}")
+
+# set(TARS_VERSION "2.4.16")
+# add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 
 set(CMAKE_VERBOSE_MAKEFILE off)
 
@@ -88,7 +89,6 @@ ENDIF (UNIX)
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
 
 message("----------------------------------------------------")
-
 message("CMAKE_SOURCE_DIR:          ${CMAKE_SOURCE_DIR}")
 message("CMAKE_BINARY_DIR:          ${CMAKE_BINARY_DIR}")
 message("PROJECT_SOURCE_DIR:        ${PROJECT_SOURCE_DIR}")

@@ -71,7 +71,7 @@ void TC_Socket::init(int fd, bool bOwner, int iDomain)
 
 void TC_Socket::createSocket(int iSocketType, int iDomain)
 {
-    assert(iSocketType == SOCK_STREAM || iSocketType == SOCK_DGRAM);
+    // assert(iSocketType == SOCK_STREAM || iSocketType == SOCK_DGRAM);
     close();
 
     _iDomain    = iDomain;
