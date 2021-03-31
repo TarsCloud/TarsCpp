@@ -185,7 +185,7 @@ template<typename T, typename D> bool TC_ThreadQueue<T, D>::pop_front(T& t, size
             }
             else {
                 //超时了
-                if (_cond.wait_for(lock, std::chrono::milliseconds(millsecond)) == std::cv_status::timeout) {
+                if (!_cond.wait_for(lock, std::chrono::milliseconds(millsecond), [this] { return !_queue.empty(); })) {
                     return false;
                 }
             }
@@ -353,7 +353,7 @@ template<typename T, typename D> bool TC_ThreadQueue<T, D>::swap(queue_type &q, 
             }
             else {
                 //超时了
-                if (_cond.wait_for(lock, std::chrono::milliseconds(millsecond)) == std::cv_status::timeout) {
+                if (!_cond.wait_for(lock, std::chrono::milliseconds(millsecond), [this] { return !_queue.empty(); })) {
                     return false;
                 }
             }
