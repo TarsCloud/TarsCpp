@@ -118,7 +118,7 @@ public:
 			fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + repeatTime;
 		}
 
-		return post(create(fireMillseconds, repeatTime,"", f, args...));
+		return post(create(fireMillseconds, repeatTime,"", f, args...), true);
 	}
 
     /**
@@ -146,7 +146,7 @@ public:
         auto task = std::make_shared < std::packaged_task
             < RetType() >> (std::bind(std::forward<F>(f), std::forward<Args>(args)...));
   
-        return post(create(0, 0,cronexpr, f, args...));
+        return post(create(0, 0,cronexpr, f, args...), true);
     }
 
 	/**
@@ -155,6 +155,11 @@ public:
 	 */
 	void erase(int64_t uniqId);
 
+    /**
+     * 判断循环是否还存在
+     * @param uniqId
+     */
+    bool exist(int64_t uniqId ,bool repeat = false);
 protected:
 	template <class F, class... Args>
 	shared_ptr<Func> create(int64_t fireMillseconds, int64_t repeatTime, const string & cronexpr, F &&f, Args &&... args)
@@ -185,23 +190,27 @@ protected:
             fPtr->_func = [task, this, fPtr, repeatTime]() {
                 (*task)();
                 task->reset();
-                if (fPtr->_cron.isset)
+    
+                if (this->exist( (int64_t) fPtr.get(),true ) )
                 {
-                    fPtr->_fireMillseconds = TC_Cron::nextcron(fPtr->_cron, fPtr->_fireMillseconds / 1000) * 1000;
-                    this->post(fPtr);
-                }
-                else if (repeatTime > 0)
-                {
-                    fPtr->_fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + repeatTime;
-                    this->post(fPtr);
-                }
+					if (fPtr->_cron.isset)
+					{
+						fPtr->_fireMillseconds = TC_Cron::nextcron(fPtr->_cron, fPtr->_fireMillseconds / 1000) * 1000;
+						this->post(fPtr);
+					}
+					else if (repeatTime > 0)
+					{
+						fPtr->_fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + repeatTime;
+						this->post(fPtr);
+					}
+				}
             };
 		}
 
 		return fPtr;
 	}
 
-	int64_t post(const shared_ptr<Func> &event);
+	int64_t post(const shared_ptr<Func> &event ,bool repeat = false);
 
 	void fireEvent(const EVENT_SET &el);
 
@@ -217,6 +226,8 @@ protected:
 	MAP_EVENT   _mapEvent;      //id, 事件
 
 	MAP_TIMER   _mapTimer;      //时间, 事件
+	
+	set<int64_t> _repeatIds; //循环任务的所有ID
 
 	TC_ThreadPool _tpool;
 };

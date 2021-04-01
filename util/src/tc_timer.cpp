@@ -27,7 +27,9 @@ TC_Timer::~TC_Timer()
 void TC_Timer::startTimer(int numThread)
 {
 	if (numThread <= 0)
+	{
 		numThread = 1;
+	}
 
 	_terminate = false;
 
@@ -38,8 +40,13 @@ void TC_Timer::startTimer(int numThread)
 
 void TC_Timer::stopTimer()
 {
+	if (_terminate)
+    {
+        return;
+    }
+
 	{
-		std::unique_lock <std::mutex> lck(_mutex);
+		std::unique_lock<std::mutex> lck(_mutex);
 		_terminate = true;
 		_cond.notify_all();
 	}
@@ -47,62 +54,78 @@ void TC_Timer::stopTimer()
 	_tpool.stop();
 }
 
+bool TC_Timer::exist(int64_t uniqId,bool repeat )
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    if (repeat)
+    {
+        return  _repeatIds.find(uniqId) != _repeatIds.end();
+    }
+    else
+    {
+        return _mapEvent.find(uniqId) != _mapEvent.end();
+    }
+}
+
 void TC_Timer::erase(int64_t uniqId)
 {
-	std::lock_guard <std::mutex> lock(_mutex);
-
+	std::lock_guard<std::mutex> lock(_mutex);
 	auto it = _mapEvent.find(uniqId);
-
-	if (it != _mapEvent.end()) {
+	if (it != _mapEvent.end()) 
+	{
 		auto itEvent = _mapTimer.find(it->second->_fireMillseconds);
-
-		if (itEvent != _mapTimer.end()) {
+		if (itEvent != _mapTimer.end()) 
+		{
 			itEvent->second.erase(uniqId);
-
-			if (itEvent->second.empty()) {
+			if (itEvent->second.empty()) 
+			{
 				_mapTimer.erase(itEvent);
 			}
 		}
+        it->second->_func = nullptr;
 		_mapEvent.erase(it);
 	}
 }
 
-int64_t TC_Timer::post(const shared_ptr<TC_Timer::Func> & event)
+int64_t TC_Timer::post(const shared_ptr<TC_Timer::Func> &event, bool repeat)
 {
-	std::unique_lock <std::mutex> lock(_mutex);
+	std::unique_lock<std::mutex> lock(_mutex);
 
-	int64_t uniqId = (int64_t)event.get();
+	int64_t uniqId = (int64_t) event.get();
+    if (repeat)
+    {
+        _repeatIds.insert(uniqId);
+    }
 
-	if(_mapEvent.find(uniqId) == _mapEvent.end()) {
+	if (_mapEvent.find(uniqId) == _mapEvent.end()) 
+	{
 		_mapEvent[uniqId] = event;
 	}
-    //cout << "post event! fire time:" << TC_Common::tm2str(event->_fireMillseconds/1000, "%Y-%m-%d %H:%M:%S")<<endl;
 	_mapTimer[event->_fireMillseconds].insert(uniqId);
 	_cond.notify_one();
 	return uniqId;
 }
 
-void TC_Timer::fireEvent(const EVENT_SET & el)
+void TC_Timer::fireEvent(const EVENT_SET &el)
 {
 	auto itList = el.begin();
 
-	while (itList != el.end()) {
-		shared_ptr<Func> func ;
+	while (itList != el.end()) 
+	{
+		shared_ptr<Func> func;
 
 		{
 			std::lock_guard<std::mutex> lock(_mutex);
 
 			auto it = _mapEvent.find(*itList);
-
-			if (it != _mapEvent.end()) {
-
+			if (it != _mapEvent.end()) 
+			{
 				func = it->second;
-
 				_mapEvent.erase(it);
 			}
 		}
-
-		if(func) {
+		if (func) 
+		{
 			//执行具体事件对象
 			_tpool.exec(func->_func);
 		}
@@ -120,7 +143,7 @@ void TC_Timer::run()
 			EVENT_SET el;
 
 			{
-				std::unique_lock <std::mutex> lock(_mutex);
+				std::unique_lock<std::mutex> lock(_mutex);
 
 				auto it = _mapTimer.begin();
 
@@ -156,7 +179,8 @@ void TC_Timer::run()
 			}
 
 		}
-		catch (exception & ex) {
+		catch (exception &ex) 
+		{
 			cerr << ex.what() << endl;
 		}
 	}
