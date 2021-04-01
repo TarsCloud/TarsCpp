@@ -20,12 +20,12 @@ if("${TARS_CPP_COMMON}" STREQUAL "")
 
 endif()
 
-set(major "")
-set(minor "")
-set(patch "")
-get_version(major minor patch)
+# set(major "")
+# set(minor "")
+# set(patch "")
+# get_version(major minor patch)
 
-set(TARS_VERSION ${major}.${minor}.${patch})
+# set(TARS_VERSION ${major}.${minor}.${patch})
 
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 
