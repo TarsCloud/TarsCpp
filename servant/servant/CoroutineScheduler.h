@@ -459,7 +459,7 @@ private:
     /**
      * 唤醒休眠的协程
      */
-    void wakeupbytimeout();
+    int wakeupbytimeout();
 
     /**
      * 放到active的协程链表中
