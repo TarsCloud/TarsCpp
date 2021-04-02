@@ -1,11 +1,15 @@
 
-# v2.4.17 2021.04.01
+# v2.4.17 2021.04.02
 ### en
 - fix tc_time bug of erase caused by timer repeat event
 - Fix the MySQL client library to solve the problem of compiling under cmake3.20
+- Fix tc_config, key has no escaped bug 
+- Fix the scheduling mechanism to avoid the problem of 1 s scheduling delay
 ### cn
 - 修复tc_timer repeat事件带来的无法erase的问题
 - 修复引用的mysql-client库, 解决cmake3.20下编译的问题
+- 修复tc_config key没有转义的bug
+- 修复协程调度机制, 避免出现总是出现1s调度延时的问题
 
 # v2.4.16 2021.03.28
 ### en
