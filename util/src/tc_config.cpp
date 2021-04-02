@@ -238,7 +238,9 @@ void TC_ConfigDomain::setParamValue(const string &line)
         }
     }
 
-    setParamValue(line, "");
+    // also need parse
+    string name = parse(TC_Common::trim(line, " \r\n\t"));
+    setParamValue(name, "");
 }
 
 string TC_ConfigDomain::parse(const string& s)
