@@ -1676,6 +1676,8 @@ void TC_EpollServer::NetThread::delConnection(TC_EpollServer::Connection *cPtr, 
     //如果是TCP的连接才真正的关闭连接
     if (cPtr->getListenfd() != -1)
     {
+        BindAdapterPtr adapter = cPtr->getBindAdapter();
+
         //false的情况,是超时被主动删除
         if(!bEraseList)
         {
@@ -1685,7 +1687,7 @@ void TC_EpollServer::NetThread::delConnection(TC_EpollServer::Connection *cPtr, 
         uint32_t uid = cPtr->getId();
 
         //构造一个tagRecvData，通知业务该连接的关闭事件
-        shared_ptr<RecvContext> recv   = std::make_shared<RecvContext>(uid, cPtr->getIp(), cPtr->getPort(), cPtr->getfd(), cPtr->getBindAdapter(), true, (int)closeType);
+        shared_ptr<RecvContext> recv   = std::make_shared<RecvContext>(uid, cPtr->getIp(), cPtr->getPort(), cPtr->getfd(), adapter, true, (int)closeType);
 
         //如果是merge模式，则close直接交给网络线程处理
         if (_epollServer->isMergeHandleNetThread())
@@ -1708,7 +1710,7 @@ void TC_EpollServer::NetThread::delConnection(TC_EpollServer::Connection *cPtr, 
             _list.del(uid);
         }
         
-        cPtr->getBindAdapter()->decreaseNowConnection();
+        adapter->decreaseNowConnection();
     }
 }
 
@@ -2047,11 +2049,13 @@ bool TC_EpollServer::accept(int fd, int domain)
     }
     else
     {
-        //直到发生EAGAIN才不继续accept
-        if (TC_Socket::isPending())
-        {
-            return false;
-        }
+        // //直到发生EAGAIN才不继续accept
+        // if (TC_Socket::isPending())
+        // {
+        //     return false;
+        // }
+
+        return false;
     }
     return true;
 }
