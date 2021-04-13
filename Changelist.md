@@ -1,4 +1,11 @@
 
+## v2.4.18 2021.04.13
+### en
+- fix tc_thread_queue,Optimizing the swarm effect
+- fix epoll server connection close cause crash bug
+### cn
+- 修复tc_thread_queue 优化惊群效应
+- 修复epoll server 连接关闭时可能带来的crash
 # v2.4.17 2021.04.02
 ### en
 - fix tc_time bug of erase caused by timer repeat event
