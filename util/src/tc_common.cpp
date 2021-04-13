@@ -519,7 +519,6 @@ string TimezoneHelper::timezone_local;
 
 int64_t TimezoneHelper::timezone_diff_secs = 0;
 
-
 int TC_Common::str2tm(const string &sString, const string &sFormat, struct tm &stTm)
 {
     char *p = strptime(sString.c_str(), sFormat.c_str(), &stTm);
