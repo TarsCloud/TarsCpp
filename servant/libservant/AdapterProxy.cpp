@@ -280,6 +280,10 @@ int AdapterProxy::invoke(ReqMessage * msg)
         msg->request.iRequestId = _timeoutQueue->generateId();
     }
 
+#ifdef TARS_OPENTRACKING
+	startTrack(msg);
+#endif
+
     if(_objectProxy->getRootServantProxy()->tars_connection_serial() > 0)
     {
 	    return invoke_connection_serial(msg);
