@@ -98,10 +98,10 @@ void SeqManager::del(uint16_t iSeq)
 
 ///////////////////////////////////////////////////////////////
 ServantProxyThreadData::ServantProxyThreadData()
-: _queueInit(false)
-, _reqQNo(0)
-, _netSeq(0)
-, _netThreadSeq(-1)
+//: _queueInit(false)
+: _reqQNo(0)
+//, _netSeq(0)
+//, _netThreadSeq(-1)
 , _hash(false)
 , _conHash(false)
 , _hashCode(-1)
@@ -109,7 +109,7 @@ ServantProxyThreadData::ServantProxyThreadData()
 , _hasTimeout(false)
 , _timeout(0)
 , _sched(NULL)
-, _objectProxyNum(0)
+//, _objectProxyNum(0)
 {
 }
 
@@ -117,24 +117,26 @@ ServantProxyThreadData::~ServantProxyThreadData()
 {
     try
     {
-        if(_queueInit)
-        {
-            for(size_t i=0;i<_objectProxyNum;++i)
-            {
-                if(_objectProxyOwn.get()[i])
-                {
-                    ReqMessage * msg = new ReqMessage();
-                    msg->eType = ReqMessage::THREAD_EXIT;
+//        if(_queueInit)
+//        {
+        	for(auto it = _communicatorEpollInfo.begin(); it != _communicatorEpollInfo.end(); ++it) {
+		        for (size_t i = 0; i < it->second._objectProxyNum; ++i) {
+			        if (it->second._objectProxyOwn.get()[i]) {
+				        ReqMessage *msg = new ReqMessage();
+				        msg->eType = ReqMessage::THREAD_EXIT;
 
-                    bool bEmpty = false;
-                    _reqQueue[i]->push_back(msg, bEmpty);
+				        bool bEmpty = false;
+				        it->second._reqQueue[i]->push_back(msg, bEmpty);
 
-                    _objectProxyOwn.get()[i]->getCommunicatorEpoll()->notifyDel(_reqQNo);
-                }
-            }
-            _queueInit = false;
+				        it->second._objectProxyOwn.get()[i]->getCommunicatorEpoll()->notifyDel(_reqQNo);
+			        }
+		        }
+//		        _queueInit = false;
+	        }
 
-        }
+	    _communicatorEpollInfo.clear();
+
+//        }
 
         _pSeq->del(_reqQNo);
     }
@@ -647,6 +649,8 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
     //选择网络线程
     selectNetThreadInfo(pSptd, pObjProxy, pReqQ);
 
+    assert(pReqQ != NULL);
+
     //调用发起时间
     msg->iBeginTime   = TNOWMS;
     msg->pObjectProxy = pObjProxy;
@@ -718,7 +722,7 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 
     if (!pReqQ->push_back(msg, bEmpty))
     {
-        TLOGERROR("[ServantProxy::invoke msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
+        TLOGERROR("[ServantProxy::invoke msgQueue push_back error]" << endl);
 
         delete msg;
         msg = NULL;
@@ -1182,44 +1186,57 @@ void ServantProxy::http_call_async(const string &funcName, shared_ptr<TC_HttpReq
 //选取一个网络线程对应的信息
 void ServantProxy::selectNetThreadInfo(ServantProxyThreadData *pSptd, ObjectProxy *&pObjProxy, ReqInfoQueue *&pReqQ)
 {
+	ServantProxyThreadData::CommunicatorEpollInfo &communicatorEpollInfo = pSptd->_communicatorEpollInfo[this->tars_communicator()];
+
     //指针为空 就new一个
-    if (!pSptd->_queueInit)
+    if (!communicatorEpollInfo._queueInit)
     {
         for (size_t i = 0; i < _objectProxyNum; ++i)
         {
-            pSptd->_reqQueue[i] = new ReqInfoQueue(_objectProxy[0]->getCommunicatorEpoll()->getNoSendQueueLimit());
+//            pSptd->_reqQueue[i] = new ReqInfoQueue(_objectProxy[0]->getCommunicatorEpoll()->getNoSendQueueLimit());
+	        communicatorEpollInfo._reqQueue[i] = new ReqInfoQueue(_objectProxy[0]->getCommunicatorEpoll()->getNoSendQueueLimit());
         }
-        pSptd->_objectProxyNum = _objectProxyNum;
-        pSptd->_objectProxyOwn = _objectProxyOwn;
-        pSptd->_queueInit      = true;
+	    communicatorEpollInfo._objectProxyNum = _objectProxyNum;
+	    communicatorEpollInfo._objectProxyOwn = _objectProxyOwn;
+	    communicatorEpollInfo._queueInit      = true;
     }
 
-    if (_objectProxyNum == 1)
+	if (_objectProxyNum == 1)
     {
         pObjProxy = *_objectProxy;
-        pReqQ     = pSptd->_reqQueue[0];
+//        pReqQ     = pSptd->_reqQueue[0];
+	    pReqQ     = communicatorEpollInfo._reqQueue[0];
     }
     else
     {
-        if (pSptd->_netThreadSeq >= 0)
+//        if (pSptd->_netThreadSeq >= 0)
+	    if (communicatorEpollInfo._netThreadSeq >= 0)
         {
             //网络线程发起的请求
-            assert(pSptd->_netThreadSeq < static_cast<int>(_objectProxyNum));
+//            assert(pSptd->_netThreadSeq < static_cast<int>(_objectProxyNum));
+	        assert(communicatorEpollInfo._netThreadSeq < static_cast<int>(_objectProxyNum));
 
-            pObjProxy = *(_objectProxy + pSptd->_netThreadSeq);
-            pReqQ     = pSptd->_reqQueue[pSptd->_netThreadSeq];
+//	        pObjProxy = *(_objectProxy + pSptd->_netThreadSeq);
+		    pObjProxy = *(_objectProxy + communicatorEpollInfo._netThreadSeq);
+//		    pReqQ     = pSptd->_reqQueue[pSptd->_netThreadSeq];
+		    pReqQ     = communicatorEpollInfo._reqQueue[communicatorEpollInfo._netThreadSeq];
         }
         else
         {
             //用线程的私有数据来保存选到的seq
-            pObjProxy = *(_objectProxy + pSptd->_netSeq);
-            pReqQ     = pSptd->_reqQueue[pSptd->_netSeq];
-            pSptd->_netSeq++;
+//            pObjProxy = *(_objectProxy + pSptd->_netSeq);
+	        pObjProxy = *(_objectProxy + communicatorEpollInfo._netSeq);
+//	        pReqQ     = pSptd->_reqQueue[pSptd->_netSeq];
+		    pReqQ     = communicatorEpollInfo._reqQueue[communicatorEpollInfo._netSeq];
+//		    pSptd->_netSeq++;
+		    communicatorEpollInfo._netSeq++;
 
-            if (pSptd->_netSeq == _objectProxyNum)
-                pSptd->_netSeq = 0;
+            if (communicatorEpollInfo._netSeq == _objectProxyNum)
+	            communicatorEpollInfo._netSeq = 0;
         }
     }
+
+    assert(pReqQ != NULL);
 }
 
 void ServantProxy::checkDye(RequestPacket& req)

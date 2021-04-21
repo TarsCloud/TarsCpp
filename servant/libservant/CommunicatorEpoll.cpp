@@ -491,7 +491,9 @@ void CommunicatorEpoll::run()
 {
     ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);
-    pSptd->_netThreadSeq = (int)_netThreadSeq;
+
+	pSptd->_communicatorEpollInfo[this->getCommunicator()]._netThreadSeq = (int)_netThreadSeq;
+//    pSptd->_netThreadSeq = (int)_netThreadSeq;
 
     while (!_terminate)
     {

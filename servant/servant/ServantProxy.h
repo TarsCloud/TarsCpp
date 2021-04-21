@@ -105,15 +105,43 @@ public:
      */
 	static void reset();
 
+//	, _reqQNo(0)
+//	, _netSeq(0)
+//	, _netThreadSeq(-1)
+
+	//每发起调用的线程 记录的 针对某通信器的 数据,
+	struct CommunicatorEpollInfo
+	{
+		bool           _queueInit = false;                       //是否初始化
+
+		/*
+		 * 每个线程跟客户端网络线程通信的队列
+		 */
+		ReqInfoQueue * _reqQueue[MAX_CLIENT_THREAD_NUM]; //队列数组
+		size_t         _netSeq = 0;                          //轮训选择网络线程的偏移量
+		int            _netThreadSeq = -1;                    //网络线程发起的请求回到自己的网络线程来处理,其值为网络线程的id
+
+		/**
+		 * ObjectProxy
+		 */
+		size_t         _objectProxyNum = 0;                  //ObjectProxy对象的个数，其个数由客户端的网络线程数决定，每个网络线程有一个ObjectProxy
+
+		/**
+		 *  objectProxy Pointer
+		 */
+		shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
+	};
 public:
+
+	unordered_map<Communicator*, CommunicatorEpollInfo>    _communicatorEpollInfo;
     /*
      * 每个线程跟客户端网络线程通信的队列
      */
-    ReqInfoQueue * _reqQueue[MAX_CLIENT_THREAD_NUM]; //队列数组
-    bool           _queueInit;                       //是否初始化
+//    ReqInfoQueue * _reqQueue[MAX_CLIENT_THREAD_NUM]; //队列数组
+//    bool           _queueInit;                       //是否初始化
     uint16_t       _reqQNo;                          //请求事件通知的seq
-    size_t         _netSeq;                          //轮训选择网络线程的偏移量
-    int            _netThreadSeq;                     //网络线程发起的请求回到自己的网络线程来处理,其值为网络线程的id
+//    size_t         _netSeq;                          //轮训选择网络线程的偏移量
+//    int            _netThreadSeq;                    //网络线程发起的请求回到自己的网络线程来处理,其值为网络线程的id
 
     /**
      * hash属性,客户端每次调用都进行设置
@@ -144,15 +172,15 @@ public:
      */
     CoroutineScheduler*        _sched;                   //协程调度器
 
-    /**
-     * ObjectProxy
-     */
-    size_t         _objectProxyNum;                  //ObjectProxy对象的个数，其个数由客户端的网络线程数决定，每个网络线程有一个ObjectProxy
-
-    /**
-     *  objectProxy Pointer
-     */
-    shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
+//    /**
+//     * ObjectProxy
+//     */
+//    size_t         _objectProxyNum;                  //ObjectProxy对象的个数，其个数由客户端的网络线程数决定，每个网络线程有一个ObjectProxy
+//
+//    /**
+//     *  objectProxy Pointer
+//     */
+//    shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
 #ifdef TARS_OPENTRACKING
     std::unordered_map<std::string, std::string> _trackInfoMap;
 #endif
