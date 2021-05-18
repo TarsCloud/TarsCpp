@@ -253,7 +253,7 @@ if (TARS_MYSQL)
         set(LIB_MYSQL "libmysql")
 
         ExternalProject_Add(ADD_${LIB_MYSQL}
-                URL http://cdn.tarsyun.com/src/mysql-connector-c-6.1.11-src.zip
+                URL http://cdn.tarsyun.com/src/mysql-connector-c-6.1.11-src.fixed.zip
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
@@ -262,7 +262,7 @@ if (TARS_MYSQL)
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
-                URL_MD5 62de01beffc48348708c983a585b4dc1
+                URL_MD5 bad636fe9bcc9bb62e3f5b784495a9b5
                 )
 
     else ()
