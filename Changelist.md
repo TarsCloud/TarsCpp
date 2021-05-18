@@ -2,9 +2,11 @@
 # v2.4.19 2021.05.18
 ### en
 - fix TARS_OPENTARCKING not report trace bug
+- update mysql-client to support cmake 3.20
 - fix doc README.md 404
 ### cn
 - 修复打开TARS_OPENTARCKING宏时，没有上报trace信息的问题
+- update mysql-client to support cmake 3.20
 - fix doc README.md 404
 
 ## v2.4.18 2021.04.13
