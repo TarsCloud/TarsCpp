@@ -1,4 +1,12 @@
 
+# v2.4.19 2021.05.18
+### en
+- fix TARS_OPENTARCKING not report trace bug
+- fix doc README.md 404
+### cn
+- 修复打开TARS_OPENTARCKING宏时，没有上报trace信息的问题
+- fix doc README.md 404
+
 ## v2.4.18 2021.04.13
 ### en
 - fix tc_thread_queue,Optimizing the swarm effect
