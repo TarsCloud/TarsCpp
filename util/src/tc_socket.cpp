@@ -702,7 +702,7 @@ void TC_Socket::setblock(SOCKET_TYPE fd, bool bBlock)
         THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setblock] fcntl [F_SETFL] error");
     }
 #else
-	unsigned long ul = 1;
+	unsigned long ul = bBlock ? 0 : 1;
 	
 	int ret;
 	ret = ioctlsocket(fd, FIONBIO, (unsigned long *)&ul);
