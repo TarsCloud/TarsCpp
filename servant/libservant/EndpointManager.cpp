@@ -47,6 +47,10 @@ QueryEpBase::QueryEpBase(Communicator * pComm, bool bFirstNetThread,bool bInterf
 , _failTimes(0)
 {
     setNoDelete(true);
+
+    _refreshInterval = TC_Common::strto<int>(_communicator->getProperty("refresh-endpoint-interval", "60000"));
+
+    TLOGTARS("[QueryEpBase _refreshInterval:" << _refreshInterval << "]" << endl);
 }
 
 void QueryEpBase::callback_findObjectById4All(Int32 ret, const vector<EndpointF>& activeEp, const vector<EndpointF>& inactiveEp)
