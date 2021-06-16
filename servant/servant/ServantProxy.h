@@ -153,14 +153,17 @@ public:
      *  objectProxy Pointer
      */
     shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
-#ifdef TARS_OPENTRACKING
-    std::unordered_map<std::string, std::string> _trackInfoMap;
-#endif
+
 
     /**
      * cookie
      */
     map<string, string>             _cookie;          // cookie内容
+
+
+    #ifdef TARS_OPENTRACKING
+    std::unordered_map<std::string, std::string> _trackInfoMap;
+    #endif
 };
 
 
