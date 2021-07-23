@@ -16,6 +16,7 @@
 
 #include "util/tc_epoll_server.h"
 #include "util/tc_http.h"
+#include "util/tc_grpc.h"
 #include "servant/AppProtocol.h"
 #include "servant/Transceiver.h"
 #include "servant/AdapterProxy.h"
@@ -165,6 +166,71 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in,
 
 	return flag;
 }
+
+
+// ENCODE function, called by network thread
+vector<char> ProxyProtocol::grpcRequest(RequestPacket& request, Transceiver *trans)
+{
+    TC_GrpcClient* session = (TC_GrpcClient*)trans->getSendBuffer()->getContextData();
+	if(session == NULL)
+	{
+		session = new TC_GrpcClient();
+
+		trans->getSendBuffer()->setContextData(session, [=](TC_NetWorkBuffer*nb){ delete session; });
+
+		session->settings(3000);
+	}
+
+    if (session->buffer().size() != 0) {
+        //直接发送裸得应答数据，业务层一般不直接使用，仅仅tcp支持
+		trans->getSendBuffer()->addBuffer(session->buffer());
+		auto data = trans->getSendBuffer()->getBufferPointer();
+		int iRet = trans->send(data.first, (uint32_t) data.second, 0);
+		trans->getSendBuffer()->moveHeader(iRet);
+        session->buffer().clear();
+    }
+
+	shared_ptr<TC_HttpRequest> *data = (shared_ptr<TC_HttpRequest>*)request.sBuffer.data();
+
+	request.iRequestId = session->submit(*(*data).get());
+
+	//这里把智能指针释放一次
+	(*data).reset();
+
+	if (request.iRequestId < 0)
+	{
+		TLOGERROR("http2Request::Fatal submit error: " << session->getErrMsg() << endl);
+		return vector<char>();
+	}
+
+//	cout << "http2Request id:" << request.iRequestId << endl;
+
+	vector<char> out;
+	session->swap(out);
+
+	return out;
+}
+
+TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::grpcResponse(TC_NetWorkBuffer &in, ResponsePacket& rsp)
+{
+	TC_GrpcClient* session = (TC_GrpcClient*)((Transceiver*)(in.getConnection()))->getSendBuffer()->getContextData();
+
+	pair<int, shared_ptr<TC_HttpResponse>> out;
+	TC_NetWorkBuffer::PACKET_TYPE flag = session->parseResponse(in, out);
+
+	if(flag == TC_NetWorkBuffer::PACKET_FULL)
+	{
+		rsp.iRequestId  = out.first;
+
+		rsp.sBuffer.resize(sizeof(shared_ptr<TC_HttpResponse>));
+
+		//这里智能指针有一次+1, 后面要自己reset掉
+		*(shared_ptr<TC_HttpResponse>*)rsp.sBuffer.data() = out.second;
+	}
+
+	return flag;
+}
+
 
 #endif
 }

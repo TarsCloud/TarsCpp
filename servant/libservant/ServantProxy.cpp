@@ -438,6 +438,11 @@ void ServantProxy::tars_set_protocol(SERVANT_PROTOCOL protocol, int connectionSe
 			proto.responseFunc  = ProxyProtocol::http2Response;
             connectionSerial    = 0;
 			break;
+        case PROTOCOL_GRPC:
+			proto.requestFunc   = ProxyProtocol::grpcRequest;
+			proto.responseFunc  = ProxyProtocol::grpcResponse;
+            connectionSerial    = 0;
+			break;
 #endif
 		case PROTOCOL_TARS:
 		default:
