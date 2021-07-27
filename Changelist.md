@@ -1,5 +1,5 @@
 
-# v2.4.20 2021.05.18
+# v2.4.20 2021.07.27
 ### en
 - application add addServantWithParams support parameter for handle
 - remove message.h opentracking define
