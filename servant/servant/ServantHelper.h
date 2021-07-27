@@ -49,6 +49,17 @@ struct ServantCreation : public ServantHelperCreation
     ServantPtr create(const string &s) { T *p = new T; p->setName(s); p->setApplication(_application); return p; }
     Application *_application;
 };
+/**
+ * Servant
+ */
+template<class T, class P>
+struct ServantCreationWithParams : public ServantHelperCreation
+{
+	ServantCreationWithParams(Application *application, const P &p) : _application(application), _p(p) {}
+	ServantPtr create(const string &s) { T *p = new T(_p); p->setName(s); p->setApplication(_application); return p; }
+	Application *_application;
+	P _p;
+};
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -81,6 +92,22 @@ public:
         }
         _servant_creator[id] = new ServantCreation<T>(application);
     }
+
+	/**
+	 * 添加Servant
+	 * @param T
+	 * @param id
+	 */
+	template<typename T, typename P>
+	void addServant(const string &id, Application *application, const P &p,  bool check = false)
+	{
+		if(check && _servant_adapter.end() == _servant_adapter.find(id))
+		{
+			cerr<<"[TAF]ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not conf in the web)"<<endl;
+			throw runtime_error("[TAF]ServantHelperManager::addServant " + id + " not find adapter.(maybe not conf in the web)");
+		}
+		_servant_creator[id] = new ServantCreationWithParams<T, P>(application, p);
+	}
 
     /**
      * 生成Servant
