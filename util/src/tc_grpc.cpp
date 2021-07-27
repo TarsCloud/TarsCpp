@@ -13,10 +13,12 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
+#if TARS_HTTP2
 #include <string>
 #include <iostream>
 #include "util/tc_grpc.h"
 
+#include "nghttp2/nghttp2.h"
 namespace tars
 {
 
@@ -596,3 +598,5 @@ TC_NetWorkBuffer::PACKET_TYPE TC_GrpcClient::parseResponse(TC_NetWorkBuffer &in,
 }
 
 }   //namespace tars
+
+#endif // end #if TARS_HTTP2

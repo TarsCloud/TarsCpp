@@ -5,7 +5,6 @@
 #include "util/tc_network_buffer.h"
 #include "util/tc_spin_lock.h"
 #include "util/tc_http2.h"
-#include "nghttp2/nghttp2.h"
 #include "util/tc_epoll_server.h"
 
 namespace tars

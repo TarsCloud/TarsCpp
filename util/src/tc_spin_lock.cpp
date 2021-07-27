@@ -21,6 +21,7 @@ void TC_SpinLock::lock() const
 {
 
     for (; _flag.test_and_set(std::memory_order_acquire);) {
+        std::this_thread::yield();
 //        asm volatile("rep; nop":: : "memory");
     }
 }
@@ -35,6 +36,7 @@ bool TC_SpinLock::tryLock() const
     int trys = 100;
     for (; trys > 0 && _flag.test_and_set(std::memory_order_acquire); --trys)
     {
+        std::this_thread::yield();
 //#if TARGET_PLATFORM_LINUX
 //        asm volatile("rep; nop" ::: "memory");
 //#endif
