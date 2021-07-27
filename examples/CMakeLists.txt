@@ -2,6 +2,7 @@
 add_subdirectory(UtilDemo)
 add_subdirectory(CoroutineDemo)
 add_subdirectory(HttpDemo)
+add_subdirectory(GrpcDemo)
 add_subdirectory(CustomDemo)
 add_subdirectory(AuthDemo)
 

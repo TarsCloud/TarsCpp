@@ -455,6 +455,7 @@ public:
     	PROTOCOL_TARS,              //默认tars服务的协议
     	PROTOCOL_HTTP1,             //http协议
 	    PROTOCOL_HTTP2,             //http2协议
+        PROTOCOL_GRPC,              //grpc协议
     };
 
     /**

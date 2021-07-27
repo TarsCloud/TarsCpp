@@ -8,9 +8,10 @@ macro(build_tars_server MODULE DEPS)
     aux_source_directory(. DIR_SRCS)
 
     FILE(GLOB TARS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.tars")
+    FILE(GLOB PB_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
 
     set(TARS_LIST_DEPENDS)
-
+    set(PB_LIST_DEPENDS)
     if (TARS_LIST)
         set(CLEAN_LIST)
 
@@ -40,10 +41,39 @@ macro(build_tars_server MODULE DEPS)
         add_executable(${MODULE} ${DIR_SRCS})
 
         add_dependencies(${MODULE} ${TARS_TARGET})
+        
+    elseif(PB_LIST)
+        set(CLEAN_LIST)
+        set(_PROTOBUF_PROTOC ${CMAKE_BINARY_DIR}/src/protobuf/bin/protoc)
 
-    else(TARS_LIST)
+        foreach (PB_SRC ${PB_LIST})
+            get_filename_component(NAME_WE ${PB_SRC} NAME_WE)
+
+            set(PB_H ${NAME_WE}.pb.h)
+            set(PB_CC ${NAME_WE}.pb.cc)
+
+            set(CUR_PB_GEN ${CMAKE_CURRENT_SOURCE_DIR}/${PB_H} ${CMAKE_CURRENT_SOURCE_DIR}/${PB_CC})
+            LIST(APPEND PB_LIST_DEPENDS ${CUR_PB_GEN})
+
+            add_custom_command(OUTPUT ${CUR_PB_GEN}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    DEPENDS ${PROTO2TARS} ${_PROTOBUF_PROTOC}
+                    COMMAND ${_PROTOBUF_PROTOC} -I "${CMAKE_CURRENT_SOURCE_DIR}" 
+                                "${PB_SRC}" --cpp_out "${CMAKE_CURRENT_SOURCE_DIR}"        
+                    COMMENT "${_PROTOBUF_PROTOC} ${PB_SRC} ${CMAKE_CURRENT_SOURCE_DIR} ${CUR_PB_GEN}")
+
+            list(APPEND CLEAN_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${PB_H} ${CMAKE_CURRENT_SOURCE_DIR}/${PB_CC})
+        endforeach ()
+
+        set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")
+
+        set(TARS_TARGET "TARS_${MODULE}")  
+        add_custom_target(${TARS_TARGET} ALL DEPENDS ${PB_LIST_DEPENDS})
+        add_executable(${MODULE} ${CLEAN_LIST} ${DIR_SRCS})
+        add_dependencies(${MODULE} ${TARS_TARGET})
+    else()
         add_executable(${MODULE} ${DIR_SRCS})
-    endif(TARS_LIST)
+    endif()
 
     if("${DEPS}" STREQUAL "")
         add_dependencies(${MODULE} tarsservant tarsutil)
@@ -63,7 +93,7 @@ macro(build_tars_server MODULE DEPS)
     endif()
 
     if(TARS_HTTP2)
-        target_link_libraries(${MODULE} ${LIB_HTTP2})
+        target_link_libraries(${MODULE} ${LIB_HTTP2} ${LIB_PROTOBUF})
     endif()
 
     if(TARS_GPERF)
