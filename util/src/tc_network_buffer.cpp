@@ -303,4 +303,18 @@ TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseEcho(TC_NetWorkBuffer&in, v
     return TC_NetWorkBuffer::PACKET_LESS;             //表示收到的包不完全
 }
 
+TC_NetWorkBuffer::PACKET_TYPE TC_NetWorkBuffer::parseJson(TC_NetWorkBuffer&in, vector<char> &out)
+{
+    auto jsonEnd = in.find("}", 1);
+
+    if (jsonEnd != in.end())
+    {
+        out = in.getBuffers();
+        in.clearBuffers();
+        return TC_NetWorkBuffer::PACKET_FULL;   //返回1表示收到的包已经完全
+    }
+
+    return TC_NetWorkBuffer::PACKET_ERR;        //返回-1表示收到包协议错误，框架会自动关闭当前连接
+}
+
 }

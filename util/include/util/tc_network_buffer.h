@@ -742,6 +742,14 @@ public:
      */
     static TC_NetWorkBuffer::PACKET_TYPE parseEcho(TC_NetWorkBuffer&in, vector<char> &out);
 
+    /**
+    * echo
+    * @param in
+    * @param out
+    * @return
+    */
+    static TC_NetWorkBuffer::PACKET_TYPE parseJson(TC_NetWorkBuffer&in, vector<char> &out);
+
 protected:
 
 	size_t getBuffers(char *buffer, size_t length) const;
