@@ -242,9 +242,7 @@ struct ReqMessage : public TC_HandleBase
 
     map<string, string>         cookie;          // cookie内容
 
-    #ifdef TARS_OPENTRACKING
     std::unordered_map<std::string, std::string> trackInfoMap; //调用链信息
-    #endif
 };
 
 typedef TC_AutoPtr<ReqMessage>  ReqMessagePtr;
