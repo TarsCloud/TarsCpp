@@ -117,38 +117,17 @@ string Tars2Dart::toTypeInit(const TypePtr& pPtr) const
     VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
     if (vPtr)
     {
-        BuiltinPtr bPtr = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
-        if (bPtr && bPtr->kind() == Builtin::KindByte)
-        {
-            return "(" + tostr(vPtr->getTypePtr()) + "[]) new " + tostr(vPtr->getTypePtr()) + "[1];";
-        }
-
-        if (_bForceArray)
-        {
-            string sType;
-            size_t iPosBegin, iPosEnd;
-            sType = tostr(vPtr->getTypePtr());
-            //map<>的数组去掉 '<...>'
-            if ((iPosBegin = sType.find("<")) != string::npos && (iPosEnd = sType.rfind(">")) != string::npos)
-            {
-                sType = sType.substr(0, iPosBegin) +  sType.substr(iPosEnd + 1);
-            }
-            //[] (数组)的数组变为[1]
-            sType = tars::TC_Common::replace(sType, "[]", "[1]");
-            return "(" + tostr(vPtr->getTypePtr()) + "[]) new " + sType + "[1];";;
-        }
-
-        return "new " + tostrVector(vPtr) + "();";
+       return "null";
     }
 
     MapPtr mPtr = MapPtr::dynamicCast(pPtr);
-    if (mPtr) return "new " + tostrMap(mPtr, true) + "();";
+    if (mPtr) return "null";
 
     StructPtr sPtr = StructPtr::dynamicCast(pPtr);
-    if (sPtr) return "new " + tostrStruct(sPtr) + "();";
+    if (sPtr) return "null";
 
     EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
-    if (ePtr) return "0;";
+    if (ePtr) return "0";
 
     return "";
 }
@@ -158,13 +137,13 @@ string Tars2Dart::toObjStr(const TypePtr& pPtr) const
 {
     string sType = tostr(pPtr);
 
-    if (sType == "boolean") return "Boolean";
-    if (sType == "byte")    return "Byte";
-    if (sType == "short")   return "Short";
-    if (sType == "int") return "Integer";
-    if (sType == "long")    return "Long";
-    if (sType == "float")   return "Float";
-    if (sType == "double")  return "Double";
+    if (sType == "boolean") return "bool";
+    if (sType == "byte")    return "Uint8List";
+    if (sType == "short")   return "int";
+    if (sType == "int") return "int";
+    if (sType == "long")    return "int";
+    if (sType == "float")   return "double";
+    if (sType == "double")  return "double";
 
     return sType;
 }
@@ -227,6 +206,36 @@ string Tars2Dart::tostr(const TypePtr& pPtr) const
     return "";
 }
 
+vector<string> Tars2Dart::toImportStrs(const TypePtr& pPtr) const{
+    vector<string> result;
+    BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
+    if (bPtr) return result;
+
+    VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
+    if (vPtr){
+        StructPtr vsPtr = StructPtr::dynamicCast(vPtr->getTypePtr());
+        if (vsPtr){ result.push_back(vsPtr->getId()); return result; }
+    }
+
+    MapPtr mPtr = MapPtr::dynamicCast(pPtr);
+    if (mPtr) {
+        StructPtr mlPtr = StructPtr::dynamicCast(mPtr->getLeftTypePtr());
+        StructPtr mrPtr = StructPtr::dynamicCast(mPtr->getRightTypePtr());
+        if(mlPtr && mrPtr){ result.push_back(mlPtr->getId());result.push_back(mrPtr->getId());   return result; } 
+        if (mlPtr) { result.push_back(mlPtr->getId()); return result; }
+        if (mrPtr) { result.push_back(mrPtr->getId()); return result; }
+    }
+
+    StructPtr sPtr = StructPtr::dynamicCast(pPtr);
+    if (sPtr) { result.push_back(sPtr->getId()); return result; } 
+
+    EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
+    if (ePtr){ result.push_back(ePtr->getId()); return result; }
+
+    return result;
+}
+
+
 /*******************************BuiltinPtr********************************/
 string Tars2Dart::tostrBuiltin(const BuiltinPtr& pPtr) const
 {
@@ -278,15 +287,11 @@ string Tars2Dart::tostrVector(const VectorPtr& pPtr) const
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
     if (bPtr && bPtr->kind() == Builtin::KindByte)
     {
-        s = "byte []";
-    }
-    else if (_bForceArray)
-    {
-        s = tostr(pPtr->getTypePtr()) + "[]";
+        s = "Uint8List";
     }
     else
     {
-        s = "java.util.ArrayList" + string("<") + toObjStr(pPtr->getTypePtr()) + ">";
+        s = "List" + string("<") + toObjStr(pPtr->getTypePtr()) + ">";
     }
     return s;
 }
@@ -295,14 +300,7 @@ string Tars2Dart::tostrVector(const VectorPtr& pPtr) const
 string Tars2Dart::tostrMap(const MapPtr& pPtr, bool bNew) const
 {
     string s;
-    if (!bNew)
-    {
-        s = "java.util.Map";
-    }
-    else
-    {
-        s = "java.util.HashMap";
-    }
+    s = "Map";
     s += string("<") + toObjStr(pPtr->getLeftTypePtr()) + ", " + toObjStr(pPtr->getRightTypePtr()) + ">";
 
     return s;
@@ -310,7 +308,8 @@ string Tars2Dart::tostrMap(const MapPtr& pPtr, bool bNew) const
 
 string Tars2Dart::tostrStruct(const StructPtr& pPtr) const
 {
-    return _packagePrefix + tars::TC_Common::replace(pPtr->getSid(), "::", ".");
+    // return _packagePrefix + tars::TC_Common::replace(pPtr->getSid(), "::", ".");
+    return pPtr->getId();
 }
 
 string Tars2Dart::tostrEnum(const EnumPtr& pPtr) const
@@ -523,6 +522,18 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     s << TAB << "import '" << _tarsPackage << "tars_displayer.dart';"<< endl;
     s << TAB << "import '" << _tarsPackage << "tars_util.dart';"<< endl;
     s << endl;
+    
+    //导入tars定义的结构体
+    for (size_t i = 0; i < member.size(); i++)
+    {
+         vector<string> packages = toImportStrs(member[i]->getTypePtr());
+         if(!packages.empty()){
+            for (size_t j = 0; j < packages.size(); j++){
+                s << TAB << "import '" << packages[j] << ".dart';"<< endl;
+            }
+         }
+    }
+  
     s << endl;
 
     bool bHasImpPrefix = false;
@@ -542,7 +553,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
 //      s << TAB << "import com.qq.component.json.JSONException;" << endl;
 //      s << endl;
 //  }
-
+    //class定义部分
     s << TAB << "class " << pPtr->getId() << " extends " <<  "TarsStruct";
 //  if (_bWithWsp)
 //  {
@@ -705,6 +716,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
 //     s << TAB << "}" << endl;
 //     s << endl;
 
+    //带参数的构造函数，格式为： TestData({int id : 0, String? code : ""}){...}
     //(constructor)(...)
     s << TAB << "" << pPtr->getId() << "({";
     for (size_t i = 0; i < member.size(); i++)
@@ -1008,9 +1020,9 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
         }
         else
         {
-            s << TAB << "this." << member[i]->getId() << " = (" + tostr(member[i]->getTypePtr()) + ")"
+            s << TAB << "this." << member[i]->getId() << " = " 
                 << " _is.read(" << prefix + member[i]->getId()
-                << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ");" << endl;
+                << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ")" << " as " <<  tostr(member[i]->getTypePtr()) << ";" << endl;
         }
     }
 

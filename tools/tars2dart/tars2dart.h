@@ -243,6 +243,14 @@ protected:
      */
     string getDefaultValue(const TypeIdPtr& pPtr, const string sp) const;
 
+    /**
+     * 获得类型变量的导入类名
+     * @param pPtr
+     *
+     * @return string，不需要导入返回""
+     */
+    vector<string> toImportStrs(const TypePtr& pPtr) const;
+
     //以下是h和dart文件的具体生成
 protected:
     /**
