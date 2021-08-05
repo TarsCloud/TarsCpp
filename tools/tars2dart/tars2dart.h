@@ -251,6 +251,22 @@ protected:
      */
     vector<string> toImportStrs(const TypePtr& pPtr) const;
 
+    /**
+     * 生成非原生类型的cache代码
+     * @param pPtr
+     *
+     * @return string
+     */
+    string tostrCache(const TypeIdPtr& pPtr) const;
+
+    /**
+     * 生成非原生类型的新对象
+     * @param pPtr
+     *
+     * @return string
+     */
+    string generateNewElem(const TypePtr& pPtr) const;
+
     //以下是h和dart文件的具体生成
 protected:
     /**

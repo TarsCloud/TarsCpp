@@ -102,7 +102,7 @@ string Tars2Dart::toTypeInit(const TypePtr& pPtr) const
         case Builtin::KindInt:
             return "0;";
         case Builtin::KindLong:
-            return "0L;";
+            return "0;";
         case Builtin::KindFloat:
             return "0.0f;";
         case Builtin::KindDouble:
@@ -117,14 +117,22 @@ string Tars2Dart::toTypeInit(const TypePtr& pPtr) const
     VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
     if (vPtr)
     {
-       return "null";
+        // BuiltinPtr bPtr = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
+        // if (bPtr && bPtr->kind() == Builtin::KindByte)
+        // {
+        //     return "Uint8List(1);";
+        // }
+
+        // return "" + tostrVector(vPtr) + "();";
+        return "null";
     }
 
     MapPtr mPtr = MapPtr::dynamicCast(pPtr);
+    // if (mPtr) return " " + tostrMap(mPtr, true) + "();";
     if (mPtr) return "null";
 
     StructPtr sPtr = StructPtr::dynamicCast(pPtr);
-    if (sPtr) return "null";
+    if (sPtr) return " " + tostrStruct(sPtr) + "();";
 
     EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
     if (ePtr) return "0";
@@ -395,7 +403,7 @@ string Tars2Dart::generateDefautElem(const TypePtr& pPtr, const string& sElemNam
         else if (_bForceArray)
         {
             s << generateDefautElem(vPtr->getTypePtr(), "");
-            s << TAB << "((" << tostr(vPtr->getTypePtr()) << "[])" << sVar
+            s << TAB << "(List<" << tostr(vPtr->getTypePtr()) << ">)" << sVar
                 << ")[0] = __var_" << tars::TC_Common::tostr(iId + 1) << ";" << endl;
         }
         else
@@ -503,6 +511,111 @@ string Tars2Dart::getDefaultValue(const TypeIdPtr& pPtr, const string sp) const{
     return sDefalut;
 }
 
+string Tars2Dart::generateNewElem(const TypePtr& pPtr) const
+{
+    ostringstream s;
+
+    VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
+    if (vPtr)
+    {
+        BuiltinPtr bPtr = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
+        if (bPtr && bPtr->kind() == Builtin::KindByte)
+        {
+            return "Uint8List.fromList(List.filled(1,0))";
+        }
+
+        return "" + tostrVector(vPtr) + "()";
+    }
+
+    MapPtr mPtr = MapPtr::dynamicCast(pPtr);
+    if (mPtr)
+    {
+        s <<  " " << tostrMap(mPtr, true) << "()" << endl;
+        return s.str();
+    }
+
+    BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
+    if (bPtr)
+    {
+        switch (bPtr->kind())
+        {
+        case Builtin::KindBool:
+            return "false";
+        case Builtin::KindByte:
+            return "0";
+        case Builtin::KindShort:
+            return "0";
+        case Builtin::KindInt:
+            return "0";
+        case Builtin::KindLong:
+            return "0";
+        case Builtin::KindFloat:
+            return "0.0f";
+        case Builtin::KindDouble:
+            return "0.0";
+        case Builtin::KindString:
+            return "\"\"";
+        default:
+            return "";
+        }
+    }
+
+    StructPtr sPtr = StructPtr::dynamicCast(pPtr);
+    if (sPtr) return " " + tostrStruct(sPtr) + "()";
+
+    EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
+    if (ePtr) return "0";
+
+    return "";
+}
+
+string Tars2Dart::tostrCache(const TypeIdPtr& pPtr) const
+{
+    string prefix = "cache";
+    string cacheName =  prefix +"_" + pPtr->getId();
+
+    static int iCount = 0;
+    string cacheCodeStr = "";
+
+    VectorPtr vPtr = VectorPtr::dynamicCast(pPtr->getTypePtr());
+    if (vPtr)
+    {
+        int iId = iCount;
+        BuiltinPtr bPtr = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
+        if (bPtr && bPtr->kind() == Builtin::KindByte)
+        {
+            cacheCodeStr = "static Uint8List " + cacheName+ " = Uint8List.fromList(List.filled(1,0))";
+        }else{
+            cacheCodeStr = "static List<" + tostr(vPtr->getTypePtr()) + "> " + cacheName + " = List.filled(1,"+ generateNewElem(vPtr->getTypePtr()) +")";
+        }
+    }
+
+    MapPtr mPtr = MapPtr::dynamicCast(pPtr->getTypePtr());
+    if (mPtr)
+    {
+        string leftType = tostr(mPtr->getLeftTypePtr());
+        string rightType = tostr(mPtr->getRightTypePtr());
+
+        cacheCodeStr = "static Map<"+ leftType +", "+ rightType +"> " + cacheName
+        + " = Map.fromEntries(List<MapEntry<"+ leftType +", "+ rightType 
+        +">>.filled(1,MapEntry<"+ leftType +", "+ rightType +">("+ generateNewElem(mPtr->getLeftTypePtr()) +","+ generateNewElem(mPtr->getRightTypePtr()) + ")))";
+    }
+  
+    StructPtr sPtr = StructPtr::dynamicCast(pPtr->getTypePtr());
+    if (sPtr)
+    {
+        cacheCodeStr = "static "+ toObjStr(sPtr) +" " + cacheName+ " = "+ generateNewElem(sPtr) ;
+    }
+
+    EnumPtr ePtr = EnumPtr::dynamicCast(pPtr->getTypePtr());
+    if (ePtr)
+    {
+        cacheCodeStr = "static "+ toObjStr(ePtr) +" " + cacheName+ " = "+ generateNewElem(ePtr) ;
+    }
+
+    return cacheCodeStr;
+}
+
 /******************************StructPtr***************************************/
 string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) const
 {
@@ -516,6 +629,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     // s << endl;
 
     s << TAB << "import 'dart:core';"<< endl;
+    s << TAB << "import 'dart:typed_data';"<< endl;
     s << TAB << "import '" << _tarsPackage << "tars_input_stream.dart';"<< endl;
     s << TAB << "import '" << _tarsPackage << "tars_output_stream.dart';"<< endl;
     s << TAB << "import '" << _tarsPackage << "tars_struct.dart';"<< endl;
@@ -966,22 +1080,29 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     s << TAB << "}" << endl;
     s << endl;
 
+
+    //生成cache
     for (size_t i = 0; i < member.size(); i++)
     {
         BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[i]->getTypePtr());
         if (!bPtr)
         {
-            string prefix = "cache_";
-            s << TAB << "static " <<  tostr(member[i]->getTypePtr()) << " cache_" << member[i]->getId() << ";" << endl;
-            s << TAB << "static {" << endl;
-            INC_TAB;
-            s << TAB << prefix << member[i]->getId() << " = " << toTypeInit(member[i]->getTypePtr()) << endl;
-            s << generateDefautElem(member[i]->getTypePtr(), prefix + member[i]->getId());
-            DEL_TAB;
-            s << TAB << "}" << endl;
+            s << TAB << tostrCache(member[i]) << ";" << endl;
+
+            // string prefix = "cache_";
+            // s << TAB << "static " <<  tostr(member[i]->getTypePtr()) << " cache_" << member[i]->getId() << ";" << endl;
+            // s << TAB << "static {" << endl;
+            // INC_TAB;
+            // s << TAB << prefix << member[i]->getId() << " = " << toTypeInit(member[i]->getTypePtr()) << endl;
+            // s << generateDefautElem(member[i]->getTypePtr(), prefix + member[i]->getId());
+            // DEL_TAB;
+            // s << TAB << "}" << endl;
         }
     }
     s << endl;
+
+
+
     //readFrom()
     s << TAB << "void readFrom(" <<  "TarsInputStream _is)" << endl;
     s << TAB << "{" << endl;
