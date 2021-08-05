@@ -94,21 +94,21 @@ string Tars2Dart::toTypeInit(const TypePtr& pPtr) const
         switch (bPtr->kind())
         {
         case Builtin::KindBool:
-            return "false;";
+            return "false";
         case Builtin::KindByte:
-            return "0;";
+            return "0";
         case Builtin::KindShort:
-            return "0;";
+            return "0";
         case Builtin::KindInt:
-            return "0;";
+            return "0";
         case Builtin::KindLong:
-            return "0;";
+            return "0";
         case Builtin::KindFloat:
-            return "0.0f;";
+            return "0.0f";
         case Builtin::KindDouble:
-            return "0.0;";
+            return "0.0";
         case Builtin::KindString:
-            return "\"\";";
+            return "\"\"";
         default:
             return "";
         }
@@ -132,7 +132,8 @@ string Tars2Dart::toTypeInit(const TypePtr& pPtr) const
     if (mPtr) return "null";
 
     StructPtr sPtr = StructPtr::dynamicCast(pPtr);
-    if (sPtr) return " " + tostrStruct(sPtr) + "();";
+    // if (sPtr) return " " + tostrStruct(sPtr) + "();";
+    if (sPtr) return "null";
 
     EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
     if (ePtr) return "0";
@@ -524,7 +525,7 @@ string Tars2Dart::generateNewElem(const TypePtr& pPtr) const
             return "Uint8List.fromList(List.filled(1,0))";
         }
 
-        return "" + tostrVector(vPtr) + "()";
+        return "List<"+tostr(vPtr->getTypePtr())+">.filled(1,"+ generateNewElem(vPtr->getTypePtr()) +")";
     }
 
     MapPtr mPtr = MapPtr::dynamicCast(pPtr);
@@ -751,7 +752,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
             }
             else
             {
-                s << TAB  << tostr(member[i]->getTypePtr()) << ((bPtr && bPtr->isSimple())? " " :"? ") << member[i]->getId() << getDefaultValue(member[i],"=") << endl;
+                s << TAB  << tostr(member[i]->getTypePtr()) << ((bPtr && bPtr->isSimple())? " " :"? ") << member[i]->getId() << getDefaultValue(member[i],"=")  << ";" << endl;
             }
         }
         s << endl;
