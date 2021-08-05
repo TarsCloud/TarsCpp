@@ -152,6 +152,12 @@ public:
 
     // DECODE function, called by network thread
     static TC_NetWorkBuffer::PACKET_TYPE http2Response(TC_NetWorkBuffer &in, ResponsePacket& done);
+
+        // ENCODE function, called by network thread
+    static vector<char> grpcRequest(tars::RequestPacket& request, Transceiver *);
+
+    // DECODE function, called by network thread
+    static TC_NetWorkBuffer::PACKET_TYPE grpcResponse(TC_NetWorkBuffer &in, ResponsePacket& done);
 #endif
 
     /**

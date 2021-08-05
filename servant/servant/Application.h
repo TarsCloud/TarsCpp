@@ -38,7 +38,6 @@
 
 namespace tars
 {
-//#ifndef GEN_PYTHON_MASK
 
 #define OUT_LINE        (TC_Common::outfill("", '-', 80))
 #define OUT_LINE_LONG   (TC_Common::outfill("", '=', 80))
@@ -238,12 +237,17 @@ public:
 	    _servantHelper->addServant<T>(id, this, true);
     }
 
+
+    /**
+     * 添加Servant
+     * @param T
+     * @param id
+     * @param p, params for handle
+     */
 	template<typename T, typename P>
 	void addServantWithParams(const string &id, const P &p)
 	{
-#ifndef GEN_PYTHON_MASK
 		_servantHelper->addServant<T>(id, this, p, true);
-#endif
 	}
 
 	/**

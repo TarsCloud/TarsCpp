@@ -153,14 +153,17 @@ public:
      *  objectProxy Pointer
      */
     shared_ptr<ObjectProxy *> _objectProxyOwn;                    //保存ObjectProxy对象的指针数组
-#ifdef TARS_OPENTRACKING
-    std::unordered_map<std::string, std::string> _trackInfoMap;
-#endif
+
 
     /**
      * cookie
      */
     map<string, string>             _cookie;          // cookie内容
+
+
+    #ifdef TARS_OPENTRACKING
+    std::unordered_map<std::string, std::string> _trackInfoMap;
+    #endif
 };
 
 
@@ -452,6 +455,7 @@ public:
     	PROTOCOL_TARS,              //默认tars服务的协议
     	PROTOCOL_HTTP1,             //http协议
 	    PROTOCOL_HTTP2,             //http2协议
+        PROTOCOL_GRPC,              //grpc协议
     };
 
     /**

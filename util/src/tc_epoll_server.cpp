@@ -1204,6 +1204,40 @@ int TC_EpollServer::Connection::sendBufferDirect(const std::string& buff)
     }
 }
 
+int TC_EpollServer::Connection::sendBufferDirect(const std::vector<char>& buff)
+{
+    _pBindAdapter->increaseSendBufferSize();
+    
+    if(getBindAdapter()->getEndpoint().isTcp())
+    {
+#if TAF_SSL
+        if (getBindAdapter()->getEndpoint().isSSL())
+        {
+            //assert(_openssl->isHandshaked());
+            
+            int ret = _openssl->write(&buff[0], buff.size(), _sendBuffer);
+            if (ret != 0)
+            {
+                _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send direct error! " + TC_Common::tostr(ret));
+                return -1; // should not happen
+            }
+    
+        }
+        else
+#endif
+        {
+            _sendBuffer.addBuffer(buff);
+        }
+
+        return sendBuffer();
+    }
+    else
+    {
+        _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send direct not support udp! ");
+        return -2;
+    }
+}
+
 int TC_EpollServer::Connection::send(const shared_ptr<SendContext> &sc)
 {
 	assert(sc);

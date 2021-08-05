@@ -33,11 +33,12 @@ class TC_Timer
 protected:
 	struct Func
 	{
-		Func( uint64_t fireMillseconds) :  _fireMillseconds(fireMillseconds) { }
+		Func( uint64_t fireMillseconds, uint32_t uniqueId) :  _fireMillseconds(fireMillseconds), _uniqueId(uniqueId) { }
 		~Func() {}
 		std::function<void()>   _func;
 		uint64_t                _fireMillseconds = 0;	//事件触发时间
         TC_Cron                 _cron;  //crontab
+        uint32_t                _uniqueId = 0;
 	};
 
 	typedef std::unordered_set<uint64_t> EVENT_SET;
@@ -52,6 +53,12 @@ public:
 	 * 析构
 	 */
 	~TC_Timer();
+	
+	/**
+	 * @brief
+	 * @return num(RUNNER_EVENT), num(ALL_EVENT), num(REPEAT_EVENT)
+	 */
+	tuple<int64_t, int64_t, int64_t> status();
 
 	/**
 	 * 系统定时器
@@ -84,12 +91,6 @@ public:
 	template <class F, class... Args>
 	int64_t postDelayed(int64_t delayMillseconds, F &&f, Args &&... args)
 	{
-		//定义返回值类型
-		using RetType = decltype(f(args...));
-
-		auto task = std::make_shared < std::packaged_task
-			< RetType() >> (std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-
 		uint64_t fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + delayMillseconds;
 
 		return post(create(fireMillseconds, 0,"", f, args...));
@@ -104,12 +105,6 @@ public:
 	template <class F, class... Args>
 	int64_t postRepeated(int64_t repeatTime, bool execNow, F &&f, Args &&... args)
 	{
-		//定义返回值类型
-		using RetType = decltype(f(args...));
-
-		auto task = std::make_shared < std::packaged_task
-			                               < RetType() >> (std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-
 		uint64_t fireMillseconds;
 
 		if(execNow) {
@@ -118,7 +113,7 @@ public:
 			fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + repeatTime;
 		}
 
-		return post(create(fireMillseconds, repeatTime,"", f, args...), true);
+		return post(create(fireMillseconds, repeatTime,"", f, args...),true);
 	}
 
     /**
@@ -140,13 +135,7 @@ public:
     template <class F, class... Args>
     int64_t postCron(const string&cronexpr, F&& f, Args&&... args)
     {
-        //定义返回值类型
-        using RetType = decltype(f(args...));
-
-        auto task = std::make_shared < std::packaged_task
-            < RetType() >> (std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-  
-        return post(create(0, 0,cronexpr, f, args...), true);
+        return post(create(0, 0,cronexpr, f, args...),true);
     }
 
 	/**
@@ -154,12 +143,18 @@ public:
 	 * @param uniqId
 	 */
 	void erase(int64_t uniqId);
-
+    
     /**
      * 判断循环是否还存在
      * @param uniqId
      */
     bool exist(int64_t uniqId ,bool repeat = false);
+
+    /**
+     * 清空当前所有任务
+     */
+    void clear();
+
 protected:
 	template <class F, class... Args>
 	shared_ptr<Func> create(int64_t fireMillseconds, int64_t repeatTime, const string & cronexpr, F &&f, Args &&... args)
@@ -169,7 +164,7 @@ protected:
 
 		auto task = std::make_shared<std::packaged_task<RetType()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
 
-		shared_ptr<Func> fPtr = std::make_shared<Func>(fireMillseconds);
+		shared_ptr<Func> fPtr = std::make_shared<Func>(fireMillseconds, genUniqueId());
 
         if (!cronexpr.empty())
         {
@@ -187,21 +182,30 @@ protected:
 		}
 		else
 		{
-            fPtr->_func = [task, this, fPtr, repeatTime]() {
+			weak_ptr<Func> wPtr = fPtr;
+
+            fPtr->_func = [task, this, wPtr, repeatTime]() {
                 (*task)();
                 task->reset();
-    
-                if (this->exist( (int64_t) fPtr.get(),true ) )
-                {
-					if (fPtr->_cron.isset)
+
+                shared_ptr<Func> p = wPtr.lock();
+                if(p)
+				{
+					if (this->exist(p->_uniqueId, true))
 					{
-						fPtr->_fireMillseconds = TC_Cron::nextcron(fPtr->_cron, fPtr->_fireMillseconds / 1000) * 1000;
-						this->post(fPtr);
-					}
-					else if (repeatTime > 0)
-					{
-						fPtr->_fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + repeatTime;
-						this->post(fPtr);
+						if (p->_cron.isset)
+						{
+							p->_fireMillseconds =
+									TC_Cron::nextcron(p->_cron, p->_fireMillseconds / 1000) * 1000;
+							this->post(p);
+						}
+						else if (repeatTime > 0)
+						{
+							p->_fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + repeatTime;
+							this->post(p);
+						}
+
+						_tmpEvent.erase(p->_uniqueId);
 					}
 				}
             };
@@ -215,6 +219,8 @@ protected:
 	void fireEvent(const EVENT_SET &el);
 
 	void run();
+	
+	uint32_t genUniqueId();
 
 protected:
 	std::mutex          _mutex;
@@ -225,13 +231,16 @@ protected:
 
 	MAP_EVENT   _mapEvent;      //id, 事件
 
+	MAP_EVENT   _tmpEvent;      //id, 事件
+
 	MAP_TIMER   _mapTimer;      //时间, 事件
+	
+	atomic_uint _increaseId = {0};
 	
 	set<int64_t> _repeatIds; //循环任务的所有ID
 
 	TC_ThreadPool _tpool;
 };
-
 }
 
 #endif

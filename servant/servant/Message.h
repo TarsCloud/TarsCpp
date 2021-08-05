@@ -240,12 +240,9 @@ struct ReqMessage : public TC_HandleBase
 
     uint32_t					iCoroId;
 
+    map<string, string>         cookie;          // cookie内容
 
-#ifdef TARS_OPENTRACKING
     std::unordered_map<std::string, std::string> trackInfoMap; //调用链信息
-#endif
-
-    map<string, string>             cookie;          // cookie内容
 };
 
 typedef TC_AutoPtr<ReqMessage>  ReqMessagePtr;
