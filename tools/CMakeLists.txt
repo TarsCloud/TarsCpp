@@ -40,6 +40,7 @@ add_subdirectory(tars2php)
 add_subdirectory(tars2android)
 add_subdirectory(tars2node)
 add_subdirectory(tars2case)
+add_subdirectory(tars2dart)
 
 IF(TARS_PROTOBUF)
     add_subdirectory(pb2tarscpp)

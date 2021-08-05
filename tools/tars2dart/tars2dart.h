@@ -88,10 +88,11 @@ public:
     void createFile(const string& file);
 
     /**
-     * 设置TAF库的报名
+     * 设置TAF库的包名
      */
     void setTafPacket(const std::string& sPacket)
     {
+        _tarsPackage = sPacket;
         s_TARS_PACKAGE 		= sPacket + TARS_PACKAGE;
         s_PROXY_PACKAGE		= sPacket + PROXY_PACKAGE;
         s_WUP_PACKAGE		= sPacket + WUP_PACKAGE;
@@ -118,6 +119,7 @@ protected:
 
     bool	_bWithGenerateInterfaceDependencies;
     bool	_bWithFilterRomTars;
+    string  _tarsPackage;
 
 protected:
 
@@ -232,6 +234,14 @@ protected:
      * @return string
      */
     string encode(const TypeIdPtr& pPtr) const;
+
+    /**
+     * 获得类型变量的默认值
+     * @param pPtr
+     *
+     * @return string
+     */
+    string getDefaultValue(const TypeIdPtr& pPtr, const string sp) const;
 
     //以下是h和dart文件的具体生成
 protected:

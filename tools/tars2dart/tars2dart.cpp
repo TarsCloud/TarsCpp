@@ -235,22 +235,22 @@ string Tars2Dart::tostrBuiltin(const BuiltinPtr& pPtr) const
     switch (pPtr->kind())
     {
     case Builtin::KindBool:
-        s = "boolean";
+        s = "bool";
         break;
     case Builtin::KindByte:
-        s = "byte";
+        s = "Uint8List";
         break;
     case Builtin::KindShort:
-        s = "short";
+        s = "int";
         break;
     case Builtin::KindInt:
         s = "int";
         break;
     case Builtin::KindLong:
-        s = "long";
+        s = "int";
         break;
     case Builtin::KindFloat:
-        s = "float";
+        s = "double";
         break;
     case Builtin::KindDouble:
         s = "double";
@@ -259,10 +259,10 @@ string Tars2Dart::tostrBuiltin(const BuiltinPtr& pPtr) const
         s = "String";
         break;
     case Builtin::KindVector:
-        s = "java.util.ArrayList";
+        s = "List";
         break;
     case Builtin::KindMap:
-        s = "java.util.HashMap";
+        s = "Map";
         break;
     default:
         assert(false);
@@ -463,6 +463,46 @@ string Tars2Dart::generateDefautElem(const TypePtr& pPtr, const string& sElemNam
     return s.str();
 }
 
+string Tars2Dart::getDefaultValue(const TypeIdPtr& pPtr, const string sp) const{
+    string sDefalut;
+    if (pPtr -> hasDefault()){
+        BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
+        EnumPtr    ePtr  = EnumPtr::dynamicCast(pPtr->getTypePtr());
+        //string转义
+        if (bPtr && bPtr->kind() == Builtin::KindString)
+        {
+            sDefalut = tars::TC_Common::replace(pPtr->def(), "\"", "\\\"");
+            //sDefalut = " = (" + tostr(member[i]->getTypePtr()) + ")\"" + sDefalut + "\"";
+            sDefalut =  " " + sp +" \"" + sDefalut + "\"";
+        }
+        else if (ePtr)
+        {
+            std::string sdef = pPtr->def();
+            std::string::size_type pos = sdef.rfind("::");
+            if (pos != std::string::npos && pos + 2 < sdef.size())
+            {
+                sdef = sdef.substr(pos + 2);
+            }
+
+            if (_bEnumCompact)
+            {
+                sDefalut =  " " + sp + " " + _packagePrefix + tars::TC_Common::replace(ePtr->getSid(), "::", ".") + "._" + sdef;
+            }
+            else
+            {
+                sDefalut = " " + sp + " " + _packagePrefix + tars::TC_Common::replace(ePtr->getSid(), "::", ".") + "." + sdef + ".value()";
+            }
+        }
+        else
+        {
+            //sDefalut = " = (" + tostr(member[i]->getTypePtr()) + ")" + member[i]->def();
+            sDefalut = " " + sp + " " + pPtr->def();
+        }
+    }else{
+        sDefalut = " " + sp + " " + toTypeInit(pPtr->getTypePtr());
+    }
+    return sDefalut;
+}
 
 /******************************StructPtr***************************************/
 string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) const
@@ -473,7 +513,16 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     vector<string> key = pPtr->getKey();
     vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
 
-    s << TAB << "package " << _packagePrefix << nPtr->getId() << ";" << endl;
+    // s << TAB << "package " << _packagePrefix << nPtr->getId() << ";" << endl;
+    // s << endl;
+
+    s << TAB << "import 'dart:core';"<< endl;
+    s << TAB << "import '" << _tarsPackage << "tars_input_stream.dart';"<< endl;
+    s << TAB << "import '" << _tarsPackage << "tars_output_stream.dart';"<< endl;
+    s << TAB << "import '" << _tarsPackage << "tars_struct.dart';"<< endl;
+    s << TAB << "import '" << _tarsPackage << "tars_displayer.dart';"<< endl;
+    s << TAB << "import '" << _tarsPackage << "tars_util.dart';"<< endl;
+    s << endl;
     s << endl;
 
     bool bHasImpPrefix = false;
@@ -494,37 +543,37 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
 //      s << endl;
 //  }
 
-    s << TAB << "public final class " << pPtr->getId() << " extends " << s_TARS_PACKAGE << ".TarsStruct";
+    s << TAB << "class " << pPtr->getId() << " extends " <<  "TarsStruct";
 //  if (_bWithWsp)
 //  {
 //      s << " implements WspStruct";
 //      bHasImpPrefix = true;
 //  }
 
-    if (key.size() > 0)
-    {
-        if (bHasImpPrefix)
-        {
-            s << ", Comparable<" << pPtr->getId() << ">";
-        }
-        else
-        {
-            s << " implements Comparable<" << pPtr->getId() << ">";
-            bHasImpPrefix = true;
-        }
-    }
+    // if (key.size() > 0)
+    // {
+    //     if (bHasImpPrefix)
+    //     {
+    //         s << ", Comparable<" << pPtr->getId() << ">";
+    //     }
+    //     else
+    //     {
+    //         s << " implements Comparable<" << pPtr->getId() << ">";
+    //         bHasImpPrefix = true;
+    //     }
+    // }
 
-    if (!_bWithCompact)
-    {
-        if (bHasImpPrefix)
-        {
-            s << ", java.lang.Cloneable";
-        }
-        else
-        {
-            s << " implements java.lang.Cloneable";
-        }
-    }
+    // if (!_bWithCompact)
+    // {
+    //     if (bHasImpPrefix)
+    //     {
+    //         s << ", java.lang.Cloneable";
+    //     }
+    //     else
+    //     {
+    //         s << " implements java.lang.Cloneable";
+    //     }
+    // }
     s << endl;
     s << TAB << "{" << endl;
     INC_TAB;
@@ -532,23 +581,23 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     if (!_bWithCompact)
     {
         //生成结构名称
-        s << TAB << "public String className()" << endl;
+        s << TAB << "String className()" << endl;
         s << TAB << "{" << endl;
         INC_TAB;
-        s << TAB << "return " << "\"" << nPtr->getId() << "." << pPtr->getId() << "\"" << ";" << endl;
+        s << TAB << "return " << "\"" << pPtr->getId() << "\"" << ";" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
         s << endl;
 
 
         // 生成带包前缀的结构名
-        s << TAB << "public String fullClassName()" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "return " << "\"" << _packagePrefix << nPtr->getId() << "." << pPtr->getId() << "\"" << ";" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
+        // s << TAB << "public String fullClassName()" << endl;
+        // s << TAB << "{" << endl;
+        // INC_TAB;
+        // s << TAB << "return " << "\"" << _packagePrefix << nPtr->getId() << "." << pPtr->getId() << "\"" << ";" << endl;
+        // DEL_TAB;
+        // s << TAB << "}" << endl;
+        // s << endl;
     }
 
 //  if (_bWithWsp)
@@ -564,136 +613,108 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
         {
             BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[i]->getTypePtr());
             EnumPtr    ePtr  = EnumPtr::dynamicCast(member[i]->getTypePtr());
-            //string转义
-            if (bPtr && bPtr->kind() == Builtin::KindString)
-            {
-                sDefalut = tars::TC_Common::replace(member[i]->def(), "\"", "\\\"");
-                //sDefalut = " = (" + tostr(member[i]->getTypePtr()) + ")\"" + sDefalut + "\"";
-                sDefalut = " = \"" + sDefalut + "\"";
-            }
-            else if (ePtr)
-            {
-
-                std::string sdef = member[i]->def();
-                std::string::size_type pos = sdef.rfind("::");
-                if (pos != std::string::npos && pos + 2 < sdef.size())
-                {
-                    sdef = sdef.substr(pos + 2);
-                }
-
-                if (_bEnumCompact)
-                {
-                    sDefalut = " = " + _packagePrefix + tars::TC_Common::replace(ePtr->getSid(), "::", ".") + "._" + sdef;
-                }
-                else
-                {
-                    sDefalut = " = " + _packagePrefix + tars::TC_Common::replace(ePtr->getSid(), "::", ".") + "." + sdef + ".value()";
-                }
-            }
-            else
-            {
-                //sDefalut = " = (" + tostr(member[i]->getTypePtr()) + ")" + member[i]->def();
-                sDefalut = " = " + member[i]->def();
-            }
-            s << TAB << "public " << tostr(member[i]->getTypePtr()) << " " << member[i]->getId() << sDefalut << ";" << endl;
+            s << TAB << tostr(member[i]->getTypePtr()) << ((bPtr && bPtr->isSimple())? " " :"? ") << member[i]->getId() << getDefaultValue(member[i],"=") << ";" << endl;
         }
         else
         {
-            sDefalut = " = " + toTypeInit(member[i]->getTypePtr());
             //s << TAB << "public " << tostr(member[i]->getTypePtr()) << " "<< member[i]->getId() << sDefalut << endl;
             BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[i]->getTypePtr());
             EnumPtr ePtr = EnumPtr::dynamicCast(member[i]->getTypePtr());
             if ((!bPtr && !ePtr) || (bPtr && bPtr->kind() == Builtin::KindString))
             {
-                s << TAB << "public " << tostr(member[i]->getTypePtr()) << " " << member[i]->getId() << " = null;" << endl;
+                s << TAB  << tostr(member[i]->getTypePtr()) << ((bPtr && bPtr->isSimple())? " " :"? ") << member[i]->getId() << ";" << endl;
             }
             else
             {
-                s << TAB << "public " << tostr(member[i]->getTypePtr()) << " " << member[i]->getId() << sDefalut << endl;
+                s << TAB  << tostr(member[i]->getTypePtr()) << ((bPtr && bPtr->isSimple())? " " :"? ") << member[i]->getId() << getDefaultValue(member[i],"=") << endl;
             }
         }
         s << endl;
     }
 
-    if (!_bWithCompact)
-    {
-        //成员变量get/set for java bean
-        for (size_t i = 0; i < member.size(); i++)
-        {
-            string sName = "";
-            //支持javabean规范,并且第二个字符是大写
-            if (_bWithJbr && member[i]->getId()[1] >= 'A' && member[i]->getId()[1] <= 'Z')
-            {
-                sName = member[i]->getId();
-            }
-            else
-            {
-                sName = tars::TC_Common::upper(member[i]->getId().substr(0, 1)) + member[i]->getId().substr(1);
-            }
-            s << TAB << "public " << tostr(member[i]->getTypePtr()) << " get" << sName
-                << "()" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
-            s << TAB << "return " <<  member[i]->getId() << ";" << endl;
-            DEL_TAB;
-            s << TAB << "}" << endl;
-            s << endl;
+    // set 和 get 不再需要
+//     if (!_bWithCompact)
+//     {
+//         //成员变量get/set for java bean
+//         for (size_t i = 0; i < member.size(); i++)
+//         {
+//             string sName = "";
+//             //支持javabean规范,并且第二个字符是大写
+//             if (_bWithJbr && member[i]->getId()[1] >= 'A' && member[i]->getId()[1] <= 'Z')
+//             {
+//                 sName = member[i]->getId();
+//             }
+//             else
+//             {
+//                 sName = tars::TC_Common::upper(member[i]->getId().substr(0, 1)) + member[i]->getId().substr(1);
+//             }
+//             s << TAB << "public " << tostr(member[i]->getTypePtr()) << " get" << sName
+//                 << "()" << endl;
+//             s << TAB << "{" << endl;
+//             INC_TAB;
+//             s << TAB << "return " <<  member[i]->getId() << ";" << endl;
+//             DEL_TAB;
+//             s << TAB << "}" << endl;
+//             s << endl;
 
-            s << TAB << "public void " << " set" << sName << "(" << tostr(member[i]->getTypePtr()) << " " << member[i]->getId() << ")" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
-            s << TAB << "this." <<  member[i]->getId() << " = " <<  member[i]->getId() << ";" << endl;
-//          if (_bWithWsp)
-//          {
-//              s << TAB <<"arr.put(\""<<member[i]->getId()<<"\","<< member[i]->getId()<<");"<<endl;
-//          }
-            DEL_TAB;
-            s << TAB << "}" << endl;
-            s << endl;
-        }
-    }
+//             s << TAB << "public void " << " set" << sName << "(" << tostr(member[i]->getTypePtr()) << " " << member[i]->getId() << ")" << endl;
+//             s << TAB << "{" << endl;
+//             INC_TAB;
+//             s << TAB << "this." <<  member[i]->getId() << " = " <<  member[i]->getId() << ";" << endl;
+// //          if (_bWithWsp)
+// //          {
+// //              s << TAB <<"arr.put(\""<<member[i]->getId()<<"\","<< member[i]->getId()<<");"<<endl;
+// //          }
+//             DEL_TAB;
+//             s << TAB << "}" << endl;
+//             s << endl;
+//         }
+//     }
 
     //(constructor)()
-    s << TAB << "public " << pPtr->getId() << "()" << endl;
-    s << TAB << "{" << endl;
-    INC_TAB;
-//  if (_bWithWsp)
-//  {
-//      s << TAB << "buildIndex();" << endl;
-//  }
-//  else
-    {
-/*
- * 无参的够造函数，不用调用成员设置方法
-        for (size_t i = 0; i < member.size(); i++)
-        {
-            string sName = "";
-            //支持javabean规范,并且第二个字符是大写
-            if (_bWithJbr && member[i]->getId()[1] >= 'A' && member[i]->getId()[1] <= 'Z' ) 
-            {
-                sName = member[i]->getId();
-            }
-            else
-            {
-                sName = tars::TC_Common::upper(member[i]->getId().substr(0, 1)) + member[i]->getId().substr(1);
-            }
-            s << TAB <<"set" << sName  << "(" << member[i]->getId() << ");" << endl;
-        }
-*/
-    }
+    // s << TAB << "" << pPtr->getId() << "();" << endl;
 
-    DEL_TAB;
-    s << TAB << "}" << endl;
-    s << endl;
+//     s << TAB << "{" << endl;
+//     INC_TAB;
+// //  if (_bWithWsp)
+// //  {
+// //      s << TAB << "buildIndex();" << endl;
+// //  }
+// //  else
+//     {
+// /*
+//  * 无参的够造函数，不用调用成员设置方法
+//         for (size_t i = 0; i < member.size(); i++)
+//         {
+//             string sName = "";
+//             //支持javabean规范,并且第二个字符是大写
+//             if (_bWithJbr && member[i]->getId()[1] >= 'A' && member[i]->getId()[1] <= 'Z' ) 
+//             {
+//                 sName = member[i]->getId();
+//             }
+//             else
+//             {
+//                 sName = tars::TC_Common::upper(member[i]->getId().substr(0, 1)) + member[i]->getId().substr(1);
+//             }
+//             s << TAB <<"set" << sName  << "(" << member[i]->getId() << ");" << endl;
+//         }
+// */
+//     }
+
+//     DEL_TAB;
+//     s << TAB << "}" << endl;
+//     s << endl;
 
     //(constructor)(...)
-    s << TAB << "public " << pPtr->getId() << "(";
+    s << TAB << "" << pPtr->getId() << "({";
     for (size_t i = 0; i < member.size(); i++)
     {
-        s << tostr(member[i]->getTypePtr()) << " " << member[i]->getId()
+        BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[i]->getTypePtr());
+        s << tostr(member[i]->getTypePtr()) << ((bPtr && bPtr->isSimple())? " " :"? ") << member[i]->getId()
+            << getDefaultValue(member[i],":")
             << ((i < member.size() - 1) ? ", " : "");
     }
-    s << ")" << endl;
+    s << "})" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
     for (size_t i = 0; i < member.size(); i++)
@@ -705,155 +726,155 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     s << endl;
 
     //compareTo()
-    if (key.size() > 0)
-    {
-        s << TAB << "public int compareTo(" << pPtr->getId() << " o)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
+    // if (key.size() > 0)
+    // {
+    //     s << TAB << "int compareTo(" << pPtr->getId() << " o)" << endl;
+    //     s << TAB << "{" << endl;
+    //     INC_TAB;
 
-        s << TAB << "int[] r = " << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
+    //     s << TAB << "int[] r = " << endl;
+    //     s << TAB << "{" << endl;
+    //     INC_TAB;
 
-        for (size_t i = 0; i < key.size(); i++)
-        {
-            s << TAB << s_TARS_PACKAGE << ".TarsUtil.compareTo(" << key[i] << ", o."
-                << key[i] << ")" << ((i < key.size() - 1) ? ", " : "") << endl;
-        }
-        DEL_TAB;
-        s << TAB << "};" << endl;
+    //     for (size_t i = 0; i < key.size(); i++)
+    //     {
+    //         s << TAB << s_TARS_PACKAGE << ".TarsUtil.compareTo(" << key[i] << ", o."
+    //             << key[i] << ")" << ((i < key.size() - 1) ? ", " : "") << endl;
+    //     }
+    //     DEL_TAB;
+    //     s << TAB << "};" << endl;
 
-        s << TAB << "for(int i = 0; i < r.length; ++i)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "if(r[i] != 0) return r[i];" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << TAB << "return 0;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
-    }
+    //     s << TAB << "for(int i = 0; i < r.length; ++i)" << endl;
+    //     s << TAB << "{" << endl;
+    //     INC_TAB;
+    //     s << TAB << "if(r[i] != 0) return r[i];" << endl;
+    //     DEL_TAB;
+    //     s << TAB << "}" << endl;
+    //     s << TAB << "return 0;" << endl;
+    //     DEL_TAB;
+    //     s << TAB << "}" << endl;
+    //     s << endl;
+    // }
 
-    if (!_bWithCompact)
-    {
-        //equals()
-        s << TAB << "public boolean equals(Object o)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
+    // if (!_bWithCompact)
+    // {
+    //     //equals()
+    //     s << TAB << "boolean equals(Object o)" << endl;
+    //     s << TAB << "{" << endl;
+    //     INC_TAB;
 
-        s << TAB << "if(o == null)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "return false;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
+    //     s << TAB << "if(o == null)" << endl;
+    //     s << TAB << "{" << endl;
+    //     INC_TAB;
+    //     s << TAB << "return false;" << endl;
+    //     DEL_TAB;
+    //     s << TAB << "}" << endl;
+    //     s << endl;
 
-        s << TAB << pPtr->getId() << " t = (" << pPtr->getId() << ") o;" << endl;
-        s << TAB << "return (" << endl;
+    //     s << TAB << pPtr->getId() << " t = (" << pPtr->getId() << ") o;" << endl;
+    //     s << TAB << "return (" << endl;
 
-        INC_TAB;
+    //     INC_TAB;
 
-        //定义了key
-        if (key.size() > 0)
-        {
-            for (size_t i = 0; i < key.size(); i++)
-            {
-                s << TAB << s_TARS_PACKAGE << ".TarsUtil.equals(" << key[i] << ", t." << key[i] << ")"
-                    << ((i < key.size() - 1) ? " && " : " );") << endl;
-            }
-        }
-        else
-        {
-            //使用所有元素比较
-            for (size_t i = 0; i < member.size(); i++)
-            {
-                s << TAB << s_TARS_PACKAGE << ".TarsUtil.equals(" << member[i]->getId() << ", t." << member[i]->getId() << ")"
-                    << ((i < member.size() - 1) ? " && " : " );") << endl;
-            }
-        }
-        DEL_TAB;
+    //     //定义了key
+    //     if (key.size() > 0)
+    //     {
+    //         for (size_t i = 0; i < key.size(); i++)
+    //         {
+    //             s << TAB << s_TARS_PACKAGE << ".TarsUtil.equals(" << key[i] << ", t." << key[i] << ")"
+    //                 << ((i < key.size() - 1) ? " && " : " );") << endl;
+    //         }
+    //     }
+    //     else
+    //     {
+    //         //使用所有元素比较
+    //         for (size_t i = 0; i < member.size(); i++)
+    //         {
+    //             s << TAB << s_TARS_PACKAGE << ".TarsUtil.equals(" << member[i]->getId() << ", t." << member[i]->getId() << ")"
+    //                 << ((i < member.size() - 1) ? " && " : " );") << endl;
+    //         }
+    //     }
+    //     DEL_TAB;
 
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
-    }
+    //     DEL_TAB;
+    //     s << TAB << "}" << endl;
+    //     s << endl;
+    // }
 
-    if (!_bWithCompact)
-    {
-        //hashCode()
-        if (key.size() > 0)
-        {
-            s << TAB << "public int hashCode()" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
+    // if (!_bWithCompact)
+    // {
+    //     //hashCode()
+    //     if (key.size() > 0)
+    //     {
+    //         s << TAB << "int hashCode()" << endl;
+    //         s << TAB << "{" << endl;
+    //         INC_TAB;
 
-            s << TAB << "int [] hc = { " << endl;
-            INC_TAB;
-            for (size_t i = 0; i < key.size(); i++)
-            {
-                s << TAB << s_TARS_PACKAGE << ".TarsUtil.hashCode(" << key[i]
-                    << ")" << ((i < key.size() - 1) ? ", " : "") << endl;
-            }
-            DEL_TAB;
-            s << TAB << "};" << endl;
-            s << TAB << "return java.util.Arrays.hashCode(hc);" << endl;
+    //         s << TAB << "int [] hc = { " << endl;
+    //         INC_TAB;
+    //         for (size_t i = 0; i < key.size(); i++)
+    //         {
+    //             s << TAB << s_TARS_PACKAGE << ".TarsUtil.hashCode(" << key[i]
+    //                 << ")" << ((i < key.size() - 1) ? ", " : "") << endl;
+    //         }
+    //         DEL_TAB;
+    //         s << TAB << "};" << endl;
+    //         s << TAB << "return java.util.Arrays.hashCode(hc);" << endl;
 
-            DEL_TAB;
-            s << TAB << "}" << endl;
-            s << endl;
-        }
-        else //生成异常代码
-        {
-            s << TAB << "public int hashCode()" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
-            s << TAB << "try" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
-            s << TAB << "throw new Exception(\"Need define key first!\");" << endl;
-            DEL_TAB;
-            s << TAB << "}" << endl;
-            s << TAB << "catch(Exception ex)" << endl;
-            s << TAB << "{" << endl;
-            INC_TAB;
-            s << TAB << "ex.printStackTrace();" << endl;
-            DEL_TAB;
-            s << TAB << "}" << endl;
-            s << TAB << "return 0;" << endl;
-            DEL_TAB;
-            s << TAB << "}" << endl;
-        }
-    }
+    //         DEL_TAB;
+    //         s << TAB << "}" << endl;
+    //         s << endl;
+    //     }
+    //     else //生成异常代码
+    //     {
+    //         s << TAB << "int hashCode()" << endl;
+    //         s << TAB << "{" << endl;
+    //         INC_TAB;
+    //         s << TAB << "try" << endl;
+    //         s << TAB << "{" << endl;
+    //         INC_TAB;
+    //         s << TAB << "throw new Exception(\"Need define key first!\");" << endl;
+    //         DEL_TAB;
+    //         s << TAB << "}" << endl;
+    //         s << TAB << "catch(Exception ex)" << endl;
+    //         s << TAB << "{" << endl;
+    //         INC_TAB;
+    //         s << TAB << "ex.printStackTrace();" << endl;
+    //         DEL_TAB;
+    //         s << TAB << "}" << endl;
+    //         s << TAB << "return 0;" << endl;
+    //         DEL_TAB;
+    //         s << TAB << "}" << endl;
+    //     }
+    // }
 
-    if (!_bWithCompact)
-    {
-        //clone()
-        s << TAB << "public java.lang.Object clone()" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "java.lang.Object o = null;" << endl;
-        s << TAB << "try" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "o = super.clone();" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << TAB << "catch(CloneNotSupportedException ex)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "assert false; // impossible" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << TAB << "return o;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
-    }
+    // if (!_bWithCompact)
+    // {
+    //     //clone()
+    //     s << TAB << "java.lang.Object clone()" << endl;
+    //     s << TAB << "{" << endl;
+    //     INC_TAB;
+    //     s << TAB << "java.lang.Object o = null;" << endl;
+    //     s << TAB << "try" << endl;
+    //     s << TAB << "{" << endl;
+    //     INC_TAB;
+    //     s << TAB << "o = super.clone();" << endl;
+    //     DEL_TAB;
+    //     s << TAB << "}" << endl;
+    //     s << TAB << "catch(CloneNotSupportedException ex)" << endl;
+    //     s << TAB << "{" << endl;
+    //     INC_TAB;
+    //     s << TAB << "assert false; // impossible" << endl;
+    //     DEL_TAB;
+    //     s << TAB << "}" << endl;
+    //     s << TAB << "return o;" << endl;
+    //     DEL_TAB;
+    //     s << TAB << "}" << endl;
+    //     s << endl;
+    // }
 
     //writeTo()
-    s << TAB << "public void writeTo(" << s_TARS_PACKAGE << ".TarsOutputStream _os)" << endl;
+    s << TAB << "void writeTo(" << "TarsOutputStream _os)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
     for (size_t i = 0; i < member.size(); i++)
@@ -950,7 +971,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     }
     s << endl;
     //readFrom()
-    s << TAB << "public void readFrom(" << s_TARS_PACKAGE << ".TarsInputStream _is)" << endl;
+    s << TAB << "void readFrom(" <<  "TarsInputStream _is)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
     for (size_t i = 0; i < member.size(); i++)
@@ -1025,10 +1046,10 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     if (!_bWithCompact)
     {
         //display()
-        s << TAB << "public void display(java.lang.StringBuilder _os, int _level)" << endl;
+        s << TAB << "void display(StringBuffer _os, int _level)" << endl;
         s << TAB << "{" << endl;
         INC_TAB;
-        s << TAB << s_TARS_PACKAGE << ".TarsDisplayer _ds = new " << s_TARS_PACKAGE << ".TarsDisplayer(_os, _level);" << endl;
+        s << TAB  << "TarsDisplayer _ds = new "  << "TarsDisplayer(_os,  level : _level);" << endl;
         for (size_t i = 0; i < member.size(); i++)
         {
             s << TAB << "_ds.display(" << member[i]->getId()
@@ -1116,7 +1137,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
 
 
 
-    string fileJava  = getFilePath(nPtr->getId()) + pPtr->getId() + ".java";
+    string fileJava  = getFilePath(nPtr->getId()) + pPtr->getId() + ".dart";
     tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileJava, s.str());
 
@@ -1287,7 +1308,7 @@ string Tars2Dart::generateDart(const EnumPtr& pPtr, const NamespacePtr& nPtr) co
     DEL_TAB;
     s << TAB << "}" << endl;
 
-    string fileJava  = getFilePath(nPtr->getId()) + pPtr->getId() + ".java";
+    string fileJava  = getFilePath(nPtr->getId()) + pPtr->getId() + ".dart";
     tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileJava, s.str());
 
@@ -1330,7 +1351,7 @@ void Tars2Dart::generateDart(const ConstPtr& pPtr, const NamespacePtr& nPtr) con
     DEL_TAB;
     s << TAB << "}" << endl;
 
-    string fileJava  = getFilePath(nPtr->getId()) + "/cnst/" + pPtr->getTypeIdPtr()->getId() + ".java";
+    string fileJava  = getFilePath(nPtr->getId()) + "/cnst/" + pPtr->getTypeIdPtr()->getId() + ".dart";
     tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId() + "/cnst/"));
     tars::TC_File::save2file(fileJava, s.str());
 
@@ -2010,7 +2031,7 @@ string Tars2Dart::generateAndroidStub(const InterfacePtr &pPtr, const NamespaceP
     s << TAB << "}" << endl << endl;
 
 
-    string fileJava = getFilePath(nPtr->getId()) + pPtr->getId() + "Agent.java";
+    string fileJava = getFilePath(nPtr->getId()) + pPtr->getId() + "Agent.dart";
     tars::TC_File::makeDirRecursive(getFilePath(nPtr->getId()));
     tars::TC_File::save2file(fileJava, s.str());
 
