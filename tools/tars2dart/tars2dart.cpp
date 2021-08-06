@@ -25,7 +25,9 @@
 #define INC_TAB g_parse->incTab()
 #define DEL_TAB g_parse->delTab()
 
-static string g_default_package = "com.tars";
+static string g_default_package = "tars_idl";
+static string g_default_tars_package = "/tars/";
+
 //////////////////////////////////////////////////////////////////////////////////
 //
 Tars2Dart::Tars2Dart()
@@ -37,6 +39,7 @@ Tars2Dart::Tars2Dart()
     s_TARS_PACKAGE       = g_default_package + TARS_PACKAGE;
     s_PROXY_PACKAGE     = g_default_package + PROXY_PACKAGE;
     s_WUP_PACKAGE       = g_default_package + WUP_PACKAGE;
+    _tarsPackage        = g_default_tars_package;
 }
 
 string Tars2Dart::writeTo(const TypeIdPtr& pPtr) const
@@ -217,31 +220,34 @@ string Tars2Dart::tostr(const TypePtr& pPtr) const
 
 vector<string> Tars2Dart::toImportStrs(const TypePtr& pPtr) const{
     vector<string> result;
+    itrToImportStrs(pPtr, result);
+    return result;
+}
+
+void Tars2Dart::itrToImportStrs(const TypePtr& pPtr, vector<string>& result) const{
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr);
-    if (bPtr) return result;
+    if (bPtr) return;
 
     VectorPtr vPtr = VectorPtr::dynamicCast(pPtr);
     if (vPtr){
-        StructPtr vsPtr = StructPtr::dynamicCast(vPtr->getTypePtr());
-        if (vsPtr){ result.push_back(vsPtr->getId()); return result; }
+        itrToImportStrs(vPtr->getTypePtr(), result);
+        return;
     }
 
     MapPtr mPtr = MapPtr::dynamicCast(pPtr);
     if (mPtr) {
-        StructPtr mlPtr = StructPtr::dynamicCast(mPtr->getLeftTypePtr());
-        StructPtr mrPtr = StructPtr::dynamicCast(mPtr->getRightTypePtr());
-        if(mlPtr && mrPtr){ result.push_back(mlPtr->getId());result.push_back(mrPtr->getId());   return result; } 
-        if (mlPtr) { result.push_back(mlPtr->getId()); return result; }
-        if (mrPtr) { result.push_back(mrPtr->getId()); return result; }
+        itrToImportStrs(mPtr->getLeftTypePtr(), result);
+        itrToImportStrs(mPtr->getRightTypePtr(), result);
+        return;
     }
 
     StructPtr sPtr = StructPtr::dynamicCast(pPtr);
-    if (sPtr) { result.push_back(sPtr->getId()); return result; } 
+    if (sPtr) { result.push_back(sPtr->getId()); return; } 
 
     EnumPtr ePtr = EnumPtr::dynamicCast(pPtr);
-    if (ePtr){ result.push_back(ePtr->getId()); return result; }
+    if (ePtr){ result.push_back(ePtr->getId()); return; }
 
-    return result;
+    return;
 }
 
 
@@ -643,6 +649,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     // s << TAB << "import '" << _tarsPackage << "tars_util.dart';"<< endl;
     s << endl;
     
+
     //导入tars定义的结构体
     map<string , bool> mapImport;
     for (size_t i = 0; i < member.size(); i++)
@@ -1201,10 +1208,10 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     if (!_bWithCompact)
     {
         //display()
-        s << TAB << "void display(StringBuffer _os, int _level)" << endl;
+        s << TAB << "void displayAsString(StringBuffer _os, int _level)" << endl;
         s << TAB << "{" << endl;
         INC_TAB;
-        s << TAB  << "TarsDisplayer _ds = new "  << "TarsDisplayer(_os,  level : _level);" << endl;
+        s << TAB  << "TarsDisplayer _ds = "  << "TarsDisplayer(_os,  level : _level);" << endl;
         for (size_t i = 0; i < member.size(); i++)
         {
             s << TAB << "_ds.display(" << member[i]->getId()
@@ -1305,161 +1312,44 @@ string Tars2Dart::generateDart(const EnumPtr& pPtr, const NamespacePtr& nPtr) co
     ostringstream s;
     s << g_parse->printHeaderRemark();
 
-    s << TAB << "package " << _packagePrefix << nPtr->getId() << ";" << endl;
+    s << TAB << "import 'dart:core';"<< endl;
     s << endl;
 
-    s << TAB << "public final class " << pPtr->getId() << " implements java.io.Serializable" << endl;
+    s << TAB << "class " << pPtr->getId() << "" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
 
-    if (_bEnumCompact)
+
+    //成员变量
+    vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
+    bool bFlag = false;
+    string sValue;
+    for (size_t i = 0; i < member.size(); i++)
     {
-        //成员变量
-        vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
-        bool bFlag = false;
-        string sValue;
-        for (size_t i = 0; i < member.size(); i++)
+        s << TAB << "static const int _" << member[i]->getId() << " = ";
+        if (member[i]->hasDefault())
         {
-            s << TAB << "public static final int _" << member[i]->getId() << " = ";
-            if (member[i]->hasDefault())
+            bFlag = true;
+            sValue = member[i]->def();
+            s << sValue;
+        }
+        else
+        {
+            if (bFlag == true)
             {
-                bFlag = true;
-                sValue = member[i]->def();
-                s << sValue;
+                assert(i > 0);
+                string stem = tars::TC_Common::tostr(tars::TC_Common::strto<int>(sValue) + 1);
+                sValue = stem;
+                s << stem;
             }
             else
             {
-                if (bFlag == true)
-                {
-                    assert(i > 0);
-                    string stem = tars::TC_Common::tostr(tars::TC_Common::strto<int>(sValue) + 1);
-                    sValue = stem;
-                    s << stem;
-                }
-                else
-                {
-                    s << tars::TC_Common::tostr(i);
-                }
+                s << tars::TC_Common::tostr(i);
             }
-            s << ";" << endl;
         }
+        s << ";" << endl;
     }
-    else
-    {
-        //成员变量
-        vector<TypeIdPtr>& member = pPtr->getAllMemberPtr();
-        s << TAB << "private static " << pPtr->getId()
-            << "[] __values = new " << pPtr->getId()
-            << "[" << tars::TC_Common::tostr(member.size()) << "];" << endl;
-        s << TAB << "private int __value;" << endl;
-
-        s << TAB << "private String __T = new String();" << endl;
-        s << endl;
-
-        bool bFlag = false;
-        string sValue;
-        for (size_t i = 0; i < member.size(); i++)
-        {
-            s << TAB << "public static final int _" << member[i]->getId() << " = ";
-            if (member[i]->hasDefault())
-            {
-                bFlag = true;
-                sValue = member[i]->def();
-                s << sValue;
-            }
-            else
-            {
-                if (bFlag == true)
-                {
-                    assert(i > 0);
-                    string stem = tars::TC_Common::tostr(tars::TC_Common::strto<int>(sValue) + 1);
-                    sValue = stem;
-                    s << stem;
-                }
-                else
-                {
-                    s << tars::TC_Common::tostr(i);
-                }
-            }
-            s << ";" << endl;
-            s << TAB << "public static final " << pPtr->getId() << " "
-                << member[i]->getId() << " = new " << pPtr->getId() << "(" << i << ",_"
-                << member[i]->getId() << ",\"" << member[i]->getId() << "\");" << endl;
-        }
-        s << endl;
-
-
-        //convert(int)
-        s << TAB << "public static " << pPtr->getId() << " convert(int val)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "for(int __i = 0; __i < __values.length; ++__i)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "if(__values[__i].value() == val)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "return __values[__i];" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << TAB << "assert false;" << endl;
-        s << TAB << "return null;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
-
-        //convert(String)
-        s << TAB << "public static " << pPtr->getId() << " convert(String val)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "for(int __i = 0; __i < __values.length; ++__i)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "if(__values[__i].toString().equals(val))" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "return __values[__i];" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << TAB << "assert false;" << endl;
-        s << TAB << "return null;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
-
-        //value()
-        s << TAB << "public int value()" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "return __value;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
-
-        //toString()
-        s << TAB << "public String toString()" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "return __T;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
-
-        //(constructor)(int)
-        s << TAB << "private " << pPtr->getId() << "(int index, int val, String s)" << endl;
-        s << TAB << "{" << endl;
-        INC_TAB;
-        s << TAB << "__T = s;" << endl;
-        s << TAB << "__value = val;" << endl;
-        s << TAB << "__values[index] = this;" << endl;
-        DEL_TAB;
-        s << TAB << "}" << endl;
-        s << endl;
-    }
+    
     DEL_TAB;
     s << TAB << "}" << endl;
 

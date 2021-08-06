@@ -24,13 +24,10 @@ void usage()
     cout << "supported [OPTION]:" << endl;
     cout << "  --help                           help,print this" << endl;
     cout << "  --dir=DIRECTORY                  generate dart file to DIRECTORY(default to current)" << endl;
-    cout << "  --base-package=NAME              package prefix, default(com.qq.)" << endl;
-	cout << "  --not-force-array                default changed byte vector to byte[], use this for list" << endl;
-    cout << "  --check-default=<true,false>     optional field not package(default package)" << endl;
-    cout << "  --extends-package=NAME           set the extends package name"<< endl;
+    cout << "  --base-package=NAME              package prefix, default(tars_idl)" << endl;
+    cout << "  --extends-package=NAME           set the extends package name, default(/tars/)"<< endl;
     cout << "  --with-charset                   set charset, default UTF8" << endl;
-    cout << "  --with-JavaBeanRule              support javabeab, default not support" << endl;
-    cout << "  --include=dir1;dir2;dir3         set search path of tars proto files" << endl;
+
 
     cout << endl;
     exit(0);
@@ -95,7 +92,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        t2d.setBasePackage("prx.");
+        t2d.setBasePackage("tars_idl.");
     }
 
 	if (option.hasParam("not-force-array"))

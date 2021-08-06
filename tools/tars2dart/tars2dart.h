@@ -253,6 +253,15 @@ protected:
     vector<string> toImportStrs(const TypePtr& pPtr) const;
 
     /**
+     * 获得类型变量的导入类名
+     * @param pPtr
+     * @param result
+     *
+     * @return 
+     */
+    void itrToImportStrs(const TypePtr& pPtr, vector<string>& result) const;
+
+    /**
      * 生成非原生类型的cache代码
      * @param pPtr
      *
