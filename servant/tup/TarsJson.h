@@ -538,37 +538,37 @@ public:
 
     static JsonValueNumPtr writeJson(Char n)
     {
-        return (new JsonValueNum(n,true));
+        return (new JsonValueNum(static_cast<int64_t>(n),true));
     }
 
     static JsonValueNumPtr writeJson(UInt8 n)
     {
-        return (new JsonValueNum(n,true));
+        return (new JsonValueNum(static_cast<int64_t>(n),true));
     }
 
     static JsonValueNumPtr writeJson(Short n)
     {
-        return (new JsonValueNum(n,true));
+        return (new JsonValueNum(static_cast<int64_t>(n),true));
     }
 
     static JsonValueNumPtr writeJson(UInt16 n)
     {
-        return (new JsonValueNum(n,true));
+        return (new JsonValueNum(static_cast<int64_t>(n),true));
     }
 
     static JsonValueNumPtr writeJson(Int32 n)
     {
-        return (new JsonValueNum(n,true));
+        return (new JsonValueNum(static_cast<int64_t>(n),true));
     }
 
     static JsonValueNumPtr writeJson(UInt32 n)
     {
-        return (new JsonValueNum(n,true));
+        return (new JsonValueNum(static_cast<int64_t>(n),true));
     }
 
     static JsonValueNumPtr writeJson(Int64 n)
     {
-        return (new JsonValueNum((double)n,true));
+        return (new JsonValueNum(static_cast<int64_t>(n),true));
     }
 
     static JsonValueNumPtr writeJson(Float n)
@@ -578,7 +578,7 @@ public:
 
     static JsonValueNumPtr writeJson(Double n)
     {
-        return (new JsonValueNum(n));
+        return (new JsonValueNum(static_cast<double>(n)));
     }
 
     static JsonValueStringPtr writeJson(const std::string& s)

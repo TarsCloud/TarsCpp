@@ -47,7 +47,7 @@ enum eJsonType
 	eJsonTypeNum,
 	eJsonTypeObj,
 	eJsonTypeArray,
-	eJsonTypeBoolean
+	eJsonTypeBoolean,
 };
 
 /*
@@ -100,10 +100,14 @@ public:
 	JsonValueNum(double d,bool b=false):value(d),isInt(b)
 	{
 	}
+	JsonValueNum(int64_t v,bool b=true):lvalue(v),isInt(b)
+	{
+	}
 	JsonValueNum()
 	{
 		isInt=false;
 		value=0.0f;
+		lvalue=0;
 	}
 	eJsonType getType()
 	{
@@ -112,6 +116,7 @@ public:
 	virtual ~JsonValueNum(){}
 public:
 	double value;
+	int64_t lvalue;
 	bool isInt;
 };
 typedef TC_AutoPtr<JsonValueNum> JsonValueNumPtr;
