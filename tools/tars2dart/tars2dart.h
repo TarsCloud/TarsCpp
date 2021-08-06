@@ -47,15 +47,6 @@ public:
      */
     void setBasePackage(const string& prefix);
 
-    /**
-    * 默认将非byte的vector转list 加上该参数后转数组
-    */
-    void setForceArray(bool bArray) { _bForceArray = bArray; }
-
-    void setCheckDefault(bool bCheck) { _bCheckDefault = bCheck; }
-
-    /*支持自定义字符集*/
-    void setCharset(string charset) { _sCharset = charset; }
     /*支持javabean规范*/
     void setWithJbr(bool bJbr) { _bWithJbr = bJbr;}
     /*去掉属性的read write方法、 cloneable、equals、hashCode、clone、display*/
@@ -79,7 +70,6 @@ public:
 // 增加的接口定义
     string generateConstructor(const TypePtr& vType) const;
     string generateAndroidJavaParams(const vector<ParamDeclPtr>& vParamDecl, bool needParamType, bool needOutParam) const;
-    string generateAndroidStub(const InterfacePtr& pPtr, const NamespacePtr& nPtr) const;
     
     /**
      * 生成
@@ -110,9 +100,6 @@ protected:
 
     string 	_packagePrefix;
     string 	_baseDir;
-    bool  	_bForceArray;
-    bool    _bCheckDefault;
-    string  _sCharset;
     bool    _bWithJbr;
     bool    _bWithCompact;
     bool    _bEnumCompact;

@@ -95,31 +95,10 @@ int main(int argc, char* argv[])
         t2d.setBasePackage("tars_idl.");
     }
 
-	if (option.hasParam("not-force-array"))
-	{
-		t2d.setForceArray(false);
-	}
-	else
-	{
-		t2d.setForceArray(true);
-	}
-
     if (option.hasParam("extends-package"))
     {
         t2d.setTafPacket(option.getValue("extends-package"));
     }
-
-    t2d.setCheckDefault(tars::TC_Common::lower(option.getValue("check-default")) == "true"?true:false);
-
-
-    if (option.hasParam("with-charset"))
-    {
-        t2d.setCharset(option.getValue("with-charset"));
-    }
-	else
-	{
-		t2d.setCharset("UTF8");
-	}
 
     if(option.hasParam("with-JavaBeanRule"))
     {
