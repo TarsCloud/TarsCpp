@@ -328,12 +328,22 @@ JsonValueNumPtr TC_Json::getNum(BufferJsonReader & reader,char head)
 		reader.back();
 	if(bExponentialNegative)
 		iExponential=0-iExponential;
-	double dResult=(iInt+dFloat)*pow(10,iExponential);
-	if(bNegative)
-		dResult=0-dResult;
+
 	JsonValueNumPtr p = new JsonValueNum();
-	p->value=dResult;
 	p->isInt=!bFloat;
+	if(bFloat)
+	{
+		double dResult=(iInt+dFloat)*pow(10,iExponential);
+		if(bNegative)
+			dResult=0-dResult;
+		p->value=dResult;
+	}
+	else
+	{
+		if(bNegative)
+			iInt =0-iInt ;
+		p->lvalue=iInt;
+	}
 	return p;
 }
 
@@ -554,7 +564,7 @@ void TC_Json::writeNum(const JsonValueNumPtr & p, string& ostr)
 	}
 	else
 	{
-		ss << (int64_t)p->value;
+		ss << (int64_t)p->lvalue;
 	}
 
 	ostr += ss.str();
@@ -719,7 +729,7 @@ void TC_JsonWriteOstream::writeNum(const JsonValueNumPtr & p, ostream& ostr)
 	}
 	else
 	{
-		ostr << (int64_t)p->value;
+		ostr << (int64_t)p->lvalue;
 	}
 }
 
