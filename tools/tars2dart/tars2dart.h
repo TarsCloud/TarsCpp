@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <string>
+#include <map>
 
 #define TARS_PACKAGE     ".tup.tars"
 #define PROXY_PACKAGE   ".proxy"

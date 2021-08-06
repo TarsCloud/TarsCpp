@@ -507,7 +507,12 @@ string Tars2Dart::getDefaultValue(const TypeIdPtr& pPtr, const string sp) const{
             sDefalut = " " + sp + " " + pPtr->def();
         }
     }else{
-        sDefalut = " " + sp + " " + toTypeInit(pPtr->getTypePtr());
+        string typeDefault = toTypeInit(pPtr->getTypePtr());
+        if(typeDefault == "" || typeDefault == "null"){
+            sDefalut = "";
+        }else{
+            sDefalut = " " + sp + " " + toTypeInit(pPtr->getTypePtr());
+        }
     }
     return sDefalut;
 }
@@ -635,15 +640,20 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     s << TAB << "import '" << _tarsPackage << "tars_output_stream.dart';"<< endl;
     s << TAB << "import '" << _tarsPackage << "tars_struct.dart';"<< endl;
     s << TAB << "import '" << _tarsPackage << "tars_displayer.dart';"<< endl;
-    s << TAB << "import '" << _tarsPackage << "tars_util.dart';"<< endl;
+    // s << TAB << "import '" << _tarsPackage << "tars_util.dart';"<< endl;
     s << endl;
     
     //导入tars定义的结构体
+    map<string , bool> mapImport;
     for (size_t i = 0; i < member.size(); i++)
     {
          vector<string> packages = toImportStrs(member[i]->getTypePtr());
          if(!packages.empty()){
             for (size_t j = 0; j < packages.size(); j++){
+                if(mapImport.count(packages[j])){
+                    continue;
+                }
+                mapImport.insert(pair<string, bool>(packages[j] , true));  
                 s << TAB << "import '" << packages[j] << ".dart';"<< endl;
             }
          }
@@ -653,21 +663,6 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
 
     bool bHasImpPrefix = false;
 
-//  if (_bWithWsp)
-//  {
-//      s << TAB << "import java.util.HashMap"  << ";" << endl;
-//      s << endl;
-//
-//      s << TAB << "import "<< s_WSP_PACKAGE << ";" << endl;
-//      s << endl;
-//  }
-
-//  if (_bJson)
-//  {
-//      s << TAB << "import com.qq.component.json.JSON;" << endl;
-//      s << TAB << "import com.qq.component.json.JSONException;" << endl;
-//      s << endl;
-//  }
     //class定义部分
     s << TAB << "class " << pPtr->getId() << " extends " <<  "TarsStruct";
 //  if (_bWithWsp)
@@ -1111,41 +1106,67 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     for (size_t i = 0; i < member.size(); i++)
     {
         string prefix = "";
-        BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[i]->getTypePtr());
-        EnumPtr ePtr = EnumPtr::dynamicCast(member[i]->getTypePtr());
+        TypePtr& tPtr = member[i]->getTypePtr();
+        BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(tPtr);
+        EnumPtr ePtr = EnumPtr::dynamicCast(tPtr);
+        VectorPtr vPtr = VectorPtr::dynamicCast(tPtr);
+        MapPtr mPtr = MapPtr::dynamicCast(tPtr);
+        StructPtr sPtr = StructPtr::dynamicCast(tPtr);
+
         if (!bPtr && !ePtr)
         {
             prefix = "cache_";
         }
-        //if (!bPtr && !ePtr)
-        //{
-        //  prefix = "cache_";
-        //  //放置默认元素用于识别类型
-        //  s << TAB <<"if(null == "<<prefix<<member[i]->getId()<<")"<<endl;
-        //  s << TAB <<"{"<<endl;
-        //  INC_TAB;
-        //  s << TAB <<prefix << member[i]->getId()<<" = " << toTypeInit(member[i]->getTypePtr()) << endl;
-        //  s << generateDefautElem(member[i]->getTypePtr(), prefix+member[i]->getId());
-        //  DEL_TAB;
-        //  s << TAB <<"}"<<endl;
-        //  //
-        //  //s << TAB << member[i]->getId() << " = " << toTypeInit(member[i]->getTypePtr()) << endl;
-        //  //s << generateDefautElem(member[i]->getTypePtr(), member[i]->getId());
 
-        //}
+        //基础类型
+        if (bPtr){
+            s << TAB << "this." << member[i]->getId() << " = " 
+                << " _is.read<" << toObjStr(member[i]->getTypePtr()) << ">(" << prefix + member[i]->getId()
+                << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ")" << ";" << endl;
+        }
 
-        //string特殊处理
-        if (bPtr && bPtr->kind() == Builtin::KindString)
+        //数组
+        if (vPtr)
         {
             s << TAB << "this." << member[i]->getId() << " = "
-                << " _is.readString(" << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ");" << endl;
+                << " _is.read<" << toObjStr(vPtr->getTypePtr()) << ">(" << prefix + member[i]->getId()
+                    << ", "  << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ");" << endl;
         }
-        else
+
+        //map
+        if (mPtr)
         {
-            s << TAB << "this." << member[i]->getId() << " = " 
-                << " _is.read(" << prefix + member[i]->getId()
-                << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ")" << " as " <<  tostr(member[i]->getTypePtr()) << ";" << endl;
+            VectorPtr svPtr = VectorPtr::dynamicCast(mPtr->getRightTypePtr());
+            MapPtr smPtr = MapPtr::dynamicCast(mPtr->getRightTypePtr());
+            if (svPtr)
+            {
+                //Map<K,List<V>> 结构
+                s << TAB << "this." << member[i]->getId() << " = "
+                << " _is.readMapList<" << toObjStr(mPtr->getLeftTypePtr()) << "," << toObjStr(svPtr->getTypePtr()) << ">(" << prefix + member[i]->getId()
+                    << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ");" << endl;
+            }else if (smPtr)
+            {   
+                //Map<K,Map<K2,V2>> 结构
+                s << TAB << "this." << member[i]->getId() << " = "
+                << " _is.readMapMap<" << toObjStr(mPtr->getLeftTypePtr()) << "," << toObjStr(smPtr->getLeftTypePtr()) << "," << toObjStr(smPtr->getRightTypePtr()) << ">(" << prefix + member[i]->getId()
+                    << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ");" << endl;
+            }else{
+                //普通 Map<K,V> 结构
+                s << TAB << "this." << member[i]->getId() << " = "
+                << " _is.readMap<" << toObjStr(mPtr->getLeftTypePtr()) << "," << toObjStr(mPtr->getRightTypePtr()) << ">(" << prefix + member[i]->getId()
+                    << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ");" << endl;
+            }
         }
+
+        //自定义结构体
+        if (sPtr)
+        {
+            s << TAB << "this." << member[i]->getId() << " = "
+                << " _is.read<" << toObjStr(member[i]->getTypePtr()) << ">(" << prefix + member[i]->getId()
+                    << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ");" << endl;
+        }
+
+        
     }
 
     DEL_TAB;
