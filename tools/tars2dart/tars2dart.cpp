@@ -549,7 +549,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     s << TAB << "import '" << _tarsPackage << "tars_output_stream.dart';"<< endl;
     s << TAB << "import '" << _tarsPackage << "tars_struct.dart';"<< endl;
     s << TAB << "import '" << _tarsPackage << "tars_displayer.dart';"<< endl;
-    // s << TAB << "import '" << _tarsPackage << "tars_util.dart';"<< endl;
+    s << TAB << "import '" << _tarsPackage << "tars_deep_copyable.dart';"<< endl;
     s << endl;
     
 
@@ -645,6 +645,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
  
 
     //writeTo()
+    s << TAB << "@override"  << endl;
     s << TAB << "void writeTo(" << "TarsOutputStream _os)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
@@ -689,6 +690,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
 
 
     //readFrom()
+    s << TAB << "@override"  << endl;
     s << TAB << "void readFrom(" <<  "TarsInputStream _is)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
@@ -765,6 +767,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     if (!_bWithCompact)
     {
         //display()
+        s << TAB << "@override"  << endl;
         s << TAB << "void displayAsString(StringBuffer _os, int _level)" << endl;
         s << TAB << "{" << endl;
         INC_TAB;
@@ -779,10 +782,98 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
         s << endl;
     }
 
+    //deepCopy()
+    s << TAB << "@override"  << endl;
+    s << TAB << "Object deepCopy()" << endl;
+    s << TAB << "{" << endl;
+    INC_TAB;
+    s << TAB  << "var o = " <<  pPtr->getId() << "();" << endl;
+    for (size_t i = 0; i < member.size(); i++)
+    {
+
+        string prefix = "";
+        TypePtr& tPtr = member[i]->getTypePtr();
+        BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(tPtr);
+        EnumPtr ePtr = EnumPtr::dynamicCast(tPtr);
+        VectorPtr vPtr = VectorPtr::dynamicCast(tPtr);
+        MapPtr mPtr = MapPtr::dynamicCast(tPtr);
+        StructPtr sPtr = StructPtr::dynamicCast(tPtr);
+
+        if (!bPtr && !ePtr)
+        {
+            prefix = "cache_";
+        }
+
+        //基础类型
+        if (bPtr || ePtr){
+            s << TAB << "o." << member[i]->getId() << " = "  << "this." << member[i]->getId()  << ";" << endl;
+        }
+
+        
+        //数组
+        if (vPtr)
+        {
+            BuiltinPtr bPtr = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
+            if (bPtr && bPtr->kind() == Builtin::KindByte)
+            {
+                s << TAB << "o." << member[i]->getId() << " = "  << "this." << member[i]->getId()  << ";" << endl;
+            } else {
+                s << TAB << "if (null != " << member[i]->getId() << ")" << endl;
+                s << TAB << "{" << endl;
+                INC_TAB;
+                s << TAB << "o." << member[i]->getId() << " = "
+                    << " listDeepCopy<" << toObjStr(vPtr->getTypePtr()) << ">(this." << member[i]->getId() << "!);" << endl;
+                DEL_TAB;
+                s << TAB << "}" << endl;
+            }
+        }
+
+        //map
+        if (mPtr)
+        {
+            s << TAB << "if (null != " << member[i]->getId() << ")" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            VectorPtr svPtr = VectorPtr::dynamicCast(mPtr->getRightTypePtr());
+            MapPtr smPtr = MapPtr::dynamicCast(mPtr->getRightTypePtr());
+            if (svPtr)
+            {
+                //Map<K,List<V>> 结构
+                s << TAB << "o." << member[i]->getId() << " = "
+                << " mapListDeepCopy<" << toObjStr(mPtr->getLeftTypePtr()) << "," << toObjStr(svPtr->getTypePtr()) << ">(this." << member[i]->getId() << "!);" << endl;
+
+            }else if (smPtr)
+            {   
+                //Map<K,Map<K2,V2>> 结构
+                s << TAB << "o." << member[i]->getId() << " = "
+                << " mapMapDeepCopy<" << toObjStr(mPtr->getLeftTypePtr()) << "," << toObjStr(smPtr->getLeftTypePtr()) << "," << toObjStr(smPtr->getRightTypePtr()) << "!);" << endl;
+
+            }else{
+                //普通 Map<K,V> 结构
+                s << TAB << "o." << member[i]->getId() << " = "
+                << " mapDeepCopy<" << toObjStr(mPtr->getLeftTypePtr()) << "," << toObjStr(mPtr->getRightTypePtr()) << ">(this." << member[i]->getId() << "!);" << endl;
+            }
+            DEL_TAB;
+            s << TAB << "}" << endl;
+        }
+
+        //自定义结构体
+        if (sPtr)
+        {
+            s << TAB << "o." << member[i]->getId() << " = this." << member[i]->getId() << "?.deepCopy() as " << toObjStr(member[i]->getTypePtr()) << "?;" << endl;
+        }
+
+    }
+    s << TAB  << "return o;" << endl;
+
     DEL_TAB;
     s << TAB << "}" << endl;
     s << endl;
 
+
+    DEL_TAB;
+    s << TAB << "}" << endl;
+    s << endl;
 
 
     string fileJava  = getFilePath(nPtr->getId()) + pPtr->getId() + ".dart";
