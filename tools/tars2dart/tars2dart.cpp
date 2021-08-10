@@ -26,7 +26,7 @@
 #define DEL_TAB g_parse->delTab()
 
 static string g_default_package = "tars_idl";
-static string g_default_tars_package = "/tars/";
+static string g_default_tars_package = "/tars/codec/";
 
 //////////////////////////////////////////////////////////////////////////////////
 //
@@ -436,10 +436,10 @@ string Tars2Dart::generateNewElem(const TypePtr& pPtr) const
         BuiltinPtr bPtr = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
         if (bPtr && bPtr->kind() == Builtin::KindByte)
         {
-            return "Uint8List.fromList(List.filled(1,0))";
+            return "[0x0]";
         }
 
-        return "List<"+tostr(vPtr->getTypePtr())+">.filled(1,"+ generateNewElem(vPtr->getTypePtr()) +")";
+        return "["+ generateNewElem(vPtr->getTypePtr()) +"]";
     }
 
     MapPtr mPtr = MapPtr::dynamicCast(pPtr);
@@ -499,9 +499,9 @@ string Tars2Dart::tostrCache(const TypeIdPtr& pPtr) const
         BuiltinPtr bPtr = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
         if (bPtr && bPtr->kind() == Builtin::KindByte)
         {
-            cacheCodeStr = "static Uint8List " + cacheName+ " = Uint8List.fromList(List.filled(1,0))";
+            cacheCodeStr = "static Uint8List " + cacheName+ " = Uint8List.fromList([0x0])";
         }else{
-            cacheCodeStr = "static List<" + tostr(vPtr->getTypePtr()) + "> " + cacheName + " = List.filled(1,"+ generateNewElem(vPtr->getTypePtr()) +")";
+            cacheCodeStr = "static List<" + tostr(vPtr->getTypePtr()) + "> " + cacheName + " = ["+ generateNewElem(vPtr->getTypePtr()) +"]";
         }
     }
 
@@ -512,8 +512,7 @@ string Tars2Dart::tostrCache(const TypeIdPtr& pPtr) const
         string rightType = tostr(mPtr->getRightTypePtr());
 
         cacheCodeStr = "static Map<"+ leftType +", "+ rightType +"> " + cacheName
-        + " = Map.fromEntries(List<MapEntry<"+ leftType +", "+ rightType 
-        +">>.filled(1,MapEntry<"+ leftType +", "+ rightType +">("+ generateNewElem(mPtr->getLeftTypePtr()) +","+ generateNewElem(mPtr->getRightTypePtr()) + ")))";
+        + " = {"+ generateNewElem(mPtr->getLeftTypePtr()) +":"+ generateNewElem(mPtr->getRightTypePtr()) + "}";
     }
   
     StructPtr sPtr = StructPtr::dynamicCast(pPtr->getTypePtr());
