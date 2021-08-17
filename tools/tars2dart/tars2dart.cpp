@@ -259,7 +259,7 @@ string Tars2Dart::tostrBuiltin(const BuiltinPtr& pPtr) const
         s = "bool";
         break;
     case Builtin::KindByte:
-        s = "Uint8List";
+        s = "int";
         break;
     case Builtin::KindShort:
         s = "int";
