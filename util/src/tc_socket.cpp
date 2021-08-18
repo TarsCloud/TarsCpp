@@ -143,7 +143,16 @@ void TC_Socket::bind(const char *sPathName)
     stBindAddr.sun_family = _iDomain;
     strncpy(stBindAddr.sun_path, sPathName, sizeof(stBindAddr.sun_path));
 
-    bind((struct sockaddr *)&stBindAddr, sizeof(stBindAddr));
+    try
+    {
+        bind((struct sockaddr *)&stBindAddr, sizeof(stBindAddr));
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << ", " << sPathName << endl;
+        throw e;
+    }
+
 }
 
 void TC_Socket::connect(const char *sPathName)
@@ -372,7 +381,16 @@ void TC_Socket::bind(const string &sServerAddr, int port)
         parseAddrWithPort(sServerAddr, port, bindAddr4);
     }
 
-    bind(bindAddr, len);
+    try
+    {
+        bind(bindAddr, len);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << ", " << sServerAddr << ":" << port << endl;
+        throw e;
+    }
+    
 }
 
 
