@@ -80,14 +80,34 @@ ELSE ()
 ENDIF (UNIX)
 
 set(TARS_RELEASE "${PROJECT_BINARY_DIR}/run-release.cmake")
+FILE(WRITE ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo release all)\n")
+
+set(TARS_TAR "${PROJECT_BINARY_DIR}/run-tar.cmake")
+FILE(WRITE ${TARS_TAR} "")
+
+####################################################################
+
 set(TARS_UPLOAD "${PROJECT_BINARY_DIR}/run-upload.cmake")
 set(TARS_UPLOAD_TARS "${PROJECT_BINARY_DIR}/run-upload-tars.cmake")
-set(TARS_TAR "${PROJECT_BINARY_DIR}/run-tar.cmake")
 
-FILE(WRITE ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo release all)\n")
 FILE(WRITE ${TARS_UPLOAD} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo upload all)\n")
 FILE(WRITE ${TARS_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND}  -E echo upload tars all)\n")
-FILE(WRITE ${TARS_TAR} "")
+
+####################################################################
+
+# k8s taf
+set(TARS_K8S_WEB_HOST "" CACHE STRING "set k8s web host")
+IF (TARS_K8S_WEB_HOST STREQUAL "")
+	set(TARS_K8S_WEB_HOST "http://taf.test.whup.com:8080")
+ENDIF ()
+
+set(TARS_K8S_TOKEN "" CACHE STRING "set k8s web token")
+set(TARS_K8S_BASE_IMAGE "" CACHE STRING "set taf k8s base image")
+set(TARS_K8S_UPLOAD "${CMAKE_BINARY_DIR}/run-k8s-upload.cmake")
+FILE(WRITE ${TARS_K8S_UPLOAD} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo upload k8s all)\n")
+FILE(WRITE ${TARS_K8S_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND}  -E echo upload k8s tars all)\n")
+
+####################################################################
 
 function(gen_tars TARGET)
 
@@ -235,11 +255,11 @@ macro(gen_server APP TARGET)
 
 		IF(WIN32)
 			FILE(WRITE ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo ${TARS_WEB_HOST}/api/upload_tars_file -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
-			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${TAF_PATH}/thirdparty/bin/curl.exe ${TARS_WEB_HOST}/api/upload_tars_file?ticket=${TAF_TOKEN} -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
+			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${TARS_PATH}/thirdparty/bin/curl.exe ${TARS_WEB_HOST}/api/upload_tars_file?ticket=${TARS_TOKEN} -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
 			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND -E echo \n---------------------------------------------------------------------------)\n")
 		ELSE()
 			FILE(WRITE ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo ${TARS_WEB_HOST}/api/upload_tars_file -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
-			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND curl ${TARS_WEB_HOST}/api/upload_tars_file?ticket=${TAF_TOKEN} -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
+			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND curl ${TARS_WEB_HOST}/api/upload_tars_file?ticket=${TARS_TOKEN} -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
 			FILE(APPEND ${RUN_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo \n---------------------------------------------------------------------------)\n")
 		ENDIF()
 
@@ -257,6 +277,40 @@ macro(gen_server APP TARGET)
 				COMMENT "call ${RUN_UPLOAD_TARS_COMMAND_FILE}")
 
 		FILE(APPEND ${TARS_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_UPLOAD_TARS_COMMAND_FILE})\n")
+	endif ()
+
+
+	#make k8s upload #########################################################################
+	SET(RUN_K8S_UPLOAD_COMMAND_FILE "${CMAKE_BINARY_DIR}/run-k8s-upload-${TARGET}.cmake")
+	FILE(WRITE ${RUN_K8S_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo ${TARS_K8S_WEB_HOST}/pages/k8s/api/upload_and_publish -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fserver_type=cpp -Fbase_image=${TARS_K8S_BASE_IMAGE} -Fcomment=developer-auto-upload)\n")
+	FILE(APPEND ${RUN_K8S_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND curl ${TARS_K8S_WEB_HOST}/pages/k8s/api/upload_and_publish?ticket=${TARS_K8S_TOKEN} -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fserver_type=cpp  -Fbase_image=${TARS_K8S_BASE_IMAGE} -Fcomment=developer-auto-upload)\n")
+	FILE(APPEND ${RUN_K8S_UPLOAD_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo \n---------------------------------------------------------------------------)\n")
+
+	#执行命令
+	add_custom_target(${TARGET}-k8s-upload
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+			DEPENDS ${TARGET}-tar
+			COMMAND cmake -P ${RUN_K8S_UPLOAD_COMMAND_FILE}
+			COMMENT "call ${RUN_K8S_UPLOAD_COMMAND_FILE}")
+
+	FILE(APPEND ${TARS_K8S_UPLOAD} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_K8S_UPLOAD_COMMAND_FILE})\n")
+
+	#make upload-k8s-tars #########################################################################
+	if (TARS_INPUT)
+		SET(RUN_K8S_UPLOAD_TARS_COMMAND_FILE "${CMAKE_BINARY_DIR}/run-k8s-upload-tars-${TARGET}.cmake")
+
+		FILE(WRITE ${RUN_K8S_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo ${TARS_K8S_WEB_HOST}/k8s/api/upload_tars_file -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
+		FILE(APPEND ${RUN_K8S_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND curl ${TARS_K8S_WEB_HOST}/k8s/api/upload_tars_file?ticket=${TARS_K8S_TOKEN} -Fsuse=@${TARGET}-merge.tars -Fapplication=${APP} -Fserver_name=${TARGET})\n")
+		FILE(APPEND ${RUN_K8S_UPLOAD_TARS_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo \n---------------------------------------------------------------------------)\n")
+
+		#执行命令
+		add_custom_target(${TARGET}-k8s-upload-tars
+				WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+				DEPENDS ${TARGET}-tars-merge
+				COMMAND cmake -P ${RUN_K8S_UPLOAD_TARS_COMMAND_FILE}
+				COMMENT "call ${RUN_K8S_UPLOAD_TARS_COMMAND_FILE}")
+
+		FILE(APPEND ${TARS_K8S_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND cmake -P ${RUN_K8S_UPLOAD_TARS_COMMAND_FILE})\n")
 	endif ()
 
 	#make release #########################################################################
@@ -305,21 +359,42 @@ macro(gen_server APP TARGET)
 	endif ()
 endmacro()
 
+if(NOT TARGET upload)
 add_custom_target(upload
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMAND ${CMAKE_COMMAND} -P ${TARS_UPLOAD})
+endif()
 
+if(NOT TARGET release)
 add_custom_target(release
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMAND ${CMAKE_COMMAND} -P ${TARS_RELEASE})
+endif()
 
+if(NOT TARGET upload-tars)
 add_custom_target(upload-tars
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMAND ${CMAKE_COMMAND} -P ${TARS_UPLOAD_TARS})
+endif()
 
+if(NOT TARGET tar)
 add_custom_target(tar
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMAND ${CMAKE_COMMAND} -P ${TARS_TAR})
+endif()
+
+if(NOT TARGET k8s-upload)
+add_custom_target(k8s-upload
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		COMMAND cmake -P ${TARS_K8S_UPLOAD})
+endif()
+
+if(NOT TARGET k8s-upload-tars)
+add_custom_target(k8s-upload-tars
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		COMMAND cmake -P ${TARS_K8S_UPLOAD_JCE})
+endif()
+
 
 message("-------------------------------------------------------------------------------------")
 message("CMAKE_SOURCE_DIR:          ${CMAKE_SOURCE_DIR}")
@@ -334,5 +409,8 @@ message("TARS_HTTP2:                ${TARS_HTTP2}")
 message("TARS_SSL:                  ${TARS_SSL}")
 message("TARS_WEB_HOST:             ${TARS_WEB_HOST}")
 message("TARS_TOKEN:                ${TARS_TOKEN}")
+message("TARS_K8S_WEB_HOST:         ${TARS_K8S_WEB_HOST}")
+message("TARS_K8S_BASE_IMAGE:       ${TARS_K8S_BASE_IMAGE}")
+message("TARS_K8S_TOKEN:            ${TARS_K8S_TOKEN}")
 message("-------------------------------------------------------------------------------------")
 
