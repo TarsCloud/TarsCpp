@@ -337,12 +337,14 @@ JsonValueNumPtr TC_Json::getNum(BufferJsonReader & reader,char head)
 		if(bNegative)
 			dResult=0-dResult;
 		p->value=dResult;
+		p->lvalue=dResult;
 	}
 	else
 	{
 		if(bNegative)
 			iInt =0-iInt ;
 		p->lvalue=iInt;
+		p->value=iInt;
 	}
 	return p;
 }
