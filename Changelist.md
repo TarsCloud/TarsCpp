@@ -5,11 +5,13 @@
 - update protocol to support K8S
 - tars-tools.cmake support K8S upload
 - tc_socket bind output to cerr when failed
+- fix tc_json double bug
 ### cn
 - 修复StatReport可能的crash当communicatorEpoll被delete时 
 - 为了后续支持K8S更新了相关的协议
 - 更新了tars-tools.cmake support K8S upload 
 - tc_socket 增加了cerr的输出, 帮忙定位问题
+- 修复tc_json double精度的bug
 # v2.4.20 2021.07.27
 ### en
 - application add addServantWithParams support parameter for handle
