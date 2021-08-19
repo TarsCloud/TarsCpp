@@ -783,6 +783,8 @@ void StatReport::run()
 
             timedWait(1000);
 
+            if (_terminate)
+                return;
         }
 
         try

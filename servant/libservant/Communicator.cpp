@@ -542,8 +542,6 @@ void Communicator::terminate()
         {
         	if(_communicatorEpoll[i]) {
 		        _communicatorEpoll[i]->getThreadControl().join();
-		        delete _communicatorEpoll[i];
-		        _communicatorEpoll[i] = NULL;
 	        }
         }
 
@@ -563,6 +561,15 @@ void Communicator::terminate()
             _statReport->getThreadControl().join();
             delete _statReport;
             _statReport = NULL;
+        }
+
+	    //delete网络线程
+        for (size_t i = 0; i < _clientThreadNum; ++i)
+        {
+        	if(_communicatorEpoll[i]) {
+		        delete _communicatorEpoll[i];
+		        _communicatorEpoll[i] = NULL;
+	        }
         }
 
         if (_servantProxyFactory)
