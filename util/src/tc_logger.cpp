@@ -21,6 +21,8 @@
 namespace tars
 {
 
+TC_RollLogger __global_logger_debug__;
+
 bool TC_LoggerRoll::_bDyeingFlag = false;
 TC_SpinLock TC_LoggerRoll::_mutexDyeing;
 unordered_map<size_t, string>  TC_LoggerRoll::_mapThreadID;

@@ -34,11 +34,11 @@ TC_Endpoint::TC_Endpoint()
     _qos = 0;
     _weight = -1;
     _weighttype = 0;
-    _authType = 0;
+    _authType = AUTH_TYPENONE;
 	_isIPv6 = TC_Socket::addressIsIPv6(_host);
 }
 
-void TC_Endpoint::init(const string& host, int port, int timeout, EType type, int grid, int qos, int weight, unsigned int weighttype, int authType)
+void TC_Endpoint::init(const string& host, int port, int timeout, EType type, int grid, int qos, int weight, unsigned int weighttype, AUTH_TYPE authType)
 {
     _host = host;
     _port = port;
@@ -72,7 +72,7 @@ void TC_Endpoint::parse(const string &str)
     _qos = 0;
     _weight = -1;
     _weighttype = 0;
-    _authType = 0;
+    _authType = AUTH_TYPENONE;
 
     const string delim = " \t\n\r";
 
@@ -212,11 +212,15 @@ void TC_Endpoint::parse(const string &str)
             // auth type
             case 'e':
             {
+                int v = 0;
                 istringstream p(argument);
-                if (!(p >> const_cast<int&>(_authType)) || !p.eof() || _authType < 0 || _authType > 1)
+
+                if (!(p >> const_cast<int&>(v)) || !p.eof() || (v != AUTH_TYPENONE && v != AUTH_TYPELOCAL))
                 {
                     throw TC_EndpointParse_Exception("TC_Endpoint::parse -e error : " + str);
                 }
+
+                _authType = (AUTH_TYPE)v;
                 break;
             }
             default:
@@ -246,10 +250,10 @@ void TC_Endpoint::parse(const string &str)
     }
     _isIPv6 = TC_Socket::addressIsIPv6(_host);
 
-    if (_authType < 0)
-        _authType = 0;
-    else if (_authType > 0)
-        _authType = 1;
+    // if (_authType < 0)
+    //     _authType = 0;
+    // else if (_authType > 0)
+    //     _authType = 1;
 }
 
 /*************************************TC_TCPClient**************************************/
@@ -273,8 +277,8 @@ void TC_ClientSocket::init(const string &sIp, int iPort, int iTimeout)
 	if(!_epoller)
 	{
 		_epoller = new TC_Epoller();
-		_epoller->create(10);
-		_epoller->enableET(false);
+		_epoller->create(10, false);
+        _epoller->enableET(false); 
 	}
 
     _socket.close();
@@ -300,30 +304,79 @@ int TC_TCPClient::checkSocket()
         try
         {
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+
 	        _socket.createSocket(SOCK_STREAM, _port ? (_isIPv6 ? AF_INET6 : AF_INET) : AF_LOCAL);
-#else
-	        _socket.createSocket(SOCK_STREAM, _isIPv6 ? AF_INET6 : AF_INET);
-#endif
-
-	        _epoller->add(_socket.getfd(), 0, EPOLLOUT | EPOLLIN);
-
 	        //设置非阻塞模式
             _socket.setblock(false);
             _socket.setNoCloseWait();
+            _socket.setKeepAlive();
+            _socket.setTcpNoDelay();
+            
+	        _epoller->add(_socket.getfd(), 0, EPOLLOUT | EPOLLIN);
             
 	        int iRet;
-
-#if TARGET_PLATFORM_LINUX
 
             if(_port == 0)
             {
                 iRet = _socket.connectNoThrow(_ip.c_str());
             }
             else
-#endif                
             {
 	            iRet = _socket.connectNoThrow(_ip, _port);
             }
+
+            if(iRet < 0 && !TC_Socket::isInProgress())
+            {
+                _socket.close();
+                return EM_CONNECT;
+            }
+            int iRetCode = _epoller->wait(_timeout);
+
+            if (iRetCode < 0)
+            {
+                _socket.close();
+                return EM_SELECT;
+            }
+            else if (iRetCode == 0)
+            {
+                _socket.close();
+                return EM_TIMEOUT;
+            }
+            else
+            {
+                for(int i = 0; i < iRetCode; ++i)
+                {
+                    const epoll_event& ev = _epoller->get(i);
+
+                    if(TC_Epoller::errorEvent(ev))
+                    {
+                        _socket.close();
+                        return EM_CONNECT;
+                    }
+                    else if(TC_Epoller::writeEvent(ev))
+                    {
+                        int iVal = 0;
+                        socklen_t iLen = static_cast<socklen_t>(sizeof(int));
+                        if(_socket.getSockOpt(SO_ERROR, reinterpret_cast<char*>(&iVal), iLen) == -1 || iVal)
+                        {
+                            _socket.close();
+                            return EM_CONNECT;
+                        }
+                    }
+                }
+            }
+            //设置为阻塞模式
+            _socket.setblock(true);
+
+#else
+	        _socket.createSocket(SOCK_STREAM, _isIPv6 ? AF_INET6 : AF_INET);
+	        //设置非阻塞模式
+            _socket.setblock(false);
+            _socket.setNoCloseWait();
+            
+	        _epoller->add(_socket.getfd(), 0, EPOLLOUT | EPOLLIN);
+
+	        int iRet = _socket.connectNoThrow(_ip, _port);
 
             if(iRet < 0 && !TC_Socket::isInProgress())
             {
@@ -341,33 +394,10 @@ int TC_TCPClient::checkSocket()
                 _socket.close();
                 return EM_TIMEOUT;
             }
-            else
-            {
-#if !TARGET_PLATFORM_WINDOWS
-                for(int i = 0; i < iRetCode; ++i)
-                {
-                    const epoll_event& ev = _epoller->get(i);
-                    if(TC_Epoller::errorEvent(ev))
-                    {
-                        _socket.close();
-                        return EM_CONNECT;
-                    }
-                    else
-                    {
-                        int iVal = 0;
-                        socklen_t iLen = static_cast<socklen_t>(sizeof(int));
-                        if(_socket.getSockOpt(SO_ERROR, reinterpret_cast<char*>(&iVal), iLen) == -1 || iVal)
-                        {
-                            _socket.close();
-                            return EM_CONNECT;
-                        }
-                    }
-                }
-#endif
 
-            }
             //设置为阻塞模式
             _socket.setblock(true);
+#endif
         }
         catch(TC_Socket_Exception &ex)
         {
@@ -431,7 +461,9 @@ int TC_TCPClient::recv(char *sRecvBuffer, size_t &iRecvLen)
     else if(TC_Epoller::readEvent(ev))
 #endif
     {
-        int iLen = _socket.recv((void*)sRecvBuffer, iRecvLen);
+	    // DEBUG_COST("before recv");
+
+	    int iLen = _socket.recv((void*)sRecvBuffer, iRecvLen);
         if (iLen < 0)
         {
             _socket.close();
@@ -460,11 +492,11 @@ int TC_TCPClient::recvBySep(string &sRecvBuffer, const string &sSep)
         return iRet;
     }
 
-    _epoller->mod(_socket.getfd(), 0, EPOLLIN);
-    
-    while(true)
+    bool succ = false;
+    while(!succ)
     {
         int iRetCode = _epoller->wait(_timeout);
+
         if (iRetCode < 0)
         {
             _socket.close();
@@ -491,7 +523,7 @@ int TC_TCPClient::recvBySep(string &sRecvBuffer, const string &sSep)
             char buffer[LEN_MAXRECV] = "\0";
 
             int len = _socket.recv((void*)&buffer, sizeof(buffer));
-            if (len < 0)
+            if (len < 0 && !TC_Socket::isPending())
             {
                 _socket.close();
                 return EM_RECV;
@@ -502,10 +534,12 @@ int TC_TCPClient::recvBySep(string &sRecvBuffer, const string &sSep)
                 return EM_CLOSE;
             }
 
-            sRecvBuffer.append(buffer, len);
+            if(len > 0)
+            {
+                sRecvBuffer.append(buffer, len);
+            }
 
-            if(sRecvBuffer.length() >= sSep.length() 
-               && sRecvBuffer.compare(sRecvBuffer.length() - sSep.length(), sSep.length(), sSep) == 0)
+            if(sRecvBuffer.length() >= sSep.length() && sRecvBuffer.compare(sRecvBuffer.length() - sSep.length(), sSep.length(), sSep) == 0)
             {
                 break;
             }
@@ -692,7 +726,7 @@ int TC_UDPClient::checkSocket()
             return EM_SOCKET;
         }
 
-	    _epoller->add(_socket.getfd(), 0, EPOLLIN | EPOLLOUT);
+	    _epoller->add(_socket.getfd(), 0, EPOLLIN);
 
 	    try
         {

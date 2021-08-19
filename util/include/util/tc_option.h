@@ -91,7 +91,7 @@ public:
      * @return string 标识的参数值
      * @return string Identified parameter values
      */
-    string getValue(const string &sName) const;
+    string getValue(const string &sName, const string &def = "") const;
 
     /**
      * @brief 获取所有--标识的参数.

@@ -104,30 +104,30 @@ public:
     }
 };
 
-template<typename T>
-class CreateUsingNew1
-{
-public:
-    /**
-	 * @brief  创建.
-	 *  
-     * @return T*
-     */
-    static T* create() 
-    { 
-        return new T; 
-    }
+// template<typename T>
+// class CreateUsingNew1
+// {
+// public:
+//     /**
+// 	 * @brief  创建.
+// 	 *  
+//      * @return T*
+//      */
+//     static T* create() 
+//     { 
+//         return new T; 
+//     }
 
-    /**
-	 * @brief 释放. 
-	 *  
-     * @param t
-     */
-    static void destroy(T *t) 
-    { 
-        delete t; 
-    }
-};
+//     /**
+// 	 * @brief 释放. 
+// 	 *  
+//      * @param t
+//      */
+//     static void destroy(T *t) 
+//     { 
+//         delete t; 
+//     }
+// };
 
 template<typename T>
 class CreateStatic

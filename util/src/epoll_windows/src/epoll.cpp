@@ -328,19 +328,20 @@ int epoll_port_data_t::epoll_add(SOCKET sock, struct epoll_event *ev)
 
 int epoll_port_data_t::epoll_mod(SOCKET sock, struct epoll_event *ev)
 {
-    std::lock_guard<std::mutex> lck (_mutex);
-
-    epoll_sock_data_t *sock_data = get(sock);
-    if(sock_data == NULL)
     {
-        SetLastError(ERROR_NOT_FOUND);
-        return -1;
-    }
-    // printf("mod new, %d\n", sock_data->_op_count);
+        std::lock_guard<std::mutex> lck (_mutex);
 
-    sock_data->_registered_events = ev->events | EPOLLERR | EPOLLHUP;
-    sock_data->_user_data         = ev->data.u64;
-    return sock_data->submit();  
+        epoll_sock_data_t *sock_data = get(sock);
+
+        if(sock_data != NULL)
+        {
+            sock_data->_registered_events = ev->events | EPOLLERR | EPOLLHUP;
+            sock_data->_user_data         = ev->data.u64;
+            return sock_data->submit();  
+        }
+    }
+    // LOG_CONSOLE_DEBUG << endl;
+    return epoll_add(sock, ev);
 }
 
 int epoll_port_data_t::epoll_del(SOCKET sock, struct epoll_event *ev)
@@ -465,7 +466,7 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
             struct epoll_event *ev = events + num_events;
             ev->data.u64 = sock_data->_user_data;
             ev->events = EPOLLERR;
-            ++num_events;
+	        num_events++;
             continue;
         }
 
@@ -542,7 +543,7 @@ int epoll_port_data_t::epoll_wait(OVERLAPPED_ENTRY *entries, ULONG count, struct
             struct epoll_event *ev = events + num_events;
             ev->data.u64           = sock_data->_user_data;
             ev->events             = reported_events;
-            ++num_events;
+	        num_events++;
         }
     }
     return num_events;

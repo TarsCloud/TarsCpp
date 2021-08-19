@@ -57,6 +57,8 @@ namespace tars
 */
 /////////////////////////////////////////////////
 
+class TC_Endpoint;
+
 /**
 * @brief socket异常类
 */
@@ -96,6 +98,9 @@ public:
      * @brief  析够
      */
     virtual ~TC_Socket();
+
+    //定义客户端地址
+    typedef pair<shared_ptr<sockaddr>, SOCKET_LEN_TYPE> addr_type;
 
     /**
      * @brief  初始化. 
@@ -418,6 +423,12 @@ public:
     void setCloseWaitDefault();
 
     /**
+     * @brief 设置reuse addr
+     * @throws TC_Socket_Exception
+     */
+    void setReuseAddr();
+
+    /**
      * @brief 设置nodelay(只有在打开keepalive才有效).
      *  
      * @throws TC_Socket_Exception
@@ -468,8 +479,16 @@ public:
     void ignoreSigPipe();
 
     /**
-    * @brief 设置socket方式. 
-    *  
+     * 解析地址
+     * @param addr
+     * @param host
+     * @param port
+     */
+    static void parseAddr(const addr_type& addr, string& host, uint16_t &port);
+
+    /**
+    * @brief 设置socket方式.
+    *
     * @param fd      句柄
     * @param bBlock  true, 阻塞; false, 非阻塞
     * @throws        TC_Socket_Exception
@@ -513,19 +532,25 @@ public:
     */
     static void parseAddr(const string &sAddr, struct in6_addr &stAddr);
 
+	/**
+	 * @brief: Determine whether an address is ipv6 by including the character ':'
+	 *         if address is a domain name, return default(not use now)
+	 * @param addr: ip address or domain name
+	 * @return: return true if addr is ipv6, false by ipv4, and default by domain name
+	 */
+	static bool addressIsIPv6(const string& addr)
+	{
+#define IPv6_ADDRESS_CHAR ':'
+		return (addr.find(IPv6_ADDRESS_CHAR) != string::npos) ? true : false;
+#undef IPv6_ADDRESS_CHAR
+	}
+
     /**
-     * @brief: Determine whether an address is ipv6 by including the character ':'
-     *         if address is a domain name, return default(not use now)
-     * @param addr: ip address or domain name
-     * @param def_value: if address is a domain name, return default(not use now)
-     * @return: return true if addr is ipv6, false by ipv4, and default by domain name
+     * create sock addr(support ipv4/ipv6)
+     * @param ep
+     * @return
      */
-    static bool addressIsIPv6(const string& addr, bool def_value = false)
-    {
-    #define IPv6_ADDRESS_CHAR ':'
-        return (addr.find(IPv6_ADDRESS_CHAR) != string::npos) ? true : false;
-    #undef IPv6_ADDRESS_CHAR
-    }
+    static TC_Socket::addr_type createSockAddr(const char *addr);
 
     /**
     * @brief 解析地址, 从字符串(ip或域名)端口, 解析到sockaddr_in结构.
@@ -571,9 +596,6 @@ public:
     */
     TC_Socket& operator=(const TC_Socket &tcSock);
     #endif
-
-
-protected:
 
     /**
     * @brief 连接其他服务. 

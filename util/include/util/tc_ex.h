@@ -106,6 +106,13 @@ public:
      */
     static int getSystemCode();
 
+    /**
+     * @brief 获取系统错误码(linux是errno, windows是GetLastError)
+     *
+     * @return 获取系统错误描述
+     */
+    static string getSystemError();
+
 private:
     void getBacktrace();
 

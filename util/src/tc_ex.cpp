@@ -36,7 +36,14 @@ TC_Exception::TC_Exception(const string &buffer)
 
 TC_Exception::TC_Exception(const string &buffer, int err)
 {
-	_buffer = buffer + " :" + parseError(err);
+    if(err != 0)
+    {
+    	_buffer = buffer + " :" + parseError(err);
+    }
+    else
+    {
+        _buffer = buffer;    
+    }
     _code   = err;
 }
 
@@ -112,13 +119,14 @@ string TC_Exception::parseError(int err)
 int TC_Exception::getSystemCode()
 {
 #if TARGET_PLATFORM_WINDOWS        
-    int ret = GetLastError();
-    // cout << "getSystemCode:" << ret << endl;
-
-    return ret; 
+    return GetLastError();
 #else
     return errno; 
 #endif
 }
 
+string TC_Exception::getSystemError()
+{
+    return parseError(getSystemCode());
+}
 }

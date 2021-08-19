@@ -119,12 +119,12 @@ string TC_Encoder::gbk2utf8(const string &sIn,int mode)
 	char* pIn = (char*)sIn.c_str();
 
 	size_t ret = iconv(cd, &pIn, &isize, &pOut, &osize);
-	if(-1 == ret && TC_Encoder::ICONV_NORMAL == mode){
-		iconv_close(cd);
-		delete []buf;
-		THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv error");
-		return sOut;
-	}
+    if((size_t)-1 == ret && TC_Encoder::ICONV_NORMAL == mode){
+        iconv_close(cd);
+        delete []buf;
+        THROW_EXCEPTION_SYSCODE(TC_Encoder_Exception, "[TC_Encoder::gbk2utf8] iconv error");
+        return sOut;
+    }
 
 	iconv_close(cd);
 	buf[bufsize-osize]=0;

@@ -139,6 +139,13 @@ public:
      */
     bool empty() const;
 
+    /**
+     * @brief  无数据则等待.
+     *
+     * @return bool 非空返回true，超时返回false
+     */    
+    bool wait(size_t millsecond);
+
 protected:
 	TC_ThreadQueue(const TC_ThreadQueue&) = delete;
 	TC_ThreadQueue(TC_ThreadQueue&&) = delete;
@@ -164,9 +171,9 @@ protected:
 
 	//锁
     mutable std::mutex _mutex;
-
+   
     //lockId, 判断请求是否唤醒过
-    size_t      _lockId = 0;    
+    size_t      _lockId = 0;
 };
 
 template<typename T, typename D> T TC_ThreadQueue<T, D>::front()
@@ -403,6 +410,31 @@ template<typename T, typename D> bool TC_ThreadQueue<T, D>::empty() const
 {
 	std::lock_guard<std::mutex> lock(_mutex);
     return _queue.empty();
+}
+
+template<typename T, typename D> bool TC_ThreadQueue<T, D>::wait(size_t millsecond)
+{
+	size_t lockId = _lockId;
+
+    std::unique_lock<std::mutex> lock(_mutex);
+
+    if (_queue.empty()) {
+        if (millsecond == 0) {
+            return false;
+        }
+        if (millsecond == (size_t) -1) {
+	        _cond.wait(lock, [&] { return !_queue.empty() || hasNotify(lockId); });
+//            _cond.wait(lock);
+        }
+        else {
+            //超时了
+//	        _cond.wait_for(lock, std::chrono::milliseconds(millsecond), [&] { return !_queue.empty() || hasNotify(lockId); });
+
+            return _cond.wait_for(lock, std::chrono::milliseconds(millsecond), [&] { return !_queue.empty() || hasNotify(lockId); });
+        }
+    }  
+
+    return !_queue.empty();
 }
 
 }

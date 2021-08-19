@@ -667,7 +667,7 @@ void TC_Http::reset()
     _bIsChunked = false;
 }
 
-void TC_Http::getHeaders(map<string, string> &header)
+void TC_Http::getHeaders(map<string, string> &header) const
 {
 	for(auto it = _headers.begin(); it != _headers.end(); ++it)
 	{
@@ -1166,23 +1166,36 @@ bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer &buff)
 {
 	if(buff.empty())
 		return false;
+
+	buff.mergeBuffers();
+
+    size_t length = buff.getBufferLength();
+
+    auto sBuf = buff.getBuffer();
+
+    bool flag = incrementDecode(*sBuf.get());
+
+    buff.subLength(length - sBuf->length());
+
+    return flag;
+}
+
+bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer::Buffer &data)
+{
+	if(data.empty())
+		return false;
 	//解析头部
 	if (_headLength == 0)
 	{
-		//至少把header合并成一个buff
-		buff.mergeBuffers();
-
-		auto data = buff.getBufferPointer();
-
-		const char * p = strnstr(data.first, "\r\n\r\n", data.second);
+		const char * p = strnstr(data.buffer(), "\r\n\r\n", data.length());
 		if(p == NULL)
 		{
 			return false;
 		}
 
-		_headLength = p - data.first + 4;
+		_headLength = p - data.buffer() + 4;
 
-		_iTmpContentLength = parseResponseHeaderString(data.first, data.first + _headLength);
+		_iTmpContentLength = parseResponseHeaderString(data.buffer(), data.buffer() + _headLength);
 
 		//304的返回码中头里本来就没有Content-Length，也不会有数据体，头收全了就是真正的收全了
 		if ( (204 == _status) || (304 == _status) )
@@ -1190,12 +1203,18 @@ bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer &buff)
 			return true;
 		}
 
-		buff.moveHeader(_headLength);
+		data.addReadIdx(_headLength);
+//		buff.moveHeader(_headLength);
 
 		//重定向就认为成功了
 		if ((_status == 301 || _status == 302) && hasHeader("Location"))
 		{
 			return true;
+		}
+
+		if(_iTmpContentLength > 0)
+		{
+			data.expansion(_headLength + _iTmpContentLength);
 		}
 
 		//是否是chunk编码
@@ -1212,37 +1231,41 @@ bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer &buff)
 		{
 			const static string sep = "\r\n";
 
-			auto sit = std::search(buff.begin(), buff.end(), sep.c_str(), sep.c_str() + sep.size());
+			char* sit = std::search(data.buffer(), data.buffer() + data.length(), sep.c_str(), sep.c_str() + sep.size());
 
-			if (sit == buff.end())
+			if (sit == data.buffer() + data.length())
 			{
 				return false;
 			}
 
-			string header = buff.iteratorToIterator<string>(buff.begin(), sit);
+//			string header = buff.iteratorToIterator<string>(buff.begin(), sit);
 
-			int iChunkSize    = strtol(header.c_str(), NULL, 16);
+			int iChunkSize    = strtol(data.buffer(), &sit, 16);
 
 			if (iChunkSize <= 0)
 			{
 				break;     //所有chunk都接收完毕
 			}
 
-			if (buff.getBufferLength() < header.size() + 2 + (size_t)iChunkSize + 2)
+			if (data.length() < sit - data.buffer() + 2 + (size_t)iChunkSize + 2)
 			{
 				//没有接收完整的chunk
 				return false;
 			}
 
 			//接收到一个完整的chunk了
-			buff.moveHeader(header.size() + 2);
-			addContent(buff.getHeader<string>(iChunkSize));
+			data.addReadIdx(sit - data.buffer() + 2);
+			addContent(data.buffer(), iChunkSize);
+//			buff.moveHeader(header.size() + 2);
+//			addContent(buff.getHeader<string>(iChunkSize));
 
 			//删除一个chunk
-			buff.moveHeader(iChunkSize + 2);
+			data.addReadIdx(iChunkSize+2);
+//			buff.moveHeader(iChunkSize + 2);
 		}
 
-		buff.clearBuffers();
+		data.clear();
+//		buff.clearBuffers();
 
 		//接收到buffer长度设置好
 		setContentLength(_iRecvContentLength);
@@ -1251,12 +1274,14 @@ bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer &buff)
 	}
 	else
 	{
-		if (_iTmpContentLength == 0)
-		{
+        if (_iTmpContentLength == 0)
+        {
 			//header长度为0, 但是有body数据
-			addContent(buff.getBuffersString());
+//			addContent(buff.getBuffersString());
+			addContent(data.buffer(), data.length());
 
-			buff.clearBuffers();
+//			buff.clearBuffers();
+			data.clear();
 
 			if(_iRecvContentLength > 0) {
 				setContentLength(_iRecvContentLength);
@@ -1273,22 +1298,26 @@ bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer &buff)
 			}
 
 			//header中没长度, 但是有body数据
-			addContent(buff.getBuffersString());
+//			addContent(buff.getBuffersString());
+			addContent(data.buffer(), data.length());
 
-			buff.clearBuffers();
+//			buff.clearBuffers();
 
+			data.clear();
 			if(_iRecvContentLength > 0) {
 				setContentLength(_iRecvContentLength);
 			}
 
+//			http 收包这里收包并没有收完应该return false
 			return false;
 		}
 		else
 		{
-			//头部有长度, 接收到长度大于头部为止
-			addContent(buff.getBuffersString());
-
-			buff.clearBuffers();
+            //头部有长度, 接收到长度大于头部为止
+//			addContent(buff.getBuffersString());
+//			buff.clearBuffers();
+			addContent(data.buffer(), data.length());
+			data.clear();
 
 			//头部的长度小于接收的内容, 还需要继续增加解析后续的buffer
 			if (_iTmpContentLength > _iRecvContentLength)
@@ -1745,6 +1774,11 @@ void TC_HttpRequest::encode(TC_NetWorkBuffer &buff)
 	buff.addBuffer(std::move(encode()));
 }
 
+void TC_HttpRequest::encode(shared_ptr<TC_NetWorkBuffer::Buffer>& buff)
+{
+    buff->addBuffer(std::move(encode()));
+}
+
 bool TC_HttpRequest::decode(const string &sBuffer)
 {
     return decode(sBuffer.c_str(), sBuffer.length());
@@ -2127,19 +2161,20 @@ int TC_HttpRequest::doRequest(TC_TCPClient& tcpClient, TC_HttpResponse& stHttpRs
 
     stHttpRsp.reset();
 
-    TC_NetWorkBuffer recvBuffer(NULL);
+	TC_NetWorkBuffer::Buffer recvBuffer;
 
     while (true)
     {
-    	char buffer[8*1024];
-        size_t iRecvLen = sizeof(buffer);
+		recvBuffer.expansion(recvBuffer.length() + 8*1024);
 
-        iRet = tcpClient.recv(buffer, iRecvLen);
+		size_t iRecvLen = recvBuffer.left();
 
-        if (iRet == TC_ClientSocket::EM_SUCCESS)
-        {
-	        recvBuffer.addBuffer(buffer, iRecvLen);
-        }
+		iRet = tcpClient.recv(recvBuffer.free(), iRecvLen);
+
+		if (iRet == TC_ClientSocket::EM_SUCCESS)
+		{
+			recvBuffer.addWriteIdx(iRecvLen);
+		}
 
         switch (iRet)
         {
@@ -2186,18 +2221,19 @@ int TC_HttpRequest::doRequest(TC_HttpResponse &stHttpRsp, int iTimeout)
 
     stHttpRsp.reset();
 
-	TC_NetWorkBuffer recvBuffer(NULL);
+    TC_NetWorkBuffer::Buffer recvBuffer;
 
     while (true)
     {
-	    char buffer[8*1024];
-	    size_t iRecvLen = sizeof(buffer);
+		recvBuffer.expansion(recvBuffer.length() + 8*1024);
 
-        iRet = tcpClient.recv(buffer, iRecvLen);
+	    size_t iRecvLen = recvBuffer.left();
+
+        iRet = tcpClient.recv(recvBuffer.free(), iRecvLen);
 
         if (iRet == TC_ClientSocket::EM_SUCCESS)
         {
-	        recvBuffer.addBuffer(buffer, iRecvLen);
+        	recvBuffer.addWriteIdx(iRecvLen);
         }
 
         switch (iRet)

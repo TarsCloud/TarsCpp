@@ -45,7 +45,7 @@ public:
     struct PtrInfo;
     struct NodeInfo;
 
-    typedef multimap<int64_t,NodeInfo>      time_type;
+    typedef multimap<uint64_t,NodeInfo>      time_type;
     typedef list<PtrInfo>                   list_type;
 
     struct PtrInfo
@@ -97,7 +97,7 @@ public:
      * @param timeout    超时时间 绝对时间
      * @return true  成功 false 失败
      */
-    bool push(T& ptr, int64_t timeout);
+    bool push(T& ptr, uint64_t timeout);
 
     /**
      * @brief 超时删除数据
@@ -168,7 +168,7 @@ template<typename T> bool TC_TimeoutQueueNoID<T>::pop(T & t)
 }
 
 
-template<typename T> bool TC_TimeoutQueueNoID<T>::push(T& ptr, int64_t timeout)
+template<typename T> bool TC_TimeoutQueueNoID<T>::push(T& ptr, uint64_t timeout)
 {
     PtrInfo pi;
     pi.ptr = ptr;
@@ -186,7 +186,7 @@ template<typename T> bool TC_TimeoutQueueNoID<T>::push(T& ptr, int64_t timeout)
 
 template<typename T> void TC_TimeoutQueueNoID<T>::timeout()
 {
-    int64_t iNow = TNOWMS;
+    uint64_t iNow = TNOWMS;
     while(true)
     {
         typename time_type::iterator it = _time.begin();

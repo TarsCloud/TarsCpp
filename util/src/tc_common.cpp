@@ -583,10 +583,6 @@ string TC_Common::tm2str(const time_t &t, const string &sFormat)
 void TC_Common::tm2tm(const time_t &t, struct tm &tt)
 {
     tm2time(t, tt);
-    // static TimezoneHelper helper;
-    // time_t localt = t + TimezoneHelper::timezone_diff_secs;
-    // TC_Port::gmtime_r(&localt, &tt);
-
 }
 
 string TC_Common::now2str(const string &sFormat)
@@ -595,10 +591,10 @@ string TC_Common::now2str(const string &sFormat)
     return tm2str(t, sFormat.c_str());
 }
 
-string TC_Common::now2msstr()
-{
-    return ms2str(now2ms());
-}
+//string TC_Common::now2msstr()
+//{
+//    return ms2str(now2ms());
+//}
 
 string TC_Common::ms2str(int64_t ms)
 {
@@ -613,6 +609,25 @@ string TC_Common::ms2str(int64_t ms)
     s.resize(128);
     const char *szFormat = "%04d-%02d-%02d %02d:%02d:%02d.%03ld";
     size_t n = snprintf(&s[0], s.size(), szFormat, tt.tm_year + 1900, tt.tm_mon + 1, tt.tm_mday, tt.tm_hour, tt.tm_min, tt.tm_sec, duration_in_ms);
+    s.resize(n);
+
+    return s;
+}
+
+string TC_Common::now2msstr()
+{
+    time_t t = time(NULL);
+
+    auto duration_in_ms = now2ms();
+
+    tm tt;
+
+    TC_Port::localtime_r(&t, &tt);
+
+    string s;
+    s.resize(128);
+    const char *szFormat = "%04d-%02d-%02d %02d:%02d:%02d.%03ld";
+    size_t n = snprintf(&s[0], s.size(), szFormat, tt.tm_year + 1900, tt.tm_mon + 1, tt.tm_mday, tt.tm_hour, tt.tm_min, tt.tm_sec, duration_in_ms % 1000);
     s.resize(n);
 
     return s;

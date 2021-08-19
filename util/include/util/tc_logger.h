@@ -496,7 +496,7 @@ namespace tars
 		 * @param stream
 		 * @param mutex
 		 */
-		LoggerStream(const char *header, ostream *stream, ostream *estream, TC_SpinLock &mutex) : _stream(stream), _estream(estream), _mutex(mutex)
+		LoggerStream(const char *header, ostream *stream, ostream *estream, TC_ThreadMutex &mutex) : _stream(stream), _estream(estream), _mutex(mutex)
 		{
 			if (stream)
 			{
@@ -512,7 +512,7 @@ namespace tars
 		{
 			if (_stream)
 			{
-				TC_LockT<TC_SpinLock> lock(_mutex);
+				TC_LockT<TC_ThreadMutex> lock(_mutex);
 				_stream->clear();
 				(*_stream) << _buffer.str();
 				_stream->flush();
@@ -529,7 +529,20 @@ namespace tars
 			if (_stream)
 			{
 				_buffer << t;
-				// *_stream << t;
+			}
+			return *this;
+		}
+
+		/**
+		* @brief 重载<<
+		* @brief Reload<<
+		*/
+		template <typename P>
+		LoggerStream &operator<<(P &t)
+		{
+			if (_stream)
+			{
+				_buffer << t;
 			}
 			return *this;
 		}
@@ -605,7 +618,8 @@ namespace tars
 		 * 锁
 		 * Lock
 		 */
-		TC_SpinLock &_mutex;
+//		TC_SpinLock &_mutex;
+		TC_ThreadMutex &_mutex;
 	};
 
 	/**
@@ -615,6 +629,13 @@ namespace tars
 	template <typename WriteT, template <class> class RollPolicy>
 	class TC_Logger : public RollPolicy<WriteT>::RollWrapperI
 	{
+	protected:
+		/**
+		 * @brief 日志级别名称
+		 * @brief Log Level Name
+		 */
+		static const string LN[];
+
 	public:
 		/**
 		 * @brief 设置显示标题
@@ -661,12 +682,6 @@ namespace tars
 			//Logging TARS Framework
 			TARS_LOG_LEVEL = 6, 
 		};
-
-		/**
-		 * @brief 日志级别名称
-		 * @brief Log Level Name
-		 */
-		static const string LN[];
 
 		/**
 		 * @brief 构造函数
@@ -1010,7 +1025,7 @@ namespace tars
 		 * Lock
 		 */
 //		std::mutex _mutex;
-		TC_SpinLock _spinMutex;
+		TC_ThreadMutex _spinMutex;
 
 		/**
 		 * 分隔符
@@ -1979,6 +1994,12 @@ namespace tars
 	};
 
 	typedef TC_Logger<TC_DefaultWriteT, TC_RollByTime> TC_DayLogger;
+
+	UTIL_DLL_API extern TC_RollLogger __global_logger_debug__;
+
+#define LOG_CONSOLE_DEBUG  \
+__global_logger_debug__.any() << TC_Common::now2msstr() <<"|" << std::this_thread::get_id() << "|" << FILE_FUNC_LINE << "|"
+
 }
 
 #endif

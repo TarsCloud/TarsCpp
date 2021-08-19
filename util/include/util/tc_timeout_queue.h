@@ -173,6 +173,12 @@ public:
      */
     size_t size() const { std::lock_guard<std::mutex> lock(_mutex); return _data.size(); }
 
+    /**
+     * @brief is empty
+     * @return
+     */
+    bool empty() const { std::lock_guard<std::mutex> lock(_mutex); return _data.empty(); }
+
 protected:
     uint32_t                        _uniqId;
     time_t                          _timeout;

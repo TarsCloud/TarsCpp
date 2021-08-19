@@ -24,6 +24,8 @@
 #include "util/tc_http.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_socket.h"
+#include "util/tc_transceiver.h"
+#include "util/tc_openssl.h"
 
 namespace tars
 {
@@ -35,20 +37,30 @@ namespace tars
 * @brief HTTP asynchronous call class.
 *
 * http同步调用使用TC_HttpRequest::doRequest就可以了
-* 代码示例请参考example_http_async.cpp
 * 说明:
 *     1 背后会启动唯一的网络线程
 *     2 目前只支持http短连接
 *     3 RequestCallback回调里面, onSucc和onFailed是对应的, 每次异步请求, onSucc/onFailed其中之一会被唯一响应
+*     4 支持https
 * Synchronized HTTP calls using TC_HttpRequest:: doRequest is OK
 * See example_for code examplesHttp_Async.cpp
 * Explanation:
 *     1 the only network thread will be launched behind it
 *     2 Only short HTTP connections are currently supported
 *     3 In the RequestCallback callback, onSucc and onFailed correspond. Each asynchronous request, one of onSucc/onFailed is uniquely responded to.
+*     4 support https
 * @author ruanshudong@qq.com
 */
 /////////////////////////////////////////////////
+
+/**
+* @brief socket异常类
+*/
+struct TC_HttpAsync_Exception : public TC_Exception
+{
+    TC_HttpAsync_Exception(const string &buffer) : TC_Exception(buffer) {};
+    ~TC_HttpAsync_Exception() throw() {};
+};
 
 /**
  * @brief 异步线程处理类.
@@ -90,6 +102,7 @@ public:
             Failed_Close    = 0x05,     //服务器主动关闭了链接
             /*Link Timeout*/
             Failed_ConnectTimeout = 0x06, //链接超时
+            Failed_Request  = 0x07,      //发送出错
         };
 
         /**
@@ -141,14 +154,7 @@ protected:
     class AsyncRequest : public TC_HandleBase
     {
     public:
-        /**
-         * @brief 构造.
-         * @brief Constructor
-         *
-         * @param stHttpRequest
-         * @param callbackPtr
-         */
-        AsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, bool bUseProxy);
+        AsyncRequest() {}
 
         /**
          * @brief 构造.
@@ -156,15 +162,16 @@ protected:
          *
          * @param stHttpRequest
          * @param callbackPtr
-         * @param addr
-         */
-        AsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, const string &addr);
-
-        /**
-         * @brief 析构
-         * @brief Destructor
          */
         ~AsyncRequest();
+
+        /**
+         * 初始化
+         * @param stHttpRequest
+         * @param callbackPtr
+         * @param ep
+         */
+        void initialize(TC_Epoller *epoller, const TC_Endpoint &ep, TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr);
 
         /**
          * @brief 获取句柄
@@ -172,14 +179,7 @@ protected:
          *
          * @return int
          */
-        int getfd() const { return _fd.getfd(); }
-
-        /**
-         * @brief 发起建立连接.
-         * @brief Initiate Connection Establishment
-         *
-         */
-        void doConnect();
+        int getfd() const { return _trans->fd(); }
 
         /**
          * @brief 获取系统错误提示
@@ -249,80 +249,45 @@ protected:
          *
          * @param addr
          */
-        void setBindAddr(const struct sockaddr* addr);
+        void setBindAddr(const TC_Socket::addr_type &bindAddr);
 
         /**
          * @brief 链接是否有效
          * @brief Is the link valid
          */
-        bool isValid() const { return _fd.isValid(); }
+        bool isValid() const { return _trans->isValid(); }
 
         /**
          * @brief 是否链接上
          * @brief Is it linked
          * @return [description]
          */
-        bool hasConnected() const { return _isConnected; }
+        bool hasConnected() const { return _trans->hasConnected(); }
 
         /**
-         * @brief 设置链接状态
-         * @brief Set Link State
-         * @param isConnected [description]
+         *
+         * @return
          */
-        void setConnected(bool isConnected) { _isConnected = isConnected; }
-
-        /**
-         * 处理网络事件
-         * Handling network events
-         * @param events [description]
-         */
-        void processNet(const epoll_event &ev);
-
-        /**
-         * 处理通知事件
-         * Handle notification events
-         */
-        void processNotify();
+        TC_Transceiver *trans() { return _trans.get(); }
 
     protected:
-        /**
-         * @brief 接收请求.
-         * @brief Receive requests.
-         *
-         * @param buf
-         * @param len
-         * @param flag
-         * @return int
-         */
-        int recv(void* buf, uint32_t len, uint32_t flag);
+        shared_ptr<TC_ProxyInfo> onCreateCallback(TC_Transceiver* trans);
+        std::shared_ptr<TC_OpenSSL> onOpensslCallback(TC_Transceiver* trans);
+        void onCloseCallback(TC_Transceiver* trans);
+        void onConnectCallback(TC_Transceiver* trans);
+        void onRequestCallback(TC_Transceiver* trans);
+        TC_NetWorkBuffer::PACKET_TYPE onParserCallback(TC_NetWorkBuffer& buff, TC_Transceiver* trans);
 
-        /**
-         * @brief 发送请求.
-         * @brief the sent request
-         *
-         * @param buf 发送内容
-         * @param buf the sent content
-         * @param len 发送长度
-         * @param len the sent length
-         * @param flag
-         * @return int
-         */
-        int send(const void* buf, uint32_t len, uint32_t flag);
+        friend class TC_HttpAsync;
 
     protected:
         TC_HttpAsync               *_pHttpAsync;
         TC_HttpResponse             _stHttpResp;
-        TC_Socket                   _fd;
-        string                      _sHost;
-        uint32_t                    _iPort;
         uint32_t                    _iUniqId;
-        TC_NetWorkBuffer            _sendBuffer;
-	    TC_NetWorkBuffer            _recvBuffer;
         RequestCallbackPtr          _callbackPtr;
-        bool                        _bindAddrSet;
-        struct sockaddr             _bindAddr;
-        bool                        _bUseProxy;
-        bool                        _isConnected;
+        unique_ptr<TC_Transceiver>  _trans;
+        std::shared_ptr<TC_NetWorkBuffer::Buffer> _buff;
+	    shared_ptr<TC_OpenSSL::CTX> _ctx;
     };
 
     typedef TC_AutoPtr<AsyncRequest> AsyncRequestPtr;
@@ -344,7 +309,15 @@ public:
     ~TC_HttpAsync();
 
     /**
-     * @brief 异步发起请求.
+     * 发送异步请求, 发现指定的TC_Endpoint地址
+     * @param stHttpRequest
+     * @param callbackPtr
+     * @param ep
+     */
+    void doAsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, const TC_Endpoint &ep);
+
+    /**
+     * @brief 异步发起请求(可以使用代理, 否则使用URL地址去发送)
      * @brief Asynchronous Initiation of Requests
      *
      * @param stHttpRequest
@@ -355,7 +328,7 @@ public:
     void doAsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, bool bUseProxy = false);
 
     /**
-     * @brief 异步发起请求.
+     * @brief 异步发起请求, 发送到指定addr的地址.
      * @brief Asynchronous Initiation of Requests
      *
      * @param stHttpRequest
@@ -365,12 +338,30 @@ public:
      */
     void doAsyncRequest(TC_HttpRequest &stHttpRequest, RequestCallbackPtr &callbackPtr, const string &addr);
 
+	/**
+	 * 设置ctx
+	 * @param ctx
+	 */
+	void setCtx(const shared_ptr<TC_OpenSSL::CTX> &ctx) { _ctx = ctx; }
+
+	/**
+	 * get ctx
+	 * @return
+	 */
+	shared_ptr<TC_OpenSSL::CTX> getCtx() { return _ctx; }
+
+    /**
+     * set proxy addr
+     * @param ep
+     */
+    void setProxyAddr(const TC_Endpoint &ep);
+
     /**
      * @brief 设置proxy地址
      * @brief Set proxy address
      *
      */
-    int setProxyAddr(const char* Host, uint16_t Port);
+    void setProxyAddr(const char* Host, uint16_t Port);
 
     /**
      * @brief 设置代理的地址.
@@ -381,7 +372,7 @@ public:
      * @param sProxyAddr 格式 192.168.1.2:2345 或者 sslproxy.qq.com:2345
      * @param sProxyAddr format : 192.168.1.2:2345 or sslproxy.qq.com:2345
      */
-    int setProxyAddr(const char* sProxyAddr);
+    void setProxyAddr(const char* sProxyAddr);
 
     /**
      * @brief 设置绑定的地址.
@@ -390,23 +381,23 @@ public:
      * @param sProxyAddr 格式 192.168.1.2
      * @param sProxyAddr format: 192.168.1.2
      */
-    int setBindAddr(const char* sBindAddr);
+    void setBindAddr(const char* sBindAddr);
 
-    /**
-     * @brief 设置绑定的地址.
-     * @brief Set Binding Address.
-     *
-     * @param addr 直接用 addr 赋值
-     * @param addr Assigning values directly with addr
-     */
-    void setProxyAddr(const struct sockaddr* addr);
-
-    /**
-     * @brief 获取代理地址, 设置代理地址后才有效
-     * @brief Get proxy address, set proxy address before valid
-     * @return [description]
-     */
-    const struct sockaddr* getProxyAddr() const { return &_proxyAddr; }
+//    /**
+//     * @brief 设置绑定的地址.
+//     * @brief Set Binding Address.
+//     *
+//     * @param addr 直接用 addr 赋值
+//     * @param addr Assigning values directly with addr
+//     */
+//    void setProxyAddr(const struct sockaddr* addr);
+//
+//    /**
+//     * @brief 获取代理地址, 设置代理地址后才有效
+//     * @brief Get proxy address, set proxy address before valid
+//     * @return [description]
+//     */
+//    const struct sockaddr* getProxyAddr() const { return &_proxyAddr; }
 
     /**
      * @brief 启动异步处理.
@@ -445,10 +436,15 @@ public:
 
 protected:
 
-    // typedef TC_Functor<void, TL::TLMaker<AsyncRequestPtr, int>::Result> async_process_type;
-    typedef std::function<void(AsyncRequestPtr, int)> async_process_type;
+    void addFd(AsyncRequest* asyncRequest);
 
-    /**
+    bool handleCloseImp(const shared_ptr<TC_Epoller::EpollInfo> &data);
+
+    bool handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> &data);
+
+    bool handleOutputImp(const shared_ptr<TC_Epoller::EpollInfo> &data);
+
+        /**
      * @brief 超时处理.
      * @brief Timeout handler.
      *
@@ -475,23 +471,6 @@ protected:
      */
     void erase(uint32_t uniqId);
 
-    /**
-     * @brief 监控链接
-     * @brief Monitoring Links
-     * @param fd     [description]
-     * @param uniqId [description]
-     * @param events [description]
-     */
-    void addConnection(int fd, uint32_t uniqId, uint32_t events);
-
-    /**
-     * @brief 删除链接
-     * @brief Delete Link
-     * @param fd     [description]
-     * @param events [description]
-     */
-    void delConnection(int fd);
-
     friend class AsyncRequest;
 
 protected:
@@ -503,19 +482,18 @@ protected:
 
     TC_Epoller                  _epoller;
 
-    TC_Epoller::NotifyInfo      _notify;
-
 	std::mutex                  _mutex;
 
 	deque<uint64_t>             _events;
 
-    bool                        _terminate;
+    deque<uint64_t>             _erases;
 
-    struct sockaddr             _proxyAddr;
+    unique_ptr<TC_Endpoint>     _proxyEp;
 
-    struct sockaddr             _bindAddr;
+    TC_Socket::addr_type        _bindAddr;
 
-    bool                        _bindAddrSet;
+	shared_ptr<TC_OpenSSL::CTX> _ctx;
+
 };
 
 }

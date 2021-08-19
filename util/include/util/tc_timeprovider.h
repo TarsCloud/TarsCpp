@@ -42,7 +42,7 @@ class TC_TimeProvider;
 /**
  * @brief 提供秒级别的时间
  */
-class UTIL_DLL_API TC_TimeProvider
+class UTIL_DLL_API TC_TimeProvider : public TC_Thread
 {
 public:
 
@@ -93,10 +93,10 @@ public:
      * @para timeval
      * @return void
      */
-    int64_t getNowMs();
+    uint64_t getNowMs();
 
 protected:
-	static TC_TimeProvider      *g_tp;
+	static TC_TimeProvider *g_tp;
 
 protected:
 
@@ -118,6 +118,8 @@ protected:
 
 	void addTimeOffset(timeval& tt, const int &idx);
 
+    void terminate();
+
 private:
     bool            _use_tsc;
 
@@ -127,7 +129,9 @@ private:
 
     timeval         _t[2];
 
-    uint64_t       _tsc[2];
+    uint64_t        _tsc[2];
+
+    bool            _terminate = false;
 };
 
 }

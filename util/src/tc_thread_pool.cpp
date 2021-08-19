@@ -23,7 +23,7 @@ namespace tars
 {
 
 TC_ThreadPool::TC_ThreadPool()
-    :  _threadNum(1), _bTerminate(false)
+    :  _threadNum(1), _bTerminate(true)
 {
 }
 
@@ -46,6 +46,11 @@ void TC_ThreadPool::init(size_t num)
 
 void TC_ThreadPool::stop()
 {
+    if(_bTerminate)
+    {
+        return ;
+    }
+    
     {
         std::unique_lock<std::mutex> lock(_mutex);
 
@@ -76,6 +81,8 @@ void TC_ThreadPool::start()
     {
         throw TC_ThreadPool_Exception("[TC_ThreadPool::start] thread pool has start!");
     }
+
+    _bTerminate = false;
 
     for (size_t i = 0; i < _threadNum; i++)
     {

@@ -87,7 +87,7 @@ protected:
         { }
 
         std::function<void()>   _func;
-        int64_t                _expireTime = 0;	//超时的绝对时间
+        uint64_t                _expireTime = 0;	//超时的绝对时间
     };
     typedef shared_ptr<TaskFunc> TaskFuncPtr;
 public:
@@ -183,13 +183,18 @@ public:
     }
 
     /**
-    * @brief 等待当前任务队列中, 所有工作全部结束(队列无任务).
-    *
-    * @param millsecond 等待的时间(ms), -1:永远等待
-    * @return           true, 所有工作都处理完毕
-    *                   false,超时退出
-    */
+     * @brief 等待当前任务队列中, 所有task全部结束(队列无任务).
+     *
+     * @param millsecond 等待的时间(ms), -1:永远等待
+     * @return           true, 所有工作都处理完毕 
+     *                   false,超时退出
+     */
     bool waitForAllDone(int millsecond = -1);
+
+    /**
+    * @brief 线程池是否退出
+    */
+    bool isTerminate() { return _bTerminate; }
 
 protected:
     /**
@@ -198,11 +203,6 @@ protected:
     * @return TaskFuncPtr
     */
     bool get(TaskFuncPtr&task);
-
-    /**
-    * @brief 线程池是否退出
-    */
-    bool isTerminate() { return _bTerminate; }
 
     /**
     * @brief 线程运行态

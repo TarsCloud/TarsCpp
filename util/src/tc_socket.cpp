@@ -315,7 +315,7 @@ void TC_Socket::parseAddr(const string &host, struct in6_addr &stSinAddr)
 		if(rs != 0)
 		{
 			ostringstream os;
-			os << "DNSException ex:(" << strerror(errno) << ")" << rs << ":" << host << ":" << __FILE__ << ":" << __LINE__;
+			os << "DNSException ex:(" << TC_Exception::parseError(TC_Exception::getSystemCode()) << ")" << rs << ":" << host << ":" << __FILE__ << ":" << __LINE__;
 			if(info != NULL)
 			{
 				freeaddrinfo(info);
@@ -331,6 +331,45 @@ void TC_Socket::parseAddr(const string &host, struct in6_addr &stSinAddr)
     }
 }
 
+void TC_Socket::parseAddr(const addr_type& addr, string& host, uint16_t &port)
+{
+    int iDomain;
+    sockaddr_in6 *addr6;
+    sockaddr_in *addr4;
+    if (addr.second == sizeof(sizeof(struct sockaddr_in6)))
+    {
+        iDomain = AF_INET6;
+        addr6 = (sockaddr_in6 *) addr.first.get();
+    }
+    else
+    {
+        iDomain = AF_INET;
+        addr4 = (sockaddr_in *) addr.first.get();
+    }
+
+    char sAddr[INET6_ADDRSTRLEN] = "\0";
+    inet_ntop(iDomain, (AF_INET6 == iDomain) ? (void *) &(addr6->sin6_addr) : (void *) &addr4->sin_addr, sAddr, sizeof(sAddr));
+    host = sAddr;
+    port = (AF_INET6 == iDomain) ? ntohs(addr6->sin6_port) : ntohs(addr4->sin_port);
+}
+
+TC_Socket::addr_type TC_Socket::createSockAddr(const char *str)
+{
+    TC_Socket::addr_type addr;
+
+    if (TC_Socket::addressIsIPv6(str))
+    {
+        addr.first.reset( (sockaddr *)new sockaddr_in6());
+        addr.second = sizeof(struct sockaddr_in6);
+    }
+    else
+    {
+        addr.first.reset((sockaddr *) new sockaddr_in());
+        addr.second = sizeof(struct sockaddr_in);
+    }
+
+    return addr;
+}
 
 void TC_Socket::parseAddrWithPort(const string& host, int port, struct sockaddr_in& addr)
 {
@@ -596,6 +635,18 @@ void TC_Socket::setNoCloseWait()
     {
         THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setNoCloseWait] error");
     }
+}
+
+void TC_Socket::setReuseAddr()
+{
+    int iReuseAddr = 1;
+
+    if (setSockOpt(SO_REUSEADDR, (const void *) &iReuseAddr, sizeof(int), SOL_SOCKET) == -1)
+    {
+        THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::setReuseAddr] error");
+        // throw TC_Socket_Exception("[TC_Socket::setNoCloseWait] error", TC_Exception::getSystemCode());
+    }
+
 }
 
 void TC_Socket::setCloseWait(int delay)

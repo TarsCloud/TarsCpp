@@ -47,7 +47,7 @@ enum eJsonType
 	eJsonTypeNum,
 	eJsonTypeObj,
 	eJsonTypeArray,
-	eJsonTypeBoolean,
+	eJsonTypeBoolean
 };
 
 /*
@@ -100,14 +100,14 @@ public:
 	JsonValueNum(double d,bool b=false):value(d),lvalue(d),isInt(b)
 	{
 	}
-	JsonValueNum(int64_t v,bool b=true):value(v),lvalue(v),isInt(b)
+	JsonValueNum(int64_t d,bool b=true):value(d), lvalue(d),isInt(b)
 	{
 	}
 	JsonValueNum()
 	{
 		isInt=false;
 		value=0.0f;
-		lvalue=0;
+		lvalue = 0;
 	}
 	eJsonType getType()
 	{

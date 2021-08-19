@@ -15,31 +15,23 @@
  */
 
 #include "util/tc_timeprovider.h"
+#include "util/tc_logger.h"
 #include <cmath>
 
 namespace tars
 {
 
-TC_TimeProvider *TC_TimeProvider::g_tp = NULL;
+TC_TimeProvider* TC_TimeProvider::g_tp = NULL;
 
 TC_TimeProvider* TC_TimeProvider::getInstance()
 {
-    if (!g_tp)
-    {
-        static std::mutex m;
-       	std::lock_guard<std::mutex> lock(m);
-
-        // static TC_ThreadMutex mutex;
-
-        // TC_LockT<TC_ThreadMutex> lock(mutex);
-
-        if (!g_tp)
-        {
+    static std::once_flag flag;
+    std::call_once(flag, []()
+        { 
             g_tp = new TC_TimeProvider();
-			std::thread t(&TC_TimeProvider::run, g_tp);
-			t.detach();
-        }
-    }
+            g_tp->start();
+        });
+
     return g_tp;
 }
 
@@ -114,7 +106,7 @@ void TC_TimeProvider::getNow(timeval *tv)
 #endif
 }
 
-int64_t TC_TimeProvider::getNowMs()
+uint64_t TC_TimeProvider::getNowMs()
 {
     struct timeval tv;
     getNow(&tv);
@@ -126,7 +118,7 @@ void TC_TimeProvider::run()
 {
     memset(_tsc, 0x00, sizeof(_tsc));
 
-    while (true)
+    while (!_terminate)
     {
         timeval& tt = _t[!_buf_idx];
 
@@ -140,6 +132,15 @@ void TC_TimeProvider::run()
     }
 }
 
+void TC_TimeProvider::terminate()
+{
+    _terminate = true;
+
+    if(joinable())
+    {
+        join();
+    }
+}
 // double TC_TimeProvider::cpuMHz()
 // {
 //     if (_cpu_cycle != 0)

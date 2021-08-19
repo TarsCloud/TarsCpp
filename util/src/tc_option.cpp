@@ -74,14 +74,14 @@ void TC_Option::parse(const string &s)
     }
 }
 
-string TC_Option::getValue(const string &sName) const
+string TC_Option::getValue(const string &sName, const string &def) const
 {
     auto it = _mParam.find(sName);
     if( it != _mParam.end())
     {
         return it->second;
     }
-    return "";
+    return def;
 }
 
 bool TC_Option::hasParam(const string &sName) const

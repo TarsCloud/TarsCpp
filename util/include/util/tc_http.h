@@ -712,7 +712,7 @@ public:
 	 * get headers
 	 * @param header
 	 */
-	void getHeaders(map<string, string> &header);
+	void getHeaders(map<string, string> &header) const;
 
      /**
       * @brief 重置
@@ -1075,6 +1075,27 @@ public:
      */
 	bool incrementDecode(TC_NetWorkBuffer &buff);
 
+	/**
+	 * @brief 增量decode,输入的buffer会自动在解析过程中被清除掉，
+	 * 增量decode之前必须reset，
+	 * (网络接收的buffer直接添加到sBuffer里面即可, 然后增量解析)
+	 * (能够解析的数据TC_HttpResponse会自动从sBuffer里面消除，直到网络接收完毕或者解析返回true)
+	 * @brief Incremental decode, input buffers are automatically cleared during parsing.
+	 * Must reset before incremental decode,
+	 * (The buffers received by the network are added directly to the sBuffer and then incrementally resolved)
+	 * (The resolvable data TC_HttpResponse is automatically eliminated from the sBuffer until the network has received it or the resolving returns true)
+	 * @param buffer
+	 * @throws TC_HttpResponse_Exception, 不支持的http协议, 抛出异常
+	 * @throws TC_HttpResponse_Exception, unsupported http protocol, throwing exception
+	 * @return true:解析出一个完整的buffer
+	 *        false:还需要继续解析，如果服务器主动关闭连接的模式下
+	 *        , 也可能不需要再解析了
+	 * @return true: resolves a complete buffer
+	 *         false: You also need to continue parsing if the server actively closes the connection in mode
+	 *         Or you may not need to parse any more
+	 */
+	bool incrementDecode(TC_NetWorkBuffer::Buffer &buff);
+
     /**
      * @brief 解析http应答(采用string方式) ，
      * 注意:如果http头部没有Content-Length且非chunk模式, 则返回true
@@ -1360,7 +1381,7 @@ public:
     TC_HttpRequest()
     {
         TC_HttpRequest::reset();
-        setUserAgent("Tars-Http");
+        //setUserAgent("Tars-Http");
     }
 
     /**
@@ -1486,6 +1507,12 @@ public:
      * @param buffer请求内容
      */
     void encode(vector<char> &buffer);
+
+    /**
+     * encode buffer to TC_NetWorkBuffer
+     * @param buff
+     */
+	void encode(shared_ptr<TC_NetWorkBuffer::Buffer>& buff) ;
 
     /**
      * encode buffer to TC_NetWorkBuffer
