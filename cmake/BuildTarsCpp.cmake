@@ -5,7 +5,7 @@ macro(build_tars_server MODULE DEPS)
 
     include_directories(./)
 
-    aux_source_directory(. DIR_SRCS)
+    FILE(GLOB_RECURSE DIR_SRCS "*.cpp")
 
     FILE(GLOB_RECURSE TARS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.tars")
     FILE(GLOB_RECURSE PB_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
