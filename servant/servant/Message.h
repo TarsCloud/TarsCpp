@@ -21,13 +21,11 @@
 #include "util/tc_autoptr.h"
 #include "util/tc_monitor.h"
 #include "util/tc_loop_queue.h"
-#include "servant/CoroutineScheduler.h"
 #include "servant/Global.h"
 
 namespace tars
 {
 
-class  CoroutineScheduler;
 /**
 
  * 超时一定比率后进行切换
@@ -52,7 +50,7 @@ struct CheckTimeoutInfo
     CheckTimeoutInfo() 
     : minTimeoutInvoke(2)
     , checkTimeoutInterval(60)
-    , frequenceFailInvoke(5)
+    , frequenceFailInvoke(2)
     , minFrequenceFailTime(5)
     , radio(0.5)
     , tryTimeInterval(10)
@@ -96,17 +94,44 @@ struct CheckTimeoutInfo
     uint32_t maxConnectExc;
 };
 
-/////////////////////////////////////////////////////////////////////////
-/**
- * 用于同步调用时的条件变量
- */
-struct ReqMonitor : public TC_ThreadLock
-{
-};
 
 #define IS_MSG_TYPE(m, t) ((m & t) != 0)
 #define SET_MSG_TYPE(m, t) do { (m |= t); } while (0);
 #define CLR_MSG_TYPE(m, t) do { (m &=~t); } while (0);
+
+struct ThreadPrivateData
+{
+    /**
+     * hash属性,客户端每次调用都进行设置
+     */
+    bool           _hash        = false;                            //是否普通取模hash
+    bool           _conHash     = false;                          //是否一致性hash
+    int64_t        _hashCode    = -1;                        //hash值
+
+    /**
+     * 染色信息
+     */
+    bool           _dyeing      = false;                          //标识当前线程是否需要染色
+    string         _dyeingKey;                        //染色的key值
+
+    /**
+     * 允许客户端设置接口级别的超时时间,包括同步和异步、单向
+     */
+    int            _timeout     = 0;                         //超时时间
+
+    /**
+     * 保存调用后端服务的地址信息
+     */
+    string         _szHost;                       //调用对端地址
+
+    /**
+     * cookie
+     */
+    map<string, string>  _cookie;          // cookie内容
+
+};
+
+struct ReqMonitor;
 
 struct ReqMessage : public TC_HandleBase
 {
@@ -116,7 +141,7 @@ struct ReqMessage : public TC_HandleBase
         SYNC_CALL = 1, //同步
         ASYNC_CALL,    //异步
         ONE_WAY,       //单向
-        THREAD_EXIT    //线程退出的标识
+//        THREAD_EXIT    //线程退出的标识
     };
 
     //请求状态
@@ -129,120 +154,80 @@ struct ReqMessage : public TC_HandleBase
 
     };
 
-    /*
-     * 构造函数
-     */
-    ReqMessage()
-    : eStatus(ReqMessage::REQ_REQ)
-    , eType(SYNC_CALL)
-    , bFromRpc(false)
-    , callback(NULL)
-    , proxy(NULL)
-    , pObjectProxy(NULL)
-    , pMonitor(NULL)
-    , bMonitorFin(false)
-    , iBeginTime(0)
-    , iEndTime(0)
-    , bHash(false)
-    , bConHash(false)
-    , iHashCode(0)
-    , adapter(NULL)
-    , bDyeing(false)
-    , bPush(false)
-    , bCoroFlag(false)
-    , sched(NULL)
-    , iCoroId(0)
-    {
-    }
+
+	/*
+	 * 构造函数
+	 */
+	ReqMessage()
+		: eStatus(ReqMessage::REQ_REQ)
+		, eType(SYNC_CALL)
+		, bFromRpc(false)
+		, callback(NULL)
+		, proxy(NULL)
+		, pObjectProxy(NULL)
+		, adapter(NULL)
+		, pMonitor(NULL)
+		, iBeginTime(TNOWMS)
+		, iEndTime(0)
+		, bPush(false)
+		, sched(NULL)
+		, iCoroId(0)
+	{
+	}
 
     /*
      * 析构函数
      */
-    ~ReqMessage()
-    {
-    	if(deconstructor)
-	    {
-		    deconstructor();
-	    }
-
-        if(pMonitor != NULL)
-        {
-            delete pMonitor;
-            pMonitor = NULL;
-        }
-    }
+    ~ReqMessage();
 
     /*
      * 初始化
      */
-    void init(CallType eCallType)
-    {
-        eStatus        = ReqMessage::REQ_REQ;
-        eType          = eCallType;
-        bFromRpc       = false;
-
-        callback       = NULL;
-        proxy          = NULL;
-        pObjectProxy   = NULL;
-
-	    response       = std::make_shared<ResponsePacket>();
-	    sReqData       = std::make_shared<TC_NetWorkBuffer::Buffer>();
-        pMonitor       = NULL;
-        bMonitorFin    = false;
-
-        iBeginTime     = 0;
-        iEndTime       = 0;
-        bHash          = false;
-        bConHash       = false;
-        iHashCode      = 0;
-        adapter        = NULL;
-
-        bDyeing        = false;
-
-        bPush          = false;
-
-        bCoroFlag      = false;
-        sched          = NULL;
-        iCoroId        = 0;
-    }
+    void init(CallType eCallType, ServantProxy *proxy);
 
     ReqStatus                   eStatus;        //调用的状态
     CallType                    eType;          //调用类型
-    bool                        bFromRpc;       //是否是第三方协议的rcp_call，缺省为false
-    ServantProxyCallbackPtr     callback;       //异步调用时的回调对象
-
-    ServantProxy *              proxy;          //调用的ServantProxy对象
-    ObjectProxy *               pObjectProxy;   //调用端的proxy对象
-
+    bool                        bFromRpc        = false;       //是否是第三方协议的rcp_call，缺省为false
     RequestPacket               request;        //请求消息体
-    std::function<void()>       deconstructor;  //析构时调用
-    shared_ptr<ResponsePacket>      response;   //响应消息体
-    // string                      sReqData;       //请求消息体
+    shared_ptr<ResponsePacket>  response;       //响应消息体
 	shared_ptr<TC_NetWorkBuffer::Buffer> sReqData;       //请求消息体
+    ServantProxyCallbackPtr     callback;       //异步调用时的回调对象
+    ServantProxy                *proxy          = NULL;
+    ObjectProxy                 *pObjectProxy   = NULL;  //调用端的proxy对象
+    AdapterProxy                *adapter        = NULL;       //调用的adapter
 
-	ReqMonitor                  *pMonitor;      //用于同步的monitor
-    volatile bool               bMonitorFin;    //同步请求timewait是否结束
-    int64_t                     iBeginTime;     //请求时间
-    int64_t                     iEndTime;       //完成时间
-    bool                        bHash;          //是否hash调用
-    bool                        bConHash;       //是否一致性hash调用
-    int64_t                     iHashCode;      //hash值，用户保证一个用户的请求发送到同一个server(不严格保证)
-    AdapterProxy                *adapter;       //调用的adapter
+	ReqMonitor                  *pMonitor       = NULL;      //用于同步的monitor
 
-    bool                        bDyeing;        //是否需要染色
-    string                      sDyeingKey;     //染色key
+    int64_t                     iBeginTime      = 0;     //请求时间
+    int64_t                     iEndTime        = 0;       //完成时间
 
-    bool                        bPush;          //push back 消息
+    bool                        bPush           = false;          //push back 消息
 
-    bool						bCoroFlag;
+    bool                        bTraceCall;     // 是否需要调用链追踪
+    string                      sTraceKey;      // 调用链key
 
-    CoroutineScheduler          *sched;
+    shared_ptr<TC_CoroutineScheduler>      sched;
+    int                         iCoroId         = 0;
 
-    uint32_t					iCoroId;
+    std::function<void()>       deconstructor;  //析构时调用
 
-    map<string, string>         cookie;          // cookie内容
+    ThreadPrivateData           data;     //线程数据
+};
 
-    std::unordered_map<std::string, std::string> trackInfoMap; //调用链信息
+/**
+ * 用于同步调用时的条件变量
+ */
+struct ReqMonitor
+{
+	ReqMessage 				*msg = NULL;
+	std::mutex 				mutex;
+	std::condition_variable cond;
+	bool               		bMonitorFin     = false;    //同步请求timewait是否结束
+
+	ReqMonitor(ReqMessage *m) : msg(m) {}
+
+	void wait();
+	void notify();
 };
 
 typedef TC_AutoPtr<ReqMessage>  ReqMessagePtr;

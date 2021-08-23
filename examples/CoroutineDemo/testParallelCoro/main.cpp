@@ -16,7 +16,7 @@
 
 #include "BServant.h"
 #include "servant/Communicator.h"
-#include "servant/CoroutineScheduler.h"
+//#include "servant/CoroutineScheduler.h"
 #include <iostream>
 
 using namespace std;
@@ -59,7 +59,7 @@ typedef tars::TC_AutoPtr<BServantCoroCallback> BServantCoroCallbackPtr;
 
 ////////////////////////////////////////////
 //继承框架的协程类
-class TestCoroutine : public Coroutine
+class TestCoroutine : public TC_Coroutine
 {
 public:
 	TestCoroutine(int iNum);

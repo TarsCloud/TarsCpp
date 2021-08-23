@@ -13,12 +13,14 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
+#include "util/tc_file.h"
+#include "util/tc_epoller.h"
 #include "servant/Communicator.h"
+#include "servant/CommunicatorEpoll.h"
 #include "servant/Application.h"
 #include "servant/StatReport.h"
 #include "servant/RemoteLogger.h"
-#include "util/tc_file.h"
+#include "servant/ObjectProxy.h"
 
 namespace tars
 {
@@ -42,39 +44,43 @@ string ClientConfig::TarsVersion = string(TARS_VERSION);
 Communicator::Communicator()
 : _initialized(false)
 , _terminating(false)
-, _clientThreadNum(1)
+
 , _statReport(NULL)
 , _timeoutLogFlag(true)
-, _minTimeout(100)
-#ifdef TARS_OPENTRACKING
-, _traceManager(NULL)
-#endif
+
+// #ifdef TARS_OPENTRACKING
+// , _traceManager(NULL)
+// #endif
 {
 #if TARGET_PLATFORM_WINDOWS    
     WSADATA wsadata;
     WSAStartup(MAKEWORD(2, 2), &wsadata);
 #endif
-    memset(_communicatorEpoll,0,sizeof(_communicatorEpoll));
+
 }
 
 Communicator::Communicator(TC_Config& conf, const string& domain/* = CONFIG_ROOT_PATH*/)
 : _initialized(false)
 , _terminating(false)
 , _timeoutLogFlag(true)
-#ifdef TARS_OPENTRACKING
-, _traceManager(NULL)
-#endif
+// #ifdef TARS_OPENTRACKING
+// , _traceManager(NULL)
+// #endif
 {
     setProperty(conf, domain);
 }
 
 Communicator::~Communicator()
 {
+    // LOG_CONSOLE_DEBUG << endl;
+    ServantProxyThreadData::deconstructor(this);
+
     terminate();
 
 #if TARGET_PLATFORM_WINDOWS
     WSACleanup();
 #endif
+
 }
 
 bool Communicator::isTerminating()
@@ -84,61 +90,65 @@ bool Communicator::isTerminating()
 
 map<string, string> Communicator::getServantProperty(const string &sObj)
 {
-    TC_LockT<TC_ThreadRecMutex> lock(*this);
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
 
-    auto it = _objInfo.find(sObj);
-    if (it != _objInfo.end())
-    {
-        return it->second;
-    }
+	auto it = _objInfo.find(sObj);
+	if(it != _objInfo.end())
+	{
+		return it->second;
+	}
 
-    return map<string, string>();
+	return map<string, string>();
 }
 
-void Communicator::setServantProperty(const string &sObj, const string &name, const string &value)
+void Communicator::setServantProperty(const string &sObj, const string& name, const string& value)
 {
-    TC_LockT<TC_ThreadRecMutex> lock(*this);
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
 
-    _objInfo[sObj][name] = value;
+	_objInfo[sObj][name] = value;
 }
 
-string Communicator::getServantProperty(const string &sObj, const string &name)
+string Communicator::getServantProperty(const string &sObj, const string& name)
 {
-    TC_LockT<TC_ThreadRecMutex> lock(*this);
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
 
-    auto it = _objInfo.find(sObj);
-    if (it != _objInfo.end())
-    {
-        auto vit = it->second.find(name);
+	auto it = _objInfo.find(sObj);
+	if(it != _objInfo.end())
+	{
+		auto vit = it->second.find(name);
 
-        if (vit != it->second.end())
-        {
-            return vit->second;
-        }
-    }
+		if(vit != it->second.end())
+		{
+			return vit->second;
+		}
+	}
 
-    return "";
+	return "";
 }
 
+
+shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string & objName)
+{
 #if TARS_SSL
-shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string &objName)
-{
-    TC_LockT<TC_ThreadRecMutex> lock(*this);
+	TC_LockT<TC_ThreadRecMutex> lock(*this);
 
-    auto it = _objCtx.find(objName);
-    if (it != _objCtx.end())
-    {
-        return TC_OpenSSL::newSSL(it->second);
-    }
+	auto it = _objCtx.find(objName);
+	if(it != _objCtx.end())
+	{
+		return TC_OpenSSL::newSSL(it->second);
+	}
 
 	if(!_ctx) {
 		_ctx = TC_OpenSSL::newCtx("", "", "", false, "");
 	}
 
-    return TC_OpenSSL::newSSL(_ctx);
+	return TC_OpenSSL::newSSL(_ctx);
+#else
+    return NULL;
+#endif
+
 }
 
-#endif
 
 void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_ROOT_PATH*/)
 {
@@ -153,47 +163,69 @@ void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_
         _properties["setdivision"] = conf.get("/tars/application<setdivision>", "NULL");
     }
 
-    vector<string> auths;
+	vector<string> auths;
 
-	if (conf.getDomainVector("/tars/application/client", auths))
+	if (conf.getDomainVector(CONFIG_ROOT_PATH, auths))
 	{
 		for(size_t i = 0; i < auths.size(); i++)
 		{
 			map<string, string> &data = _objInfo[auths[i]];
-			data["accesskey"] = conf.get("/tars/application/client/" + auths[i] + "<accesskey>");
-			data["secretkey"] = conf.get("/tars/application/client/" + auths[i] + "<secretkey>");
-			data["ca"]        = conf.get("/tars/application/client/" + auths[i] + "<ca>");
-			data["cert"]      = conf.get("/tars/application/client/" + auths[i] + "<cert>");
-			data["key"]       = conf.get("/tars/application/client/" + auths[i] + "<key>");
-			data["ciphers"]   = conf.get("/tars/application/client/" + auths[i] + "<ciphers>");
-
+			data["accesskey"] = conf.get(CONFIG_ROOT_PATH + "/" + auths[i] + "<accesskey>");
+			data["secretkey"] = conf.get(CONFIG_ROOT_PATH + "/" + auths[i] + "<secretkey>");
+			data["ca"]        = conf.get(CONFIG_ROOT_PATH + "/" + auths[i] + "<ca>");
+			data["cert"]      = conf.get(CONFIG_ROOT_PATH + "/" + auths[i] + "<cert>");
+			data["key"]       = conf.get(CONFIG_ROOT_PATH + "/" + auths[i] + "<key>");
+			data["ciphers"]   = conf.get(CONFIG_ROOT_PATH + "/" + auths[i] + "<ciphers>");
 #if TARS_SSL
 
-            if (!data["ca"].empty())
-            {
-                shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx(data["ca"], data["cert"], data["key"], false, data["ciphers"]);
-                if (!ctx)
-                {
-                    TLOGERROR("load obj:" << auths[i] << ", ssl error, ca:" << data["ca"] << endl);
-                    exit(-1);
-                }
+			if(!data["ca"].empty())
+			{
+				shared_ptr<TC_OpenSSL::CTX> ctx = TC_OpenSSL::newCtx( data["ca"], data["cert"], data["key"], false, data["ciphers"]);
+				if(!ctx)
+				{
+					TLOGERROR("[load obj:" << auths[i] << ", ssl error, ca:" << data["ca"] << endl);
+					exit(-1);
+				}
 
-                _objCtx[auths[i]] = ctx;
-            }
+				_objCtx[auths[i]] = ctx;
+			}
 #endif
-        }
-    }
+		}
+	}
 
 //    initClientConfig();
+}
+
+void Communicator::notifyCommunicatorEpollStart()
+{
+    ++_communicatorEpollStartNum;
+
+    std::unique_lock<std::mutex> lock(_mutex);
+
+    _cond.notify_one();
 }
 
 void Communicator::initialize()
 {
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 
-    if (_initialized) return;
+    //两次保护
+    if (_initialized)
+        return;
 
     _initialized = true;
+
+    _sigId = TC_Port::registerCtrlC([&]{
+
+		TC_Common::msleep(50);
+		this->terminate();
+#if TARGET_PLATFORM_WINDOWS
+		ExitProcess(0);
+#else
+		exit(0);
+#endif
+	});
+
 
 	ClientConfig::TarsVersion   = TARS_VERSION;
 
@@ -207,12 +239,14 @@ void Communicator::initialize()
 
         string sWildCard = "*";
 
-        if (vtSetDivisions.size() != 3 || vtSetDivisions[0] == sWildCard || vtSetDivisions[1] == sWildCard)
+        if (vtSetDivisions.size() != 3
+            || vtSetDivisions[0] == sWildCard
+            || vtSetDivisions[1] == sWildCard)
         {
             //set分组名不对时默认没有打开set分组
             ClientConfig::SetOpen = false;
-            setProperty("enableset","n");
-            TLOGERROR( "[set division name error:" << ClientConfig::SetDivision << ", client failed to open set]" << endl);
+            setProperty("enableset", "n");
+            TLOGERROR("[set division name error:" << ClientConfig::SetDivision << ", client failed to open set]" << endl);
         }
     }
 
@@ -238,7 +272,7 @@ void Communicator::initialize()
     {
         exe = TC_File::extractFileName(TC_File::getExePath());
     }
-    catch (TC_File_Exception &ex)
+    catch (TC_File_Exception& ex)
     {
         //取失败则使用ip代替进程名
         exe = ClientConfig::LocalIp;
@@ -248,10 +282,10 @@ void Communicator::initialize()
 
 #if TARS_SSL
 
-    string ca      = getProperty("ca");
-    string cert    = getProperty("cert");
-    string key     = getProperty("key");
-    string ciphers = getProperty("ciphers");
+	string ca   = getProperty("ca");
+	string cert = getProperty("cert");
+	string key  = getProperty("key");
+	string ciphers  = getProperty("ciphers");
 
 	if(!ca.empty()) {
 		_ctx = TC_OpenSSL::newCtx(ca, cert, key, false, ciphers);
@@ -267,56 +301,64 @@ void Communicator::initialize()
     _servantProxyFactory = new ServantProxyFactory(this);
 
     //网络线程
-    _clientThreadNum = TC_Common::strto<size_t>(getProperty("netthread", "1"));
+    size_t clientThreadNum = TC_Common::strto<size_t>(getProperty("netthread", "1"));
 
-    if (0 == _clientThreadNum)
+    if (0 == clientThreadNum)
     {
-        _clientThreadNum = 1;
+        clientThreadNum = 1;
     }
-    else if (MAX_CLIENT_THREAD_NUM < _clientThreadNum)
+    else if(MAX_CLIENT_THREAD_NUM < clientThreadNum)
     {
-        _clientThreadNum = MAX_CLIENT_THREAD_NUM;
+        clientThreadNum = MAX_CLIENT_THREAD_NUM;
     }
 
     //异步线程数
     _asyncThreadNum = TC_Common::strto<size_t>(getProperty("asyncthread", "3"));
 
-    if (_asyncThreadNum == 0)
+    if(_asyncThreadNum == 0)
     {
         _asyncThreadNum = 3;
     }
 
-    if (_asyncThreadNum > MAX_CLIENT_ASYNCTHREAD_NUM)
+    if(_asyncThreadNum > MAX_CLIENT_ASYNCTHREAD_NUM)
     {
         _asyncThreadNum = MAX_CLIENT_ASYNCTHREAD_NUM;
     }
 
-    bool merge = TC_Common::strto<bool>(getProperty("mergenetasync", "0"));
+	bool merge = TC_Common::strto<bool>(getProperty("mergenetasync", "0"));
 
     //异步队列的大小
     size_t iAsyncQueueCap = TC_Common::strto<size_t>(getProperty("asyncqueuecap", "100000"));
-    if (iAsyncQueueCap < 10000)
+    if(iAsyncQueueCap < 10000)
     {
         iAsyncQueueCap = 10000;
     }
 
-	//第一个通信器才去启动回调线程
-	for (size_t i = 0; i < _asyncThreadNum; ++i) {
-		_asyncThread.push_back(new AsyncProcThread(iAsyncQueueCap, merge));
-	}
+    //第一个通信器才去启动回调线程
+    for (size_t i = 0; i < _asyncThreadNum; ++i) {
+        _asyncThread.push_back(new AsyncProcThread(iAsyncQueueCap, merge));
+    }
 
     //stat总是有对象, 保证getStat返回的对象总是有效
-    _statReport = new StatReport(_clientThreadNum);
+    _statReport = new StatReport(this);
 
-    for (size_t i = 0; i < _clientThreadNum; ++i)
+    for (size_t i = 0; i < clientThreadNum; ++i)
     {
-        _communicatorEpoll[i] = new CommunicatorEpoll(this, i);
-        _communicatorEpoll[i]->start();
+		_communicatorEpoll.push_back(std::make_shared<CommunicatorEpoll>(this, -1, i == 0));
+
+		//以协程模式启动
+		_communicatorEpoll.back()->setThreadName("communicator-epoll-" + TC_Common::tostr(i));
+        _communicatorEpoll.back()->startCoroutine(3, 128*1024, false);
+    }
+
+    {
+        std::unique_lock<std::mutex> lock(_mutex);
+        _cond.wait(lock, [&]{ return _communicatorEpollStartNum == clientThreadNum; });
     }
 
     //异步队列数目上报
-    _reportAsyncQueue = getStatReport()->createPropertyReport(ClientConfig::ModuleName + ".asyncqueue", PropertyReport::avg());
-
+    _reportAsyncQueue= getStatReport()->createPropertyReport(ClientConfig::ModuleName  + ".asyncqueue", PropertyReport::avg());
+    
     //初始化统计上报接口
     string statObj = getProperty("stat", "");
 
@@ -335,7 +377,7 @@ void Communicator::initialize()
     _timeoutLogFlag = TC_Common::strto<bool>(getProperty("timeout-log-flag", "1"));
 
     _minTimeout = TC_Common::strto<int64_t>(getProperty("min-timeout", "100"));
-    if (_minTimeout < 1)
+    if(_minTimeout < 1)
         _minTimeout = 1;
 
     StatFPrx statPrx = NULL;
@@ -351,8 +393,8 @@ void Communicator::initialize()
         propertyPrx = stringToProxy<PropertyFPrx>(propertyObj);
     }
 
-	string sSetDivision = ClientConfig::SetOpen?ClientConfig::SetDivision:"";
-	_statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
+    string sSetDivision = ClientConfig::SetOpen ? ClientConfig::SetDivision : "";
+    _statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
 
 #if TARS_OPENTRACKING
 	string collector_host = getProperty("collector_host", "");
@@ -375,21 +417,21 @@ void Communicator::initialize()
 }
 
 
-void Communicator::setProperty(const map<string, string> &properties)
+void Communicator::setProperty(const map<string, string>& properties)
 {
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 
     _properties = properties;
 }
 
-void Communicator::setProperty(const string &name, const string &value)
+void Communicator::setProperty(const string& name, const string& value)
 {
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 
     _properties[name] = value;
 }
 
-string Communicator::getProperty(const string &name, const string &dft /* = ""*/)
+string Communicator::getProperty(const string& name, const string& dft/* = ""*/)
 {
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 
@@ -402,28 +444,85 @@ string Communicator::getProperty(const string &name, const string &dft /* = ""*/
     return dft;
 }
 
-void Communicator::reloadLocator()
+vector<shared_ptr<CommunicatorEpoll>> Communicator::getAllCommunicatorEpoll()
 {
-    for (size_t i = 0; i < _clientThreadNum; ++i)
-    {
-        _communicatorEpoll[i]->getObjectProxyFactory()->loadObjectLocator();
-    }
+	vector<shared_ptr<CommunicatorEpoll>> communicatorEpolls = _communicatorEpoll;
+
+	forEachSchedCommunicatorEpoll([&](const shared_ptr<CommunicatorEpoll> &c){
+		communicatorEpolls.push_back(c);
+	});
+
+	return communicatorEpolls;
 }
 
-int Communicator::reloadProperty(string &sResult)
+void Communicator::forEachSchedCommunicatorEpoll(std::function<void(const shared_ptr<CommunicatorEpoll> &)> func)
 {
-    for (size_t i = 0; i < _clientThreadNum; ++i)
+	TC_LockT<TC_SpinLock> lock(_schedMutex);
+	for(auto it : _schedCommunicatorEpoll)
+	{
+		func(it.second);
+	}
+}
+
+shared_ptr<CommunicatorEpoll> Communicator::createSchedCommunicatorEpoll(size_t netThreadSeq,  const shared_ptr<ReqInfoQueue> &reqInfoQueue)
+{
+	shared_ptr<CommunicatorEpoll> communicatorEpoll = std::make_shared<CommunicatorEpoll>(this, netThreadSeq);
+
+	communicatorEpoll->initializeEpoller();
+
+	communicatorEpoll->initNotify(netThreadSeq, reqInfoQueue);
+
+	{
+		TC_LockT<TC_SpinLock> lock(_schedMutex);
+
+		_schedCommunicatorEpoll.insert(std::make_pair(netThreadSeq, communicatorEpoll));
+	}
+
+	return communicatorEpoll;
+}
+
+void Communicator::eraseSchedCommunicatorEpoll(size_t netThreadSeq)
+{
+	shared_ptr<CommunicatorEpoll> ce;
+	{
+		TC_LockT<TC_SpinLock> lock(_schedMutex);
+
+		ce = _schedCommunicatorEpoll[netThreadSeq];
+
+		_schedCommunicatorEpoll.erase(netThreadSeq);
+	}
+
+	if(ce)
+	{
+		ce->terminate();
+	}
+}
+
+void Communicator::reloadLocator()
+{
+    for (size_t i = 0; i < _communicatorEpoll.size(); ++i)
     {
-        _communicatorEpoll[i]->getObjectProxyFactory()->loadObjectLocator();
+		_communicatorEpoll[i]->_epoller->syncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, _communicatorEpoll[i].get()));
+
+//        _communicatorEpoll[i]->loadObjectLocator();
     }
+
+	forEachSchedCommunicatorEpoll([](const shared_ptr<CommunicatorEpoll> &c){
+		c->_epoller->syncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, c.get()));
+//		c->loadObjectLocator();
+	});
+
+}
+
+int Communicator::reloadProperty(string & sResult)
+{
+//    size_t num = getCommunicatorEpollNum();
+
+	reloadLocator();
 
     int iReportInterval = TC_Common::strto<int>(getProperty("report-interval", "60000"));
 
     int iReportTimeout = TC_Common::strto<int>(getProperty("report-timeout", "5000"));
-
-    // int iSampleRate = TC_Common::strto<int>(getProperty("sample-rate", "1000"));
-
-    // int iMaxSampleCount = TC_Common::strto<int>(getProperty("max-sample-count", "100"));
 
     int iMaxReportSize = TC_Common::strto<int>(getProperty("max-report-size", "1400"));
 
@@ -449,23 +548,23 @@ int Communicator::reloadProperty(string &sResult)
     _statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
 
     sResult = "locator=" + getProperty("locator", "") + "\r\n" +
-              "stat=" + statObj + "\r\n" + "property=" + propertyObj + "\r\n" +
-              "SetDivision=" + sSetDivision + "\r\n" +
-              "report-interval=" + TC_Common::tostr(iReportInterval) + "\r\n" +
-              "report-timeout=" + TC_Common::tostr(iReportTimeout) + "\r\n";
-    //        "sample-rate=" + TC_Common::tostr(iSampleRate) + "\r\n" +
-    //        "max-sample-count=" + TC_Common::tostr(iMaxSampleCount) + "\r\n";
+        "stat=" + statObj + "\r\n" + "property=" + propertyObj + "\r\n" +
+        "SetDivision=" + sSetDivision + "\r\n" +
+        "report-interval=" + TC_Common::tostr(iReportInterval) + "\r\n" +
+        "report-timeout=" + TC_Common::tostr(iReportTimeout) + "\r\n";
+//        "sample-rate=" + TC_Common::tostr(iSampleRate) + "\r\n" +
+//        "max-sample-count=" + TC_Common::tostr(iMaxSampleCount) + "\r\n";
 
     return 0;
 }
 
-vector<TC_Endpoint> Communicator::getEndpoint(const string &objName)
+vector<TC_Endpoint> Communicator::getEndpoint(const string& objName)
 {
     ServantProxy * pServantProxy = getServantProxy(objName);
     return pServantProxy->getEndpoint();
 }
 
-vector<TC_Endpoint> Communicator::getEndpoint4All(const string &objName)
+vector<TC_Endpoint> Communicator::getEndpoint4All(const string& objName)
 {
     ServantProxy *pServantProxy = getServantProxy(objName);
     return pServantProxy->getEndpoint4All();
@@ -474,161 +573,164 @@ vector<TC_Endpoint> Communicator::getEndpoint4All(const string &objName)
 string Communicator::getResourcesInfo()
 {
     ostringstream os;
-    for (size_t i = 0; i < _clientThreadNum; ++i)
+
+    for (size_t i = 0; i < _communicatorEpoll.size(); ++i)
     {
         os << OUT_LINE << endl;
-        os << _communicatorEpoll[i]->getResourcesInfo();
-    }
-    return os.str();
-}
 
-void Communicator::notifyUpdateEndpoints(const ServantPrx &prx, const set<EndpointInfo> &active, const set<EndpointInfo> &inactive)
-{
-    for (size_t i = 0; i < _clientThreadNum; ++i)
-    {
-        _communicatorEpoll[i]->notifyUpdateEndpoints(prx, active, inactive);
+		_communicatorEpoll[i]->_epoller->syncCallback(std::bind(&CommunicatorEpoll::getResourcesInfo, _communicatorEpoll[i].get(), std::ref(os)));
     }
+
+	forEachSchedCommunicatorEpoll([&](const shared_ptr<CommunicatorEpoll> & c){
+		os << OUT_LINE << endl;
+		c->_epoller->syncCallback(std::bind(&CommunicatorEpoll::getResourcesInfo, c.get(), std::ref(os)));
+	});
+
+    return os.str();
 }
 
 void Communicator::terminate()
 {
     {
-        TC_LockT<TC_ThreadRecMutex> lock(*this);
-
         if (_terminating)
             return;
 
+        TC_LockT<TC_ThreadRecMutex> lock(*this);
+
         _terminating = true;
+        
+        TC_Port::unregisterCtrlC(_sigId);
 
         if (_initialized)
         {
-            for (size_t i = 0; i < _clientThreadNum; ++i)
+            //先要结束stat的, 这样后续结束可以把stat队列清空
+			if (_statReport)
+			{
+				_statReport->terminate();
+
+				_statReport->getThreadControl().join();
+			}
+
+            for (size_t i = 0; i < _communicatorEpoll.size(); ++i)
             {
             	if(_communicatorEpoll[i]) {
 		            _communicatorEpoll[i]->terminate();
-	            }
+                }
             }
 
-            if (_statReport)
+            forEachSchedCommunicatorEpoll([](const shared_ptr<CommunicatorEpoll> &c)
+                                          {
+            	c->terminate();
+                                          });
+
+            for(size_t i = 0;i < _asyncThreadNum; ++i)
             {
-                _statReport->terminate();
+                _asyncThread[i]->terminate();
             }
-
         }
+
     }
 
-	// 释放当前线程数据
-	// ServantProxyThreadData::reset();
-
-	//把锁释放掉, 再来等待线程停止, 避免死锁
+    //把锁释放掉, 再来等待线程停止, 避免死锁
     //因为通信器线程运行过程中, 有可能加上上面那把锁
     if (_initialized)
     {
+//    	LOG_CONSOLE_DEBUG << endl;
+
     	//停止掉异步线程
 	    for (size_t i = 0; i < _asyncThread.size(); ++i)
 	    {
 		    if (_asyncThread[i])
 		    {
-			    if (_asyncThread[i]->isAlive())
+			    if (_asyncThread[i]->joinable())
 			    {
-				    _asyncThread[i]->terminate();
-				    _asyncThread[i]->getThreadControl().join();
+				    _asyncThread[i]->join();
 			    }
 		    }
 	    }
 
 	    //停止掉网络线程
-        for (size_t i = 0; i < _clientThreadNum; ++i)
+        for (size_t i = 0; i < _communicatorEpoll.size(); ++i)
         {
-        	if(_communicatorEpoll[i]) {
-		        _communicatorEpoll[i]->getThreadControl().join();
-	        }
+            if(_communicatorEpoll[i]->joinable())
+            {
+                _communicatorEpoll[i]->join();
+            }
         }
 
         //都停止了, 再把异步线程析构掉(因为异步线程中会调用网络线程的数据)
 	    for (size_t i = 0; i < _asyncThread.size(); ++i)
 	    {
-		    if (_asyncThread[i])
-		    {
-			    delete _asyncThread[i];
-			    _asyncThread[i] = NULL;
-		    }
+            delete _asyncThread[i];
+			_asyncThread[i] = NULL;
 	    }
 	    _asyncThread.clear();
 
-        if (_statReport)
-        {
-            _statReport->getThreadControl().join();
-            delete _statReport;
-            _statReport = NULL;
-        }
-
-	    //delete网络线程
-        for (size_t i = 0; i < _clientThreadNum; ++i)
-        {
-        	if(_communicatorEpoll[i]) {
-		        delete _communicatorEpoll[i];
-		        _communicatorEpoll[i] = NULL;
-	        }
-        }
-
-        if (_servantProxyFactory)
+	    if(_statReport)
+		{
+			delete _statReport;
+			_statReport = NULL;
+		}
+        if(_servantProxyFactory)
         {
             delete _servantProxyFactory;
-            _servantProxyFactory = NULL;
+            _servantProxyFactory = NULL; 
         }
+
+		_communicatorEpoll.clear();
+		_schedCommunicatorEpoll.clear();
+
     }
+
 }
 
-void Communicator::pushAsyncThreadQueue(ReqMessage *msg)
+void Communicator::pushAsyncThreadQueue(ReqMessage * msg)
 {
-    if (msg->pObjectProxy->getRootServantProxy()->_callback)
-    {
-        ReqMessagePtr msgPtr = msg;
+	if(msg->pObjectProxy->getRootServantProxy()->_callback) {
+		ReqMessagePtr msgPtr = msg;
 
-        msg->pObjectProxy->getRootServantProxy()->_callback(msgPtr);
-    }
+		msg->pObjectProxy->getRootServantProxy()->_callback(msgPtr);
+	}
     else if (msg->pObjectProxy->getRootServantProxy()->_callbackHash)
     {
         //先不考虑每个线程队列数目不一致的情况
         _asyncThread[((uint32_t)msg->adapter->trans()->fd()) % _asyncThreadNum]->push_back(msg);
     }
-    else
-    {
-        //先不考虑每个线程队列数目不一致的情况
-        _asyncThread[(_asyncSeq++) % _asyncThreadNum]->push_back(msg);
-    }
+	else {
+		//先不考虑每个线程队列数目不一致的情况
+		_asyncThread[(_asyncSeq++) % _asyncThreadNum]->push_back(msg);
+	}
 }
 
 void Communicator::doStat()
 {
     //队列长度上报
-    if (_reportAsyncQueue)
-    {
+    if (_reportAsyncQueue) {
         size_t n = 0;
+
         for (size_t i = 0; i < _asyncThread.size(); ++i)
         {
             n = n + _asyncThread[i]->getSize();
         }
-        _reportAsyncQueue->report((int)n);
+        _reportAsyncQueue->report((int) n);
     }
 }
 
-ServantProxy *Communicator::getServantProxy(const string &objectName, const string &setName)
+ServantProxy* Communicator::getServantProxy(const string& objectName, const string& setName)
 {
     Communicator::initialize();
 
     return _servantProxyFactory->getServantProxy(objectName, setName);
 }
 
-StatReport *Communicator::getStatReport()
+StatReport* Communicator::getStatReport()
 {
     Communicator::initialize();
 
     return _statReport;
 }
 
-ServantProxyFactory *Communicator::servantProxyFactory()
+ServantProxyFactory* Communicator::servantProxyFactory()
 {
     return _servantProxyFactory;
 }

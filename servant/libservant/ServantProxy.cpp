@@ -19,17 +19,18 @@
 #include "servant/StatReport.h"
 #include "servant/Application.h"
 #include "servant/BaseF.h"
+#include "servant/CommunicatorEpoll.h"
 #include "servant/EndpointManager.h"
 #include "servant/Message.h"
-#include "servant/ProxyInfo.h"
+#include "servant/ObjectProxy.h"
 #include "servant/RemoteLogger.h"
 
 namespace tars
 {
 
-thread_local shared_ptr<ServantProxyThreadData> ServantProxyThreadData::g_sp;
+shared_ptr<ServantProxyThreadData::Immortal> ServantProxyThreadData::g_immortal;
 
-SeqManager *ServantProxyThreadData::_pSeq = new SeqManager(MAX_CLIENT_NOTIFYEVENT_NUM);
+thread_local shared_ptr<ServantProxyThreadData> ServantProxyThreadData::g_sp;
 
 ///////////////////////////////////////////////////////////////
 SeqManager::SeqManager(uint16_t iNum)
@@ -51,6 +52,15 @@ SeqManager::SeqManager(uint16_t iNum)
     }
     _p[iNum - 1].next = MAX_UNSIGN_SHORT;
     _num              = iNum;
+}
+
+SeqManager ::~SeqManager()
+{
+    if (_p)
+    {
+        delete[] _p;
+        _p = NULL;
+    }
 }
 
 uint16_t SeqManager::get()
@@ -97,65 +107,188 @@ void SeqManager::del(uint16_t iSeq)
 }
 
 ///////////////////////////////////////////////////////////////
-ServantProxyThreadData::ServantProxyThreadData()
-: _queueInit(false)
-, _reqQNo(0)
-, _netSeq(0)
-, _netThreadSeq(-1)
-, _hash(false)
-, _conHash(false)
-, _hashCode(-1)
-, _dyeing(false)
-, _hasTimeout(false)
-, _timeout(0)
-, _sched(NULL)
-, _objectProxyNum(0)
+
+ServantProxyThreadData::Immortal::Immortal()
 {
+    _pSeq.reset(new SeqManager(MAX_CLIENT_NOTIFYEVENT_NUM));
+}
+
+ServantProxyThreadData::Immortal::~Immortal()
+{
+    _pSeq.reset();
+}
+
+void ServantProxyThreadData::Immortal::add(ServantProxyThreadData* data)
+{
+    TC_LockT<TC_ThreadMutex> lock(_mutex);
+    _sp_list.insert(data);
+}
+
+void ServantProxyThreadData::Immortal::erase(ServantProxyThreadData* data)
+{
+	TC_LockT<TC_ThreadMutex> lock(_mutex);
+	_sp_list.erase(data);
+}
+
+unordered_set<ServantProxyThreadData *> ServantProxyThreadData::Immortal::getList()
+{
+    TC_LockT<TC_ThreadMutex> lock(_mutex);
+    return _sp_list;
+}
+
+void ServantProxyThreadData::Immortal::erase(Communicator *comm)
+{
+	TC_LockT<TC_ThreadMutex> lock(_mutex);
+
+	for(auto it : _sp_list)
+	{
+		(*it).erase(comm);
+	}
+}
+
+ServantProxyThreadData::ServantProxyThreadData()
+    : _reqQNo(0)
+{
+//     LOG_CONSOLE_DEBUG << endl;
+
+	_sp_immortal = g_immortal;
+
+    _reqQNo = _sp_immortal->getSeqManager()->get();
+
+	_sp_immortal->add(this);
+
 }
 
 ServantProxyThreadData::~ServantProxyThreadData()
 {
+//     LOG_CONSOLE_DEBUG << endl;
     try
     {
-        if(_queueInit)
-        {
-            for(size_t i=0;i<_objectProxyNum;++i)
-            {
-                if(_objectProxyOwn.get()[i])
-                {
-                    ReqMessage * msg = new ReqMessage();
-                    msg->eType = ReqMessage::THREAD_EXIT;
+//		TC_LockT<TC_SpinLock> lock(_mutex);
 
-                    bool bEmpty = false;
-                    _reqQueue[i]->push_back(msg, bEmpty);
+		//先释放公有的网络通信器的信息
+		for(auto it = _communicatorEpollInfo.begin(); it != _communicatorEpollInfo.end(); ++it)
+		{
+			for (auto &e: it->second->_info)
+			{
+				shared_ptr<CommunicatorEpoll> ce = e._communicatorEpoll.lock();
+				if(ce)
+				{
+					ce->notifyServantThreadQuit(_reqQNo);
+				}
+			}
+		}
 
-                    _objectProxyOwn.get()[i]->getCommunicatorEpoll()->notifyDel(_reqQNo);
-                }
-            }
-            _queueInit = false;
+		for(auto it = _schedCommunicatorEpollInfo.begin(); it != _schedCommunicatorEpollInfo.end(); ++it)
+		{
+			it->second->_communicator->eraseSchedCommunicatorEpoll(_reqQNo);
+		}
 
-        }
+	}
+	catch (...)
+	{
+	}
 
-        _pSeq->del(_reqQNo);
-    }
-    catch (...)
-    {
-    }
+	_sp_immortal->erase(this);
+
+	_sp_immortal->getSeqManager()->del(_reqQNo);
+
+    _sched.reset();
+
+	_sp_immortal.reset();
 }
 
-ServantProxyThreadData *ServantProxyThreadData::getData()
+ServantProxyThreadData* ServantProxyThreadData::getData()
 {
+    static std::once_flag flag;
+    std::call_once(flag, []()
+                   { g_immortal = std::make_shared<Immortal>(); });
+
     if (!g_sp)
     {
-        g_sp.reset(new ServantProxyThreadData());
-        g_sp->_reqQNo = _pSeq->get();
+        g_sp = std::make_shared<ServantProxyThreadData>();
     }
     return g_sp.get();
 }
 
-void ServantProxyThreadData::reset()
+void ServantProxyThreadData::deconstructor(Communicator *communicator)
 {
-	return g_sp.reset();
+    assert(g_immortal);
+    g_immortal->erase(communicator);
+}
+
+void ServantProxyThreadData::erase(Communicator *communicator)
+{
+	TC_LockT<TC_ThreadMutex> lock(_mutex);
+
+	_communicatorEpollInfo.erase(communicator);
+	_schedCommunicatorEpollInfo.erase(communicator);
+
+}
+
+shared_ptr<ServantProxyThreadData::CommunicatorEpollInfo> ServantProxyThreadData::getCommunicatorEpollInfo(Communicator *communicator)
+{
+	TC_LockT<TC_ThreadMutex> lock(_mutex);
+
+	auto it = _communicatorEpollInfo.find(communicator);
+
+	if(it != _communicatorEpollInfo.end())
+	{
+		return it->second;
+	}
+
+	auto info = std::make_shared<CommunicatorEpollInfo>();
+
+	_communicatorEpollInfo.insert(std::make_pair(communicator, info));
+
+	return info;
+}
+
+shared_ptr<ServantProxyThreadData::SchedCommunicatorEpollInfo> ServantProxyThreadData::getSchedCommunicatorEpollInfo(Communicator *communicator)
+{
+	TC_LockT<TC_ThreadMutex> lock(_mutex);
+
+	auto it = _schedCommunicatorEpollInfo.find(communicator);
+
+	if(it != _schedCommunicatorEpollInfo.end())
+	{
+		return it->second;
+	}
+
+	auto info = std::make_shared<SchedCommunicatorEpollInfo>();
+
+	_schedCommunicatorEpollInfo.insert(std::make_pair(communicator, info));
+
+	return info;
+}
+
+ThreadPrivateData ServantProxyThreadData::move()
+{
+    ThreadPrivateData data = _data;
+
+    //hash每次调用完成都要清掉，不用透传
+    _data._hash    = false;
+    _data._conHash = false;
+    _data._timeout = 0;
+
+    return data;
+}
+
+shared_ptr<ServantProxyThreadData::CommunicatorEpollInfo> ServantProxyThreadData::addCommunicatorEpoll(const shared_ptr<CommunicatorEpoll> &ce)
+{
+	auto q = std::make_shared<ReqInfoQueue>(ce->getNoSendQueueLimit());
+
+	ServantProxyThreadData::CommunicatorEpollReqQueueInfo epollReqQueueInfo;
+	epollReqQueueInfo._reqQueue = q;
+	epollReqQueueInfo._communicatorEpoll = ce;
+
+	auto info = getCommunicatorEpollInfo(ce->getCommunicator());
+
+	info->_info.push_back(epollReqQueueInfo);
+
+	ce->initNotify(this->_reqQNo, q);
+
+	return info;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -248,72 +381,98 @@ string ServantProxy::STATUS_RESULT_DESC   = "STATUS_RESULT_DESC";
 
 string ServantProxy::STATUS_SETNAME_VALUE = "STATUS_SETNAME_VALUE";
 
-string ServantProxy::STATUS_TRACK_KEY     = "STATUS_TRACK_KEY";
+string ServantProxy::STATUS_TRACE_KEY     = "STATUS_TRACE_KEY";
 
 ////////////////////////////////////
-ServantProxy::ServantProxy(Communicator * pCommunicator, ObjectProxy ** ppObjectProxy, size_t iClientThreadNum)
-: _communicator(pCommunicator)
-, _objectProxy(ppObjectProxy)
-, _objectProxyNum(iClientThreadNum)
-, _syncTimeout(DEFAULT_SYNCTIMEOUT)
-, _asyncTimeout(DEFAULT_ASYNCTIMEOUT)
-, _id(0)
-, _masterFlag(false)
-, _minTimeout(100)
+ServantProxy::ServantProxy(Communicator *pCommunicator, const string &name, const string &setName)
+    : _communicator(pCommunicator), _syncTimeout(DEFAULT_SYNCTIMEOUT), _asyncTimeout(DEFAULT_ASYNCTIMEOUT), _id(0), _masterFlag(false), _minTimeout(100)
 {
-    _objectProxyOwn.reset(ppObjectProxy);
-    _endpointInfo.reset(new EndpointManagerThread(pCommunicator, (*_objectProxy)->name()));
+	_proxyProtocol.requestFunc  = ProxyProtocol::tarsRequest;
+	_proxyProtocol.responseFunc = ProxyProtocol::tarsResponse;
 
-    for (size_t i = 0; i < _objectProxyNum; ++i)
+    //在每个公有网络线程对象中创建ObjectProxy
+    for (size_t i = 0; i < _communicator->getCommunicatorEpollNum(); ++i)
     {
-        (*(_objectProxy + i))->setServantProxy(this);
+        _communicator->getCommunicatorEpoll(i)->createObjectProxy(this, name, setName);
     }
+
+    //用第一个ObjectProxy返回数据
+    _objectProxy = this->getObjectProxy(0);
+
+    _endpointInfo.reset(new EndpointManagerThread(_communicator, _objectProxy->name()));
 
     _minTimeout = pCommunicator->getMinTimeout();
     if (_minTimeout < 1)
     {
         _minTimeout = 1;
     }
+
+}
+
+void ServantProxy::tars_initialize()
+{
+    //等ServantProxy完全创建完以后, 再创建Object
+    for (size_t i = 0; i < _communicator->getCommunicatorEpollNum(); ++i)
+    {
+        this->getObjectProxy(i)->initialize();
+    }
 }
 
 ServantProxy::~ServantProxy()
 {
-    if (_objectProxy)
-    {
-        //set _objectProxy to NULL
-        for (size_t i = 0; i < _objectProxyNum; i++)
-        {
-            _objectProxy[i] = NULL;
-        }
-        _objectProxy = NULL;
-    }
 }
 
-string ServantProxy::tars_name() const
+const string &ServantProxy::tars_name() const
 {
-    if (_objectProxyNum >= 1 && (*_objectProxy != NULL))
-    {
-        return (*_objectProxy)->name();
-    }
-    return "NULL";
+    return _objectProxy->name();
 }
 
 string ServantProxy::tars_full_name() const
 {
-    if (_objectProxyNum >= 1 && (*_objectProxy != NULL))
-    {
-        return (*_objectProxy)->name() + "#" + (*_objectProxy)->hash() + "@" + (*_objectProxy)->address();
-    }
-    return "NULL";
+	string name = _objectProxy->name();
+
+	if(!_objectProxy->hash().empty())
+	{
+		name = name + "#" + _objectProxy->hash();
+	}
+	if(!_objectProxy->address().empty())
+	{
+		name = name + "@" + _objectProxy->address();
+	}
+
+	return name;
 }
 
+const string&  ServantProxy::tars_setName() const
+{
+	return _objectProxy->getInvokeSetName();
+}
+
+ObjectProxy *ServantProxy::getObjectProxy(size_t netThreadSeq)
+{
+    return _communicator->getCommunicatorEpoll(netThreadSeq)->servantToObjectProxy(this);
+}
+
+void ServantProxy::forEachObject(std::function<void(ObjectProxy *)> func)
+{
+    for (size_t i = 0; i < _communicator->getCommunicatorEpollNum(); ++i)
+    {
+        ObjectProxy *objectProxy = _communicator->getCommunicatorEpoll(i)->servantToObjectProxy(this);
+        assert(objectProxy != NULL);
+
+        try
+        {
+            func(objectProxy);
+        }
+        catch (...)
+        {
+        }
+    }
+}
 
 void ServantProxy::tars_reconnect(int second)
 {
-    if (_objectProxyNum >= 1 && (*_objectProxy != NULL))
-    {
-        (*_objectProxy)->reconnect(second);
-    }
+    forEachObject([=](ObjectProxy *o) { o->reconnect(second); });
 }
 
 TC_Endpoint ServantProxy::tars_invoke_endpoint()
@@ -322,34 +481,38 @@ TC_Endpoint ServantProxy::tars_invoke_endpoint()
 
     if (td)
     {
-        return TC_Endpoint(td->_szHost);
+        return TC_Endpoint(td->_data._szHost);
     }
     return TC_Endpoint();
 }
 
 void ServantProxy::tars_set_proxy(ServantProxy::SERVANT_PROXY type, const TC_Endpoint &ep, const string &user, const string &pass)
 {
+    _proxyBaseInfo       = std::make_shared<TC_ProxyInfo::ProxyBaseInfo>();
+    _proxyBaseInfo->ep   = ep;
+    _proxyBaseInfo->user = user;
+    _proxyBaseInfo->pass = pass;
+
     switch (type)
     {
         case PROXY_SOCK4:
-            _proxyPointer.reset(new ProxySock4(ep));
+            _proxyBaseInfo->type = TC_ProxyInfo::eProxy_Type_Sock4;
             break;
         case PROXY_SOCK5:
-            _proxyPointer.reset(new ProxySock5(ep, user, pass));
+            _proxyBaseInfo->type = TC_ProxyInfo::eProxy_Type_Sock5;
             break;
         case PROXY_HTTP:
-            _proxyPointer.reset(new ProxyHttp(ep, user, pass));
+            _proxyBaseInfo->type = TC_ProxyInfo::eProxy_Type_Http;
             break;
+        default:
+            assert(false);
     }
 }
 
 void ServantProxy::tars_timeout(int msecond)
 {
-    {
-        TC_LockT<TC_ThreadMutex> lock(*this);
-        //保护，超时时间不能小于_minTimeout毫秒
-        _syncTimeout = (msecond < _minTimeout)?_minTimeout:msecond;
-    }
+    //保护，超时时间不能小于_minTimeout毫秒
+   	_syncTimeout = (msecond < _minTimeout) ? _minTimeout : msecond;
 }
 
 int ServantProxy::tars_timeout() const
@@ -369,15 +532,13 @@ void ServantProxy::tars_connect_timeout(int conTimeout)
         conTimeout = 100;
     }
 
-    if(conTimeout > 5000)
-    {
-        conTimeout = 5000;
-    }
-    _connTimeout = conTimeout;
-    for (size_t i = 0; i < _objectProxyNum; ++i)
-    {
-        (*(_objectProxy + i))->setConTimeout(conTimeout);
-    }
+//    if (conTimeout > 5000)
+//    {
+//        conTimeout = 5000;
+//    }
+
+	_connTimeout = conTimeout;
+//    forEachObject([=](ObjectProxy *o) { o->setConTimeout(conTimeout); });
 }
 
 void ServantProxy::tars_async_timeout(int msecond)
@@ -421,7 +582,7 @@ int ServantProxy::tars_connection_serial() const
 
 void ServantProxy::tars_set_protocol(SERVANT_PROTOCOL protocol, int connectionSerial)
 {
-	ProxyProtocol proto;
+    ProxyProtocol proto;
 
 	switch(protocol)
 	{
@@ -455,63 +616,64 @@ void ServantProxy::tars_set_protocol(SERVANT_PROTOCOL protocol, int connectionSe
 
 void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol, int connectionSerial)
 {
-    TC_LockT<TC_ThreadMutex> lock(*this);
+	TC_LockT<TC_ThreadMutex> lock(*this);
 
-    for (size_t i = 0; i < _objectProxyNum; ++i)
-    {
-        (*(_objectProxy + i))->setProxyProtocol(protocol);
-    }
+	_proxyProtocol = protocol;
+//    forEachObject([&](ObjectProxy *o) { o->setProxyProtocol(protocol); });
 
     _connectionSerial = connectionSerial;
 }
 
-ProxyProtocol ServantProxy::tars_get_protocol()
+const ProxyProtocol &ServantProxy::tars_get_protocol() const
 {
-    TC_LockT<TC_ThreadMutex> lock(*this);
-
-    return (*(_objectProxy + 0))->getProxyProtocol();
+	return _proxyProtocol;
+//    TC_LockT<TC_ThreadMutex> lock(*this);
+//    return _objectProxy->getProxyProtocol();
 }
 
-void ServantProxy::tars_set_sockopt(int level, int optname, const void * optval, SOCKET_LEN_TYPE optlen)
+vector<ServantProxy::SocketOpt> ServantProxy::tars_get_sockopt() const
 {
-    TC_LockT<TC_ThreadMutex> lock(*this);
+	TC_LockT<TC_ThreadMutex> lock(*this);
 
-    for (size_t i = 0; i < _objectProxyNum; ++i)
-    {
-        (*(_objectProxy + i))->setSocketOpt(level, optname, optval, optlen);
-    }
+	return _socketOpts;
+}
+
+void ServantProxy::tars_set_sockopt(int level, int optname, const void *optval, SOCKET_LEN_TYPE optlen)
+{
+	TC_LockT<TC_ThreadMutex> lock(*this);
+
+	SocketOpt socketOpt;
+
+	socketOpt.level        = level;
+	socketOpt.optname = optname;
+	socketOpt.optval     = optval;
+	socketOpt.optlen     = optlen;
+
+	_socketOpts.push_back(socketOpt);
+//    forEachObject([&](ObjectProxy *o) { o->setSocketOpt(level, optname, optval, optlen); });
 }
 
 void ServantProxy::tars_set_check_timeout(const CheckTimeoutInfo& checkTimeoutInfo)
 {
-    TC_LockT<TC_ThreadMutex> lock(*this);
+	TC_LockT<TC_ThreadMutex> lock(*this);
 
-    for (size_t i = 0; i < _objectProxyNum; ++i)
-    {
-        (*(_objectProxy + i))->checkTimeoutInfo().minTimeoutInvoke     = checkTimeoutInfo.minTimeoutInvoke;
-        (*(_objectProxy + i))->checkTimeoutInfo().checkTimeoutInterval = checkTimeoutInfo.checkTimeoutInterval;
-        (*(_objectProxy + i))->checkTimeoutInfo().frequenceFailInvoke  = checkTimeoutInfo.frequenceFailInvoke;
-        (*(_objectProxy + i))->checkTimeoutInfo().minFrequenceFailTime = checkTimeoutInfo.minFrequenceFailTime;
-        (*(_objectProxy + i))->checkTimeoutInfo().radio                = checkTimeoutInfo.radio;
-        (*(_objectProxy + i))->checkTimeoutInfo().tryTimeInterval      = checkTimeoutInfo.tryTimeInterval;
-    }
+	_checkTimeoutInfo = checkTimeoutInfo;
+//    forEachObject([&](ObjectProxy *o) {
+//        o->checkTimeoutInfo().minTimeoutInvoke     = checkTimeoutInfo.minTimeoutInvoke;
+//        o->checkTimeoutInfo().checkTimeoutInterval = checkTimeoutInfo.checkTimeoutInterval;
+//        o->checkTimeoutInfo().frequenceFailInvoke  = checkTimeoutInfo.frequenceFailInvoke;
+//        o->checkTimeoutInfo().minFrequenceFailTime = checkTimeoutInfo.minFrequenceFailTime;
+//        o->checkTimeoutInfo().radio                = checkTimeoutInfo.radio;
+//        o->checkTimeoutInfo().tryTimeInterval      = checkTimeoutInfo.tryTimeInterval;
+//    });
 }
 
 CheckTimeoutInfo ServantProxy::tars_get_check_timeout()
 {
-    CheckTimeoutInfo checkTimeoutInfo;
+	TC_LockT<TC_ThreadMutex> lock(*this);
 
-    if (_objectProxyNum > 0)
-    {
-        checkTimeoutInfo.minTimeoutInvoke     = (*_objectProxy)->checkTimeoutInfo().minTimeoutInvoke;
-        checkTimeoutInfo.checkTimeoutInterval = (*_objectProxy)->checkTimeoutInfo().checkTimeoutInterval;
-        checkTimeoutInfo.frequenceFailInvoke  = (*_objectProxy)->checkTimeoutInfo().frequenceFailInvoke;
-        checkTimeoutInfo.minFrequenceFailTime = (*_objectProxy)->checkTimeoutInfo().minFrequenceFailTime;
-        checkTimeoutInfo.radio                = (*_objectProxy)->checkTimeoutInfo().radio;
-        checkTimeoutInfo.tryTimeInterval      = (*_objectProxy)->checkTimeoutInfo().tryTimeInterval;
-    }
-
-    return checkTimeoutInfo;
+	return _checkTimeoutInfo;
+//    return _objectProxy->checkTimeoutInfo();
 }
 
 void ServantProxy::tars_ping()
@@ -538,12 +700,12 @@ void ServantProxy::tars_async_ping()
 
 ServantProxy* ServantProxy::tars_hash(int64_t key)
 {
-    ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
+    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
 
     assert(pSptd != NULL);
 
-    pSptd->_hash     = true;
-    pSptd->_hashCode = key;
+    pSptd->_data._hash     = true;
+    pSptd->_data._hashCode = key;
 
     return this;
 }
@@ -562,9 +724,9 @@ ServantProxy* ServantProxy::tars_consistent_hash(int64_t key)
 
     assert(pSptd != NULL);
 
-    pSptd->_hash     = true;
-    pSptd->_conHash  = true;
-    pSptd->_hashCode = key;
+    pSptd->_data._hash     = true;
+    pSptd->_data._conHash  = true;
+    pSptd->_data._hashCode = key;
 
     return this;
 }
@@ -575,11 +737,11 @@ void ServantProxy::tars_clear_hash()
 
 ServantProxy* ServantProxy::tars_set_timeout(int msecond)
 {
-    ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
+    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);
 
-    pSptd->_hasTimeout = true;
-    pSptd->_timeout    = msecond;
+//     pSptd->_hasTimeout = true;
+    pSptd->_data._timeout = msecond;
 
     return this;
 }
@@ -597,93 +759,82 @@ uint32_t ServantProxy::tars_gen_requestid()
 
 void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 {
-    for (size_t i = 0; i < _objectProxyNum; ++i)
-    {
-        (*(_objectProxy + i))->setPushCallbacks(cb);
-    }
+	_pushCallback = cb;
+//    forEachObject([&](ObjectProxy *o) { o->setPushCallbacks(cb); });
 }
 
-
-void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
+ServantProxyCallbackPtr ServantProxy::tars_get_push_callback()
 {
-    msg->proxy         = this;
-    msg->response->iRet = TARSSERVERUNKNOWNERR;
+	return _pushCallback;
+}
 
+void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
+{
     //线程私有数据
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);
 
-    msg->bHash     = pSptd->_hash;
-    msg->bConHash  = pSptd->_conHash;
-    msg->iHashCode = pSptd->_hashCode;
+    msg->data = pSptd->move();
 
-    //hash每次调用完成都要清掉，不用透传
-    pSptd->_hash    = false;
-    pSptd->_conHash = false;
+    // 调用链追踪透传
+    msg->bTraceCall = pSptd->_traceCall;
+    msg->sTraceKey  = pSptd->getTraceKey(true);
 
-    //染色需要透传
-    msg->bDyeing    = pSptd->_dyeing;
-    msg->sDyeingKey = pSptd->_dyeingKey;
-
-    if (msg->bDyeing)
+    if (msg->data._dyeing)
     {
-        TLOGTARS("[ServantProxy::invoke, set dyeing, key=" << pSptd->_dyeingKey << endl);
+        TLOGTARS("[ServantProxy::invoke, set dyeing, key=" << pSptd->_data._dyeingKey << endl);
     }
+    msg->data._cookie = pSptd->_data._cookie;
 
-    msg->cookie       = pSptd->_cookie;
-
-#ifdef TARS_OPENTRACKING
-    msg->trackInfoMap = pSptd->_trackInfoMap;
-#endif
-
+// #ifdef TARS_OPENTRACKING
+//     msg->trackInfoMap = pSptd->_trackInfoMap;
+// #endif
+// 
     //设置超时时间
     msg->request.iTimeout = (ReqMessage::SYNC_CALL == msg->eType) ? _syncTimeout : _asyncTimeout;
 
     //判断是否针对接口级设置超时
-    if (pSptd->_hasTimeout)
+    if (msg->data._timeout > 0)
     {
-        msg->request.iTimeout = (pSptd->_timeout > 0) ? pSptd->_timeout : msg->request.iTimeout;
-        pSptd->_hasTimeout    = false;
+        msg->request.iTimeout = msg->data._timeout;
+    }
+    else
+    {
+        msg->request.iTimeout = (ReqMessage::SYNC_CALL == msg->eType) ? _syncTimeout : _asyncTimeout;
     }
 
-    ObjectProxy *pObjProxy = NULL;
-    ReqInfoQueue *pReqQ    = NULL;
+    shared_ptr<ReqInfoQueue> pReqQ;
 
     //选择网络线程
-    selectNetThreadInfo(pSptd, pObjProxy, pReqQ);
-
-    //调用发起时间
-    msg->iBeginTime   = TNOWMS;
-    msg->pObjectProxy = pObjProxy;
+    selectNetThreadInfo(pSptd, msg->pObjectProxy, pReqQ);
 
     //如果是按set规则调用
-    if (pObjProxy && pObjProxy->isInvokeBySet())
+    if (msg->pObjectProxy && msg->pObjectProxy->isInvokeBySet())
     {
         SET_MSG_TYPE(msg->request.iMessageType, TARSMESSAGETYPESETNAME);
-        msg->request.status[ServantProxy::STATUS_SETNAME_VALUE] = pObjProxy->getInvokeSetName();
+        msg->request.status[ServantProxy::STATUS_SETNAME_VALUE] = msg->pObjectProxy->getInvokeSetName();
 
-        TLOGTARS("[ServantProxy::invoke, " << msg->request.sServantName << ", invoke with set,"<<pObjProxy->getInvokeSetName()<<"]" << endl);
+        TLOGTARS("[ServantProxy::invoke, " << msg->request.sServantName << ", invoke with set," << msg->pObjectProxy->getInvokeSetName() << "]" << endl);
     }
 
-    //同步调用 new 一个ReqMonitor
     assert(msg->pMonitor == NULL);
     if (msg->eType == ReqMessage::SYNC_CALL)
     {
-        msg->bMonitorFin = false;
+//        msg->bMonitorFin = false;
 
         if (pSptd->_sched)
         {
-            msg->bCoroFlag = true;
-            msg->sched     = pSptd->_sched;
-            msg->iCoroId   = pSptd->_sched->getCoroutineId();
+            // msg->bCoroFlag = true;
+            msg->sched   = pSptd->_sched;
+            msg->iCoroId = pSptd->_sched->getCoroutineId();
         }
         else
         {
-            msg->pMonitor = new ReqMonitor;
+            //同步调用 new 一个ReqMonitor
+            msg->pMonitor = new ReqMonitor(msg);
         }
     }
-
-    if (ReqMessage::ASYNC_CALL == msg->eType)
+    else if (msg->eType == ReqMessage::ASYNC_CALL)
     {
         //是否是协程的并行请求
         if (bCoroAsync)
@@ -695,13 +846,13 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
                 {
                     coroPtr->incReqCount();
 
-                    msg->bCoroFlag = true;
-                    msg->sched     = pSptd->_sched;
-                    msg->iCoroId   = pSptd->_sched->getCoroutineId();
+                    // msg->bCoroFlag = true;
+                    msg->sched   = pSptd->_sched;
+                    msg->iCoroId = pSptd->_sched->getCoroutineId();
                 }
                 else
                 {
-                    TLOGERROR("[ServantProxy::invoke use coroutine's callback not set CoroParallelBasePtr]"<<endl);
+                    TLOGERROR("[ServantProxy::invoke use coroutine's callback not set CoroParallelBasePtr]" << endl);
                     delete msg;
                     msg = NULL;
                     throw TarsUseCoroException("use coroutine's callback not set CoroParallelBasePtr");
@@ -709,7 +860,8 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
             }
             else
             {
-                TLOGERROR("[ServantProxy::invoke coroutine mode invoke not open]"<<endl);
+                TLOGERROR("[ServantProxy::invoke coroutine mode invoke not open]" << endl);
+
                 delete msg;
                 msg = NULL;
                 throw TarsUseCoroException("coroutine mode invoke not open");
@@ -723,48 +875,52 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
 
     if (!pReqQ->push_back(msg, bEmpty))
     {
-        TLOGERROR("[ServantProxy::invoke msgQueue push_back error num:" << pSptd->_netSeq << "]" << endl);
+        TLOGERROR("[ServantProxy::invoke msgQueue push_back error thread seq:" << pSptd->_reqQNo << "]" << endl);
 
         delete msg;
         msg = NULL;
 
-        pObjProxy->getCommunicatorEpoll()->notify(pSptd->_reqQNo, pReqQ);
-
         throw TarsClientQueueException("client queue full");
     }
 
-    pObjProxy->getCommunicatorEpoll()->notify(pSptd->_reqQNo, pReqQ);
+    if (msg->sched)
+    {
+//		LOG_CONSOLE_DEBUG << "in sched handle: " << this << ", " << msg->request.sServantName << endl;
 
-    //异步调用 另一个线程delele msg 如果是异步后面不能再用msg了
+        //协程中, 直接发包了
+        msg->pObjectProxy->getCommunicatorEpoll()->handle(pSptd->_reqQNo);
+    }
+    else
+    {
+        msg->pObjectProxy->getCommunicatorEpoll()->notify(pSptd->_reqQNo);
+    }
 
     if (bSync)
     {
-        if (!msg->bCoroFlag)
+        if (!msg->sched)
         {
-            if (!msg->bMonitorFin)
-            {
-                TC_ThreadLock::Lock lock(*(msg->pMonitor));
+        	assert(msg->pMonitor);
 
-                //等待直到网络线程通知过来
-                if (!msg->bMonitorFin)
-                {
-                    msg->pMonitor->wait();
-                }
-            }
+			msg->pMonitor->wait();
+
+			if(!msg->pMonitor->bMonitorFin)
+			{
+				TLOGERROR("[ServantProxy::invoke communicator terminate]" << endl);
+				return;
+			}
         }
         else
         {
-            msg->sched->yield(false);
+			assert(!msg->sched->isMainCoroutine());
+			msg->sched->yield(false);
         }
 
         //判断eStatus来判断状态
-        assert(msg->eStatus != ReqMessage::REQ_REQ);
+//        assert(msg->eStatus != ReqMessage::REQ_REQ);
 
-//        TLOGTARS("[ServantProxy::invoke line: " << __LINE__ << " status: " << msg->eStatus << ", ret: " <<msg->response->iRet << endl);
-
-		if(msg->adapter) {
-			pSptd->_szHost = msg->adapter->endpoint().desc();
-		}
+	    if(msg->adapter) {
+		    pSptd->_data._szHost = msg->adapter->endpoint().desc();
+	    }
 
         if(msg->eStatus == ReqMessage::REQ_RSP && msg->response->iRet == TARSSERVERSUCCESS)
         {
@@ -802,7 +958,8 @@ void ServantProxy::invoke(ReqMessage * msg, bool bCoroAsync)
         //异常调用
         int ret = msg->response->iRet;
 
-        delete msg;
+
+		delete msg;
         msg = NULL;
 
         TarsException::throwException(ret, os.str());
@@ -818,15 +975,15 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
                                     const ServantProxyCallbackPtr& callback,
                                     bool  bCoro)
 {
-    ReqMessage *msg = new ReqMessage();
+	ReqMessage *msg = new ReqMessage();
 
-    msg->init(callback?ReqMessage::ASYNC_CALL:ReqMessage::ONE_WAY);
+    msg->init(callback?ReqMessage::ASYNC_CALL:ReqMessage::ONE_WAY, this);
     msg->callback = callback;
 
     msg->request.iVersion = TARSVERSION;
     msg->request.cPacketType = (callback ? cPacketType : TARSONEWAY);
 	msg->request.sFuncName = sFuncName;
-    msg->request.sServantName = (*_objectProxy)->name();
+	msg->request.sServantName = _objectProxy->name();
 
     buf.swap(msg->request.sBuffer);
 
@@ -840,10 +997,10 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
 //        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName)); //TARS_MASTER_KEY  clientConfig.ModuleName
 //    }
 
-    checkDye(msg->request);
-
-    checkCookie(msg->request);
-    servant_invoke(msg, bCoro);
+	checkDye(msg->request);
+	checkTrace(msg->request);
+	checkCookie(msg->request);
+	servant_invoke(msg, bCoro);
 }
 
 
@@ -858,13 +1015,13 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
 {
     ReqMessage * msg = new ReqMessage();
 
-    msg->init(callback?ReqMessage::ASYNC_CALL:ReqMessage::ONE_WAY);
+    msg->init(callback?ReqMessage::ASYNC_CALL:ReqMessage::ONE_WAY, this);
     msg->callback = callback;
 
     msg->request.iVersion = TARSVERSION;
     msg->request.cPacketType = (callback ? cPacketType : TARSONEWAY);
 	msg->request.sFuncName = sFuncName;
-    msg->request.sServantName = (*_objectProxy)->name();
+	msg->request.sServantName = _objectProxy->name();
     msg->request.sBuffer = buf;
     msg->request.context      = context;
     msg->request.status       = status;
@@ -876,10 +1033,10 @@ void ServantProxy::tars_invoke_async(char  cPacketType,
 //        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName)); //TARS_MASTER_KEY  clientConfig.ModuleName
 //    }
 
-    checkDye(msg->request);
-
-    checkCookie(msg->request);
-    servant_invoke(msg, bCoro);
+	checkDye(msg->request);
+	checkTrace(msg->request);
+	checkCookie(msg->request);
+	servant_invoke(msg, bCoro);
 }
 
 shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
@@ -891,12 +1048,12 @@ shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
 {
     ReqMessage *msg = new ReqMessage();
 
-    msg->init(ReqMessage::SYNC_CALL);
+    msg->init(ReqMessage::SYNC_CALL, this);
 
     msg->request.iVersion = TARSVERSION;
     msg->request.cPacketType = cPacketType;
 	msg->request.sFuncName = sFuncName;
-    msg->request.sServantName = (*_objectProxy)->name();
+    msg->request.sServantName = _objectProxy->name();
 
     msg->request.sBuffer = buf;
     msg->request.context      = context;
@@ -909,19 +1066,18 @@ shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
 //        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName));
 //    }
 
-    checkDye(msg->request);
-
-    checkCookie(msg->request);
-    servant_invoke(msg, false);
+	checkDye(msg->request);
+	checkTrace(msg->request);
+	checkCookie(msg->request);
+	servant_invoke(msg, false);
 
     shared_ptr<ResponsePacket> rsp = msg->response;
     // rsp = msg->response;
 
-    delete msg;
-    msg = NULL;
+	delete msg;
+	msg = NULL;
 
-    return rsp;
-
+	return rsp;
 }
 
 
@@ -934,12 +1090,12 @@ shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
 {
     ReqMessage * msg = new ReqMessage();
 
-    msg->init(ReqMessage::SYNC_CALL);
+    msg->init(ReqMessage::SYNC_CALL, this);
 
     msg->request.iVersion = TARSVERSION;
     msg->request.cPacketType = cPacketType;
 	msg->request.sFuncName = sFuncName;
-    msg->request.sServantName = (*_objectProxy)->name();
+    msg->request.sServantName = _objectProxy->name();
 
     buf.swap(msg->request.sBuffer);
     msg->request.context      = context;
@@ -952,19 +1108,18 @@ shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
 //        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName));
 //    }
 
-    checkDye(msg->request);
-
-    checkCookie(msg->request);
-    servant_invoke(msg, false);
+	checkDye(msg->request);
+	checkTrace(msg->request);
+	checkCookie(msg->request);
+	servant_invoke(msg, false);
 
     shared_ptr<ResponsePacket> rsp = msg->response;
     // rsp = msg->response;
 
-    delete msg;
-    msg = NULL;
+	delete msg;
+	msg = NULL;
 
-    return rsp;
-
+	return rsp;
 }
 //////////////////////////////////////////////////////////////////////////////
 //服务端是非tars协议，通过rpc_call调用
@@ -974,11 +1129,11 @@ void ServantProxy::rpc_call(uint32_t iRequestId,
                             uint32_t len,
                             ResponsePacket& rsp)
 {
-    ReqMessage *msg = new ReqMessage();
+	ReqMessage *msg = new ReqMessage();
 
-    msg->init(ReqMessage::SYNC_CALL);
+    msg->init(ReqMessage::SYNC_CALL, this);
     msg->bFromRpc             = true;
-    msg->request.sServantName = (*_objectProxy)->name();
+    msg->request.sServantName = _objectProxy->name();
     msg->request.sFuncName    = sFuncName;
     msg->request.iRequestId   = iRequestId;
 
@@ -999,20 +1154,20 @@ void ServantProxy::rpc_call_async(uint32_t iRequestId,
                                   const ServantProxyCallbackPtr& callback, 
                                   bool  bCoro)
 {
-    ReqMessage *msg = new ReqMessage();
+	ReqMessage *msg = new ReqMessage();
 
-    msg->init(callback ? ReqMessage::ASYNC_CALL : ReqMessage::ONE_WAY);
+	msg->init(callback ? ReqMessage::ASYNC_CALL : ReqMessage::ONE_WAY, this);
 
-    msg->bFromRpc             = true;
-    msg->callback             = callback;
-    msg->request.sServantName = (*_objectProxy)->name();
-    msg->request.sFuncName    = sFuncName;
+	msg->bFromRpc             = true;
+	msg->callback             = callback;
+	msg->request.sServantName = _objectProxy->name();
+	msg->request.sFuncName    = sFuncName;
 
-    msg->request.iRequestId = iRequestId;
+	msg->request.iRequestId = iRequestId;
 
-    msg->request.sBuffer.assign(buff, buff + len);
+	msg->request.sBuffer.assign(buff, buff + len);
 
-    servant_invoke(msg, bCoro);
+	servant_invoke(msg, bCoro);
 }
 
 ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
@@ -1026,9 +1181,9 @@ ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
             for (int i = 1; i < _connectionSerial; ++i)
             {
                 string obj = tars_name() + "#" + TC_Common::tostr(i);
-                if (!(*_objectProxy)->address().empty())
+                if (!_objectProxy->address().empty())
                 {
-                    obj += "@" + (*_objectProxy)->address();
+                    obj += "@" + _objectProxy->address();
                 }
 
                 ServantPrx prx = _communicator->stringToProxy<ServantPrx>(obj);
@@ -1059,24 +1214,83 @@ ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
     return _servantList[(id - 1)];
 }
 
-void ServantProxy::tars_update_endpoints(const set<EndpointInfo> &active, const set<EndpointInfo> &inactive)
+void ServantProxy::travelObjectProxys(ServantProxy *prx, function<void(ObjectProxy*)> f)
 {
-    _communicator->notifyUpdateEndpoints(this, active, inactive);
+	vector<ObjectProxy*> objectProxys;
+
+	size_t num = _communicator->getCommunicatorEpollNum();
+
+	for (size_t i = 0; i < num; ++i)
+	{
+		auto ce = _communicator->getCommunicatorEpoll(i);
+
+		ObjectProxy* objectProxy = ce->servantToObjectProxy(prx);
+
+		if (objectProxy)
+		{
+			f(objectProxy);
+		}
+	}
+
+	//协程通信器也需要
+	_communicator->forEachSchedCommunicatorEpoll([&](const shared_ptr<CommunicatorEpoll>& ce)
+	{
+		ObjectProxy* objectProxy = ce->servantToObjectProxy(prx);
+
+		if (objectProxy)
+		{
+			f(objectProxy);
+		}
+	});
 }
 
-void ServantProxy::onNotifyEndpoints(size_t netThreadSeq, const set<EndpointInfo> &active, const set<EndpointInfo> &inactive, bool fromInner)
+vector<ObjectProxy*> ServantProxy::getObjectProxys()
 {
-    assert(netThreadSeq < _objectProxyNum);
+	vector<ObjectProxy*> objectProxys;
 
-    for (size_t i = 0; i < _servantList.size(); i++)
-    {
-        _servantList[i]->_objectProxy[netThreadSeq]->getEndpointManager()->updateEndpoints(active, inactive);
-    }
+	//更新子servant proxy的地址
+	for (size_t i = 0; i < _servantList.size(); i++)
+	{
+		ServantProxy* prx = _servantList[i].get();
 
-    if (!fromInner)
-    {
-        _objectProxy[netThreadSeq]->getEndpointManager()->updateEndpoints(active, inactive);
-    }
+		travelObjectProxys(prx, [&](ObjectProxy *op){
+			objectProxys.push_back(op);
+		});
+	}
+
+	travelObjectProxys(this, [&](ObjectProxy *op){
+		objectProxys.push_back(op);
+	});
+
+	return objectProxys;
+}
+
+void ServantProxy::tars_update_endpoints(const set<EndpointInfo> &active, const set<EndpointInfo> &inactive)
+{
+	onNotifyEndpoints(NULL, active, inactive);
+}
+
+void ServantProxy::onNotifyEndpoints(CommunicatorEpoll *communicatorEpoll, const set<EndpointInfo> &active, const set<EndpointInfo> &inactive)
+{
+	//更新子servant proxy的地址
+	for (size_t i = 0; i < _servantList.size(); i++)
+	{
+		ServantProxy* prx = _servantList[i].get();
+
+		travelObjectProxys(prx, [&](ObjectProxy *op){
+			if(op->getEndpointManager())
+			{
+				op->getEndpointManager()->updateEndpointsOutter(active, inactive);
+			}
+		});
+	}
+
+	travelObjectProxys(this, [&](ObjectProxy *op){
+		if(op->getEndpointManager())
+		{
+			op->getEndpointManager()->updateEndpointsOutter(active, inactive);
+		}
+	});
 }
 
 void ServantProxy::onSetInactive(const EndpointInfo &ep)
@@ -1088,10 +1302,7 @@ void ServantProxy::onSetInactive(const EndpointInfo &ep)
     {
         ServantPrx &prx = _rootPrx->_servantList[i];
 
-        for (size_t i = 0; i < prx->_objectProxyNum; ++i)
-        {
-            prx->_objectProxy[i]->onSetInactive(ep);
-        }
+        prx->forEachObject([&](ObjectProxy *o) { o->onSetInactive(ep); });
     }
 }
 
@@ -1111,120 +1322,193 @@ int ServantProxy::servant_invoke(ReqMessage *msg, bool bCoroAsync)
 
 void ServantProxy::http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response)
 {
-    ReqMessage *msg = new ReqMessage();
+	if (_connectionSerial <= 0)
+	{
+		_connectionSerial = DEFAULT_CONNECTION_SERIAL;
+	}
 
-    msg->init(ReqMessage::SYNC_CALL);
+	ReqMessage *msg = new ReqMessage();
 
-    msg->bFromRpc = true;
+	msg->init(ReqMessage::SYNC_CALL, this);
 
-    msg->request.sServantName = (*_objectProxy)->name();
-    msg->request.sFuncName    = funcName;
+	msg->bFromRpc = true;
 
-    msg->request.sBuffer.resize(sizeof(shared_ptr<TC_HttpRequest>));
+	msg->request.sServantName = _objectProxy->name();
+	msg->request.sFuncName    = funcName;
 
-    msg->deconstructor = [msg] {
-        shared_ptr<TC_HttpRequest> &data = *(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data());
-        data.reset();
+	msg->request.sBuffer.resize(sizeof(shared_ptr<TC_HttpRequest>));
 
-        if (!msg->response->sBuffer.empty())
-        {
-            shared_ptr<TC_HttpResponse> &rsp = *(shared_ptr<TC_HttpResponse> *)(msg->response->sBuffer.data());
-            //主动reset一次
-            rsp.reset();
+	msg->deconstructor = [msg] {
+		shared_ptr<TC_HttpRequest> &data = *(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data());
+		data.reset();
 
-            msg->response->sBuffer.clear();
-        }
-    };
+		if (!msg->response->sBuffer.empty())
+		{
+			shared_ptr<TC_HttpResponse> &rsp = *(shared_ptr<TC_HttpResponse> *)(msg->response->sBuffer.data());
+			//主动reset一次
+			rsp.reset();
 
-    shared_ptr<TC_HttpRequest> &data = *(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data());
+			msg->response->sBuffer.clear();
+		}
+	};
 
-    data = request;
+	shared_ptr<TC_HttpRequest> &data = *(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data());
 
-    servant_invoke(msg, false);
+	data = request;
 
-    response = *(shared_ptr<TC_HttpResponse> *)(msg->response->sBuffer.data());
+	servant_invoke(msg, false);
 
-    delete msg;
-    msg = NULL;
+	response = *(shared_ptr<TC_HttpResponse> *)(msg->response->sBuffer.data());
+
+	delete msg;
+	msg = NULL;
 }
 
 void ServantProxy::http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro)
 {
-    ReqMessage *msg = new ReqMessage();
+	if (_connectionSerial <= 0)
+	{
+		_connectionSerial = DEFAULT_CONNECTION_SERIAL;
+	}
 
-    msg->init(ReqMessage::ASYNC_CALL);
+	ReqMessage *msg = new ReqMessage();
 
-    msg->bFromRpc = true;
+	msg->init(ReqMessage::ASYNC_CALL, this);
 
-    msg->request.sServantName = (*_objectProxy)->name();
-    msg->request.sFuncName    = funcName;
+	msg->bFromRpc = true;
 
-    msg->request.sBuffer.resize(sizeof(shared_ptr<TC_HttpRequest>));
+	msg->request.sServantName = _objectProxy->name();
+	msg->request.sFuncName    = funcName;
 
-    msg->deconstructor = [msg] {
-        shared_ptr<TC_HttpRequest> &data = *(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data());
-        data.reset();
+	msg->request.sBuffer.resize(sizeof(shared_ptr<TC_HttpRequest>));
 
-        if (!msg->response->sBuffer.empty())
-        {
-            shared_ptr<TC_HttpResponse> &rsp = *(shared_ptr<TC_HttpResponse> *)(msg->response->sBuffer.data());
-            //主动reset一次
-            rsp.reset();
+	msg->deconstructor = [msg] {
+		shared_ptr<TC_HttpRequest> &data = *(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data());
+		data.reset();
 
-            msg->response->sBuffer.clear();
-        }
-    };
+		if (!msg->response->sBuffer.empty())
+		{
+			shared_ptr<TC_HttpResponse> &rsp = *(shared_ptr<TC_HttpResponse> *)(msg->response->sBuffer.data());
+			//主动reset一次
+			rsp.reset();
 
-    *(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data()) = request;
+			msg->response->sBuffer.clear();
+		}
+	};
 
-    ServantProxyCallbackPtr callback = new HttpServantProxyCallback(cb);
+	*(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data()) = request;
 
-    msg->callback = callback;
+	ServantProxyCallbackPtr callback = new HttpServantProxyCallback(cb);
 
-    servant_invoke(msg, bCoro);
+	msg->callback = callback;
+
+	servant_invoke(msg, bCoro);
 }
 
+//
 //选取一个网络线程对应的信息
-void ServantProxy::selectNetThreadInfo(ServantProxyThreadData *pSptd, ObjectProxy *&pObjProxy, ReqInfoQueue *&pReqQ)
+void ServantProxy::selectNetThreadInfo(ServantProxyThreadData *pSptd, ObjectProxy *&pObjProxy, shared_ptr<ReqInfoQueue> &pReqQ)
 {
-    //指针为空 就new一个
-    if (!pSptd->_queueInit)
-    {
-        for (size_t i = 0; i < _objectProxyNum; ++i)
-        {
-            pSptd->_reqQueue[i] = new ReqInfoQueue(_objectProxy[0]->getCommunicatorEpoll()->getNoSendQueueLimit());
-        }
-        pSptd->_objectProxyNum = _objectProxyNum;
-        pSptd->_objectProxyOwn = _objectProxyOwn;
-        pSptd->_queueInit      = true;
-    }
+	if(pSptd->_sched && pSptd->_communicatorEpoll == NULL)
+	{
+		//处于业务线程中, 且当前业务线程是以协程模式启动;
+		auto schedCommunicatorEpollInfo = pSptd->getSchedCommunicatorEpollInfo(_communicator);
 
-    if (_objectProxyNum == 1)
-    {
-        pObjProxy = *_objectProxy;
-        pReqQ     = pSptd->_reqQueue[0];
-    }
-    else
-    {
-        if (pSptd->_netThreadSeq >= 0)
-        {
-            //网络线程发起的请求
-            assert(pSptd->_netThreadSeq < static_cast<int>(_objectProxyNum));
+		shared_ptr<CommunicatorEpoll> ce;
 
-            pObjProxy = *(_objectProxy + pSptd->_netThreadSeq);
-            pReqQ     = pSptd->_reqQueue[pSptd->_netThreadSeq];
-        }
-        else
-        {
-            //用线程的私有数据来保存选到的seq
-            pObjProxy = *(_objectProxy + pSptd->_netSeq);
-            pReqQ     = pSptd->_reqQueue[pSptd->_netSeq];
-            pSptd->_netSeq++;
+		if (!schedCommunicatorEpollInfo->_communicator)
+		{
+			//当前协程没有关联过私有网络通信器, 需要新建!
+			pReqQ = std::make_shared<ReqInfoQueue>(_communicator->getCommunicatorEpoll(0)->getNoSendQueueLimit());
+			ce = _communicator->createSchedCommunicatorEpoll(pSptd->_reqQNo, pReqQ);
 
-            if (pSptd->_netSeq == _objectProxyNum)
-                pSptd->_netSeq = 0;
-        }
-    }
+			schedCommunicatorEpollInfo->_communicator = _communicator;
+			schedCommunicatorEpollInfo->_info._reqQueue = pReqQ;
+			schedCommunicatorEpollInfo->_info._communicatorEpoll = ce;
+
+			pObjProxy = ce->createObjectProxy(this, this->tars_full_name(), this->tars_setName());
+
+			pObjProxy->initialize();
+		}
+		else
+		{
+			//网络通信器已经初始化过, 直接获取对象
+			pReqQ = schedCommunicatorEpollInfo->_info._reqQueue.lock();
+
+			ce = schedCommunicatorEpollInfo->_info._communicatorEpoll.lock();
+			if(ce && pReqQ)
+			{
+				pObjProxy = ce->hasObjectProxy(this->tars_full_name(), this->tars_setName());
+
+				//创建对应的ObjectProxy
+				if(!pObjProxy)
+				{
+					pObjProxy = ce->createObjectProxy(this, this->tars_full_name(), this->tars_setName());
+
+					pObjProxy->initialize();
+				}
+			}
+			else
+			{
+//				assert(false);
+				throw TarsCommunicatorException("communicator may deconstruct");
+			}
+		}
+	}
+	else
+	{
+		if( pSptd->_communicatorEpoll )
+		{
+			auto info = pSptd->getCommunicatorEpollInfo(_communicator);
+
+			assert(info->_info.size() == 1);
+			assert(info->_info[0]._communicatorEpoll.lock().get() == pSptd->_communicatorEpoll);
+
+			pObjProxy = pSptd->_communicatorEpoll->servantToObjectProxy(this);
+			pReqQ = info->_info[0]._reqQueue.lock();
+
+		}
+		else
+		{
+			//处于普通线程中, 判断当前线程是否关联过网络通信器, 没关联, 则关联所有的公有通信器, 即创建和公有网络通信器的队列!
+			auto communicatorEpollInfo = pSptd->getCommunicatorEpollInfo(_communicator);
+
+			//当前线程没有关联业务通信器, 需要关联
+			if (!communicatorEpollInfo->_communicator)
+			{
+				communicatorEpollInfo->_communicator = _communicator;
+				//为每个网络线程都创建一个队列
+				for (size_t i = 0; i < _communicator->getCommunicatorEpollNum(); ++i)
+				{
+					shared_ptr<CommunicatorEpoll> ce = _communicator->getCommunicatorEpoll(i);
+
+					pSptd->addCommunicatorEpoll(ce);
+				}
+			}
+
+			assert(communicatorEpollInfo->_netSeq < _communicator->getCommunicatorEpollNum());
+
+			//循环使用下一个网络线程发送数据
+			auto ce = communicatorEpollInfo->_info[communicatorEpollInfo->_netSeq]._communicatorEpoll.lock();
+			if (ce)
+			{
+				pObjProxy = ce->servantToObjectProxy(this);
+				pReqQ = communicatorEpollInfo->_info[communicatorEpollInfo->_netSeq]._reqQueue.lock();
+
+				communicatorEpollInfo->_netSeq++;
+
+				if (communicatorEpollInfo->_netSeq == _communicator->getCommunicatorEpollNum())
+					communicatorEpollInfo->_netSeq = 0;
+			}
+
+		}
+
+		if(!pReqQ)
+		{
+			//队列已经析构, 说明通信器已经释放了!
+			throw TarsCommunicatorException("communicator has deconstructed");
+		}
+	}
 }
 
 void ServantProxy::checkDye(RequestPacket& req)
@@ -1232,21 +1516,34 @@ void ServantProxy::checkDye(RequestPacket& req)
     //线程私有数据
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);
-    if (pSptd && pSptd->_dyeing)
+    if (pSptd && pSptd->_data._dyeing)
     {
         SET_MSG_TYPE(req.iMessageType, TARSMESSAGETYPEDYED);
 
-        req.status[ServantProxy::STATUS_DYED_KEY] = pSptd->_dyeingKey;
+        req.status[ServantProxy::STATUS_DYED_KEY] = pSptd->_data._dyeingKey;
     }
 }
 
-void ServantProxy::checkCookie(RequestPacket& req)
+void ServantProxy::checkTrace(RequestPacket &req)
+{
+    //线程私有数据
+    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+    assert(pSptd != NULL);
+    if (pSptd && pSptd->_traceCall)
+    {
+        SET_MSG_TYPE(req.iMessageType, tars::TARSMESSAGETYPETRACE);
+
+        req.status[ServantProxy::STATUS_TRACE_KEY] = pSptd->getTraceKey();
+    }
+}
+
+void ServantProxy::checkCookie(RequestPacket &req)
 {
     //线程私有数据
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);
 
-    std::for_each(pSptd->_cookie.begin(), pSptd->_cookie.end(), [&](map<string, string>::value_type &p) {
+    std::for_each(pSptd->_data._cookie.begin(), pSptd->_data._cookie.end(), [&](map<string, string>::value_type &p) {
         req.status.insert(make_pair(p.first, p.second));
     });
 }

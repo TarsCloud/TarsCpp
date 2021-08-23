@@ -52,12 +52,7 @@ add_subdirectory(servant)
 
 IF (NOT ${ONLY_LIB})
 add_subdirectory(examples)
+add_subdirectory(unittest)
 ENDIF()
 
-#add_subdirectory(test_deprecated)
-# IF (UNIX)
-    IF (NOT ${ONLY_LIB} )
-    add_subdirectory(unittest)
-    ENDIF()
-# ENDIF()
 

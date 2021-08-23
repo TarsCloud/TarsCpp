@@ -406,13 +406,13 @@ public:
     *
     * @param sSql sql语句
     * @param sSql SQL statement
-    * @param pdatafunc ，函数参数为map<string,string> ,key为column 名，value为数据
-    * @param pdatafunc , Function parameter is map<string, string>, key is column name, value is data
+    * @param pdatarsunc ，函数参数为map<string,string> ,key为column 名，value为数据
+    * @param pdatarsunc , Function parameter is map<string, string>, key is column name, value is data
     * @throws TC_Mysql_Exception
     * @return MysqlData类型的数据，可以根据字段获取相关信息
     * @return MysqlData type of data, you can get information based on the field
     */
-    size_t travelRecord(const string& sSql, const std::function<void(const map<string,string> &)> & pdatafunc);
+    size_t travelRecord(const string& sSql, const std::function<void(const map<string,string> &)> & pdatarsunc);
 
     /**
      * @brief 定义字段类型， 

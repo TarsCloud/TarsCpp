@@ -231,7 +231,7 @@ void TC_EpollServer::Handle::handleOnceCoroutine()
 				}
 				else
 				{
-					uint32_t iRet = scheduler->createCoroutine(std::bind(&Handle::handle, this, data));
+					uint32_t iRet = scheduler->go(std::bind(&Handle::handle, this, data));
 					if (iRet == 0)
 					{
 //						LOG_CONSOLE_DEBUG << "handleOverload" << endl;
@@ -390,7 +390,7 @@ void TC_EpollServer::Handle::handleLoopCoroutine()
 
 	initialize();
 
-	_scheduler->createCoroutine(std::bind(&Handle::handleCoroutine, this));
+	_scheduler->go(std::bind(&Handle::handleCoroutine, this));
 
 	_epollServer->notifyThreadReady();
 
@@ -503,7 +503,7 @@ void TC_EpollServer::Connection::initialize(TC_Epoller *epoller, unsigned int ui
 
 	const TC_Endpoint &ep = _pBindAdapter->getEndpoint();
 
-#if TAF_SSL
+#if TARS_SSL
 	if (ep.isSSL())
     {
         _trans.reset(new TC_SSLTransceiver(epoller, ep));
@@ -650,7 +650,7 @@ void TC_EpollServer::Connection::onCloseCallback(TC_Transceiver *trans, TC_Trans
 
 std::shared_ptr<TC_OpenSSL> TC_EpollServer::Connection::onOpensslCallback(TC_Transceiver* trans)
 {
-#if TAF_SSL
+#if TARS_SSL
 	if(trans->isSSL()) {
 		assert(_pBindAdapter->_ctx);
 		return TC_OpenSSL::newSSL(_pBindAdapter->_ctx);
@@ -735,46 +735,34 @@ TC_NetWorkBuffer::PACKET_TYPE TC_EpollServer::Connection::onParserCallback(TC_Ne
 	return ret;
 }
 
-
-int TC_EpollServer::Connection::sendBufferDirect(const std::string& buff)
+int TC_EpollServer::Connection::sendBufferDirect(const char* buff, size_t length)
 {
 	_pBindAdapter->increaseSendBufferSize();
 
 	if(getBindAdapter()->getEndpoint().isTcp()) {
 
-		return _trans->sendRequest(std::make_shared<TC_NetWorkBuffer::Buffer>(buff.data(), buff.length()));
+		return _trans->sendRequest(std::make_shared<TC_NetWorkBuffer::Buffer>(buff, length));
 	}
 
 	return 0;
-//
-//#if TAF_SSL
-//		if (getBindAdapter()->getEndpoint().isSSL())
-//        {
-//            //assert(_openssl->isHandshaked());
-//
-//            int ret = _openssl->write(buff.c_str(), buff.length(), _sendBuffer);
-//            if (ret != 0)
-//            {
-//                _pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send direct error! " + TC_Common::tostr(ret));
-//                return -1; // should not happen
-//            }
-//
-//        }
-//        else
-//#endif
-//		{
-//			_sendBuffer.addBuffer(buff);
-//		}
-//
-//		return sendBuffer();
-//	}
-//	else
-//	{
-//		_pBindAdapter->getEpollServer()->error("[TC_EpollServer::Connection] send direct not support udp! ");
-//		return -2;
-//	}
 }
 
+int TC_EpollServer::Connection::sendBufferDirect(const std::string& buff)
+{
+	return sendBufferDirect(buff.data(), buff.length());
+}
+
+int TC_EpollServer::Connection::sendBufferDirect(const shared_ptr<TC_NetWorkBuffer::Buffer>& buff)
+{
+	_pBindAdapter->increaseSendBufferSize();
+
+	if(getBindAdapter()->getEndpoint().isTcp()) {
+
+		return _trans->sendRequest(buff);
+	}
+
+	return 0;
+}
 
 int TC_EpollServer::Connection::checkFlow(TC_NetWorkBuffer& sendBuffer, size_t lastLeftBufferSize)
 {
@@ -1281,7 +1269,7 @@ TC_EpollServer::BindAdapter::BindAdapter(TC_EpollServer *epollServer)
 	, _iQueueTimeout(DEFAULT_QUEUE_TIMEOUT)
 	, _iHeaderLen(0)
 	, _iHeartBeatTime(0)
-	, _protocolName("taf")
+	, _protocolName("tars")
 {
 }
 
@@ -1388,7 +1376,7 @@ const string &TC_EpollServer::BindAdapter::getProtocolName()
 
 bool TC_EpollServer::BindAdapter::isTarsProtocol()
 {
-	return (_protocolName == "taf");
+	return (_protocolName == "tars" || _protocolName == "tars");
 }
 
 bool TC_EpollServer::BindAdapter::isIpAllow(const string &ip) const

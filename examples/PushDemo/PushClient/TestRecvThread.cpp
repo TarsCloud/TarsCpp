@@ -55,8 +55,10 @@ static TC_NetWorkBuffer::PACKET_TYPE pushResponse(TC_NetWorkBuffer &in, Response
    请求包编码函数，本函数的打包格式为
    整个包长度（4字节）+iRequestId（4字节）+包内容
 */
-static vector<char> pushRequest(RequestPacket& request, Transceiver *)
+static shared_ptr<TC_NetWorkBuffer::Buffer> pushRequest(RequestPacket& request, TC_Transceiver *)
 {
+	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
+
     unsigned int net_bufflength = htonl(request.sBuffer.size()+8);
     unsigned char * bufflengthptr = (unsigned char*)(&net_bufflength);
 
@@ -71,7 +73,9 @@ static vector<char> pushRequest(RequestPacket& request, Transceiver *)
 	memcpy(buffer.data() + sizeof(unsigned int), netrequestIdptr, sizeof(unsigned int));
 	memcpy(buffer.data() + sizeof(unsigned int) * 2, request.sBuffer.data(), request.sBuffer.size());
 
-	return buffer;
+	buff->addBuffer(buffer);
+
+	return buff;
 	// sbuff->addBuffer(buffer);
 }
 

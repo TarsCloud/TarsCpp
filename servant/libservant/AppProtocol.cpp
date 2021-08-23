@@ -18,7 +18,7 @@
 #include "util/tc_http.h"
 #include "util/tc_grpc.h"
 #include "servant/AppProtocol.h"
-#include "servant/Transceiver.h"
+// #include "servant/TC_Transceiver.h"
 #include "servant/AdapterProxy.h"
 #include "servant/RemoteLogger.h"
 #include "tup/Tars.h"
@@ -31,11 +31,23 @@
 namespace tars
 {
 
-class Transceiver;
+class TC_Transceiver;
 
-vector<char> ProxyProtocol::tarsRequest(RequestPacket& request, Transceiver *)
+shared_ptr<TC_NetWorkBuffer::Buffer> ProxyProtocol::toBuffer(TarsOutputStream<BufferWriter> &os)
 {
-	TarsOutputStream<BufferWriterVector> os;
+	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
+
+	buff->replaceBuffer(os.getBuffer(), os.getLength());
+	os._buf = NULL;
+	os._buf_len = 0;
+	os._len = 0;
+
+	return buff;
+}
+
+shared_ptr<TC_NetWorkBuffer::Buffer> ProxyProtocol::tarsRequest(RequestPacket& request, TC_Transceiver *)
+{
+	TarsOutputStream<BufferWriter> os;
 
 	int iHeaderLen = 0;
 
@@ -44,32 +56,28 @@ vector<char> ProxyProtocol::tarsRequest(RequestPacket& request, Transceiver *)
 
 	request.writeTo(os);
 
-    vector<char> buff;
+	assert(os.getLength() >= 4);
 
-	buff.swap(os.getByteBuffer());
+	iHeaderLen = htonl((int)(os.getLength()));
 
-	assert(buff.size() >= 4);
+	memcpy((void*)os.getBuffer(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
 
-	iHeaderLen = htonl((int)(buff.size()));
-
-	memcpy((void*)buff.data(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
-
-    return buff;
+	return toBuffer(os);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-vector<char> ProxyProtocol::http1Request(tars::RequestPacket& request, Transceiver *trans)
+shared_ptr<TC_NetWorkBuffer::Buffer> ProxyProtocol::http1Request(tars::RequestPacket& request, TC_Transceiver *trans)
 {
 	shared_ptr<TC_HttpRequest> &data = *(shared_ptr<TC_HttpRequest>*)request.sBuffer.data();
 
-	vector<char> buffer;
+	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
 
-	data->encode(buffer);
+	data->encode(buff);
 
 	data.reset();
 
-	return buffer;
+	return buff;
 }
 
 TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in, ResponsePacket& rsp)
@@ -92,18 +100,21 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
 	    data = *context;
 
 		auto ret = TC_NetWorkBuffer::PACKET_FULL;
-	    if(!data->checkHeader("Connection", "keep-alive"))
-	    {
-			// 如果非keep-alive，返回PACKET_FULL_CLOSE，外层结束连接
+		if (data->checkHeader("Connection", "keep-alive") || (data->getVersion() == "HTTP/1.1" && !data->hasHeader("Connection")))
+		{
+			ret = TC_NetWorkBuffer::PACKET_FULL;
+		}
+		else
+		{
 			ret = TC_NetWorkBuffer::PACKET_FULL_CLOSE;
-	    }
+		}
 
+		//收取到完整的包, 把当前包释放掉, 下次新包来会新建context
 		(*context) = NULL;
 		delete context;
 		in.setContextData(NULL);
 
 	    return ret;
-
     }
 
     return TC_NetWorkBuffer::PACKET_LESS;
@@ -114,14 +125,14 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
 #if TARS_HTTP2
 
 // ENCODE function, called by network thread
-vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *trans)
+shared_ptr<TC_NetWorkBuffer::Buffer> ProxyProtocol::http2Request(RequestPacket& request, TC_Transceiver *trans)
 {
-    TC_Http2Client* session = (TC_Http2Client*)trans->getSendBuffer()->getContextData();
+    TC_Http2Client* session = (TC_Http2Client*)trans->getSendBuffer().getContextData();
 	if(session == NULL)
 	{
 		session = new TC_Http2Client();
 
-		trans->getSendBuffer()->setContextData(session, [=](TC_NetWorkBuffer*nb){ delete session; });
+		trans->getSendBuffer().setContextData(session, [=](TC_NetWorkBuffer*){delete session;});
 
 		session->settings(3000);
 	}
@@ -133,23 +144,25 @@ vector<char> ProxyProtocol::http2Request(RequestPacket& request, Transceiver *tr
 	//这里把智能指针释放一次
 	(*data).reset();
 
+	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
+
 	if (request.iRequestId < 0)
 	{
 		TLOGERROR("http2Request::Fatal submit error: " << session->getErrMsg() << endl);
-		return vector<char>();
+		return buff;
 	}
-
-//	cout << "http2Request id:" << request.iRequestId << endl;
 
 	vector<char> out;
 	session->swap(out);
 
-	return out;
+	buff->addBuffer(out);
+
+	return buff;
 }
 
 TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in, ResponsePacket& rsp)
 {
-	TC_Http2Client* session = (TC_Http2Client*)((Transceiver*)(in.getConnection()))->getSendBuffer()->getContextData();
+	TC_Http2Client* session = (TC_Http2Client*)((TC_Transceiver*)(in.getConnection()))->getSendBuffer().getContextData();
 
 	pair<int, shared_ptr<TC_HttpResponse>> out;
 	TC_NetWorkBuffer::PACKET_TYPE flag = session->parseResponse(in, out);
@@ -169,24 +182,27 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http2Response(TC_NetWorkBuffer &in,
 
 
 // ENCODE function, called by network thread
-vector<char> ProxyProtocol::grpcRequest(RequestPacket& request, Transceiver *trans)
+shared_ptr<TC_NetWorkBuffer::Buffer> ProxyProtocol::grpcRequest(RequestPacket& request, TC_Transceiver *trans)
 {
-    TC_GrpcClient* session = (TC_GrpcClient*)trans->getSendBuffer()->getContextData();
+    TC_GrpcClient* session = (TC_GrpcClient*)trans->getSendBuffer().getContextData();
 	if(session == NULL)
 	{
 		session = new TC_GrpcClient();
 
-		trans->getSendBuffer()->setContextData(session, [=](TC_NetWorkBuffer*nb){ delete session; });
+		trans->getSendBuffer().setContextData(session, [=](TC_NetWorkBuffer*){ delete session; });
 
 		session->settings(3000);
 	}
 
     if (session->buffer().size() != 0) {
         //直接发送裸得应答数据，业务层一般不直接使用，仅仅tcp支持
-		trans->getSendBuffer()->addBuffer(session->buffer());
-		auto data = trans->getSendBuffer()->getBufferPointer();
-		int iRet = trans->send(data.first, (uint32_t) data.second, 0);
-		trans->getSendBuffer()->moveHeader(iRet);
+		trans->getSendBuffer().addBuffer(session->buffer());
+
+		trans->doRequest();
+
+//		auto data = trans->getSendBuffer().getBufferPointer();
+//		int iRet = trans->send(data.first, (uint32_t) data.second, 0);
+//		trans->getSendBuffer().moveHeader(iRet);
         session->buffer().clear();
     }
 
@@ -197,10 +213,12 @@ vector<char> ProxyProtocol::grpcRequest(RequestPacket& request, Transceiver *tra
 	//这里把智能指针释放一次
 	(*data).reset();
 
+	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
+
 	if (request.iRequestId < 0)
 	{
 		TLOGERROR("http2Request::Fatal submit error: " << session->getErrMsg() << endl);
-		return vector<char>();
+		return buff;
 	}
 
 //	cout << "http2Request id:" << request.iRequestId << endl;
@@ -208,12 +226,14 @@ vector<char> ProxyProtocol::grpcRequest(RequestPacket& request, Transceiver *tra
 	vector<char> out;
 	session->swap(out);
 
-	return out;
+	buff->addBuffer(out);
+
+	return buff;
 }
 
 TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::grpcResponse(TC_NetWorkBuffer &in, ResponsePacket& rsp)
 {
-	TC_GrpcClient* session = (TC_GrpcClient*)((Transceiver*)(in.getConnection()))->getSendBuffer()->getContextData();
+	TC_GrpcClient* session = (TC_GrpcClient*)((TC_Transceiver*)(in.getConnection()))->getSendBuffer().getContextData();
 
 	pair<int, shared_ptr<TC_HttpResponse>> out;
 	TC_NetWorkBuffer::PACKET_TYPE flag = session->parseResponse(in, out);

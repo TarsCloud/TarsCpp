@@ -21,7 +21,7 @@
 namespace tars
 {
 
-int RollWriteT::_dyeingThread = 0;
+//int RollWriteT::_dyeingThread = 0;
 int TimeWriteT::_dyeing = 0;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +93,7 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
     }
 }
 
-void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const CommunicatorPtr &comm, const string &sLogObj)
+void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx, const string &sLogObj)
 {
     _app     = sApp;
     _server  = sServer;
@@ -101,16 +101,19 @@ void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, con
     _maxSize = iMaxSize;
     _maxNum  = iMaxNum;
 
-    if(comm && !sLogObj.empty())
-    {
-        _logPrx = comm->stringToProxy<LogPrx>(sLogObj);
-        //单独设置超时时间
-        _logPrx->tars_timeout(3000);
-    }
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////////
+
+LocalRollLogger::~LocalRollLogger()
+{
+	for(auto e : _logger_ex)
+	{
+		delete e.second;
+	}
+	_logger_ex.clear();
+}
 
 void LocalRollLogger::terminate()
 {
@@ -126,6 +129,14 @@ void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, cons
     _app       = sApp;
     _server    = sServer;
     _logpath   = sLogpath;
+	_logObj    = sLogObj;
+
+	if(comm && !sLogObj.empty())
+	{
+		_logPrx = comm->stringToProxy<LogPrx>(sLogObj);
+		//单独设置超时时间
+		_logPrx->tars_timeout(3000);
+	}
 
     //生成目录
     TC_File::makeDirRecursive(_logpath + FILE_SEP + _app + FILE_SEP + _server);
@@ -141,7 +152,7 @@ void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, cons
     sync(false);
 
     //设置染色日志信息
-    _logger.getWriteT().setDyeingLogInfo(sApp, sServer, sLogpath, iMaxSize, iMaxNum, comm, sLogObj);
+    _logger.getWriteT().setDyeingLogInfo(sApp, sServer, sLogpath, iMaxSize, iMaxNum, _logPrx, sLogObj);
 
 }
 
@@ -151,16 +162,72 @@ void LocalRollLogger::sync(bool bSync)
     if(bSync)
     {
         _logger.unSetupThread();
-    }
+
+		TC_ThreadRLock lock(_mutex);
+		for(auto e : _logger_ex)
+		{
+			e.second->unSetupThread();
+		}
+	}
     else
     {
         _logger.setupThread(&_local);
+
+		TC_ThreadRLock lock(_mutex);
+		for(auto e : _logger_ex)
+		{
+			e.second->setupThread(&_local);
+		}
     }
 }
 
 void LocalRollLogger::enableDyeing(bool bEnable, const string& sDyeingKey/* = ""*/)
 {
     _logger.getRoll()->enableDyeing(bEnable, sDyeingKey);
+
+	TC_ThreadRLock lock(_mutex);
+	for(auto e : _logger_ex)
+	{
+		e.second->getRoll()->enableDyeing(bEnable, sDyeingKey);
+	}
+}
+
+LocalRollLogger::RollLogger *LocalRollLogger::logger(const string &suffix)
+{
+	unordered_map<string, RollLogger*>::iterator it;
+
+	{
+		TC_ThreadRLock lock(_mutex);
+
+		it = _logger_ex.find(suffix);
+
+		if (it != _logger_ex.end())
+		{
+			return it->second;
+		}
+	}
+
+	TC_ThreadWLock lock(_mutex);
+	it = _logger_ex.find(suffix);
+
+	if (it != _logger_ex.end())
+	{
+		return it->second;
+	}
+
+	RollLogger *logger = new RollLogger();
+
+	//初始化本地循环日志
+	logger->init(_logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + _app + "." + _server + "." + suffix, _logger.getMaxSize(), _logger.getMaxNum());
+	logger->modFlag(TC_DayLogger::HAS_TIME, false);
+	logger->modFlag(TC_DayLogger::HAS_TIME|TC_DayLogger::HAS_LEVEL|TC_DayLogger::HAS_PID, true);
+
+	//设置染色日志信息
+	logger->getWriteT().setDyeingLogInfo(_app, _server, _logpath, _logger.getMaxSize(), _logger.getMaxSize(), _logPrx, _logObj);
+
+	_logger_ex[suffix] = logger;
+
+	return logger;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -821,6 +888,51 @@ void RemoteTimeLogger::enableLocalEx(const string &sApp, const string &sServer,c
 {
     logger(sApp,sServer,sFile)->getWriteT().enableLocal(bEnable);
     logger(sApp,sServer,sFile)->setRemote(!bEnable);
+}
+
+TarsDyeingSwitch::~TarsDyeingSwitch()
+{
+	if(_needDyeing)
+	{
+		LocalRollLogger::getInstance()->enableDyeing(false);
+
+		ServantProxyThreadData * td = ServantProxyThreadData::getData();
+		assert(NULL != td);
+		if (td)
+		{
+			td->_data._dyeing = false;
+			td->_data._dyeingKey = "";
+		}
+	}
+}
+
+bool TarsDyeingSwitch::getDyeingKey(string & sDyeingkey)
+{
+	ServantProxyThreadData * td = ServantProxyThreadData::getData();
+	assert(NULL != td);
+
+	if (td && td->_data._dyeing == true)
+	{
+		sDyeingkey = td->_data._dyeingKey;
+		return true;
+	}
+	return false;
+}
+
+void TarsDyeingSwitch::enableDyeing(const string & sDyeingKey)
+{
+	LocalRollLogger::getInstance()->enableDyeing(true);
+
+	ServantProxyThreadData * td = ServantProxyThreadData::getData();
+	assert(NULL != td);
+	if(td)
+
+	{
+		td->_data._dyeing    = true;
+		td->_data._dyeingKey = sDyeingKey;
+	}
+	_needDyeing = true;
+	_dyeingKey  = sDyeingKey;
 }
 
 }

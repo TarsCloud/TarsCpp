@@ -28,7 +28,7 @@ namespace tars
 /////////////////////////////////////////////////
 /**
  * @file tc_thread_cond.h 
- * @brief 线程锁以及条件变量类(兼容TAF4.x版本, 底层直接封装了c++11, 从而跨平台兼容)
+ * @brief 线程锁以及条件变量类(兼容TARS4.x版本, 底层直接封装了c++11, 从而跨平台兼容)
  *  
  * @author  jarodruan@upchina.com
  */             

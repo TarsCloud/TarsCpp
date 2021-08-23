@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
         conf.parseFile(option.getValue("config"));
 	    _comm->setProperty(conf);
 
-//	    TafRollLogger::getInstance()->logger()->setLogLevel(6);
+//	    TarsRollLogger::getInstance()->logger()->setLogLevel(6);
 
         _comm->setProperty("sendqueuelimit", "1000000");
         _comm->setProperty("asyncqueuecap", "1000000");

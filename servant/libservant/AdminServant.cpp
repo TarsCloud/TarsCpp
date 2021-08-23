@@ -60,7 +60,6 @@ string AdminServant::notify(const string &command, CurrentPtr current)
 {
     RemoteNotify::getInstance()->report("AdminServant::notify:" + command);
 
-//    return NotifyObserver::getInstance()->notify(command, current);
     return this->getApplication()->getNotifyObserver()->notify(command, current);
 }
 

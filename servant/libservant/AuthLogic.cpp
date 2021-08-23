@@ -22,116 +22,13 @@
 #include "servant/AuthLogic.h"
 #include <iostream>
 #include <cassert>
-
+#include "tup/tup.h"
 
 namespace tars
 {
 
-bool processAuth(TC_EpollServer::Connection *conn, const shared_ptr<TC_EpollServer::RecvContext> &data, const string &objName)
-{
-	conn->tryInitAuthState(AUTH_INIT);
 
-    if (conn->_authState == AUTH_SUCC)
-        return false; // data to be processed
-
-    TC_EpollServer::BindAdapterPtr adapter = data->adapter();
-
-    int type = adapter->getEndpoint().getAuthType();
-    if (type == AUTH_TYPENONE)
-    {
-        adapter->getEpollServer()->info("processAuth no need auth func, auth succ");
-        conn->_authState = AUTH_SUCC;
-        return false;
-    }
-
-    // got auth request
-    RequestPacket request;
-
-    if (adapter->isTarsProtocol())
-    {
-        TarsInputStream<BufferReader> is;
-
-        is.setBuffer(data->buffer().data(), data->buffer().size());
-
-        try
-        {
-            request.readFrom(is);
-        }
-        catch(...)
-        {
-	        adapter->getEpollServer()->error("processAuth tars protocol decode error, close connection.");
-
-            conn->setClose();
-            return true;
-        }
-    }
-    else
-    {
-        request.sBuffer = data->buffer();
-    }
-
-    int currentState = conn->_authState;
-//    int newstate = tars::defaultProcessAuthReq(request.sBuffer.data(), request.sBuffer.size(), adapter->getName());
-	int newstate = tars::defaultProcessAuthReq(request.sBuffer.data(), request.sBuffer.size(), adapter, objName);
-    std::string out = tars::etos((tars::AUTH_STATE)newstate);
-
-    if (newstate < 0)
-    {
-        // 验证错误,断开连接
-        adapter->getEpollServer()->error("authProcess failed with new state [" + out + "]");
-        conn->setClose();
-        return true;
-    }
-
-    adapter->getEpollServer()->info(TC_Common::tostr(conn->getId()) + "'s auth response[" + out + "], change state from " +
-	    tars::etos((tars::AUTH_STATE)currentState) + " to " + out);
-    conn->_authState = newstate;
-
-    shared_ptr<TC_EpollServer::SendContext> sData = data->createSendContext();
-
-    if (adapter->isTarsProtocol())
-    {
-        TarsOutputStream<BufferWriterVector> os;
-
-        ResponsePacket response;
-        response.iVersion = TARSVERSION;
-        response.iRequestId = request.iRequestId;
-        response.iMessageType = request.iMessageType;
-        response.cPacketType = request.cPacketType;
-        response.iRet = 0;
-        response.sBuffer.assign(out.begin(), out.end());
-
-        int iHeaderLen = 0;
-
-    //	先预留4个字节长度
-        os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
-
-	    response.writeTo(os);
-
-	    vector<char> buff;
-
-	    buff.swap(os.getByteBuffer());
-
-	    assert(buff.size() >= 4);
-
-	    iHeaderLen = htonl((int)(buff.size()));
-
-	    memcpy((void*)buff.data(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
-
-	    sData->buffer()->swap(buff);
-    }
-    else
-    {
-        sData->buffer()->assign(out.c_str(), out.size());
-    }
-
-    adapter->getEpollServer()->send(sData);
-
-    return true; // processed
-}
-
-
-int processAuthReqHelper(const BasicAuthPackage& pkg, const BasicAuthInfo& info)
+AUTH_STATE processAuthReqHelper(const BasicAuthPackage& pkg, const BasicAuthInfo& info)
 {
     // 明文:objName, accessKey, time, hashMethod
     // 密文:use TmpKey to enc secret1;
@@ -198,8 +95,7 @@ int processAuthReqHelper(const BasicAuthPackage& pkg, const BasicAuthInfo& info)
 
 // 只需要传入 expect 的objname；
 // 内部根据obj查找access账号集
-//int defaultProcessAuthReq(const char* request, size_t len, const string& expectObj)
-int defaultProcessAuthReq(const char* request, size_t len, const TC_EpollServer::BindAdapterPtr &adapter, const string &objName)
+AUTH_STATE defaultProcessAuthReq(const char* request, size_t len, TC_EpollServer::BindAdapterPtr& adapter, const string &expectObj)
 {
     if (len <= 20)
         return AUTH_PROTO_ERR;
@@ -218,53 +114,138 @@ int defaultProcessAuthReq(const char* request, size_t len, const TC_EpollServer:
 //    if (!bap)
 //        return AUTH_WRONG_OBJ;
 
-    BasicAuthInfo info;
-//    string expectServantName = ServantHelperManager::getInstance()->getAdapterServant(expectObj);
-    info.sObjName = objName;
-    info.sAccessKey = pkg.sAccessKey;
-    info.sHashSecretKey2 = adapter->getSk(info.sAccessKey);
-    if (info.sHashSecretKey2.empty())
-        return AUTH_WRONG_AK;
+	BasicAuthInfo info;
+	string expectServantName = expectObj;
+	info.sObjName = expectServantName;
+	info.sAccessKey = pkg.sAccessKey;
+	info.sHashSecretKey2 = adapter->getSk(info.sAccessKey);
+	if (info.sHashSecretKey2.empty())
+		return AUTH_WRONG_AK;
 
-    return processAuthReqHelper(pkg, info);
+	return processAuthReqHelper(pkg, info);
 }
 
-//int defaultProcessAuthReq(const string& request, const string& expectObj)
-//{
-//    return defaultProcessAuthReq(request.data(), request.size(), expectObj);
-//}
+AUTH_STATE defaultProcessAuthReq(const string& request, TC_EpollServer::BindAdapterPtr& adapter, const string& expectObj)
+{
+	return defaultProcessAuthReq(request.data(), request.size(), adapter, expectObj);
+}
 
-string defaultCreateAuthReq(const BasicAuthInfo& info /*, const string& hashMethod*/ )
+vector<char> defaultCreateAuthReq(const BasicAuthInfo& info /*, const string& hashMethod*/ )
 {
     // 明文:objName, accessKey, time, hashMethod
     // 密文:use TmpKey to enc secret1;
-    TarsOutputStream<BufferWriterString> os;
+    TarsOutputStream<BufferWriterVector> os;
     BasicAuthPackage pkg;
     pkg.sObjName = info.sObjName;
     pkg.sAccessKey = info.sAccessKey;
     pkg.iTime = TNOW;
 
-    string secret1 = TC_SHA::sha1str(info.sSecretKey.data(), info.sSecretKey.size());
-    string secret2 = TC_SHA::sha1str(secret1.data(), secret1.size());
+	string secret1 = TC_SHA::sha1str(info.sSecretKey.data(), info.sSecretKey.size());
+	string secret2 = TC_SHA::sha1str(secret1.data(), secret1.size());
 
-    // create tmpKey
+	// create tmpKey
 	string tmpKey;
-    {
-        string tmp = secret2;
-        const char* pt = (const char* )&pkg.iTime;
-        for (size_t i = 0; i < sizeof pkg.iTime; ++ i)
-        {
-            tmp[i] |= pt[i];
-        }
-        // 只用了前面24字节
-        tmpKey = TC_MD5::md5str(tmp);
-    }
+	{
+		string tmp = secret2;
+		const char* pt = (const char* )&pkg.iTime;
+		for (size_t i = 0; i < sizeof pkg.iTime; ++ i)
+		{
+			tmp[i] |= pt[i];
+		}
+		// 保证key是16字节
+		tmpKey = TC_MD5::md5str(tmp);
+	}
 
 	pkg.sSignature = TC_Des::encrypt3(tmpKey.data(), secret1.data(), secret1.size());
 
-    pkg.writeTo(os);
+	pkg.writeTo(os);
 
-    return os.getByteBuffer();
+	return os.getByteBuffer();
+}
+
+pair<TC_NetWorkBuffer::PACKET_TYPE, shared_ptr<TC_NetWorkBuffer::Buffer>> serverVerifyAuthCallback(TC_NetWorkBuffer &buff, TC_Transceiver* trans, weak_ptr<TC_EpollServer::BindAdapter> adapterPtr, const string &expectObj)
+{
+	shared_ptr<TC_NetWorkBuffer::Buffer> data = std::make_shared<TC_NetWorkBuffer::Buffer>();
+
+	auto adapter = adapterPtr.lock();
+	if(!adapter)
+	{
+		data->addBuffer("adapter release");
+		return std::make_pair(TC_NetWorkBuffer::PACKET_ERR, data);
+	}
+
+	// got auth request
+	RequestPacket request;
+
+	if (adapter->isTarsProtocol())
+	{
+		TarsInputStream<BufferReader> is;
+
+		is.setBuffer(buff.mergeBuffers(), buff.getBufferLength());
+
+		try
+		{
+			request.readFrom(is);
+		}
+		catch(...)
+		{
+			adapter->getEpollServer()->error("serverVerifyCallback protocol decode error, close connection.");
+			return std::make_pair(TC_NetWorkBuffer::PACKET_ERR, data);
+		}
+	}
+	else
+	{
+		request.sBuffer = buff.getBuffers();
+	}
+
+	AUTH_STATE newstate = tars::defaultProcessAuthReq(request.sBuffer.data(), request.sBuffer.size(), adapter, expectObj);
+	std::string out = tars::etos((tars::AUTH_STATE)newstate);
+
+	if (newstate != AUTH_SUCC)
+	{
+		// 验证错误,断开连接
+		adapter->getEpollServer()->error("authProcess failed with new state [" + out + "]");
+		return std::make_pair(TC_NetWorkBuffer::PACKET_ERR, data);
+	}
+
+	buff.clearBuffers();
+
+	string host;
+	uint16_t port;
+	TC_Socket::parseAddr(trans->getClientAddr(), host, port);
+
+	adapter->getEpollServer()->info(host+ ":" + TC_Common::tostr(port) + ", auth response succ: [" + out + "]");
+
+	if (adapter->isTarsProtocol())
+	{
+		TarsOutputStream<BufferWriter> os;
+
+		ResponsePacket response;
+		response.iVersion = TARSVERSION;
+		response.iRequestId = request.iRequestId;
+		response.iMessageType = request.iMessageType;
+		response.cPacketType = request.cPacketType;
+		response.iRet = 0;
+		response.sBuffer.assign(out.begin(), out.end());
+
+		tars::Int32 iHeaderLen = 0;
+
+		os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
+
+		response.writeTo(os);
+
+		iHeaderLen = htonl((int)(os.getLength()));
+
+		memcpy((void*)os.getBuffer(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
+
+		data = ProxyProtocol::toBuffer(os);
+	}
+	else
+	{
+		data->addBuffer(out.c_str(), out.size());
+	}
+
+	return std::make_pair(TC_NetWorkBuffer::PACKET_FULL, data);
 }
 
 } // end namespace tars

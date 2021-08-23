@@ -168,7 +168,7 @@ void TC_Thread::coroutineEntry(TC_Thread *pThread, uint32_t iPoolSize, size_t iS
         });
     }
 
-	pThread->_scheduler->createCoroutine(std::bind(TC_Thread::threadEntry, pThread));
+	pThread->_scheduler->go(std::bind(TC_Thread::threadEntry, pThread));
 
     {
         TC_ThreadLock::Lock sync(pThread->_lock);

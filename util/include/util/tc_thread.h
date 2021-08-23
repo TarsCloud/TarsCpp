@@ -29,7 +29,7 @@ namespace tars
 /////////////////////////////////////////////////
 /** 
  * @file tc_thread.h 
- * @brief  线程类(兼容TAF4.x版本, 底层直接封装了c++11 thread, 从而跨平台兼容)
+ * @brief  线程类(兼容TARS4.x版本, 底层直接封装了c++11 thread, 从而跨平台兼容)
  *
  * 使用说明:
  * - TC_Thread定义一个线程, 继承TC_Thread, 实现run方法, 调用start即可启动线程

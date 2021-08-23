@@ -7,8 +7,8 @@ macro(build_tars_server MODULE DEPS)
 
     aux_source_directory(. DIR_SRCS)
 
-    FILE(GLOB TARS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.tars")
-    FILE(GLOB PB_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
+    FILE(GLOB_RECURSE TARS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.tars")
+    FILE(GLOB_RECURSE PB_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
 
     set(TARS_LIST_DEPENDS)
     set(PB_LIST_DEPENDS)
@@ -17,19 +17,20 @@ macro(build_tars_server MODULE DEPS)
 
         foreach (TARS_SRC ${TARS_LIST})
             get_filename_component(NAME_WE ${TARS_SRC} NAME_WE)
+            get_filename_component(PATH ${TARS_SRC} PATH)
 
             set(TARS_H ${NAME_WE}.h)
 
-            set(CUR_TARS_GEN ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H})
+            set(CUR_TARS_GEN ${PATH}/${TARS_H})
             LIST(APPEND TARS_LIST_DEPENDS ${CUR_TARS_GEN})
             
             add_custom_command(OUTPUT ${CUR_TARS_GEN}
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                    DEPENDS ${TARS2CPP} 
+                    WORKING_DIRECTORY ${PATH}
+                    DEPENDS ${TARS2CPP} ${TARS_SRC}
                     COMMAND ${TARS2CPP} ${TARS_SRC}
                     COMMENT "${TARS2CPP} ${TARS_SRC}")
 
-            list(APPEND CLEAN_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H})
+            list(APPEND CLEAN_LIST ${PATH}/${TARS_H})
 
         endforeach ()
 
@@ -48,21 +49,22 @@ macro(build_tars_server MODULE DEPS)
 
         foreach (PB_SRC ${PB_LIST})
             get_filename_component(NAME_WE ${PB_SRC} NAME_WE)
+            get_filename_component(PATH ${PB_SRC} PATH)
 
             set(PB_H ${NAME_WE}.pb.h)
             set(PB_CC ${NAME_WE}.pb.cc)
 
-            set(CUR_PB_GEN ${CMAKE_CURRENT_SOURCE_DIR}/${PB_H} ${CMAKE_CURRENT_SOURCE_DIR}/${PB_CC})
+            set(CUR_PB_GEN ${PATH}/${PB_H} ${PATH}/${PB_CC})
             LIST(APPEND PB_LIST_DEPENDS ${CUR_PB_GEN})
 
             add_custom_command(OUTPUT ${CUR_PB_GEN}
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    WORKING_DIRECTORY ${PATH}
                     DEPENDS ${PROTO2TARS} ${_PROTOBUF_PROTOC}
-                    COMMAND ${_PROTOBUF_PROTOC} -I "${CMAKE_CURRENT_SOURCE_DIR}" 
-                                "${PB_SRC}" --cpp_out "${CMAKE_CURRENT_SOURCE_DIR}"        
-                    COMMENT "${_PROTOBUF_PROTOC} ${PB_SRC} ${CMAKE_CURRENT_SOURCE_DIR} ${CUR_PB_GEN}")
+                    COMMAND ${_PROTOBUF_PROTOC} -I "${PATH}"
+                                "${PB_SRC}" --cpp_out "${PATH}"
+                    COMMENT "${_PROTOBUF_PROTOC} ${PB_SRC} ${PATH} ${CUR_PB_GEN}")
 
-            list(APPEND CLEAN_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${PB_H} ${CMAKE_CURRENT_SOURCE_DIR}/${PB_CC})
+            list(APPEND CLEAN_LIST ${PATH}/${PB_H} ${PATH}/${PB_CC})
         endforeach ()
 
         set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")

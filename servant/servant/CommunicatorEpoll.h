@@ -23,6 +23,8 @@
 #include "util/tc_loop_queue.h"
 #include "servant/Message.h"
 #include "servant/EndpointInfo.h"
+#include "servant/StatReport.h"
+#include "servant/Communicator.h"
 #include <set>
 
 namespace tars
@@ -30,7 +32,6 @@ namespace tars
 
 class Communicator;
 class ObjectProxy;
-class ObjectProxyFactory;
 class StatReport;
 class PropertyReport;
 
@@ -38,23 +39,12 @@ class PropertyReport;
 /**
  * 监听FD事件并触发注册的handle
  */
-struct FDInfo
+struct FDInfo 
 {
-    enum
-    {
-        ET_C_NOTIFY = 1,
-        ET_C_NET    = 2,
-        ET_C_TERMINATE  = 3,
-	    ET_C_UPDATE_LIST= 4,
-    };
-
     /**
      * 构造函数
      */
     FDInfo()
-    : iSeq(0)
-    , iType(ET_C_NOTIFY)
-    , p(NULL)
     {
     }
 
@@ -63,33 +53,36 @@ struct FDInfo
      */
     ~FDInfo()
     {
+        if (msgQueue)
+        {
+            ReqMessage *msg;
+            while (msgQueue->pop_front(msg))
+            {
+                delete msg;
+            }
+        }
     }
-
     size_t iSeq;
-    int iType;
-    void * p;
+    shared_ptr<ReqInfoQueue> msgQueue;
     TC_Epoller::NotifyInfo notify;
-};
-
-struct UpdateListInfo
-{
-	ServantPrx prx;
-	set<EndpointInfo> active;
-	set<EndpointInfo> inactive;
+    bool autoDestroy = false;
 };
 
 ////////////////////////////////////////////////////////////////////////
 /**
  * 客户端网络处理的线程类
  */
-class CommunicatorEpoll : public TC_Thread ,public TC_ThreadRecMutex
+class CommunicatorEpoll : public TC_Thread, public enable_shared_from_this<CommunicatorEpoll>
 {
 public:
 
     /**
      * 构造函数
+     * @param pCommunicator
+     * @param netThreadSeq, 业务线程序号, 如果是公有网络通信器, 则为-1
+     * @param isFirst, 是否是第一个公有网络通信器
      */
-    CommunicatorEpoll(Communicator * pCommunicator, size_t _netThreadSeq);
+    CommunicatorEpoll(Communicator * pCommunicator, size_t netThreadSeq, bool isFirst = false);
 
     /**
      * 析构函数
@@ -105,17 +98,9 @@ public:
     }
 
     /**
-     * 获取 ObjectProxyFactory
-     */
-    inline ObjectProxyFactory * getObjectProxyFactory()
-    {
-        return _objectProxyFactory;
-    }
-
-    /**
      * 获取 网络线程id
      */
-    inline size_t getCommunicatorEpollId()
+    inline size_t getCommunicatorNetThreadSeq()
     {
         return _netThreadSeq;
     }
@@ -133,13 +118,27 @@ public:
      */
     inline bool isFirstNetThread()
     {
-        return (_netThreadSeq == 0);
+        return _isFirst;
     }
+
+    /**
+     * 获取epoller
+     * @return
+     */
+    inline TC_Epoller* getEpoller() { return _epoller; }
+
+    /**
+     * 是否存在ObjectProxy了, 如果已经存在则创建
+     * @param sObjectProxyName
+     * @param setName
+     * @return
+     */
+	ObjectProxy * hasObjectProxy(const string & sObjectProxyName,const string& setName="");
 
     /*
      * 获取本epoll的代理对象
      */
-    ObjectProxy * getObjectProxy(const string & sObjectProxyName,const string& setName="");
+    ObjectProxy * createObjectProxy(ServantProxy *servantProxy, const string & sObjectProxyName,const string& setName="");
 
     /**
      * 循环监听网络事件
@@ -153,83 +152,138 @@ public:
 
     /**
      * 注册fd对应的处理handle
-     * @param fd
-     * @param info 事件指针
-     * @param event
-     * @param handle
+     * @param adapterProxy
      */
-    int addFd(int fd,FDInfo * info, uint32_t events);
-
-    /**
-     * 取消已注册的handle
-     * @param fd
-     * @param info 事件指针
-     * @param event
-     * @param handle
-     */
-    int delFd(int fd,FDInfo * info, uint32_t events);
-
-    /**
-     * mod handle
-     * @param fd
-     * @param info
-     * @param events
-     * @return
-     */
-    int modFd(int fd,FDInfo * info, uint32_t events);
+    void addFd(AdapterProxy* adapterProxy);
 
     /**
      * 通知事件过来
      * @param iSeq
      */
-    void notify(size_t iSeq,ReqInfoQueue * pReqQueue);
-    void notifyDel(size_t iSeq);
+    void notify(size_t iSeq);
 
     /**
      * 主动更新ip list
      * @param active
      * @param inactive
      */
-    void notifyUpdateEndpoints(const ServantPrx &prx, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
+    void notifyUpdateEndpoints(ServantProxy *servantProxy, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
 
     /**
      * 数据加入到异步线程队列里面
      * @return
      */
-    void pushAsyncThreadQueue(ReqMessage * msg);
+    inline void pushAsyncThreadQueue(ReqMessage * msg) { _communicator->pushAsyncThreadQueue(msg); }
 
 	/**
 	 * set reconnect
 	 * @param time
 	 */
-	void reConnect(int64_t ms, Transceiver*);
+	inline void reConnect(int64_t ms, TC_Transceiver*p) { _reconnect[ms] = p; }
 
 	/**
 	 * communicator resource desc
 	 * @return
 	 */
-	string getResourcesInfo();
+	void getResourcesInfo(ostringstream &desc);
+
+    /**
+     * 所有对象代理加载locator信息
+     */
+    int loadObjectLocator();
+
+    /**
+     * servant换成对应线程的objectproxy
+     * @param servantProxy
+     * @return
+     */
+    ObjectProxy* servantToObjectProxy(ServantProxy *servantProxy);
+
+	/**
+	 * 是否是协程中的私有通信器
+	 * @return
+	 */
+	inline bool isSchedCommunicatorEpoll() const { return !_public; }
+
+	/**
+	 * 初始化notify
+	 */
+    void initNotify(size_t iSeq, const shared_ptr<ReqInfoQueue> &msgQueue);
+
+    /**
+     * 直接通知
+     */ 
+    inline void handle(uint16_t reqQNo) { handleNotify(_notify[reqQNo]->notify.getEpollInfo()); }
+
+    /**
+     * 获取通知句柄(主要用于测试)
+     * @return
+     */
+	FDInfo** getNotify() { return _notify; }
 
 protected:
+
+	/**
+	 * 网络线程中处理CommunicatorEpoll退出的清理逻辑
+	 */
+	void handleTerminate();
+
+	/**
+	 * 通知CommunicatorEpoll退出
+	 */
+	void notifyTerminate();
+
+	/**
+	 * 网络线程中处理业务线程退出的清理逻辑
+	 */
+	void handleServantThreadQuit(uint16_t iSeq);
+
+	/**
+	 * 通知业务线程退出
+	 */
+	void notifyServantThreadQuit(uint16_t iSeq);
+
     /**
-     * 处理函数
-     *
-     * @param pFDInfo
-     * @param events
+     * 初始化
+     * 如果在其他协程中, 并不自己run, 只需要调用该函数初始化epoller即可
      */
-    void handle(FDInfo * pFDInfo, const epoll_event &ev);
+    void initializeEpoller();
+
+    /**
+     * 上报数据
+     * @param pmStatMicMsg
+     */
+    void report(StatReport::MapStatMicMsg *pmStatMicMsg);
+
+    /**
+     * 弹出来统计数据
+     * @param mStatMsg
+     * @return
+     */
+    bool popStatMsg(StatReport::MapStatMicMsg* &mStatMsg);
 
     /**
      * 输入事件
      * @param pi
      */
-    void handleInputImp(Transceiver * pTransceiver);
+    bool handleCloseImp(const shared_ptr<TC_Epoller::EpollInfo> &data);
+
+    /**
+     * 输入事件
+     * @param pi
+     */
+    bool handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> &data);
 
     /**
      * 输出事件
      * @param pi
      */
-    void handleOutputImp(Transceiver * pTransceiver);
+    bool handleOutputImp(const shared_ptr<TC_Epoller::EpollInfo> &data);
+
+    /**
+     * 处理notify
+     */
+    bool handleNotify(const shared_ptr<TC_Epoller::EpollInfo> & data);
 
     /**
      * 处理超时
@@ -246,8 +300,38 @@ protected:
     /**
      * reconnect
      */
-    void reConnect();
+    void doReconnect();
 
+    /**
+     * 根据序号 获取所有obj对象
+     */
+    inline ObjectProxy * getObjectProxy(size_t iNum)
+    {
+		TC_ThreadRLock lock(_vObjectMutex);
+
+        assert(iNum < _objNum);
+        return _vObjectProxys[iNum];
+    }
+
+    /**
+     * 获取所有对象的个数，为了不加锁不用map
+     */
+    inline size_t getObjNum()
+    {
+        return _objNum;
+    }
+
+    /**
+     * 需要上报的stat数据size
+     * @return
+     */
+    inline size_t getReportSize() { return _statQueue.size(); }
+
+    friend class StatReport;
+    friend class AdapterProxy;
+    friend class Communicator;
+    friend class ServantProxy;
+    friend class ServantProxyThreadData;
 protected:
     /*
      * 通信器
@@ -255,42 +339,73 @@ protected:
     Communicator *         _communicator;
 
     /**
-     * notify
+     * 是否第一个网络线程
      */
-    FDInfo*                 _notify[MAX_CLIENT_NOTIFYEVENT_NUM];
-
-    /*
-     * terminate thread
-     */
-    bool                   _terminate;
+    bool 				    _isFirst = false;
 
     /**
-     * terminate fd info
+     * 是否公有的网络线程
      */
-    FDInfo                 _terminateFDInfo;
+    bool 				   _public = false;
 
-	/*
+    /**
+     * notify
+     */
+    FDInfo*                _notify[MAX_CLIENT_NOTIFYEVENT_NUM];
+
+    /**
+     * schedule
+     */
+    shared_ptr<TC_CoroutineScheduler>  _scheduler;
+
+    /**
+     * 独立的网络线程存在, 线程私有数据
+     */ 
+    ServantProxyThreadData *_pSptd = NULL;
+    
+    /*
      * epoll
      */
-    TC_Epoller             _ep;
+    TC_Epoller *_epoller = NULL;
+
+    /**
+     * lock
+     */
+    TC_ThreadRecMutex              _objectMutex;
+
+	/**
+	 * 保存已创建的objectproxy
+	 */
+    unordered_map<string, ObjectProxy*>    _objectProxys;
+
+    /**
+     * _vObjectProxys读写锁
+     */
+	TC_ThreadRWLocker              	_vObjectMutex;
+
+    /**
+     * 保存已经创建的obj 取的时候可以不用加锁
+     */
+    vector<ObjectProxy *>       	_vObjectProxys;
+
+    /**
+     * 读写锁
+     */
+	TC_ThreadRWLocker              	_servantMutex;
+
+    /**
+     * servant对应的objectProxy
+     */
+    unordered_map<ServantProxy*, ObjectProxy*>  _servantObjectProxy;
 
     /*
-     * 下次检查超时的时间
+     *保存已经创建obj的数量
      */
-    int64_t                _nextTime;
-
-    /*
-     * 下次上报数据的时间
-     */
-    int64_t                _nextStatTime;
-
-    /*
-     * ObjectProxy的工厂类
-     */
-    ObjectProxyFactory *   _objectProxyFactory;
+    size_t                      _objNum = 0;
 
     /*
      * 网络线程的id号
+     * 私有网络线程: ServantProxyThreadData::_reqQNo, 从0开始计数
      */
     size_t                 _netThreadSeq;
 
@@ -305,9 +420,29 @@ protected:
     int64_t                _timeoutCheckInterval;
 
     /**
-     * auto reconnect Transceiver
+     * auto reconnect TC_Transceiver
      */
-    map<int64_t, Transceiver*> _reconnect;
+	unordered_map<int64_t, TC_Transceiver*> _reconnect;
+
+	/**
+	 * 统计数据
+	 */
+    TC_LoopQueue<StatReport::MapStatMicMsg*>         _statQueue;
+
+    /**
+     * 网络线程ID
+     */
+    std::thread::id _threadId;
+
+    /**
+     * 定时器的id
+     */
+    vector<int64_t> _timerIds;
+
+	/**
+	 * 锁
+	 */
+	std::mutex             _mutex;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////

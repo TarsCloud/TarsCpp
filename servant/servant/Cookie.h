@@ -41,7 +41,7 @@ public:
         assert(NULL != td);
         if (td)
         {
-            td->_cookie.clear();
+            td->_data._cookie.clear();
         }
     }
 
@@ -53,7 +53,7 @@ public:
         ServantProxyThreadData * td = ServantProxyThreadData::getData();
         assert(NULL != td);
 
-        return td->_cookie;
+        return td->_data._cookie;
     }
 
     /**
@@ -65,7 +65,7 @@ public:
         assert(NULL != td);
         if(td)
         {
-            td->_cookie = cookie;
+            td->_data._cookie = cookie;
         }
     }
 };

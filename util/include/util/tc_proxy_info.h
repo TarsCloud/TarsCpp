@@ -277,4 +277,4 @@ public:
 
 }
 
-#endif //TAF_CPP_PROXYINFO_H
+#endif //TARS_CPP_PROXYINFO_H

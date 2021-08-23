@@ -13,7 +13,7 @@ void TC_HttpAsync::AsyncRequest::initialize(TC_Epoller *epoller, const TC_Endpoi
 {
     _callbackPtr = callbackPtr;
 
-#if TAF_SSL
+#if TARS_SSL
     if(ep.isSSL())
     {
 	    _trans.reset(new TC_SSLTransceiver(epoller, ep));
@@ -47,7 +47,7 @@ shared_ptr<TC_ProxyInfo> TC_HttpAsync::AsyncRequest::onCreateCallback(TC_Transce
 
 std::shared_ptr<TC_OpenSSL> TC_HttpAsync::AsyncRequest::onOpensslCallback(TC_Transceiver* trans)
 {
-#if TAF_SSL
+#if TARS_SSL
 	if(trans->isSSL()) {
 		if (!_pHttpAsync->getCtx()) {
 			_ctx = TC_OpenSSL::newCtx("", "", "", false, "");

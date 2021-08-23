@@ -58,7 +58,7 @@ namespace tars
  * - 调度过程简单的理解就是: 检查是否有需要执行的协程, 有则执行之, 没有则等待在epoll对象上, 直到有唤醒或者超时
  * - 调度器底层使用tc_epoller来完成协程的切换, 等待和阻塞等操作, 可以和网络IO无缝粘合, 因此可以通过TC_CoroutineScheduler对象拿到TC_Epoller指针, 并用于网络IO上
  * - 由于网络IO也是用相同的epoller对象, 因此可以做到当有数据发送/接受时, 唤醒epoll对象, 从而完成协程的切换
- * - 协程启动通过: createCoroutine 函数来完成
+ * - 协程启动通过: go 函数来完成
  * - 协程在运行中, 主要使用三个函数来完成, 调度控制: yield/sleep/put
  *
  * TC_Coroutine详细说明:
@@ -384,7 +384,7 @@ public:
     /**
      * 创建协程
      */
-    uint32_t createCoroutine(const std::function<void ()> &callback);
+    uint32_t go(const std::function<void ()> &callback);
 
     /**
      * 通知循环醒过来
@@ -706,7 +706,7 @@ public:
      * 创建协程，在已经创建的协程中使用
      * 返回值为协程的id，大于0，表示成功，，小于等于0，表示失败
      */
-    uint32_t createCoroutine(const std::function<void ()> &coroFunc);
+    uint32_t go(const std::function<void ()> &coroFunc);
 
     /**
      * 当前协程自己放弃执行,会自动被调度器唤醒

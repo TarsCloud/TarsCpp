@@ -26,10 +26,10 @@
 #include "util/tc_epoll_server.h"
 #include "servant/Servant.h"
 #include "servant/StatReport.h"
-#include "servant/CoroutineScheduler.h"
-#ifdef TARS_OPENTRACKING
-#include "opentracing/span.h"
-#endif
+
+// #ifdef TARS_OPENTRACKING
+// #include "opentracing/span.h"
+// #endif
 
 namespace tars
 {
@@ -60,33 +60,11 @@ public:
      */
     ~ServantHandle();
 
-	/**
-	 * 线程处理方法
-	 */
-	virtual void run();
-
     /**
-     * 获取协程调度器
+     * get Application
+     * @return
      */
-    CoroutineScheduler* getCoroSched() { return _coroSched; }
-
-	/**
-	 * get Application
-	 * @return
-	*/
 	Application *getApplication() { return _application; }
-
-protected:
-
-    /**
-     * 处理接收请求的协程函数
-     */
-    virtual void handleRequest();
-
-    /**
-     * 处理请求的协程函数
-     */
-    virtual void handleRecvData(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
 protected:
     /**
@@ -118,7 +96,6 @@ protected:
      */
     virtual void handleClose(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
-
 	/**
 	 * handleFilter拆分的第一部分，处理异步调用队列
 	 */
@@ -146,7 +123,6 @@ protected:
      * @param stRecvData
      * @return Current*
      */
-//    CurrentPtr createCurrent(const TC_EpollServer::RecvContext &stRecvData);
 	CurrentPtr createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data);
 
 	/**
@@ -161,33 +137,40 @@ protected:
      *
      * @param current
      */
-    void handleTarsProtocol(const TarsCurrentPtr &current);
+    void handleTarsProtocol(const CurrentPtr &current);
 
     /**
      * 处理非Tars协议
      *
      * @param current
      */
-    void handleNoTarsProtocol(const TarsCurrentPtr &current);
+    void handleNoTarsProtocol(const CurrentPtr &current);
 
 
-#ifdef TARS_OPENTRACKING
-    /**
-     * 处理TARS下的调用链逻辑
-     *
-     * @param current
-     */
-    void processTracking(const TarsCurrentPtr &current);
+// #ifdef TARS_OPENTRACKING
+//     /**
+//      * 处理TARS下的调用链逻辑
+//      *
+//      * @param current
+//      */
+//     void processTracking(const CurrentPtr &current);
 
 
-    void finishTracking(int ret, const TarsCurrentPtr &current);
-#endif
+//     void finishTracking(int ret, const CurrentPtr &current);
+// #endif
     /**
      * 处理TARS下的染色逻辑
      *
      * @param current
      */
     bool processDye(const CurrentPtr &current, string& dyeingKey);
+
+    /**
+     * 处理TARS下的调用链追踪
+     *
+     * @param current
+     */
+    bool processTrace(const CurrentPtr &current);
 
     /**
      * 处理cookie
@@ -213,14 +196,9 @@ protected:
     unordered_map<string, ServantPtr> _servants;
 
 
-    /**
-     * 协程调度器
-     */
-    CoroutineScheduler     *_coroSched;
-
-#ifdef TARS_OPENTRACKING
-    map<int,std::unique_ptr<opentracing::Span>> _spanMap;
-#endif
+// #ifdef TARS_OPENTRACKING
+//     map<int,std::unique_ptr<opentracing::Span>> _spanMap;
+// #endif
 };
 
 typedef TC_AutoPtr<ServantHandle> ServantHandlePtr;

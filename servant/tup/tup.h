@@ -399,17 +399,6 @@ public:
     void encode(string& buff)
     {
         encodeBuff<string>(buff);
-
-        // TarsOutputStream<TWriter> &os = UniAttribute<TWriter, TReader,Alloc>::os;
-
-        // os.reset();
-        
-        // doEncode(os);
-
-        // tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
-        // buff.assign((const char*)&iHeaderLen, sizeof(tars::Int32));
-
-        // buff.append(os.getBuffer(), os.getLength());
     }
 
     /**
@@ -421,18 +410,6 @@ public:
     void encode(vector<char>& buff)
     {
         encodeBuff<vector<char>>(buff);
-        // TarsOutputStream<TWriter> & os = UniAttribute<TWriter, TReader,Alloc>::os;
-
-        // os.reset();
-
-        // doEncode(os);
-
-        // tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
-
-        // buff.resize(sizeof(tars::Int32) + os.getLength());
-        // memcpy(&buff[0], &iHeaderLen, sizeof(tars::Int32));
-        // memcpy(&buff[sizeof(tars::Int32)], os.getBuffer(), os.getLength());
-
     }
 
     /**
@@ -460,20 +437,6 @@ public:
         memcpy(buff + sizeof(tars::Int32), os.getBuffer(), os.getLength());
 
         len = sizeof(tars::Int32) + os.getLength();
-
-        // TarsOutputStream<TWriter> &os = UniAttribute<TWriter, TReader,Alloc>::os;
-
-        // os.reset();
-
-        // doEncode(os);
-
-        // tars::Int32 iHeaderLen = htonl(sizeof(tars::Int32) + os.getLength());
-        // if(len < sizeof(tars::Int32) + os.getLength()) throw runtime_error("encode error, buffer length too short");
-
-        // memcpy(buff, &iHeaderLen, sizeof(tars::Int32));
-        // memcpy(buff + sizeof(tars::Int32), os.getBuffer(), os.getLength());
-
-        // len = sizeof(tars::Int32) + os.getLength();
     }
 
     /** 解码
@@ -588,26 +551,6 @@ protected:
 
         os.reset();
     }
-
-    // /**
-    //  * 内部编码
-    //  */
-    // void doEncode(TarsOutputStream<TWriter>& os)
-    // {
-    //     //ServantName、FuncName不能为空
-    //     if(sServantName.empty()) throw runtime_error("ServantName must not be empty");
-    //     if(sFuncName.empty())    throw runtime_error("FuncName must not be empty");
-
-    //     os.reset();
-
-    //     os.write(UniAttribute<TWriter, TReader,Alloc>::_data, 0);
-	
-    //     sBuffer.assign(os.getBuffer(), os.getBuffer() + os.getLength());
-
-    //     os.reset();
-
-    //     writeTo(os);
-    // }
 };
 
 /////////////////////////////////////////////////////////////////////////////////

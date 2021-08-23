@@ -16,30 +16,29 @@
 
 #include "servant/EndpointInfo.h"
 #include "servant/RemoteLogger.h"
-#include "servant/NetworkUtil.h"
+//#include "servant/NetworkUtil.h"
 #include "util/tc_socket.h"
 
 namespace tars
 {
+
 EndpointInfo::EndpointInfo()
 {
     _setDivision.clear();
-
-	memset(&_addr,0,sizeof(_addr));
-
+	// memset(&_addr,0,sizeof(_addr));
 }
 
 EndpointInfo::EndpointInfo(const TC_Endpoint &ep, const string &setDivision)
 : _ep(ep)
 , _setDivision(setDivision)
-, _addressSucc(false)
+// , _addressSucc(false)
 {
 	_cmpDesc = createCompareDesc();
 	_desc = createDesc();
 }
 
 EndpointInfo::EndpointInfo(const EndpointF &ep)
-: _setDivision(ep.setId), _addressSucc(false)
+: _setDivision(ep.setId)
 {
 	_ep.setHost(ep.host);
 	_ep.setPort(ep.port);
@@ -49,22 +48,14 @@ EndpointInfo::EndpointInfo(const EndpointF &ep)
 	_ep.setQos(ep.qos);
 	_ep.setWeight(ep.weight);
 	_ep.setWeightType(ep.weightType);
-	_ep.setAuthType(ep.authType);
+
+	_ep.setAuthType((TC_Endpoint::AUTH_TYPE)ep.authType);
+
 	_cmpDesc = createCompareDesc();
 	_desc = createDesc();
+
 }
 
-void EndpointInfo::parseConnectAddress()
-{
-    if (isConnectIPv6())
-    {
-        TC_Socket::parseAddrWithPort(getConnectEndpoint()->getHost(), getConnectEndpoint()->getPort(), _addr.in6);
-    }
-    else
-    {
-        TC_Socket::parseAddrWithPort(getConnectEndpoint()->getHost(), getConnectEndpoint()->getPort(), _addr.in);
-    }
-}
 
 string EndpointInfo::createCompareDesc()
 {
@@ -74,54 +65,5 @@ string EndpointInfo::createCompareDesc()
 	return ss.str();
 }
 
-string EndpointInfo::createDesc() const
-{
-	return _ep.toString();
-}
-
-bool EndpointInfo::operator == (const EndpointInfo& r) const
-{
-    return (_cmpDesc == r._cmpDesc);
-}
-
-bool EndpointInfo::operator < (const EndpointInfo& r) const
-{
-    return (_cmpDesc < r._cmpDesc);
-}
-
-const string &EndpointInfo::host() const
-{
-    return _ep.getHost();
-}
-
-int32_t EndpointInfo::grid() const
-{
-    return _ep.getGrid();
-}
-
-uint16_t EndpointInfo::port() const
-{
-    return _ep.getPort();
-}
-
-bool EndpointInfo::isTcp() const
-{
-	return _ep.isTcp();
-}
-
-//const struct sockaddr_in& EndpointInfo::addr() const
-//{
-//    return _addr.in;
-//}
-
-const struct sockaddr * EndpointInfo::connectAddrPtr() const
-{
-	return getConnectEndpoint()->isIPv6() ? (struct sockaddr *)&_addr.in6 : (struct sockaddr *)&_addr.in;
-}
-
-const string& EndpointInfo::setDivision() const
-{
-    return _setDivision;
-}
 ///////////////////////////////////////////////////////////
 }

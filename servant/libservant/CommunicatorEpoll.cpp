@@ -18,453 +18,477 @@
 #include "servant/Communicator.h"
 #include "servant/Application.h"
 #include "servant/RemoteLogger.h"
-#include "servant/StatReport.h"
+#include "servant/ObjectProxy.h"
+#include "servant/EndpointManager.h"
 
 using namespace std;
 
 namespace tars
 {
 
-CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThreadSeq)
+#define MAX_STAT_QUEUE_SIZE 100000 //上报队列缓存大小
+
+CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThreadSeq, bool isFirst)
 : _communicator(pCommunicator)
-, _terminate(false)
-, _nextTime(0)
-, _nextStatTime(0)
-, _objectProxyFactory(NULL)
+, _isFirst(isFirst)
 , _netThreadSeq(netThreadSeq)
 , _noSendQueueLimit(1000)
 , _timeoutCheckInterval(100)
+, _statQueue(MAX_STAT_QUEUE_SIZE)
+
 {
-    _ep.create(1024);
-
-    _terminateFDInfo.notify.init(&_ep);
-    _terminateFDInfo.iType = FDInfo::ET_C_TERMINATE;
-    _terminateFDInfo.notify.add((uint64_t)&_terminateFDInfo);
-
-    //ObjectProxyFactory 对象
-    _objectProxyFactory = new ObjectProxyFactory(this);
+//	LOG_CONSOLE_DEBUG << endl;
 
     //节点队列未发送请求的大小限制
-    _noSendQueueLimit = TC_Common::strto<size_t>(pCommunicator->getProperty("nosendqueuelimit", "100000"));
+    _noSendQueueLimit = TC_Common::strto<size_t>(pCommunicator->getProperty("sendqueuelimit", pCommunicator->getProperty("nosendqueuelimit", "100000")));
     if(_noSendQueueLimit < 1000)
     {
         _noSendQueueLimit = 1000;
     }
 
     //检查超时请求的时间间隔，单位:ms
-    _timeoutCheckInterval = TC_Common::strto<int64_t>(pCommunicator->getProperty("timeoutcheckinterval", "100"));
+    _timeoutCheckInterval = TC_Common::strto<int64_t>(pCommunicator->getProperty("timeoutcheckinterval", "1000"));
     if(_timeoutCheckInterval < 1)
     {
-        _timeoutCheckInterval = 1;
+        _timeoutCheckInterval = 5;
     }
 
 	for(size_t i = 0;i < MAX_CLIENT_NOTIFYEVENT_NUM;++i)
 	{
 		_notify[i] = NULL;
 	}
-
 }
 
 CommunicatorEpoll::~CommunicatorEpoll()
 {
-    for(size_t i = 0;i < MAX_CLIENT_NOTIFYEVENT_NUM;++i)
+//     LOG_CONSOLE_DEBUG << endl;
+}
+
+void CommunicatorEpoll::handleServantThreadQuit(uint16_t iSeq)
+{
+	assert(_threadId == this_thread::get_id());
+
+	//在网络线程中处理的!
+    if(_notify[iSeq])
+	{
+        _notify[iSeq]->autoDestroy = true;
+
+        //通知网络线程, 网络线程好析构notify对象
+		notify(iSeq);
+
+        _notify[iSeq] = NULL;
+	}
+}
+
+void CommunicatorEpoll::notifyServantThreadQuit(uint16_t iSeq)
+{
+
+	if(_scheduler)
+	{
+		//CommunicatorEpoll还没有退出!
+		if (_threadId == this_thread::get_id())
+		{
+			//同一个线程里面结束, 直接释放相关资源即可
+			CommunicatorEpoll::handleServantThreadQuit(iSeq);
+		}
+		else
+		{
+            //等待数据都发送出去, 避免业务线程退出以后, 还有数据没有发送出去, 这里处理不够优雅!
+            {
+                std::lock_guard<std::mutex> lock(_mutex);
+
+                //再做一次判断
+                if (_scheduler)
+                {
+                    //通知网络线程去释放资源!
+                    _epoller->asyncCallback(std::bind(&CommunicatorEpoll::handleServantThreadQuit, this, iSeq));
+                }
+            }
+		}
+	}
+}
+
+void CommunicatorEpoll::notifyTerminate()
+{
+    if (_scheduler)
     {
-        if(_notify[i])
+        if(_threadId == this_thread::get_id())
         {
-            delete _notify[i];
+            //同一个线程里面结束, 直接释放相关资源即可
+            CommunicatorEpoll::handleTerminate();
         }
-        _notify[i] = NULL;
+        else
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+
+            if (_scheduler)
+            {
+                //通知网络线程去释放资源!
+                _epoller->syncCallback(std::bind(&CommunicatorEpoll::handleTerminate, this), 1000);
+
+                // if (_scheduler)
+                // {
+                //     _epoller->syncCallback(std::bind(&CommunicatorEpoll::handleTerminate, this), 1000);
+                //     LOG_CONSOLE_DEBUG << _scheduler.get() << endl;
+                // }
+            }
+        }
     }
-	
-    if(_objectProxyFactory)
+}
+
+void CommunicatorEpoll::handleTerminate()
+{
+	assert(_threadId == this_thread::get_id());
+
+    if (_scheduler)
     {
-        delete _objectProxyFactory;
-        _objectProxyFactory = NULL;
+        for (size_t i = 0; i < MAX_CLIENT_NOTIFYEVENT_NUM; ++i)
+        {
+            if (_notify[i])
+            {
+                delete _notify[i];
+            }
+            _notify[i] = NULL;
+        }
+
+        for (size_t i = 0; i < _vObjectProxys.size(); i++)
+        {
+            if (_vObjectProxys[i])
+            {
+                delete _vObjectProxys[i];
+                _vObjectProxys[i] = NULL;
+            }
+        }
+
+        _vObjectProxys.clear();
+
+        //这里是否还是有临界情况!!??
+        if(_epoller)
+        {
+            //定时任务都删除掉
+            for_each(_timerIds.begin(), _timerIds.end(), [&](int64_t id)
+                    { _epoller->erase(id); });
+        }
+
+        _timerIds.clear();
+
+        //独立启动的才需要释放协程调度器, 复用其他协程是不能停止调度器的!
+        if(!this->isSchedCommunicatorEpoll())
+        {
+            _scheduler->terminate();
+
+            assert(_pSptd);
+
+            _pSptd->_sched.reset();
+
+            ServantProxyThreadData::g_sp.reset();
+        }
+
+        _scheduler.reset();
+
+        StatReport::MapStatMicMsg *pmStatMicMsg = NULL;
+
+        while (_statQueue.pop_front(pmStatMicMsg))
+        {
+            assert(pmStatMicMsg != NULL);
+            delete pmStatMicMsg;
+            pmStatMicMsg = NULL;
+        }
     }
 }
 
 void CommunicatorEpoll::terminate()
 {
-    _terminate = true;
-
-	//通知epoll响应
-    _terminateFDInfo.notify.notify();
+    //通知网络线程退出, 不再执行任何操作
+	notifyTerminate();
 }
 
-void CommunicatorEpoll::notifyUpdateEndpoints(const ServantPrx &prx, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
+void CommunicatorEpoll::notifyUpdateEndpoints(ServantProxy *servantProxy, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
 {
-	FDInfo *nfd = new FDInfo();
+    CommunicatorEpoll *ce = this;
 
-	UpdateListInfo *p = new UpdateListInfo();
-	p->prx      = prx;
-	p->active   = active;
-	p->inactive = inactive;
-	nfd->p      = p;
-
-	nfd->notify.init(&_ep);
-	nfd->iType = FDInfo::ET_C_UPDATE_LIST;
-	nfd->notify.add((uint64_t)nfd);
+    _epoller->asyncCallback([=]()
+                            { servantProxy->onNotifyEndpoints(ce, active, inactive); });
 }
 
-ObjectProxy * CommunicatorEpoll::getObjectProxy(const string & sObjectProxyName,const string& setName)
+int CommunicatorEpoll::loadObjectLocator()
 {
-    return _objectProxyFactory->getObjectProxy(sObjectProxyName,setName);
+	assert(_threadId == this_thread::get_id());
+
+    for (size_t i = 0; i < _objNum; i++)
+    {
+        _vObjectProxys[i]->loadLocator();
+    }
+    return 0;
 }
 
-int CommunicatorEpoll::addFd(int fd,FDInfo * info, uint32_t events)
+ObjectProxy* CommunicatorEpoll::servantToObjectProxy(ServantProxy *servantProxy)
 {
-    return _ep.add(fd, (uint64_t)info, events);
+	TC_ThreadRLock lock(_servantMutex);
+
+	auto it = _servantObjectProxy.find(servantProxy);
+    if( it != _servantObjectProxy.end())
+    {
+        //当前线程(CommunicatorEpoll)还没有创建出对应的ObjectProxy
+        return it->second;
+    }
+
+//    assert(false);
+
+    return NULL;
 }
 
-int CommunicatorEpoll::modFd(int fd,FDInfo * info, uint32_t events)
+ObjectProxy * CommunicatorEpoll::hasObjectProxy(const string & sObjectProxyName,const string& setName)
 {
-    return _ep.mod(fd, (uint64_t)info, events);
+	TC_LockT<TC_ThreadRecMutex> lock(_objectMutex);
+
+	string tmpObjName = sObjectProxyName + "!" + setName;
+	auto it = _objectProxys.find(tmpObjName);
+	if(it != _objectProxys.end())
+	{
+		return it->second;
+	}
+
+	return NULL;
 }
 
-int CommunicatorEpoll::delFd(int fd,FDInfo * info, uint32_t events)
+ObjectProxy * CommunicatorEpoll::createObjectProxy(ServantProxy *servantProxy, const string & sObjectProxyName, const string& setName)
 {
-    return _ep.del(fd, (uint64_t)info, events);
+	ObjectProxy * pObjectProxy;
+	string tmpObjName = sObjectProxyName + "!" + setName;
+	{
+		TC_LockT<TC_ThreadRecMutex> lock(_objectMutex);
+
+		auto it = _objectProxys.find(tmpObjName);
+		if (it != _objectProxys.end())
+		{
+			return it->second;
+		}
+
+	    pObjectProxy = new ObjectProxy(this, servantProxy, sObjectProxyName, setName);
+
+		_objectProxys[tmpObjName] = pObjectProxy;
+
+	}
+
+	{
+		TC_ThreadWLock lock(_vObjectMutex);
+
+		_vObjectProxys.push_back(pObjectProxy);
+
+		_objNum++;
+	}
+
+	{
+		TC_ThreadWLock lock(_servantMutex);
+
+		_servantObjectProxy[servantProxy] = pObjectProxy;
+	}
+
+	return pObjectProxy;
 }
 
-//业务线程调用, 通知对应的网络线程醒过来
-//iSeq业务线程号
-void CommunicatorEpoll::notify(size_t iSeq, ReqInfoQueue * msgQueue)
+void CommunicatorEpoll::addFd(AdapterProxy* adapterProxy)
 {
-    assert(iSeq < MAX_CLIENT_NOTIFYEVENT_NUM);
+    shared_ptr<TC_Epoller::EpollInfo> epollInfo = adapterProxy->trans()->getEpollInfo();
 
-    if(_notify[iSeq] == NULL)
+    epollInfo->cookie(adapterProxy);
+
+	map<uint32_t, TC_Epoller::EpollInfo::EVENT_CALLBACK> callbacks;
+
+	callbacks[EPOLLIN] = std::bind(&CommunicatorEpoll::handleInputImp, this, std::placeholders::_1);
+	callbacks[EPOLLOUT] = std::bind(&CommunicatorEpoll::handleOutputImp, this, std::placeholders::_1);
+	callbacks[EPOLLERR] = std::bind(&CommunicatorEpoll::handleCloseImp, this, std::placeholders::_1);
+
+	epollInfo->registerCallback(callbacks, EPOLLIN|EPOLLOUT);
+}
+
+void CommunicatorEpoll::notify(size_t iSeq)
+{
+	assert(_notify[iSeq] != NULL);
+
+    // LOG_CONSOLE_DEBUG << "iSeq:" << iSeq << ", epollInfo:" << _notify[iSeq]->notify.getEpollInfo() << ", ce:" << this << endl;
+
+    _notify[iSeq]->notify.getEpollInfo()->mod(EPOLLOUT);
+}
+
+void CommunicatorEpoll::initNotify(size_t iSeq, const shared_ptr<ReqInfoQueue> &msgQueue)
+{
+	// if(_notify[iSeq] != NULL)
+	// {
+    //     LOG_CONSOLE_DEBUG << "iSeq:" << iSeq << ", " << msgQueue.get() << ", " << _notify[iSeq]->msgQueue.get() << endl;
+    // }
+    // assert(_notify[iSeq] == NULL);
+
+    if (_notify[iSeq] == NULL)
     {
         _notify[iSeq] = new FDInfo();
-        _notify[iSeq]->iType = FDInfo::ET_C_NOTIFY;
-        _notify[iSeq]->p     =(void*)msgQueue;
-        _notify[iSeq]->iSeq  = iSeq;
-        _notify[iSeq]->notify.init(&_ep);
-        _notify[iSeq]->notify.add((uint64_t)_notify[iSeq]);
+        _notify[iSeq]->msgQueue = msgQueue;
+        _notify[iSeq]->iSeq     = iSeq;
+
+        _notify[iSeq]->notify.init(_epoller);
+
+        _notify[iSeq]->notify.getEpollInfo()->cookie((void*)_notify[iSeq]);
+
+        map<uint32_t, TC_Epoller::EpollInfo::EVENT_CALLBACK> callbacks;
+
+        callbacks[EPOLLOUT] = std::bind(&CommunicatorEpoll::handleNotify, this, std::placeholders::_1);
+
+        _notify[iSeq]->notify.getEpollInfo()->registerCallback(callbacks, EPOLLIN | EPOLLOUT);
     }
     else
     {
-        _notify[iSeq]->notify.notify();
+        _notify[iSeq]->msgQueue = msgQueue;
     }
 }
 
-void CommunicatorEpoll::notifyDel(size_t iSeq)
+bool CommunicatorEpoll::handleCloseImp(const shared_ptr<TC_Epoller::EpollInfo> &data)
 {
-    assert(iSeq < MAX_CLIENT_NOTIFYEVENT_NUM);
-    if(_notify[iSeq] && NULL != _notify[iSeq]->p)
+	assert(_threadId == this_thread::get_id());
+
+	AdapterProxy* adapterProxy = (AdapterProxy*)data->cookie();
+
+    adapterProxy->trans()->close();
+
+    return false;
+}
+
+bool CommunicatorEpoll::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> &data)
+{
+	assert(_threadId == this_thread::get_id());
+
+	AdapterProxy* adapterProxy = (AdapterProxy*)data->cookie();
+
+    try
     {
-        _notify[iSeq]->notify.notify();
+        adapterProxy->trans()->doResponse();
+    }
+    catch(const std::exception& e)
+    {
+//		LOG_CONSOLE_DEBUG << "[CommunicatorEpoll::handleInputImp] error:" << e.what() << endl;
+        TLOGTARS("[CommunicatorEpoll::handleInputImp] error:" << e.what() << endl);
+        adapterProxy->addConnExc(true);
+        return false;
+    }
+   
+    
+    return true;
+}
+
+bool CommunicatorEpoll::handleOutputImp(const shared_ptr<TC_Epoller::EpollInfo> &data)
+{
+	assert(_threadId == this_thread::get_id());
+
+//	LOG_CONSOLE_DEBUG << endl;
+
+    AdapterProxy* adapterProxy = (AdapterProxy*)data->cookie();
+
+    try
+    {
+        adapterProxy->trans()->doRequest();
+    }
+    catch(const std::exception& e)
+    {
+//		LOG_CONSOLE_DEBUG << "[CommunicatorEpoll::handleOutputImp] error:" << e.what() << endl;
+
+		TLOGTARS("[CommunicatorEpoll::handleOutputImp] error:" << e.what() << endl);
+        adapterProxy->addConnExc(true);
+        return false;
+    }
+    
+    return true;
+}
+
+void CommunicatorEpoll::report(StatReport::MapStatMicMsg *pmStatMicMsg)
+{
+    bool bFlag = _statQueue.push_back(pmStatMicMsg);
+    if(!bFlag)
+    {
+        delete pmStatMicMsg;
+        pmStatMicMsg = NULL;
+
+        TLOGERROR("[StatReport::report: queue full]" << endl);
     }
 }
 
-
-void CommunicatorEpoll::handleInputImp(Transceiver * pTransceiver)
+bool CommunicatorEpoll::popStatMsg(StatReport::MapStatMicMsg* &mStatMsg)
 {
-    //检查连接是否有错误
-    if(pTransceiver->isConnecting())
-    {
-        int iVal = 0;
-        SOCKET_LEN_TYPE iLen = static_cast<SOCKET_LEN_TYPE>(sizeof(int));
-        if (::getsockopt(pTransceiver->fd(), SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&iVal), &iLen) == -1 || iVal)
-        {
-            pTransceiver->close();
-            pTransceiver->getAdapterProxy()->addConnExc(true);
-            TLOGERROR("[CommunicatorEpoll::handleInputImp] connect error "
-                    << pTransceiver->getEndpointInfo().getConnectEndpoint()->toString()
-                    << "," << pTransceiver->getAdapterProxy()->getObjProxy()->name()
-                    << ",_connExcCnt=" << pTransceiver->getAdapterProxy()->ConnExcCnt()
-                    << "," << strerror(iVal) << endl);
-            return;
-        }
-
-        pTransceiver->setConnected();
-    }
-
-	pTransceiver->doResponse();
-}
-
-void CommunicatorEpoll::handleOutputImp(Transceiver * pTransceiver)
-{
-    //检查连接是否有错误
-    if(pTransceiver->isConnecting())
-    {
-	    int iVal = 0;
-	    SOCKET_LEN_TYPE iLen = static_cast<SOCKET_LEN_TYPE>(sizeof(int));
-	    if (::getsockopt(pTransceiver->fd(), SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&iVal), &iLen) == -1 || iVal)
-	    {
-		    pTransceiver->close();
-		    pTransceiver->getAdapterProxy()->addConnExc(true);
-		    TLOGERROR("[CommunicatorEpoll::handleOutputImp] connect error "
-			              << pTransceiver->getEndpointInfo().getConnectEndpoint()->toString()
-			              << "," << pTransceiver->getAdapterProxy()->getObjProxy()->name()
-			              << ",_connExcCnt=" << pTransceiver->getAdapterProxy()->ConnExcCnt()
-			              << "," << strerror(iVal) << endl);
-		    return;
-	    }
-
-        pTransceiver->setConnected();
-    }
-
-    pTransceiver->doRequest();
-}
-
-void CommunicatorEpoll::handle(FDInfo * pFDInfo, const epoll_event &ev)
-{
-	try
-    {
-        assert(pFDInfo != NULL);
-
-        if(FDInfo::ET_C_TERMINATE == pFDInfo->iType)
-        {
-	        //结束通知过来
-            return;
-        }
-        else if(FDInfo::ET_C_UPDATE_LIST == pFDInfo->iType)
-        {
-	        UpdateListInfo *p = (UpdateListInfo*)pFDInfo->p;
-
-	        assert(p && p->prx);
-
-		    p->prx->onNotifyEndpoints(_netThreadSeq, p->active, p->inactive, false);
-
-	        pFDInfo->notify.release();
-
-	        delete p;
-	        delete pFDInfo;
-
-	        return;
-        }
-        else if(FDInfo::ET_C_NOTIFY == pFDInfo->iType)
-        {
-            //队列有消息通知过来
-            ReqInfoQueue * pInfoQueue=(ReqInfoQueue*)pFDInfo->p;
-            ReqMessage * msg = NULL;
-
-	        size_t maxProcessCount = 0;
-
-            try
-            {
-                while(pInfoQueue->pop_front(msg))
-                {
-                    //线程退出了
-                    if(ReqMessage::THREAD_EXIT == msg->eType)
-                    {
-                        assert(pInfoQueue->empty());
-
-						size_t iSeq = pFDInfo->iSeq;
-
-						_notify[iSeq]->notify.release();
-
-                        _notify[iSeq]->p = NULL;
-
-                        delete _notify[iSeq];
-
-                        _notify[iSeq] = NULL;
-
-						//delete msg
-						delete msg;
-
-						//delete queue
-						delete pInfoQueue;
-
-                        return;
-                    }
-
-                    try
-                    {
-	                    msg->pObjectProxy->invoke(msg);
-                    }
-                    catch(exception & e)
-                    {
-                        TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
-                    }
-                    catch(...)
-                    {
-                        TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
-                    }
-
-                    if(++maxProcessCount > 1000)
-                    {
-                        //避免包太多的时候, 循环占用网路线程, 导致连接都建立不上, 一个包都无法发送出去
-                        pFDInfo->notify.notify();
-                        break;
-                    }
-                }
-            }
-            catch(exception & e)
-            {
-                TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
-            }
-            catch(...)
-            {
-                TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
-            }
-        }
-        else
-        {
-            Transceiver *pTransceiver = (Transceiver*)pFDInfo->p;
-
-	        //连接出错 直接关闭连接
-	        if(TC_Epoller::errorEvent(ev))
-	        {
-		        try
-		        {
-			        pTransceiver->close();
-		        }
-		        catch(exception & e)
-		        {
-			        TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
-		        }
-		        catch(...)
-		        {
-			        TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
-		        }
-		        return;
-	        }
-
-	        //先收包
-            if(TC_Epoller::readEvent(ev))
-            {
-                try
-                {
-                    handleInputImp(pTransceiver);
-                }
-                catch(exception & e)
-                {
-                    TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
-                }
-                catch(...)
-                {
-                    TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
-                }
-            }
-
-            //发包
-            if(TC_Epoller::writeEvent(ev))
-            {
-                try
-                {
-                    handleOutputImp(pTransceiver);
-                }
-                catch(exception & e)
-                {
-                    TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
-                }
-                catch(...)
-                {
-                    TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
-                }
-            }
-
-        }
-    }
-    catch(exception & e)
-    {
-        TLOGERROR("CommunicatorEpoll::handle exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
-    }
-    catch(...)
-    {
-        TLOGERROR("CommunicatorEpoll::handle|"<<__LINE__<<endl);
-    }
+    return _statQueue.pop_front(mStatMsg);
 }
 
 void CommunicatorEpoll::doTimeout()
 {
-    int64_t iNow = TNOWMS;
-    if(_nextTime > iNow)
-    {
-        return;
-    }
+	assert(_threadId == this_thread::get_id());
 
-    //每_timeoutCheckInterval检查一次
-    _nextTime = iNow + _timeoutCheckInterval;
-
-    for(size_t i = 0; i < _objectProxyFactory->getObjNum(); ++i)
+	for(size_t i = 0; i < getObjNum(); ++i)
     {
-        _objectProxyFactory->getObjectProxy(i)->doTimeout();
+        getObjectProxy(i)->doTimeout();
     }
 }
 
 void CommunicatorEpoll::doStat()
 {
-    int64_t iNow = TNOW;
-    if(_nextStatTime > iNow)
-        return;
+	assert(_threadId == this_thread::get_id());
 
-    //10s上报一次
-    _nextStatTime = iNow + 10;
-
-	if(isFirstNetThread()) {
-        _communicator->doStat();
-    }
-
-    StatReport::MapStatMicMsg mStatMicMsg;
-
-    for(size_t i = 0;i < _objectProxyFactory->getObjNum(); ++i)
     {
-        _objectProxyFactory->getObjectProxy(i)->mergeStat(mStatMicMsg);
-    }
+        if(isFirstNetThread()) {
+            _communicator->doStat();
+        }
 
-    //有数据才上报
-    if(!mStatMicMsg.empty())
-    {
-        StatReport::MapStatMicMsg* pmStatMicMsg = new StatReport::MapStatMicMsg(mStatMicMsg);
-        _communicator->getStatReport()->report(_netThreadSeq,pmStatMicMsg);
-    }
-}
+        StatReport::MapStatMicMsg* pmStatMicMsg = new StatReport::MapStatMicMsg();//(mStatMicMsg);
 
-void CommunicatorEpoll::pushAsyncThreadQueue(ReqMessage * msg)
-{
-    _communicator->pushAsyncThreadQueue(msg);
-}
-
-void CommunicatorEpoll::reConnect(int64_t ms, Transceiver*p)
-{
-    //如果节点已经存在，则不重复加入
-    for ( auto & item : _reconnect)
-    {
-        if (item.second == p)
+        for(size_t i = 0;i < getObjNum(); ++i)
         {
-            return;
+            getObjectProxy(i)->mergeStat(*pmStatMicMsg);
+        }
+
+        //有数据才上报
+        if(!pmStatMicMsg->empty())
+        {
+            report(pmStatMicMsg);
+        }
+        else
+        {
+            delete pmStatMicMsg;
+            pmStatMicMsg = NULL;
         }
     }
-	_reconnect[ms] = p;
 }
 
-string CommunicatorEpoll::getResourcesInfo()
+void CommunicatorEpoll::getResourcesInfo(ostringstream &desc)
 {
-	ostringstream desc;
+	assert(_threadId == this_thread::get_id());
+
 	desc << TC_Common::outfill("index") << _netThreadSeq << endl;
-	if(_communicator->_statReport) {
-		desc << TC_Common::outfill("stat size") << _communicator->_statReport->getQueueSize(_netThreadSeq) << endl;
-	}
-	desc << TC_Common::outfill("obj num") << _objectProxyFactory->getObjNum() << endl;
+	desc << TC_Common::outfill("stat size") << getReportSize() << endl;
+	desc << TC_Common::outfill("obj num") << getObjNum() << endl;
 
 	const static string TAB = "    ";
-	for(size_t i = 0; i < _objectProxyFactory->getObjNum(); ++i)
+	for(size_t i = 0; i < getObjNum(); ++i)
 	{
 		desc << TAB << OUT_LINE_TAB(1) << endl;
 
-		desc << TAB << TC_Common::outfill("obj name") << _objectProxyFactory->getObjectProxy(i)->name() << endl;
-		const vector<AdapterProxy*> &adapters = _objectProxyFactory->getObjectProxy(i)->getAdapters();
+		desc << TAB << TC_Common::outfill("obj name") << getObjectProxy(i)->name() << endl;
+		const vector<AdapterProxy*> &adapters = getObjectProxy(i)->getAdapters();
 
 		for(auto adapter : adapters)
 		{
 			desc << TAB << TAB << OUT_LINE_TAB(2) << endl;
 
 			desc << TAB << TAB << TC_Common::outfill("adapter") << adapter->endpoint().getEndpoint().toString() << endl;
-			desc << TAB << TAB << TC_Common::outfill("recv size")  << adapter->trans()->getRecvBuffer()->getBufferLength() << endl;
-			desc << TAB << TAB << TC_Common::outfill("send size")  << adapter->trans()->getSendBuffer()->getBufferLength() << endl;
+			desc << TAB << TAB << TC_Common::outfill("recv size")  << adapter->trans()->getRecvBuffer().getBufferLength() << endl;
+			desc << TAB << TAB << TC_Common::outfill("send size")  << adapter->trans()->getSendBuffer().getBufferLength() << endl;
 		}
 	}
-
-	return desc.str();
 }
 
-void CommunicatorEpoll::reConnect()
+void CommunicatorEpoll::doReconnect()
 {
+	assert(_threadId == this_thread::get_id());
+
 	int64_t iNow = TNOWMS;
 
-    set<Transceiver*> does;
+    set<TC_Transceiver*> does;
 	while(!_reconnect.empty())
 	{
 		auto it = _reconnect.begin();
@@ -473,6 +497,7 @@ void CommunicatorEpoll::reConnect()
 		{
 			return;
 		}
+
         //一次循环同一个节点只尝试一次重试,以避免多次触发close，导致重连的间隔无效
         if (does.find(it->second) != does.end())
         {
@@ -481,57 +506,103 @@ void CommunicatorEpoll::reConnect()
         else
         {
             does.insert(it->second);
-            it->second->reconnect();
+            it->second->connect();
             _reconnect.erase(it++);
         }
 	}
 }
 
-void CommunicatorEpoll::run()
+bool CommunicatorEpoll::handleNotify(const shared_ptr<TC_Epoller::EpollInfo> &data)
 {
-    ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
-    assert(pSptd != NULL);
-    pSptd->_netThreadSeq = (int)_netThreadSeq;
+	assert(_threadId == this_thread::get_id());
 
-    while (!_terminate)
+	// LOG_CONSOLE_DEBUG << endl;
+
+    //队列有消息通知过来
+    FDInfo *pFDInfo = (FDInfo*)data->cookie();
+
+    ReqMessage * msg = NULL;
+
+    size_t maxProcessCount = 0;
+
+    try
     {
-        try
+        while (pFDInfo->msgQueue->pop_front(msg))
         {
-            //考虑到检测超时等的情况 这里就wait100ms吧
-            int num = _ep.wait(100);
+            msg->pObjectProxy->invoke(msg);
 
-			if (_terminate) break;
-
-	        //先处理epoll的网络事件
-            for (int i = 0; i < num; ++i)
+            if(++maxProcessCount > 1000)
             {
-                const epoll_event& ev = _ep.get(i);
+                //避免包太多的时候, 循环占用网路线程, 导致连接都建立不上, 一个包都无法发送出去
+				data->mod(EPOLLOUT);
 
-                uint64_t data = TC_Epoller::getU64(ev);
-
-                if(data == 0) continue; //data非指针, 退出循环
-
-//	            int64_t ms = TNOWMS;
-
-                handle((FDInfo*)data, ev);
+                TLOGTARS("[CommunicatorEpoll::handle max process count: " << maxProcessCount << ", fd:" << data->fd() << "]" << endl);
+                break;
             }
-
-            //处理超时请求
-            doTimeout();
-
-            //数据上报
-            doStat();
-	        reConnect();
         }
-        catch (exception& e)
+
+        if (pFDInfo->msgQueue->empty() && pFDInfo->autoDestroy)
         {
-            TLOGERROR("[CommunicatorEpoll:run exception:" << e.what() << "]" << endl);
-        }
-        catch (...)
-        {
-            TLOGERROR("[CommunicatorEpoll:run exception.]" << endl);
+//			LOG_CONSOLE_DEBUG << "iSeq:" << pFDInfo->iSeq << ", fd:" << pFDInfo->notify.notifyFd() << endl;
+
+            delete pFDInfo;
+            return false;
         }
     }
+    catch(exception & e)
+    {
+        TLOGERROR("[CommunicatorEpoll::handleNotify error: " << e.what() << "]"<<endl);
+    }
+    catch(...)
+    {
+        TLOGERROR("[CommunicatorEpoll::handleNotify error]" <<endl);
+    }
+
+    return true;
+}
+
+void CommunicatorEpoll::initializeEpoller()
+{
+	_threadId = this_thread::get_id();
+
+    _scheduler = TC_CoroutineScheduler::scheduler();
+
+     assert(_scheduler);
+
+    _epoller = _scheduler->getEpoller();
+
+    auto id1 = _epoller->postRepeated(1000, false, std::bind(&CommunicatorEpoll::doReconnect, this));
+	auto id2 = _epoller->postRepeated(1000 * 5, false, std::bind(&CommunicatorEpoll::doStat, this));
+    auto id3 = _epoller->postRepeated(_timeoutCheckInterval, false, std::bind(&CommunicatorEpoll::doTimeout, this));
+
+	_timerIds = { id1, id2, id3 };
+
+}
+
+void CommunicatorEpoll::run()
+{
+    //注意网络通信器是通过startCoroutine启动的, 因此就在协程中!
+
+	_public = true;
+
+    initializeEpoller();
+
+    _pSptd = ServantProxyThreadData::getData();
+    _pSptd->_sched = _scheduler;
+
+    _netThreadSeq = _pSptd->_reqQNo;
+
+	_epoller->setName("communicator-epoller-public-netseq:" + TC_Common::tostr(_netThreadSeq));
+
+    //关联公有网络通信器
+    auto info = _pSptd->addCommunicatorEpoll(shared_from_this());
+    info->_communicator = this->_communicator;
+
+	//当前线程处于网络线程中!
+    _pSptd->_communicatorEpoll = this;
+
+    _communicator->notifyCommunicatorEpollStart();
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////

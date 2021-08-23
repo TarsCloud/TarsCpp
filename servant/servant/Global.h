@@ -31,6 +31,7 @@
 #include "util/tc_common.h"
 #include "util/tc_logger.h"
 #include "util/tc_thread_mutex.h"
+#include "util/tc_coroutine.h"
 #include "tup/RequestF.h"
 #include "servant/BaseF.h"
 
@@ -40,7 +41,7 @@ namespace tars
 {
 //////////////////////////////////////////////////////////////
 
-const size_t MAX_CLIENT_THREAD_NUM          = 64;   //客户端最大网络线程数
+const size_t MAX_CLIENT_THREAD_NUM          = 2048; //客户端最大网络线程数(线程模型: 网络线程数, 协程模型: 业务线程+网络线程)
 const size_t MAX_CLIENT_ASYNCTHREAD_NUM     = 1024; //客户端每个网络线程拥有的最大异步线程数
 const size_t MAX_CLIENT_NOTIFYEVENT_NUM     = 2048; //客户端每个网络线程拥有的最大通知事件的数目
 
@@ -52,11 +53,10 @@ class ServantProxyCallback;
 class ObjectProxy;
 class Current;
 class FDReactor;
-class Transceiver;
+class TC_Transceiver;
 class StatFProxy;
 class StatReport;
 class ServantProxyFactory;
-class ObjectProxyFactory;
 class AsyncProcThread;
 class LocalRollLogger;
 class RemoteConfig;
@@ -98,58 +98,14 @@ struct TarsException : public TC_Exception
 
 ////////////////////////////////////////////////////////////////
 // 定义网络异常
-/**
- * 建立连接异常
- */
-struct TarsNetConnectException : public TarsException
-{
-    TarsNetConnectException(const string &buffer) : TarsException(buffer){};
-    TarsNetConnectException(const string &buffer, int err) : TarsException(buffer, err){};
-    ~TarsNetConnectException() throw(){};
-};
-/**
- * 链接丢失
- */
-struct TarsNetConnectLostException : public TarsException
-{
-    TarsNetConnectLostException(const string &buffer) : TarsException(buffer){};
-    TarsNetConnectLostException(const string &buffer, int err) : TarsException(buffer, err){};
-    ~TarsNetConnectLostException() throw(){};
-};
-/**
- * Socket异常
- */
-struct TarsNetSocketException : public TarsException
-{
-    TarsNetSocketException(const string &buffer) : TarsException(buffer){};
-    TarsNetSocketException(const string &buffer, int err) : TarsException(buffer, err){};
-    ~TarsNetSocketException() throw(){};
-};
-/**
- * Proxy解码异常
- */
-struct TarsProxyDecodeException : public TarsException
-{
-    TarsProxyDecodeException(const string &buffer) : TarsException(buffer){};
-    TarsProxyDecodeException(const string &buffer, int err) : TarsException(buffer, err){};
-    ~TarsProxyDecodeException() throw(){};
-};
-/**
- * Proxy编码异常
- */
-struct TarsProxyEncodeException : public TarsException
-{
-    TarsProxyEncodeException(const string &buffer) : TarsException(buffer){};
-    TarsProxyEncodeException(const string &buffer, int err) : TarsException(buffer, err){};
-    ~TarsProxyEncodeException() throw(){};
-};
+
+
 /**
  * Server编码异常
  */
 struct TarsServerEncodeException : public TarsException
 {
     TarsServerEncodeException(const string &buffer) : TarsException(buffer){};
-    TarsServerEncodeException(const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsServerEncodeException() throw(){};
 };
 /**
@@ -158,25 +114,24 @@ struct TarsServerEncodeException : public TarsException
 struct TarsServerDecodeException : public TarsException
 {
     TarsServerDecodeException(const string &buffer) : TarsException(buffer){};
-    TarsServerDecodeException(const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsServerDecodeException() throw(){};
 };
+
 /**
  * Server无函数异常
  */
 struct TarsServerNoFuncException : public TarsException
 {
     TarsServerNoFuncException(const string &buffer) : TarsException(buffer){};
-    TarsServerNoFuncException(const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsServerNoFuncException() throw(){};
 };
+
 /**
  * Server无对象异常
  */
 struct TarsServerNoServantException : public TarsException
 {
     TarsServerNoServantException(const string &buffer) : TarsException(buffer){};
-    TarsServerNoServantException(const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsServerNoServantException() throw(){};
 };
 /**
@@ -185,8 +140,23 @@ struct TarsServerNoServantException : public TarsException
 struct TarsServerQueueTimeoutException : public TarsException
 {
     TarsServerQueueTimeoutException(const string &buffer) : TarsException(buffer){};
-    TarsServerQueueTimeoutException(const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsServerQueueTimeoutException() throw(){};
+};
+/**
+ * 连接异常
+ */
+struct TarsServerConnectionException : public TarsException
+{
+	TarsServerConnectionException(const string &buffer) : TarsException(buffer){};
+	~TarsServerConnectionException() throw(){};
+};
+/**
+ * 调用超时(连接都没有成功建立)
+ */
+struct TarsServerInvokeTimeoutException : public TarsException
+{
+	TarsServerInvokeTimeoutException(const string &buffer) : TarsException(buffer){};
+	~TarsServerInvokeTimeoutException() throw(){};
 };
 /**
  * 服务端返回的未知值
@@ -194,34 +164,36 @@ struct TarsServerQueueTimeoutException : public TarsException
 struct TarsServerUnknownException : public TarsException
 {
     TarsServerUnknownException(const string &buffer) : TarsException(buffer){};
-    TarsServerUnknownException(const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsServerUnknownException() throw(){};
 };
+
+
 /**
  * 同步调用超时异常
  */
 struct TarsSyncCallTimeoutException  : public TarsException
 {
     TarsSyncCallTimeoutException (const string &buffer) : TarsException(buffer){};
-    TarsSyncCallTimeoutException (const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsSyncCallTimeoutException () throw(){};
 };
+
+
 /**
  * 访问 Registry 错误
  */
 struct TarsRegistryException : public TarsException
 {
     TarsRegistryException(const string &buffer) : TarsException(buffer){};
-    TarsRegistryException(const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsRegistryException() throw(){};
 };
+
+
 /**
  * 客户端队列满了
  */
 struct TarsClientQueueException : public TarsException
 {
     TarsClientQueueException(const string &buffer) : TarsException(buffer){};
-    TarsClientQueueException(const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsClientQueueException() throw(){};
 };
 
@@ -231,8 +203,16 @@ struct TarsClientQueueException : public TarsException
 struct TarsUseCoroException : public TarsException
 {
     TarsUseCoroException(const string &buffer) : TarsException(buffer){};
-    TarsUseCoroException(const string &buffer, int err) : TarsException(buffer, err){};
     ~TarsUseCoroException() throw(){};
+};
+
+/**
+ * 通信器析构了
+ */
+struct TarsCommunicatorException : public TarsException
+{
+	TarsCommunicatorException(const string &buffer) : TarsException(buffer){};
+	~TarsCommunicatorException() throw(){};
 };
 ///////////////////////////////////////////////////////////////////
 }

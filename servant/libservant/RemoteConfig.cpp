@@ -101,42 +101,40 @@ string RemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigOnly)
 {
     if (_configPrx)
     {
-       string stream;
-       int ret = -1;
+       	string stream;
+       	int ret = -1;
 
+       	for(int i = 0; i < 2;i++)
+       	{
+       		try
+       		{
+       			if(_setdivision.empty())
+       			{
+       				ret = _configPrx->loadConfig(_app, (bAppConfigOnly ? "" : _serverName), sFileName, stream, ServerConfig::Context);
+       			}
+       			else
+       			{
+       				struct ConfigInfo confInfo;
+       				confInfo.appname     = _app;
+       				confInfo.servername  = (bAppConfigOnly ? "" : _serverName);
+       				confInfo.filename    = sFileName;
+       				confInfo.bAppOnly    = bAppConfigOnly;
+       				confInfo.setdivision = _setdivision;
+       				ret = _configPrx->loadConfigByInfo(confInfo,stream, ServerConfig::Context);
+       			}
 
-       for(int i = 0; i < 2;i++)
-       {
-           try
-           {
-                if(_setdivision.empty())
-                {
-                    ret = _configPrx->loadConfig(_app, (bAppConfigOnly ? "" : _serverName), sFileName, stream, ServerConfig::Context);
-                }
-                else
-                {
-                    struct ConfigInfo confInfo;
-                    confInfo.appname     = _app;
-                    confInfo.servername  = (bAppConfigOnly ? "" : _serverName);
-                    confInfo.filename    = sFileName;
-                    confInfo.bAppOnly    = bAppConfigOnly;
-                    confInfo.setdivision = _setdivision;
-                    ret = _configPrx->loadConfigByInfo(confInfo,stream, ServerConfig::Context);
-                }
-                
-                break;
-           }catch(std::exception& e){
-            //
-           }catch (...){
-            //
-           }
-       }
+       			break;
+       		}catch(std::exception& e){
+       		//
+       		}catch (...){
+       			//
+       		}
+	    }
        
-       if (ret != 0 || stream.empty())
-       {
-           throw runtime_error("remote config file is empty:" + sFileName);
-       }
-
+       	if (ret != 0 || stream.empty())
+       	{
+        	throw runtime_error("remote config file is empty:" + sFileName);
+		}
 
         string newFile = _basePath + FILE_SEP + sFileName + "." + TC_Common::tostr(time(NULL));
 

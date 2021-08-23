@@ -1,5 +1,6 @@
 ﻿#include "util/tc_epoll_server.h"
 #include "util/tc_http.h"
+#include "util/tc_option.h"
 #include "util/tc_logger.h"
 #include "util/tc_thread_pool.h"
 #include "util/tc_network_buffer.h"
@@ -40,21 +41,22 @@ public:
 	{
 		try
 		{
-
-			g_logger.debug() << "HttpHandle::handle : " << data->ip() << ":" << data->port() << endl;
-
 			TC_HttpRequest request;
 
 			request.decode(data->buffer().data(), data->buffer().size());
 
+//			cout << string(data->buffer().data(), data->buffer().size()) << endl;
+//			g_logger.debug() << "HttpHandle::handle : " << data->ip() << ":" << data->port() << ", " << request.getContent() << endl;
+//            cout << "HttpHandle::handle : " << data->ip() << ":" << data->port() << endl;
+//            cout << request.getContent() << endl;
 
 			TC_HttpResponse response;
-			response.setResponse(200, "OK", "HttpServer");
+			response.setResponse(200, "OK", request.getContent());
 
 			string buffer = response.encode();
 
 			shared_ptr<TC_EpollServer::SendContext> send = data->createSendContext();
-			send->buffer()->assign(buffer.c_str(), buffer.size());
+			send->buffer()->addBuffer(buffer.c_str(), buffer.size());
 
 			sendResponse(send);
 
@@ -99,14 +101,22 @@ protected:
 
 };
 
+
+// static int g_count = 0;
+
 TC_NetWorkBuffer::PACKET_TYPE parseEcho(TC_NetWorkBuffer&in, vector<char> &out)
 {
-	TC_EpollServer::Connection *c = (TC_EpollServer::Connection *)in.getConnection();
-	cout << c->getIp() << endl;
+
+//	DEBUG_COST("parseEcho1");
+
+//	TC_EpollServer::Connection *c = (TC_EpollServer::Connection *)in.getConnection();
+	// cout << c->getIp() << endl;
     try
     {
         out = in.getBuffers();
         in.clearBuffers();
+	    // DEBUG_COST("parseEcho");
+
         return TC_NetWorkBuffer::PACKET_FULL;
     }
     catch (exception &ex)
@@ -122,6 +132,7 @@ class SocketHandle : public TC_EpollServer::Handle
 {
 public:
 
+	int _count = 0;
 	/**
 	 * 初始化
 	 */
@@ -138,10 +149,11 @@ public:
 	{
 		try
 		{
-			cout << "SocketHandle::handle : " << data->ip() << ":" << data->port() << endl;
+			// DEBUG_COST("handle");
 
+//			cout << "SocketHandle::handle : " << data->ip() << ":" << data->port() << ", " << data->buffer().data() << endl;
 			shared_ptr<TC_EpollServer::SendContext> send = data->createSendContext();
-			send->buffer()->setBuffer(data->buffer());
+			send->buffer()->setBuffer(data->buffer().data(), data->buffer().size());
 			sendResponse(send);
 
 		}
@@ -160,8 +172,7 @@ public:
 	{
 		try
 		{
-
-			g_logger.debug() << "SocketHandle::handleClose : " << data->ip() << ":" << data->port();
+			g_logger.debug() << "SocketHandle::handleClose : " << data->ip() << ":" << data->port() << endl;
 		}
 		catch (exception &ex)
 		{
@@ -182,17 +193,17 @@ protected:
 };
 
 
-class MyServer
+class MyServer : public TC_EpollServer
 {
 public:
 	MyServer()
 	{
-		_epollServer = new TC_EpollServer(1);
-	};
+	}
+
+	TC_EpollServer* getEpollServer() { return this; }
 
 	void initialize()
 	{
-		cout << "initialize ok" << endl;
 		g_group.start(1);
 
 		g_logger.init("./debug", 1024 * 1024, 10);
@@ -200,87 +211,99 @@ public:
 		g_logger.setLogLevel(5);
 		g_logger.setupThread(&g_group);
 
-		_epollServer->setLocalLogger(&g_logger);
+		setLocalLogger(&g_logger);
+
+		TC_EpollServer *epollServer = this;
+
+		TC_Port::registerCtrlC([=]{
+			epollServer->terminate();
+		});
+    	
 	}
 
 	void bindHttp(const std::string &str)
 	{
-		TC_EpollServer::BindAdapterPtr lsPtr = new TC_EpollServer::BindAdapter(_epollServer);
-
-		//设置adapter名称, 唯一
-		lsPtr->setName("HttpAdapter");
-		//设置绑定端口
-		lsPtr->setEndpoint(str);
-		//设置最大连接数
-		lsPtr->setMaxConns(1024);
-		//设置启动线程数
-		lsPtr->setHandle<HttpHandle>(5);
-		//设置协议解析器
-		lsPtr->setProtocol(TC_NetWorkBuffer::parseHttp);
-		//设置逻辑处理器
-		g_logger.debug() << "HttpAdapter::setHandle ok" << endl;
+		TC_EpollServer::BindAdapterPtr adapter = this->createBindAdapter<HttpHandle>("http", str, 1);
+		adapter->setMaxConns(100000);
+		adapter->setProtocol(TC_NetWorkBuffer::parseHttp);
 
 		//绑定对象
-		_epollServer->bind(lsPtr);
+		bind(adapter);
 
-		g_logger.debug() << "HttpAdapter::bind ok" << endl;
+		g_logger.debug() << "HttpAdapter::setHandle ok" << endl;
 	}
 
 	void bindSocket(const std::string &str)
 	{
-		TC_EpollServer::BindAdapterPtr lsPtr = new TC_EpollServer::BindAdapter(_epollServer);
+		TC_EpollServer::BindAdapterPtr adapter = this->createBindAdapter<SocketHandle>(str, str, 5);
 
-		//设置adapter名称, 唯一
-		lsPtr->setName("SocketAdapter");
-		//设置绑定端口
-		lsPtr->setEndpoint(str);
-		//设置最大连接数
-		lsPtr->setMaxConns(10240);
-		//设置启动线程数
-		lsPtr->setHandle<SocketHandle>(1);
-		//设置协议解析器
-		lsPtr->setProtocol(parseEcho);
-//		lsPtr->enableQueueMode();
+		adapter->setMaxConns(10240);
+		adapter->setProtocol(parseEcho);
+
+		adapter->enableQueueMode();
+		adapter->setQueueCapacity(1000000);
 
 		g_logger.debug() << "SocketAdapter::SocketHandle ok" << endl;
 
 		//绑定对象
-		_epollServer->bind(lsPtr);
-
+		bind(adapter);
 
 		g_logger.debug() << "SocketAdapter::bind ok" << endl;
 	}
-
-	void waitForShutdown()
-	{
-		_epollServer->waitForShutdown();
-	}
-
-protected:
-	TC_EpollServer *_epollServer;
 };
 
 int main(int argc, char** argv)
 {
 	try
 	{
+		if(argc < 2)
+		{
+			cout << argv[0] << " --pattern=[0-3]" << endl;
+			cout << "pattern 0: NET_THREAD_AND_HANDLES_THREAD" << endl;
+			cout << "pattern 1: NET_THREAD_AND_HANDLES_CO" << endl;
+			cout << "pattern 2: NET_HANDLES_MERGE_THREAD" << endl;
+			cout << "pattern 3: NET_HANDLES_MERGE_CO" << endl;
+			exit(0);
+		}
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS		
 		TC_Common::ignorePipe();
 #endif
+		TC_Option option;
+		option.decode(argc, argv);
+
+		TC_EpollServer::SERVER_OPEN_COROUTINE pattern = (TC_EpollServer::SERVER_OPEN_COROUTINE)TC_Common::strto<int>(option.getValue("pattern"));
+
 		MyServer server;
+		server.setOpenCoroutine(pattern);
 
 		server.initialize();
 
-		server.bindHttp("tcp -h 0.0.0.0 -p 8083 -t 60000");
-		server.bindSocket("tcp -h 0.0.0.0 -p 8084 -t 60000");
+		string ep = option.getValue("ep");
+		if(ep.empty())
+		{
+			ep = "tcp -h 0.0.0.0 -p 8084 -t 60000";
+		}
 
+		server.bindHttp("tcp -h 0.0.0.0 -p 8083 -t 60000");
+		server.bindSocket(ep);
+		 server.bindSocket("udp -h 0.0.0.0 -p 8085 -t 60000");
+
+//		__CT__->enable(true);
+
+		TC_Port::registerCtrlC([&]{
+
+			server.getEpollServer()->terminate();
+		});
 		server.waitForShutdown();
+
+//		__CT__->output();
+//		__CT__->outputAvg();
 
 	}
 	catch (exception &ex)
 	{
-		cerr << "HttpServer::run ex:" << ex.what() << endl;
+		cerr << "MyServer::run ex:" << ex.what() << endl;
 	}
 
-	cout << "HttpServer::run http server thread exit." << endl;
+	cout << "MyServer::run server main thread exit." << endl;
 }

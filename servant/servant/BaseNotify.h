@@ -20,8 +20,8 @@
 #include "servant/Global.h"
 #include "util/tc_thread_queue.h"
 #include "util/tc_thread_mutex.h"
-#include <functional>
 
+//////////////////////////////////////////////////////////////////////
 namespace tars
 {
 class NotifyObserver;
@@ -84,9 +84,9 @@ protected:
      */
     map<string, TAdminFunc> _procFunctors;
 
-	/**
-	 * notify observer
-	 */
+    /**
+     * notify observer
+     */
 	shared_ptr<NotifyObserver> _observer;
 
 };

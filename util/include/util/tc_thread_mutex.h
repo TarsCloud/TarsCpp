@@ -27,7 +27,7 @@ namespace tars
 /////////////////////////////////////////////////
 /** 
  * @file tc_thread_mutex.h 
- * @brief 线程锁互斥类(兼容TAF4.x版本, 底层直接封装了c++11, 从而跨平台兼容)
+ * @brief 线程锁互斥类(兼容TARS4.x版本, 底层直接封装了c++11, 从而跨平台兼容)
  *  
  * @author jarodruan@upchina.com  
  */

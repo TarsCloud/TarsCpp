@@ -42,30 +42,6 @@
 namespace tars
 {
 
-/**
- * 状态上报类, 上报的信息包括:
- * 1 模块间调用的信息
- * 2 业务自定义的属性统计
- */
-struct StatSampleMsgHead
-{
-    string slaveName;
-    string interfaceName;
-    string ip;
-    bool operator <(const StatSampleMsgHead& m)const
-    {
-        if(slaveName != m.slaveName)
-        {
-            return slaveName < m.slaveName;
-        }
-        if(interfaceName != m.interfaceName)
-        {
-            return interfaceName < m.interfaceName;
-        }
-        return ip < m.ip;
-    }
-};
-
 /////////////////////////////////////////////////////////////////////////
 /**
  * 状态上报类, 上报的信息包括:
@@ -75,10 +51,9 @@ struct StatSampleMsgHead
 class StatReport : public TC_HandleBase, public TC_Thread, public TC_ThreadLock
 {
 public:
+
     typedef  map<StatMicMsgHead, StatMicMsgBody>        MapStatMicMsg;
     typedef  map<StatPropMsgHead, StatPropMsgBody>      MapStatPropMsg;
-    typedef  multimap<StatSampleMsgHead,StatSampleMsg>  MMapStatSampleMsg;
-    typedef  TC_LoopQueue<MapStatMicMsg*>                 stat_queue;
 
     const static int MAX_MASTER_NAME_LEN   = 127;
     const static int MAX_MASTER_IP_LEN     = 50;
@@ -86,8 +61,7 @@ public:
     const static int MIN_REPORT_SIZE       = 500;     //上报的最小大小限制
     const static int STAT_PROTOCOL_LEN     = 100;     //一次stat mic上报纯协议部分占用大小，用来控制udp大小防止超MTU
     const static int PROPERTY_PROTOCOL_LEN = 50;      //一次property上纯报协议部分占用大小，用来控制udp大小防止超MTU
-    const static int MAX_STAT_QUEUE_SIZE   = 10000;   //上报队列缓存大小限制
-    
+
     enum StatResult
     {
         STAT_SUCC       = 0,
@@ -98,7 +72,7 @@ public:
     /**
      * 构造函数
      */
-    StatReport(size_t iEpollNum=0);
+    StatReport(Communicator*);
 
     /**
      * 析够函数
@@ -217,24 +191,13 @@ public:
     }
 
 public:
-    void report(size_t iSeq,MapStatMicMsg * pmStatMicMsg);
+
+    inline bool valid() { return _statPrx ; }
 
     /*
     * 获取stat代理
     */
-    StatFPrx getStatPrx() {return _statPrx; }
-
-//    /*
-//    * 采样
-//    */
-//    void doSample(const string& strSlaveName,
-//                      const string& strInterfaceName,
-//                      const string& strSlaveIp,
-//                      map<string, string> &status);
-//    /*
-//    * 采样id
-//    */
-//    string sampleUnid();
+    inline StatFPrx getStatPrx() {return _statPrx; }
 
     /**
      * 增加关注时间点.  调用方式addStatInterv(5)
@@ -311,33 +274,18 @@ private:
      */
     int reportPropMsg();
 
-//    /**
-//     * 上报多维度属性信息  Prop = property
-//     * @return int
-//     */
-//    int reportPropPlusMsg();
-
-    /**
-     * stat 采样
-     */
-    int reportSampleMsg();
-
     //合并两个MicMsg
-    void addMicMsg(MapStatMicMsg & old,MapStatMicMsg & add);
-
-	/**
-	 * get queue info
-	 * @return
-	 */
-	size_t getQueueSize(size_t epollIndex);
+    void addMicMsg(MapStatMicMsg & old, MapStatMicMsg & add);
 
 	friend class CommunicatorEpoll;
 private:
+    Communicator*   _communicator;
+
     time_t              _time;
 
     int                 _reportInterval;
 
-    int                    _reportTimeout;
+    int                  _reportTimeout;
 
     int                 _maxReportSize;
 
@@ -363,8 +311,6 @@ private:
 
     MapStatMicMsg       _statMicMsgServer;
 
-    MMapStatSampleMsg   _statSampleMsg;
-
     vector<int>         _timePoint;
 
     PropertyFPrx        _propertyPrx;
@@ -372,9 +318,6 @@ private:
     map<string, PropertyReportPtr>          _statPropMsg;
 
 private:
-
-    size_t _epollNum;
-    vector<stat_queue*>   _statMsg;
 
     size_t                _retValueNumLimit;    
 

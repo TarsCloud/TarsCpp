@@ -16,6 +16,7 @@
 
 #include "servant/ObjectProxy.h"
 #include "servant/Communicator.h"
+#include "servant/CommunicatorEpoll.h"
 #include "servant/Global.h"
 #include "servant/EndpointManager.h"
 #include "servant/AppCache.h"
@@ -25,15 +26,15 @@
 
 namespace tars
 {
-////////////////////////////////////////////////////////////////////////////////////////////
-ObjectProxy::ObjectProxy(CommunicatorEpoll * pCommunicatorEpoll, const string & sObjectProxyName,const string& setName)
+///////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////
+ObjectProxy::ObjectProxy(CommunicatorEpoll *pCommunicatorEpoll, ServantProxy *servantProxy, const string & sObjectProxyName,const string& setName)
 : _communicatorEpoll(pCommunicatorEpoll)
 , _sObjectProxyName(sObjectProxyName)
 , _invokeSetId(setName)
 , _isInvokeBySet(false)
-, _hasSetProtocol(false)
-, _conTimeout(1000)
-, _servantProxy(NULL)
+, _servantProxy(servantProxy)
 {
     string::size_type pos = sObjectProxyName.find_first_of('@');
 
@@ -62,15 +63,18 @@ ObjectProxy::ObjectProxy(CommunicatorEpoll * pCommunicatorEpoll, const string & 
 		_name = _name.substr(0,pos);
 	}
 
-    _proxyProtocol.requestFunc = ProxyProtocol::tarsRequest;
-    _proxyProtocol.responseFunc = ProxyProtocol::tarsResponse;
-
-	_endpointManger.reset(new EndpointManager(this, _communicatorEpoll->getCommunicator(), _sObjectProxyName, _communicatorEpoll->isFirstNetThread(), _invokeSetId));
-
 }
 
 ObjectProxy::~ObjectProxy()
 {
+
+}
+
+void ObjectProxy::initialize()
+{
+    _endpointManger.reset(new EndpointManager(this, _communicatorEpoll->getCommunicator(), _communicatorEpoll->isFirstNetThread()));
+
+    _endpointManger->init(_sObjectProxyName, _invokeSetId);
 }
 
 const vector<AdapterProxy*> & ObjectProxy::getAdapters()
@@ -102,49 +106,48 @@ int ObjectProxy::loadLocator()
     return 0;
 }
 
-void ObjectProxy::setPushCallbacks(const ServantProxyCallbackPtr& cb)
-{
-    _pushCallback = cb;
-}
-
-ServantProxyCallbackPtr ObjectProxy::getPushCallback()
-{
-    return _pushCallback;
-}
-
-void ObjectProxy::setProxyProtocol(const ProxyProtocol& protocol)
-{
-    if(_hasSetProtocol)
-    {
-        return ;
-    }
-
-    _hasSetProtocol = true;
-    _proxyProtocol  = protocol;
-}
-
-ProxyProtocol& ObjectProxy::getProxyProtocol()
-{
-    return _proxyProtocol;
-}
-
-
-void ObjectProxy::setSocketOpt(int level, int optname, const void *optval, SOCKET_LEN_TYPE optlen)
-{
-    SocketOpt socketOpt;
-
-    socketOpt.level        = level;
-    socketOpt.optname = optname;
-    socketOpt.optval     = optval;
-    socketOpt.optlen     = optlen;
-
-    _socketOpts.push_back(socketOpt);
-}
-
-vector<SocketOpt>& ObjectProxy::getSocketOpt()
-{
-    return _socketOpts;
-}
+//void ObjectProxy::setPushCallbacks(const ServantProxyCallbackPtr& cb)
+//{
+//    _pushCallback = cb;
+//}
+//
+//ServantProxyCallbackPtr ObjectProxy::getPushCallback()
+//{
+//    return _pushCallback;
+//}
+//
+//void ObjectProxy::setProxyProtocol(const ProxyProtocol& protocol)
+//{
+//    if(_hasSetProtocol)
+//    {
+//        return ;
+//    }
+//
+//    _hasSetProtocol = true;
+//    _proxyProtocol  = protocol;
+//}
+//
+//ProxyProtocol& ObjectProxy::getProxyProtocol()
+//{
+//    return _proxyProtocol;
+//}
+//
+//void ObjectProxy::setSocketOpt(int level, int optname, const void *optval, SOCKET_LEN_TYPE optlen)
+//{
+//    SocketOpt socketOpt;
+//
+//    socketOpt.level        = level;
+//    socketOpt.optname = optname;
+//    socketOpt.optval     = optval;
+//    socketOpt.optlen     = optlen;
+//
+//    _socketOpts.push_back(socketOpt);
+//}
+//
+//vector<SocketOpt>& ObjectProxy::getSocketOpt()
+//{
+//    return _socketOpts;
+//}
 
 void ObjectProxy::invoke(ReqMessage * msg)
 {
@@ -180,11 +183,12 @@ void ObjectProxy::invoke(ReqMessage * msg)
 	msg->adapter = pAdapterProxy;
 
     //连接还没有建立, 暂时先放队列里面
-	if(!msg->adapter->getTransceiver()->hasConnected())
+	if(!msg->adapter->trans()->hasConnected())
     {
-        bool bRet = _reqTimeoutQueue.push(msg,msg->request.iTimeout+msg->iBeginTime);
 
-        assert(bRet);
+		bool bRet = _reqTimeoutQueue.push(msg, this->_servantProxy->tars_connect_timeout() + msg->iBeginTime);
+
+		assert(bRet);
 
         //把数据缓存在obj里面
         TLOGTARS("[ObjectProxy::invoke, " << _name << ", select adapter proxy not connected (have not invoke reg)]" << endl);
@@ -205,8 +209,8 @@ void ObjectProxy::prepareConnection(AdapterProxy *adapterProxy)
 
         assert(msg != NULL);
 
-	    if(msg->adapter == NULL && msg->bHash)
-//		    if(msg->adapter != NULL && msg->adapter != adapterProxy)
+        //第一个请求包，adapter必然为NULL，如果需要hash，则重新选择一次
+        if (msg->adapter == NULL && msg->data._hash)
         {
             //选取的adapter和之前的不一样(hash的原因), 需要重新选择一个远程服务的Adapter来调用
             _endpointManger->selectAdapterProxy(msg, adapterProxy);
@@ -237,30 +241,10 @@ void ObjectProxy::onConnect(AdapterProxy *adapterProxy)
     prepareConnection(adapterProxy);
 }
 
-void ObjectProxy::finishInvoke(ReqMessage * msg, AdapterProxy *adapterProxy)
-{
-    // TLOGERROR("[ObjectProxy::doInvoke,finishInvokeSize, adapter queue size:" << adapterProxy->getTimeoutQueue()->getSendListSize() <<", object queue size:" << _reqTimeoutQueue.size() << ", " << adapterProxy << endl);
-    
-	if(getRootServantProxy()->tars_connection_serial() > 0)
-    {
-        prepareConnection(adapterProxy);
-
-        if(!adapterProxy->getTimeoutQueue()->sendListEmpty())
-        {
-	        //并行连接模式, 继续发起连接, 建立连接后, 会自动doInvoke发包
-	        if(adapterProxy->getTransceiver()->hasConnected()) {
-		        adapterProxy->doInvoke(true);
-	        }else {
-		        adapterProxy->checkActive(true);
-	        }
-        }
-    }
-}
-
 void ObjectProxy::onNotifyEndpoints(const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
 {
-	if(_servantProxy) {
-		_servantProxy->onNotifyEndpoints(this->_communicatorEpoll->getCommunicatorEpollId(), active, inactive, true);
+	if(this->getRootServantProxy()) {
+		this->getRootServantProxy()->onNotifyEndpoints(_communicatorEpoll, active, inactive);
 	}
 }
 
@@ -282,8 +266,6 @@ void ObjectProxy::doInvoke()
 
 void ObjectProxy::doInvokeException(ReqMessage * msg)
 {
-    // TLOGTARS("[ObjectProxy::doInvokeException, objname:" << _name << "]" << endl);
-
     //单向调用出现异常直接删除请求
     if(msg->eType == ReqMessage::ONE_WAY)
     {
@@ -296,14 +278,11 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 
     if(msg->eType == ReqMessage::SYNC_CALL)
     {
-        if(!msg->bCoroFlag)
+        if(!msg->sched)
         {
             assert(msg->pMonitor);
 
-            TC_ThreadLock::Lock sync(*(msg->pMonitor));
-
-            msg->pMonitor->notify();
-            msg->bMonitorFin = true;
+			msg->pMonitor->notify();
         }
         else
         {
@@ -315,7 +294,7 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 
     if(msg->callback)
     {
-		if(!msg->bCoroFlag)
+		if(!msg->sched)
 		{
 			if(msg->callback->getNetThreadProcess())
 			{
@@ -375,6 +354,7 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 void ObjectProxy::doTimeout()
 {
     const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+
     for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
     {
         if(vAdapterProxy[iAdapter] != NULL)
@@ -411,10 +391,13 @@ void ObjectProxy::onSetInactive(const EndpointInfo& ep)
 	const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
 	for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
 	{
-		if(vAdapterProxy[iAdapter] != NULL && vAdapterProxy[iAdapter]->endpoint() == ep)
-		{
-			vAdapterProxy[iAdapter]->onSetInactive();
-		}
+        if(vAdapterProxy[iAdapter] != NULL)
+        {
+            if (vAdapterProxy[iAdapter]->endpoint() == ep)
+            {
+                vAdapterProxy[iAdapter]->onSetInactive();
+            }
+        }
 	}
 }
 

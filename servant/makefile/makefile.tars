@@ -42,14 +42,14 @@ MYSQL_LIB_DIR   += -L/usr/local/mysql/lib/mysql -L/usr/local/mysql/lib -L/usr/li
 LIB_DIR         += ${MYSQL_LIB_DIR}
 INC_DIR         += ${MYSQL_INC}
 
-ifneq ($(TARS_OPENTRACKING), 0)
-ifneq ($(TARS_OPENTRACKING), )
-	OPENTRACKING_INC     += -I/usr/local/include
-	OPENTRACKING_LIB_DIR += -L/usr/local/lib 
-	LIB_DIR += ${OPENTRACKING_LIB_DIR}
-	INC_DIR += ${OPENTRACKING_INC}
-endif
-endif
+// ifneq ($(TARS_OPENTRACKING), 0)
+// ifneq ($(TARS_OPENTRACKING), )
+// 	OPENTRACKING_INC     += -I/usr/local/include
+// 	OPENTRACKING_LIB_DIR += -L/usr/local/lib 
+// 	LIB_DIR += ${OPENTRACKING_LIB_DIR}
+// 	INC_DIR += ${OPENTRACKING_INC}
+// endif
+// endif
 
 
 
@@ -72,13 +72,13 @@ ifneq ($(TARS_HTTP2), )
 endif
 endif
 
-ifneq ($(TARS_OPENTRACKING), 0)
-ifneq ($(TARS_OPENTRACKING), )
-	#业务编译
-	CFLAGS += -D_USE_OPENTRACKING=1
-	LIB += -lopentracing -lzipkin_opentracing -lzipkin -lcurl 
-endif
-endif
+// ifneq ($(TARS_OPENTRACKING), 0)
+// ifneq ($(TARS_OPENTRACKING), )
+// 	#业务编译
+// 	CFLAGS += -D_USE_OPENTRACKING=1
+// 	LIB += -lopentracing -lzipkin_opentracing -lzipkin -lcurl 
+// endif
+// endif
 
 #-----------------------------------------------------------------------------
 

@@ -1,8 +1,8 @@
-if(TARS_OPENTRACKING)
-include_directories(${PROJECT_SOURCE_DIR} ${OPENTRACKING_INC})
-else()
+# if(TARS_OPENTRACKING)
+# include_directories(${PROJECT_SOURCE_DIR} ${OPENTRACKING_INC})
+# else()
 include_directories(${PROJECT_SOURCE_DIR})
-endif()
+# endif()
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 

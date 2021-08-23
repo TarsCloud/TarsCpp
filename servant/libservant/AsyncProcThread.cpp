@@ -18,6 +18,7 @@
 #include "servant/Communicator.h"
 #include "servant/StatReport.h"
 #include "servant/RemoteLogger.h"
+#include "servant/AdapterProxy.h"
 
 namespace tars
 {
@@ -30,29 +31,29 @@ AsyncProcThread::AsyncProcThread(size_t iQueueCap, bool merge)
 	 if(!_merge)
 	 {
 	 	start();
-     }
+	 }
 }
 
 AsyncProcThread::~AsyncProcThread()
 {
     terminate();
 
-    if(_msgQueue)
-    {
-        delete _msgQueue;
-        _msgQueue = NULL;
-    }
+	if(_msgQueue)
+	{
+		delete _msgQueue;
+		_msgQueue = NULL;
+	}
 }
 
 void AsyncProcThread::terminate()
 {
 	if(!_merge) {
-        TC_ThreadLock::Lock lock(*this);
+		Lock lock(*this);
 
-        _terminate = true;
+		_terminate = true;
 
-        notifyAll();
-    }
+		notifyAll();
+	}
 }
 
 void AsyncProcThread::push_back(ReqMessage * msg)
@@ -77,25 +78,33 @@ void AsyncProcThread::push_back(ReqMessage * msg)
 	}
 }
 
-
 void AsyncProcThread::run()
 {
     while (!_terminate)
     {
         ReqMessage * msg;
 
+        //异步请求回来的响应包处理
         if (_msgQueue->pop_front(msg))
         {
 	        callback(msg);
         }
 		else
 		{
-			TC_ThreadLock::Lock lock(*this);
-	        timedWait(1000);		
+		    TC_ThreadLock::Lock lock(*this);
+	     	timedWait(1000);
 		}
     }
-}
 
+	ReqMessage * msg;
+	while(_msgQueue->pop_front(msg))
+	{
+    	delete msg;
+	}
+
+	ServantProxyThreadData::g_sp.reset();
+	CallbackThreadData::g_sp.reset();
+}
 
 void AsyncProcThread::callback(ReqMessage * msg)
 {
@@ -103,17 +112,26 @@ void AsyncProcThread::callback(ReqMessage * msg)
 
 	//从回调对象把线程私有数据传递到回调线程中
 	ServantProxyThreadData * pServantProxyThreadData = ServantProxyThreadData::getData();
-	assert(pServantProxyThreadData != NULL);
+//	assert(pServantProxyThreadData != NULL);
 
 	//把染色的消息设置在线程私有数据里面
-	pServantProxyThreadData->_dyeing  = msg->bDyeing;
-	pServantProxyThreadData->_dyeingKey = msg->sDyeingKey;
 
-	pServantProxyThreadData->_cookie = msg->cookie;
+	pServantProxyThreadData->_data._dyeing  = msg->data._dyeing;
+	pServantProxyThreadData->_data._dyeingKey = msg->data._dyeingKey;
+	pServantProxyThreadData->_data._cookie = msg->data._cookie;
+//=======
+//	pServantProxyThreadData->_dyeing  = msg->bDyeing;
+//	pServantProxyThreadData->_dyeingKey = msg->sDyeingKey;
+
+	pServantProxyThreadData->_traceCall = msg->bTraceCall;
+	pServantProxyThreadData->initTrace(msg->sTraceKey);
+
+//	pServantProxyThreadData->_cookie = msg->cookie;
+//>>>>>>> origin/delay
 
 	if(msg->adapter)
 	{
-		pServantProxyThreadData->_szHost = msg->adapter->endpoint().desc();
+		pServantProxyThreadData->_data._szHost = msg->adapter->endpoint().desc();
 	}
 
 	try

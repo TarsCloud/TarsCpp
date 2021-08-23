@@ -49,6 +49,7 @@ struct ServantCreation : public ServantHelperCreation
     ServantPtr create(const string &s) { T *p = new T; p->setName(s); p->setApplication(_application); return p; }
     Application *_application;
 };
+
 /**
  * Servant
  */
@@ -66,7 +67,7 @@ struct ServantCreationWithParams : public ServantHelperCreation
 /**
  * Servant管理
  */
-class SVT_DLL_API ServantHelperManager
+class SVT_DLL_API ServantHelperManager// : public TC_Singleton<ServantHelperManager>
 {
 public:
     /**
@@ -87,8 +88,8 @@ public:
     {
         if(check && _servant_adapter.end() == _servant_adapter.find(id))
         {
-            cerr<<"[TARS]ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not conf in the web)"<<endl;
-			throw runtime_error("[TARS]ServantHelperManager::addServant " + id + " not find adapter.(maybe not conf in the web)");
+            cerr<<"[ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not set conf in the web)]"<<endl;
+			throw runtime_error("[ServantHelperManager::addServant " + id + " not find adapter.(maybe not set conf in the web)]");
         }
         _servant_creator[id] = new ServantCreation<T>(application);
     }
@@ -103,8 +104,8 @@ public:
 	{
 		if(check && _servant_adapter.end() == _servant_adapter.find(id))
 		{
-			cerr<<"[TAF]ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not conf in the web)"<<endl;
-			throw runtime_error("[TAF]ServantHelperManager::addServant " + id + " not find adapter.(maybe not conf in the web)");
+			cerr<<"[TARS]ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not conf in the web)"<<endl;
+			throw runtime_error("[TARS]ServantHelperManager::addServant " + id + " not find adapter.(maybe not conf in the web)");
 		}
 		_servant_creator[id] = new ServantCreationWithParams<T, P>(application, p);
 	}
@@ -147,6 +148,7 @@ public:
      */
     const string &getServantAdapter(const string& sServant) const
     {
+
 	    static const string s = "";
 
 	    auto it = _servant_adapter.find(sServant);

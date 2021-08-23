@@ -67,7 +67,7 @@ public:
     /*
      * 初始化
      */
-    bool init(const string & sObjName, const string & sLocator, const string& setName = "");
+    bool init(const string & sObjName, const string& setName = "");
 
     /*
      * 获取所有节点信息的回调处理
@@ -180,6 +180,11 @@ private:
      */
     void setEndPointToCache(bool bInactive);
 
+    /*
+     * 更新外部地址
+     */
+    virtual void onUpdateOutter() {};
+
 protected:
 
     /*
@@ -251,7 +256,7 @@ protected:
      */
 	bool                      _rootServant;
 
-private:
+protected:
 
     /////////以下是请求主控的策略信息/////////////////
 
@@ -327,7 +332,7 @@ public:
     /*
      * 构造函数
      */
-    EndpointManager(ObjectProxy* pObjectProxy, Communicator* pComm, const string & sObjName, bool bFirstNetThread, const string& setName = "");
+    EndpointManager(ObjectProxy* pObjectProxy, Communicator* pComm, bool bFirstNetThread);
 
     /*
      * 析构函数
@@ -346,7 +351,14 @@ public:
      */
 	void updateEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive);
 
-	/*
+	/**
+	 * 外部其他通信过来的更新
+	 * @param active
+	 * @param inactive
+	 */
+    void updateEndpointsOutter(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive);
+
+    /*
      * 重写基类的实现
      */
     void doNotify();
@@ -365,6 +377,7 @@ public:
     }
 
 private:
+    virtual void onUpdateOutter();
 
     /*
      * 轮询选取一个结点
@@ -535,6 +548,15 @@ private:
      * 一致性hash普通使用
      */
     TC_ConsistentHashNew          _consistentHash;
+
+    struct OutterUpdate
+    {
+        set<EndpointInfo> active;
+        set<EndpointInfo> inactive;
+    };
+
+    shared_ptr<OutterUpdate>    _outterUpdate;
+
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -598,9 +620,7 @@ private:
     /*
      * 锁
      */
-    // TC_ThreadLock            _mutex;
-    TC_SpinLock             _mutex;
-
+    TC_ThreadMutex           _mutex;
 
     /*
      * 活跃的结点

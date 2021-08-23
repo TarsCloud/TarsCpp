@@ -17,7 +17,8 @@
 #include "util/tc_socket.h"
 #include "util/tc_singleton.h"
 
-using namespace taf;
+namespace tars
+{
 
 class TC_UUIDGenerator : public TC_Singleton<TC_UUIDGenerator>
 {
@@ -126,5 +127,7 @@ private:
     std::atomic<uint32_t> seq;
     bool initOK;
 };
+
+}
 
 #endif //__TC_UUID_GENERATOR_H

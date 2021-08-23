@@ -44,10 +44,12 @@ void TarsException::throwException(int ret, const string& desc)
         throw TarsServerQueueTimeoutException("server queue timeout exception: ret:" + TC_Common::tostr(ret) + " msg:"+ desc);
         break;
     case TARSPROXYCONNECTERR:
-        throw TarsServerQueueTimeoutException("server connection lost: ret:" + TC_Common::tostr(ret) + " msg:"+ desc);
+        throw TarsServerConnectionException("server connection lost: ret:" + TC_Common::tostr(ret) + " msg:"+ desc);
         break;
-    default:
-        throw TarsServerUnknownException("server unknown exception: ret:" + TC_Common::tostr(ret) + " msg:"+ desc);
+    case TARSINVOKETIMEOUT:
+		throw TarsServerInvokeTimeoutException(desc);
+	default:
+    throw TarsServerUnknownException("server unknown exception: ret:" + TC_Common::tostr(ret) + " msg:"+ desc);
     }
 }
 ////////////////////////////////////////////////////////////////////////////

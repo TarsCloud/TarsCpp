@@ -29,6 +29,8 @@ Current::Current(ServantHandle *pServantHandle)
     , _response(true)
     , _ret(0)
     , _reportStat(true)
+    , _traceCall(false)
+
 {
 }
 
@@ -45,7 +47,7 @@ Current::~Current()
         {
             reportToStat("one_way_client");
         }
-        else if(!_data->adapter()->isTarsProtocol() && ServerConfig::ReportFlow)
+        else if (!_isTars && ServerConfig::ReportFlow)
         {
             //非tars客户端 从服务端上报调用信息
             reportToStat("not_tars_client");
@@ -135,7 +137,7 @@ void Current::setReportStat(bool bReport)
 
 const vector<char>& Current::getRequestBuffer() const
 {
-	if (_data->adapter()->isTarsProtocol())
+	if (_isTars)
 	{
 		return _request.sBuffer;
 	}
@@ -166,11 +168,11 @@ void Current::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
 
 	Application *application = (Application*)this->_servantHandle->getApplication();
 
-	_request.sServantName = application->getServantHelper()->getAdapterServant(_data->adapter()->getName());
+    _request.sServantName = application->getServantHelper()->getAdapterServant(_data->adapter()->getName());
 
-//    _request.sServantName = ServantHelperManager::getInstance()->getAdapterServant(_data->adapter()->getName());
+	_isTars = _data->adapter()->isTarsProtocol();
 
-    if (_data->adapter()->isTarsProtocol())
+    if (_isTars)
     {
         initialize(_data->buffer());
     }
@@ -197,7 +199,8 @@ void Current::initialize(const vector<char>& sRecvBuffer)
 void Current::sendResponse(const char *buff, uint32_t len)
 {
 	shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
-	send->buffer()->assign(buff, len);
+	// send->buffer()->assign(buff, len);
+	send->buffer()->addBuffer(buff, len);
 	_servantHandle->sendResponse(send);
 }
 
@@ -212,6 +215,19 @@ void Current::sendResponse(int iRet, const vector<char> &buff)
 	ResponsePacket response;
 	response.sBuffer = buff;
 	sendResponse(iRet, response, TARS_STATUS(), "");
+}
+
+void Current::sendResponse(int iRet, const string &buff)
+{
+    //单向调用不需要返回
+    if (_request.cPacketType == TARSONEWAY)
+    {
+        return;
+    }
+
+    ResponsePacket response;
+    response.sBuffer.assign(buff.begin(), buff.end());
+    sendResponse(iRet, response, TARS_STATUS(), "");
 }
 
 void Current::sendResponse(int iRet)
@@ -248,7 +264,7 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 
 	Int32 iHeaderLen = 0;
 
-	TarsOutputStream<BufferWriterVector> os;
+	TarsOutputStream<BufferWriter> os;
 
 	//先预留4个字节长度
 	os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
@@ -276,7 +292,7 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
     }
     else
     {
-        //tup回应包用请求包的结构(这里和新版本TAF是有区别的)
+        //tup回应包用请求包的结构(这里和新版本TARS是有区别的)
         RequestPacket tupResponse;
 
 	    tupResponse.iRequestId     = _request.iRequestId;
@@ -321,9 +337,9 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 
 	iHeaderLen = htonl((int)(os.getLength()));
 
-	memcpy(os.getByteBuffer().data(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
+	memcpy((void*)os.getBuffer(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
 
-	send->buffer()->swap(os.getByteBuffer());
+	send->setBuffer(ProxyProtocol::toBuffer(os));
 
 	_servantHandle->sendResponse(send);
 
@@ -356,6 +372,28 @@ void Current::reportToStat(const string& sObj)
         stat->report(sObj, "", _request.sFuncName, _data->ip(), 0, (StatReport::StatResult)_ret, TNOWMS - _data->recvTimeStamp(), 0, false);
     }
 }
+
+void Current::setTrace(bool traceCall, const string& traceKey)
+{
+    _traceCall = traceCall;
+    _traceKey = traceKey;
+}
+
+bool Current::isTraced() const
+{
+    return _traceCall;
+}
+
+string Current::getTraceKey() const
+{
+    return _traceKey;
+}
+
+bool Current::connectionExists() const
+{
+	return _data->connectionExists();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 }

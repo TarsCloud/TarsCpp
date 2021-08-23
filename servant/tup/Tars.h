@@ -21,6 +21,8 @@
 #include <cassert>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <stdexcept>
 #include <functional>
@@ -28,6 +30,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdio.h>
+#include <set>
 
 #if defined _WIN32 || defined _WIN64
 #pragma comment(lib,"ws2_32.lib")
@@ -473,18 +476,6 @@ public:
 	template<typename OutputStreamT>
 	void writeTo(OutputStreamT& os)
 	{
-		/*
-		helper h;
-		h.type = _type;
-		if(_tag < 15){
-			h.tag = _tag;
-			os.writeBuf(&h, sizeof(h));
-		}else{
-			h.tag = 15;
-			os.writeBuf(&h, sizeof(h));
-			os.writeBuf(&_tag, sizeof(_tag));
-		}
-		*/
 		writeTo(os, _type, _tag);
 	}
 
@@ -497,13 +488,13 @@ public:
 		if (tag < 15)
 		{
 			h.tag = tag;
-			os.writeBuf((const char *)&h, sizeof(h));
+			os.writeBuf((const char*)&h, sizeof(h));
 		}
 		else
 		{
 			h.tag = 15;
-			os.writeBuf((const char *)&h, sizeof(h));
-			os.writeBuf((const char *)&tag, sizeof(tag));
+			os.writeBuf((const char*)&h, sizeof(h));
+			os.writeBuf((const char*)&tag, sizeof(tag));
 		}
 	}
 };
@@ -657,6 +648,10 @@ public:
 //指针需要内存时通过偏移指向预分配内存块，减少解码过程中的内存申请
 class MapBufferReader : public BufferReader
 {
+private:
+	MapBufferReader(const MapBufferReader&);
+
+	MapBufferReader& operator=(const MapBufferReader&);
 
 public:
 	MapBufferReader() : _buf_m(NULL),_buf_len_m(0),_cur_m(0) {}
@@ -751,8 +746,8 @@ public:
 		_len += len;
 	}
 	std::vector<char> getByteBuffer() const      { return std::vector<char>(_buf, _buf + _len);}
-	const char * getBuffer() const               { return _buf;}//{ return &_buf[0]; }
-	size_t getLength() const                     { return _len;} //{ return _buf.size(); }
+	const char * getBuffer() const               { return _buf;}
+	size_t getLength() const                     { return _len;}
 	void swap(std::vector<char>& v)              { v.assign(_buf, _buf + _len); }
 	void swap(std::string& v)                    { v.assign(_buf, _len); }
 	void swap(BufferWriter& buf)
@@ -989,7 +984,7 @@ public:
 				break;
 			case TarsHeadeString4:
 			{
-				size_t len = 0;
+				uint32_t len = 0;
 				TarsReadTypeBuf(*this, len, uint32_t);
 				len = ntohl((uint32_t)len);
 				TarsReadHeadSkip(*this, len);
@@ -1087,6 +1082,7 @@ public:
 		Char c = b;
 		read(c, tag, isRequire);
 		b = c ? true : false;
+		if (tag) { } //avoid compiler warning
 	}
 
 	void read(Char& c, uint8_t tag, bool isRequire = true)
@@ -1246,7 +1242,7 @@ public:
 				default:
 				{
 					char s[64];
-					snprintf(s, sizeof(s), "read 'Int64' type mismatch, tag: %d, get type: %d.", tag, headType);
+					snprintf(s, sizeof(s), "read 'Int64' type mismatch, tag: %d, headTag: %d, get type: %d.", tag, headTag, headType);
 					throw TarsDecodeMismatch(s);
 				}
 
@@ -1279,7 +1275,7 @@ public:
 				default:
 				{
 					char s[64];
-					snprintf(s, sizeof(s), "read 'Float' type mismatch, tag: %d, get type: %d.", tag, headType);
+					snprintf(s, sizeof(s), "read 'Float' type mismatch, tag: %d, get type: %d, headTag: %d.", tag, headType, headTag);
 					throw TarsDecodeMismatch(s);
 				}
 			}
@@ -1315,7 +1311,7 @@ public:
 				default:
 				{
 					char s[64];
-					snprintf(s, sizeof(s), "read 'Double' type mismatch, tag: %d, get type: %d.", tag, headType);
+					snprintf(s, sizeof(s), "read 'Double' type mismatch, tag: %d, get type: %d, headType: %d.", tag, headType,headTag);
 					throw TarsDecodeMismatch(s);
 				}
 			}
@@ -1327,73 +1323,6 @@ public:
 			throw TarsDecodeRequireNotExist(s);
 		}
 	}
-
-	/*void read(std::string& s, uint8_t tag, bool isRequire = true)
-	{
-		uint8_t headType = 0, headTag = 0;
-		bool skipFlag = false;
-		TarsSkipToTag(skipFlag, tag, headType, headTag);
-		if (tars_likely(skipFlag))
-		{
-			switch(headType)
-			{
-			case TarsHeadeString1:
-				{
-					size_t len = 0;
-					TarsReadTypeBuf(*this, len, uint8_t);
-					char ss[256];
-					//s.resize(len);
-					//this->readBuf((void *)s.c_str(), len);
-					TarsReadStringBuf(*this, s, len);
-					//TarsReadBuf(*this, s, len);
-					//s.assign(ss, ss + len);
-				}
-				break;
-			case TarsHeadeString4:
-				{
-					uint32_t len = 0;
-					TarsReadTypeBuf(*this, len, uint32_t);
-					len = ntohl(len);
-					if (tars_unlikely(len > TARS_MAX_STRING_LENGTH))
-					{
-						char s[128];
-						snprintf(s, sizeof(s), "invalid string size, tag: %d, size: %d", tag, len);
-						throw TarsDecodeInvalidValue(s);
-					}
-					//char *ss = new char[len];
-					//s.resize(len);
-					//this->readBuf((void *)s.c_str(), len);
-
-					char *ss = new char[len];
-					try
-					{
-						TarsReadBuf(*this, ss, len);
-						s.assign(ss, ss + len);
-					}
-					catch (...)
-					{
-						delete[] ss;
-						throw;
-					}
-					delete[] ss;
-					TarsReadStringBuf(*this, s, len);
-				}
-				break;
-			default:
-			{
-					   char s[64];
-					   snprintf(s, sizeof(s), "read 'string' type mismatch, tag: %d, get type: %d.", tag, headType);
-					   throw TarsDecodeMismatch(s);
-			}
-			}
-		}
-		else if (tars_unlikely(isRequire))
-		{
-			char s[64];
-			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
-			throw TarsDecodeRequireNotExist(s);
-		}
-	}*/
 
 	void read(std::string& s, uint8_t tag, bool isRequire = true)
 	{
@@ -1417,7 +1346,7 @@ public:
 					if (tars_unlikely(strLength > TARS_MAX_STRING_LENGTH))
 					{
 						char s[128];
-						snprintf(s, sizeof(s), "invalid string size, tag: %d, size: %d", tag, strLength);
+						snprintf(s, sizeof(s), "invalid string size, tag: %d, size: %d, headTag: %d", tag, strLength, headTag);
 						throw TarsDecodeInvalidValue(s);
 					}
 				}
@@ -1506,7 +1435,7 @@ public:
 					if (tars_unlikely(size > this->size()))
 					{
 						char s[128];
-						snprintf(s, sizeof(s), "invalid map, tag: %d, size: %d", tag, size);
+						snprintf(s, sizeof(s), "invalid map, tag: %d, size: %d, headTag: %d", tag, size, headTag);
 						throw TarsDecodeInvalidValue(s);
 					}
 					m.clear();
@@ -1532,6 +1461,152 @@ public:
 		{
 			char s[64];
 			snprintf(s, sizeof(s), "require field not exist, tag: %d, headTag: %d", tag, headTag);
+			throw TarsDecodeRequireNotExist(s);
+		}
+	}
+
+	template<typename K, typename V, typename H, typename Cmp, typename Alloc>
+	void read(std::unordered_map<K, V, H, Cmp, Alloc>& m, uint8_t tag, bool isRequire = true)
+	{
+		uint8_t headType = 0, headTag = 0;
+		bool skipFlag = false;
+		TarsSkipToTag(skipFlag, tag, headType, headTag);
+		if (tars_likely(skipFlag))
+		{
+			switch(headType)
+			{
+				case TarsHeadeMap:
+				{
+					UInt32 size = 0;
+					read(size, 0);
+					if (tars_unlikely(size > this->size()))
+					{
+						char s[128];
+						snprintf(s, sizeof(s), "invalid unordered_map, tag: %d, size: %d, headTag: %d", tag, size, headTag);
+						throw TarsDecodeInvalidValue(s);
+					}
+					m.clear();
+
+					for (UInt32 i = 0; i < size; ++i)
+					{
+						std::pair<K, V> pr;
+						read(pr.first, 0);
+						read(pr.second, 1);
+						m.insert(pr);
+					}
+				}
+					break;
+				default:
+				{
+					char s[64];
+					snprintf(s, sizeof(s), "read 'map' type mismatch, tag: %d, get type: %d.", tag, headType);
+					throw TarsDecodeMismatch(s);
+				}
+			}
+		}
+		else if (tars_unlikely(isRequire))
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
+			throw TarsDecodeRequireNotExist(s);
+		}
+	}
+
+	template<typename CV, typename K, typename V, typename Cmp, typename Alloc>
+	void readEx(std::map<K, V, Cmp, Alloc>& m, uint8_t tag, bool isRequire = true)
+	{
+		uint8_t headType = 0, headTag = 0;
+		bool skipFlag = false;
+		TarsSkipToTag(skipFlag, tag, headType, headTag);
+		if (tars_likely(skipFlag))
+		{
+			switch (headType)
+			{
+				case TarsHeadeMap:
+				{
+					UInt32 size = 0;
+					read(size, 0);
+					if (tars_unlikely(size > this->size()))
+					{
+						char s[128];
+						snprintf(s, sizeof(s), "invalid map, tag: %d, size: %d, headTag: %d", tag, size, headTag);
+						throw TarsDecodeInvalidValue(s);
+					}
+					m.clear();
+
+					for (UInt32 i = 0; i < size; ++i)
+					{
+						std::pair<K, V> pr;
+						read(pr.first, 0);
+						CV tmp(pr.second);
+						read(tmp, 1);
+
+
+						m.insert(pr);
+					}
+				}
+					break;
+				default:
+				{
+					char s[64];
+					snprintf(s, sizeof(s), "read 'map' type mismatch, tag: %d, get type: %d.", tag, headType);
+					throw TarsDecodeMismatch(s);
+				}
+			}
+		}
+		else if (tars_unlikely(isRequire))
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
+			throw TarsDecodeRequireNotExist(s);
+		}
+	}
+
+	template<typename CV, typename K, typename V, typename H, typename Cmp, typename Alloc>
+	void readEx(std::unordered_map<K, V, H, Cmp, Alloc>& m, uint8_t tag, bool isRequire = true)
+	{
+		uint8_t headType = 0, headTag = 0;
+		bool skipFlag = false;
+		TarsSkipToTag(skipFlag, tag, headType, headTag);
+		if (tars_likely(skipFlag))
+		{
+			switch (headType)
+			{
+				case TarsHeadeMap:
+				{
+					UInt32 size = 0;
+					read(size, 0);
+					if (tars_unlikely(size > this->size()))
+					{
+						char s[128];
+						snprintf(s, sizeof(s), "invalid map, tag: %d, size: %d, headTag: %d", tag, size, headTag);
+						throw TarsDecodeInvalidValue(s);
+					}
+					m.clear();
+
+					for (UInt32 i = 0; i < size; ++i)
+					{
+						std::pair<K, V> pr;
+						read(pr.first, 0);
+						CV tmp(pr.second);
+						read(tmp, 1);
+
+						m.insert(pr);
+					}
+				}
+					break;
+				default:
+				{
+					char s[64];
+					snprintf(s, sizeof(s), "read 'map' type mismatch, tag: %d, get type: %d.", tag, headType);
+					throw TarsDecodeMismatch(s);
+				}
+			}
+		}
+		else if (tars_unlikely(isRequire))
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
 			throw TarsDecodeRequireNotExist(s);
 		}
 	}
@@ -1565,7 +1640,11 @@ public:
 						throw TarsDecodeInvalidValue(s);
 					}
 
-					this->readBuf(v, size);
+					v.reserve(size);
+					v.resize(size);
+
+					this->readBuf(v.data(), size);
+					//TarsReadTypeBuf(*this, v[0], Int32);
 				}
 					break;
 				case TarsHeadeList:
@@ -1617,7 +1696,7 @@ public:
 					if (tars_unlikely(size > this->size()))
 					{
 						char s[128];
-						snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, size: %d", tag, headType, size);
+						snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, size: %d, headTag: %d", tag, headType, size, headTag);
 						throw TarsDecodeInvalidValue(s);
 					}
 					v.reserve(size);
@@ -1638,6 +1717,233 @@ public:
 		{
 			char s[64];
 			snprintf(s, sizeof(s), "require field not exist, tag: %d, headTag: %d", tag, headTag);
+			throw TarsDecodeRequireNotExist(s);
+		}
+	}
+
+	template<typename T, typename Cmp, typename Alloc>
+	void read(std::set<T, Cmp, Alloc>& v, uint8_t tag, bool isRequire = true)
+	{
+		uint8_t headType = 0, headTag = 0;
+		bool skipFlag = false;
+		TarsSkipToTag(skipFlag, tag, headType, headTag);
+		if (tars_likely(skipFlag))
+		{
+			switch(headType)
+			{
+				case TarsHeadeList:
+				{
+					UInt32 size = 0;
+					read(size, 0);
+					if (tars_unlikely(size > this->size()))
+					{
+						char s[128];
+						snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, size: %d, headTag: %d", tag, headType, size, headTag);
+						throw TarsDecodeInvalidValue(s);
+					}
+//					    v.reserve(size);
+//					    v.resize(size);
+					for (UInt32 i = 0; i < size; ++i) {
+						T t;
+						read(t, 0);
+						v.insert(t);
+					}
+				}
+					break;
+				default:
+				{
+					char s[64];
+					snprintf(s, sizeof(s), "read 'set' type mismatch, tag: %d, get type: %d.", tag, headType);
+					throw TarsDecodeMismatch(s);
+				}
+			}
+		}
+		else if (tars_unlikely(isRequire))
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
+			throw TarsDecodeRequireNotExist(s);
+		}
+	}
+
+	template<typename T, typename H, typename Cmp, typename Alloc>
+	void read(std::unordered_set<T, H, Cmp, Alloc>& v, uint8_t tag, bool isRequire = true)
+	{
+		uint8_t headType = 0, headTag = 0;
+		bool skipFlag = false;
+		TarsSkipToTag(skipFlag, tag, headType, headTag);
+		if (tars_likely(skipFlag))
+		{
+			switch(headType)
+			{
+				case TarsHeadeList:
+				{
+					UInt32 size = 0;
+					read(size, 0);
+					if (tars_unlikely(size > this->size()))
+					{
+						char s[128];
+						snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, size: %d, headTag: %d", tag, headType, size, headTag);
+						throw TarsDecodeInvalidValue(s);
+					}
+//					    v.reserve(size);
+//					    v.resize(size);
+					for (UInt32 i = 0; i < size; ++i) {
+						T t;
+						read(t, 0);
+						v.insert(t);
+					}
+				}
+					break;
+				default:
+				{
+					char s[64];
+					snprintf(s, sizeof(s), "read 'set' type mismatch, tag: %d, get type: %d.", tag, headType);
+					throw TarsDecodeMismatch(s);
+				}
+			}
+		}
+		else if (tars_unlikely(isRequire))
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
+			throw TarsDecodeRequireNotExist(s);
+		}
+	}
+
+	template<typename CV, typename T, typename Cmp, typename Alloc>
+	void readEx(std::set<T, Cmp, Alloc>& v, uint8_t tag, bool isRequire = true)
+	{
+		uint8_t headType = 0, headTag = 0;
+		bool skipFlag = false;
+		TarsSkipToTag(skipFlag, tag, headType, headTag);
+		if (tars_likely(skipFlag))
+		{
+			switch(headType)
+			{
+				case TarsHeadeList:
+				{
+					UInt32 size = 0;
+					read(size, 0);
+					if (tars_unlikely(size > this->size()))
+					{
+						char s[128];
+						snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, size: %d, headTag: %d", tag, headType, size, headTag);
+						throw TarsDecodeInvalidValue(s);
+					}
+//					    v.reserve(size);
+//					    v.resize(size);
+					for (UInt32 i = 0; i < size; ++i) {
+						T t;
+						CV tmp(t);
+						read(tmp, 0);
+						v.insert(t);
+					}
+				}
+					break;
+				default:
+				{
+					char s[64];
+					snprintf(s, sizeof(s), "read 'set' type mismatch, tag: %d, get type: %d.", tag, headType);
+					throw TarsDecodeMismatch(s);
+				}
+			}
+		}
+		else if (tars_unlikely(isRequire))
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
+			throw TarsDecodeRequireNotExist(s);
+		}
+	}
+
+	template<typename CV, typename T, typename H, typename Cmp, typename Alloc>
+	void readEx(std::unordered_set<T, H, Cmp, Alloc>& v, uint8_t tag, bool isRequire = true)
+	{
+		uint8_t headType = 0, headTag = 0;
+		bool skipFlag = false;
+		TarsSkipToTag(skipFlag, tag, headType, headTag);
+		if (tars_likely(skipFlag))
+		{
+			switch(headType)
+			{
+				case TarsHeadeList:
+				{
+					UInt32 size = 0;
+					read(size, 0);
+					if (tars_unlikely(size > this->size()))
+					{
+						char s[128];
+						snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, size: %d, headTag: %d", tag, headType, size, headTag);
+						throw TarsDecodeInvalidValue(s);
+					}
+//					    v.reserve(size);
+//					    v.resize(size);
+					for (UInt32 i = 0; i < size; ++i) {
+						T t;
+						CV tmp(t);
+						read(tmp, 0);
+						v.insert(t);
+					}
+				}
+					break;
+				default:
+				{
+					char s[64];
+					snprintf(s, sizeof(s), "read 'set' type mismatch, tag: %d, get type: %d.", tag, headType);
+					throw TarsDecodeMismatch(s);
+				}
+			}
+		}
+		else if (tars_unlikely(isRequire))
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
+			throw TarsDecodeRequireNotExist(s);
+		}
+	}
+
+	template<typename CV, typename T, typename Alloc>
+	void readEx(std::vector<T, Alloc>& v, uint8_t tag, bool isRequire = true)
+	{
+		uint8_t headType = 0, headTag = 0;
+		bool skipFlag = false;
+		TarsSkipToTag(skipFlag, tag, headType, headTag);
+		if (tars_likely(skipFlag))
+		{
+			switch (headType)
+			{
+				case TarsHeadeList:
+				{
+					UInt32 size = 0;
+					read(size, 0);
+					if (tars_unlikely(size > this->size()))
+					{
+						char s[128];
+						snprintf(s, sizeof(s), "invalid size, tag: %d, type: %d, size: %d, headTag: %d", tag, headType, size, headTag);
+						throw TarsDecodeInvalidValue(s);
+					}
+					v.reserve(size);
+					v.resize(size);
+					for (UInt32 i = 0; i < size; ++i)
+					{
+						CV tmp(v[i]);
+						read(tmp, 0);
+					}
+				}
+					break;
+				default:
+				{
+					char s[64];
+					snprintf(s, sizeof(s), "read 'vector' type mismatch, tag: %d, get type: %d.", tag, headType);
+					throw TarsDecodeMismatch(s);
+				}
+			}
+		}
+		else if (tars_unlikely(isRequire))
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
 			throw TarsDecodeRequireNotExist(s);
 		}
 	}
@@ -1692,6 +1998,34 @@ public:
 		v = (T) n;
 	}
 
+	template<typename T>
+	void read(T&& v, uint8_t tag, bool isRequire = true, typename detail::enable_if<detail::is_convertible<T*, TarsStructBase*>, void ***>::type dummy = 0)
+	{
+		uint8_t headType = 0, headTag = 0;
+		bool skipFlag = false;
+		TarsSkipToTag(skipFlag, tag, headType, headTag);
+		if (tars_likely(skipFlag))
+		{
+			if (tars_unlikely(headType != TarsHeadeStructBegin))
+			{
+				char s[64];
+				snprintf(s, sizeof(s), "read 'struct' type mismatch, tag: %d, get type: %d, headTag: %d.", tag, headType, headTag);
+				throw TarsDecodeMismatch(s);
+			}
+
+			// 精度保存恢复都在 readFrom 里面做
+			v.readFrom(*this);
+
+			skipToStructEnd();
+		}
+		else if (tars_unlikely(isRequire))
+		{
+			char s[64];
+			snprintf(s, sizeof(s), "require field not exist, tag: %d", tag);
+			throw TarsDecodeRequireNotExist(s);
+		}
+	}
+
 	/// 读取结构
 	template<typename T>
 	void read(T& v, uint8_t tag, bool isRequire = true, typename detail::enable_if<detail::is_convertible<T*, TarsStructBase*>, void ***>::type dummy = 0)
@@ -1704,7 +2038,7 @@ public:
 			if (tars_unlikely(headType != TarsHeadeStructBegin))
 			{
 				char s[64];
-				snprintf(s, sizeof(s), "read 'struct' type mismatch, tag: %d, get type: %d.", tag, headType);
+				snprintf(s, sizeof(s), "read 'struct' type mismatch, tag: %d, get type: %d, headTag: %d.", tag, headType, headTag);
 				throw TarsDecodeMismatch(s);
 			}
 			v.readFrom(*this);
@@ -1741,16 +2075,6 @@ public:
 
 	void write(Char n, uint8_t tag)
 	{
-		/*
-		DataHead h(DataHead::eChar, tag);
-		if(n == 0){
-			h.setType(DataHead::eZeroTag);
-			h.writeTo(*this);
-		}else{
-			h.writeTo(*this);
-			this->writeBuf(&n, sizeof(n));
-		}
-		*/
 		if (tars_unlikely(n == 0))
 		{
 			TarsWriteToHead(*this, TarsHeadeZeroTag, tag);
@@ -1769,19 +2093,12 @@ public:
 
 	void write(Short n, uint8_t tag)
 	{
-		//if(n >= CHAR_MIN && n <= CHAR_MAX){
 		if (n >= (-128) && n <= 127)
 		{
 			write((Char) n, tag);
 		}
 		else
 		{
-			/*
-			DataHead h(DataHead::eShort, tag);
-			h.writeTo(*this);
-			n = htons(n);
-			this->writeBuf(&n, sizeof(n));
-			*/
 			TarsWriteToHead(*this, TarsHeadeShort, tag);
 			n = htons(n);
 			TarsWriteShortTypeBuf(*this, n, (*this)._len);
@@ -1795,15 +2112,12 @@ public:
 
 	void write(Int32 n, uint8_t tag)
 	{
-		//if(n >= SHRT_MIN && n <= SHRT_MAX){
 		if (n >= (-32768) && n <= 32767)
 		{
 			write((Short) n, tag);
 		}
 		else
 		{
-			//DataHead h(DataHead::eInt32, tag);
-			//h.writeTo(*this);
 			TarsWriteToHead(*this, TarsHeadeInt32, tag);
 			n = htonl(n);
 			TarsWriteInt32TypeBuf(*this, n, (*this)._len);
@@ -1817,15 +2131,12 @@ public:
 
 	void write(Int64 n, uint8_t tag)
 	{
-		//if(n >= INT_MIN && n <= INT_MAX){
 		if (n >= (-2147483647-1) && n <= 2147483647)
 		{
 			write((Int32) n, tag);
 		}
 		else
 		{
-			//DataHead h(DataHead::eInt64, tag);
-			//h.writeTo(*this);
 			TarsWriteToHead(*this, TarsHeadeInt64, tag);
 			n = tars_htonll(n);
 			TarsWriteInt64TypeBuf(*this, n, (*this)._len);
@@ -1843,8 +2154,6 @@ public:
 
 	void write(Double n, uint8_t tag)
 	{
-		//DataHead h(DataHead::eDouble, tag);
-		//h.writeTo(*this);
 		TarsWriteToHead(*this, TarsHeadeDouble, tag);
 		n = tars_htond(n);
 		TarsWriteDoubleTypeBuf(*this, n, (*this)._len);
@@ -1863,7 +2172,7 @@ public:
 			TarsWriteToHead(*this, TarsHeadeString4, tag);
 			uint32_t n = htonl((uint32_t)s.size());
 			TarsWriteUInt32TTypeBuf(*this, n, (*this)._len);
-			//this->writeBuf(s.data(), s.size());
+
 			TarsWriteTypeBuf(*this, s.data(), s.size());
 		}
 		else
@@ -1871,7 +2180,7 @@ public:
 			TarsWriteToHead(*this, TarsHeadeString1, tag);
 			uint8_t n = (uint8_t)s.size();
 			TarsWriteUInt8TTypeBuf(*this, n, (*this)._len);
-			//this->writeBuf(s.data(), s.size());
+
 			TarsWriteTypeBuf(*this, s.data(), s.size());
 		}
 	}
@@ -1881,15 +2190,14 @@ public:
 		TarsWriteToHead(*this, TarsHeadeSimpleList, tag);
 		TarsWriteToHead(*this, TarsHeadeChar, 0);
 		write(len, 0);
-		//this->writeBuf(buf, len);
+
 		TarsWriteTypeBuf(*this, buf, len);
 	}
 
 	template<typename K, typename V, typename Cmp, typename Alloc>
 	void write(const std::map<K, V, Cmp, Alloc>& m, uint8_t tag)
 	{
-		//DataHead h(DataHead::eMap, tag);
-		//h.writeTo(*this);
+
 		TarsWriteToHead(*this, TarsHeadeMap, tag);
 		Int32 n = (Int32)m.size();
 		write(n, 0);
@@ -1901,17 +2209,117 @@ public:
 		}
 	}
 
+	template<typename K, typename V, typename H, typename Cmp, typename Alloc>
+	void write(const std::unordered_map<K, V, H, Cmp, Alloc>& m, uint8_t tag)
+	{
+		{
+			TarsWriteToHead(*this, TarsHeadeMap, tag);
+			Int32 n = (Int32)m.size();
+			write(n, 0);
+			typedef typename std::unordered_map<K, V, H, Cmp, Alloc>::const_iterator IT;
+			for (IT i = m.begin(); i != m.end(); ++i)
+			{
+				write(i->first, 0);
+				write(i->second, 1);
+
+				std::cout << "write:" << i->first << ", " << i->second << std::endl;
+
+			}
+		}
+	}
+
+	template< typename CV, typename K, typename V, typename Cmp, typename Alloc>
+	void writeEx(  const std::map<K, V, Cmp, Alloc>& m, uint8_t tag)
+	{
+		{
+			TarsWriteToHead(*this, TarsHeadeMap, tag);
+			Int32 n = (Int32)m.size();
+			write(n, 0);
+			typedef typename std::map<K, V, Cmp, Alloc>::const_iterator IT;
+			for (IT i = m.begin(); i != m.end(); ++i)
+			{
+				write(i->first, 0);
+
+				CV cv(i->second);
+				write(cv, 1);
+			}
+		}
+	}
+
 	template<typename T, typename Alloc>
 	void write(const std::vector<T, Alloc>& v, uint8_t tag)
 	{
-		//DataHead h(DataHead::eList, tag);
-		//h.writeTo(*this);
 		TarsWriteToHead(*this, TarsHeadeList, tag);
 		Int32 n = (Int32)v.size();
 		write(n, 0);
 		typedef typename std::vector<T, Alloc>::const_iterator IT;
 		for (IT i = v.begin(); i != v.end(); ++i)
 			write(*i, 0);
+	}
+
+	template<typename T, typename Cmp, typename Alloc>
+	void write(const std::set<T, Cmp, Alloc>& v, uint8_t tag)
+	{
+		TarsWriteToHead(*this, TarsHeadeList, tag);
+		Int32 n = (Int32)v.size();
+		write(n, 0);
+		typedef typename std::set<T, Cmp, Alloc>::const_iterator IT;
+		for (IT i = v.begin(); i != v.end(); ++i)
+			write(*i, 0);
+	}
+
+	template<typename T, typename H, typename Cmp, typename Alloc>
+	void write(const std::unordered_set<T, H, Cmp, Alloc>& v, uint8_t tag)
+	{
+		TarsWriteToHead(*this, TarsHeadeList, tag);
+		Int32 n = (Int32)v.size();
+		write(n, 0);
+		typedef typename std::unordered_set<T, H, Cmp, Alloc>::const_iterator IT;
+		for (IT i = v.begin(); i != v.end(); ++i)
+			write(*i, 0);
+	}
+
+	template<typename CV, typename T, typename Cmp, typename Alloc>
+	void writeEx(const std::set<T, Cmp, Alloc>& v, uint8_t tag)
+	{
+		TarsWriteToHead(*this, TarsHeadeList, tag);
+		Int32 n = (Int32)v.size();
+		write(n, 0);
+		typedef typename std::set<T, Cmp, Alloc>::const_iterator IT;
+		for (IT i = v.begin(); i != v.end(); ++i)
+		{
+			CV cv(*i);
+			write(cv, 0);
+		}
+	}
+
+	template<typename CV, typename T, typename H, typename Cmp, typename Alloc>
+	void writeEx(const std::unordered_set<T, H, Cmp, Alloc>& v, uint8_t tag)
+	{
+		TarsWriteToHead(*this, TarsHeadeList, tag);
+		Int32 n = (Int32)v.size();
+		write(n, 0);
+		typedef typename std::unordered_set<T, H, Cmp, Alloc>::const_iterator IT;
+		for (IT i = v.begin(); i != v.end(); ++i)
+		{
+			CV cv(*i);
+			write(cv, 0);
+		}
+	}
+
+
+	template< typename CV, typename T, typename Alloc>
+	void writeEx(const std::vector<T, Alloc>& v, uint8_t tag)
+	{
+		TarsWriteToHead(*this, TarsHeadeList, tag);
+		Int32 n = (Int32)v.size();
+		write(n, 0);
+		typedef typename std::vector<T, Alloc>::const_iterator IT;
+		for (IT i = v.begin(); i != v.end(); ++i)
+		{
+			CV cv(*i);
+			write(cv, 0);
+		}
 	}
 
 	template<typename T>
@@ -1928,15 +2336,12 @@ public:
 	template<typename Alloc>
 	void write(const std::vector<Char, Alloc>& v, uint8_t tag)
 	{
-		//DataHead h(DataHead::eSimpleList, tag);
-		//h.writeTo(*this);
-		//DataHead hh(DataHead::eChar, 0);
-		//hh.writeTo(*this);
+
 		TarsWriteToHead(*this, TarsHeadeSimpleList, tag);
 		TarsWriteToHead(*this, TarsHeadeChar, 0);
 		Int32 n = (Int32)v.size();
 		write(n, 0);
-		//writeBuf(&v[0], v.size());
+
 		TarsWriteTypeBuf(*this, v.data(), v.size());
 	}
 
@@ -1949,16 +2354,10 @@ public:
 	template<typename T>
 	void write(const T& v, uint8_t tag, typename detail::enable_if<detail::is_convertible<T*, TarsStructBase*>, void ***>::type dummy = 0)
 	{
-		//DataHead h(DataHead::eStructBegin, tag);
-		//h.writeTo(*this);
+
 		TarsWriteToHead(*this, TarsHeadeStructBegin, tag);
 		v.writeTo(*this);
 		TarsWriteToHead(*this, TarsHeadeStructEnd, 0);
-		/*
-		h.setType(DataHead::eStructEnd);
-		h.setTag(0);
-		h.writeTo(*this);
-		*/
 	}
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////

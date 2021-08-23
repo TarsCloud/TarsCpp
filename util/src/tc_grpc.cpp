@@ -332,20 +332,23 @@ TC_NetWorkBuffer::PACKET_TYPE TC_GrpcServer::parseGrpc(TC_NetWorkBuffer&in, vect
 	    sessionPtr = session.get();
     }
 
-    if (sessionPtr->buffer().size() != 0) {
+    vector<char> &buff = sessionPtr->buffer();
+
+    if (!buff.empty())
+    {
         //直接发送裸得应答数据，业务层一般不直接使用，仅仅tcp支持
-        connection->sendBufferDirect(sessionPtr->buffer());
-        sessionPtr->buffer().clear();
+        connection->sendBufferDirect(buff.data(), buff.size());
+        buff.clear();
     }
 
     std::string inStr = in.getBuffersString();
 
     auto ret = sessionPtr->parse(in, out);
     
-    if (sessionPtr->buffer().size() != 0) {
+    if (!buff.empty()) {
         //直接发送裸得应答数据，业务层一般不直接使用，仅仅tcp支持
-        connection->sendBufferDirect(sessionPtr->buffer());
-        sessionPtr->buffer().clear();
+        connection->sendBufferDirect(buff.data(), buff.size());
+        buff.clear();
     }
 
 	return ret;

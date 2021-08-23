@@ -601,7 +601,7 @@ TC_Mysql::MysqlData TC_Mysql::queryRecord(const string& sSql)
     return data;
 }
 
-size_t TC_Mysql::travelRecord(const string& sSql, const std::function<void(const map<string, string> &)> & pdatafunc)
+size_t TC_Mysql::travelRecord(const string& sSql, const std::function<void(const map<string, string> &)> & func)
 {
     size_t count = 0;
     /**
@@ -664,7 +664,7 @@ size_t TC_Mysql::travelRecord(const string& sSql, const std::function<void(const
                 mpRow[vtFields[i]] = "";
             }
         }
-        pdatafunc(mpRow);
+        func(mpRow);
         count++;
     }
 

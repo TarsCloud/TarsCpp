@@ -32,7 +32,7 @@ using namespace tup;
 namespace tars
 {
 
-class Transceiver;
+class TC_Transceiver;
 
 #define TARS_NET_MIN_PACKAGE_SIZE 5
 #define TARS_NET_MAX_PACKAGE_SIZE 1024*1024*10
@@ -50,7 +50,7 @@ T net2host(T len)
     return 0;
 }
 
-class Transceiver;
+class TC_Transceiver;
 
 //////////////////////////////////////////////////////////////////////
 /**
@@ -125,7 +125,10 @@ public:
     }
 };
 
-typedef std::function<vector<char>(RequestPacket&, Transceiver *)> request_protocol;
+//typedef std::function<vector<char>(RequestPacket&, TC_Transceiver *)> request_protocol;
+
+typedef std::function<shared_ptr<TC_NetWorkBuffer::Buffer>(RequestPacket&, TC_Transceiver*)> request_protocol;
+
 typedef std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer&, ResponsePacket&)> response_protocol;
 
 //////////////////////////////////////////////////////////////////////
@@ -140,21 +143,24 @@ public:
      */
     ProxyProtocol() : requestFunc(streamRequest) {}
 
-    static vector<char> http1Request(tars::RequestPacket& request, Transceiver *);
+    /**
+     * 将TarsOutputStream<BufferWriter>换成shared_ptr<TC_NetWorkBuffer::Buffer>, 且中间没有内存copy
+     * 注意: 转换后os无效了, 数据被置换到shared_ptr<TC_NetWorkBuffer::Buffer>
+     */ 
+    static shared_ptr<TC_NetWorkBuffer::Buffer> toBuffer(TarsOutputStream<BufferWriter> &os);
+    static shared_ptr<TC_NetWorkBuffer::Buffer> http1Request(tars::RequestPacket& request, TC_Transceiver *);
     static TC_NetWorkBuffer::PACKET_TYPE http1Response(TC_NetWorkBuffer &in, ResponsePacket& done);
 
-	// static vector<char> httpJceRequest(taf::RequestPacket& request, Transceiver *);
-	// static TC_NetWorkBuffer::PACKET_TYPE httpJceResponse(TC_NetWorkBuffer &in, ResponsePacket& done);
 #if TARS_HTTP2
 
     // ENCODE function, called by network thread
-    static vector<char> http2Request(tars::RequestPacket& request, Transceiver *);
+    static shared_ptr<TC_NetWorkBuffer::Buffer> http2Request(tars::RequestPacket& request, TC_Transceiver *);
 
     // DECODE function, called by network thread
     static TC_NetWorkBuffer::PACKET_TYPE http2Response(TC_NetWorkBuffer &in, ResponsePacket& done);
 
-        // ENCODE function, called by network thread
-    static vector<char> grpcRequest(tars::RequestPacket& request, Transceiver *);
+    // ENCODE function, called by network thread
+    static shared_ptr<TC_NetWorkBuffer::Buffer> grpcRequest(tars::RequestPacket& request, TC_Transceiver *);
 
     // DECODE function, called by network thread
     static TC_NetWorkBuffer::PACKET_TYPE grpcResponse(TC_NetWorkBuffer &in, ResponsePacket& done);
@@ -165,13 +171,15 @@ public:
      * @param request
      * @param buff
      */
-    static vector<char> streamRequest(RequestPacket& request, Transceiver *)
+    static shared_ptr<TC_NetWorkBuffer::Buffer> streamRequest(RequestPacket& request, TC_Transceiver *)
     {
-	    return request.sBuffer;
+        shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
+        buff->addBuffer(request.sBuffer);
+	    return buff;
     }
 
     /**
-     * 普通二进制包普taf请求包
+     * 普通二进制包普tars请求包
      * @param request
      * @param buff
      */
@@ -465,7 +473,7 @@ public:
      * @param request
      * @param buff
      */
-    static vector<char> tarsRequest(RequestPacket& request, Transceiver *);
+    static shared_ptr<TC_NetWorkBuffer::Buffer> tarsRequest(RequestPacket& request, TC_Transceiver *);
 
     /**
      * tars响应包解析
@@ -539,8 +547,8 @@ public:
         else
         {
 	        vector<char> buffer;
-            bool ret = in.parseBufferOf4(buffer, iMinLength, iMaxLength);
-            if(!ret)
+            auto ret = in.parseBufferOf4(buffer, iMinLength, iMaxLength);
+            if (ret == TC_NetWorkBuffer::PACKET_LESS)
             {
 	            throw TarsDecodeException("parse buffer exception");
             }
@@ -653,6 +661,7 @@ public:
 
             if (rsp.iVersion == TUPVERSION)
             {
+                //buffer包括4个字节长度
                 vector<char> buffer;
                 buffer.resize(iHeaderLen);
 
@@ -714,11 +723,10 @@ public:
     }
 
 public:
-    request_protocol  requestFunc;
+    request_protocol requestFunc;
 
     response_protocol responseFunc;
 };
-
 
 //////////////////////////////////////////////////////////////////////
 }

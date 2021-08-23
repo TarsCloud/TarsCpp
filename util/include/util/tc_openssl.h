@@ -218,7 +218,7 @@ public:
 
 #endif
 
-} // end namespace taf
+} // end namespace tars
 
 
 

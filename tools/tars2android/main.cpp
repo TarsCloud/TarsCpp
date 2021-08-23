@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 
     if (option.hasParam("extends-package"))
     {
-        t2a.setTafPacket(option.getValue("extends-package"));
+        t2a.setTarsPacket(option.getValue("extends-package"));
     }
 
     t2a.setCheckDefault(tars::TC_Common::lower(option.getValue("check-default")) == "true"?true:false);

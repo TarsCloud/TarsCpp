@@ -106,7 +106,7 @@ namespace detail
         virtual void info(const string &s) const = 0;
 
         /**
-         * taf日志
+         * tars日志
          * @param s
          */
         virtual void tars(const string &s) const = 0;
@@ -593,7 +593,27 @@ public:
          * @return int, -1: sending error, 0: no data, 1: send completely, 2: data retains
          * @return
          */
+        int sendBufferDirect(const char* buff, size_t length);
+
+        /**
+         * 直接发送裸得应答数据，业务层一般不直接使用，仅仅tcp支持
+         * send naked response data
+         * @param buffer
+         * @return int, -1:发送出错, 0:无数据, 1:发送完毕, 2:还有数据
+         * @return int, -1: sending error, 0: no data, 1: send completely, 2: data retains
+         * @return
+         */
         int sendBufferDirect(const std::string& buff);
+
+        /**
+         * 直接发送裸得应答数据，业务层一般不直接使用，仅仅tcp支持
+         * send naked response data
+         * @param buffer
+         * @return int, -1:发送出错, 0:无数据, 1:发送完毕, 2:还有数据
+         * @return int, -1: sending error, 0: no data, 1: send completely, 2: data retains
+         * @return
+         */
+        int sendBufferDirect(const shared_ptr<TC_NetWorkBuffer::Buffer>& buff);
 
         /**
          * 添加发送buffer
@@ -1029,7 +1049,7 @@ public:
         const string & getProtocolName();
 
         /**
-         * 是否taf协议
+         * 是否tars协议
          * @return bool
          */
         bool isTarsProtocol();
@@ -2259,7 +2279,7 @@ public:
     virtual void info(const string &s) const;
 
     /**
-     * taf日志
+     * tars日志
      * @param s
      */
     virtual void tars(const string &s) const;

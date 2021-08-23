@@ -118,20 +118,24 @@ protected:
 
 	static size_t registerSig(int sig, std::function<void()> callback);
 	static void unregisterSig(int sig, size_t id);
-
 	static void registerSig(int sig);
 
-    static std::mutex   _mutex;
-
-    static unordered_map<int, unordered_map<size_t, std::function<void()>>> _callbacks;
-
-    static std::atomic<size_t> _callbackId;
-
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-    static void sighandler( int sig_no );
+	static void sighandler( int sig_no );
 #else
-    static BOOL WINAPI HandlerRoutine(DWORD dwCtrlType);
+	static BOOL WINAPI HandlerRoutine(DWORD dwCtrlType);
 #endif
+
+	struct SigInfo
+	{
+		std::mutex   _mutex;
+
+		unordered_map<int, unordered_map<size_t, std::function<void()>>> _callbacks;
+
+		std::atomic<size_t> _callbackId{0};
+	};
+
+	static shared_ptr<SigInfo>	_sigInfo;
 };
 
 }

@@ -39,15 +39,10 @@ ServantPrx::element_type* ServantProxyFactory::getServantProxy(const string& nam
 	if(it != _servantProxy.end())
 		return it->second.get();
 
-    ObjectProxy ** ppObjectProxy = new ObjectProxy * [_comm->getClientThreadNum()];
-    assert(ppObjectProxy != NULL);
+    ServantPrx sp = new ServantProxy(_comm, name, setName);
 
-    for(size_t i = 0; i < _comm->getClientThreadNum(); ++i)
-    {
-        ppObjectProxy[i] = _comm->getCommunicatorEpoll(i)->getObjectProxy(name,setName);
-    }
-
-    ServantPrx sp = new ServantProxy(_comm, ppObjectProxy, _comm->getClientThreadNum());
+    //需要主动初始化一次
+    sp->tars_initialize();
 
     int syncTimeout = TC_Common::strto<int>(_comm->getProperty("sync-invoke-timeout", "3000"));
 	int asyncTimeout = TC_Common::strto<int>(_comm->getProperty("async-invoke-timeout", "5000"));

@@ -30,18 +30,19 @@
 #include "servant/ServantHelper.h"
 #include "servant/ServantHandle.h"
 #include "servant/StatReport.h"
-#include "servant/CommunicatorFactory.h"
+#include "Communicator.h"
 #include "servant/RemoteLogger.h"
 #include "servant/RemoteConfig.h"
 #include "servant/RemoteNotify.h"
+#include "servant/NotifyObserver.h"
 #include "util/tc_openssl.h"
 
 namespace tars
 {
 
-#define OUT_LINE        (TC_Common::outfill("", '-', 80))
-#define OUT_LINE_LONG   (TC_Common::outfill("", '=', 80))
-#define OUT_LINE_TAB(x) (TC_Common::outfill("", '-', 80 - 4*x))
+#define OUT_LINE        (TC_Common::outfill("", '-', 100))
+#define OUT_LINE_LONG   (TC_Common::outfill("", '=', 100))
+#define OUT_LINE_TAB(x) (TC_Common::outfill("", '-', 100 - 4*x))
 
 /**
  * 以下定义配置框架支持的命令
@@ -122,14 +123,13 @@ struct SVT_DLL_API ServerConfig
     static std::string Notify;              //信息通知中心
     static std::string ConfigFile;          //框架配置文件路径
     static bool        CloseCout;
-    static int         ReportFlow;          //是否服务端上报所有接口stat流量 0不上报 1上报(用于非taf协议服务流量统计)
+    static int         ReportFlow;          //是否服务端上报所有接口stat流量 0不上报 1上报(用于非tars协议服务流量统计)
     static int         IsCheckSet;          //是否对按照set规则调用进行合法性检查 0,不检查，1检查
-    static bool        OpenCoroutine;       //是否启用协程处理方式
+    static int        OpenCoroutine;       //是否启用协程处理方式(0~3)
     static size_t      CoroutineMemSize;    //协程占用内存空间的最大大小
     static uint32_t    CoroutineStackSize;  //每个协程的栈大小(默认128k)
 	static int         NetThread;           //servernet thread
 	static bool        ManualListen;        //是否启用手工端口监听
-	static bool        MergeNetImp;         //网络线程和IMP线程合并(以网络线程个数为准)
 	static int         BackPacketLimit;     //回包积压检查
 	static int         BackPacketMin;       //回包速度检查
 
@@ -143,7 +143,6 @@ struct SVT_DLL_API ServerConfig
 };
 
 class PropertyReport;
-class NotifyObserver;
 
 //////////////////////////////////////////////////////////////////////
 /**
@@ -163,17 +162,32 @@ public:
     virtual ~Application();
 
     /**
-     * 初始化
+     * 初始化 --config=xxxx
      * @param argv
      */
     void main(int argc, char *argv[]);
+
+    /**
+     * init
+     * @param option
+     */
     void main(const TC_Option &option);
+
+    /**
+     * config , 实际配置文件的内容(而不是目录)
+     * @param config
+     */
 	void main(const string &config);
 
 	/**
 	 * 运行
 	 */
     void waitForShutdown();
+
+    /**
+     * 等待服务已经正常运行了
+     */
+    void waitForReady();
 
 public:
     /**
@@ -191,11 +205,11 @@ public:
 	 */
     static CommunicatorPtr& getCommunicator();
 
-	/**
-	 * 获取服务Server对象
-	 *
-	 * @return TC_EpollServerPtr&
-	 */
+    /**
+     * 获取服务Server对象
+     *
+     * @return TC_EpollServerPtr&
+     */
     TC_EpollServerPtr &getEpollServer() { return _epollServer; }
 	const TC_EpollServerPtr &getEpollServer() const { return _epollServer; }
 
@@ -205,7 +219,7 @@ public:
     void terminate();
 
     /**
-     * 获取tarsservant框架的版本
+     * 获取框架的版本
      */
     static string getTarsVersion();
 
@@ -237,13 +251,12 @@ public:
 	    _servantHelper->addServant<T>(id, this, true);
     }
 
-
-    /**
-     * 添加Servant
-     * @param T
-     * @param id
-     * @param p, params for handle
-     */
+	/**
+	 * 添加Servant
+	 * @param T
+	 * @param id
+	 * @param p, p will pass to T, T must has constructor with p
+	 */
 	template<typename T, typename P>
 	void addServantWithParams(const string &id, const P &p)
 	{
@@ -260,10 +273,10 @@ public:
 	 * get notify observer
 	 * @return
 	 */
-	const shared_ptr<NotifyObserver> &getNotifyObserver() { return _notifyObserver; }
+	shared_ptr<NotifyObserver> &getNotifyObserver() { return _notifyObserver; }
 
     /**
-     * 非taf协议server，设置Servant的协议解析器
+     * 非tars协议server，设置Servant的协议解析器
      * @param protocol
      * @param servant
      */
@@ -285,7 +298,7 @@ protected:
     /**
      * 析够, 进程只会调用一次
      */
-    virtual void destroyApp() = 0;
+    virtual void destroyApp() {};
 
     /**
      * 解析服务的网络配置(业务可以在里面变更网络配置)
@@ -439,16 +452,16 @@ protected:
      */
     void onAccept(TC_EpollServer::Connection* cPtr);
 
-    /**
-     *
-     *
-     * @param command
-     * @param params
-     * @param result
-     *
-     * @return bool
-     */
-    void addServantOnClose(const string& servant, const TC_EpollServer::close_functor& f);
+    // /**
+    //  *
+    //  *
+    //  * @param command
+    //  * @param params
+    //  * @param result
+    //  *
+    //  * @return bool
+    //  */
+    // void addServantOnClose(const string& servant, const TC_EpollServer::close_functor& f);
 
 protected:
     /**
@@ -488,11 +501,11 @@ protected:
     /**
      * 解析配置文件
      */
-    void parseConfig(const string &config);
+	void parseConfig(const string &config);
 
-     /**
-     * 解析ip权限allow deny 次序
-     */
+	/**
+	* 解析ip权限allow deny 次序
+	*/
     TC_EpollServer::BindAdapter::EOrder parseOrder(const string &s);
 
     /**
@@ -549,20 +562,23 @@ protected:
      */
     std::vector<TC_EpollServer::accept_callback_functor> _acceptFuncs;
 
-	/**
-	 * servant helper
-	 */
-	shared_ptr<ServantHelperManager>    _servantHelper;
+    /**
+     * servant helper
+     */
+    shared_ptr<ServantHelperManager>    _servantHelper;
 
-	/**
-	 * notify observer
-	 */
-	shared_ptr<NotifyObserver>          _notifyObserver;
+    /**
+     * notify observer
+     */
+    shared_ptr<NotifyObserver>          _notifyObserver;
 
     /**
      * ssl ctx
      */
-	shared_ptr<TC_OpenSSL::CTX> _ctx = nullptr;
+	shared_ptr<TC_OpenSSL::CTX> 		_ctx = nullptr;
+
+	size_t 								_ctrlCId = -1;
+	size_t  							_termId = -1;
 
     PropertyReport * _pReportQueue;
     PropertyReport * _pReportConRate;

@@ -95,14 +95,14 @@ FILE(WRITE ${TARS_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND}  -E ech
 
 ####################################################################
 
-# k8s taf
+# k8s 
 set(TARS_K8S_WEB_HOST "" CACHE STRING "set k8s web host")
 IF (TARS_K8S_WEB_HOST STREQUAL "")
-	set(TARS_K8S_WEB_HOST "http://taf.test.whup.com:8080")
+	set(TARS_K8S_WEB_HOST "http://tars.test.whup.com:8080")
 ENDIF ()
 
 set(TARS_K8S_TOKEN "" CACHE STRING "set k8s web token")
-set(TARS_K8S_BASE_IMAGE "" CACHE STRING "set taf k8s base image")
+set(TARS_K8S_BASE_IMAGE "" CACHE STRING "set tars k8s base image")
 set(TARS_K8S_UPLOAD "${CMAKE_BINARY_DIR}/run-k8s-upload.cmake")
 FILE(WRITE ${TARS_K8S_UPLOAD} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo upload k8s all)\n")
 FILE(WRITE ${TARS_K8S_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND}  -E echo upload k8s tars all)\n")

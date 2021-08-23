@@ -658,8 +658,8 @@ namespace tars
 		};
 
 		/**
-		* @brief 枚举类型,定义日志的四种等级 . 此处级别被修改了，与taf标准不一样
-		* @brief Enumeration type, defines four levels of logs. This level has been modified and is different from the TAF standard
+		* @brief 枚举类型,定义日志的四种等级 . 此处级别被修改了，与tars标准不一样
+		* @brief Enumeration type, defines four levels of logs. This level has been modified and is different from the TARS standard
 		*/
 		enum
 		{

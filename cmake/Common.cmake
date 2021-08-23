@@ -24,12 +24,12 @@ endforeach()
 
 option(ONLY_LIB "option for only lib" ON)
 
-option(TARS_OPENTRACKING "option for open tracking" OFF)
+# option(TARS_OPENTRACKING "option for open tracking" OFF)
 
-if (TARS_OPENTRACKING)
-    add_definitions(-DTARS_OPENTRACKING=1)
-    set(OPENTRACKING_INC "/usr/local/include")
-endif ()
+# if (TARS_OPENTRACKING)
+#     add_definitions(-DTARS_OPENTRACKING=1)
+#     set(OPENTRACKING_INC "/usr/local/include")
+# endif ()
 
 # set(TARS_OPENTRACKING $ENV{TARS_OPENTRACKING})
 # if(TARS_OPENTRACKING)
@@ -97,7 +97,7 @@ message("PLATFORM:                  ${PLATFORM}")
 message("CMAKE_INSTALL_PREFIX:      ${CMAKE_INSTALL_PREFIX}")
 message("BIN:                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}") 
 message("TARS2CPP:                  ${TARS2CPP}") 
-message("TARS_OPENTRACKING:         ${TARS_OPENTRACKING}") 
+#message("TARS_OPENTRACKING:         ${TARS_OPENTRACKING}")
 message("ONLY_LIB:                  ${ONLY_LIB}" )
 #-------------------------------------------------------------
 

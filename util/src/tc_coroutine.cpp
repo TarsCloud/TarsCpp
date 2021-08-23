@@ -438,7 +438,7 @@ int TC_CoroutineScheduler::increaseCoroPoolSize()
     return 0;
 }
 
-uint32_t TC_CoroutineScheduler::createCoroutine(const std::function<void ()> &callback)
+uint32_t TC_CoroutineScheduler::go(const std::function<void ()> &callback)
 {
 	if(!_all_coro)
 	{
@@ -835,7 +835,7 @@ void TC_Coroutine::handleCoro()
 	//把协程创建出来
     for(uint32_t i = 0; i < _num; ++i)
     {
-        _coroSched->createCoroutine(std::bind(&TC_Coroutine::coroEntry, this));
+		_coroSched->go(std::bind(&TC_Coroutine::coroEntry, this));
     }
 
 
@@ -847,9 +847,9 @@ void TC_Coroutine::coroEntry(TC_Coroutine *pCoro)
     pCoro->handle();
 }
 
-uint32_t TC_Coroutine::createCoroutine(const std::function<void ()> &coroFunc)
+uint32_t TC_Coroutine::go(const std::function<void ()> &coroFunc)
 {
-    return _coroSched->createCoroutine(coroFunc);
+    return _coroSched->go(coroFunc);
 }
 
 void TC_Coroutine::yield()

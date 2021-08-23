@@ -88,9 +88,9 @@ public:
     void createFile(const string& file);
 
     /**
-     * 设置TAF库的报名
+     * 设置TARS库的报名
      */
-    void setTafPacket(const std::string& sPacket)
+    void setTarsPacket(const std::string& sPacket)
     {
         s_TARS_PACKAGE 		= sPacket + TARS_PACKAGE;
         s_PROXY_PACKAGE		= sPacket + PROXY_PACKAGE;

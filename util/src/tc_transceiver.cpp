@@ -1,6 +1,6 @@
 #include "util/tc_transceiver.h"
 #include "util/tc_logger.h"
-#if TAF_SSL
+#if TARS_SSL
 #include "util/tc_openssl.h"
 #endif
 #include <sstream>
@@ -160,7 +160,7 @@ void TC_Transceiver::initializeServer(const onclose_callback &onclose,
 
 	_onOpensslCallback = onopenssl;
 
-#if TAF_SSL
+#if TARS_SSL
     if (isSSL()) 
     {
         _openssl = _onOpensslCallback(this);
@@ -421,7 +421,7 @@ void TC_Transceiver::onConnect()
 
     _epoller->erase(_connTimerId);
     _connTimerId = 0;
-#if TAF_SSL
+#if TARS_SSL
     if (isSSL())
     {
 	    _openssl = _onOpensslCallback(this);
@@ -468,7 +468,7 @@ void TC_Transceiver::doAuthReq()
         //如果是客户端, 则主动发起鉴权请求
         shared_ptr<TC_NetWorkBuffer::Buffer> buff = _onClientSendAuthCallback(this);
 
-    #if TAF_SSL
+    #if TARS_SSL
         if(this->isSSL()) 
         {
             int ret = _openssl->write(buff->buffer(), (uint32_t) buff->length(), _sendBuffer);
@@ -569,7 +569,7 @@ void TC_Transceiver::tcpClose(bool deconstructor, CloseReason reason, const stri
 {
     if(_ep.isTcp() && isValid())
     {
-#if TAF_SSL
+#if TARS_SSL
         if (_openssl)
         {
             _openssl->release();
@@ -659,7 +659,7 @@ TC_Transceiver::ReturnStatus TC_Transceiver::sendRequest(const shared_ptr<TC_Net
 
     if (_ep.isTcp() && _ep.getAuthType() == TC_Endpoint::AUTH_TYPELOCAL && _authState != eAuthSucc)
 	{
-#if TAF_SSL
+#if TARS_SSL
 		if (isSSL() && !_openssl)
         {
             return eRetNotSend;
@@ -668,7 +668,7 @@ TC_Transceiver::ReturnStatus TC_Transceiver::sendRequest(const shared_ptr<TC_Net
 		return eRetNotSend; // 需要鉴权但还没通过，不能发送非认证消息
 	}
 
-#if TAF_SSL
+#if TARS_SSL
 	// 握手数据已加密,直接发送，会话数据需加密
 	if (isSSL())
 	{
@@ -964,7 +964,7 @@ int TC_TCPTransceiver::recv(void* buf, uint32_t len, uint32_t flag)
     return iRet;
 }
 /////////////////////////////////////////////////////////////////
-#if TAF_SSL
+#if TARS_SSL
 
 TC_SSLTransceiver::TC_SSLTransceiver(TC_Epoller* epoller, const TC_Endpoint &ep)
 : TC_TCPTransceiver(epoller, ep)

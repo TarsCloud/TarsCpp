@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.2)
 
 project(servant)
 
-if(TARS_OPENTRACKING)
-include_directories(${util_SOURCE_DIR}/include ${OPENTRACKING_INC})
-else()
+# if(TARS_OPENTRACKING)
+# include_directories(${util_SOURCE_DIR}/include ${OPENTRACKING_INC})
+# else()
 include_directories(${util_SOURCE_DIR}/include)
-endif()
+# endif()
 
 #调用tars2cpp, 生成tars对应的文件
 macro(complice_tars OUT_DEPENDS_LIST HEADER INCLUDE)
