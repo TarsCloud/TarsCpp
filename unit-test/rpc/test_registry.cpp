@@ -169,11 +169,14 @@ while(count-- > 0) { prx->http_call("hello", req, rsp); } }
 
 TEST_F(HelloTest, registryRpc)
 {
-	shared_ptr<Communicator> c = getCommunicator();
+//	shared_ptr<Communicator> c = getCommunicator();
 
 	START_FRAMEWORK_SERVER_1_2
 
+	shared_ptr<Communicator> c = getCommunicator();
+
 	rpcFromRegistry(c.get());
+	LOG_CONSOLE_DEBUG << endl;
 
 	funcInCoroutine([&](){
 		rpcFromRegistry(c.get());
@@ -185,6 +188,7 @@ TEST_F(HelloTest, registryRpc)
 		rpcFromRegistry(comm.get());
 	});
 
+	LOG_CONSOLE_DEBUG << endl;
 	stopServer(rpc1Server);
 	stopServer(rpc2Server);
 	stopServer(fs);

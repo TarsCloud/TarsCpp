@@ -56,7 +56,7 @@ TEST_F(HelloTest, testAdmin)
 	EXPECT_TRUE(viewversion.find("$") != string::npos);
 
 	string connection = adminFPrx->notify("tars.connection");
-	EXPECT_TRUE(connection.find("[adater:AdminAdapter] [connections:1]") != string::npos);
+	EXPECT_TRUE(connection.find("[adapter:AdminAdapter]") != string::npos);
 
 	ServerConfig::ConfigFile = CONFIGPATH + "/server/windows.conf";
 

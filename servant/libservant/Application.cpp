@@ -425,7 +425,7 @@ bool Application::cmdConnections(const string& command, const string& params, st
     {
         vector<TC_EpollServer::ConnStatus> v = it->second->getConnStatus();
 
-        os << OUT_LINE << "\n" << TC_Common::outfill("[adater:" + it->second->getName() + "] [connections:" + TC_Common::tostr(v.size()) + "]") << endl;
+        os << OUT_LINE << "\n" << TC_Common::outfill("[adapter:" + it->second->getName() + "] [connections:" + TC_Common::tostr(v.size()) + "]") << endl;
 
         os  << TC_Common::outfill("conn-uid", ' ', 15)
             << TC_Common::outfill("ip:port", ' ', 25)

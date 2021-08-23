@@ -205,6 +205,7 @@ public:
 
 		_conf = CONFIG();
 
+		TC_File::removeFile("RpcServer.tarsdat", false);
 	}
 	virtual void TearDown()
 	{
@@ -214,13 +215,9 @@ public:
 	template<typename T>
 	void startServer(T &server, TC_Config conf, TC_EpollServer::SERVER_OPEN_COROUTINE openCoroutine = TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD)
 	{
-//		TC_Config conf;
-//		conf.parseFile(config);
 		conf.set("/tars/application/server<opencoroutine>", TC_Common::tostr(openCoroutine));
 
 		ASSERT_TRUE(conf.get("/tars/application/server<opencoroutine>") == TC_Common::tostr(openCoroutine));
-
-		// ASSERT_TRUE(ServerConfig::OpenCoroutine == openCoroutine);
 
 		server.main(conf.tostr());
 
