@@ -1,0 +1,22 @@
+
+module Test
+{
+    interface Hello
+    {
+        int testTrans(int index, string s, out string r);
+
+        int testSyncTrans(int index, string s, out string r);
+
+        int testHello(int index, string s, out string r);
+
+        int testPid(out string r);
+
+        int testTimeout(int timeout);
+
+        int testDyeing(routekey string strIn, out string strOut);
+
+        int testDyeingTrans();
+
+    };
+};
+
