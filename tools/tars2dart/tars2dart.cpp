@@ -902,7 +902,7 @@ string Tars2Dart::generateDart(const EnumPtr& pPtr, const NamespacePtr& nPtr) co
     string sValue;
     for (size_t i = 0; i < member.size(); i++)
     {
-        s << TAB << "static const int _" << member[i]->getId() << " = ";
+        s << TAB << "static const int " << member[i]->getId() << " = ";
         if (member[i]->hasDefault())
         {
             bFlag = true;
