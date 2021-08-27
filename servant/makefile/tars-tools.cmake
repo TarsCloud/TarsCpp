@@ -104,6 +104,7 @@ ENDIF ()
 set(TARS_K8S_TOKEN "" CACHE STRING "set k8s web token")
 set(TARS_K8S_BASE_IMAGE "" CACHE STRING "set tars k8s base image")
 set(TARS_K8S_UPLOAD "${CMAKE_BINARY_DIR}/run-k8s-upload.cmake")
+set(TARS_K8S_UPLOAD_TARS "${CMAKE_BINARY_DIR}/run-k8s-upload-tars.cmake")
 FILE(WRITE ${TARS_K8S_UPLOAD} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo upload k8s all)\n")
 FILE(WRITE ${TARS_K8S_UPLOAD_TARS} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND}  -E echo upload k8s tars all)\n")
 
