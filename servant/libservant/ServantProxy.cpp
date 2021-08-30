@@ -213,8 +213,10 @@ ServantProxyThreadData* ServantProxyThreadData::getData()
 
 void ServantProxyThreadData::deconstructor(Communicator *communicator)
 {
-    assert(g_immortal);
-    g_immortal->erase(communicator);
+    if(g_immortal)
+    {
+        g_immortal->erase(communicator);
+    }
 }
 
 void ServantProxyThreadData::erase(Communicator *communicator)
