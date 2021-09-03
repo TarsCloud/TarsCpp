@@ -408,10 +408,9 @@ void TC_EpollServer::Handle::handleLoopThread()
 
 	while (!_epollServer->isTerminate())
 	{
-		if(_dataBuffer->wait(_handleIndex))
-		{
-			handleOnceThread();
-		}
+		_dataBuffer->wait(_handleIndex);
+
+		handleOnceThread();
 	}
 }
 
