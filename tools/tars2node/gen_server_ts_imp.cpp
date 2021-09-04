@@ -49,7 +49,7 @@ void CodeGenerator::generateTSServerImp(const ContextPtr &cPtr)
             estr << TAB << "export class " << is[ii]->getId() << "Imp extends base." << namespaces[i]->getId() << "." << is[ii]->getId() << "Imp { " << endl;
             INC_TAB;
 
-            estr << TAB << "initialize() {" << endl;
+            estr << TAB << "async initialize() {" << endl;
             INC_TAB;
             estr << TAB << "// TODO: implement initialize" << endl;
             DEL_TAB;
@@ -61,7 +61,7 @@ void CodeGenerator::generateTSServerImp(const ContextPtr &cPtr)
                 const OperationPtr &oPtr = vOperation[iii];
 
                 // generate function entries
-                estr << TAB << oPtr->getId() << "(current: base." << namespaces[i]->getId() << "." << is[ii]->getId() << "Imp." << oPtr->getId() << "Current";
+                estr << TAB << "async " << oPtr->getId() << "(current: base." << namespaces[i]->getId() << "." << is[ii]->getId() << "Imp." << oPtr->getId() << "Current";
 
                 vector<ParamDeclPtr> &vParamDecl = oPtr->getAllParamDeclPtr();
                 for (size_t j = 0; j < vParamDecl.size(); j++)
