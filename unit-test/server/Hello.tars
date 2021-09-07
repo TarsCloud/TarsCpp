@@ -17,6 +17,8 @@ module Test
 
         int testDyeingTrans();
 
+        bool testCoro(string sIn, out string sOut);
+
     };
 };
 

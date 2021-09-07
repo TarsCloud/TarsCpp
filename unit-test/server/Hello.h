@@ -24,6 +24,11 @@ namespace Test
     {
     public:
         virtual ~HelloPrxCallback(){}
+        virtual void callback_testCoro(tars::Bool ret,  const std::string& sOut)
+        { throw std::runtime_error("callback_testCoro() override incorrect."); }
+        virtual void callback_testCoro_exception(tars::Int32 ret)
+        { throw std::runtime_error("callback_testCoro_exception() override incorrect."); }
+
         virtual void callback_testDyeing(tars::Int32 ret,  const std::string& strOut)
         { throw std::runtime_error("callback_testDyeing() override incorrect."); }
         virtual void callback_testDyeing_exception(tars::Int32 ret)
@@ -77,6 +82,7 @@ namespace Test
         {
             static ::std::string __Hello_all[]=
             {
+                "testCoro",
                 "testDyeing",
                 "testDyeingTrans",
                 "testHello",
@@ -85,11 +91,39 @@ namespace Test
                 "testTimeout",
                 "testTrans"
             };
-            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+7, string(msg->request.sFuncName));
+            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+8, string(msg->request.sFuncName));
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __Hello_all)
             {
                 case 0:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testCoro_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+                    tars::Bool _ret = false;
+                    _is.read(_ret, 0, true);
+
+                    std::string sOut;
+                    _is.read(sOut, 2, true);
+                    CallbackThreadData * pCbtd = CallbackThreadData::getData();
+                    assert(pCbtd != NULL);
+
+                    pCbtd->setResponseContext(msg->response->context);
+
+                    callback_testCoro(_ret, sOut);
+
+                    pCbtd->delResponseContext();
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 1:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -117,7 +151,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 1:
+                case 2:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -143,7 +177,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 2:
+                case 3:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -171,7 +205,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 3:
+                case 4:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -199,7 +233,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 4:
+                case 5:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -227,7 +261,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 5:
+                case 6:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -253,7 +287,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 6:
+                case 7:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -303,6 +337,7 @@ namespace Test
         {
             static ::std::string __Hello_all[]=
             {
+                "testCoro",
                 "testDyeing",
                 "testDyeingTrans",
                 "testHello",
@@ -312,11 +347,50 @@ namespace Test
                 "testTrans"
             };
 
-            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+7, string(msg->request.sFuncName));
+            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+8, string(msg->request.sFuncName));
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __Hello_all)
             {
                 case 0:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testCoro_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+                    try
+                    {
+                        tars::Bool _ret = false;
+                        _is.read(_ret, 0, true);
+
+                        std::string sOut;
+                        _is.read(sOut, 2, true);
+                        setResponseContext(msg->response->context);
+
+                        callback_testCoro(_ret, sOut);
+
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testCoro_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testCoro_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 1:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -355,7 +429,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 1:
+                case 2:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -392,7 +466,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 2:
+                case 3:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -431,7 +505,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 3:
+                case 4:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -470,7 +544,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 4:
+                case 5:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -509,7 +583,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 5:
+                case 6:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -546,7 +620,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 6:
+                case 7:
                 {
                     if (msg->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -599,6 +673,42 @@ namespace Test
     {
     public:
         typedef map<string, string> TARS_CONTEXT;
+        tars::Bool testCoro(const std::string & sIn,std::string &sOut,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
+        {
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(sIn, 1);
+            _os.write(sOut, 2);
+            std::map<string, string> _mStatus;
+            shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testCoro", _os, context, _mStatus);
+            if(pResponseContext)
+            {
+                pResponseContext->swap(rep->context);
+            }
+
+            tars::TarsInputStream<tars::BufferReader> _is;
+            _is.setBuffer(rep->sBuffer);
+            tars::Bool _ret = false;
+            _is.read(_ret, 0, true);
+            _is.read(sOut, 2, true);
+            return _ret;
+        }
+
+        void async_testCoro(HelloPrxCallbackPtr callback,const std::string &sIn,const map<string, string>& context = TARS_CONTEXT())
+        {
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(sIn, 1);
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testCoro", _os, context, _mStatus, callback);
+        }
+        
+        void coro_testCoro(HelloCoroPrxCallbackPtr callback,const std::string &sIn,const map<string, string>& context = TARS_CONTEXT())
+        {
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(sIn, 1);
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testCoro", _os, context, _mStatus, callback, true);
+        }
+
         tars::Int32 testDyeing(const std::string & strIn,std::string &strOut,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -877,6 +987,41 @@ namespace Test
     {
     public:
         virtual ~Hello(){}
+        virtual tars::Bool testCoro(const std::string & sIn,std::string &sOut,tars::TarsCurrentPtr current) = 0;
+        static void async_response_testCoro(tars::TarsCurrentPtr current, tars::Bool _ret, const std::string &sOut)
+        {
+            if (current->getRequestVersion() == TUPVERSION )
+            {
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
+                tarsAttr.setVersion(current->getRequestVersion());
+                tarsAttr.put("", _ret);
+                tarsAttr.put("tars_ret", _ret);
+                tarsAttr.put("sOut", sOut);
+
+                vector<char> sTupResponseBuffer;
+                tarsAttr.encode(sTupResponseBuffer);
+                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+            }
+            else if (current->getRequestVersion() == JSONVERSION)
+            {
+                tars::JsonValueObjPtr _p = new tars::JsonValueObj();
+                _p->value["sOut"] = tars::JsonOutput::writeJson(sOut);
+                _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
+                vector<char> sJsonResponseBuffer;
+                tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
+                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+            }
+            else
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
+
+                _os.write(sOut, 2);
+
+                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+            }
+        }
+
         virtual tars::Int32 testDyeing(const std::string & strIn,std::string &strOut,tars::TarsCurrentPtr current) = 0;
         static void async_response_testDyeing(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &strOut)
         {
@@ -1119,6 +1264,7 @@ namespace Test
         {
             static ::std::string __Test__Hello_all[]=
             {
+                "testCoro",
                 "testDyeing",
                 "testDyeingTrans",
                 "testHello",
@@ -1128,11 +1274,66 @@ namespace Test
                 "testTrans"
             };
 
-            pair<string*, string*> r = equal_range(__Test__Hello_all, __Test__Hello_all+7, _current->getFuncName());
+            pair<string*, string*> r = equal_range(__Test__Hello_all, __Test__Hello_all+8, _current->getFuncName());
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __Test__Hello_all)
             {
                 case 0:
+                {
+                    tars::TarsInputStream<tars::BufferReader> _is;
+                    _is.setBuffer(_current->getRequestBuffer());
+                    std::string sIn;
+                    std::string sOut;
+                    if (_current->getRequestVersion() == TUPVERSION)
+                    {
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
+                        tarsAttr.setVersion(_current->getRequestVersion());
+                        tarsAttr.decode(_current->getRequestBuffer());
+                        tarsAttr.get("sIn", sIn);
+                        tarsAttr.getByDefault("sOut", sOut, sOut);
+                    }
+                    else if (_current->getRequestVersion() == JSONVERSION)
+                    {
+                        tars::JsonValueObjPtr _jsonPtr = tars::JsonValueObjPtr::dynamicCast(tars::TC_Json::getValue(_current->getRequestBuffer()));
+                        tars::JsonInput::readJson(sIn, _jsonPtr->value["sIn"], true);
+                        tars::JsonInput::readJson(sOut, _jsonPtr->value["sOut"], false);
+                    }
+                    else
+                    {
+                        _is.read(sIn, 1, true);
+                        _is.read(sOut, 2, false);
+                    }
+                    tars::Bool _ret = testCoro(sIn,sOut, _current);
+                    if(_current->isResponse())
+                    {
+                        if (_current->getRequestVersion() == TUPVERSION)
+                        {
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
+                            tarsAttr.setVersion(_current->getRequestVersion());
+                            tarsAttr.put("", _ret);
+                            tarsAttr.put("tars_ret", _ret);
+                            tarsAttr.put("sOut", sOut);
+                            tarsAttr.encode(_sResponseBuffer);
+                        }
+                        else if (_current->getRequestVersion() == JSONVERSION)
+                        {
+                            tars::JsonValueObjPtr _p = new tars::JsonValueObj();
+                            _p->value["sOut"] = tars::JsonOutput::writeJson(sOut);
+                            _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
+                            tars::TC_Json::writeValue(_p, _sResponseBuffer);
+                        }
+                        else
+                        {
+                            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                            _os.write(_ret, 0);
+                            _os.write(sOut, 2);
+                            _os.swap(_sResponseBuffer);
+                        }
+                    }
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 1:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -1187,7 +1388,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 1:
+                case 2:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -1231,7 +1432,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 2:
+                case 3:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -1290,7 +1491,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 3:
+                case 4:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -1341,7 +1542,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 4:
+                case 5:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -1400,7 +1601,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 5:
+                case 6:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -1448,7 +1649,7 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 6:
+                case 7:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());

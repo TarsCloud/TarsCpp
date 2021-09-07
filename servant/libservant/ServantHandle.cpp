@@ -155,6 +155,11 @@ bool ServantHandle::allFilterIsEmpty()
 
 void ServantHandle::initialize()
 {
+	if(TC_CoroutineScheduler::scheduler())
+	{
+		ServantProxyThreadData::getData()->_sched = TC_CoroutineScheduler::scheduler();
+	}
+
     ServantPtr servant = _application->getServantHelper()->create(_bindAdapter->getName());
 
     if (servant)

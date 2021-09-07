@@ -259,3 +259,77 @@ TEST_F(HelloTest, winLog)
 
 	stopServer(ws);
 }
+
+
+TEST_F(HelloTest, winServerCo)
+{
+	{
+		WinServer ws;
+
+		startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+		string obj = getObj(ws.getConfig(), "WinAdapter");
+
+		HelloPrx prx = ws.getCommunicator()->stringToProxy<HelloPrx>(obj);
+
+		string out;
+
+		bool co = prx->testCoro(_buffer, out);
+
+		EXPECT_FALSE(co);
+
+		stopServer(ws);
+	}
+
+	{
+		WinServer ws;
+
+		startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_CO);
+
+		string obj = getObj(ws.getConfig(), "WinAdapter");
+
+		HelloPrx prx = ws.getCommunicator()->stringToProxy<HelloPrx>(obj);
+
+		string out;
+
+		bool co = prx->testCoro(_buffer, out);
+
+		EXPECT_TRUE(co);
+
+		stopServer(ws);
+	}
+	{
+		WinServer ws;
+
+		startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_QUEUE_HANDLES_THREAD);
+
+		string obj = getObj(ws.getConfig(), "WinAdapter");
+
+		HelloPrx prx = ws.getCommunicator()->stringToProxy<HelloPrx>(obj);
+
+		string out;
+
+		bool co = prx->testCoro(_buffer, out);
+
+		EXPECT_FALSE(co);
+
+		stopServer(ws);
+	}
+	{
+		WinServer ws;
+
+		startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_QUEUE_HANDLES_CO);
+
+		string obj = getObj(ws.getConfig(), "WinAdapter");
+
+		HelloPrx prx = ws.getCommunicator()->stringToProxy<HelloPrx>(obj);
+
+		string out;
+
+		bool co = prx->testCoro(_buffer, out);
+
+		EXPECT_TRUE(co);
+
+		stopServer(ws);
+	}
+}

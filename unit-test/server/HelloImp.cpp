@@ -142,4 +142,9 @@ tars::Int32 HelloImp::testDyeingTrans(CurrentPtr current)
 	return 0;
 }
 
+bool HelloImp::testCoro(const std::string& sIn, std::string &sOut, CurrentPtr current)
+{
+	return ServantProxyThreadData::getData()->_sched != NULL;
+}
+
 ///////////////////////////////////////////////////////////////////////////////

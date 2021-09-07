@@ -45,6 +45,8 @@ public:
 
 	virtual tars::Int32 testDyeingTrans(CurrentPtr current);
 
+	virtual bool testCoro(const std::string& sIn, std::string &sOut, CurrentPtr current);
+
 protected:
     HelloPrx _helloPrx;
 
