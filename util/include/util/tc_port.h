@@ -23,6 +23,7 @@ typedef unsigned short mode_t;
 #endif
 
 #include <stdio.h>
+#include <memory>
 #include <atomic>
 #include <string>
 #include <vector>
