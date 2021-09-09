@@ -1,7 +1,7 @@
 
 # -------------------------------------------------------------------------------
 
-TARS_PATH    :=/usr/local/tars/cpp
+TARS_PATH    :=${CMAKE_INSTALL_PREFIX}
 
 #-------------------------------------------------------------------------------
 
@@ -182,7 +182,7 @@ HELP += $(HELP_TAR)
 ifneq ($(TARS_SRC),)
 
 SERVER_NAME := $(TARGET)
-SERVER_DIR  := /home/tarsproto/$(APP)/$(SERVER_NAME)
+SERVER_DIR  := ${CMAKE_INSTALL_PREFIX}/tarsproto/$(APP)/$(SERVER_NAME)
 RELEASE_TARS += $(TARS_SRC) $(TARS_H)
 
 release: $(TARS_H)
@@ -207,7 +207,7 @@ ifneq ($(DEP_FILE),)
 -include $(DEP_FILE)
 endif
 
-HELP_RELEASE  = "\n\e[1;33mrelease\e[0m:\t[copy '\e[1;32m$(TARS_SRC) $(TARS_H)\e[0m' -> '/home/tarsproto/$(APP)/$(TARGET)']"
+HELP_RELEASE  = "\n\e[1;33mrelease\e[0m:\t[copy '\e[1;32m$(TARS_SRC) $(TARS_H)\e[0m' -> '$(CMAKE_INSTALL_PREFIX)/tarsproto/$(APP)/$(TARGET)']"
 HELP_CLEAN    = "\n\e[1;33mclean\e[0m:\t\t[remove $(LOCAL_OBJ) $(TARGET)]"
 HELP_CLEANALL = "\n\e[1;33mcleanall\e[0m:\t[clean & rm .*.d]"
 HELP_TAR      = "\n\e[1;33mtar\e[0m:\t\t[will do 'tar $(TARGET).tgz $(RELEASE_FILE)']"

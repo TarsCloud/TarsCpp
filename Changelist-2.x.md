@@ -107,7 +107,7 @@
 ## v2.4.14 2020.11.09
 ### en
 - fix TC_Shm::init windows not set _bOwner
-- cmake copy .tars to tarsproto/protocol in windows
+- cmake copy .tars to tarsproto in windows
 - epoll add/del/mod and return value
 - ServantProxyThreadData reset when communicator terminate
 - get rid of the singleton. You can start multiple applications in a process!
@@ -123,7 +123,7 @@
 
 ### cn
 - 修改 TC_Shm::init in windows 没有设置 _bOwner变量的bug
-- 修改tars-tools.cmake, 在windows 平台下cmake 复制 .tars 到 tarsproto/protocol
+- 修改tars-tools.cmake, 在windows 平台下cmake 复制 .tars 到 tarsproto
 - epoll add/del/mod 等接口增加返回值
 - communicator 结束时调用ServantProxyThreadData reset
 - 尽量去掉libservant中的单例, 这样在一个进程中可以启动多个Application

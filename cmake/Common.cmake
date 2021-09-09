@@ -38,14 +38,6 @@ option(ONLY_LIB "option for only lib" ON)
 # endif()
 
 #-------------------------------------------------------------
-
-IF (UNIX)
-    set(CMAKE_INSTALL_PREFIX "/usr/local/tars/cpp" CACHE STRING "set install path" FORCE)
-ELSE()
-    set(CMAKE_INSTALL_PREFIX "c:\\tars\\cpp" CACHE STRING "set install path" FORCE)
-ENDIF()
-
-#-------------------------------------------------------------
 IF (APPLE)
 link_libraries(iconv)
 ENDIF(APPLE)

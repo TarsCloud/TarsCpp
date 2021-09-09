@@ -21,7 +21,7 @@ ENDIF ()
 include_directories(/usr/local/tars/cpp/thirdparty/include)
 link_directories(/usr/local/tars/cpp/thirdparty/lib)
 
-#include_directories(/home/tarsprotol/App/OtherServer)
+#include_directories(${CMAKE_INSTALL_PREFIX}/tarsprotol/App/OtherServer)
 
 add_subdirectory(src)
 
