@@ -1801,7 +1801,6 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     return s.str();
 }
 
-/*
 string Tars2Cpp::promiseReadFrom(const TypeIdPtr &pPtr, bool bIsRequire) const
 {
     ostringstream s;
@@ -1834,6 +1833,7 @@ string Tars2Cpp::promiseReadFrom(const TypeIdPtr &pPtr, bool bIsRequire) const
     s << TAB <<"_is.mapBufferSkip("<<pPtr->getId() << "Len);"<<endl;
     return s.str();
 }
+
 bool Tars2Cpp::isPromiseDispatchInitValue(const TypeIdPtr &pPtr) const
 {
     BuiltinPtr bPtr = BuiltinPtr::dynamicCast(pPtr->getTypePtr());
@@ -1861,7 +1861,6 @@ bool Tars2Cpp::isPromiseDispatchInitValue(const TypeIdPtr &pPtr) const
     }
     return false;
 }
-*/
 string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) const
 {
     ostringstream s;
@@ -1922,7 +1921,6 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
     DEL_TAB;
     s << TAB << "}" << endl;
     s << TAB << endl;
-/*
    //promise异步的函数声明
    string sStruct = pPtr->getId();
     s << TAB << "tars::Future< " << cn <<"PrxCallbackPromise::Promise" << sStruct << "Ptr > promise_async_" << pPtr->getId() << "(";
@@ -1965,7 +1963,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
     DEL_TAB;
     s << TAB << "}" << endl;
     s << endl;
-*/
+
     //协程并行异步的函数声明
     s << TAB << "void coro_" << pPtr->getId() << "(";
     s << cn << "CoroPrxCallbackPtr callback,";
@@ -2254,7 +2252,6 @@ struct SortOperation {
     }
 };
 
-/*
 string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const OperationPtr &pPtr) const
 {
     ostringstream s;
@@ -2382,7 +2379,6 @@ string Tars2Cpp::generateDispatchPromiseAsync(const OperationPtr &pPtr, const st
     s << TAB << "return tars::TARSSERVERSUCCESS;" << endl;
     return s.str();
 }
-*/
 /******************************InterfacePtr***************************************/
 string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) const
 {
@@ -2488,7 +2484,6 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
 
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallback> " << pPtr->getId() << "PrxCallbackPtr;" << endl;
     s << endl;
-/*
 	//生成promise异步回调Proxy
     s << TAB << "//callback of promise async proxy for client" << endl;
     s << TAB << "class " << pPtr->getId() << "PrxCallbackPromise: public tars::ServantProxyCallback" << endl;
@@ -2547,7 +2542,6 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     s << TAB << "};" << endl;
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallbackPromise> " << pPtr->getId() << "PrxCallbackPromisePtr;" << endl;
     s << endl;
-*/
     //生成协程异步回调类，用于并发请求
     s << TAB << "/* callback of coroutine async proxy for client */" << endl;
     s << TAB << "class " << pPtr->getId() << "CoroPrxCallback: public " << pPtr->getId() << "PrxCallback" << endl;
@@ -2939,7 +2933,7 @@ void Tars2Cpp::generateH(const ContextPtr &pPtr) const
         {
             s << "#include \"servant/ServantProxy.h\"" << endl;
             s << "#include \"servant/Servant.h\"" << endl;
-			// s << "#include \"promise/promise.h\"" << endl;
+	    s << "#include \"promise/promise.h\"" << endl;
             break;
         }
     }
