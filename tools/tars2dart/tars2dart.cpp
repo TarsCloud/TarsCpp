@@ -614,7 +614,7 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
             }
             else
             {
-                s << TAB  << tostr(member[i]->getTypePtr()) << ((bPtr && bPtr->isSimple())? " " :"? ") << member[i]->getId() << getDefaultValue(member[i],"=")  << ";" << endl;
+                s << TAB  << tostr(member[i]->getTypePtr()) << (( ePtr || (bPtr && bPtr->isSimple()))? " " :"? ") << member[i]->getId() << getDefaultValue(member[i],"=")  << ";" << endl;
             }
         }
         s << endl;
@@ -627,7 +627,8 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     for (size_t i = 0; i < member.size(); i++)
     {
         BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[i]->getTypePtr());
-        s << tostr(member[i]->getTypePtr()) << ((bPtr && bPtr->isSimple())? " " :"? ") << member[i]->getId()
+        EnumPtr ePtr = EnumPtr::dynamicCast(member[i]->getTypePtr());
+        s << tostr(member[i]->getTypePtr()) << (( ePtr || (bPtr && bPtr->isSimple()))? " " :"? ") << member[i]->getId()
             << getDefaultValue(member[i],":")
             << ((i < member.size() - 1) ? ", " : "");
     }
@@ -679,7 +680,8 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
     for (size_t i = 0; i < member.size(); i++)
     {
         BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[i]->getTypePtr());
-        if (!bPtr)
+        EnumPtr ePtr    = EnumPtr::dynamicCast(member[i]->getTypePtr());
+        if (!bPtr && !ePtr)
         {
             s << TAB << tostrCache(member[i]) << ";" << endl;
         }
@@ -756,6 +758,12 @@ string Tars2Dart::generateDart(const StructPtr& pPtr, const NamespacePtr& nPtr) 
                     << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ");" << endl;
         }
 
+        //枚举
+        if (ePtr){
+            s << TAB << "this." << member[i]->getId() << " = " 
+                << " _is.read<int>(" << prefix + member[i]->getId()
+                << ", " << member[i]->getTag() << ", " << (member[i]->isRequire() ? "true" : "false") << ")" << ";" << endl;
+        }
         
     }
 
