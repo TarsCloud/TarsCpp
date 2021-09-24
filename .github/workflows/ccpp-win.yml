@@ -11,14 +11,12 @@ jobs:
     runs-on: windows-latest
     
     steps:
-      - steps:
-          - uses: actions/checkout@v2
-          - uses: shogo82148/actions-setup-perl@v1
-            with:
-              perl-version: '5.34'
-          - run: cpanm --installdeps .
-          - run: prove -lv t
-    - run: perl -V
+    - uses: actions/checkout@v2
+    - uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: '5.34'
+    - run: cpanm --installdeps .
+    - run: prove -lv t
     - uses: actions/checkout@v2
     - name: git
       run: git submodule update --init --recursive
