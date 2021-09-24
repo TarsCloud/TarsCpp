@@ -81,7 +81,7 @@ protected:
 		void writeLock()
 		{
 			unique_lock<mutex> lck(_mutex);
-			_cond.wait(lck, bind([](const bool *is_w, const size_t *read_c) -> bool
+			_cond.wait(lck, std::bind([](const bool *is_w, const size_t *read_c) -> bool
 			{
 				return false == *is_w && 0 == *read_c;
 			}, &_isWrite, &_readCount));
