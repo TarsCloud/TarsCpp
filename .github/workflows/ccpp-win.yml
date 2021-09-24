@@ -11,10 +11,13 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - name: Setup perl
-      uses: shogo82148/actions-setup-perl@v1
-      with:
-        perl-version: ${{ matrix.perl }}
+      - steps:
+          - uses: actions/checkout@v2
+          - uses: shogo82148/actions-setup-perl@v1
+            with:
+              perl-version: '5.34'
+          - run: cpanm --installdeps .
+          - run: prove -lv t
     - run: perl -V
     - uses: actions/checkout@v2
     - name: git
