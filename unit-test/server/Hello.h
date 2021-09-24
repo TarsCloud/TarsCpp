@@ -14,6 +14,7 @@
 using namespace std;
 #include "servant/ServantProxy.h"
 #include "servant/Servant.h"
+#include "promise/promise.h"
 
 
 namespace Test
@@ -321,6 +322,594 @@ namespace Test
 
     };
     typedef tars::TC_AutoPtr<HelloPrxCallback> HelloPrxCallbackPtr;
+
+    //callback of promise async proxy for client
+    class HelloPrxCallbackPromise: public tars::ServantProxyCallback
+    {
+    public:
+        virtual ~HelloPrxCallbackPromise(){}
+    public:
+        struct PromisetestCoro: virtual public TC_HandleBase
+        {
+        public:
+            tars::Bool _ret;
+            std::string sOut;
+            map<std::string, std::string> _mRspContext;
+        };
+        
+        typedef tars::TC_AutoPtr< HelloPrxCallbackPromise::PromisetestCoro > PromisetestCoroPtr;
+
+        HelloPrxCallbackPromise(const tars::Promise< HelloPrxCallbackPromise::PromisetestCoroPtr > &promise)
+        : _promise_testCoro(promise)
+        {}
+        
+        virtual void callback_testCoro(const HelloPrxCallbackPromise::PromisetestCoroPtr &ptr)
+        {
+            _promise_testCoro.setValue(ptr);
+        }
+        virtual void callback_testCoro_exception(tars::Int32 ret)
+        {
+            std::string str("");
+            str += "Function:testCoro_exception|Ret:";
+            str += TC_Common::tostr(ret);
+            _promise_testCoro.setException(tars::copyException(str, ret));
+        }
+
+    protected:
+        tars::Promise< HelloPrxCallbackPromise::PromisetestCoroPtr > _promise_testCoro;
+
+    public:
+        struct PromisetestDyeing: virtual public TC_HandleBase
+        {
+        public:
+            tars::Int32 _ret;
+            std::string strOut;
+            map<std::string, std::string> _mRspContext;
+        };
+        
+        typedef tars::TC_AutoPtr< HelloPrxCallbackPromise::PromisetestDyeing > PromisetestDyeingPtr;
+
+        HelloPrxCallbackPromise(const tars::Promise< HelloPrxCallbackPromise::PromisetestDyeingPtr > &promise)
+        : _promise_testDyeing(promise)
+        {}
+        
+        virtual void callback_testDyeing(const HelloPrxCallbackPromise::PromisetestDyeingPtr &ptr)
+        {
+            _promise_testDyeing.setValue(ptr);
+        }
+        virtual void callback_testDyeing_exception(tars::Int32 ret)
+        {
+            std::string str("");
+            str += "Function:testDyeing_exception|Ret:";
+            str += TC_Common::tostr(ret);
+            _promise_testDyeing.setException(tars::copyException(str, ret));
+        }
+
+    protected:
+        tars::Promise< HelloPrxCallbackPromise::PromisetestDyeingPtr > _promise_testDyeing;
+
+    public:
+        struct PromisetestDyeingTrans: virtual public TC_HandleBase
+        {
+        public:
+            tars::Int32 _ret;
+            map<std::string, std::string> _mRspContext;
+        };
+        
+        typedef tars::TC_AutoPtr< HelloPrxCallbackPromise::PromisetestDyeingTrans > PromisetestDyeingTransPtr;
+
+        HelloPrxCallbackPromise(const tars::Promise< HelloPrxCallbackPromise::PromisetestDyeingTransPtr > &promise)
+        : _promise_testDyeingTrans(promise)
+        {}
+        
+        virtual void callback_testDyeingTrans(const HelloPrxCallbackPromise::PromisetestDyeingTransPtr &ptr)
+        {
+            _promise_testDyeingTrans.setValue(ptr);
+        }
+        virtual void callback_testDyeingTrans_exception(tars::Int32 ret)
+        {
+            std::string str("");
+            str += "Function:testDyeingTrans_exception|Ret:";
+            str += TC_Common::tostr(ret);
+            _promise_testDyeingTrans.setException(tars::copyException(str, ret));
+        }
+
+    protected:
+        tars::Promise< HelloPrxCallbackPromise::PromisetestDyeingTransPtr > _promise_testDyeingTrans;
+
+    public:
+        struct PromisetestHello: virtual public TC_HandleBase
+        {
+        public:
+            tars::Int32 _ret;
+            std::string r;
+            map<std::string, std::string> _mRspContext;
+        };
+        
+        typedef tars::TC_AutoPtr< HelloPrxCallbackPromise::PromisetestHello > PromisetestHelloPtr;
+
+        HelloPrxCallbackPromise(const tars::Promise< HelloPrxCallbackPromise::PromisetestHelloPtr > &promise)
+        : _promise_testHello(promise)
+        {}
+        
+        virtual void callback_testHello(const HelloPrxCallbackPromise::PromisetestHelloPtr &ptr)
+        {
+            _promise_testHello.setValue(ptr);
+        }
+        virtual void callback_testHello_exception(tars::Int32 ret)
+        {
+            std::string str("");
+            str += "Function:testHello_exception|Ret:";
+            str += TC_Common::tostr(ret);
+            _promise_testHello.setException(tars::copyException(str, ret));
+        }
+
+    protected:
+        tars::Promise< HelloPrxCallbackPromise::PromisetestHelloPtr > _promise_testHello;
+
+    public:
+        struct PromisetestPid: virtual public TC_HandleBase
+        {
+        public:
+            tars::Int32 _ret;
+            std::string r;
+            map<std::string, std::string> _mRspContext;
+        };
+        
+        typedef tars::TC_AutoPtr< HelloPrxCallbackPromise::PromisetestPid > PromisetestPidPtr;
+
+        HelloPrxCallbackPromise(const tars::Promise< HelloPrxCallbackPromise::PromisetestPidPtr > &promise)
+        : _promise_testPid(promise)
+        {}
+        
+        virtual void callback_testPid(const HelloPrxCallbackPromise::PromisetestPidPtr &ptr)
+        {
+            _promise_testPid.setValue(ptr);
+        }
+        virtual void callback_testPid_exception(tars::Int32 ret)
+        {
+            std::string str("");
+            str += "Function:testPid_exception|Ret:";
+            str += TC_Common::tostr(ret);
+            _promise_testPid.setException(tars::copyException(str, ret));
+        }
+
+    protected:
+        tars::Promise< HelloPrxCallbackPromise::PromisetestPidPtr > _promise_testPid;
+
+    public:
+        struct PromisetestSyncTrans: virtual public TC_HandleBase
+        {
+        public:
+            tars::Int32 _ret;
+            std::string r;
+            map<std::string, std::string> _mRspContext;
+        };
+        
+        typedef tars::TC_AutoPtr< HelloPrxCallbackPromise::PromisetestSyncTrans > PromisetestSyncTransPtr;
+
+        HelloPrxCallbackPromise(const tars::Promise< HelloPrxCallbackPromise::PromisetestSyncTransPtr > &promise)
+        : _promise_testSyncTrans(promise)
+        {}
+        
+        virtual void callback_testSyncTrans(const HelloPrxCallbackPromise::PromisetestSyncTransPtr &ptr)
+        {
+            _promise_testSyncTrans.setValue(ptr);
+        }
+        virtual void callback_testSyncTrans_exception(tars::Int32 ret)
+        {
+            std::string str("");
+            str += "Function:testSyncTrans_exception|Ret:";
+            str += TC_Common::tostr(ret);
+            _promise_testSyncTrans.setException(tars::copyException(str, ret));
+        }
+
+    protected:
+        tars::Promise< HelloPrxCallbackPromise::PromisetestSyncTransPtr > _promise_testSyncTrans;
+
+    public:
+        struct PromisetestTimeout: virtual public TC_HandleBase
+        {
+        public:
+            tars::Int32 _ret;
+            map<std::string, std::string> _mRspContext;
+        };
+        
+        typedef tars::TC_AutoPtr< HelloPrxCallbackPromise::PromisetestTimeout > PromisetestTimeoutPtr;
+
+        HelloPrxCallbackPromise(const tars::Promise< HelloPrxCallbackPromise::PromisetestTimeoutPtr > &promise)
+        : _promise_testTimeout(promise)
+        {}
+        
+        virtual void callback_testTimeout(const HelloPrxCallbackPromise::PromisetestTimeoutPtr &ptr)
+        {
+            _promise_testTimeout.setValue(ptr);
+        }
+        virtual void callback_testTimeout_exception(tars::Int32 ret)
+        {
+            std::string str("");
+            str += "Function:testTimeout_exception|Ret:";
+            str += TC_Common::tostr(ret);
+            _promise_testTimeout.setException(tars::copyException(str, ret));
+        }
+
+    protected:
+        tars::Promise< HelloPrxCallbackPromise::PromisetestTimeoutPtr > _promise_testTimeout;
+
+    public:
+        struct PromisetestTrans: virtual public TC_HandleBase
+        {
+        public:
+            tars::Int32 _ret;
+            std::string r;
+            map<std::string, std::string> _mRspContext;
+        };
+        
+        typedef tars::TC_AutoPtr< HelloPrxCallbackPromise::PromisetestTrans > PromisetestTransPtr;
+
+        HelloPrxCallbackPromise(const tars::Promise< HelloPrxCallbackPromise::PromisetestTransPtr > &promise)
+        : _promise_testTrans(promise)
+        {}
+        
+        virtual void callback_testTrans(const HelloPrxCallbackPromise::PromisetestTransPtr &ptr)
+        {
+            _promise_testTrans.setValue(ptr);
+        }
+        virtual void callback_testTrans_exception(tars::Int32 ret)
+        {
+            std::string str("");
+            str += "Function:testTrans_exception|Ret:";
+            str += TC_Common::tostr(ret);
+            _promise_testTrans.setException(tars::copyException(str, ret));
+        }
+
+    protected:
+        tars::Promise< HelloPrxCallbackPromise::PromisetestTransPtr > _promise_testTrans;
+
+    public:
+        virtual int onDispatch(tars::ReqMessagePtr msg)
+        {
+            static ::std::string __Hello_all[]=
+            {
+                "testCoro",
+                "testDyeing",
+                "testDyeingTrans",
+                "testHello",
+                "testPid",
+                "testSyncTrans",
+                "testTimeout",
+                "testTrans"
+            };
+
+            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+8, string(msg->request.sFuncName));
+            if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
+            switch(r.first - __Hello_all)
+            {
+                case 0:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testCoro_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+
+                    HelloPrxCallbackPromise::PromisetestCoroPtr ptr = new HelloPrxCallbackPromise::PromisetestCoro();
+
+                    try
+                    {
+                        ptr->_ret  = false;
+                        _is.read(ptr->_ret, 0, true);
+
+                        _is.read(ptr->sOut, 2, true);
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testCoro_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testCoro_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    ptr->_mRspContext = msg->response->context;
+
+                    callback_testCoro(ptr);
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 1:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testDyeing_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+
+                    HelloPrxCallbackPromise::PromisetestDyeingPtr ptr = new HelloPrxCallbackPromise::PromisetestDyeing();
+
+                    try
+                    {
+                        _is.read(ptr->_ret, 0, true);
+
+                        _is.read(ptr->strOut, 2, true);
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testDyeing_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testDyeing_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    ptr->_mRspContext = msg->response->context;
+
+                    callback_testDyeing(ptr);
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 2:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testDyeingTrans_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+
+                    HelloPrxCallbackPromise::PromisetestDyeingTransPtr ptr = new HelloPrxCallbackPromise::PromisetestDyeingTrans();
+
+                    try
+                    {
+                        _is.read(ptr->_ret, 0, true);
+
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testDyeingTrans_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testDyeingTrans_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    ptr->_mRspContext = msg->response->context;
+
+                    callback_testDyeingTrans(ptr);
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 3:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testHello_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+
+                    HelloPrxCallbackPromise::PromisetestHelloPtr ptr = new HelloPrxCallbackPromise::PromisetestHello();
+
+                    try
+                    {
+                        _is.read(ptr->_ret, 0, true);
+
+                        _is.read(ptr->r, 3, true);
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testHello_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testHello_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    ptr->_mRspContext = msg->response->context;
+
+                    callback_testHello(ptr);
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 4:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testPid_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+
+                    HelloPrxCallbackPromise::PromisetestPidPtr ptr = new HelloPrxCallbackPromise::PromisetestPid();
+
+                    try
+                    {
+                        _is.read(ptr->_ret, 0, true);
+
+                        _is.read(ptr->r, 1, true);
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testPid_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testPid_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    ptr->_mRspContext = msg->response->context;
+
+                    callback_testPid(ptr);
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 5:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testSyncTrans_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+
+                    HelloPrxCallbackPromise::PromisetestSyncTransPtr ptr = new HelloPrxCallbackPromise::PromisetestSyncTrans();
+
+                    try
+                    {
+                        _is.read(ptr->_ret, 0, true);
+
+                        _is.read(ptr->r, 3, true);
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testSyncTrans_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testSyncTrans_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    ptr->_mRspContext = msg->response->context;
+
+                    callback_testSyncTrans(ptr);
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 6:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testTimeout_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+
+                    HelloPrxCallbackPromise::PromisetestTimeoutPtr ptr = new HelloPrxCallbackPromise::PromisetestTimeout();
+
+                    try
+                    {
+                        _is.read(ptr->_ret, 0, true);
+
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testTimeout_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testTimeout_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    ptr->_mRspContext = msg->response->context;
+
+                    callback_testTimeout(ptr);
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 7:
+                {
+                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testTrans_exception(msg->response->iRet);
+
+                        return msg->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(msg->response->sBuffer);
+
+                    HelloPrxCallbackPromise::PromisetestTransPtr ptr = new HelloPrxCallbackPromise::PromisetestTrans();
+
+                    try
+                    {
+                        _is.read(ptr->_ret, 0, true);
+
+                        _is.read(ptr->r, 3, true);
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testTrans_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testTrans_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    ptr->_mRspContext = msg->response->context;
+
+                    callback_testTrans(ptr);
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+            }
+            return tars::TARSSERVERNOFUNCERR;
+        }
+
+    };
+    typedef tars::TC_AutoPtr<HelloPrxCallbackPromise> HelloPrxCallbackPromisePtr;
 
     /* callback of coroutine async proxy for client */
     class HelloCoroPrxCallback: public HelloPrxCallback
@@ -701,6 +1290,19 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testCoro", _os, context, _mStatus, callback);
         }
         
+        tars::Future< HelloPrxCallbackPromise::PromisetestCoroPtr > promise_async_testCoro(const std::string &sIn,const map<string, string>& context)
+        {
+            tars::Promise< HelloPrxCallbackPromise::PromisetestCoroPtr > promise;
+            HelloPrxCallbackPromisePtr callback = new HelloPrxCallbackPromise(promise);
+
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(sIn, 1);
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testCoro", _os, context, _mStatus, callback);
+
+            return promise.getFuture();
+        }
+
         void coro_testCoro(HelloCoroPrxCallbackPtr callback,const std::string &sIn,const map<string, string>& context = TARS_CONTEXT())
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -739,6 +1341,20 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testDyeing", _os, context, _mStatus, callback);
         }
         
+        tars::Future< HelloPrxCallbackPromise::PromisetestDyeingPtr > promise_async_testDyeing(const std::string &strIn,const map<string, string>& context)
+        {
+            tars::Promise< HelloPrxCallbackPromise::PromisetestDyeingPtr > promise;
+            HelloPrxCallbackPromisePtr callback = new HelloPrxCallbackPromise(promise);
+
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(strIn, 1);
+            std::map<string, string> _mStatus;
+            _mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, strIn));
+            tars_invoke_async(tars::TARSNORMAL,"testDyeing", _os, context, _mStatus, callback);
+
+            return promise.getFuture();
+        }
+
         void coro_testDyeing(HelloCoroPrxCallbackPtr callback,const std::string &strIn,const map<string, string>& context = TARS_CONTEXT())
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -772,6 +1388,18 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testDyeingTrans", _os, context, _mStatus, callback);
         }
         
+        tars::Future< HelloPrxCallbackPromise::PromisetestDyeingTransPtr > promise_async_testDyeingTrans(const map<string, string>& context)
+        {
+            tars::Promise< HelloPrxCallbackPromise::PromisetestDyeingTransPtr > promise;
+            HelloPrxCallbackPromisePtr callback = new HelloPrxCallbackPromise(promise);
+
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testDyeingTrans", _os, context, _mStatus, callback);
+
+            return promise.getFuture();
+        }
+
         void coro_testDyeingTrans(HelloCoroPrxCallbackPtr callback,const map<string, string>& context = TARS_CONTEXT())
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -809,6 +1437,20 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testHello", _os, context, _mStatus, callback);
         }
         
+        tars::Future< HelloPrxCallbackPromise::PromisetestHelloPtr > promise_async_testHello(tars::Int32 index,const std::string &s,const map<string, string>& context)
+        {
+            tars::Promise< HelloPrxCallbackPromise::PromisetestHelloPtr > promise;
+            HelloPrxCallbackPromisePtr callback = new HelloPrxCallbackPromise(promise);
+
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(index, 1);
+            _os.write(s, 2);
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testHello", _os, context, _mStatus, callback);
+
+            return promise.getFuture();
+        }
+
         void coro_testHello(HelloCoroPrxCallbackPtr callback,tars::Int32 index,const std::string &s,const map<string, string>& context = TARS_CONTEXT())
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -844,6 +1486,18 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testPid", _os, context, _mStatus, callback);
         }
         
+        tars::Future< HelloPrxCallbackPromise::PromisetestPidPtr > promise_async_testPid(const map<string, string>& context)
+        {
+            tars::Promise< HelloPrxCallbackPromise::PromisetestPidPtr > promise;
+            HelloPrxCallbackPromisePtr callback = new HelloPrxCallbackPromise(promise);
+
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testPid", _os, context, _mStatus, callback);
+
+            return promise.getFuture();
+        }
+
         void coro_testPid(HelloCoroPrxCallbackPtr callback,const map<string, string>& context = TARS_CONTEXT())
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -881,6 +1535,20 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testSyncTrans", _os, context, _mStatus, callback);
         }
         
+        tars::Future< HelloPrxCallbackPromise::PromisetestSyncTransPtr > promise_async_testSyncTrans(tars::Int32 index,const std::string &s,const map<string, string>& context)
+        {
+            tars::Promise< HelloPrxCallbackPromise::PromisetestSyncTransPtr > promise;
+            HelloPrxCallbackPromisePtr callback = new HelloPrxCallbackPromise(promise);
+
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(index, 1);
+            _os.write(s, 2);
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testSyncTrans", _os, context, _mStatus, callback);
+
+            return promise.getFuture();
+        }
+
         void coro_testSyncTrans(HelloCoroPrxCallbackPtr callback,tars::Int32 index,const std::string &s,const map<string, string>& context = TARS_CONTEXT())
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -916,6 +1584,19 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testTimeout", _os, context, _mStatus, callback);
         }
         
+        tars::Future< HelloPrxCallbackPromise::PromisetestTimeoutPtr > promise_async_testTimeout(tars::Int32 timeout,const map<string, string>& context)
+        {
+            tars::Promise< HelloPrxCallbackPromise::PromisetestTimeoutPtr > promise;
+            HelloPrxCallbackPromisePtr callback = new HelloPrxCallbackPromise(promise);
+
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(timeout, 1);
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testTimeout", _os, context, _mStatus, callback);
+
+            return promise.getFuture();
+        }
+
         void coro_testTimeout(HelloCoroPrxCallbackPtr callback,tars::Int32 timeout,const map<string, string>& context = TARS_CONTEXT())
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -954,6 +1635,20 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testTrans", _os, context, _mStatus, callback);
         }
         
+        tars::Future< HelloPrxCallbackPromise::PromisetestTransPtr > promise_async_testTrans(tars::Int32 index,const std::string &s,const map<string, string>& context)
+        {
+            tars::Promise< HelloPrxCallbackPromise::PromisetestTransPtr > promise;
+            HelloPrxCallbackPromisePtr callback = new HelloPrxCallbackPromise(promise);
+
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(index, 1);
+            _os.write(s, 2);
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testTrans", _os, context, _mStatus, callback);
+
+            return promise.getFuture();
+        }
+
         void coro_testTrans(HelloCoroPrxCallbackPtr callback,tars::Int32 index,const std::string &s,const map<string, string>& context = TARS_CONTEXT())
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
