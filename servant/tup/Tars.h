@@ -1242,7 +1242,7 @@ public:
 				default:
 				{
 					char s[64];
-					snprintf(s, sizeof(s), "read 'Int64' type mismatch, tag: %d, headTag: %d, get type: %d.", tag, headTag, headType);
+					snprintf(s, sizeof(s), "read 'Int64' type mismatch, tag: %d, headTag: %c, get type: %c.", tag, headTag, headType);
 					throw TarsDecodeMismatch(s);
 				}
 
@@ -2038,7 +2038,7 @@ public:
 			if (tars_unlikely(headType != TarsHeadeStructBegin))
 			{
 				char s[64];
-				snprintf(s, sizeof(s), "read 'struct' type mismatch, tag: %d, get type: %d, headTag: %d.", tag, headType, headTag);
+				snprintf(s, sizeof(s), "read 'struct' type mismatch, tag: %d, get type: %c, headTag: %c.", tag, headType, headTag);
 				throw TarsDecodeMismatch(s);
 			}
 			v.readFrom(*this);
