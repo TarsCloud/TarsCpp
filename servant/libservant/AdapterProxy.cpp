@@ -170,16 +170,25 @@ void AdapterProxy::onRequestCallback(TC_Transceiver* trans)
 TC_NetWorkBuffer::PACKET_TYPE AdapterProxy::onParserCallback(TC_NetWorkBuffer& buff, TC_Transceiver* trans)
 {
 //	LOG_CONSOLE_DEBUG  << "fd:" << trans->fd() << ", " << trans<< endl;
-    shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
-
-    TC_NetWorkBuffer::PACKET_TYPE ret = _objectProxy->getRootServantProxy()->tars_get_protocol().responseFunc(buff, *rsp.get());
-
-    if(ret == TC_NetWorkBuffer::PACKET_FULL || ret == TC_NetWorkBuffer::PACKET_FULL_CLOSE)
+    try
     {
-        finishInvoke(rsp);
+        shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
+
+        TC_NetWorkBuffer::PACKET_TYPE ret = _objectProxy->getRootServantProxy()->tars_get_protocol().responseFunc(buff, *rsp.get());
+
+        if(ret == TC_NetWorkBuffer::PACKET_FULL || ret == TC_NetWorkBuffer::PACKET_FULL_CLOSE)
+        {
+            finishInvoke(rsp);
+        }
+        
+        return ret;
     }
-    
-    return ret;
+    catch(exception &ex)
+    {
+		TLOGERROR("[AdapterProxy::onParserCallback parser error:" << ex.what() << "," << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
+    }
+
+    return TC_NetWorkBuffer::PACKET_ERR;
 }
 
 void AdapterProxy::onCompletePackage(TC_Transceiver* trans)
