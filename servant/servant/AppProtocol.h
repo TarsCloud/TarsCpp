@@ -601,7 +601,7 @@ public:
         if (len < iHeaderLen)
         {
             //看看包头是否正确
-            static const uint32_t head = 20;
+            static const uint32_t head = 18;
 
             if (len >= head)
             {
@@ -641,13 +641,13 @@ public:
         else
         {
             //看看包头是否正确
-            static const uint32_t head = 20;
+            // static const uint32_t head = 20;
 
             string buffer;
-            in.getHeader(head, buffer);
+            in.getHeader(iHeaderLen, buffer);
 
             TarsInputStream<BufferReader> is;
-            is.setBuffer(buffer.c_str() + sizeof(tars::Int32), head);
+            is.setBuffer(buffer.c_str() + sizeof(tars::Int32), iHeaderLen - sizeof(tars::Int32));
 
             is.read(rsp.iVersion, 1, false);
 
