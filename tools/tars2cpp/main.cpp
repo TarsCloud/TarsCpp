@@ -32,6 +32,7 @@ void usage()
     // cout << "  --unknown                                   create unkown field" << endl;
     cout << "  --tarsMaster                                create get registry info interface" << endl;
     cout << "  --currentPriority						   use current path first." << endl;
+    cout << "  --without-trace                             不需要调用链追踪逻辑" << endl;
     cout << "  tars2cpp support type: bool byte short int long float double vector map" << endl;
     exit(0);
 }
@@ -115,6 +116,16 @@ int main(int argc, char* argv[])
     {
         t2c.setSqlSupport(true);
         t2c.setJsonSupport(true);
+    }
+
+    // 调用链追踪
+    if (option.hasParam("with-trace"))
+    {
+        t2c.setTrace(true);
+    }
+    else
+    {
+        t2c.setTrace(false);
     }
 
     if (option.hasParam("xml"))
