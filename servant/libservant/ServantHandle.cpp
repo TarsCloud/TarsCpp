@@ -519,6 +519,41 @@ bool ServantHandle::processDye(const CurrentPtr &current, string& dyeingKey)
 	return false;
 }
 
+bool ServantHandle::processTrace(const CurrentPtr &current)
+{
+    //当前线程的线程数据
+    ServantProxyThreadData* sptd = ServantProxyThreadData::getData();
+
+    if (sptd)
+    {
+        sptd->_traceCall = false;
+        sptd->_traceContext.reset();
+    }
+
+    // 如果调用链需要追踪，需要初始化线程私有追踪参数
+    map<string, string>::const_iterator traceIt = current->getRequestStatus().find(ServantProxy::STATUS_TRACE_KEY);
+
+    if (IS_MSG_TYPE(current->getMessageType(), tars::TARSMESSAGETYPETRACE))
+    {
+        TLOGTARS("[TARS] servant got a trace request, message_type set " << current->getMessageType() << endl);
+
+        if (traceIt != current->getRequestStatus().end())
+        {
+            TLOGTARS("[TARS] servant got a trace request, trace key:" << traceIt->second << endl);
+
+            if (sptd->initTrace(traceIt->second))
+            {
+                sptd->_traceCall = true;
+                return true;
+            }
+            else
+            {
+                TLOGTARS("[TARS] servant got a trace request, but trace key is error:" << traceIt->second << endl);
+            }
+        }
+    }
+    return false;
+}
 
 bool ServantHandle::processCookie(const CurrentPtr &current, map<string, string> &cookie)
 {
@@ -638,6 +673,8 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
     {
         dyeSwitch.enableDyeing(dyeingKey);
     }
+
+    processTrace(current);
 
 	//处理cookie
 	map<string, string> cookie;

@@ -90,6 +90,11 @@ public:
      */
     void setTarsMaster(bool bTarsMaster) { _tarsMaster = bTarsMaster; }
 
+    /**
+    * 调用链追踪
+    * @param bTrace
+    */
+    void setTrace(bool bTrace) { _bTrace = bTrace; }
 
     //下面是编解码的源码生成
 protected:
@@ -514,6 +519,8 @@ private:
     // bool _unknownField;
 
     bool _tarsMaster;
+
+    bool _bTrace;
 };
 
 #endif
