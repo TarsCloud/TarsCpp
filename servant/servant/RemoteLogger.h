@@ -17,12 +17,15 @@
 #ifndef __TARS_LOGGER_H__
 #define __TARS_LOGGER_H__
 
-#include "util/tc_logger.h"
-#include "util/tc_file.h"
-#include "util/tc_singleton.h"
 #include "servant/Global.h"
 #include "servant/LogF.h"
 #include "servant/PropertyReport.h"
+#include "util/tc_base64.h"
+#include "util/tc_file.h"
+#include "util/tc_logger.h"
+#include "util/tc_platform.h"
+#include "util/tc_thread_rwlock.h"
+#include "util/tc_singleton.h"
 
 #define DYEING_DIR "tars_dyeing"
 #define DYEING_FILE "dyeing"
@@ -64,14 +67,13 @@ public:
 
     void operator()(ostream &of, const deque<pair<size_t, string> > &ds);
 
-    void setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath,
-            int iMaxSize, int iMaxNum, const CommunicatorPtr &comm, const string & sLogObj);
+    void setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx);
 
 protected:
 
     TC_RollLogger *_dyeingRollLogger;
 
-    static int  _dyeingThread;
+//    static int  _dyeingThread;
 
     string _app;
     string _server;
@@ -83,7 +85,6 @@ protected:
      * 染色远程滚动日志代理
      */
     LogPrx                _logPrx;
-
 
 };
 
@@ -105,8 +106,13 @@ public:
         DEBUG_LOG   = 5,    /**写错误,警告,调试log*/
         TARS_LOG    = 6     /**写错误,警告,调试,Info log*/
     };
-public:
+
     typedef TC_Logger<RollWriteT, TC_RollBySize> RollLogger;
+
+    /**
+     * 析构
+     */
+    ~LocalRollLogger();
 
     /**
      * 设置本地信息
@@ -131,6 +137,13 @@ public:
      * @return RollLogger
      */
     RollLogger *logger()          { return &_logger; }
+
+	/**
+	 * 获取循环日志, 以suffix为文件名后缀
+	 *
+	 * @return RollLogger
+	 */
+	RollLogger *logger(const string &suffix);
 
     /**
      * 染色日志是否启用
@@ -160,15 +173,38 @@ public:
     string                  _logpath;
 
     /**
+     * log obj
+     */
+    string 					_logObj;
+
+    /**
      * 循环日志
      */
     RollLogger              _logger;
+
+    /**
+     * 扩展日志
+     */
+    unordered_map<string, RollLogger*>	_logger_ex;
+
+    /**
+     * lock
+     */
+	TC_ThreadRWLocker		_mutex;
 
     /**
      * 本地线程组
      */
     TC_LoggerThreadGroup    _local;
 
+	/**
+	 * 染色远程滚动日志代理
+	 */
+	LogPrx                _logPrx;
+
+    /**
+     * 是否结束
+     */
     bool _terminate = false;
 };
 
@@ -788,21 +824,7 @@ public:
     /**
      * 析构函数，关闭已打开的染色日志
      */
-    ~TarsDyeingSwitch()
-    {
-        if(_needDyeing)
-        {
-            LocalRollLogger::getInstance()->enableDyeing(false);
-
-            ServantProxyThreadData * td = ServantProxyThreadData::getData();
-            assert(NULL != td);
-            if (td)
-            {
-                td->_dyeing = false;
-                td->_dyeingKey = "";
-            }
-        }
-    }
+    ~TarsDyeingSwitch();
 
     /**
      * 获取染色的key
@@ -810,37 +832,12 @@ public:
      * @param key
      * @return bool
      */
-    static bool getDyeingKey(string & sDyeingkey)
-    {
-        ServantProxyThreadData * td = ServantProxyThreadData::getData();
-        assert(NULL != td);
-
-        if (td && td->_dyeing == true)
-        {
-            sDyeingkey = td->_dyeingKey;
-            return true;
-        }
-        return false;
-    }
+    static bool getDyeingKey(string & sDyeingkey);
 
     /**
      * 启用染色日志
      */
-    void enableDyeing(const string & sDyeingKey = "")
-    {
-        LocalRollLogger::getInstance()->enableDyeing(true);
-
-        ServantProxyThreadData * td = ServantProxyThreadData::getData();
-        assert(NULL != td);
-        if(td)
-
-        {
-            td->_dyeing       = true;
-            td->_dyeingKey = sDyeingKey;
-        }
-        _needDyeing = true;
-        _dyeingKey  = sDyeingKey;
-    }
+    void enableDyeing(const string & sDyeingKey = "");
 
 protected:
     bool _needDyeing;
@@ -854,6 +851,11 @@ protected:
 
 #define LOG_DEBUG LOG->debug() << FILE_FUNC_LINE << "|"
 #define LOG_ERROR LOG->error() << FILE_FUNC_LINE << "|"
+
+#define LOG_EX(x) (LocalRollLogger::getInstance()->logger(x))
+
+#define LOG_DEBUG_EX(x) LOG_EX(x)->debug() << FILE_FUNC_LINE << "|"
+#define LOG_ERROR_EX(x) LOG_EX(x)->error() << FILE_FUNC_LINE << "|"
 
 /**
  * @brief 按级别循环日志宏
@@ -878,6 +880,20 @@ protected:
         if (LOG->isNeedLog(level))                                   \
             LOG->log(level) << FILE_FUNC_LINE << "|" << __VA_ARGS__; \
     } while (0)
+
+#define LOGEXMSG(x, level, ...)                  \
+    do                                      \
+    {                                       \
+        if (x->isNeedLog(level))          \
+            x->log(level) << __VA_ARGS__; \
+    } while (0)
+#define LOGEX_MSG(x, level, ...)                                          \
+    do                                                               \
+    {                                                                \
+        if (x->isNeedLog(level))                                   \
+            x->log(level) << FILE_FUNC_LINE << "|" << __VA_ARGS__; \
+    } while (0)
+
 #else
 #define LOGMSG(level, msg...)       \
     do                              \
@@ -891,6 +907,20 @@ protected:
         if (LOG->isNeedLog(level))                           \
             LOG->log(level) << FILE_FUNC_LINE << "|" << msg; \
     } while (0)
+
+#define LOGEXMSG(x, level, msg...)       \
+    do                              \
+    {                               \
+        if (x->isNeedLog(level))  \
+            x->log(level) << msg; \
+    } while (0)
+#define LOGEX_MSG(x, level, msg...)                               \
+    do                                                       \
+    {                                                        \
+        if (x->isNeedLog(level))                           \
+            x->log(level) << FILE_FUNC_LINE << "|" << msg; \
+    } while (0)
+
 #endif
 
 /**
@@ -903,27 +933,52 @@ protected:
  *       框架宏方式:     TLOGINFO("I have " << vApple.size() << " apples!"<<endl);
  */
 #if TARGET_PLATFORM_WINDOWS
+#define TLOGTARS(...)    LOGMSG(LocalRollLogger::TARS_LOG,__VA_ARGS__)
 #define TLOGINFO(...)    LOGMSG(LocalRollLogger::INFO_LOG,__VA_ARGS__)
 #define TLOGDEBUG(...)   LOGMSG(LocalRollLogger::DEBUG_LOG,__VA_ARGS__)
 #define TLOGWARN(...)    LOGMSG(LocalRollLogger::WARN_LOG,__VA_ARGS__)
 #define TLOGERROR(...)   LOGMSG(LocalRollLogger::ERROR_LOG,__VA_ARGS__)
-#define TLOGTARS(...)    LOGMSG(LocalRollLogger::TARS_LOG,__VA_ARGS__)
+#define TLOG_TARS(...)    LOG_MSG(LocalRollLogger::TARS_LOG,__VA_ARGS__)
 #define TLOG_INFO(...)    LOG_MSG(LocalRollLogger::INFO_LOG,__VA_ARGS__)
 #define TLOG_DEBUG(...)   LOG_MSG(LocalRollLogger::DEBUG_LOG,__VA_ARGS__)
 #define TLOG_WARN(...)    LOG_MSG(LocalRollLogger::WARN_LOG,__VA_ARGS__)
 #define TLOG_ERROR(...)   LOG_MSG(LocalRollLogger::ERROR_LOG,__VA_ARGS__)
-#define TLOG_TARS(...)    LOG_MSG(LocalRollLogger::TARS_LOG,__VA_ARGS__)
+
+#define TLOGEXTARS(x, ...) LOGEXMSG(LOG_EX(x), LocalRollLogger::TARS_LOG, __VA_ARGS__)
+#define TLOGEXTARS(x, ...) LOGEXMSG(LOG_EX(x), LocalRollLogger::TARS_LOG, __VA_ARGS__)
+#define TLOGEXINFO(x, ...) LOGEXMSG(LOG_EX(x), LocalRollLogger::INFO_LOG, __VA_ARGS__)
+#define TLOGEXDEBUG(x, ...) LOGEXMSG(LOG_EX(x), LocalRollLogger::DEBUG_LOG, __VA_ARGS__)
+#define TLOGEXWARN(x, ...) LOGEXMSG(LOG_EX(x), LocalRollLogger::WARN_LOG, __VA_ARGS__)
+#define TLOGEXERROR(x, ...) LOGEXMSG(LOG_EX(x), LocalRollLogger::ERROR_LOG, __VA_ARGS__)
+
+#define TLOGEX_TARS(x, ...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::TARS_LOG, __VA_ARGS__)
+#define TLOGEX_TARS(x, ...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::TARS_LOG, __VA_ARGS__)
+#define TLOGEX_INFO(x, ...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::INFO_LOG, __VA_ARGS__)
+#define TLOGEX_DEBUG(x, ...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::DEBUG_LOG, __VA_ARGS__)
+#define TLOGEX_WARN(x, ...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::WARN_LOG, __VA_ARGS__)
+#define TLOGEX_ERROR(x, ...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::ERROR_LOG, __VA_ARGS__)
 #else
+#define TLOGTARS(msg...)    LOGMSG(LocalRollLogger::TARS_LOG,msg)
 #define TLOGINFO(msg...)    LOGMSG(LocalRollLogger::INFO_LOG,msg)
 #define TLOGDEBUG(msg...)   LOGMSG(LocalRollLogger::DEBUG_LOG,msg)
 #define TLOGWARN(msg...)    LOGMSG(LocalRollLogger::WARN_LOG,msg)
 #define TLOGERROR(msg...)   LOGMSG(LocalRollLogger::ERROR_LOG,msg)
-#define TLOGTARS(msg...)    LOGMSG(LocalRollLogger::TARS_LOG,msg)
+#define TLOG_TARS(msg...)    LOG_MSG(LocalRollLogger::TARS_LOG,msg)
 #define TLOG_INFO(msg...)    LOG_MSG(LocalRollLogger::INFO_LOG,msg)
 #define TLOG_DEBUG(msg...)   LOG_MSG(LocalRollLogger::DEBUG_LOG,msg)
 #define TLOG_WARN(msg...)    LOG_MSG(LocalRollLogger::WARN_LOG,msg)
 #define TLOG_ERROR(msg...)   LOG_MSG(LocalRollLogger::ERROR_LOG,msg)
-#define TLOG_TARS(msg...)    LOG_MSG(LocalRollLogger::TARS_LOG,msg)
+#define TLOGEXTARS(x, msg...) LOGEXMSG(LOG_EX(x), LocalRollLogger::TARS_LOG, msg)
+#define TLOGEXINFO(x, msg...) LOGEXMSG(LOG_EX(x), LocalRollLogger::INFO_LOG, msg)
+#define TLOGEXDEBUG(x, msg...) LOGEXMSG(LOG_EX(x), LocalRollLogger::DEBUG_LOG, msg)
+#define TLOGEXWARN(x, msg...) LOGEXMSG(LOG_EX(x), LocalRollLogger::WARN_LOG, msg)
+#define TLOGEXERROR(x, msg...) LOGEXMSG(LOG_EX(x), LocalRollLogger::ERROR_LOG, msg)
+
+#define TLOGEX_TARS(x, msg...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::TARS_LOG, msg)
+#define TLOGEX_INFO(x, msg...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::INFO_LOG, msg)
+#define TLOGEX_DEBUG(x, msg...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::DEBUG_LOG, msg)
+#define TLOGEX_WARN(x, msg...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::WARN_LOG, msg)
+#define TLOGEX_ERROR(x, msg...) LOGEX_MSG(LOG_EX(x), LocalRollLogger::ERROR_LOG, msg)
 #endif
 
 /**
@@ -932,6 +987,24 @@ protected:
 #define DLOG            (RemoteTimeLogger::getInstance()->logger()->any())
 #define FDLOG(x)        (RemoteTimeLogger::getInstance()->logger(x)->any())
 #define FFDLOG(x,y,z)   (RemoteTimeLogger::getInstance()->logger(x,y,z)->any())
+///////////////////////////////////////////
+/**
+ *  调用链追踪
+ */
+#define TRACE_ANNOTATION_TS "ts"
+#define TRACE_ANNOTATION_TE "te"
+#define TRACE_ANNOTATION_CS "cs"
+#define TRACE_ANNOTATION_CR "cr"
+#define TRACE_ANNOTATION_SR "sr"
+#define TRACE_ANNOTATION_SS "ss"
+
+#define TRACE_LOG_FILENAME "_t_trace_"
+// traceKey: traceType-TraceID|SpanID|ParentSpanID
+#define TARS_TRACE(traceKey, annotation, client, server, func, ret, data, ex) \
+    {   \
+        FDLOG(TRACE_LOG_FILENAME) << traceKey << "|" << annotation << "|" << client << "|" << server << "|" << func << "|" << TNOWMS << "|" << ret << "|" << data << "|" << ex << endl; \
+    }
+//////////////////////////////////////////////
 
 /**
  *  按天日志局部使能开关，针对单个日志文件进行使能，请在所有按天日志输出前调用

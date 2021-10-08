@@ -1,3 +1,10 @@
+# v2.4.22 2021.10.08
+### en
+- There can be multiple circular logs, and tlog can be used directly TLOG_EX to add multiple circular logs
+- Fix the bug in the parsing protocol when the package is less than 20 bytes
+### cn
+- 循环日志可以多个, 可以直接使用TLOG_EX来增加多个循环日志
+- 修复当包体小于20个字节时, 解析协议出现的bug
 
 # v2.4.21 2021.08.19
 ### en
