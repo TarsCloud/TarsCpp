@@ -31,6 +31,7 @@ namespace tars
 shared_ptr<ServantProxyThreadData::Immortal> ServantProxyThreadData::g_immortal;
 
 thread_local shared_ptr<ServantProxyThreadData> ServantProxyThreadData::g_sp;
+unsigned int ServantProxyThreadData::_traceParamMaxLen = 1;     // 默认1K
 
 ///////////////////////////////////////////////////////////////
 SeqManager::SeqManager(uint16_t iNum)
