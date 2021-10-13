@@ -23,6 +23,7 @@
 #define TAB g_parse->getTab()
 #define INC_TAB g_parse->incTab()
 #define DEL_TAB g_parse->delTab()
+#define G_TRACE_PARAM_OVER_MAX_LEN "\"{\\\"trace_param_over_max_len\\\":true}\""
 
 //////////////////////////////////////////////////////////////////////////////////
 //
@@ -35,6 +36,7 @@ Tars2Cpp::Tars2Cpp()
 , _namespace("tars")
 // , _unknownField(false)
 , _tarsMaster(false)
+, _bTrace(true)
 {
 
 }
@@ -1313,6 +1315,46 @@ string Tars2Cpp::generateDispatchAsync(const OperationPtr& pPtr, const string& c
         }
     }
 
+    // 处理调用链
+    if (_bTrace)
+    {
+        s << TAB << "ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();" << endl;
+        s << TAB << "if (pSptd && pSptd->_traceCall)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "string _trace_param_;" << endl;
+        s << TAB << "int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());" << endl;
+        s << TAB << "if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << _namespace << "::JsonValueObjPtr _p_ = new " << _namespace <<"::JsonValueObj();" << endl;
+        if (pPtr->getReturnPtr()->getTypePtr())
+        {
+            s << TAB << "_p_->value[\"\"] = " << _namespace << "::JsonOutput::writeJson(_ret);" << endl;
+        }
+        for (size_t i = 0; i < vParamDecl.size(); i++)
+        {
+            if(vParamDecl[i]->isOut())
+            {
+                s << TAB << "_p_->value[\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"] = " << _namespace << "::JsonOutput::writeJson(" << vParamDecl[i]->getTypeIdPtr()->getId() << ");" << endl;
+            }
+        }
+        s << TAB << "_trace_param_ = " + _namespace + "::TC_Json::writeValue(_p_);" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << TAB << "else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+
+        s << TAB << "TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << endl;
+    }
+
     //处理线程私有数据
     s << TAB << "CallbackThreadData * pCbtd = CallbackThreadData::getData();" << endl;
     s << TAB << "assert(pCbtd != NULL);" << endl;
@@ -1653,6 +1695,40 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     DEL_TAB;
     s << TAB << "}" << endl;
 
+    // 处理调用链
+    if (_bTrace)
+    {
+        s << TAB << "ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();" << endl;
+        s << TAB << "if (pSptd && pSptd->_traceCall)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "string _trace_param_;" << endl;
+        s << TAB << "int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());" << endl;
+        s << TAB << "if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << _namespace << "::JsonValueObjPtr _p_ = new " << _namespace <<"::JsonValueObj();" << endl;
+        for (size_t i = 0; i < vParamDecl.size(); i++)
+        {
+            if(vParamDecl[i]->isOut()) continue;
+            s << TAB << "_p_->value[\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"] = " << _namespace << "::JsonOutput::writeJson(" << vParamDecl[i]->getTypeIdPtr()->getId() << ");" << endl;
+        }
+        s << TAB << "_trace_param_ = " + _namespace + "::TC_Json::writeValue(_p_);" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << TAB << "else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+
+        s << TAB << "TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << endl;
+    }
+
     if(pPtr->getReturnPtr()->getTypePtr())
     {
         s << TAB << tostr(pPtr->getReturnPtr()->getTypePtr()) << " " << pPtr->getReturnPtr()->getId() << " = " << pPtr->getId() << "(";
@@ -1793,8 +1869,58 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
     s << TAB << "_os.swap(_sResponseBuffer);" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
+
+    if (_bTrace)
+    {
+        s << TAB << "if (pSptd && pSptd->_traceCall)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "string _trace_param_;" << endl;
+        s << TAB << "int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());" << endl;
+        s << TAB << "if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << _namespace << "::JsonValueObjPtr _p_ = new " << _namespace <<"::JsonValueObj();" << endl;
+        if (pPtr->getReturnPtr()->getTypePtr())
+        {
+            s << TAB << "_p_->value[\"\"] = " << _namespace << "::JsonOutput::writeJson(_ret);" << endl;
+        }
+        for (size_t i = 0; i < vParamDecl.size(); i++)
+        {
+            if(vParamDecl[i]->isOut())
+            {
+                s << TAB << "_p_->value[\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"] = " << _namespace << "::JsonOutput::writeJson(" << vParamDecl[i]->getTypeIdPtr()->getId() << ");" << endl;
+            }
+        }
+        s << TAB << "_trace_param_ = " + _namespace + "::TC_Json::writeValue(_p_);" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << TAB << "else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << TAB << "TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << endl;
+    }
+
     DEL_TAB;
     s << TAB << "}" << endl;
+
+    // 处理调用链
+    if (_bTrace)
+    {
+        s << TAB << "else if(pSptd && pSptd->_traceCall)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "_current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << endl;
+    }
 
     s << TAB << "return tars::TARSSERVERSUCCESS;" << endl;
 
@@ -1917,6 +2043,39 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         s << TAB << "_mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, " << os.str() << "));" << endl;
     }
 
+     // 处理调用链
+    if (_bTrace)
+    {
+        s << TAB << "ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();" << endl;
+        s << TAB << "if (pSptd && pSptd->_traceCall)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "pSptd->newSpan();" << endl;
+        s << TAB << "string _trace_param_;" << endl;
+        s << TAB << "int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());" << endl; 
+        s << TAB << "if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << _namespace << "::JsonValueObjPtr _p_ = new " << _namespace <<"::JsonValueObj();" << endl;
+        for (size_t i = 0; i < vParamDecl.size(); i++)
+        {
+            if(vParamDecl[i]->isOut()) continue;
+            s << TAB << "_p_->value[\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"] = " << _namespace << "::JsonOutput::writeJson(" << vParamDecl[i]->getTypeIdPtr()->getId() << ");" << endl;
+        }
+        s << TAB << "_trace_param_ = " + _namespace + "::TC_Json::writeValue(_p_);" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << TAB << "else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)" << endl;
+        s << TAB << "{" << endl;
+        INC_TAB;
+        s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << TAB << "TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + \".\" + ServerConfig::ServerName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+    }
+
     s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os, context, _mStatus, callback);" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
@@ -1957,6 +2116,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         os << routekey;
         s << TAB << "_mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, " << os.str() << "));" << endl;
     }
+
     s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os, context, _mStatus, callback);" << endl;
     s << endl;
     s << TAB << "return promise.getFuture();" << endl;
@@ -2006,6 +2166,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
 
         s << TAB << "_mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, " << os.str() << "));" << endl;
     }
+
     s << TAB << "tars_invoke_async(tars::TARSNORMAL,\"" << pPtr->getId() << "\", _os, context, _mStatus, callback, true);" << endl;
     DEL_TAB;
     s << TAB << "}" << endl;
@@ -2065,6 +2226,41 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
 
         // s << TAB << "" + _namespace + "::ResponsePacket rep;" << endl;
 
+        // 处理调用链
+        if (_bTrace)
+        {
+            s << TAB << "ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();" << endl;
+            s << TAB << "if (pSptd && pSptd->_traceCall)" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << "pSptd->newSpan();" << endl;
+            s << TAB << "string _trace_param_;" << endl;
+            s << TAB << "int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());" << endl;
+            s << TAB << "if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << _namespace << "::JsonValueObjPtr _p_ = new " << _namespace <<"::JsonValueObj();" << endl;
+            for (size_t i = 0; i < vParamDecl.size(); i++)
+            {
+                if(vParamDecl[i]->isOut()) continue;
+                s << TAB << "_p_->value[\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"] = " << _namespace << "::JsonOutput::writeJson(" << vParamDecl[i]->getTypeIdPtr()->getId() << ");" << endl;
+            }
+            s << TAB << "_trace_param_ = " + _namespace + "::TC_Json::writeValue(_p_);" << endl;
+            DEL_TAB;
+            s << TAB << "}" << endl;
+            s << TAB << "else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
+            DEL_TAB;
+            s << TAB << "}" << endl;
+            s << TAB << "TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + \".\" + ServerConfig::ServerName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+            DEL_TAB;
+            s << TAB << "}" << endl;
+            s << endl;
+        }
+
+
         s << TAB << "std::map<string, string> _mStatus;" << endl;
 
         if (!routekey.empty())
@@ -2104,10 +2300,59 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
                     s << readFrom(vParamDecl[i]->getTypeIdPtr());
                 }
             }
+
+            // 处理调用链
+            if (_bTrace)
+            {
+                s << TAB << "if (pSptd && pSptd->_traceCall)" << endl;
+                s << TAB << "{" << endl;
+                INC_TAB;
+                s << TAB << "string _trace_param_;" << endl;
+                s << TAB << "int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());" << endl;
+                s << TAB << "if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)" << endl;
+                s << TAB << "{" << endl;
+                INC_TAB;
+                s << TAB << _namespace << "::JsonValueObjPtr _p_ = new " << _namespace <<"::JsonValueObj();" << endl;
+                if (pPtr->getReturnPtr()->getTypePtr())
+                {
+                    s << TAB << "_p_->value[\"\"] = " << _namespace << "::JsonOutput::writeJson(_ret);" << endl;
+                }
+                for (size_t i = 0; i < vParamDecl.size(); i++)
+                {
+                    if(vParamDecl[i]->isOut())
+                    {
+                        s << TAB << "_p_->value[\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"] = " << _namespace << "::JsonOutput::writeJson(" << vParamDecl[i]->getTypeIdPtr()->getId() << ");" << endl;
+                    }
+                }
+                s << TAB << "_trace_param_ = " + _namespace + "::TC_Json::writeValue(_p_);" << endl;
+                DEL_TAB;
+                s << TAB << "}" << endl;
+                s << TAB << "else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)" << endl;
+                s << TAB << "{" << endl;
+                INC_TAB;
+                s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
+                DEL_TAB;
+                s << TAB << "}" << endl;
+                s << TAB << "TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + \".\" + ServerConfig::ServerName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+                DEL_TAB;
+                s << TAB << "}" << endl;
+                s << endl;
+            }
+
             if (pPtr->getReturnPtr()->getTypePtr())
             {
                 s << TAB << "return " << pPtr->getReturnPtr()->getId() << ";" << endl;
             }
+        }
+        else if(_bTrace)
+        {
+            // 处理调用链
+            s << TAB << "if (pSptd && pSptd->_traceCall)" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << "TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, \"\", \"\", \"" << pPtr->getId() << "\", 0, \"\", \"\");" << endl;
+            DEL_TAB;
+            s << "}" << endl;
         }
         DEL_TAB;
         s << TAB << "}" << endl;
@@ -2146,6 +2391,11 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
         s << TAB << "{" << endl;
         INC_TAB;
 
+        if (_bTrace)
+        {
+            s << TAB << "size_t _rsp_len_ = 0;" << endl;
+        }
+
         s << TAB << "if (current->getRequestVersion() == TUPVERSION )" << endl;
         s << TAB << "{" << endl;
         INC_TAB;
@@ -2171,6 +2421,10 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
         s << TAB << "vector<char> sTupResponseBuffer;" << endl;
         s << TAB << "tarsAttr.encode(sTupResponseBuffer);"<< endl;
         s << TAB << "current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);" << endl;
+        if (_bTrace)
+        {
+            s << TAB << "_rsp_len_ = sTupResponseBuffer.size();" << endl;
+        }
 
         DEL_TAB;
         s << TAB << "}" << endl;
@@ -2178,7 +2432,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
         if (_bJsonSupport)
         {
             
-                s << TAB << "else if (current->getRequestVersion() == JSONVERSION)" << endl;
+            s << TAB << "else if (current->getRequestVersion() == JSONVERSION)" << endl;
             s << TAB << "{" << endl;
             INC_TAB;
             s << TAB << _namespace << "::JsonValueObjPtr _p = new " << _namespace << "::JsonValueObj();" << endl;
@@ -2207,6 +2461,10 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
 
             s << TAB << _namespace << "::TC_Json::writeValue(_p, sJsonResponseBuffer);" << endl;
             s << TAB << "current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);" << endl;
+            if (_bTrace)
+            {
+                s << TAB << "_rsp_len_ = sJsonResponseBuffer.size();" << endl;
+            }
             DEL_TAB;
             s << TAB << "}" << endl;
             
@@ -2233,9 +2491,51 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
 
         //s << TAB << "current->sendResponse(tars::TARSSERVERSUCCESS, string(_os.getBuffer(), _os.getLength()));" << endl;
         s << TAB << "current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());" << endl;
+        if (_bTrace)
+        {
+            s << TAB << "_rsp_len_ = _os.getLength();" << endl;
+        }
 
         DEL_TAB;
         s << TAB << "}" << endl;
+
+        if (_bTrace)
+        {
+            s << TAB << "if (current->isTraced())" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << "string _trace_param_;" << endl;
+            s << TAB << "int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);" << endl;
+            s << TAB << "if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << _namespace << "::JsonValueObjPtr _p_ = new " << _namespace <<"::JsonValueObj();" << endl;
+            if (pPtr->getReturnPtr()->getTypePtr())
+            {
+                s << TAB << "_p_->value[\"\"] = " << _namespace << "::JsonOutput::writeJson(_ret);" << endl;
+            }
+            for (size_t i = 0; i < vParamDecl.size(); i++)
+            {
+                if(vParamDecl[i]->isOut())
+                {
+                    s << TAB << "_p_->value[\"" << vParamDecl[i]->getTypeIdPtr()->getId() << "\"] = " << _namespace << "::JsonOutput::writeJson(" << vParamDecl[i]->getTypeIdPtr()->getId() << ");" << endl;
+                }
+            }
+            s << TAB << "_trace_param_ = " + _namespace + "::TC_Json::writeValue(_p_);" << endl;
+            DEL_TAB;
+            s << TAB << "}" << endl;
+            s << TAB << "else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
+            DEL_TAB;
+            s << TAB << "}" << endl;
+            s << TAB << "TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+            DEL_TAB;
+            s << TAB << "}" << endl;
+            s << endl;
+        }
+
         DEL_TAB;
         s << TAB << "}" << endl;
     }
@@ -2933,7 +3233,11 @@ void Tars2Cpp::generateH(const ContextPtr &pPtr) const
         {
             s << "#include \"servant/ServantProxy.h\"" << endl;
             s << "#include \"servant/Servant.h\"" << endl;
-	    s << "#include \"promise/promise.h\"" << endl;
+	        s << "#include \"promise/promise.h\"" << endl;
+            if (_bTrace)
+            {
+                s << "#include \"servant/Application.h\"" << endl;
+            }
             break;
         }
     }
