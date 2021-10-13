@@ -17,8 +17,6 @@ jobs:
         perl-version: '5.32'
         distribution: strawberry
     - run: perl -V
-    - run: cpanm --installdeps .
-    - run: prove -lv t
     - name: git
       run: git submodule update --init --recursive
     - name: configure
