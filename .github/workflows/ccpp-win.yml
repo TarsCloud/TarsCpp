@@ -16,6 +16,7 @@ jobs:
       with:
         perl-version: '5.32'
         distribution: strawberry
+    - run: perl -V
     - run: cpanm --installdeps .
     - run: prove -lv t
     - name: git
