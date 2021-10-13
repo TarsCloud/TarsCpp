@@ -8,7 +8,7 @@ on:
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: windows-2019
     
     steps:
     - uses: actions/checkout@v2
@@ -18,7 +18,6 @@ jobs:
         distribution: strawberry
     - run: cpanm --installdeps .
     - run: prove -lv t
-    - uses: actions/checkout@v2
     - name: git
       run: git submodule update --init --recursive
     - name: configure
