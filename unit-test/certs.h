@@ -1,4 +1,4 @@
-#ifndef PATH_HEAER
+﻿#ifndef PATH_HEAER
 #define PATH_HEAER
 
 #include "util/tc_config.h"

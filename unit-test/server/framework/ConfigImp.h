@@ -1,4 +1,4 @@
-
+﻿
 
 #ifndef _CONFIGIMP_H_
 #define _CONFIGIMP_H_

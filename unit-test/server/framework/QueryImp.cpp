@@ -1,4 +1,4 @@
-
+﻿
 
 #include "QueryImp.h"
 #include "util/tc_logger.h"
