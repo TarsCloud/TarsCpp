@@ -27,7 +27,7 @@
 #include "servant/AppProtocol.h"
 #include "servant/Current.h"
 #include "servant/EndpointInfo.h"
-
+#include <tuple>
 
 namespace tars
 {
@@ -119,6 +119,7 @@ public:
 public:
 
     static thread_local shared_ptr<ServantProxyThreadData> g_sp;
+    static unsigned int _traceParamMaxLen;
 
     /**
      * global Immortal ptr, 避免Immortal提前被释放掉
@@ -248,7 +249,8 @@ public:
      */
     struct  TraceContext
     {
-        int    traceType;       // 0 不用打参数， 1 只打客户端调用参数， 2 客户端服务端参数都打印
+        int    traceType;               // 取值范围0-15， 0 不用打参数， 其他情况按位做控制开关，从低位到高位分别控制CS、CR、SR、SS，为1则输出对应参数
+        unsigned int    paramMaxLen;    // 业务接口参数最大长度，如果超过该值，那么不输出参数，用特殊串标记 {"trace_param_over_max_len":true}
         string traceID;         // traceID
         string spanID;          // spanID
         string parentSpanID;    // 父spanID
@@ -263,7 +265,16 @@ public:
             EST_TE,
         };
 
+        // 是否输出参数
+        enum E_NeedParam
+        {
+            ENP_NO = 0,
+            ENP_NORMAL = 1,
+            ENP_OVERMAXLEN = 2, 
+        };
+
         // key 分两种情况，1.rpc调用； 2.异步回调
+        // eg: f.2-ee824ad0eb4dacf56b29d230a229c584|030019ac000010796162bc5900000021|030019ac000010796162bc5900000021
         bool init(const string& k)
         {
             vector<string> vs = TC_Common::sepstr<string>(k, "|");
@@ -272,7 +283,9 @@ public:
                 traceID = vs[0];
                 parentSpanID = vs[1];
                 spanID = "";
-                traceType =initType(traceID);
+                auto flags = initType(traceID);
+                traceType = std::get<0>(flags);
+                paramMaxLen = std::get<1>(flags);
                 return true;
             }
             else if (vs.size() == 3)
@@ -280,7 +293,9 @@ public:
                 traceID = vs[0];
                 spanID = vs[1];
                 parentSpanID = vs[2];
-                traceType = initType(traceID);
+                auto flags = initType(traceID);
+                traceType = std::get<0>(flags);
+                paramMaxLen = std::get<1>(flags);
                 return true;
             }
             else
@@ -290,26 +305,40 @@ public:
             return false;
         }
 
-        static int initType(const string& tid)
+        static std::tuple<int, unsigned int> initType(const string& tid)
         {
-            string::size_type  pos = tid.find("-");
             int type = 0;
+            unsigned int maxLen = ServantProxyThreadData::getTraceParamMaxLen();
+
+            string::size_type  pos = tid.find("-");
             if (pos != string::npos)
             {
-                type = strtol(tid.substr(0, pos).c_str(), NULL, 16);
+                vector<string> flags = TC_Common::sepstr<string>(tid.substr(0, pos), ".");
+                if (flags.size() >= 1)
+                {
+                    type = strtol(flags[0].c_str(), NULL, 16);
+                }
+                if (flags.size() >= 2)
+                {
+                    maxLen = std::max(maxLen, TC_Common::strto<unsigned int>(flags[1]));
+                }
+            
+                // type = strtol(tid.substr(0, pos).c_str(), NULL, 16);
             }
             if (type < 0 || type > 15)
             {
                 type = 0;
             }
-            return type;
+            return make_tuple(type, maxLen);
         }
+
         void reset()
         {
             traceID = "";
             spanID = "";
             parentSpanID = "";
             traceType = 0;
+            paramMaxLen = 1;
         }
 
         TraceContext()
@@ -349,7 +378,8 @@ public:
             return full ? (traceID + "|" + spanID + "|" + parentSpanID) : (traceID + "|" + spanID);
         }
 
-        static bool needParam(E_SpanType es, int type)
+        // return: 0 不需要参数， 1：正常打印参数， 2：参数太长返回默认串
+        static int needParam(E_SpanType es, int type, size_t len, size_t maxLen)
         {
             if (es == EST_TS)
             {
@@ -359,7 +389,16 @@ public:
             {
                 es = EST_CR;
             }
-            return (bool)((int)es & type);
+            if (!(bool)((int)es & type))
+            {
+                return ServantProxyThreadData::TraceContext::ENP_NO;
+            }
+            else if (len > maxLen * 1024)
+            {
+                return ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN;
+            }
+
+            return ServantProxyThreadData::TraceContext::ENP_NORMAL;
         }
     };
 
@@ -386,14 +425,28 @@ public:
     {
         return _traceContext.traceType;
     }
-    bool needTraceParam(TraceContext::E_SpanType es)
+    int needTraceParam(TraceContext::E_SpanType es, size_t len)
     {
-        return _traceContext.needParam(es, _traceContext.traceType);
+        return _traceContext.needParam(es, _traceContext.traceType, len, _traceContext.paramMaxLen);
     }
-    static bool needTraceParam(TraceContext::E_SpanType es, const string& k)
+    static int needTraceParam(TraceContext::E_SpanType es, const string& k, size_t len)
     {
-        int type = TraceContext::initType(k);
-        return TraceContext::needParam(es, type);
+        auto flags = TraceContext::initType(k);
+        int type = std::get<0>(flags);
+        unsigned int maxLen = std::get<1>(flags);
+        return TraceContext::needParam(es, type, len, maxLen);
+    }
+    static void setTraceParamMaxLen(unsigned int len)
+    {
+        // 最最大保护，不超过10M
+        if (len < 1024 * 10)
+        {
+            _traceParamMaxLen = len;
+        }
+    }
+    static unsigned int getTraceParamMaxLen()
+    {
+        return _traceParamMaxLen;
     }
     ////////////////////////////////////////////////////////////////////////////////////调用链追踪 end/////
 
