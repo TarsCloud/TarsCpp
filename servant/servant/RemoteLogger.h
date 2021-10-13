@@ -1002,7 +1002,7 @@ protected:
 // traceKey: traceType-TraceID|SpanID|ParentSpanID
 #define TARS_TRACE(traceKey, annotation, client, server, func, ret, data, ex) \
     {   \
-        FDLOG(TRACE_LOG_FILENAME) << traceKey << "|" << annotation << "|" << client << "|" << server << "|" << func << "|" << TNOWMS << "|" << ret << "|" << data << "|" << ex << endl; \
+        FDLOG(TRACE_LOG_FILENAME) << traceKey << "|" << annotation << "|" << client << "|" << server << "|" << func << "|" << TNOWMS << "|" << ret << "|" << TC_Base64::encode(data) << "|" << ex << endl; \
     }
 //////////////////////////////////////////////
 

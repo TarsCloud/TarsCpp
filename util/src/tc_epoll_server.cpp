@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -918,6 +918,12 @@ int TC_EpollServer::Connection::send(const shared_ptr<SendContext> &sc)
 		_messageSize += sc->buffer()->length();
 
 		_messages.push_back(sc);
+	}
+	
+    auto cl = _connList.lock();
+	if(cl)
+	{
+		cl->refresh(getId(), getTimeout() + TNOW);
 	}
 
 	return 0;

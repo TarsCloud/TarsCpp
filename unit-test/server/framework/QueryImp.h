@@ -1,4 +1,4 @@
-
+﻿
 #ifndef __QUERY_IMP_H__
 #define __QUERY_IMP_H__
 

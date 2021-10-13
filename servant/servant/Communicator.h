@@ -377,6 +377,12 @@ protected:
 	shared_ptr<TC_OpenSSL> newClientSSL(const string & objName);
 
     /**
+     * 设置调用链控制参数
+     * @param name: 参数名
+     */
+    void setTraceParam(const string& name = "");
+
+    /**
      * 通信器启动
      */ 
     void  notifyCommunicatorEpollStart();
