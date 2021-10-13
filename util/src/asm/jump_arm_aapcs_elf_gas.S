@@ -43,6 +43,7 @@
 .globl jump_fcontext
 .align 2
 .type jump_fcontext,%function
+.syntax unified
 jump_fcontext:
     @ save LR as PC
     push {lr}
