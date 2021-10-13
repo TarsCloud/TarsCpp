@@ -43,6 +43,7 @@
 .globl ontop_fcontext
 .align 2
 .type ontop_fcontext,%function
+.syntax unified
 ontop_fcontext:
     @ save LR as PC
     push {lr}

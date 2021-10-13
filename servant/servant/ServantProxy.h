@@ -28,7 +28,8 @@
 #include "servant/Current.h"
 #include "servant/EndpointInfo.h"
 #include <tuple>
-
+#include <cmath>
+#include <algorithm>
 namespace tars
 {
 
@@ -320,7 +321,7 @@ public:
                 }
                 if (flags.size() >= 2)
                 {
-                    maxLen = std::max(maxLen, TC_Common::strto<unsigned int>(flags[1]));
+                    maxLen = max(maxLen, TC_Common::strto<unsigned int>(flags[1]));
                 }
             
                 // type = strtol(tid.substr(0, pos).c_str(), NULL, 16);
