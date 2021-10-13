@@ -1,4 +1,4 @@
-
+﻿
 #include "hello_test.h"
 
 TEST_F(HelloTest, customSyncGlobalCommunicator)

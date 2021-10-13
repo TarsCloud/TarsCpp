@@ -1,4 +1,4 @@
-
+﻿
 #ifndef __TC_UUID_GENERATOR_H
 #define __TC_UUID_GENERATOR_H
 
