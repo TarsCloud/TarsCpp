@@ -45,6 +45,7 @@
 #include <vector>
 #include <list>
 #include <thread>
+#include <memory>
 
 using namespace std;
 
