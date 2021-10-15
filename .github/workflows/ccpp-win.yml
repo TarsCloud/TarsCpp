@@ -8,7 +8,7 @@ on:
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: windows-2019
     
     steps:
     - uses: actions/checkout@v2
@@ -16,11 +16,10 @@ jobs:
       with:
         perl-version: '5.32'
         distribution: strawberry
-    - run: cpanm --installdeps .
-    - run: prove -lv t
-    - uses: actions/checkout@v2
+    - run: perl -V
     - name: git
       run: git submodule update --init --recursive
     - name: configure
-      run: mkdir build;cd build; cmake --version; cmake .. -A X64 -DTARS_MYSQL=ON -DTARS_PROTOBUF=ON
-
+      run: mkdir build;cd build; cmake --version; cmake .. -A X64 -DTARS_MYSQL=ON -DTARS_PROTOBUF=ON  -DTARS_SSL=ON
+    - name: make
+      run: cd build; cmake --build . --config release

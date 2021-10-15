@@ -41,8 +41,8 @@ macro(complice_tars OUT_DEPENDS_LIST HEADER INCLUDE)
                 OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                 DEPENDS tars2cpp ${FILE}
-                COMMAND ${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}
-                COMMENT "${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}")
+                COMMAND ${TARS2CPP} --with-tars --without-trace ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}
+                COMMENT "${TARS2CPP} --with-tars --without-trace ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}")
 
         list(APPEND DEPENDS_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H})
 
