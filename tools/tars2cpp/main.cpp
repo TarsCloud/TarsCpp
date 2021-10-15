@@ -119,13 +119,13 @@ int main(int argc, char* argv[])
     }
 
     // 调用链追踪
-    if (option.hasParam("with-trace"))
+    if (option.hasParam("without-trace"))
     {
-        t2c.setTrace(true);
+        t2c.setTrace(false);
     }
     else
     {
-        t2c.setTrace(false);
+        t2c.setTrace(true);
     }
 
     if (option.hasParam("xml"))
