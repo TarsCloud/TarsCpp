@@ -126,6 +126,20 @@ string Communicator::getServantProperty(const string &sObj, const string& name)
 	return "";
 }
 
+void Communicator::setTraceParam(const string& name)
+{
+    if (!name.empty() && name != "trace_param_max_len")
+    {
+        return;
+    }
+
+    string defaultValue = "";
+    defaultValue = getProperty("trace_param_max_len", defaultValue);
+    if (!defaultValue.empty() && TC_Common::isdigit(defaultValue))
+    {
+        ServantProxyThreadData::setTraceParamMaxLen(TC_Common::strto<unsigned int>(defaultValue));
+    }
+}
 
 shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string & objName)
 {
@@ -155,7 +169,7 @@ void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 
     conf.getDomainMap(domain, _properties);
-
+    setTraceParam();
     string defaultValue = "dft";
     if ((defaultValue == getProperty("enableset", defaultValue)) || (defaultValue == getProperty("setdivision", defaultValue)))
     {
@@ -422,6 +436,8 @@ void Communicator::setProperty(const map<string, string>& properties)
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 
     _properties = properties;
+
+    setTraceParam();
 }
 
 void Communicator::setProperty(const string& name, const string& value)
@@ -429,6 +445,8 @@ void Communicator::setProperty(const string& name, const string& value)
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 
     _properties[name] = value;
+
+    setTraceParam(name);
 }
 
 string Communicator::getProperty(const string& name, const string& dft/* = ""*/)

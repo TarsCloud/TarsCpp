@@ -209,7 +209,7 @@ if (TARS_SSL)
         set(LIB_CRYPTO "libcrypto")
 
         ExternalProject_Add(ADD_${LIB_SSL}
-                URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
+                URL http://cdn.tarsyun.com/src/openssl-1.1.1l.tar.gz
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
@@ -218,14 +218,14 @@ if (TARS_SSL)
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND nmake
                 INSTALL_COMMAND nmake install
-                URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
+                URL_MD5 ac0d4387f3ba0ad741b0580dd45f6ff3
                 )
     else ()
         set(LIB_SSL "ssl")
         set(LIB_CRYPTO "crypto")
 
         ExternalProject_Add(ADD_${LIB_SSL}
-                URL http://cdn.tarsyun.com/src/openssl-1.1.1d.tar.gz
+                URL http://cdn.tarsyun.com/src/openssl-1.1.1l.tar.gz
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
@@ -233,7 +233,7 @@ if (TARS_SSL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
-                URL_MD5 3be209000dbc7e1b95bcdf47980a3baa
+                URL_MD5 ac0d4387f3ba0ad741b0580dd45f6ff3
                 )
 
     endif ()

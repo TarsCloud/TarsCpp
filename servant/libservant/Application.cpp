@@ -1294,6 +1294,7 @@ void Application::initializeServer()
         g_pReportRspQueue = _communicator->getStatReport()->createPropertyReport(sRspQueue, PropertyReport::avg());
     }
 
+    TarsTimeLogger::getInstance()->enableLocal(TRACE_LOG_FILENAME, false);
 }
 
 void Application::setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const string &name)
