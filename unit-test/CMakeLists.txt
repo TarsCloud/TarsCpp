@@ -1,6 +1,5 @@
 project(unit-test)
 
-message(${servant_SOURCE_DIR})
 include_directories(${servant_SOURCE_DIR}/protocol/framework)
 include_directories(${servant_SOURCE_DIR}/protocol/servant)
 
