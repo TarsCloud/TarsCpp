@@ -15,6 +15,7 @@ using namespace std;
 #include "servant/ServantProxy.h"
 #include "servant/Servant.h"
 #include "promise/promise.h"
+#include "servant/Application.h"
 
 
 namespace Test
@@ -112,6 +113,25 @@ namespace Test
 
                     std::string sOut;
                     _is.read(sOut, 2, true);
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _p_->value["sOut"] = tars::JsonOutput::writeJson(sOut);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
+                    }
+
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
@@ -140,6 +160,25 @@ namespace Test
 
                     std::string strOut;
                     _is.read(strOut, 2, true);
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _p_->value["strOut"] = tars::JsonOutput::writeJson(strOut);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
+                    }
+
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
@@ -165,6 +204,24 @@ namespace Test
                     _is.setBuffer(msg->response->sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
+
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
+                    }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
@@ -194,6 +251,25 @@ namespace Test
 
                     std::string r;
                     _is.read(r, 3, true);
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
+                    }
+
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
@@ -222,6 +298,25 @@ namespace Test
 
                     std::string r;
                     _is.read(r, 1, true);
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
+                    }
+
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
@@ -250,6 +345,25 @@ namespace Test
 
                     std::string r;
                     _is.read(r, 3, true);
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
+                    }
+
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
@@ -275,6 +389,24 @@ namespace Test
                     _is.setBuffer(msg->response->sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
+
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
+                    }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
@@ -304,6 +436,25 @@ namespace Test
 
                     std::string r;
                     _is.read(r, 3, true);
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
+                    }
+
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
@@ -1267,6 +1418,25 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(sIn, 1);
             _os.write(sOut, 2);
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["sIn"] = tars::JsonOutput::writeJson(sIn);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testCoro", 0, _trace_param_, "");
+            }
+
             std::map<string, string> _mStatus;
             shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testCoro", _os, context, _mStatus);
             if(pResponseContext)
@@ -1279,6 +1449,24 @@ namespace Test
             tars::Bool _ret = false;
             _is.read(_ret, 0, true);
             _is.read(sOut, 2, true);
+            if (pSptd && pSptd->_traceCall)
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["sOut"] = tars::JsonOutput::writeJson(sOut);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testCoro", 0, _trace_param_, "");
+            }
+
             return _ret;
         }
 
@@ -1287,6 +1475,24 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(sIn, 1);
             std::map<string, string> _mStatus;
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["sIn"] = tars::JsonOutput::writeJson(sIn);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testCoro", 0, _trace_param_, "");
+            }
             tars_invoke_async(tars::TARSNORMAL,"testCoro", _os, context, _mStatus, callback);
         }
         
@@ -1316,6 +1522,25 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(strIn, 1);
             _os.write(strOut, 2);
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["strIn"] = tars::JsonOutput::writeJson(strIn);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeing", 0, _trace_param_, "");
+            }
+
             std::map<string, string> _mStatus;
             _mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, strIn));
             shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testDyeing", _os, context, _mStatus);
@@ -1329,6 +1554,24 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(strOut, 2, true);
+            if (pSptd && pSptd->_traceCall)
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["strOut"] = tars::JsonOutput::writeJson(strOut);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeing", 0, _trace_param_, "");
+            }
+
             return _ret;
         }
 
@@ -1338,6 +1581,24 @@ namespace Test
             _os.write(strIn, 1);
             std::map<string, string> _mStatus;
             _mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, strIn));
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["strIn"] = tars::JsonOutput::writeJson(strIn);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeing", 0, _trace_param_, "");
+            }
             tars_invoke_async(tars::TARSNORMAL,"testDyeing", _os, context, _mStatus, callback);
         }
         
@@ -1367,6 +1628,24 @@ namespace Test
         tars::Int32 testDyeingTrans(const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeingTrans", 0, _trace_param_, "");
+            }
+
             std::map<string, string> _mStatus;
             shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testDyeingTrans", _os, context, _mStatus);
             if(pResponseContext)
@@ -1378,6 +1657,23 @@ namespace Test
             _is.setBuffer(rep->sBuffer);
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
+            if (pSptd && pSptd->_traceCall)
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeingTrans", 0, _trace_param_, "");
+            }
+
             return _ret;
         }
 
@@ -1385,6 +1681,23 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             std::map<string, string> _mStatus;
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeingTrans", 0, _trace_param_, "");
+            }
             tars_invoke_async(tars::TARSNORMAL,"testDyeingTrans", _os, context, _mStatus, callback);
         }
         
@@ -1413,6 +1726,26 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             _os.write(r, 3);
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["index"] = tars::JsonOutput::writeJson(index);
+                    _p_->value["s"] = tars::JsonOutput::writeJson(s);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testHello", 0, _trace_param_, "");
+            }
+
             std::map<string, string> _mStatus;
             shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testHello", _os, context, _mStatus);
             if(pResponseContext)
@@ -1425,6 +1758,24 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(r, 3, true);
+            if (pSptd && pSptd->_traceCall)
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testHello", 0, _trace_param_, "");
+            }
+
             return _ret;
         }
 
@@ -1434,6 +1785,25 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             std::map<string, string> _mStatus;
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["index"] = tars::JsonOutput::writeJson(index);
+                    _p_->value["s"] = tars::JsonOutput::writeJson(s);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testHello", 0, _trace_param_, "");
+            }
             tars_invoke_async(tars::TARSNORMAL,"testHello", _os, context, _mStatus, callback);
         }
         
@@ -1464,6 +1834,24 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(r, 1);
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPid", 0, _trace_param_, "");
+            }
+
             std::map<string, string> _mStatus;
             shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testPid", _os, context, _mStatus);
             if(pResponseContext)
@@ -1476,6 +1864,24 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(r, 1, true);
+            if (pSptd && pSptd->_traceCall)
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPid", 0, _trace_param_, "");
+            }
+
             return _ret;
         }
 
@@ -1483,6 +1889,23 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             std::map<string, string> _mStatus;
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPid", 0, _trace_param_, "");
+            }
             tars_invoke_async(tars::TARSNORMAL,"testPid", _os, context, _mStatus, callback);
         }
         
@@ -1511,6 +1934,26 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             _os.write(r, 3);
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["index"] = tars::JsonOutput::writeJson(index);
+                    _p_->value["s"] = tars::JsonOutput::writeJson(s);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testSyncTrans", 0, _trace_param_, "");
+            }
+
             std::map<string, string> _mStatus;
             shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testSyncTrans", _os, context, _mStatus);
             if(pResponseContext)
@@ -1523,6 +1966,24 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(r, 3, true);
+            if (pSptd && pSptd->_traceCall)
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testSyncTrans", 0, _trace_param_, "");
+            }
+
             return _ret;
         }
 
@@ -1532,6 +1993,25 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             std::map<string, string> _mStatus;
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["index"] = tars::JsonOutput::writeJson(index);
+                    _p_->value["s"] = tars::JsonOutput::writeJson(s);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testSyncTrans", 0, _trace_param_, "");
+            }
             tars_invoke_async(tars::TARSNORMAL,"testSyncTrans", _os, context, _mStatus, callback);
         }
         
@@ -1562,6 +2042,25 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(timeout, 1);
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["timeout"] = tars::JsonOutput::writeJson(timeout);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTimeout", 0, _trace_param_, "");
+            }
+
             std::map<string, string> _mStatus;
             shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testTimeout", _os, context, _mStatus);
             if(pResponseContext)
@@ -1573,6 +2072,23 @@ namespace Test
             _is.setBuffer(rep->sBuffer);
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
+            if (pSptd && pSptd->_traceCall)
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTimeout", 0, _trace_param_, "");
+            }
+
             return _ret;
         }
 
@@ -1581,6 +2097,24 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(timeout, 1);
             std::map<string, string> _mStatus;
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["timeout"] = tars::JsonOutput::writeJson(timeout);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTimeout", 0, _trace_param_, "");
+            }
             tars_invoke_async(tars::TARSNORMAL,"testTimeout", _os, context, _mStatus, callback);
         }
         
@@ -1611,6 +2145,26 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             _os.write(r, 3);
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["index"] = tars::JsonOutput::writeJson(index);
+                    _p_->value["s"] = tars::JsonOutput::writeJson(s);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTrans", 0, _trace_param_, "");
+            }
+
             std::map<string, string> _mStatus;
             shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testTrans", _os, context, _mStatus);
             if(pResponseContext)
@@ -1623,6 +2177,24 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(r, 3, true);
+            if (pSptd && pSptd->_traceCall)
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTrans", 0, _trace_param_, "");
+            }
+
             return _ret;
         }
 
@@ -1632,6 +2204,25 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             std::map<string, string> _mStatus;
+            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+            if (pSptd && pSptd->_traceCall)
+            {
+                pSptd->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["index"] = tars::JsonOutput::writeJson(index);
+                    _p_->value["s"] = tars::JsonOutput::writeJson(s);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTrans", 0, _trace_param_, "");
+            }
             tars_invoke_async(tars::TARSNORMAL,"testTrans", _os, context, _mStatus, callback);
         }
         
@@ -1685,6 +2276,7 @@ namespace Test
         virtual tars::Bool testCoro(const std::string & sIn,std::string &sOut,tars::TarsCurrentPtr current) = 0;
         static void async_response_testCoro(tars::TarsCurrentPtr current, tars::Bool _ret, const std::string &sOut)
         {
+            size_t _rsp_len_ = 0;
             if (current->getRequestVersion() == TUPVERSION )
             {
                 UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
@@ -1696,6 +2288,7 @@ namespace Test
                 vector<char> sTupResponseBuffer;
                 tarsAttr.encode(sTupResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _rsp_len_ = sTupResponseBuffer.size();
             }
             else if (current->getRequestVersion() == JSONVERSION)
             {
@@ -1705,6 +2298,7 @@ namespace Test
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
             {
@@ -1714,12 +2308,32 @@ namespace Test
                 _os.write(sOut, 2);
 
                 current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _rsp_len_ = _os.getLength();
             }
+            if (current->isTraced())
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["sOut"] = tars::JsonOutput::writeJson(sOut);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
+            }
+
         }
 
         virtual tars::Int32 testDyeing(const std::string & strIn,std::string &strOut,tars::TarsCurrentPtr current) = 0;
         static void async_response_testDyeing(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &strOut)
         {
+            size_t _rsp_len_ = 0;
             if (current->getRequestVersion() == TUPVERSION )
             {
                 UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
@@ -1731,6 +2345,7 @@ namespace Test
                 vector<char> sTupResponseBuffer;
                 tarsAttr.encode(sTupResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _rsp_len_ = sTupResponseBuffer.size();
             }
             else if (current->getRequestVersion() == JSONVERSION)
             {
@@ -1740,6 +2355,7 @@ namespace Test
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
             {
@@ -1749,12 +2365,32 @@ namespace Test
                 _os.write(strOut, 2);
 
                 current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _rsp_len_ = _os.getLength();
             }
+            if (current->isTraced())
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["strOut"] = tars::JsonOutput::writeJson(strOut);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
+            }
+
         }
 
         virtual tars::Int32 testDyeingTrans(tars::TarsCurrentPtr current) = 0;
         static void async_response_testDyeingTrans(tars::TarsCurrentPtr current, tars::Int32 _ret)
         {
+            size_t _rsp_len_ = 0;
             if (current->getRequestVersion() == TUPVERSION )
             {
                 UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
@@ -1765,6 +2401,7 @@ namespace Test
                 vector<char> sTupResponseBuffer;
                 tarsAttr.encode(sTupResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _rsp_len_ = sTupResponseBuffer.size();
             }
             else if (current->getRequestVersion() == JSONVERSION)
             {
@@ -1773,6 +2410,7 @@ namespace Test
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
             {
@@ -1780,12 +2418,31 @@ namespace Test
                 _os.write(_ret, 0);
 
                 current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _rsp_len_ = _os.getLength();
             }
+            if (current->isTraced())
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
+            }
+
         }
 
         virtual tars::Int32 testHello(tars::Int32 index,const std::string & s,std::string &r,tars::TarsCurrentPtr current) = 0;
         static void async_response_testHello(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &r)
         {
+            size_t _rsp_len_ = 0;
             if (current->getRequestVersion() == TUPVERSION )
             {
                 UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
@@ -1797,6 +2454,7 @@ namespace Test
                 vector<char> sTupResponseBuffer;
                 tarsAttr.encode(sTupResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _rsp_len_ = sTupResponseBuffer.size();
             }
             else if (current->getRequestVersion() == JSONVERSION)
             {
@@ -1806,6 +2464,7 @@ namespace Test
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
             {
@@ -1815,12 +2474,32 @@ namespace Test
                 _os.write(r, 3);
 
                 current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _rsp_len_ = _os.getLength();
             }
+            if (current->isTraced())
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
+            }
+
         }
 
         virtual tars::Int32 testPid(std::string &r,tars::TarsCurrentPtr current) = 0;
         static void async_response_testPid(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &r)
         {
+            size_t _rsp_len_ = 0;
             if (current->getRequestVersion() == TUPVERSION )
             {
                 UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
@@ -1832,6 +2511,7 @@ namespace Test
                 vector<char> sTupResponseBuffer;
                 tarsAttr.encode(sTupResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _rsp_len_ = sTupResponseBuffer.size();
             }
             else if (current->getRequestVersion() == JSONVERSION)
             {
@@ -1841,6 +2521,7 @@ namespace Test
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
             {
@@ -1850,12 +2531,32 @@ namespace Test
                 _os.write(r, 1);
 
                 current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _rsp_len_ = _os.getLength();
             }
+            if (current->isTraced())
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
+            }
+
         }
 
         virtual tars::Int32 testSyncTrans(tars::Int32 index,const std::string & s,std::string &r,tars::TarsCurrentPtr current) = 0;
         static void async_response_testSyncTrans(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &r)
         {
+            size_t _rsp_len_ = 0;
             if (current->getRequestVersion() == TUPVERSION )
             {
                 UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
@@ -1867,6 +2568,7 @@ namespace Test
                 vector<char> sTupResponseBuffer;
                 tarsAttr.encode(sTupResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _rsp_len_ = sTupResponseBuffer.size();
             }
             else if (current->getRequestVersion() == JSONVERSION)
             {
@@ -1876,6 +2578,7 @@ namespace Test
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
             {
@@ -1885,12 +2588,32 @@ namespace Test
                 _os.write(r, 3);
 
                 current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _rsp_len_ = _os.getLength();
             }
+            if (current->isTraced())
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
+            }
+
         }
 
         virtual tars::Int32 testTimeout(tars::Int32 timeout,tars::TarsCurrentPtr current) = 0;
         static void async_response_testTimeout(tars::TarsCurrentPtr current, tars::Int32 _ret)
         {
+            size_t _rsp_len_ = 0;
             if (current->getRequestVersion() == TUPVERSION )
             {
                 UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
@@ -1901,6 +2624,7 @@ namespace Test
                 vector<char> sTupResponseBuffer;
                 tarsAttr.encode(sTupResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _rsp_len_ = sTupResponseBuffer.size();
             }
             else if (current->getRequestVersion() == JSONVERSION)
             {
@@ -1909,6 +2633,7 @@ namespace Test
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
             {
@@ -1916,12 +2641,31 @@ namespace Test
                 _os.write(_ret, 0);
 
                 current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _rsp_len_ = _os.getLength();
             }
+            if (current->isTraced())
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
+            }
+
         }
 
         virtual tars::Int32 testTrans(tars::Int32 index,const std::string & s,std::string &r,tars::TarsCurrentPtr current) = 0;
         static void async_response_testTrans(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &r)
         {
+            size_t _rsp_len_ = 0;
             if (current->getRequestVersion() == TUPVERSION )
             {
                 UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
@@ -1933,6 +2677,7 @@ namespace Test
                 vector<char> sTupResponseBuffer;
                 tarsAttr.encode(sTupResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _rsp_len_ = sTupResponseBuffer.size();
             }
             else if (current->getRequestVersion() == JSONVERSION)
             {
@@ -1942,6 +2687,7 @@ namespace Test
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
                 current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
             {
@@ -1951,7 +2697,26 @@ namespace Test
                 _os.write(r, 3);
 
                 current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _rsp_len_ = _os.getLength();
             }
+            if (current->isTraced())
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
+            }
+
         }
 
     public:
@@ -1998,6 +2763,24 @@ namespace Test
                         _is.read(sIn, 1, true);
                         _is.read(sOut, 2, false);
                     }
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value["sIn"] = tars::JsonOutput::writeJson(sIn);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
+                    }
+
                     tars::Bool _ret = testCoro(sIn,sOut, _current);
                     if(_current->isResponse())
                     {
@@ -2024,7 +2807,30 @@ namespace Test
                             _os.write(sOut, 2);
                             _os.swap(_sResponseBuffer);
                         }
+                        if (pSptd && pSptd->_traceCall)
+                        {
+                            string _trace_param_;
+                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                            {
+                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                                _p_->value["sOut"] = tars::JsonOutput::writeJson(sOut);
+                                _trace_param_ = tars::TC_Json::writeValue(_p_);
+                            }
+                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                            {
+                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                            }
+                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
+                        }
+
                     }
+                    else if(pSptd && pSptd->_traceCall)
+                    {
+                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                    }
+
                     return tars::TARSSERVERSUCCESS;
 
                 }
@@ -2053,6 +2859,24 @@ namespace Test
                         _is.read(strIn, 1, true);
                         _is.read(strOut, 2, false);
                     }
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value["strIn"] = tars::JsonOutput::writeJson(strIn);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
+                    }
+
                     tars::Int32 _ret = testDyeing(strIn,strOut, _current);
                     if(_current->isResponse())
                     {
@@ -2079,7 +2903,30 @@ namespace Test
                             _os.write(strOut, 2);
                             _os.swap(_sResponseBuffer);
                         }
+                        if (pSptd && pSptd->_traceCall)
+                        {
+                            string _trace_param_;
+                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                            {
+                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                                _p_->value["strOut"] = tars::JsonOutput::writeJson(strOut);
+                                _trace_param_ = tars::TC_Json::writeValue(_p_);
+                            }
+                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                            {
+                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                            }
+                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
+                        }
+
                     }
+                    else if(pSptd && pSptd->_traceCall)
+                    {
+                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                    }
+
                     return tars::TARSSERVERSUCCESS;
 
                 }
@@ -2100,6 +2947,23 @@ namespace Test
                     else
                     {
                     }
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
+                    }
+
                     tars::Int32 _ret = testDyeingTrans(_current);
                     if(_current->isResponse())
                     {
@@ -2123,7 +2987,29 @@ namespace Test
                             _os.write(_ret, 0);
                             _os.swap(_sResponseBuffer);
                         }
+                        if (pSptd && pSptd->_traceCall)
+                        {
+                            string _trace_param_;
+                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                            {
+                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                                _trace_param_ = tars::TC_Json::writeValue(_p_);
+                            }
+                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                            {
+                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                            }
+                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
+                        }
+
                     }
+                    else if(pSptd && pSptd->_traceCall)
+                    {
+                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                    }
+
                     return tars::TARSSERVERSUCCESS;
 
                 }
@@ -2156,6 +3042,25 @@ namespace Test
                         _is.read(s, 2, true);
                         _is.read(r, 3, false);
                     }
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value["index"] = tars::JsonOutput::writeJson(index);
+                            _p_->value["s"] = tars::JsonOutput::writeJson(s);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
+                    }
+
                     tars::Int32 _ret = testHello(index,s,r, _current);
                     if(_current->isResponse())
                     {
@@ -2182,7 +3087,30 @@ namespace Test
                             _os.write(r, 3);
                             _os.swap(_sResponseBuffer);
                         }
+                        if (pSptd && pSptd->_traceCall)
+                        {
+                            string _trace_param_;
+                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                            {
+                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                                _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                                _trace_param_ = tars::TC_Json::writeValue(_p_);
+                            }
+                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                            {
+                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                            }
+                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
+                        }
+
                     }
+                    else if(pSptd && pSptd->_traceCall)
+                    {
+                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                    }
+
                     return tars::TARSSERVERSUCCESS;
 
                 }
@@ -2207,6 +3135,23 @@ namespace Test
                     {
                         _is.read(r, 1, false);
                     }
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
+                    }
+
                     tars::Int32 _ret = testPid(r, _current);
                     if(_current->isResponse())
                     {
@@ -2233,7 +3178,30 @@ namespace Test
                             _os.write(r, 1);
                             _os.swap(_sResponseBuffer);
                         }
+                        if (pSptd && pSptd->_traceCall)
+                        {
+                            string _trace_param_;
+                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                            {
+                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                                _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                                _trace_param_ = tars::TC_Json::writeValue(_p_);
+                            }
+                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                            {
+                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                            }
+                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
+                        }
+
                     }
+                    else if(pSptd && pSptd->_traceCall)
+                    {
+                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                    }
+
                     return tars::TARSSERVERSUCCESS;
 
                 }
@@ -2266,6 +3234,25 @@ namespace Test
                         _is.read(s, 2, true);
                         _is.read(r, 3, false);
                     }
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value["index"] = tars::JsonOutput::writeJson(index);
+                            _p_->value["s"] = tars::JsonOutput::writeJson(s);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
+                    }
+
                     tars::Int32 _ret = testSyncTrans(index,s,r, _current);
                     if(_current->isResponse())
                     {
@@ -2292,7 +3279,30 @@ namespace Test
                             _os.write(r, 3);
                             _os.swap(_sResponseBuffer);
                         }
+                        if (pSptd && pSptd->_traceCall)
+                        {
+                            string _trace_param_;
+                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                            {
+                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                                _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                                _trace_param_ = tars::TC_Json::writeValue(_p_);
+                            }
+                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                            {
+                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                            }
+                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
+                        }
+
                     }
+                    else if(pSptd && pSptd->_traceCall)
+                    {
+                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                    }
+
                     return tars::TARSSERVERSUCCESS;
 
                 }
@@ -2317,6 +3327,24 @@ namespace Test
                     {
                         _is.read(timeout, 1, true);
                     }
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value["timeout"] = tars::JsonOutput::writeJson(timeout);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
+                    }
+
                     tars::Int32 _ret = testTimeout(timeout, _current);
                     if(_current->isResponse())
                     {
@@ -2340,7 +3368,29 @@ namespace Test
                             _os.write(_ret, 0);
                             _os.swap(_sResponseBuffer);
                         }
+                        if (pSptd && pSptd->_traceCall)
+                        {
+                            string _trace_param_;
+                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                            {
+                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                                _trace_param_ = tars::TC_Json::writeValue(_p_);
+                            }
+                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                            {
+                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                            }
+                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
+                        }
+
                     }
+                    else if(pSptd && pSptd->_traceCall)
+                    {
+                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                    }
+
                     return tars::TARSSERVERSUCCESS;
 
                 }
@@ -2373,6 +3423,25 @@ namespace Test
                         _is.read(s, 2, true);
                         _is.read(r, 3, false);
                     }
+                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+                    if (pSptd && pSptd->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value["index"] = tars::JsonOutput::writeJson(index);
+                            _p_->value["s"] = tars::JsonOutput::writeJson(s);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
+                    }
+
                     tars::Int32 _ret = testTrans(index,s,r, _current);
                     if(_current->isResponse())
                     {
@@ -2399,7 +3468,30 @@ namespace Test
                             _os.write(r, 3);
                             _os.swap(_sResponseBuffer);
                         }
+                        if (pSptd && pSptd->_traceCall)
+                        {
+                            string _trace_param_;
+                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                            {
+                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                                _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                                _trace_param_ = tars::TC_Json::writeValue(_p_);
+                            }
+                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                            {
+                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                            }
+                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
+                        }
+
                     }
+                    else if(pSptd && pSptd->_traceCall)
+                    {
+                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                    }
+
                     return tars::TARSSERVERSUCCESS;
 
                 }
