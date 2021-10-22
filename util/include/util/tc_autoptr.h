@@ -172,7 +172,7 @@ public:
 	 *  
      * @param p
      */
-    TC_AutoPtr(T* p = 0)
+    TC_AutoPtr(T* p = nullptr)
     {
         _ptr = p;
 
