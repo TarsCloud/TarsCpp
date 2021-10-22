@@ -679,7 +679,7 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp
 	string sAppSrvName;
     string sFilePath;
     
-    if(_app.empty() && _server.empty())
+    if(sApp.empty() && sServer.empty())
     {
         sAppSrvName = "";
         if(_logpath.empty())
@@ -695,8 +695,8 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp
     }
     else
     {
-        sAppSrvName = _hasAppNamePrefix?(_app + "." + _server):"";
-        sFilePath = _logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + sAppSrvName;
+        sAppSrvName = _hasAppNamePrefix?(sApp+ "." + sServer):"";
+        sFilePath = _logpath + FILE_SEP + sApp + FILE_SEP + sServer+ FILE_SEP + sAppSrvName;
     }
 
     if(!sFile.empty())
