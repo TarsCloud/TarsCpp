@@ -618,7 +618,8 @@ int epoll_wait(epoll_t port_handle, struct epoll_event *events, int maxevents, i
     OVERLAPPED_ENTRY entries[64];
 
     /* Compute how much overlapped entries can be dequeued at most. */
-    DWORD max_entries = min(ARRAY_COUNT(entries), maxevents);
+    int tmp_count = ARRAY_COUNT(entries);
+    DWORD max_entries = min(tmp_count, maxevents);
     ULONG count = 0;
 
     DWORD result = GetQueuedCompletionStatusEx(port_data->getHandle(), entries, max_entries, &count, gqcs_timeout, TRUE);

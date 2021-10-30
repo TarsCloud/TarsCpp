@@ -47,6 +47,9 @@ set(LIB_SSL)
 set(LIB_CRYPTO)
 set(LIB_PROTOBUF)
 set(LIB_GTEST)
+set(LIB_GPERF)
+set(LIB_TCMALLOC_PROFILER)
+set(LIB_TCMALLOC_MINIMAL)
 #-------------------------------------------------------------
 
 add_custom_target(thirdparty)
@@ -55,21 +58,23 @@ include(ExternalProject)
 
 if (TARS_GPERF)
 
-    set(GPERF_DIR_INC "${THIRDPARTY_PATH}/gpref/include")
-    set(GRPEF_DIR_LIB "${THIRDPARTY_PATH}/gpref/lib")
+    set(GPERF_DIR_INC "${THIRDPARTY_PATH}/gperf/include")
+    set(GRPEF_DIR_LIB "${THIRDPARTY_PATH}/gperf/lib")
     include_directories(${GPERF_DIR_INC})
     link_directories(${GRPEF_DIR_LIB})
 
     if (UNIX)
         set(LIB_GPERF "profiler")
+        set(LIB_TCMALLOC_PROFILER "tcmalloc_and_profiler")
+        set(LIB_TCMALLOC_MINIMAL "tcmalloc_and_minimal")
 
         ExternalProject_Add(ADD_${LIB_GPERF}
                 URL https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com//src/gperftools-2.7.tar.gz
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/src/gpref --disable-shared --disable-debugalloc
-                SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gpref-lib
+                CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/src/gperf --disable-shared --disable-debugalloc
+                SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gperf-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
                 # INSTALL_COMMAND ${CMAKE_COMMAND}  --build . --config release --target install
@@ -78,11 +83,11 @@ if (TARS_GPERF)
 
         add_dependencies(thirdparty ADD_${LIB_GPERF})
 
-        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/gpref/bin/pprof
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/gperf/bin/pprof
                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
                 DESTINATION thirdparty/bin/)
-        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gpref/lib DESTINATION thirdparty)
-        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gpref/include/gperftools DESTINATION thirdparty/include)
+        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gperf/lib DESTINATION thirdparty)
+        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gperf/include/gperftools DESTINATION thirdparty/include)
 
     endif (UNIX)
 
@@ -92,7 +97,7 @@ endif (TARS_GPERF)
 if(WIN32)
 
     ExternalProject_Add(ADD_CURL
-        URL http://cdn.tarsyun.com/src/curl-7.69.1.tar.gz 
+        URL http://cdn.tarsyun.com/src/curl-7.69.1.tar.gz
         DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
         PREFIX ${CMAKE_BINARY_DIR}
         INSTALL_DIR ${CMAKE_SOURCE_DIR}
@@ -124,7 +129,7 @@ if (WIN32)
             CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest -A x64 -Dgtest_force_shared_crt=on
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
-            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} 
+            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE}
             INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config  ${CMAKE_BUILD_TYPE}  --target install
             URL_MD5 82358affdd7ab94854c8ee73a180fc53
             )
@@ -213,7 +218,7 @@ if (TARS_SSL)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND perl Configure --prefix=${CMAKE_BINARY_DIR}/src/openssl VC-WIN64A no-asm 
+                CONFIGURE_COMMAND perl Configure --prefix=${CMAKE_BINARY_DIR}/src/openssl --openssldir=ssl VC-WIN64A no-asm
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND nmake
@@ -229,7 +234,7 @@ if (TARS_SSL)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND ./config --prefix=${CMAKE_BINARY_DIR}/src/openssl no-shared
+                CONFIGURE_COMMAND ./config --prefix=${CMAKE_BINARY_DIR}/src/openssl --openssldir=ssl no-shared
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
