@@ -795,29 +795,13 @@ int TC_Transceiver::doProtocolAnalysis(TC_NetWorkBuffer *buff)
 	            _onCompletePackageCallback(this);
             }
 
-            /*
-                范围内修改目的：
-                    1、当使用自定义协议时，并未注意到解析响应包后需要操作buffer的movehead，这个地方找了一天，为了减少后续开发人员
-                       调试时间，这个地方做个标记，容易定位问题
-                    2、当解析一次Packet_Full后，还需要再遍历一次，感觉不友好，因此判断一下后提前break
-                    3、当没有对buffer进行movehead的话，此循环会反复调用_onParserCallback，显得不是很友好，虽然_onParserCallback内
-                       有2000次判断，但提示性不够
-            */
+            // 当收到完整包时，解析完包后，buffer没movehead，则报错
+            if (ret == TC_NetWorkBuffer::PACKET_FULL && ioriginal == isurplus) 
             {
-                // 当收到完整包时，解析完包后，buffer没movehead，则报错
-                if (ret == TC_NetWorkBuffer::PACKET_FULL && ioriginal == isurplus) 
-                {
-                	ret = TC_NetWorkBuffer::PACKET_FULL_CLOSE;
-                	string err = "parser buffer movehead error, " + _desc;
-                	tcpClose(false, CR_PROTOCOL, err); // 这个地方会将连接关闭，为了方便后期问题定位
-                	throw TC_Transceiver_Exception(err);
-                }
-
-                // 当没有剩余数据需要解析时，跳出循环
-                if (ret == TC_NetWorkBuffer::PACKET_FULL && isurplus == 0) 
-                {
-                	break;
-                }
+            	ret = TC_NetWorkBuffer::PACKET_FULL_CLOSE;
+            	string err = "parser buffer movehead error, " + _desc;
+            	tcpClose(false, CR_PROTOCOL, err); // 这个地方会将连接关闭，为了方便后期问题定位
+            	throw TC_Transceiver_Exception(err);
             }
         }
         while (ret == TC_NetWorkBuffer::PACKET_FULL);
