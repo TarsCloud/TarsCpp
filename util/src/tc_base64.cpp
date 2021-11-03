@@ -15,6 +15,7 @@
  */
 
 #include "util/tc_base64.h"
+#include <iostream>
 
 namespace tars
 {
@@ -146,7 +147,7 @@ int TC_Base64::encode(const unsigned char* pSrc, size_t nSrcLen, char* pDst, boo
     return nDstLen;
 }
 
- 
+
 int  TC_Base64::decode(const char* pSrc, size_t nSrcLen, unsigned char* pDst)
 {
     int nDstLen;            // 输出的字符计数 
@@ -161,27 +162,40 @@ int  TC_Base64::decode(const char* pSrc, size_t nSrcLen, unsigned char* pDst)
         // 跳过回车换行    
         if (*pSrc != '\r' && *pSrc!='\n')
         {
-            if(i + 4 > nSrcLen)                             //待解码字符串不合法，立即停止解码返回
-                break;           
+            if(i + 2 > nSrcLen)                             //待解码字符串不合法，立即停止解码返回
+            {
+            	break;
+            }
 
             nValue = DeBase64Tab[int(*pSrc++)] << 18;         
             nValue += DeBase64Tab[int(*pSrc++)] << 12;
             *pDst++ = (unsigned char)((nValue & 0x00ff0000) >> 16);
-            nDstLen++; 
+            nDstLen++;
+
+            i+=2;
+
+            if(i >= nSrcLen)
+            	break;
+
             if (*pSrc != '=')
             {                
                 nValue += DeBase64Tab[int(*pSrc++)] << 6;
                 *pDst++ = (nValue & 0x0000ff00) >> 8;
-                nDstLen++; 
+                nDstLen++;
+                ++i;
+                if(i >= nSrcLen)
+                	break;
                 if (*pSrc != '=')
                 {                    
                     nValue += DeBase64Tab[int(*pSrc++)];
                     *pDst++ =nValue & 0x000000ff;
                     nDstLen++;
+                    ++i;
+
+                    if(i >= nSrcLen)
+                    	break;
                 }
             }
- 
-            i += 4;
         }
         else       
         {
