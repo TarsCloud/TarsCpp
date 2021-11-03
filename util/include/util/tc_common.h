@@ -49,6 +49,14 @@
 
 using namespace std;
 
+#if TARGET_PLATFORM_WINDOWS
+
+#ifndef ssize_t
+#define ssize_t __int64
+#endif
+
+#endif
+
 namespace tars
 {
 /////////////////////////////////////////////////
