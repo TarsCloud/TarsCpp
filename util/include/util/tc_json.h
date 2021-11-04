@@ -287,9 +287,9 @@ class TC_Json
 public:
 	//json类型到字符串的转换
 	//Conversion of JSON type to string
-	static string writeValue(const JsonValuePtr & p);
-	static void writeValue(const JsonValuePtr & p, string& ostr);
-	static void writeValue(const JsonValuePtr & p, vector<char>& buf);
+	static string writeValue(const JsonValuePtr & p, bool withSpace = false);
+	static void writeValue(const JsonValuePtr & p, string& ostr, bool withSpace = false);
+	static void writeValue(const JsonValuePtr & p, vector<char>& buf, bool withSpace = false);
 
 	//json字符串到json结构的转换
 	//Conversion of JSON string to JSON structure
@@ -307,11 +307,11 @@ private:
 
 	//obj 类型到json字符串
 	//obj type to json string
-	static void writeObj(const JsonValueObjPtr & p, string& ostr);
+	static void writeObj(const JsonValueObjPtr & p, string& ostr, bool withSpace = false);
 
 	//array 类型到json字符串
 	//array type to json string
-	static void writeArray(const JsonValueArrayPtr & p, string& ostr);
+	static void writeArray(const JsonValueArrayPtr & p, string& ostr, bool withSpace = false);
 
 	//boolean 类型到json字符串
 	//boolean type to json string
@@ -350,7 +350,7 @@ private:
 class TC_JsonWriteOstream
 {
 public:
-	static void writeValue(const JsonValuePtr & p, ostream& ostr);
+    static void writeValue(const JsonValuePtr & p, ostream& ostr, bool withSpace = false);
 private:
 	//string 类型到json字符串
 	//stirng type to json string
@@ -363,11 +363,11 @@ private:
 
 	//obj 类型到json字符串
 	//obj type to json string
-	static void writeObj(const JsonValueObjPtr & p, ostream& ostr);
+	static void writeObj(const JsonValueObjPtr & p, ostream& ostr, bool withSpace = false);
 
 	//array 类型到json字符串
 	//array type to json string
-	static void writeArray(const JsonValueArrayPtr & p, ostream& ostr);
+	static void writeArray(const JsonValueArrayPtr & p, ostream& ostr, bool withSpace = false);
 
 	//boolean 类型到json字符串
 	//boolean type to json string
