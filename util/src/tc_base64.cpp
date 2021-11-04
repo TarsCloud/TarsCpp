@@ -162,7 +162,7 @@ int  TC_Base64::decode(const char* pSrc, size_t nSrcLen, unsigned char* pDst)
         // 跳过回车换行    
         if (*pSrc != '\r' && *pSrc!='\n')
         {
-            if(i + 2 > nSrcLen)                             //待解码字符串不合法，立即停止解码返回
+            if(i + 2 >= nSrcLen)                             //待解码字符串不合法，立即停止解码返回
             {
             	break;
             }
@@ -173,9 +173,6 @@ int  TC_Base64::decode(const char* pSrc, size_t nSrcLen, unsigned char* pDst)
             nDstLen++;
 
             i+=2;
-
-            if(i >= nSrcLen)
-            	break;
 
             if (*pSrc != '=')
             {                
