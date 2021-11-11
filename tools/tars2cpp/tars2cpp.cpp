@@ -832,6 +832,15 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
             continue;
         }
 
+        VectorPtr vPtr = VectorPtr::dynamicCast(member[j]->getTypePtr());
+        MapPtr mPtr = MapPtr::dynamicCast(member[j]->getTypePtr());
+        // 如果是vector或者map，reset时需要调用clear方法
+        if (vPtr || mPtr)
+        {
+            s << TAB << member[j]->getId() << ".clear();" << endl;
+            continue;
+        }
+
         if (member[j]->hasDefault())
         {
             BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
