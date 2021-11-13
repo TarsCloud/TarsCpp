@@ -2,6 +2,7 @@
 #include "util/tc_common.h"
 #include "util/tc_cron.h"
 #include "util/tc_epoller.h"
+#include <cmath>
 #include "gtest/gtest.h"
 
 #include <iostream>
