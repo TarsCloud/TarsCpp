@@ -770,11 +770,15 @@ int TC_Transceiver::doProtocolAnalysis(TC_NetWorkBuffer *buff)
 
     int packetCount = 0;
 
+    int ioriginal = 0;
+    int isurplus = 0;
     try
     {
         do
         {
+            ioriginal = buff->getBuffers().size();
             ret = _onParserCallback(*buff, this);
+            isurplus = buff->getBuffers().size();
 
             if(ret == TC_NetWorkBuffer::PACKET_FULL || ret == TC_NetWorkBuffer::PACKET_FULL_CLOSE)
             {
@@ -789,6 +793,15 @@ int TC_Transceiver::doProtocolAnalysis(TC_NetWorkBuffer *buff)
             if(_onCompletePackageCallback) {
             	//收到一个完整的包
 	            _onCompletePackageCallback(this);
+            }
+
+            // 当收到完整包时，解析完包后，buffer没movehead，则报错
+            if (ret == TC_NetWorkBuffer::PACKET_FULL && ioriginal == isurplus) 
+            {
+            	ret = TC_NetWorkBuffer::PACKET_FULL_CLOSE;
+            	string err = "parser buffer movehead error, " + _desc;
+            	tcpClose(false, CR_PROTOCOL, err); // 这个地方会将连接关闭，为了方便后期问题定位
+            	throw TC_Transceiver_Exception(err);
             }
         }
         while (ret == TC_NetWorkBuffer::PACKET_FULL);
