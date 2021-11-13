@@ -3,6 +3,7 @@
 #include "util/tc_logger.h"
 #include <thread>
 #include <iostream>
+#include <cmath>
 #include "gtest/gtest.h"
 
 using namespace tars;
