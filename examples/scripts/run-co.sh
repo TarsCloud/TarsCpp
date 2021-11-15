@@ -30,12 +30,12 @@ sleep 1
 echo "client: ${EXE_PATH}/CoroutineDemoClient"
 
 ${EXE_PATH}/CoroutineDemoClient --count=10000 --call=serial --thread=2 --buffersize=100 --netthread=2
-
+#
 ${EXE_PATH}/CoroutineDemoClient --count=10000 --call=parallel --thread=2 --buffersize=100 --netthread=2
-
-${EXE_PATH}/testCoro 1000
-
-${EXE_PATH}/testParallelCoro 1000
+#
+#${EXE_PATH}/testCoro 1000
+#
+#${EXE_PATH}/testParallelCoro 1000
 
 #-------------------------------------------------------------------------------------------------------
 
