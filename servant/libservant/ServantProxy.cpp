@@ -777,6 +777,12 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);
 
+    //协程调用方式, 启用协程
+    if(bCoroAsync && TC_CoroutineScheduler::scheduler() && !pSptd->_sched)
+    {
+    	pSptd->_sched = TC_CoroutineScheduler::scheduler();
+    }
+
     msg->data = pSptd->move();
 
     // 调用链追踪透传

@@ -730,6 +730,7 @@ void Application::main(const string &config)
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
         TC_Common::ignorePipe();
 #endif
+    	__out__.modFlag(0xFFFF, false);
 
         //解析配置文件
         parseConfig(config);
