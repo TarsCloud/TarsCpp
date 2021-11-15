@@ -48,11 +48,11 @@ main(int argc, char* argv[])
     }
     catch (std::exception& e)
     {
-        cerr << "std::exception:" << e.what() << std::endl;
+        LOG_CONSOLE_DEBUG << "std::exception error:" << e.what() << std::endl;
     }
     catch (...)
     {
-        cerr << "unknown exception." << std::endl;
+    	LOG_CONSOLE_DEBUG << "unknown exception." << std::endl;
     }
     return -1;
 }

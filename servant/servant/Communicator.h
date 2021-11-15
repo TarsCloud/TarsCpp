@@ -524,7 +524,7 @@ protected:
      * 分发给异步线程的索引seq
      */
     size_t                 _asyncSeq = 0;
-	
+
     /**
      * 注册事件
      */

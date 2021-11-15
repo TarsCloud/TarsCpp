@@ -143,6 +143,7 @@ void ServantProxyThreadData::Immortal::erase(Communicator *comm)
 
 	for(auto it : _sp_list)
 	{
+		cout << "erase" << endl;
 		(*it).erase(comm);
 	}
 }
@@ -214,7 +215,7 @@ ServantProxyThreadData* ServantProxyThreadData::getData()
 
 void ServantProxyThreadData::deconstructor(Communicator *communicator)
 {
-    if(g_immortal)
+    if(g_immortal.use_count() > 0)
     {
         g_immortal->erase(communicator);
     }
@@ -915,7 +916,7 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
 			if(!msg->pMonitor->bMonitorFin)
 			{
 				TLOGERROR("[ServantProxy::invoke communicator terminate]" << endl);
-				return;
+				throw TarsCommunicatorException("communicator terminate");
 			}
         }
         else
@@ -966,7 +967,6 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
 
         //异常调用
         int ret = msg->response->iRet;
-
 
 		delete msg;
         msg = NULL;
