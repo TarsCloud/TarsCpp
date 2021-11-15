@@ -80,7 +80,6 @@ Communicator::~Communicator()
 #if TARGET_PLATFORM_WINDOWS
     WSACleanup();
 #endif
-
 }
 
 bool Communicator::isTerminating()

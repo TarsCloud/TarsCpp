@@ -532,6 +532,9 @@ void TC_EpollServer::Connection::initialize(TC_Epoller *epoller, unsigned int ui
 	                         std::bind(&Connection::onOpensslCallback, this, std::placeholders::_1));
 
 	_trans->setServerAuthCallback(_pBindAdapter->_onVerifyCallback);
+
+	_trans->getRecvBuffer().setConnection(this);
+
 }
 
 bool TC_EpollServer::Connection::handleOutputImp(const shared_ptr<TC_Epoller::EpollInfo> &data)
@@ -713,6 +716,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_EpollServer::Connection::onParserCallback(TC_Ne
 			return TC_NetWorkBuffer::PACKET_LESS;
 		}
 	}
+
 
 	vector<char> ro;
 
