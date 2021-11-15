@@ -1,3 +1,27 @@
+
+# v3.0.2 20211115
+### en
+- reset inner struct/vector/map when resetDefautlt
+- Fix the problem that the core will be when the independent communicator client Ctrl + C exits
+- fix TC_Coroutine rpc call not open co
+- fix co examples bug
+- fix service model, the connection obtained is TC_Transceiver, and fix this problem with TC_Transceiver is changed to Connection to maintain consistency with version 2. X
+- fix unittest compiler bug, need open cmath
+- fix tc_base64 crash bug
+- fix build error on windows
+- fix: fix tc_autoptr.h Type p to nullptr
+### cn
+- 修复struct/vector/map, 支持resetDefautlt
+- 修复独立通信器的客户端ctrl+C退出时会crash的问题
+- 修复TC_Coroutine rpc调用时没有开启co的支持
+- 修复协程例子的bug
+- 修复服务模型中, 获取的Connection是TC_Transceiver的问题, 改成了Connection, 保持和2.x版本一致性
+- 修复unittest编译的bug, 缺少了cmath头文件
+- 修复tc_base64的在某些字符下decode的bug
+- 修复windows下的编译bug
+- json输出支持不包含空格的紧凑格式
+
+
 # v3.0.1 20211017
 ### en
 - Built in support call chain
