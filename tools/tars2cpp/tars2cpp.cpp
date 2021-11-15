@@ -841,6 +841,14 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
             continue;
         }
 
+        StructPtr sPtr = StructPtr::dynamicCast(member[j]->getTypePtr());
+        // 如果是结构体，那么需要调用resetDefautlt方法
+        if (sPtr)
+        {
+            s << TAB << member[j]->getId() << ".resetDefautlt();" << endl;
+            continue;
+        }
+
         if (member[j]->hasDefault())
         {
             BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
