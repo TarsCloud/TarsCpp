@@ -143,7 +143,6 @@ void ServantProxyThreadData::Immortal::erase(Communicator *comm)
 
 	for(auto it : _sp_list)
 	{
-		cout << "erase" << endl;
 		(*it).erase(comm);
 	}
 }
