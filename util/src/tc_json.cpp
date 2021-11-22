@@ -405,8 +405,9 @@ JsonValueBooleanPtr TC_Json::getBoolean(BufferJsonReader & reader,char c)
 	return p;
 }
 
-JsonValuePtr TC_Json::getNull(BufferJsonReader & reader,char c)
+JsonValueNullPtr TC_Json::getNull(BufferJsonReader & reader,char c)
 {
+	JsonValueNullPtr p = new JsonValueNull();
 	assert(c=='n' || c=='N');
 	bool bOk=false;
 	c=reader.read();
@@ -428,7 +429,8 @@ JsonValuePtr TC_Json::getNull(BufferJsonReader & reader,char c)
 		snprintf(s, sizeof(s), "get NULL error[pos:%u]", (uint32_t)reader.getCur());
 		throw TC_Json_Exception(s);
 	}
-	return NULL;
+	//return NULL;
+	return p;
 }
 
 uint32_t TC_Json::getHex(BufferJsonReader & reader)
@@ -560,7 +562,11 @@ void TC_Json::writeString(const string & s, string& ostr)
 void TC_Json::writeNum(const JsonValueNumPtr & p, string& ostr)
 {
 	ostringstream ss;
-	if (!p->isInt)
+	if (std::isnan(p->value))
+	{
+		ss << "null";
+	}
+	else if (!p->isInt)
 	{
 		ss << TC_Common::tostr(p->value) ;
 	}

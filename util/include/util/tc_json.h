@@ -47,7 +47,8 @@ enum eJsonType
 	eJsonTypeNum,
 	eJsonTypeObj,
 	eJsonTypeArray,
-	eJsonTypeBoolean
+	eJsonTypeBoolean,
+	eJsonTypeNull,
 };
 
 /*
@@ -63,6 +64,27 @@ public:
 	}
 };
 typedef TC_AutoPtr<JsonValue> JsonValuePtr;
+
+/*
+ * json类型 null
+ * json type   null type   
+ */
+class JsonValueNull : public JsonValue
+{
+public:
+	JsonValueNull()
+	{
+	}
+
+	eJsonType getType()
+	{
+		return eJsonTypeNull;
+	}
+	virtual ~JsonValueNull()
+	{
+	}
+};
+typedef TC_AutoPtr<JsonValueNull> JsonValueNullPtr;
 
 /*
  * json类型 string类型 例如"dd\ndfd"
@@ -180,6 +202,9 @@ typedef TC_AutoPtr<JsonValueArray> JsonValueArrayPtr;
 class JsonValueBoolean : public JsonValue
 {
 public:
+	JsonValueBoolean() {}
+	JsonValueBoolean(bool b): value(b){}
+
 	eJsonType getType()
 	{
 		return eJsonTypeBoolean;
@@ -337,7 +362,8 @@ private:
 	static JsonValueBooleanPtr getBoolean(BufferJsonReader & reader,char c);
 	//读取json的 null 如果不符合规范会抛异常
 	//Reading json's null throws an exception if it does not conform to the specification
-	static JsonValuePtr getNull(BufferJsonReader & reader,char c);
+	//static JsonValuePtr getNull(BufferJsonReader & reader,char c);
+	static JsonValueNullPtr getNull(BufferJsonReader & reader,char c);
 	//获取16进制形式的值 如\u003f 如果不符合规范会抛异常
 	//Judging whether a character meets json's definition of a blank character Gets a value in hexadecimal form such as \u003f Throws an exception if it does not conform to the specification
 	static uint32_t getHex(BufferJsonReader & reader);

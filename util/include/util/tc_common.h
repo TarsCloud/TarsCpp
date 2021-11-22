@@ -1052,14 +1052,23 @@ namespace p
     template<typename D>
     struct strto2
     {
-        D operator()(const string &sStr)
+    	D operator()(const string &sStr, typename std::enable_if<!std::is_enum<D>::value, void ***>::type dummy = 0)
         {
             istringstream sBuffer(sStr);
-
             D t;
+
             sBuffer >> t;
 
             return t;
+        }
+
+        D operator()(const string &sStr, typename std::enable_if<std::is_enum<D>::value, void ***>::type dummy = 0)
+        {
+    		istringstream sBuffer(sStr);
+    		int i;
+    		sBuffer >> i;
+
+    		return (D)i;
         }
     };
 

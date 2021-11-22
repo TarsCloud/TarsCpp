@@ -1,6 +1,36 @@
 
 module Test
 {
+    enum EN_KEY
+    {
+        KEY1 = 1,
+        KEY2 = 2,
+    };
+    struct JsonMap
+    {
+        0 optional byte c;
+        1 optional short s;
+        2 optional int i;
+        3 optional long l;
+        4 optional float f;
+        5 optional double d;
+        6 optional unsigned byte  uc;
+        7 optional unsigned short us;
+        8 optional unsigned int ui;
+        9 optional bool b;
+        10 optional EN_KEY k;
+        11 optional string ss;
+        12 optional map<EN_KEY, string> data;
+        13 optional vector<EN_KEY> v;
+        14 optional map<int, string> im;
+        15 optional map<bool, string> bm;
+        16 optional map<float, string> fm;
+        17 optional vector<bool> bv;
+        18 optional vector<int> iv;
+        19 optional vector<double> dv;
+
+    };
+    
     interface Hello
     {
         int testTrans(int index, string s, out string r);
