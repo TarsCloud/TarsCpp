@@ -326,7 +326,7 @@ namespace Test
     };
     inline bool operator==(const JsonMap&l, const JsonMap&r)
     {
-        return l.c == r.c && l.s == r.s && l.i == r.i && l.l == r.l && l.f == r.f && l.d == r.d && l.uc == r.uc && l.us == r.us && l.ui == r.ui && l.b == r.b && l.k == r.k && l.ss == r.ss && l.data == r.data && l.v == r.v && l.im == r.im && l.bm == r.bm && l.fm == r.fm && l.bv == r.bv && l.iv == r.iv && l.dv == r.dv;
+        return l.c == r.c && l.s == r.s && l.i == r.i && l.l == r.l && tars::TC_Common::equal(l.f,r.f) && tars::TC_Common::equal(l.d,r.d) && l.uc == r.uc && l.us == r.us && l.ui == r.ui && l.b == r.b && l.k == r.k && l.ss == r.ss && l.data == r.data && l.v == r.v && l.im == r.im && l.bm == r.bm && tars::TC_Common::equal(l.fm,r.fm) && l.bv == r.bv && l.iv == r.iv && tars::TC_Common::equal(l.dv,r.dv);
     }
     inline bool operator!=(const JsonMap&l, const JsonMap&r)
     {

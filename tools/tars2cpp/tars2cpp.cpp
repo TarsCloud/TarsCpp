@@ -1113,7 +1113,51 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
         }
         else
         {
-            s << "l." << member[j]->getId() << " == r." << member[j]->getId();
+            BuiltinPtr bPtr = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
+            MapPtr mPtr = MapPtr::dynamicCast(member[j]->getTypePtr());
+            VectorPtr vPtr = VectorPtr::dynamicCast(member[j]->getTypePtr());         
+
+            bool mapDouble = false;
+            if (mPtr)
+            {
+                {
+                    BuiltinPtr innerPtr = BuiltinPtr::dynamicCast(mPtr->getLeftTypePtr());
+                    if (innerPtr && (innerPtr->kind() == Builtin::KindFloat || innerPtr->kind() == Builtin::KindDouble))
+                    {
+                        mapDouble = true;
+                    }
+                }
+                {
+                    BuiltinPtr innerPtr = BuiltinPtr::dynamicCast(mPtr->getRightTypePtr());
+                    if (innerPtr && (innerPtr->kind() == Builtin::KindFloat || innerPtr->kind() == Builtin::KindDouble))
+                    {
+                        mapDouble = true;
+                    }
+                }
+            }
+            bool vecDouble = false;
+            //vector比较
+            if (vPtr)
+            {
+                BuiltinPtr innerPtr = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
+                if (innerPtr && (innerPtr->kind() == Builtin::KindFloat || innerPtr->kind() == Builtin::KindDouble))
+                {
+                    vecDouble = true;
+                }
+            }
+            if (mapDouble || vecDouble)
+            {
+                s << "tars::TC_Common::equal(" << "l." << member[j]->getId() << "," << "r." << member[j]->getId() << ")";
+            }
+            else if (bPtr && (bPtr->kind() == Builtin::KindFloat || bPtr->kind() == Builtin::KindDouble))
+            {
+                s << "tars::TC_Common::equal(" <<  "l." << member[j]->getId() << "," << "r." << member[j]->getId() << ")" ;
+            }
+            else
+            {
+                s << "l." << member[j]->getId() << " == r." << member[j]->getId();
+            }
+            // s << "l." << member[j]->getId() << " == r." << member[j]->getId();
         }
         if (j != member.size() - 1)
         {
