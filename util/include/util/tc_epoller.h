@@ -55,7 +55,7 @@ namespace tars
  * 5 拥有EpollInfo对象后, 可以通过它的registerCallback来注册epoll事件以及回调, 当有对应的事件产生时, 会触发回调
  * 6 registerCallback第二参数表示需要add的事件, 如果业务不需要registerCallback, 可以用epoller的add函数去添加事件
  * 7 EpollInfo有一个cookie方法, 可以在EpollInfo中存入一个指针和析构函数, 会在EpollInfo析构是调用, 一般用来保证cookie设置的对象有机会被释放到
- * 8 EpollInfo它通过epoller.createEpollInfo()创建出来后, 需要持有住, 知道句柄被close后, 调用Epoller::releaseEpollInfo来释放掉
+ * 8 EpollInfo它通过epoller.createEpollInfo()创建出来后, 需要持有住, 直到句柄被close后, 调用Epoller::releaseEpollInfo来释放掉
  * 9 TC_Epoller对象的loop方法, 会发起一个epoll wait的事件循环, 会阻塞当前线程
  * 10 TC_Epoller对象的done方法, 会执行一次epoll wait事件, 如果没有任何事件发生, 则只会等待最后ms毫秒(参数确定)
  * 11 TC_Epoller对象中的notify方法, 可以主动唤醒epoll wait
