@@ -403,7 +403,7 @@ public:
         }
     };
 
-    bool           _traceCall;     //标识当前线程是否需要调用链追踪
+    bool           _traceCall = false;     //标识当前线程是否需要调用链追踪，默认不打开
     TraceContext _traceContext;    //调用链追踪信息
 
     string getTraceKey(TraceContext::E_SpanType es) const
