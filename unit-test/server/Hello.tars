@@ -6,7 +6,13 @@ module Test
         KEY1 = 1,
         KEY2 = 2,
     };
-    struct JsonMap
+    struct JsonKey
+    {
+        0 optional int i;
+    };
+    key[JsonKey, i];
+
+    struct JsonData
     {
         0 optional byte c;
         1 optional short s;
@@ -30,7 +36,12 @@ module Test
         19 optional vector<double> dv;
 
     };
-    
+
+    struct JsonMap
+    {
+        0 optional map<JsonKey, JsonData> json;
+    };
+
     interface Hello
     {
         int testTrans(int index, string s, out string r);
