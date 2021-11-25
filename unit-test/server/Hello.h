@@ -42,18 +42,130 @@ namespace Test
         return -1;
     }
 
-    struct JsonMap : public tars::TarsStructBase
+    struct JsonKey : public tars::TarsStructBase
     {
     public:
         static string className()
         {
-            return "Test.JsonMap";
+            return "Test.JsonKey";
+        }
+        static string MD5()
+        {
+            return "7b010a6336d210a506b1eb4bf4c1e014";
+        }
+        JsonKey()
+        {
+            resetDefautlt();
+        }
+        void resetDefautlt()
+        {
+            i = 0;
+        }
+        template<typename WriterT>
+        void writeTo(tars::TarsOutputStream<WriterT>& _os) const
+        {
+            if (i != 0)
+            {
+                _os.write(i, 0);
+            }
+        }
+        template<typename ReaderT>
+        void readFrom(tars::TarsInputStream<ReaderT>& _is)
+        {
+            resetDefautlt();
+            _is.read(i, 0, false);
+        }
+        tars::JsonValueObjPtr writeToJson() const
+        {
+            tars::JsonValueObjPtr p = new tars::JsonValueObj();
+            p->value["i"] = tars::JsonOutput::writeJson(i);
+            return p;
+        }
+        string writeToJsonString() const
+        {
+            return tars::TC_Json::writeValue(writeToJson());
+        }
+        void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)
+        {
+            resetDefautlt();
+            if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)
+            {
+                char s[128];
+                snprintf(s, sizeof(s), "read 'struct' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
+                throw tars::TC_Json_Exception(s);
+            }
+            tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);
+            tars::JsonInput::readJson(i,pObj->value["i"], false);
+        }
+        void readFromJsonString(const string & str)
+        {
+            readFromJson(tars::TC_Json::getValue(str));
+        }
+        ostream& display(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.display(i,"i");
+            return _os;
+        }
+        ostream& displaySimple(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.displaySimple(i, false);
+            return _os;
+        }
+    public:
+        tars::Int32 i;
+    };
+    inline bool operator==(const JsonKey&l, const JsonKey&r)
+    {
+        return l.i == r.i;
+    }
+    inline bool operator!=(const JsonKey&l, const JsonKey&r)
+    {
+        return !(l == r);
+    }
+    inline ostream& operator<<(ostream & os,const JsonKey&r)
+    {
+        os << r.writeToJsonString();
+        return os;
+    }
+    inline istream& operator>>(istream& is,JsonKey&l)
+    {
+        std::istreambuf_iterator<char> eos;
+        std::string s(std::istreambuf_iterator<char>(is), eos);
+        l.readFromJsonString(s);
+        return is;
+    }
+    inline bool operator<(const JsonKey&l, const JsonKey&r)
+    {
+        if(l.i != r.i)  return (l.i < r.i);
+        return false;
+    }
+    inline bool operator<=(const JsonKey&l, const JsonKey&r)
+    {
+        return !(r < l);
+    }
+    inline bool operator>(const JsonKey&l, const JsonKey&r)
+    {
+        return r < l;
+    }
+    inline bool operator>=(const JsonKey&l, const JsonKey&r)
+    {
+        return !(l < r);
+    }
+
+    struct JsonData : public tars::TarsStructBase
+    {
+    public:
+        static string className()
+        {
+            return "Test.JsonData";
         }
         static string MD5()
         {
             return "7e2b4e48c7c69de6efedb26120c23c90";
         }
-        JsonMap()
+        JsonData()
         {
             resetDefautlt();
         }
@@ -324,9 +436,104 @@ namespace Test
         vector<tars::Int32> iv;
         vector<tars::Double> dv;
     };
-    inline bool operator==(const JsonMap&l, const JsonMap&r)
+    inline bool operator==(const JsonData&l, const JsonData&r)
     {
         return l.c == r.c && l.s == r.s && l.i == r.i && l.l == r.l && tars::TC_Common::equal(l.f,r.f) && tars::TC_Common::equal(l.d,r.d) && l.uc == r.uc && l.us == r.us && l.ui == r.ui && l.b == r.b && l.k == r.k && l.ss == r.ss && l.data == r.data && l.v == r.v && l.im == r.im && l.bm == r.bm && tars::TC_Common::equal(l.fm,r.fm) && l.bv == r.bv && l.iv == r.iv && tars::TC_Common::equal(l.dv,r.dv);
+    }
+    inline bool operator!=(const JsonData&l, const JsonData&r)
+    {
+        return !(l == r);
+    }
+    inline ostream& operator<<(ostream & os,const JsonData&r)
+    {
+        os << r.writeToJsonString();
+        return os;
+    }
+    inline istream& operator>>(istream& is,JsonData&l)
+    {
+        std::istreambuf_iterator<char> eos;
+        std::string s(std::istreambuf_iterator<char>(is), eos);
+        l.readFromJsonString(s);
+        return is;
+    }
+
+    struct JsonMap : public tars::TarsStructBase
+    {
+    public:
+        static string className()
+        {
+            return "Test.JsonMap";
+        }
+        static string MD5()
+        {
+            return "5bf0437e83ccb7e533b35c9747197b50";
+        }
+        JsonMap()
+        {
+            resetDefautlt();
+        }
+        void resetDefautlt()
+        {
+            json.clear();
+        }
+        template<typename WriterT>
+        void writeTo(tars::TarsOutputStream<WriterT>& _os) const
+        {
+            if (json.size() > 0)
+            {
+                _os.write(json, 0);
+            }
+        }
+        template<typename ReaderT>
+        void readFrom(tars::TarsInputStream<ReaderT>& _is)
+        {
+            resetDefautlt();
+            _is.read(json, 0, false);
+        }
+        tars::JsonValueObjPtr writeToJson() const
+        {
+            tars::JsonValueObjPtr p = new tars::JsonValueObj();
+            p->value["json"] = tars::JsonOutput::writeJson(json);
+            return p;
+        }
+        string writeToJsonString() const
+        {
+            return tars::TC_Json::writeValue(writeToJson());
+        }
+        void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)
+        {
+            resetDefautlt();
+            if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)
+            {
+                char s[128];
+                snprintf(s, sizeof(s), "read 'struct' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
+                throw tars::TC_Json_Exception(s);
+            }
+            tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);
+            tars::JsonInput::readJson(json,pObj->value["json"], false);
+        }
+        void readFromJsonString(const string & str)
+        {
+            readFromJson(tars::TC_Json::getValue(str));
+        }
+        ostream& display(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.display(json,"json");
+            return _os;
+        }
+        ostream& displaySimple(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.displaySimple(json, false);
+            return _os;
+        }
+    public:
+        map<Test::JsonKey, Test::JsonData> json;
+    };
+    inline bool operator==(const JsonMap&l, const JsonMap&r)
+    {
+        return l.json == r.json;
     }
     inline bool operator!=(const JsonMap&l, const JsonMap&r)
     {

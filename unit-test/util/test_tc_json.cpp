@@ -30,37 +30,48 @@ public:
 //        cout<<"TearDown"<<endl;
     }
 
-    JsonMap create()
+    JsonData createJsonValue()
     {
-    	JsonMap jMap;
-    	jMap.c = '4';
-    	jMap.s = -43;
-    	jMap.i = -423323;
-    	jMap.l = -42342344;
-    	jMap.f = 42234.23f;
-    	jMap.d = 42.4232f;
-    	jMap.uc = '6';
-    	jMap.us = 49023;
-    	jMap.ui = 90239238;
-    	jMap.b = true;
-    	jMap.k = KEY1;
-    	jMap.ss = "abc";
+    	JsonData jValue;
+    	jValue.c = '4';
+    	jValue.s = -43;
+    	jValue.i = -423323;
+    	jValue.l = -42342344;
+    	jValue.f = 42234.23f;
+    	jValue.d = 42.4232f;
+    	jValue.uc = '6';
+    	jValue.us = 49023;
+    	jValue.ui = 90239238;
+    	jValue.b = true;
+    	jValue.k = KEY1;
+    	jValue.ss = "abc";
 
-    	jMap.data[KEY1] = "key1";
-    	jMap.data[KEY2] = "key2";
+    	jValue.data[KEY1] = "key1";
+    	jValue.data[KEY2] = "key2";
 
-    	jMap.v.push_back(KEY1);
-    	jMap.v.push_back(KEY2);
+    	jValue.v.push_back(KEY1);
+    	jValue.v.push_back(KEY2);
 
-    	jMap.im[1] = "abc";
-		jMap.bm[true] = "abc";
-		jMap.fm[4.53f] = "abc";
+    	jValue.im[1] = "abc";
+		jValue.bm[true] = "abc";
+		jValue.fm[4.53f] = "abc";
 
-		jMap.bm[true]="abc";
-		jMap.iv.push_back(333);
-		jMap.dv.push_back(323.323);
+		jValue.bm[true]="abc";
+		jValue.iv.push_back(333);
+		jValue.dv.push_back(323.323);
 
-    	return jMap;
+    	return jValue;
+    }
+
+    JsonMap createJsonMap()
+    {
+    	JsonKey k;
+    	k.i = 10;
+
+    	JsonMap jm;
+    	jm.json[k] = createJsonValue();
+
+    	return jm;
     }
 };
 
@@ -81,17 +92,33 @@ TEST_F(JsonTest, json)
 	ASSERT_TRUE((int64_t)v->value != point);
 }
 
-TEST_F(JsonTest, struct)
+TEST_F(JsonTest, jsonStruct)
 {
-	JsonMap jMap = create();
+	JsonData jValue = createJsonValue();
 
-    string v = jMap.writeToJsonString();
+    string v = jValue.writeToJsonString();
 
     cout << "json1:" << v << endl;
 
-    JsonMap jMap2;
+    JsonData jMap2;
     jMap2.readFromJsonString(v);
 
     cout << "json2:" << jMap2.writeToJsonString() << endl;
-    ASSERT_TRUE(jMap == jMap2);
+    ASSERT_TRUE(jValue == jMap2);
+}
+
+
+TEST_F(JsonTest, jsonMap)
+{
+	JsonMap jMap = createJsonMap();
+
+	string v = jMap.writeToJsonString();
+
+	cout << "json1:" << v << endl;
+
+	JsonMap jMap2;
+	jMap2.readFromJsonString(v);
+
+	cout << "json2:" << jMap2.writeToJsonString() << endl;
+	ASSERT_TRUE(jMap == jMap2);
 }

@@ -338,9 +338,27 @@ public:
 	template<typename K, typename V, typename Cmp, typename Alloc>
 	static void readJson(std::map<K, V, Cmp, Alloc>& m, const JsonValuePtr & p, bool isRequire = true, typename std::enable_if<std::is_convertible<K*, TarsStructBase*>::value, void ***>::type dummy = 0)
 	{
-    	char s[128];
-    	snprintf(s, sizeof(s), "map key is not Basic type. map key is only string|bool|num");
-    	throw TC_Json_Exception(s);
+		if(p && p->getType() == eJsonTypeObj)
+		{
+			JsonValueObj *pObj = dynamic_cast<JsonValueObj*>(p.get());
+			auto iter=pObj->value.begin();
+			for(;iter!=pObj->value.end();++iter)
+			{
+				std::pair<K, V> pr;
+				pr.first.readFromJsonString(iter->first);
+				readJson(pr.second,iter->second);
+				m.insert(pr);
+			}
+		}
+		else if (isRequire)
+		{
+			char s[128];
+			snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+			throw TC_Json_Exception(s);
+		}
+//    	char s[128];
+//    	snprintf(s, sizeof(s), "map key is not Basic type. map key is only string|bool|num");
+//    	throw TC_Json_Exception(s);
 	}
 
 	template<typename K, typename V, typename H, typename Cmp, typename Alloc>
@@ -417,9 +435,28 @@ public:
 	template<typename K, typename V, typename Cmp, typename Alloc>
 	static void readJson(std::unordered_map<K, V, Cmp, Alloc>& m, const JsonValuePtr & p, bool isRequire = true, typename std::enable_if<std::is_convertible<K*, TarsStructBase*>::value, void ***>::type dummy = 0)
 	{
-    	char s[128];
-    	snprintf(s, sizeof(s), "map key is not Basic type. map key is only string|bool|num");
-    	throw TC_Json_Exception(s);
+		if(p && p->getType() == eJsonTypeObj)
+		{
+			JsonValueObj *pObj = dynamic_cast<JsonValueObj*>(p.get());
+			auto iter=pObj->value.begin();
+			for(;iter!=pObj->value.end();++iter)
+			{
+				std::pair<K, V> pr;
+				pr.first.readFromJsonString(iter->first);
+				readJson(pr.second,iter->second);
+				m.insert(pr);
+			}
+		}
+		else if (isRequire)
+		{
+			char s[128];
+			snprintf(s, sizeof(s), "read 'map' type mismatch, get type: %d.", p->getType());
+			throw TC_Json_Exception(s);
+		}
+
+//    	char s[128];
+//    	snprintf(s, sizeof(s), "map key is not Basic type. map key is only string|bool|num");
+//    	throw TC_Json_Exception(s);
 	}
 
     template<typename T, typename Alloc>
@@ -637,6 +674,28 @@ public:
 		for (auto i = m.begin(); i != m.end(); ++i)
 		{
 			pObj->value.insert(make_pair(TC_Common::tostr(i->first), writeJson(i->second)));
+		}
+		return pObj;
+	}
+
+	template<typename K, typename V, typename Cmp, typename Alloc>
+	static JsonValueObjPtr writeJson(const std::map<K, V, Cmp, Alloc>& m, typename std::enable_if<std::is_convertible<K*, TarsStructBase*>::value, void ***>::type dummy = 0)
+	{
+		JsonValueObjPtr pObj=new JsonValueObj();
+		for (auto i = m.begin(); i != m.end(); ++i)
+		{
+			pObj->value.insert(make_pair(i->first.writeToJsonString(), writeJson(i->second)));
+		}
+		return pObj;
+	}
+
+	template<typename K, typename V, typename H, typename Cmp, typename Alloc>
+	static JsonValueObjPtr writeJson(const std::unordered_map<K, V, H, Cmp, Alloc>& m, typename std::enable_if<std::is_convertible<K*, TarsStructBase*>::value, void ***>::type dummy = 0)
+	{
+		JsonValueObjPtr pObj=new JsonValueObj();
+		for (auto i = m.begin(); i != m.end(); ++i)
+		{
+			pObj->value.insert(make_pair(i->first.writeToJsonString(), writeJson(i->second)));
 		}
 		return pObj;
 	}
