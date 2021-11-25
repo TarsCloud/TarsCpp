@@ -1,3 +1,19 @@
+# v2.4.24 2021.11.25
+
+### en
+
+- tars2cpp support double/float use TC_Common::equal
+- tars struct add map/clear resetDefault
+- tc_json support enum & tars struct as map key
+- fix FFDLOG bug
+
+### cn
+
+- tars2cpp 支持 double/float 的比较, 使用 TC_Common::equal
+- tars2cpp 支持 tars 结构体中有 map/clear 的 resetDefault
+- tc_json 支持枚举以及 tars 结构体作为 map 的 key
+- 修复 FFDLOG 的 bug
+
 # v2.4.23 2021.11.16
 
 ### en
