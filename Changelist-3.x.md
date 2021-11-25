@@ -1,4 +1,21 @@
 
+# v3.0.3 20211125
+### en
+- TarsJson support map<TarsStructBase ....> format
+- tc_epoller remove assert(info->_epoller == this), that will cause coredump(reason not known)
+- fix FFDLOG not work bug
+- fix _traceCall not initialize bug
+- tars2cpp add tars::TC_Common::equal when field is float or double
+- tars json support enum as map key
+### cn
+- 修复TarsJson支持Tars结构体作为Key
+- 去掉tc_epoller中的assert判断, 会导致服务core, 原因未知(该问题还需持续跟中)
+- 修复FDDLOG不工作的问题
+- 修复_traceCall没有初始化的问题, 会导致独立的客户端启用调用链抛异常
+- 修复tars2cpp生成代码对double/float直接用=判断的问题
+- TarsJon支持枚举类型作为key
+
+- 
 # v3.0.2 20211115
 ### en
 - reset inner struct/vector/map when resetDefautlt
