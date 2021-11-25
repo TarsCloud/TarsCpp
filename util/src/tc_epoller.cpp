@@ -592,7 +592,12 @@ void TC_Epoller::done(uint64_t ms)
             continue;
         }
 
-        assert(info->_epoller == this);
+        if(info->_epoller != this)
+        {
+            //not current epoller, not process(should not be here!!!!)
+            continue;
+        }
+        // assert(info->_epoller == this);
 
         //返回成智能指针, 保证EpollInfo fireEvent的过程中, 不会被释放掉
         auto data = info->shared_from_this();
