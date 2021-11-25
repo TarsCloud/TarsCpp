@@ -800,8 +800,8 @@ void EndpointManager::updateEndpoints(const set<EndpointInfo> & active, const se
 		_regProxys.insert(make_pair(iter->cmpDesc(),iterAdapter->second));
 
 		const string &host = iterAdapter->second->endpoint().host();
-		_indexActiveProxys.insert(make_pair(inet_addr(host.data()), iterAdapter->second));
-		_sortActivProxys.insert(make_pair(inet_addr(host.data()), iterAdapter->second));
+		_indexActiveProxys.insert(make_pair(host, iterAdapter->second));
+		_sortActivProxys.insert(make_pair(host, iterAdapter->second));
 
 		//设置该节点的静态权重值
 		iterAdapter->second->setWeight(iter->weight());
@@ -1016,7 +1016,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
         }
         else
         {
-            TLOGWARN("[EndpointManager::getHashProxyForWeight, hash not active," << _objectProxy->name() << "@" << _vRegProxys[iIndex]->getTransceiver()->getEndpointInfo().desc() << endl);
+            TLOGWARN("[EndpointManager::getHashProxyForWeight, hash not active," << _objectProxy->name() << "@" << _vRegProxys[iIndex]->endpoint().desc() << endl);
             if(_activeProxys.empty())
             {
                 TLOGERROR("[EndpointManager::getHashProxyForWeight _activeEndpoints is empty], bStatic:" << bStatic << endl);
@@ -1105,12 +1105,12 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
 
     while(_consistentHashWeight.size() > 0)
     {
-        unsigned int iIndex = 0;
+        string sNode;
 
         // 通过一致性hash取到对应的节点
-        _consistentHashWeight.getIndex(hashCode, iIndex);
+        _consistentHashWeight.getNodeName(hashCode, sNode);
 
-        auto it = _indexActiveProxys.find(iIndex);
+        auto it = _indexActiveProxys.find(sNode);
         // 节点不存在，可能是下线或者服务不可用
         if (it == _indexActiveProxys.end())
         {
@@ -1125,15 +1125,15 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
         }
         else
         {
-            TLOGWARN("[EndpointManager::getHashProxyForWeight, hash not active," << _objectProxy->name() << "@" << it->second->getTransceiver()->getEndpointInfo().desc() << endl);
+            TLOGWARN("[EndpointManager::getHashProxyForWeight, hash not active," << _objectProxy->name() << "@" << it->second->endpoint().desc() << endl);
             // 剔除节点再次hash
             if (!it->second->isActiveInReg())
             {
                 // 如果在主控的注册状态不是active直接删除，如果状态有变更由updateEndpoints函数里重新添加
-                _indexActiveProxys.erase(iIndex);
+                _indexActiveProxys.erase(sNode);
             }
             // checkConHashChange里重新加回到_sortActivProxys重试
-            _sortActivProxys.erase(iIndex);
+            _sortActivProxys.erase(sNode);
             updateConHashProxyWeighted(bStatic, _lastConHashWeightProxys, _consistentHashWeight);
 
             if (_indexActiveProxys.empty())
@@ -1251,7 +1251,7 @@ bool EndpointManager::checkHashStaticWeightChange(bool bStatic)
     return false;
 }
 
-bool EndpointManager::checkConHashChange(bool bStatic, const map<uint32_t, AdapterProxy*> &umLastConHashProxys)
+bool EndpointManager::checkConHashChange(bool bStatic, const map<string, AdapterProxy*> &mLastConHashProxys)
 {
     // 将之前故障临时剔除的节点重新加回来重试
     if (_indexActiveProxys.size() != _sortActivProxys.size())
@@ -1262,14 +1262,14 @@ bool EndpointManager::checkConHashChange(bool bStatic, const map<uint32_t, Adapt
         }
     }
 
-    if(umLastConHashProxys.size() != _sortActivProxys.size())
+    if(mLastConHashProxys.size() != _sortActivProxys.size())
     {
         return true;
     }
 
-    auto itLast = umLastConHashProxys.begin();
+    auto itLast = mLastConHashProxys.begin();
     auto itSort = _sortActivProxys.begin();
-    for (; itLast!=umLastConHashProxys.end() && itSort!=_sortActivProxys.end(); ++itLast,++itSort)
+    for (; itLast!=mLastConHashProxys.end() && itSort!=_sortActivProxys.end(); ++itLast,++itSort)
     {
         if (itLast->first != itSort->first)
         {
@@ -1433,7 +1433,7 @@ void EndpointManager::updateHashProxyWeighted(bool bStatic)
     }
 }
 
-void EndpointManager::updateConHashProxyWeighted(bool bStatic, map<uint32_t, AdapterProxy*> &umLastConHashProxys, TC_ConsistentHashNew &conHash)
+void EndpointManager::updateConHashProxyWeighted(bool bStatic, map<string, AdapterProxy*> &mLastConHashProxys, TC_ConsistentHashNew &conHash)
 {
     if(_sortActivProxys.empty())
     {    
@@ -1441,7 +1441,7 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, map<uint32_t, Ada
         return ;
     }
 
-    umLastConHashProxys = _sortActivProxys;
+    mLastConHashProxys = _sortActivProxys;
     conHash.clear();
 
     for (auto it = _sortActivProxys.begin(); it != _sortActivProxys.end(); ++it)
@@ -1457,7 +1457,8 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, map<uint32_t, Ada
             // 同一服务有多个obj的情况
             // 同一hash值调用不同的obj会hash到不同的服务器
             // 因为addNode会根据desc(ip+port)计算md5,导致顺序不一致
-            conHash.addNode(it->second->endpoint().host(), it->first, iWeight);
+            // 一致性hash用host进行索引，不使用index，这里传0
+            conHash.addNode(it->second->endpoint().host(), 0, iWeight);
         }
         //防止多个服务节点权重同时更新时一致性哈希环多次更新
         it->second->resetWeightChanged();
@@ -1520,7 +1521,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
     }
     else
     {
-        TLOGWARN("[EndpointManager::getHashProxyForNormal, hash not active," << _objectProxy->name() << "@" << _vRegProxys[hash]->getTransceiver()->getEndpointInfo().desc() << endl);
+        TLOGWARN("[EndpointManager::getHashProxyForNormal, hash not active," << _objectProxy->name() << "@" << _vRegProxys[hash]->endpoint().desc() << endl);
         if(_activeProxys.empty())
         {
             TLOGERROR("[EndpointManager::getHashProxyForNormal _activeEndpoints is empty]" << endl);
@@ -1604,12 +1605,12 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
 
     while(_consistentHash.size() > 0)
     {
-        unsigned int iIndex = 0;
+        string sNode;
 
         // 通过一致性hash取到对应的节点
-        _consistentHash.getIndex(hashCode, iIndex);
+        _consistentHash.getNodeName(hashCode, sNode);
 
-        auto it = _indexActiveProxys.find(iIndex);
+        auto it = _indexActiveProxys.find(sNode);
         // 节点不存在，可能是下线或者服务不可用
         if (it == _indexActiveProxys.end())
         {
@@ -1624,15 +1625,15 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
         }
         else
         {
-            TLOGWARN("[EndpointManager::getConHashProxyForNormal, hash not active," << _objectProxy->name() << "@" << it->second->getTransceiver()->getEndpointInfo().desc() << endl);
+            TLOGWARN("[EndpointManager::getConHashProxyForNormal, hash not active," << _objectProxy->name() << "@" << it->second->endpoint().desc() << endl);
             // 剔除节点再次hash
             if (!it->second->isActiveInReg())
             {
                 // 如果在主控的注册状态不是active直接删除，如果状态有变更由updateEndpoints函数里重新添加
-                _indexActiveProxys.erase(iIndex);
+                _indexActiveProxys.erase(sNode);
             }
             // checkConHashChange里重新加回到_sortActivProxys重试
-            _sortActivProxys.erase(iIndex);
+            _sortActivProxys.erase(sNode);
             updateConHashProxyWeighted(false, _lastConHashProxys, _consistentHash);
 
             if (_indexActiveProxys.empty())

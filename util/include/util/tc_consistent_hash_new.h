@@ -97,6 +97,12 @@ public:
         int32_t iHashCode;
 
         /**
+         *节点名称
+         *node name
+         */
+        string sNode;
+
+        /**
          *节点下标
          * node subscript
         */
@@ -162,6 +168,19 @@ public:
     int getIndex(const string & key, unsigned int & iIndex);
 
     /**
+     * @brief 获取某key对应到的节点node的名称.
+     * @brief Gets the name of the node to which a key corresponds.
+     *
+     * @param key      key名称
+     * @param key      key name
+     * @param sNode    对应到的节点的名称
+     * @param sNode    the name of the node to which corresponds.
+     * @return        0:获取成功   -1:没有被添加的节点
+     * @return        0:obtain successfully  -1:no nodes added
+     */
+    int getNodeName(const string & key, string & sNode);
+
+    /**
      * @brief 获取某hashcode对应到的节点node的下标.
      * @brief Gets the subscript of the node to which a certain hashcode corresponds
      *
@@ -172,6 +191,18 @@ public:
      * @return        0:obtain successfully  -1:no nodes added
      */
     int getIndex(int32_t hashcode, unsigned int & iIndex);
+
+    /**
+     * @brief 获取某hashcode对应到的节点node的名称.
+     * @brief Gets the name of the node to which a certain hashcode corresponds
+     *
+     * @param hashcode      hashcode
+     * @param sNode   对应到的节点的名称
+     * @param sNode   the name of the node to which corresponds.
+     * @return        0:获取成功   -1:没有被添加的节点
+     * @return        0:obtain successfully  -1:no nodes added
+     */
+    int getNodeName(int32_t hashcode, string & sNode);
 
     /**
      * @brief 获取当前hash列表的长度.
