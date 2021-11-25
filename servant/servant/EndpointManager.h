@@ -418,7 +418,7 @@ private:
     /*
      * 判断静态权重节点是否有变化
      */
-    bool checkConHashChange(bool bStatic, const map<uint32_t, AdapterProxy*> &umLastConHashProxys);
+    bool checkConHashChange(bool bStatic, const map<string, AdapterProxy*> &mLastConHashProxys);
 
     /*
      * 更新取模hash方法的静态权重节点信息
@@ -428,7 +428,7 @@ private:
     /*
      * 更新一致性hash方法的静态权重节点信息
      */
-    void updateConHashProxyWeighted(bool bStatic, map<uint32_t, AdapterProxy*> &umLastConHashProxys, TC_ConsistentHashNew &conHash);
+    void updateConHashProxyWeighted(bool bStatic, map<string, AdapterProxy*> &mLastConHashProxys, TC_ConsistentHashNew &conHash);
 
     /*
      * 根据后端服务的权重值选取一个结点
@@ -469,10 +469,10 @@ private:
 
     /*
      * 一致性hash使用，保证强一致性
-     * key：inet_addr(ip)
+     * key：host
      */
-    map<uint32_t, AdapterProxy*>            _sortActivProxys;
-    unordered_map<uint32_t, AdapterProxy*>  _indexActiveProxys;
+    map<string, AdapterProxy*>            _sortActivProxys;
+    unordered_map<string, AdapterProxy*>  _indexActiveProxys;
 
     /*
      * 部署的结点 包括活跃的和不活跃的
@@ -539,7 +539,7 @@ private:
     /*
      * 一致性hash静态权重时使用
      */
-    map<uint32_t, AdapterProxy*> _lastConHashWeightProxys;
+    map<string, AdapterProxy*>    _lastConHashWeightProxys;
 
     /*
      * 一致性hash静态权重时使用
@@ -549,7 +549,7 @@ private:
     /*
      * 一致性hash普通使用
      */
-    map<uint32_t, AdapterProxy*> _lastConHashProxys;
+    map<string, AdapterProxy*>    _lastConHashProxys;
 
     /*
      * 一致性hash普通使用
