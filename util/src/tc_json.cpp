@@ -405,8 +405,9 @@ JsonValueBooleanPtr TC_Json::getBoolean(BufferJsonReader & reader,char c)
 	return p;
 }
 
-JsonValuePtr TC_Json::getNull(BufferJsonReader & reader,char c)
+JsonValueNullPtr TC_Json::getNull(BufferJsonReader & reader,char c)
 {
+	JsonValueNullPtr p = new JsonValueNull();
 	assert(c=='n' || c=='N');
 	bool bOk=false;
 	c=reader.read();
@@ -428,7 +429,8 @@ JsonValuePtr TC_Json::getNull(BufferJsonReader & reader,char c)
 		snprintf(s, sizeof(s), "get NULL error[pos:%u]", (uint32_t)reader.getCur());
 		throw TC_Json_Exception(s);
 	}
-	return NULL;
+	//return NULL;
+	return p;
 }
 
 uint32_t TC_Json::getHex(BufferJsonReader & reader)
@@ -455,21 +457,21 @@ uint32_t TC_Json::getHex(BufferJsonReader & reader)
 }
 
 
-string TC_Json::writeValue(const JsonValuePtr & p)
+string TC_Json::writeValue(const JsonValuePtr & p, bool withSpace)
 {
 	string ostr;
-	writeValue(p, ostr);
+	writeValue(p, ostr, withSpace);
 	return ostr;
 }
 
-void TC_Json::writeValue(const JsonValuePtr& p, vector<char>& buf)
+void TC_Json::writeValue(const JsonValuePtr& p, vector<char>& buf, bool withSpace)
 {
     string ostr;
-    writeValue(p, ostr);
+    writeValue(p, ostr, withSpace);
     buf.assign(ostr.begin(), ostr.end());
 }
 
-void TC_Json::writeValue(const JsonValuePtr & p, string& ostr)
+void TC_Json::writeValue(const JsonValuePtr & p, string& ostr, bool withSpace)
 {
 	if(!p)
 	{
@@ -485,10 +487,10 @@ void TC_Json::writeValue(const JsonValuePtr & p, string& ostr)
 			writeNum(JsonValueNumPtr::dynamicCast(p), ostr);
 			break;
 		case eJsonTypeObj:
-			writeObj(JsonValueObjPtr::dynamicCast(p), ostr);
+			writeObj(JsonValueObjPtr::dynamicCast(p), ostr, withSpace);
 			break;
 		case eJsonTypeArray:
-			writeArray(JsonValueArrayPtr::dynamicCast(p), ostr);
+		    writeArray(JsonValueArrayPtr::dynamicCast(p), ostr, withSpace);
 			break;
 		case eJsonTypeBoolean:
 			writeBoolean(JsonValueBooleanPtr::dynamicCast(p), ostr);
@@ -560,7 +562,11 @@ void TC_Json::writeString(const string & s, string& ostr)
 void TC_Json::writeNum(const JsonValueNumPtr & p, string& ostr)
 {
 	ostringstream ss;
-	if (!p->isInt)
+	if (std::isnan(p->value))
+	{
+		ss << "null";
+	}
+	else if (!p->isInt)
 	{
 		ss << TC_Common::tostr(p->value) ;
 	}
@@ -573,36 +579,36 @@ void TC_Json::writeNum(const JsonValueNumPtr & p, string& ostr)
 }
 
 
-void TC_Json::writeObj(const JsonValueObjPtr & p, string& ostr)
+void TC_Json::writeObj(const JsonValueObjPtr & p, string& ostr, bool withSpace)
 {
-	ostr += "{ ";
+    ostr += (withSpace ? "{ " : "{");
 	unordered_map<string,JsonValuePtr>::const_iterator it(p->value.begin()), it_end(p->value.end());
 	while (it != it_end)
 	{
 		writeString(it->first, ostr);
-		ostr += ": " ;
+		ostr += (withSpace ? ": " : ":");
 		writeValue(it->second, ostr);
 		if(++it != it_end)
 		{
-			ostr += ", ";
+			ostr += (withSpace ? ", " : ",");
 		}
 	}
-	ostr += " }";
+	ostr += (withSpace ? " }" : "}");
 }
 
-void TC_Json::writeArray(const JsonValueArrayPtr & p, string& ostr)
+void TC_Json::writeArray(const JsonValueArrayPtr & p, string& ostr, bool withSpace)
 {
-	ostr += "[ ";
+    ostr += (withSpace ? "[ " : "[");
 	vector<JsonValuePtr>::const_iterator it(p->value.begin()), it_end(p->value.end());
 	while (it != it_end)
 	{
 		writeValue(*it, ostr);
 		if (++it != it_end)
 		{
-			ostr += ", ";
+		    ostr += (withSpace ? ", " : ",");
 		}
 	}
-	ostr += " ]";
+	ostr += (withSpace ? " ]" : "]");
 }
 
 void TC_Json::writeBoolean(const JsonValueBooleanPtr & p, string& ostr)
@@ -636,7 +642,7 @@ bool TC_Json::isspace(char c)
 }
 
 //////////////////////////////////////////////////////
-void TC_JsonWriteOstream::writeValue(const JsonValuePtr & p, ostream& ostr)
+void TC_JsonWriteOstream::writeValue(const JsonValuePtr & p, ostream& ostr, bool withSpace)
 {
 	if(!p)
 	{
@@ -652,10 +658,10 @@ void TC_JsonWriteOstream::writeValue(const JsonValuePtr & p, ostream& ostr)
 			writeNum(JsonValueNumPtr::dynamicCast(p), ostr);
 			break;
 		case eJsonTypeObj:
-			writeObj(JsonValueObjPtr::dynamicCast(p), ostr);
+			writeObj(JsonValueObjPtr::dynamicCast(p), ostr, withSpace);
 			break;
 		case eJsonTypeArray:
-			writeArray(JsonValueArrayPtr::dynamicCast(p), ostr);
+			writeArray(JsonValueArrayPtr::dynamicCast(p), ostr, withSpace);
 			break;
 		case eJsonTypeBoolean:
 			writeBoolean(JsonValueBooleanPtr::dynamicCast(p), ostr);
@@ -736,36 +742,36 @@ void TC_JsonWriteOstream::writeNum(const JsonValueNumPtr & p, ostream& ostr)
 }
 
 
-void TC_JsonWriteOstream::writeObj(const JsonValueObjPtr & p, ostream& ostr)
+void TC_JsonWriteOstream::writeObj(const JsonValueObjPtr & p, ostream& ostr, bool withSpace)
 {
-	ostr << "{ ";
+	ostr << "{" << (withSpace ? " " : "");
 	unordered_map<string,JsonValuePtr>::const_iterator it(p->value.begin()), it_end(p->value.end());
 	while (it != it_end)
 	{
 		writeString(it->first, ostr);
-		ostr << ": " ;
+		ostr << ":" << (withSpace ? " " : "");
 		writeValue(it->second, ostr);
 		if(++it != it_end)
 		{
-			ostr << ", ";
+		    ostr << "," << (withSpace ? " " : "");
 		}
 	}
-	ostr << " }";
+	ostr << (withSpace ? " " : "") << "}";
 }
 
-void TC_JsonWriteOstream::writeArray(const JsonValueArrayPtr & p, ostream& ostr)
+void TC_JsonWriteOstream::writeArray(const JsonValueArrayPtr & p, ostream& ostr, bool withSpace)
 {
-	ostr << "[ ";
+    ostr << "[" << (withSpace ? " " : "");
 	vector<JsonValuePtr>::const_iterator it(p->value.begin()), it_end(p->value.end());
 	while (it != it_end)
 	{
 		writeValue(*it, ostr);
 		if (++it != it_end)
 		{
-			ostr << ", ";
+		    ostr << "," << (withSpace ? " " : "");
 		}
 	}
-	ostr << " ]";
+	ostr << (withSpace ? " " : "") << "]";
 }
 
 void TC_JsonWriteOstream::writeBoolean(const JsonValueBooleanPtr & p, ostream& ostr)
