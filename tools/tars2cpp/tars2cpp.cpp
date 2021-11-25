@@ -830,6 +830,24 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
             continue;
         }
 
+        VectorPtr vPtr = VectorPtr::dynamicCast(member[j]->getTypePtr());
+        MapPtr mPtr = MapPtr::dynamicCast(member[j]->getTypePtr());
+        // 如果是vector或者map，reset时需要调用clear方法
+        if (vPtr || mPtr)
+        {
+            s << TAB << member[j]->getId() << ".clear();" << endl;
+            continue;
+        }
+
+        StructPtr sPtr = StructPtr::dynamicCast(member[j]->getTypePtr());
+        // 如果是结构体，那么需要调用resetDefautlt方法
+        if (sPtr)
+        {
+            s << TAB << member[j]->getId() << ".resetDefautlt();" << endl;
+            continue;
+        }
+
+
         if (member[j]->hasDefault())
         {
             BuiltinPtr bPtr  = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
@@ -1094,7 +1112,50 @@ string Tars2Cpp::generateH(const StructPtr& pPtr, const string& namespaceId) con
         }
         else
         {
-            s << "l." << member[j]->getId() << " == r." << member[j]->getId();
+            BuiltinPtr bPtr = BuiltinPtr::dynamicCast(member[j]->getTypePtr());
+            MapPtr mPtr = MapPtr::dynamicCast(member[j]->getTypePtr());
+            VectorPtr vPtr = VectorPtr::dynamicCast(member[j]->getTypePtr());         
+
+            bool mapDouble = false;
+            if (mPtr)
+            {
+                {
+                    BuiltinPtr innerPtr = BuiltinPtr::dynamicCast(mPtr->getLeftTypePtr());
+                    if (innerPtr && (innerPtr->kind() == Builtin::KindFloat || innerPtr->kind() == Builtin::KindDouble))
+                    {
+                        mapDouble = true;
+                    }
+                }
+                {
+                    BuiltinPtr innerPtr = BuiltinPtr::dynamicCast(mPtr->getRightTypePtr());
+                    if (innerPtr && (innerPtr->kind() == Builtin::KindFloat || innerPtr->kind() == Builtin::KindDouble))
+                    {
+                        mapDouble = true;
+                    }
+                }
+            }
+            bool vecDouble = false;
+            //vector比较
+            if (vPtr)
+            {
+                BuiltinPtr innerPtr = BuiltinPtr::dynamicCast(vPtr->getTypePtr());
+                if (innerPtr && (innerPtr->kind() == Builtin::KindFloat || innerPtr->kind() == Builtin::KindDouble))
+                {
+                    vecDouble = true;
+                }
+            }
+            if (mapDouble || vecDouble)
+            {
+                s << "tars::TC_Common::equal(" << "l." << member[j]->getId() << "," << "r." << member[j]->getId() << ")";
+            }
+            else if (bPtr && (bPtr->kind() == Builtin::KindFloat || bPtr->kind() == Builtin::KindDouble))
+            {
+                s << "tars::TC_Common::equal(" <<  "l." << member[j]->getId() << "," << "r." << member[j]->getId() << ")" ;
+            }
+            else
+            {
+                s << "l." << member[j]->getId() << " == r." << member[j]->getId();
+            }
         }
         if (j != member.size() - 1)
         {
