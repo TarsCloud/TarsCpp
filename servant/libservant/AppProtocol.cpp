@@ -73,6 +73,9 @@ shared_ptr<TC_NetWorkBuffer::Buffer> ProxyProtocol::http1Request(tars::RequestPa
 
 	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
 
+	if(!data->hasHeader("Host")) {
+		data->setHost(trans->getEndpoint().getHost());
+	}
 	data->encode(buff);
 
 	data.reset();
