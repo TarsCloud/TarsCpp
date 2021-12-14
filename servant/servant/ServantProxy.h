@@ -494,11 +494,6 @@ public:
 
 };
 
-//  业务主动打开调用链@param traceFlag: 调用链日志输出参数控制，取值范围0-15， 0 不用打参数， 其他情况按位做控制开关，从低位到高位分别控制CS、CR、SR、SS，为1则输出对应参数
-#define OPEN_TARS_TRACE(traceFlag)   { ServantProxyThreadData::getData()->openTrace(traceFlag); }
-#define OPEN_TARS_TRACE_NO_PARAMS   { ServantProxyThreadData::getData()->openTrace(); }
-#define OPEN_TARS_TRACE_ALL_PARAMS   { ServantProxyThreadData::getData()->openTrace(15); }
-
 //////////////////////////////////////////////////////////////////////////
 // 协程并行请求的基类
 class CoroParallelBase : virtual public TC_HandleBase
@@ -1018,6 +1013,12 @@ public:
     virtual ServantProxy* tars_consistent_hash(int64_t key);
 
 
+    /**
+     * 打开调用链
+     * @param traceParams： 是否输出接口调用参数，默认false， 如果设置为true时 接口调用参数会转为json输出会影响性能
+     * @return ServantProxy*
+     */
+    virtual ServantProxy* tars_open_trace(bool traceParams = false);
 
     /**
      * 清除当前的Hash数据
