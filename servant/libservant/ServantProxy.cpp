@@ -734,6 +734,23 @@ ServantProxy* ServantProxy::tars_consistent_hash(int64_t key)
     return this;
 }
 
+ServantProxy* ServantProxy::tars_open_trace(bool traceParams)
+{
+    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
+
+    assert(pSptd != NULL);
+    if (traceParams)
+    {
+        pSptd->openTrace(15);
+    }
+    else
+    {
+        pSptd->openTrace();
+    }
+
+    return this;
+}
+
 void ServantProxy::tars_clear_hash()
 {
 }

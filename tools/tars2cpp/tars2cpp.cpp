@@ -3022,6 +3022,14 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     s << TAB << "}" << endl;
     s << endl;
 
+    s << TAB << pPtr->getId() << "Proxy* tars_open_trace(bool traceParam = false)" << endl;
+    s << TAB << "{" << endl;
+    INC_TAB;
+    s << TAB << "return (" << pPtr->getId() + "Proxy*)ServantProxy::tars_open_trace(traceParam);" << endl;
+    DEL_TAB;
+    s << TAB << "}" << endl;
+    s << endl;
+
     s << TAB << pPtr->getId() << "Proxy* tars_set_timeout(int msecond)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
