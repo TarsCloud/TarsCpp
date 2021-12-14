@@ -1,20 +1,19 @@
-/* A Bison parser, made by GNU Bison 3.5.1.  */
+/* A Bison parser, made by GNU Bison 2.7.  */
 
 /* Bison implementation for Yacc-like parsers in C
-
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
-   Inc.
-
+   
+      Copyright (C) 1984, 1989-1990, 2000-2012 Free Software Foundation, Inc.
+   
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
-
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
@@ -27,7 +26,7 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-
+   
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
@@ -41,14 +40,11 @@
    define necessary library symbols; they are noted "INFRINGES ON
    USER NAME SPACE" below.  */
 
-/* Undocumented macros, especially those whose name start with YY_,
-   are private implementation details.  Do not rely on them.  */
-
 /* Identify Bison output.  */
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.5.1"
+#define YYBISON_VERSION "2.7"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -65,8 +61,9 @@
 
 
 
-/* First part of user prologue.  */
-#line 17 "/data/TarsCpp/tools/tarsgrammar/tars.y"
+/* Copy the first part of user declarations.  */
+/* Line 371 of yacc.c  */
+#line 17 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
 
 #include <iostream>
 #include <memory>
@@ -80,26 +77,14 @@ using namespace std;
 #define YYDEBUG 1
 #define YYINITDEPTH 10000
 
-#line 84 "tars.tab.cpp"
+/* Line 371 of yacc.c  */
+#line 82 "tars.tab.cpp"
 
-# ifndef YY_CAST
-#  ifdef __cplusplus
-#   define YY_CAST(Type, Val) static_cast<Type> (Val)
-#   define YY_REINTERPRET_CAST(Type, Val) reinterpret_cast<Type> (Val)
+# ifndef YY_NULL
+#  if defined __cplusplus && 201103L <= __cplusplus
+#   define YY_NULL nullptr
 #  else
-#   define YY_CAST(Type, Val) ((Type) (Val))
-#   define YY_REINTERPRET_CAST(Type, Val) ((Type) (Val))
-#  endif
-# endif
-# ifndef YY_NULLPTR
-#  if defined __cplusplus
-#   if 201103L <= __cplusplus
-#    define YY_NULLPTR nullptr
-#   else
-#    define YY_NULLPTR 0
-#   endif
-#  else
-#   define YY_NULLPTR ((void*)0)
+#   define YY_NULL 0
 #  endif
 # endif
 
@@ -111,11 +96,11 @@ using namespace std;
 # define YYERROR_VERBOSE 0
 #endif
 
-/* Use api.header.include to #include this header
-   instead of duplicating it here.  */
+/* In a future release of Bison, this section will be replaced
+   by #include "tars.tab.hpp".  */
 #ifndef YY_YY_TARS_TAB_HPP_INCLUDED
 # define YY_YY_TARS_TAB_HPP_INCLUDED
-/* Debug traces.  */
+/* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 1
 #endif
@@ -123,134 +108,106 @@ using namespace std;
 extern int yydebug;
 #endif
 
-/* Token type.  */
+/* Tokens.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-  enum yytokentype
-  {
-    TARS_VOID = 258,
-    TARS_STRUCT = 259,
-    TARS_BOOL = 260,
-    TARS_BYTE = 261,
-    TARS_SHORT = 262,
-    TARS_INT = 263,
-    TARS_DOUBLE = 264,
-    TARS_FLOAT = 265,
-    TARS_LONG = 266,
-    TARS_STRING = 267,
-    TARS_VECTOR = 268,
-    TARS_MAP = 269,
-    TARS_NAMESPACE = 270,
-    TARS_INTERFACE = 271,
-    TARS_IDENTIFIER = 272,
-    TARS_OUT = 273,
-    TARS_OP = 274,
-    TARS_KEY = 275,
-    TARS_ROUTE_KEY = 276,
-    TARS_REQUIRE = 277,
-    TARS_OPTIONAL = 278,
-    TARS_CONST_INTEGER = 279,
-    TARS_CONST_FLOAT = 280,
-    TARS_FALSE = 281,
-    TARS_TRUE = 282,
-    TARS_STRING_LITERAL = 283,
-    TARS_SCOPE_DELIMITER = 284,
-    TARS_CONST = 285,
-    TARS_ENUM = 286,
-    TARS_UNSIGNED = 287,
-    BAD_CHAR = 288
-  };
+   /* Put the tokens into the symbol table, so that GDB and other debuggers
+      know about them.  */
+   enum yytokentype {
+     TARS_VOID = 258,
+     TARS_STRUCT = 259,
+     TARS_BOOL = 260,
+     TARS_BYTE = 261,
+     TARS_SHORT = 262,
+     TARS_INT = 263,
+     TARS_DOUBLE = 264,
+     TARS_FLOAT = 265,
+     TARS_LONG = 266,
+     TARS_STRING = 267,
+     TARS_VECTOR = 268,
+     TARS_MAP = 269,
+     TARS_NAMESPACE = 270,
+     TARS_INTERFACE = 271,
+     TARS_IDENTIFIER = 272,
+     TARS_OUT = 273,
+     TARS_OP = 274,
+     TARS_KEY = 275,
+     TARS_ROUTE_KEY = 276,
+     TARS_REQUIRE = 277,
+     TARS_OPTIONAL = 278,
+     TARS_CONST_INTEGER = 279,
+     TARS_CONST_FLOAT = 280,
+     TARS_FALSE = 281,
+     TARS_TRUE = 282,
+     TARS_STRING_LITERAL = 283,
+     TARS_SCOPE_DELIMITER = 284,
+     TARS_CONST = 285,
+     TARS_ENUM = 286,
+     TARS_UNSIGNED = 287,
+     BAD_CHAR = 288
+   };
 #endif
 
-/* Value type.  */
+
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef int YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
+# define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
-
 extern YYSTYPE yylval;
 
+#ifdef YYPARSE_PARAM
+#if defined __STDC__ || defined __cplusplus
+int yyparse (void *YYPARSE_PARAM);
+#else
+int yyparse ();
+#endif
+#else /* ! YYPARSE_PARAM */
+#if defined __STDC__ || defined __cplusplus
 int yyparse (void);
+#else
+int yyparse ();
+#endif
+#endif /* ! YYPARSE_PARAM */
 
 #endif /* !YY_YY_TARS_TAB_HPP_INCLUDED  */
 
+/* Copy the second part of user declarations.  */
 
+/* Line 390 of yacc.c  */
+#line 181 "tars.tab.cpp"
 
 #ifdef short
 # undef short
 #endif
 
-/* On compilers that do not define __PTRDIFF_MAX__ etc., make sure
-   <limits.h> and (if available) <stdint.h> are included
-   so that the code can choose integer types of a good width.  */
-
-#ifndef __PTRDIFF_MAX__
-# include <limits.h> /* INFRINGES ON USER NAME SPACE */
-# if defined __STDC_VERSION__ && 199901 <= __STDC_VERSION__
-#  include <stdint.h> /* INFRINGES ON USER NAME SPACE */
-#  define YY_STDINT_H
-# endif
-#endif
-
-/* Narrow types that promote to a signed type and that can represent a
-   signed or unsigned integer of at least N bits.  In tables they can
-   save space and decrease cache pressure.  Promoting to a signed type
-   helps avoid bugs in integer arithmetic.  */
-
-#ifdef __INT_LEAST8_MAX__
-typedef __INT_LEAST8_TYPE__ yytype_int8;
-#elif defined YY_STDINT_H
-typedef int_least8_t yytype_int8;
+#ifdef YYTYPE_UINT8
+typedef YYTYPE_UINT8 yytype_uint8;
 #else
-typedef signed char yytype_int8;
-#endif
-
-#ifdef __INT_LEAST16_MAX__
-typedef __INT_LEAST16_TYPE__ yytype_int16;
-#elif defined YY_STDINT_H
-typedef int_least16_t yytype_int16;
-#else
-typedef short yytype_int16;
-#endif
-
-#if defined __UINT_LEAST8_MAX__ && __UINT_LEAST8_MAX__ <= __INT_MAX__
-typedef __UINT_LEAST8_TYPE__ yytype_uint8;
-#elif (!defined __UINT_LEAST8_MAX__ && defined YY_STDINT_H \
-       && UINT_LEAST8_MAX <= INT_MAX)
-typedef uint_least8_t yytype_uint8;
-#elif !defined __UINT_LEAST8_MAX__ && UCHAR_MAX <= INT_MAX
 typedef unsigned char yytype_uint8;
-#else
-typedef short yytype_uint8;
 #endif
 
-#if defined __UINT_LEAST16_MAX__ && __UINT_LEAST16_MAX__ <= __INT_MAX__
-typedef __UINT_LEAST16_TYPE__ yytype_uint16;
-#elif (!defined __UINT_LEAST16_MAX__ && defined YY_STDINT_H \
-       && UINT_LEAST16_MAX <= INT_MAX)
-typedef uint_least16_t yytype_uint16;
-#elif !defined __UINT_LEAST16_MAX__ && USHRT_MAX <= INT_MAX
-typedef unsigned short yytype_uint16;
+#ifdef YYTYPE_INT8
+typedef YYTYPE_INT8 yytype_int8;
+#elif (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+typedef signed char yytype_int8;
 #else
-typedef int yytype_uint16;
+typedef short int yytype_int8;
 #endif
 
-#ifndef YYPTRDIFF_T
-# if defined __PTRDIFF_TYPE__ && defined __PTRDIFF_MAX__
-#  define YYPTRDIFF_T __PTRDIFF_TYPE__
-#  define YYPTRDIFF_MAXIMUM __PTRDIFF_MAX__
-# elif defined PTRDIFF_MAX
-#  ifndef ptrdiff_t
-#   include <stddef.h> /* INFRINGES ON USER NAME SPACE */
-#  endif
-#  define YYPTRDIFF_T ptrdiff_t
-#  define YYPTRDIFF_MAXIMUM PTRDIFF_MAX
-# else
-#  define YYPTRDIFF_T long
-#  define YYPTRDIFF_MAXIMUM LONG_MAX
-# endif
+#ifdef YYTYPE_UINT16
+typedef YYTYPE_UINT16 yytype_uint16;
+#else
+typedef unsigned short int yytype_uint16;
+#endif
+
+#ifdef YYTYPE_INT16
+typedef YYTYPE_INT16 yytype_int16;
+#else
+typedef short int yytype_int16;
 #endif
 
 #ifndef YYSIZE_T
@@ -258,27 +215,16 @@ typedef int yytype_uint16;
 #  define YYSIZE_T __SIZE_TYPE__
 # elif defined size_t
 #  define YYSIZE_T size_t
-# elif defined __STDC_VERSION__ && 199901 <= __STDC_VERSION__
+# elif ! defined YYSIZE_T && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 #  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
 #  define YYSIZE_T size_t
 # else
-#  define YYSIZE_T unsigned
+#  define YYSIZE_T unsigned int
 # endif
 #endif
 
-#define YYSIZE_MAXIMUM                                  \
-  YY_CAST (YYPTRDIFF_T,                                 \
-           (YYPTRDIFF_MAXIMUM < YY_CAST (YYSIZE_T, -1)  \
-            ? YYPTRDIFF_MAXIMUM                         \
-            : YY_CAST (YYSIZE_T, -1)))
-
-#define YYSIZEOF(X) YY_CAST (YYPTRDIFF_T, sizeof (X))
-
-/* Stored state numbers (used for stacks). */
-typedef yytype_uint8 yy_state_t;
-
-/* State numbers in computations.  */
-typedef int yy_state_fast_t;
+#define YYSIZE_MAXIMUM ((YYSIZE_T) -1)
 
 #ifndef YY_
 # if defined YYENABLE_NLS && YYENABLE_NLS
@@ -292,22 +238,6 @@ typedef int yy_state_fast_t;
 # endif
 #endif
 
-#ifndef YY_ATTRIBUTE_PURE
-# if defined __GNUC__ && 2 < __GNUC__ + (96 <= __GNUC_MINOR__)
-#  define YY_ATTRIBUTE_PURE __attribute__ ((__pure__))
-# else
-#  define YY_ATTRIBUTE_PURE
-# endif
-#endif
-
-#ifndef YY_ATTRIBUTE_UNUSED
-# if defined __GNUC__ && 2 < __GNUC__ + (7 <= __GNUC_MINOR__)
-#  define YY_ATTRIBUTE_UNUSED __attribute__ ((__unused__))
-# else
-#  define YY_ATTRIBUTE_UNUSED
-# endif
-#endif
-
 /* Suppress unused-variable warnings by "using" E.  */
 #if ! defined lint || defined __GNUC__
 # define YYUSE(E) ((void) (E))
@@ -315,39 +245,23 @@ typedef int yy_state_fast_t;
 # define YYUSE(E) /* empty */
 #endif
 
-#if defined __GNUC__ && ! defined __ICC && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
-/* Suppress an incorrect diagnostic about yylval being uninitialized.  */
-# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                            \
-    _Pragma ("GCC diagnostic push")                                     \
-    _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")              \
-    _Pragma ("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
-# define YY_IGNORE_MAYBE_UNINITIALIZED_END      \
-    _Pragma ("GCC diagnostic pop")
+/* Identity function, used to suppress warnings about constant conditions.  */
+#ifndef lint
+# define YYID(N) (N)
 #else
-# define YY_INITIAL_VALUE(Value) Value
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+static int
+YYID (int yyi)
+#else
+static int
+YYID (yyi)
+    int yyi;
 #endif
-#ifndef YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-# define YY_IGNORE_MAYBE_UNINITIALIZED_END
+{
+  return yyi;
+}
 #endif
-#ifndef YY_INITIAL_VALUE
-# define YY_INITIAL_VALUE(Value) /* Nothing. */
-#endif
-
-#if defined __cplusplus && defined __GNUC__ && ! defined __ICC && 6 <= __GNUC__
-# define YY_IGNORE_USELESS_CAST_BEGIN                          \
-    _Pragma ("GCC diagnostic push")                            \
-    _Pragma ("GCC diagnostic ignored \"-Wuseless-cast\"")
-# define YY_IGNORE_USELESS_CAST_END            \
-    _Pragma ("GCC diagnostic pop")
-#endif
-#ifndef YY_IGNORE_USELESS_CAST_BEGIN
-# define YY_IGNORE_USELESS_CAST_BEGIN
-# define YY_IGNORE_USELESS_CAST_END
-#endif
-
-
-#define YY_ASSERT(E) ((void) (0 && (E)))
 
 #if ! defined yyoverflow || YYERROR_VERBOSE
 
@@ -366,7 +280,8 @@ typedef int yy_state_fast_t;
 #    define alloca _alloca
 #   else
 #    define YYSTACK_ALLOC alloca
-#    if ! defined _ALLOCA_H && ! defined EXIT_SUCCESS
+#    if ! defined _ALLOCA_H && ! defined EXIT_SUCCESS && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 #     include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
       /* Use EXIT_SUCCESS as a witness for stdlib.h.  */
 #     ifndef EXIT_SUCCESS
@@ -378,8 +293,8 @@ typedef int yy_state_fast_t;
 # endif
 
 # ifdef YYSTACK_ALLOC
-   /* Pacify GCC's 'empty if-body' warning.  */
-#  define YYSTACK_FREE(Ptr) do { /* empty */; } while (0)
+   /* Pacify GCC's `empty if-body' warning.  */
+#  define YYSTACK_FREE(Ptr) do { /* empty */; } while (YYID (0))
 #  ifndef YYSTACK_ALLOC_MAXIMUM
     /* The OS might guarantee only one guard page at the bottom of the stack,
        and a page size can be as small as 4096 bytes.  So we cannot safely
@@ -395,7 +310,7 @@ typedef int yy_state_fast_t;
 #  endif
 #  if (defined __cplusplus && ! defined EXIT_SUCCESS \
        && ! ((defined YYMALLOC || defined malloc) \
-             && (defined YYFREE || defined free)))
+	     && (defined YYFREE || defined free)))
 #   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
 #   ifndef EXIT_SUCCESS
 #    define EXIT_SUCCESS 0
@@ -403,13 +318,15 @@ typedef int yy_state_fast_t;
 #  endif
 #  ifndef YYMALLOC
 #   define YYMALLOC malloc
-#   if ! defined malloc && ! defined EXIT_SUCCESS
+#   if ! defined malloc && ! defined EXIT_SUCCESS && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 void *malloc (YYSIZE_T); /* INFRINGES ON USER NAME SPACE */
 #   endif
 #  endif
 #  ifndef YYFREE
 #   define YYFREE free
-#   if ! defined free && ! defined EXIT_SUCCESS
+#   if ! defined free && ! defined EXIT_SUCCESS && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 void free (void *); /* INFRINGES ON USER NAME SPACE */
 #   endif
 #  endif
@@ -419,22 +336,22 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 
 #if (! defined yyoverflow \
      && (! defined __cplusplus \
-         || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
+	 || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
-  yy_state_t yyss_alloc;
+  yytype_int16 yyss_alloc;
   YYSTYPE yyvs_alloc;
 };
 
 /* The size of the maximum gap between one aligned stack and the next.  */
-# define YYSTACK_GAP_MAXIMUM (YYSIZEOF (union yyalloc) - 1)
+# define YYSTACK_GAP_MAXIMUM (sizeof (union yyalloc) - 1)
 
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
 # define YYSTACK_BYTES(N) \
-     ((N) * (YYSIZEOF (yy_state_t) + YYSIZEOF (YYSTYPE)) \
+     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE)) \
       + YYSTACK_GAP_MAXIMUM)
 
 # define YYCOPY_NEEDED 1
@@ -444,16 +361,16 @@ union yyalloc
    elements in the stack, and YYPTR gives the new location of the
    stack.  Advance YYPTR to a properly aligned location for the next
    stack.  */
-# define YYSTACK_RELOCATE(Stack_alloc, Stack)                           \
-    do                                                                  \
-      {                                                                 \
-        YYPTRDIFF_T yynewbytes;                                         \
-        YYCOPY (&yyptr->Stack_alloc, Stack, yysize);                    \
-        Stack = &yyptr->Stack_alloc;                                    \
-        yynewbytes = yystacksize * YYSIZEOF (*Stack) + YYSTACK_GAP_MAXIMUM; \
-        yyptr += yynewbytes / YYSIZEOF (*yyptr);                        \
-      }                                                                 \
-    while (0)
+# define YYSTACK_RELOCATE(Stack_alloc, Stack)				\
+    do									\
+      {									\
+	YYSIZE_T yynewbytes;						\
+	YYCOPY (&yyptr->Stack_alloc, Stack, yysize);			\
+	Stack = &yyptr->Stack_alloc;					\
+	yynewbytes = yystacksize * sizeof (*Stack) + YYSTACK_GAP_MAXIMUM; \
+	yyptr += yynewbytes / sizeof (*yyptr);				\
+      }									\
+    while (YYID (0))
 
 #endif
 
@@ -463,16 +380,16 @@ union yyalloc
 # ifndef YYCOPY
 #  if defined __GNUC__ && 1 < __GNUC__
 #   define YYCOPY(Dst, Src, Count) \
-      __builtin_memcpy (Dst, Src, YY_CAST (YYSIZE_T, (Count)) * sizeof (*(Src)))
+      __builtin_memcpy (Dst, Src, (Count) * sizeof (*(Src)))
 #  else
 #   define YYCOPY(Dst, Src, Count)              \
       do                                        \
         {                                       \
-          YYPTRDIFF_T yyi;                      \
+          YYSIZE_T yyi;                         \
           for (yyi = 0; yyi < (Count); yyi++)   \
             (Dst)[yyi] = (Src)[yyi];            \
         }                                       \
-      while (0)
+      while (YYID (0))
 #  endif
 # endif
 #endif /* !YYCOPY_NEEDED */
@@ -488,21 +405,18 @@ union yyalloc
 #define YYNNTS  42
 /* YYNRULES -- Number of rules.  */
 #define YYNRULES  137
-/* YYNSTATES -- Number of states.  */
+/* YYNRULES -- Number of states.  */
 #define YYNSTATES  199
 
+/* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
 #define YYMAXUTOK   288
 
+#define YYTRANSLATE(YYX)						\
+  ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
 
-/* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
-   as returned by yylex, with out-of-bounds checking.  */
-#define YYTRANSLATE(YYX)                                                \
-  (0 <= (YYX) && (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
-
-/* YYTRANSLATE[TOKEN-NUM] -- Symbol number corresponding to TOKEN-NUM
-   as returned by yylex.  */
-static const yytype_int8 yytranslate[] =
+/* YYTRANSLATE[YYLEX] -- Bison symbol number corresponding to YYLEX.  */
+static const yytype_uint8 yytranslate[] =
 {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -536,8 +450,72 @@ static const yytype_int8 yytranslate[] =
 };
 
 #if YYDEBUG
-  /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_int16 yyrline[] =
+/* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
+   YYRHS.  */
+static const yytype_uint16 yyprhs[] =
+{
+       0,     0,     3,     5,     6,    11,    12,    17,    19,    20,
+      22,    24,    26,    28,    30,    32,    33,    39,    42,    45,
+      49,    51,    53,    55,    59,    60,    61,    68,    69,    77,
+      79,    83,    84,    90,    93,    96,   100,   104,   106,   107,
+     109,   113,   116,   118,   120,   121,   123,   127,   130,   135,
+     138,   143,   145,   147,   149,   151,   152,   158,   161,   164,
+     167,   171,   173,   174,   176,   180,   186,   192,   196,   199,
+     202,   205,   207,   209,   211,   213,   215,   217,   219,   223,
+     228,   231,   237,   241,   246,   249,   251,   253,   257,   259,
+     263,   265,   267,   270,   272,   275,   277,   280,   282,   284,
+     286,   288,   290,   292,   294,   299,   303,   308,   311,   318,
+     322,   324,   327,   331,   333,   335,   337,   339,   341,   343,
+     345,   347,   349,   351,   353,   355,   357,   359,   361,   363,
+     365,   367,   369,   371,   373,   375,   377,   379
+};
+
+/* YYRHS -- A `-1'-separated list of the rules' RHS.  */
+static const yytype_int8 yyrhs[] =
+{
+      47,     0,    -1,    48,    -1,    -1,    51,    49,    34,    48,
+      -1,    -1,     1,    34,    50,    48,    -1,    51,    -1,    -1,
+      57,    -1,    62,    -1,    73,    -1,    59,    -1,    52,    -1,
+      80,    -1,    -1,    54,    53,    35,    55,    36,    -1,    31,
+      17,    -1,    31,    87,    -1,    56,    37,    55,    -1,    56,
+      -1,    17,    -1,    87,    -1,    17,    38,    79,    -1,    -1,
+      -1,    15,    17,    58,    35,    48,    36,    -1,    -1,    20,
+      39,    86,    37,    60,    61,    40,    -1,    17,    -1,    61,
+      37,    17,    -1,    -1,    64,    63,    35,    65,    36,    -1,
+      16,    17,    -1,    16,    87,    -1,    66,    34,    65,    -1,
+       1,    34,    65,    -1,    66,    -1,    -1,    67,    -1,    68,
+      70,    41,    -1,    69,    19,    -1,    82,    -1,     3,    -1,
+      -1,    81,    -1,    70,    37,    81,    -1,    72,    81,    -1,
+      70,    37,    72,    81,    -1,    71,    81,    -1,    70,    37,
+      71,    81,    -1,    72,    -1,    71,    -1,    21,    -1,    18,
+      -1,    -1,    75,    74,    35,    76,    36,    -1,     4,    17,
+      -1,     4,    87,    -1,     4,     1,    -1,    77,    34,    76,
+      -1,    77,    -1,    -1,    78,    -1,    24,    22,    81,    -1,
+      24,    22,    81,    38,    79,    -1,    24,    23,    81,    38,
+      79,    -1,    24,    23,    81,    -1,    22,    81,    -1,    23,
+      81,    -1,    24,    81,    -1,    81,    -1,    24,    -1,    25,
+      -1,    28,    -1,    26,    -1,    27,    -1,    17,    -1,    86,
+      29,    17,    -1,    30,    81,    38,    79,    -1,    82,    17,
+      -1,    82,    17,    39,    24,    40,    -1,    82,    42,    17,
+      -1,    82,    17,    43,    24,    -1,    82,    87,    -1,    82,
+      -1,     1,    -1,    83,    43,    24,    -1,    83,    -1,    83,
+      43,     1,    -1,     5,    -1,     6,    -1,    32,     6,    -1,
+       7,    -1,    32,     7,    -1,     8,    -1,    32,     8,    -1,
+      11,    -1,    10,    -1,     9,    -1,    12,    -1,    84,    -1,
+      85,    -1,    86,    -1,    13,    44,    82,    45,    -1,    13,
+      44,     1,    -1,    13,    44,    82,     1,    -1,    13,     1,
+      -1,    14,    44,    82,    37,    82,    45,    -1,    14,    44,
+       1,    -1,    17,    -1,    29,    17,    -1,    86,    29,    17,
+      -1,     4,    -1,     3,    -1,     5,    -1,     6,    -1,     7,
+      -1,     8,    -1,    10,    -1,     9,    -1,    12,    -1,    13,
+      -1,    20,    -1,    14,    -1,    15,    -1,    16,    -1,    18,
+      -1,    22,    -1,    23,    -1,    24,    -1,    25,    -1,    26,
+      -1,    27,    -1,    28,    -1,    30,    -1,    31,    -1,    32,
+      -1
+};
+
+/* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
+static const yytype_uint16 yyrline[] =
 {
        0,    68,    68,    75,    74,    79,    78,    83,    88,    95,
       99,   103,   107,   110,   114,   124,   123,   146,   159,   170,
@@ -577,14 +555,14 @@ static const char *const yytname[] =
   "parameters", "routekey_qualifier", "out_qualifier", "struct_def", "@7",
   "struct_id", "struct_exports", "data_member", "struct_type_id",
   "const_initializer", "const_def", "type_id", "type", "type_no", "vector",
-  "map", "scoped_name", "keyword", YY_NULLPTR
+  "map", "scoped_name", "keyword", YY_NULL
 };
 #endif
 
 # ifdef YYPRINT
-/* YYTOKNUM[NUM] -- (External) token number corresponding to the
-   (internal) symbol number NUM (which must be that of a token).  */
-static const yytype_int16 yytoknum[] =
+/* YYTOKNUM[YYLEX-NUM] -- Internal token number corresponding to
+   token YYLEX-NUM.  */
+static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
@@ -594,45 +572,47 @@ static const yytype_int16 yytoknum[] =
 };
 # endif
 
-#define YYPACT_NINF (-146)
-
-#define yypact_value_is_default(Yyn) \
-  ((Yyn) == YYPACT_NINF)
-
-#define YYTABLE_NINF (-113)
-
-#define yytable_value_is_error(Yyn) \
-  0
-
-  /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
-     STATE-NUM.  */
-static const yytype_int16 yypact[] =
+/* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
+static const yytype_uint8 yyr1[] =
 {
-     145,   -22,   286,    20,   445,    16,   372,   475,    42,  -146,
-      26,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
-    -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
-    -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
-    -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
-    -146,  -146,    11,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
-    -146,  -146,     7,     2,  -146,    37,    51,    23,   182,    19,
-    -146,  -146,    35,  -146,  -146,  -146,    31,    32,    33,    49,
-     102,    66,    -2,  -146,   386,   415,  -146,  -146,  -146,  -146,
-     153,    -5,    69,  -146,     8,    87,   102,   505,   252,   220,
-    -146,   120,  -146,  -146,     5,  -146,    29,    78,  -146,  -146,
-    -146,  -146,  -146,  -146,    79,    86,    88,  -146,  -146,  -146,
-    -146,  -146,    75,    80,    83,  -146,    81,  -146,    90,    93,
-    -146,    12,   112,  -146,   372,   372,   314,    98,   103,  -146,
-    -146,   107,   122,  -146,  -146,   533,   127,   108,  -146,   153,
-    -146,   505,   252,  -146,   252,  -146,  -146,    15,    68,    82,
-    -146,  -146,  -146,  -146,   372,   372,  -146,  -146,   220,  -146,
-    -146,   -26,   109,   118,  -146,  -146,  -146,  -146,  -146,   343,
-    -146,  -146,  -146,   117,   119,  -146,   146,  -146,  -146,   372,
-     372,  -146,   153,   153,  -146,  -146,  -146,  -146,  -146
+       0,    46,    47,    49,    48,    50,    48,    48,    48,    51,
+      51,    51,    51,    51,    51,    53,    52,    54,    54,    55,
+      55,    56,    56,    56,    56,    58,    57,    60,    59,    61,
+      61,    63,    62,    64,    64,    65,    65,    65,    65,    66,
+      67,    68,    69,    69,    70,    70,    70,    70,    70,    70,
+      70,    70,    70,    71,    72,    74,    73,    75,    75,    75,
+      76,    76,    76,    77,    78,    78,    78,    78,    78,    78,
+      78,    78,    79,    79,    79,    79,    79,    79,    79,    80,
+      81,    81,    81,    81,    81,    81,    81,    82,    82,    82,
+      83,    83,    83,    83,    83,    83,    83,    83,    83,    83,
+      83,    83,    83,    83,    84,    84,    84,    84,    85,    85,
+      86,    86,    86,    87,    87,    87,    87,    87,    87,    87,
+      87,    87,    87,    87,    87,    87,    87,    87,    87,    87,
+      87,    87,    87,    87,    87,    87,    87,    87
 };
 
-  /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
-     Performed when YYTABLE does not specify something else to do.  Zero
-     means the default is an error.  */
+/* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
+static const yytype_uint8 yyr2[] =
+{
+       0,     2,     1,     0,     4,     0,     4,     1,     0,     1,
+       1,     1,     1,     1,     1,     0,     5,     2,     2,     3,
+       1,     1,     1,     3,     0,     0,     6,     0,     7,     1,
+       3,     0,     5,     2,     2,     3,     3,     1,     0,     1,
+       3,     2,     1,     1,     0,     1,     3,     2,     4,     2,
+       4,     1,     1,     1,     1,     0,     5,     2,     2,     2,
+       3,     1,     0,     1,     3,     5,     5,     3,     2,     2,
+       2,     1,     1,     1,     1,     1,     1,     1,     3,     4,
+       2,     5,     3,     4,     2,     1,     1,     3,     1,     3,
+       1,     1,     2,     1,     2,     1,     2,     1,     1,     1,
+       1,     1,     1,     1,     4,     3,     4,     2,     6,     3,
+       1,     2,     3,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1
+};
+
+/* YYDEFACT[STATE-NAME] -- Default reduction number in state STATE-NUM.
+   Performed when YYTABLE doesn't specify something else to do.  Zero
+   means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
        0,     0,     0,     0,     0,     0,     0,     0,     0,     2,
@@ -657,17 +637,7 @@ static const yytype_uint8 yydefact[] =
        0,    46,     0,     0,    30,    50,    48,    65,    66
 };
 
-  /* YYPGOTO[NTERM-NUM].  */
-static const yytype_int16 yypgoto[] =
-{
-    -146,  -146,   -65,  -146,  -146,  -146,  -146,  -146,  -146,    13,
-    -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -109,
-    -146,  -146,  -146,  -146,  -146,   -17,   -13,  -146,  -146,  -146,
-      -1,  -146,  -146,  -145,  -146,    -6,   -82,  -146,  -146,  -146,
-     -51,     3
-};
-
-  /* YYDEFGOTO[NTERM-NUM].  */
+/* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
       -1,     8,     9,    76,    80,    10,    11,    77,    12,   123,
@@ -677,9 +647,47 @@ static const yytype_int16 yydefgoto[] =
       72,   125
 };
 
-  /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
-     positive, shift that token.  If negative, reduce the rule whose
-     number is the opposite.  If YYTABLE_NINF, syntax error.  */
+/* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
+   STATE-NUM.  */
+#define YYPACT_NINF -146
+static const yytype_int16 yypact[] =
+{
+     145,   -22,   286,    20,   445,    16,   372,   475,    42,  -146,
+      26,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
+    -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
+    -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
+    -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
+    -146,  -146,    11,  -146,  -146,  -146,  -146,  -146,  -146,  -146,
+    -146,  -146,     7,     2,  -146,    37,    51,    23,   182,    19,
+    -146,  -146,    35,  -146,  -146,  -146,    31,    32,    33,    49,
+     102,    66,    -2,  -146,   386,   415,  -146,  -146,  -146,  -146,
+     153,    -5,    69,  -146,     8,    87,   102,   505,   252,   220,
+    -146,   120,  -146,  -146,     5,  -146,    29,    78,  -146,  -146,
+    -146,  -146,  -146,  -146,    79,    86,    88,  -146,  -146,  -146,
+    -146,  -146,    75,    80,    83,  -146,    81,  -146,    90,    93,
+    -146,    12,   112,  -146,   372,   372,   314,    98,   103,  -146,
+    -146,   107,   122,  -146,  -146,   533,   127,   108,  -146,   153,
+    -146,   505,   252,  -146,   252,  -146,  -146,    15,    68,    82,
+    -146,  -146,  -146,  -146,   372,   372,  -146,  -146,   220,  -146,
+    -146,   -26,   109,   118,  -146,  -146,  -146,  -146,  -146,   343,
+    -146,  -146,  -146,   117,   119,  -146,   146,  -146,  -146,   372,
+     372,  -146,   153,   153,  -146,  -146,  -146,  -146,  -146
+};
+
+/* YYPGOTO[NTERM-NUM].  */
+static const yytype_int16 yypgoto[] =
+{
+    -146,  -146,   -65,  -146,  -146,  -146,  -146,  -146,  -146,    13,
+    -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -146,  -109,
+    -146,  -146,  -146,  -146,  -146,   -17,   -13,  -146,  -146,  -146,
+      -1,  -146,  -146,  -145,  -146,    -6,   -82,  -146,  -146,  -146,
+     -51,     3
+};
+
+/* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
+   positive, shift that token.  If negative, reduce the rule which
+   number is the opposite.  If YYTABLE_NINF, syntax error.  */
+#define YYTABLE_NINF -113
 static const yytype_int16 yytable[] =
 {
       67,    82,   104,   106,   175,    48,   143,    51,    83,   118,
@@ -740,6 +748,12 @@ static const yytype_int16 yytable[] =
       64,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,    65,     0,     0,    66
 };
+
+#define yypact_value_is_default(Yystate) \
+  (!!((Yystate) == (-146)))
+
+#define yytable_value_is_error(Yytable_value) \
+  YYID (0)
 
 static const yytype_int16 yycheck[] =
 {
@@ -802,9 +816,9 @@ static const yytype_int16 yycheck[] =
       -1,    -1,    29,    -1,    -1,    32
 };
 
-  /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
-     symbol of state STATE-NUM.  */
-static const yytype_int8 yystos[] =
+/* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
+   symbol of state STATE-NUM.  */
+static const yytype_uint8 yystos[] =
 {
        0,     1,     4,    15,    16,    20,    30,    31,    47,    48,
       51,    52,    54,    57,    59,    62,    64,    73,    75,    80,
@@ -828,79 +842,67 @@ static const yytype_int8 yystos[] =
       72,    81,    38,    38,    17,    81,    81,    79,    79
 };
 
-  /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
-static const yytype_int8 yyr1[] =
-{
-       0,    46,    47,    49,    48,    50,    48,    48,    48,    51,
-      51,    51,    51,    51,    51,    53,    52,    54,    54,    55,
-      55,    56,    56,    56,    56,    58,    57,    60,    59,    61,
-      61,    63,    62,    64,    64,    65,    65,    65,    65,    66,
-      67,    68,    69,    69,    70,    70,    70,    70,    70,    70,
-      70,    70,    70,    71,    72,    74,    73,    75,    75,    75,
-      76,    76,    76,    77,    78,    78,    78,    78,    78,    78,
-      78,    78,    79,    79,    79,    79,    79,    79,    79,    80,
-      81,    81,    81,    81,    81,    81,    81,    82,    82,    82,
-      83,    83,    83,    83,    83,    83,    83,    83,    83,    83,
-      83,    83,    83,    83,    84,    84,    84,    84,    85,    85,
-      86,    86,    86,    87,    87,    87,    87,    87,    87,    87,
-      87,    87,    87,    87,    87,    87,    87,    87,    87,    87,
-      87,    87,    87,    87,    87,    87,    87,    87
-};
+#define yyerrok		(yyerrstatus = 0)
+#define yyclearin	(yychar = YYEMPTY)
+#define YYEMPTY		(-2)
+#define YYEOF		0
 
-  /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
-static const yytype_int8 yyr2[] =
-{
-       0,     2,     1,     0,     4,     0,     4,     1,     0,     1,
-       1,     1,     1,     1,     1,     0,     5,     2,     2,     3,
-       1,     1,     1,     3,     0,     0,     6,     0,     7,     1,
-       3,     0,     5,     2,     2,     3,     3,     1,     0,     1,
-       3,     2,     1,     1,     0,     1,     3,     2,     4,     2,
-       4,     1,     1,     1,     1,     0,     5,     2,     2,     2,
-       3,     1,     0,     1,     3,     5,     5,     3,     2,     2,
-       2,     1,     1,     1,     1,     1,     1,     1,     3,     4,
-       2,     5,     3,     4,     2,     1,     1,     3,     1,     3,
-       1,     1,     2,     1,     2,     1,     2,     1,     1,     1,
-       1,     1,     1,     1,     4,     3,     4,     2,     6,     3,
-       1,     2,     3,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     1,     1,     1
-};
+#define YYACCEPT	goto yyacceptlab
+#define YYABORT		goto yyabortlab
+#define YYERROR		goto yyerrorlab
 
 
-#define yyerrok         (yyerrstatus = 0)
-#define yyclearin       (yychar = YYEMPTY)
-#define YYEMPTY         (-2)
-#define YYEOF           0
+/* Like YYERROR except do call yyerror.  This remains here temporarily
+   to ease the transition to the new meaning of YYERROR, for GCC.
+   Once GCC version 2 has supplanted version 1, this can go.  However,
+   YYFAIL appears to be in use.  Nevertheless, it is formally deprecated
+   in Bison 2.4.2's NEWS entry, where a plan to phase it out is
+   discussed.  */
 
-#define YYACCEPT        goto yyacceptlab
-#define YYABORT         goto yyabortlab
-#define YYERROR         goto yyerrorlab
-
+#define YYFAIL		goto yyerrlab
+#if defined YYFAIL
+  /* This is here to suppress warnings from the GCC cpp's
+     -Wunused-macros.  Normally we don't worry about that warning, but
+     some users do, and we want to make it easy for users to remove
+     YYFAIL uses, which will produce warnings from Bison 2.5.  */
+#endif
 
 #define YYRECOVERING()  (!!yyerrstatus)
 
-#define YYBACKUP(Token, Value)                                    \
-  do                                                              \
-    if (yychar == YYEMPTY)                                        \
-      {                                                           \
-        yychar = (Token);                                         \
-        yylval = (Value);                                         \
-        YYPOPSTACK (yylen);                                       \
-        yystate = *yyssp;                                         \
-        goto yybackup;                                            \
-      }                                                           \
-    else                                                          \
-      {                                                           \
-        yyerror (YY_("syntax error: cannot back up")); \
-        YYERROR;                                                  \
-      }                                                           \
-  while (0)
+#define YYBACKUP(Token, Value)                                  \
+do                                                              \
+  if (yychar == YYEMPTY)                                        \
+    {                                                           \
+      yychar = (Token);                                         \
+      yylval = (Value);                                         \
+      YYPOPSTACK (yylen);                                       \
+      yystate = *yyssp;                                         \
+      goto yybackup;                                            \
+    }                                                           \
+  else                                                          \
+    {                                                           \
+      yyerror (YY_("syntax error: cannot back up")); \
+      YYERROR;							\
+    }								\
+while (YYID (0))
 
 /* Error token number */
-#define YYTERROR        1
-#define YYERRCODE       256
+#define YYTERROR	1
+#define YYERRCODE	256
 
 
+/* This macro is provided for backward compatibility. */
+#ifndef YY_LOCATION_PRINT
+# define YY_LOCATION_PRINT(File, Loc) ((void) 0)
+#endif
+
+
+/* YYLEX -- calling `yylex' with the right arguments.  */
+#ifdef YYLEX_PARAM
+# define YYLEX yylex (YYLEX_PARAM)
+#else
+# define YYLEX yylex ()
+#endif
 
 /* Enable debugging if requested.  */
 #if YYDEBUG
@@ -910,63 +912,82 @@ static const yytype_int8 yyr2[] =
 #  define YYFPRINTF fprintf
 # endif
 
-# define YYDPRINTF(Args)                        \
-do {                                            \
-  if (yydebug)                                  \
-    YYFPRINTF Args;                             \
-} while (0)
+# define YYDPRINTF(Args)			\
+do {						\
+  if (yydebug)					\
+    YYFPRINTF Args;				\
+} while (YYID (0))
 
-/* This macro is provided for backward compatibility. */
-#ifndef YY_LOCATION_PRINT
-# define YY_LOCATION_PRINT(File, Loc) ((void) 0)
-#endif
-
-
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)                    \
-do {                                                                      \
-  if (yydebug)                                                            \
-    {                                                                     \
-      YYFPRINTF (stderr, "%s ", Title);                                   \
-      yy_symbol_print (stderr,                                            \
-                  Type, Value); \
-      YYFPRINTF (stderr, "\n");                                           \
-    }                                                                     \
-} while (0)
+# define YY_SYMBOL_PRINT(Title, Type, Value, Location)			  \
+do {									  \
+  if (yydebug)								  \
+    {									  \
+      YYFPRINTF (stderr, "%s ", Title);					  \
+      yy_symbol_print (stderr,						  \
+		  Type, Value); \
+      YYFPRINTF (stderr, "\n");						  \
+    }									  \
+} while (YYID (0))
 
 
-/*-----------------------------------.
-| Print this symbol's value on YYO.  |
-`-----------------------------------*/
+/*--------------------------------.
+| Print this symbol on YYOUTPUT.  |
+`--------------------------------*/
 
+/*ARGSUSED*/
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_value_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+#else
+static void
+yy_symbol_value_print (yyoutput, yytype, yyvaluep)
+    FILE *yyoutput;
+    int yytype;
+    YYSTYPE const * const yyvaluep;
+#endif
 {
-  FILE *yyoutput = yyo;
-  YYUSE (yyoutput);
+  FILE *yyo = yyoutput;
+  YYUSE (yyo);
   if (!yyvaluep)
     return;
 # ifdef YYPRINT
   if (yytype < YYNTOKENS)
-    YYPRINT (yyo, yytoknum[yytype], *yyvaluep);
+    YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
+# else
+  YYUSE (yyoutput);
 # endif
-  YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-  YYUSE (yytype);
-  YY_IGNORE_MAYBE_UNINITIALIZED_END
+  switch (yytype)
+    {
+      default:
+        break;
+    }
 }
 
 
-/*---------------------------.
-| Print this symbol on YYO.  |
-`---------------------------*/
+/*--------------------------------.
+| Print this symbol on YYOUTPUT.  |
+`--------------------------------*/
 
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+#else
+static void
+yy_symbol_print (yyoutput, yytype, yyvaluep)
+    FILE *yyoutput;
+    int yytype;
+    YYSTYPE const * const yyvaluep;
+#endif
 {
-  YYFPRINTF (yyo, "%s %s (",
-             yytype < YYNTOKENS ? "token" : "nterm", yytname[yytype]);
+  if (yytype < YYNTOKENS)
+    YYFPRINTF (yyoutput, "token %s (", yytname[yytype]);
+  else
+    YYFPRINTF (yyoutput, "nterm %s (", yytname[yytype]);
 
-  yy_symbol_value_print (yyo, yytype, yyvaluep);
-  YYFPRINTF (yyo, ")");
+  yy_symbol_value_print (yyoutput, yytype, yyvaluep);
+  YYFPRINTF (yyoutput, ")");
 }
 
 /*------------------------------------------------------------------.
@@ -974,8 +995,16 @@ yy_symbol_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
 | TOP (included).                                                   |
 `------------------------------------------------------------------*/
 
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
-yy_stack_print (yy_state_t *yybottom, yy_state_t *yytop)
+yy_stack_print (yytype_int16 *yybottom, yytype_int16 *yytop)
+#else
+static void
+yy_stack_print (yybottom, yytop)
+    yytype_int16 *yybottom;
+    yytype_int16 *yytop;
+#endif
 {
   YYFPRINTF (stderr, "Stack now");
   for (; yybottom <= yytop; yybottom++)
@@ -986,42 +1015,49 @@ yy_stack_print (yy_state_t *yybottom, yy_state_t *yytop)
   YYFPRINTF (stderr, "\n");
 }
 
-# define YY_STACK_PRINT(Bottom, Top)                            \
-do {                                                            \
-  if (yydebug)                                                  \
-    yy_stack_print ((Bottom), (Top));                           \
-} while (0)
+# define YY_STACK_PRINT(Bottom, Top)				\
+do {								\
+  if (yydebug)							\
+    yy_stack_print ((Bottom), (Top));				\
+} while (YYID (0))
 
 
 /*------------------------------------------------.
 | Report that the YYRULE is going to be reduced.  |
 `------------------------------------------------*/
 
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
-yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp, int yyrule)
+yy_reduce_print (YYSTYPE *yyvsp, int yyrule)
+#else
+static void
+yy_reduce_print (yyvsp, yyrule)
+    YYSTYPE *yyvsp;
+    int yyrule;
+#endif
 {
-  int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
   int yyi;
-  YYFPRINTF (stderr, "Reducing stack by rule %d (line %d):\n",
-             yyrule - 1, yylno);
+  unsigned long int yylno = yyrline[yyrule];
+  YYFPRINTF (stderr, "Reducing stack by rule %d (line %lu):\n",
+	     yyrule - 1, yylno);
   /* The symbols being reduced.  */
   for (yyi = 0; yyi < yynrhs; yyi++)
     {
       YYFPRINTF (stderr, "   $%d = ", yyi + 1);
-      yy_symbol_print (stderr,
-                       yystos[+yyssp[yyi + 1 - yynrhs]],
-                       &yyvsp[(yyi + 1) - (yynrhs)]
-                                              );
+      yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
+		       &(yyvsp[(yyi + 1) - (yynrhs)])
+		       		       );
       YYFPRINTF (stderr, "\n");
     }
 }
 
-# define YY_REDUCE_PRINT(Rule)          \
-do {                                    \
-  if (yydebug)                          \
-    yy_reduce_print (yyssp, yyvsp, Rule); \
-} while (0)
+# define YY_REDUCE_PRINT(Rule)		\
+do {					\
+  if (yydebug)				\
+    yy_reduce_print (yyvsp, Rule); \
+} while (YYID (0))
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
    multiple parsers can coexist.  */
@@ -1035,7 +1071,7 @@ int yydebug;
 
 
 /* YYINITDEPTH -- initial size of the parser's stacks.  */
-#ifndef YYINITDEPTH
+#ifndef	YYINITDEPTH
 # define YYINITDEPTH 200
 #endif
 
@@ -1055,13 +1091,20 @@ int yydebug;
 
 # ifndef yystrlen
 #  if defined __GLIBC__ && defined _STRING_H
-#   define yystrlen(S) (YY_CAST (YYPTRDIFF_T, strlen (S)))
+#   define yystrlen strlen
 #  else
 /* Return the length of YYSTR.  */
-static YYPTRDIFF_T
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+static YYSIZE_T
 yystrlen (const char *yystr)
+#else
+static YYSIZE_T
+yystrlen (yystr)
+    const char *yystr;
+#endif
 {
-  YYPTRDIFF_T yylen;
+  YYSIZE_T yylen;
   for (yylen = 0; yystr[yylen]; yylen++)
     continue;
   return yylen;
@@ -1075,8 +1118,16 @@ yystrlen (const char *yystr)
 #  else
 /* Copy YYSRC to YYDEST, returning the address of the terminating '\0' in
    YYDEST.  */
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static char *
 yystpcpy (char *yydest, const char *yysrc)
+#else
+static char *
+yystpcpy (yydest, yysrc)
+    char *yydest;
+    const char *yysrc;
+#endif
 {
   char *yyd = yydest;
   const char *yys = yysrc;
@@ -1097,46 +1148,43 @@ yystpcpy (char *yydest, const char *yysrc)
    backslash-backslash).  YYSTR is taken from yytname.  If YYRES is
    null, do not copy; instead, return the length of what the result
    would have been.  */
-static YYPTRDIFF_T
+static YYSIZE_T
 yytnamerr (char *yyres, const char *yystr)
 {
   if (*yystr == '"')
     {
-      YYPTRDIFF_T yyn = 0;
+      YYSIZE_T yyn = 0;
       char const *yyp = yystr;
 
       for (;;)
-        switch (*++yyp)
-          {
-          case '\'':
-          case ',':
-            goto do_not_strip_quotes;
+	switch (*++yyp)
+	  {
+	  case '\'':
+	  case ',':
+	    goto do_not_strip_quotes;
 
-          case '\\':
-            if (*++yyp != '\\')
-              goto do_not_strip_quotes;
-            else
-              goto append;
+	  case '\\':
+	    if (*++yyp != '\\')
+	      goto do_not_strip_quotes;
+	    /* Fall through.  */
+	  default:
+	    if (yyres)
+	      yyres[yyn] = *yyp;
+	    yyn++;
+	    break;
 
-          append:
-          default:
-            if (yyres)
-              yyres[yyn] = *yyp;
-            yyn++;
-            break;
-
-          case '"':
-            if (yyres)
-              yyres[yyn] = '\0';
-            return yyn;
-          }
+	  case '"':
+	    if (yyres)
+	      yyres[yyn] = '\0';
+	    return yyn;
+	  }
     do_not_strip_quotes: ;
     }
 
-  if (yyres)
-    return yystpcpy (yyres, yystr) - yyres;
-  else
+  if (! yyres)
     return yystrlen (yystr);
+
+  return yystpcpy (yyres, yystr) - yyres;
 }
 # endif
 
@@ -1149,21 +1197,25 @@ yytnamerr (char *yyres, const char *yystr)
    *YYMSG_ALLOC to the required number of bytes.  Return 2 if the
    required number of bytes is too large to store.  */
 static int
-yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
-                yy_state_t *yyssp, int yytoken)
+yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
+                yytype_int16 *yyssp, int yytoken)
 {
+  YYSIZE_T yysize0 = yytnamerr (YY_NULL, yytname[yytoken]);
+  YYSIZE_T yysize = yysize0;
   enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
   /* Internationalized format string. */
-  const char *yyformat = YY_NULLPTR;
-  /* Arguments of yyformat: reported tokens (one for the "unexpected",
-     one per "expected"). */
+  const char *yyformat = YY_NULL;
+  /* Arguments of yyformat. */
   char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
-  /* Actual size of YYARG. */
+  /* Number of reported tokens (one for the "unexpected", one per
+     "expected"). */
   int yycount = 0;
-  /* Cumulated lengths of YYARG.  */
-  YYPTRDIFF_T yysize = 0;
 
   /* There are many possibilities here to consider:
+     - Assume YYFAIL is not used.  It's too flawed to consider.  See
+       <http://lists.gnu.org/archive/html/bison-patches/2009-12/msg00024.html>
+       for details.  YYERROR is fine as it does not invoke this
+       function.
      - If this state is a consistent state with a default action, then
        the only way this function was invoked is if the default action
        is an error action.  In that case, don't check for expected
@@ -1188,9 +1240,7 @@ yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
   */
   if (yytoken != YYEMPTY)
     {
-      int yyn = yypact[+*yyssp];
-      YYPTRDIFF_T yysize0 = yytnamerr (YY_NULLPTR, yytname[yytoken]);
-      yysize = yysize0;
+      int yyn = yypact[*yyssp];
       yyarg[yycount++] = yytname[yytoken];
       if (!yypact_value_is_default (yyn))
         {
@@ -1215,12 +1265,11 @@ yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
                   }
                 yyarg[yycount++] = yytname[yyx];
                 {
-                  YYPTRDIFF_T yysize1
-                    = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
-                  if (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM)
-                    yysize = yysize1;
-                  else
+                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULL, yytname[yyx]);
+                  if (! (yysize <= yysize1
+                         && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
                     return 2;
+                  yysize = yysize1;
                 }
               }
         }
@@ -1232,7 +1281,6 @@ yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
       case N:                               \
         yyformat = S;                       \
       break
-    default: /* Avoid compiler warnings. */
       YYCASE_(0, YY_("syntax error"));
       YYCASE_(1, YY_("syntax error, unexpected %s"));
       YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
@@ -1243,13 +1291,10 @@ yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
     }
 
   {
-    /* Don't count the "%s"s in the final size, but reserve room for
-       the terminator.  */
-    YYPTRDIFF_T yysize1 = yysize + (yystrlen (yyformat) - 2 * yycount) + 1;
-    if (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM)
-      yysize = yysize1;
-    else
+    YYSIZE_T yysize1 = yysize + yystrlen (yyformat);
+    if (! (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
       return 2;
+    yysize = yysize1;
   }
 
   if (*yymsg_alloc < yysize)
@@ -1275,8 +1320,8 @@ yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
         }
       else
         {
-          ++yyp;
-          ++yyformat;
+          yyp++;
+          yyformat++;
         }
   }
   return 0;
@@ -1287,17 +1332,31 @@ yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
 | Release the memory associated to this symbol.  |
 `-----------------------------------------------*/
 
+/*ARGSUSED*/
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
 yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep)
+#else
+static void
+yydestruct (yymsg, yytype, yyvaluep)
+    const char *yymsg;
+    int yytype;
+    YYSTYPE *yyvaluep;
+#endif
 {
   YYUSE (yyvaluep);
+
   if (!yymsg)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yytype, yyvaluep, yylocationp);
 
-  YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-  YYUSE (yytype);
-  YY_IGNORE_MAYBE_UNINITIALIZED_END
+  switch (yytype)
+    {
+
+      default:
+        break;
+    }
 }
 
 
@@ -1306,8 +1365,18 @@ yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep)
 /* The lookahead symbol.  */
 int yychar;
 
+
+#ifndef YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+# define YY_IGNORE_MAYBE_UNINITIALIZED_END
+#endif
+#ifndef YY_INITIAL_VALUE
+# define YY_INITIAL_VALUE(Value) /* Nothing. */
+#endif
+
 /* The semantic value of the lookahead symbol.  */
-YYSTYPE yylval;
+YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
+
 /* Number of syntax errors so far.  */
 int yynerrs;
 
@@ -1316,31 +1385,50 @@ int yynerrs;
 | yyparse.  |
 `----------*/
 
+#ifdef YYPARSE_PARAM
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+int
+yyparse (void *YYPARSE_PARAM)
+#else
+int
+yyparse (YYPARSE_PARAM)
+    void *YYPARSE_PARAM;
+#endif
+#else /* ! YYPARSE_PARAM */
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 int
 yyparse (void)
+#else
+int
+yyparse ()
+
+#endif
+#endif
 {
-    yy_state_fast_t yystate;
+    int yystate;
     /* Number of tokens to shift before error messages enabled.  */
     int yyerrstatus;
 
     /* The stacks and their tools:
-       'yyss': related to states.
-       'yyvs': related to semantic values.
+       `yyss': related to states.
+       `yyvs': related to semantic values.
 
        Refer to the stacks through separate pointers, to allow yyoverflow
        to reallocate them elsewhere.  */
 
     /* The state stack.  */
-    yy_state_t yyssa[YYINITDEPTH];
-    yy_state_t *yyss;
-    yy_state_t *yyssp;
+    yytype_int16 yyssa[YYINITDEPTH];
+    yytype_int16 *yyss;
+    yytype_int16 *yyssp;
 
     /* The semantic value stack.  */
     YYSTYPE yyvsa[YYINITDEPTH];
     YYSTYPE *yyvs;
     YYSTYPE *yyvsp;
 
-    YYPTRDIFF_T yystacksize;
+    YYSIZE_T yystacksize;
 
   int yyn;
   int yyresult;
@@ -1354,7 +1442,7 @@ yyparse (void)
   /* Buffer for error messages, and its allocated size.  */
   char yymsgbuf[128];
   char *yymsg = yymsgbuf;
-  YYPTRDIFF_T yymsg_alloc = sizeof yymsgbuf;
+  YYSIZE_T yymsg_alloc = sizeof yymsgbuf;
 #endif
 
 #define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
@@ -1375,99 +1463,90 @@ yyparse (void)
   yychar = YYEMPTY; /* Cause a token to be read.  */
   goto yysetstate;
 
-
 /*------------------------------------------------------------.
-| yynewstate -- push a new state, which is found in yystate.  |
+| yynewstate -- Push a new state, which is found in yystate.  |
 `------------------------------------------------------------*/
-yynewstate:
+ yynewstate:
   /* In all cases, when you get here, the value and location stacks
      have just been pushed.  So pushing a state here evens the stacks.  */
   yyssp++;
 
-
-/*--------------------------------------------------------------------.
-| yysetstate -- set current state (the top of the stack) to yystate.  |
-`--------------------------------------------------------------------*/
-yysetstate:
-  YYDPRINTF ((stderr, "Entering state %d\n", yystate));
-  YY_ASSERT (0 <= yystate && yystate < YYNSTATES);
-  YY_IGNORE_USELESS_CAST_BEGIN
-  *yyssp = YY_CAST (yy_state_t, yystate);
-  YY_IGNORE_USELESS_CAST_END
+ yysetstate:
+  *yyssp = yystate;
 
   if (yyss + yystacksize - 1 <= yyssp)
-#if !defined yyoverflow && !defined YYSTACK_RELOCATE
-    goto yyexhaustedlab;
-#else
     {
       /* Get the current used size of the three stacks, in elements.  */
-      YYPTRDIFF_T yysize = yyssp - yyss + 1;
+      YYSIZE_T yysize = yyssp - yyss + 1;
 
-# if defined yyoverflow
+#ifdef yyoverflow
       {
-        /* Give user a chance to reallocate the stack.  Use copies of
-           these so that the &'s don't force the real ones into
-           memory.  */
-        yy_state_t *yyss1 = yyss;
-        YYSTYPE *yyvs1 = yyvs;
+	/* Give user a chance to reallocate the stack.  Use copies of
+	   these so that the &'s don't force the real ones into
+	   memory.  */
+	YYSTYPE *yyvs1 = yyvs;
+	yytype_int16 *yyss1 = yyss;
 
-        /* Each stack pointer address is followed by the size of the
-           data in use in that stack, in bytes.  This used to be a
-           conditional around just the two extra args, but that might
-           be undefined if yyoverflow is a macro.  */
-        yyoverflow (YY_("memory exhausted"),
-                    &yyss1, yysize * YYSIZEOF (*yyssp),
-                    &yyvs1, yysize * YYSIZEOF (*yyvsp),
-                    &yystacksize);
-        yyss = yyss1;
-        yyvs = yyvs1;
+	/* Each stack pointer address is followed by the size of the
+	   data in use in that stack, in bytes.  This used to be a
+	   conditional around just the two extra args, but that might
+	   be undefined if yyoverflow is a macro.  */
+	yyoverflow (YY_("memory exhausted"),
+		    &yyss1, yysize * sizeof (*yyssp),
+		    &yyvs1, yysize * sizeof (*yyvsp),
+		    &yystacksize);
+
+	yyss = yyss1;
+	yyvs = yyvs1;
       }
-# else /* defined YYSTACK_RELOCATE */
+#else /* no yyoverflow */
+# ifndef YYSTACK_RELOCATE
+      goto yyexhaustedlab;
+# else
       /* Extend the stack our own way.  */
       if (YYMAXDEPTH <= yystacksize)
-        goto yyexhaustedlab;
+	goto yyexhaustedlab;
       yystacksize *= 2;
       if (YYMAXDEPTH < yystacksize)
-        yystacksize = YYMAXDEPTH;
+	yystacksize = YYMAXDEPTH;
 
       {
-        yy_state_t *yyss1 = yyss;
-        union yyalloc *yyptr =
-          YY_CAST (union yyalloc *,
-                   YYSTACK_ALLOC (YY_CAST (YYSIZE_T, YYSTACK_BYTES (yystacksize))));
-        if (! yyptr)
-          goto yyexhaustedlab;
-        YYSTACK_RELOCATE (yyss_alloc, yyss);
-        YYSTACK_RELOCATE (yyvs_alloc, yyvs);
-# undef YYSTACK_RELOCATE
-        if (yyss1 != yyssa)
-          YYSTACK_FREE (yyss1);
+	yytype_int16 *yyss1 = yyss;
+	union yyalloc *yyptr =
+	  (union yyalloc *) YYSTACK_ALLOC (YYSTACK_BYTES (yystacksize));
+	if (! yyptr)
+	  goto yyexhaustedlab;
+	YYSTACK_RELOCATE (yyss_alloc, yyss);
+	YYSTACK_RELOCATE (yyvs_alloc, yyvs);
+#  undef YYSTACK_RELOCATE
+	if (yyss1 != yyssa)
+	  YYSTACK_FREE (yyss1);
       }
 # endif
+#endif /* no yyoverflow */
 
       yyssp = yyss + yysize - 1;
       yyvsp = yyvs + yysize - 1;
 
-      YY_IGNORE_USELESS_CAST_BEGIN
-      YYDPRINTF ((stderr, "Stack size increased to %ld\n",
-                  YY_CAST (long, yystacksize)));
-      YY_IGNORE_USELESS_CAST_END
+      YYDPRINTF ((stderr, "Stack size increased to %lu\n",
+		  (unsigned long int) yystacksize));
 
       if (yyss + yystacksize - 1 <= yyssp)
-        YYABORT;
+	YYABORT;
     }
-#endif /* !defined yyoverflow && !defined YYSTACK_RELOCATE */
+
+  YYDPRINTF ((stderr, "Entering state %d\n", yystate));
 
   if (yystate == YYFINAL)
     YYACCEPT;
 
   goto yybackup;
 
-
 /*-----------.
 | yybackup.  |
 `-----------*/
 yybackup:
+
   /* Do appropriate processing given the current state.  Read a
      lookahead token if we need one and don't already have one.  */
 
@@ -1482,7 +1561,7 @@ yybackup:
   if (yychar == YYEMPTY)
     {
       YYDPRINTF ((stderr, "Reading a token: "));
-      yychar = yylex ();
+      yychar = YYLEX;
     }
 
   if (yychar <= YYEOF)
@@ -1517,13 +1596,15 @@ yybackup:
 
   /* Shift the lookahead token.  */
   YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
+
+  /* Discard the shifted token.  */
+  yychar = YYEMPTY;
+
   yystate = yyn;
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 
-  /* Discard the shifted token.  */
-  yychar = YYEMPTY;
   goto yynewstate;
 
 
@@ -1538,14 +1619,14 @@ yydefault:
 
 
 /*-----------------------------.
-| yyreduce -- do a reduction.  |
+| yyreduce -- Do a reduction.  |
 `-----------------------------*/
 yyreduce:
   /* yyn is the number of a rule to reduce with.  */
   yylen = yyr2[yyn];
 
   /* If YYLEN is nonzero, implement the default value of the action:
-     '$$ = $1'.
+     `$$ = $1'.
 
      Otherwise, the following line sets YYVAL to garbage.
      This behavior is undocumented and Bison
@@ -1558,238 +1639,239 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 3:
-#line 75 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+        case 3:
+/* Line 1792 of yacc.c  */
+#line 75 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1566 "tars.tab.cpp"
     break;
 
   case 5:
-#line 79 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 79 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     yyerrok;
 }
-#line 1574 "tars.tab.cpp"
     break;
 
   case 7:
-#line 84 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 84 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("`;' missing after definition");
 }
-#line 1582 "tars.tab.cpp"
     break;
 
   case 8:
-#line 88 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 88 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1589 "tars.tab.cpp"
     break;
 
   case 9:
-#line 96 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    assert(yyvsp[0] == 0 || NamespacePtr::dynamicCast(yyvsp[0]));
+/* Line 1792 of yacc.c  */
+#line 96 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    assert((yyvsp[(1) - (1)]) == 0 || NamespacePtr::dynamicCast((yyvsp[(1) - (1)])));
 }
-#line 1597 "tars.tab.cpp"
     break;
 
   case 10:
-#line 100 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    assert(yyvsp[0] == 0 || InterfacePtr::dynamicCast(yyvsp[0]));
+/* Line 1792 of yacc.c  */
+#line 100 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    assert((yyvsp[(1) - (1)]) == 0 || InterfacePtr::dynamicCast((yyvsp[(1) - (1)])));
 }
-#line 1605 "tars.tab.cpp"
     break;
 
   case 11:
-#line 104 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    assert(yyvsp[0] == 0 || StructPtr::dynamicCast(yyvsp[0]));
+/* Line 1792 of yacc.c  */
+#line 104 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    assert((yyvsp[(1) - (1)]) == 0 || StructPtr::dynamicCast((yyvsp[(1) - (1)])));
 }
-#line 1613 "tars.tab.cpp"
     break;
 
   case 12:
-#line 108 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 108 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1620 "tars.tab.cpp"
     break;
 
   case 13:
-#line 111 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    assert(yyvsp[0] == 0 || EnumPtr::dynamicCast(yyvsp[0]));
+/* Line 1792 of yacc.c  */
+#line 111 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    assert((yyvsp[(1) - (1)]) == 0 || EnumPtr::dynamicCast((yyvsp[(1) - (1)])));
 }
-#line 1628 "tars.tab.cpp"
     break;
 
   case 14:
-#line 115 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    assert(yyvsp[0] == 0 || ConstPtr::dynamicCast(yyvsp[0]));
+/* Line 1792 of yacc.c  */
+#line 115 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    assert((yyvsp[(1) - (1)]) == 0 || ConstPtr::dynamicCast((yyvsp[(1) - (1)])));
 }
-#line 1636 "tars.tab.cpp"
     break;
 
   case 15:
-#line 124 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = yyvsp[0];
+/* Line 1792 of yacc.c  */
+#line 124 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = (yyvsp[(1) - (1)]);
 }
-#line 1644 "tars.tab.cpp"
     break;
 
   case 16:
-#line 128 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    if(yyvsp[-2])
+/* Line 1792 of yacc.c  */
+#line 128 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    if((yyvsp[(3) - (5)]))
     {
         g_parse->popContainer();
-        yyval = yyvsp[-2];
+        (yyval) = (yyvsp[(3) - (5)]);
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 
-    yyval = yyvsp[-3];
+    (yyval) = (yyvsp[(2) - (5)]);
 }
-#line 1662 "tars.tab.cpp"
     break;
 
   case 17:
-#line 147 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 147 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     NamespacePtr c = NamespacePtr::dynamicCast(g_parse->currentContainer());
     if(!c)
     {
         g_parse->error("enum must define in namespace");
     }
-    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast(yyvsp[0]);
+    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[(2) - (2)]));
     EnumPtr e = c->createEnum(ident->v);
     g_parse->pushContainer(e);
 
-    yyval = e;
+    (yyval) = e;
 }
-#line 1679 "tars.tab.cpp"
     break;
 
   case 18:
-#line 160 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 160 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(2) - (2)]));
     g_parse->error("keyword `" + ident->v + "' cannot be used as enumeration name");
-    yyval = yyvsp[0];
+    (yyval) = (yyvsp[(2) - (2)]);
 }
-#line 1689 "tars.tab.cpp"
     break;
 
   case 19:
-#line 171 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = yyvsp[-1];
+/* Line 1792 of yacc.c  */
+#line 171 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = (yyvsp[(2) - (3)]);
 }
-#line 1697 "tars.tab.cpp"
     break;
 
   case 20:
-#line 175 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 175 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1704 "tars.tab.cpp"
     break;
 
   case 21:
-#line 183 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 183 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     TypePtr type        = TypePtr::dynamicCast(g_parse->createBuiltin(Builtin::KindLong));
-    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast(yyvsp[0]);
+    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     TypeIdPtr tPtr      = new TypeId(type, ident->v);
     tPtr->disableDefault();
     EnumPtr e = EnumPtr::dynamicCast(g_parse->currentContainer());
     assert(e);
     e->addMember(tPtr);
-    yyval = e;
+    (yyval) = e;
 }
-#line 1719 "tars.tab.cpp"
     break;
 
   case 22:
-#line 194 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 194 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     g_parse->error("keyword `" + ident->v + "' cannot be used as enumerator");
 }
-#line 1728 "tars.tab.cpp"
     break;
 
   case 23:
-#line 199 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 199 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     TypePtr type        = TypePtr::dynamicCast(g_parse->createBuiltin(Builtin::KindLong));
-    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast(yyvsp[-2]);
+    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[(1) - (3)]));
     TypeIdPtr tPtr      = new TypeId(type, ident->v);
-    ConstGrammarPtr sPtr    = ConstGrammarPtr::dynamicCast(yyvsp[0]);
+    ConstGrammarPtr sPtr    = ConstGrammarPtr::dynamicCast((yyvsp[(3) - (3)]));
     g_parse->checkConstValue(tPtr, sPtr->t);
     tPtr->setDefault(sPtr->v);
     EnumPtr e = EnumPtr::dynamicCast(g_parse->currentContainer());
     assert(e);
     e->addMember(tPtr);
-    yyval = e;
+    (yyval) = e;
 }
-#line 1745 "tars.tab.cpp"
     break;
 
   case 24:
-#line 212 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 212 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1752 "tars.tab.cpp"
     break;
 
   case 25:
-#line 220 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 220 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[(2) - (2)]));
     ContainerPtr c      = g_parse->currentContainer();
     NamespacePtr n      = c->createNamespace(ident->v);
     if(n)
     {
         g_parse->pushContainer(n);
-        yyval = GrammarBasePtr::dynamicCast(n);
+        (yyval) = GrammarBasePtr::dynamicCast(n);
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 1771 "tars.tab.cpp"
     break;
 
   case 26:
-#line 235 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    if(yyvsp[-3])
+/* Line 1792 of yacc.c  */
+#line 235 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    if((yyvsp[(3) - (6)]))
     {
         g_parse->popContainer();
-        yyval = yyvsp[-3];
+        (yyval) = (yyvsp[(3) - (6)]);
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 1787 "tars.tab.cpp"
     break;
 
   case 27:
-#line 253 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[-1]);
+/* Line 1792 of yacc.c  */
+#line 253 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(3) - (4)]));
     StructPtr sp = StructPtr::dynamicCast(g_parse->findUserType(ident->v));
     if(!sp)
     {
@@ -1798,20 +1880,20 @@ yyreduce:
 
     g_parse->setKeyStruct(sp);
 }
-#line 1802 "tars.tab.cpp"
     break;
 
   case 28:
-#line 264 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 264 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1809 "tars.tab.cpp"
     break;
 
   case 29:
-#line 272 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 272 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     StructPtr np = g_parse->getKeyStruct();
     if(np)
     {
@@ -1819,16 +1901,16 @@ yyreduce:
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 1826 "tars.tab.cpp"
     break;
 
   case 30:
-#line 285 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 285 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(3) - (3)]));
     StructPtr np = g_parse->getKeyStruct();
     if(np)
     {
@@ -1836,16 +1918,16 @@ yyreduce:
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }   
 }
-#line 1843 "tars.tab.cpp"
     break;
 
   case 31:
-#line 304 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 304 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
 
     NamespacePtr c = NamespacePtr::dynamicCast(g_parse->currentContainer());
 
@@ -1853,100 +1935,100 @@ yyreduce:
     if(cl)
     {
         g_parse->pushContainer(cl);
-        yyval = GrammarBasePtr::dynamicCast(cl);
+        (yyval) = GrammarBasePtr::dynamicCast(cl);
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 1864 "tars.tab.cpp"
     break;
 
   case 32:
-#line 321 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    if(yyvsp[-3])
+/* Line 1792 of yacc.c  */
+#line 321 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    if((yyvsp[(2) - (5)]))
     {
        g_parse->popContainer();
-       yyval = GrammarBasePtr::dynamicCast(yyvsp[-3]);
+       (yyval) = GrammarBasePtr::dynamicCast((yyvsp[(2) - (5)]));
     }
     else
     {
-       yyval = 0;
+       (yyval) = 0;
     }
 }
-#line 1880 "tars.tab.cpp"
     break;
 
   case 33:
-#line 338 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = yyvsp[0];
+/* Line 1792 of yacc.c  */
+#line 338 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = (yyvsp[(2) - (2)]);
 }
-#line 1888 "tars.tab.cpp"
     break;
 
   case 34:
-#line 342 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 342 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(2) - (2)]));
     g_parse->error("keyword `" + ident->v + "' cannot be used as interface name");
-    yyval = yyvsp[0];
+    (yyval) = (yyvsp[(2) - (2)]);
 }
-#line 1898 "tars.tab.cpp"
     break;
 
   case 35:
-#line 353 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 353 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1905 "tars.tab.cpp"
     break;
 
   case 36:
-#line 356 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 356 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1912 "tars.tab.cpp"
     break;
 
   case 37:
-#line 359 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 359 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("`;' missing after definition");
 }
-#line 1920 "tars.tab.cpp"
     break;
 
   case 38:
-#line 363 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 363 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1927 "tars.tab.cpp"
     break;
 
   case 40:
-#line 377 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    if(yyvsp[-2])
+/* Line 1792 of yacc.c  */
+#line 377 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    if((yyvsp[(1) - (3)]))
     {
         g_parse->popContainer();
-        yyval = GrammarBasePtr::dynamicCast(yyvsp[-2]);
+        (yyval) = GrammarBasePtr::dynamicCast((yyvsp[(1) - (3)]));
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 1943 "tars.tab.cpp"
     break;
 
   case 41:
-#line 394 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    TypePtr returnType = TypePtr::dynamicCast(yyvsp[-1]);
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 394 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    TypePtr returnType = TypePtr::dynamicCast((yyvsp[(1) - (2)]));
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(2) - (2)]));
     string name        = ident->v;
     InterfacePtr cl    = InterfacePtr::dynamicCast(g_parse->currentContainer());
     if(cl)
@@ -1955,40 +2037,40 @@ yyreduce:
          if(op)
          {
              g_parse->pushContainer(op);
-             yyval = GrammarBasePtr::dynamicCast(op);
+             (yyval) = GrammarBasePtr::dynamicCast(op);
          }
          else
          {
-             yyval = 0;
+             (yyval) = 0;
          }
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 1971 "tars.tab.cpp"
     break;
 
   case 43:
-#line 424 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = 0;
+/* Line 1792 of yacc.c  */
+#line 424 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = 0;
 }
-#line 1979 "tars.tab.cpp"
     break;
 
   case 44:
-#line 434 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 434 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 1986 "tars.tab.cpp"
     break;
 
   case 45:
-#line 437 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    TypeIdPtr  tsp         = TypeIdPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 437 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    TypeIdPtr  tsp         = TypeIdPtr::dynamicCast((yyvsp[(1) - (1)]));
 
     OperationPtr op = OperationPtr::dynamicCast(g_parse->currentContainer());
     assert(op);
@@ -1997,13 +2079,13 @@ yyreduce:
         op->createParamDecl(tsp, false, false);
     }
 }
-#line 2001 "tars.tab.cpp"
     break;
 
   case 46:
-#line 448 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    TypeIdPtr  tsp         = TypeIdPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 448 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    TypeIdPtr  tsp         = TypeIdPtr::dynamicCast((yyvsp[(3) - (3)]));
 
     OperationPtr op = OperationPtr::dynamicCast(g_parse->currentContainer());
     assert(op);
@@ -2012,14 +2094,14 @@ yyreduce:
         op->createParamDecl(tsp, false, false);
     }
 }
-#line 2016 "tars.tab.cpp"
     break;
 
   case 47:
-#line 459 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    BoolGrammarPtr isOutParam  = BoolGrammarPtr::dynamicCast(yyvsp[-1]);
-    TypeIdPtr  tsp         = TypeIdPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 459 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    BoolGrammarPtr isOutParam  = BoolGrammarPtr::dynamicCast((yyvsp[(1) - (2)]));
+    TypeIdPtr  tsp         = TypeIdPtr::dynamicCast((yyvsp[(2) - (2)]));
 
     OperationPtr op = OperationPtr::dynamicCast(g_parse->currentContainer());
     assert(op);
@@ -2028,14 +2110,14 @@ yyreduce:
         op->createParamDecl(tsp, isOutParam->v, false);
     }
 }
-#line 2032 "tars.tab.cpp"
     break;
 
   case 48:
-#line 471 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    BoolGrammarPtr isOutParam  = BoolGrammarPtr::dynamicCast(yyvsp[-1]);
-    TypeIdPtr  tsp         = TypeIdPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 471 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    BoolGrammarPtr isOutParam  = BoolGrammarPtr::dynamicCast((yyvsp[(3) - (4)]));
+    TypeIdPtr  tsp         = TypeIdPtr::dynamicCast((yyvsp[(4) - (4)]));
 
     OperationPtr op = OperationPtr::dynamicCast(g_parse->currentContainer());
     assert(op);
@@ -2044,14 +2126,14 @@ yyreduce:
         op->createParamDecl(tsp, isOutParam->v, false);
     }
 }
-#line 2048 "tars.tab.cpp"
     break;
 
   case 49:
-#line 483 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    BoolGrammarPtr isRouteKeyParam  = BoolGrammarPtr::dynamicCast(yyvsp[-1]);
-    TypeIdPtr  tsp              = TypeIdPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 483 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    BoolGrammarPtr isRouteKeyParam  = BoolGrammarPtr::dynamicCast((yyvsp[(1) - (2)]));
+    TypeIdPtr  tsp              = TypeIdPtr::dynamicCast((yyvsp[(2) - (2)]));
 
     OperationPtr op = OperationPtr::dynamicCast(g_parse->currentContainer());
     assert(op);
@@ -2060,14 +2142,14 @@ yyreduce:
          op->createParamDecl(tsp, false, isRouteKeyParam->v);
     }
 }
-#line 2064 "tars.tab.cpp"
     break;
 
   case 50:
-#line 495 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    BoolGrammarPtr isRouteKeyParam = BoolGrammarPtr::dynamicCast(yyvsp[-1]);
-    TypeIdPtr  tsp             = TypeIdPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 495 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    BoolGrammarPtr isRouteKeyParam = BoolGrammarPtr::dynamicCast((yyvsp[(3) - (4)]));
+    TypeIdPtr  tsp             = TypeIdPtr::dynamicCast((yyvsp[(4) - (4)]));
 
     OperationPtr op = OperationPtr::dynamicCast(g_parse->currentContainer());
     assert(op);
@@ -2076,49 +2158,49 @@ yyreduce:
          op->createParamDecl(tsp, false, isRouteKeyParam->v);
     }
 }
-#line 2080 "tars.tab.cpp"
     break;
 
   case 51:
-#line 507 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 507 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("'out' must be defined with a type");
 }
-#line 2088 "tars.tab.cpp"
     break;
 
   case 52:
-#line 511 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 511 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("'routekey' must be defined with a type");
 }
-#line 2096 "tars.tab.cpp"
     break;
 
   case 53:
-#line 520 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 520 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     BoolGrammarPtr routekey = new BoolGrammar;
     routekey->v = true;
-    yyval = GrammarBasePtr::dynamicCast(routekey);
+    (yyval) = GrammarBasePtr::dynamicCast(routekey);
 }
-#line 2106 "tars.tab.cpp"
     break;
 
   case 54:
-#line 531 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 531 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     BoolGrammarPtr out = new BoolGrammar;
     out->v = true;
-    yyval = GrammarBasePtr::dynamicCast(out);
+    (yyval) = GrammarBasePtr::dynamicCast(out);
 }
-#line 2116 "tars.tab.cpp"
     break;
 
   case 55:
-#line 542 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 542 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     NamespacePtr np = NamespacePtr::dynamicCast(g_parse->currentContainer());
     if(np)
     {
@@ -2126,11 +2208,11 @@ yyreduce:
          if(sp)
          {
              g_parse->pushContainer(sp);
-             yyval = GrammarBasePtr::dynamicCast(sp);
+             (yyval) = GrammarBasePtr::dynamicCast(sp);
          }
          else
          {
-             yyval = 0;
+             (yyval) = 0;
          }
     }
     else
@@ -2138,280 +2220,280 @@ yyreduce:
        g_parse->error("struct '" + ident->v + "' must definition in namespace");
     }
 }
-#line 2142 "tars.tab.cpp"
     break;
 
   case 56:
-#line 564 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    if(yyvsp[-3])
+/* Line 1792 of yacc.c  */
+#line 564 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    if((yyvsp[(2) - (5)]))
     {
         g_parse->popContainer();
     }
-    yyval = yyvsp[-3];
+    (yyval) = (yyvsp[(2) - (5)]);
 
-    StructPtr st = StructPtr::dynamicCast(yyval);
+    StructPtr st = StructPtr::dynamicCast((yyval));
     assert(st);
     if(st->getAllMemberPtr().size() == 0)
     {
         g_parse->error("struct `" + st->getSid() + "' must have at least one member");
     }
 }
-#line 2161 "tars.tab.cpp"
     break;
 
   case 57:
-#line 584 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = yyvsp[0];
+/* Line 1792 of yacc.c  */
+#line 584 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = (yyvsp[(2) - (2)]);
 }
-#line 2169 "tars.tab.cpp"
     break;
 
   case 58:
-#line 588 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 588 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(2) - (2)]));
 
     g_parse->error("keyword `" + ident->v + "' cannot be used as struct name");
 }
-#line 2179 "tars.tab.cpp"
     break;
 
   case 59:
-#line 594 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 594 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("abstract declarator '<anonymous struct>' used as declaration");
 }
-#line 2187 "tars.tab.cpp"
     break;
 
   case 60:
-#line 603 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 603 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 
 }
-#line 2195 "tars.tab.cpp"
     break;
 
   case 61:
-#line 607 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 607 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
    g_parse->error("';' missing after definition");
 }
-#line 2203 "tars.tab.cpp"
     break;
 
   case 62:
-#line 611 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 611 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2210 "tars.tab.cpp"
     break;
 
   case 63:
-#line 621 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = GrammarBasePtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 621 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = GrammarBasePtr::dynamicCast((yyvsp[(1) - (1)]));
 }
-#line 2218 "tars.tab.cpp"
     break;
 
   case 64:
-#line 630 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 630 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     StructPtr np = StructPtr::dynamicCast(g_parse->currentContainer());
     if(np)
     {
-        IntergerGrammarPtr iPtr = IntergerGrammarPtr::dynamicCast(yyvsp[-2]);
+        IntergerGrammarPtr iPtr = IntergerGrammarPtr::dynamicCast((yyvsp[(1) - (3)]));
         g_parse->checkTag(iPtr->v);
 
-        TypeIdPtr tPtr  = TypeIdPtr::dynamicCast(yyvsp[0]);
+        TypeIdPtr tPtr  = TypeIdPtr::dynamicCast((yyvsp[(3) - (3)]));
         tPtr->setRequire(iPtr->v);
         np->addTypeId(tPtr);
-        yyval = GrammarBasePtr::dynamicCast(yyvsp[0]);
+        (yyval) = GrammarBasePtr::dynamicCast((yyvsp[(3) - (3)]));
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 2240 "tars.tab.cpp"
     break;
 
   case 65:
-#line 648 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 648 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     StructPtr np = StructPtr::dynamicCast(g_parse->currentContainer());
     if(np)
     {
-        IntergerGrammarPtr iPtr = IntergerGrammarPtr::dynamicCast(yyvsp[-4]);
+        IntergerGrammarPtr iPtr = IntergerGrammarPtr::dynamicCast((yyvsp[(1) - (5)]));
         g_parse->checkTag(iPtr->v);
 
-        TypeIdPtr tPtr   = TypeIdPtr::dynamicCast(yyvsp[-2]);
-        ConstGrammarPtr sPtr = ConstGrammarPtr::dynamicCast(yyvsp[0]);
+        TypeIdPtr tPtr   = TypeIdPtr::dynamicCast((yyvsp[(3) - (5)]));
+        ConstGrammarPtr sPtr = ConstGrammarPtr::dynamicCast((yyvsp[(5) - (5)]));
         g_parse->checkConstValue(tPtr, sPtr->t);
 
         tPtr->setRequire(iPtr->v);
         tPtr->setDefault(sPtr->v);
         np->addTypeId(tPtr);
-        yyval = GrammarBasePtr::dynamicCast(yyvsp[-2]);
+        (yyval) = GrammarBasePtr::dynamicCast((yyvsp[(3) - (5)]));
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 2266 "tars.tab.cpp"
     break;
 
   case 66:
-#line 670 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 670 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     StructPtr np = StructPtr::dynamicCast(g_parse->currentContainer());
     if(np)
     {
-        IntergerGrammarPtr iPtr = IntergerGrammarPtr::dynamicCast(yyvsp[-4]);
+        IntergerGrammarPtr iPtr = IntergerGrammarPtr::dynamicCast((yyvsp[(1) - (5)]));
         g_parse->checkTag(iPtr->v);
 
-        TypeIdPtr tPtr   = TypeIdPtr::dynamicCast(yyvsp[-2]);
-        ConstGrammarPtr sPtr = ConstGrammarPtr::dynamicCast(yyvsp[0]);
+        TypeIdPtr tPtr   = TypeIdPtr::dynamicCast((yyvsp[(3) - (5)]));
+        ConstGrammarPtr sPtr = ConstGrammarPtr::dynamicCast((yyvsp[(5) - (5)]));
         g_parse->checkConstValue(tPtr, sPtr->t);
 
         tPtr->setOptional(iPtr->v);
         tPtr->setDefault(sPtr->v);
         np->addTypeId(tPtr);
-        yyval = GrammarBasePtr::dynamicCast(yyvsp[-2]);
+        (yyval) = GrammarBasePtr::dynamicCast((yyvsp[(3) - (5)]));
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 2292 "tars.tab.cpp"
     break;
 
   case 67:
-#line 692 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 692 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     StructPtr np = StructPtr::dynamicCast(g_parse->currentContainer());
     if(np)
     {
-        IntergerGrammarPtr iPtr = IntergerGrammarPtr::dynamicCast(yyvsp[-2]);
+        IntergerGrammarPtr iPtr = IntergerGrammarPtr::dynamicCast((yyvsp[(1) - (3)]));
         g_parse->checkTag(iPtr->v);
-        TypeIdPtr tPtr = TypeIdPtr::dynamicCast(yyvsp[0]);
+        TypeIdPtr tPtr = TypeIdPtr::dynamicCast((yyvsp[(3) - (3)]));
         tPtr->setOptional(iPtr->v);
         np->addTypeId(tPtr);
-        yyval = GrammarBasePtr::dynamicCast(yyvsp[0]);
+        (yyval) = GrammarBasePtr::dynamicCast((yyvsp[(3) - (3)]));
     }
     else
     {
-        yyval = 0;
+        (yyval) = 0;
     }
 }
-#line 2313 "tars.tab.cpp"
     break;
 
   case 68:
-#line 709 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 709 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("struct member need 'tag'");
 }
-#line 2321 "tars.tab.cpp"
     break;
 
   case 69:
-#line 713 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 713 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("struct member need 'tag'");
 }
-#line 2329 "tars.tab.cpp"
     break;
 
   case 70:
-#line 717 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 717 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("struct member need 'require' or 'optional'");
 }
-#line 2337 "tars.tab.cpp"
     break;
 
   case 71:
-#line 721 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 721 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("struct member need 'tag' or 'require' or 'optional'");
 }
-#line 2345 "tars.tab.cpp"
     break;
 
   case 72:
-#line 730 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    IntergerGrammarPtr intVal = IntergerGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 730 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    IntergerGrammarPtr intVal = IntergerGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     ostringstream sstr;
     sstr << intVal->v;
     ConstGrammarPtr c = new ConstGrammar();
     c->t = ConstGrammar::VALUE;
     c->v = sstr.str();
-    yyval = c;
+    (yyval) = c;
 }
-#line 2359 "tars.tab.cpp"
     break;
 
   case 73:
-#line 740 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    FloatGrammarPtr floatVal = FloatGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 740 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    FloatGrammarPtr floatVal = FloatGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     ostringstream sstr;
     sstr << floatVal->v;
     ConstGrammarPtr c = new ConstGrammar();
     c->t = ConstGrammar::VALUE;
     c->v = sstr.str();
-    yyval = c;
+    (yyval) = c;
 }
-#line 2373 "tars.tab.cpp"
     break;
 
   case 74:
-#line 750 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 750 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     ConstGrammarPtr c = new ConstGrammar();
     c->t = ConstGrammar::STRING;
     c->v = ident->v;
-    yyval = c;
+    (yyval) = c;
 }
-#line 2385 "tars.tab.cpp"
     break;
 
   case 75:
-#line 758 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 758 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     ConstGrammarPtr c = new ConstGrammar();
     c->t = ConstGrammar::BOOL;
     c->v = ident->v;
-    yyval = c;
+    (yyval) = c;
 }
-#line 2397 "tars.tab.cpp"
     break;
 
   case 76:
-#line 766 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 766 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     ConstGrammarPtr c = new ConstGrammar();
     c->t = ConstGrammar::BOOL;
     c->v = ident->v;
-    yyval = c;
+    (yyval) = c;
 }
-#line 2409 "tars.tab.cpp"
     break;
 
   case 77:
-#line 774 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 774 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
 
     if (g_parse->checkEnum(ident->v) == false)
     {
@@ -2420,17 +2502,17 @@ yyreduce:
     ConstGrammarPtr c = new ConstGrammar();
     c->t = ConstGrammar::ENUM;
     c->v = ident->v;
-    yyval = c;
+    (yyval) = c;
 }
-#line 2426 "tars.tab.cpp"
     break;
 
   case 78:
-#line 787 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 787 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 
-    StringGrammarPtr scoped = StringGrammarPtr::dynamicCast(yyvsp[-2]);
-    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast(yyvsp[0]);
+    StringGrammarPtr scoped = StringGrammarPtr::dynamicCast((yyvsp[(1) - (3)]));
+    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[(3) - (3)]));
     
     if (g_parse->checkEnum(ident->v) == false)
     {
@@ -2439,512 +2521,511 @@ yyreduce:
     ConstGrammarPtr c = new ConstGrammar();
     c->t = ConstGrammar::ENUM;
     c->v = scoped->v + "::" + ident->v;
-    yyval = c;
+    (yyval) = c;
 }
-#line 2445 "tars.tab.cpp"
     break;
 
   case 79:
-#line 807 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 807 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     NamespacePtr np = NamespacePtr::dynamicCast(g_parse->currentContainer());
     if(!np)
     {
         g_parse->error("const type must define in namespace");
     }
 
-    TypeIdPtr t   = TypeIdPtr::dynamicCast(yyvsp[-2]);
-    ConstGrammarPtr c = ConstGrammarPtr::dynamicCast(yyvsp[0]);
+    TypeIdPtr t   = TypeIdPtr::dynamicCast((yyvsp[(2) - (4)]));
+    ConstGrammarPtr c = ConstGrammarPtr::dynamicCast((yyvsp[(4) - (4)]));
     ConstPtr cPtr = np->createConst(t, c);
-    yyval = cPtr;
+    (yyval) = cPtr;
 }
-#line 2462 "tars.tab.cpp"
     break;
 
   case 80:
-#line 825 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    TypePtr type = TypePtr::dynamicCast(yyvsp[-1]);
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 825 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    TypePtr type = TypePtr::dynamicCast((yyvsp[(1) - (2)]));
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(2) - (2)]));
 
     TypeIdPtr typeIdPtr = new TypeId(type, ident->v);
 
-    yyval = GrammarBasePtr::dynamicCast(typeIdPtr);
+    (yyval) = GrammarBasePtr::dynamicCast(typeIdPtr);
 }
-#line 2475 "tars.tab.cpp"
     break;
 
   case 81:
-#line 834 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    TypePtr type = g_parse->createVector(TypePtr::dynamicCast(yyvsp[-4]));
-    IntergerGrammarPtr iPtrSize = IntergerGrammarPtr::dynamicCast(yyvsp[-1]);
+/* Line 1792 of yacc.c  */
+#line 834 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    TypePtr type = g_parse->createVector(TypePtr::dynamicCast((yyvsp[(1) - (5)])));
+    IntergerGrammarPtr iPtrSize = IntergerGrammarPtr::dynamicCast((yyvsp[(4) - (5)]));
     g_parse->checkArrayVaid(type,iPtrSize->v);
     type->setArray(iPtrSize->v);
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[-3]);
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(2) - (5)]));
     TypeIdPtr typeIdPtr = new TypeId(type, ident->v);
-    yyval = GrammarBasePtr::dynamicCast(typeIdPtr);
+    (yyval) = GrammarBasePtr::dynamicCast(typeIdPtr);
 }
-#line 2489 "tars.tab.cpp"
     break;
 
   case 82:
-#line 844 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    TypePtr type = g_parse->createVector(TypePtr::dynamicCast(yyvsp[-2]));
+/* Line 1792 of yacc.c  */
+#line 844 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    TypePtr type = g_parse->createVector(TypePtr::dynamicCast((yyvsp[(1) - (3)])));
     //IntergerGrammarPtr iPtrSize = IntergerGrammarPtr::dynamicCast($4);
     g_parse->checkPointerVaid(type);
     type->setPointer(true);
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(3) - (3)]));
     TypeIdPtr typeIdPtr = new TypeId(type, ident->v);
-    yyval = GrammarBasePtr::dynamicCast(typeIdPtr);
+    (yyval) = GrammarBasePtr::dynamicCast(typeIdPtr);
 }
-#line 2503 "tars.tab.cpp"
     break;
 
   case 83:
-#line 854 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    TypePtr type = TypePtr::dynamicCast(yyvsp[-3]);
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[-2]);
+/* Line 1792 of yacc.c  */
+#line 854 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    TypePtr type = TypePtr::dynamicCast((yyvsp[(1) - (4)]));
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(2) - (4)]));
     TypeIdPtr typeIdPtr = new TypeId(type, ident->v);
-    IntergerGrammarPtr iPtrSize = IntergerGrammarPtr::dynamicCast(yyvsp[-1]);
+    IntergerGrammarPtr iPtrSize = IntergerGrammarPtr::dynamicCast((yyvsp[(3) - (4)]));
     g_parse->checkArrayVaid(type,iPtrSize->v);
-    yyval = GrammarBasePtr::dynamicCast(typeIdPtr);
+    (yyval) = GrammarBasePtr::dynamicCast(typeIdPtr);
 }
-#line 2516 "tars.tab.cpp"
     break;
 
   case 84:
-#line 863 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 863 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(2) - (2)]));
     g_parse->error("keyword `" + ident->v + "' cannot be used as data member name");
 }
-#line 2525 "tars.tab.cpp"
     break;
 
   case 85:
-#line 868 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 868 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("missing data member name");
 }
-#line 2533 "tars.tab.cpp"
     break;
 
   case 86:
-#line 872 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 872 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
     g_parse->error("unkown type");
 }
-#line 2541 "tars.tab.cpp"
     break;
 
   case 87:
-#line 881 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 881 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 
-    TypePtr type = TypePtr::dynamicCast(yyvsp[-2]);
-    IntergerGrammarPtr iPtrSize = IntergerGrammarPtr::dynamicCast(yyvsp[0]);
+    TypePtr type = TypePtr::dynamicCast((yyvsp[(1) - (3)]));
+    IntergerGrammarPtr iPtrSize = IntergerGrammarPtr::dynamicCast((yyvsp[(3) - (3)]));
     g_parse->checkArrayVaid(type,iPtrSize->v);
     type->setArray(iPtrSize->v);
-    yyval = type;
+    (yyval) = type;
 }
-#line 2554 "tars.tab.cpp"
     break;
 
   case 88:
-#line 890 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = yyvsp[0];
+/* Line 1792 of yacc.c  */
+#line 890 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = (yyvsp[(1) - (1)]);
 }
-#line 2562 "tars.tab.cpp"
     break;
 
   case 89:
-#line 894 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 894 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
    g_parse->error("array missing size");
 }
-#line 2570 "tars.tab.cpp"
     break;
 
   case 90:
-#line 903 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindBool);
+/* Line 1792 of yacc.c  */
+#line 903 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindBool);
 }
-#line 2578 "tars.tab.cpp"
     break;
 
   case 91:
-#line 907 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindByte);
+/* Line 1792 of yacc.c  */
+#line 907 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindByte);
 }
-#line 2586 "tars.tab.cpp"
     break;
 
   case 92:
-#line 911 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindShort,true);
+/* Line 1792 of yacc.c  */
+#line 911 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindShort,true);
 }
-#line 2594 "tars.tab.cpp"
     break;
 
   case 93:
-#line 915 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindShort);
+/* Line 1792 of yacc.c  */
+#line 915 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindShort);
 }
-#line 2602 "tars.tab.cpp"
     break;
 
   case 94:
-#line 919 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindInt,true);
+/* Line 1792 of yacc.c  */
+#line 919 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindInt,true);
 }
-#line 2610 "tars.tab.cpp"
     break;
 
   case 95:
-#line 923 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindInt);
+/* Line 1792 of yacc.c  */
+#line 923 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindInt);
 }
-#line 2618 "tars.tab.cpp"
     break;
 
   case 96:
-#line 927 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindLong,true);
+/* Line 1792 of yacc.c  */
+#line 927 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindLong,true);
 }
-#line 2626 "tars.tab.cpp"
     break;
 
   case 97:
-#line 931 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindLong);
+/* Line 1792 of yacc.c  */
+#line 931 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindLong);
 }
-#line 2634 "tars.tab.cpp"
     break;
 
   case 98:
-#line 935 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindFloat);
+/* Line 1792 of yacc.c  */
+#line 935 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindFloat);
 }
-#line 2642 "tars.tab.cpp"
     break;
 
   case 99:
-#line 939 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindDouble);
+/* Line 1792 of yacc.c  */
+#line 939 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindDouble);
 }
-#line 2650 "tars.tab.cpp"
     break;
 
   case 100:
-#line 943 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    yyval = g_parse->createBuiltin(Builtin::KindString);
+/* Line 1792 of yacc.c  */
+#line 943 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    (yyval) = g_parse->createBuiltin(Builtin::KindString);
 }
-#line 2658 "tars.tab.cpp"
     break;
 
   case 101:
-#line 947 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-   yyval = GrammarBasePtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 947 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+   (yyval) = GrammarBasePtr::dynamicCast((yyvsp[(1) - (1)]));
 }
-#line 2666 "tars.tab.cpp"
     break;
 
   case 102:
-#line 951 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-   yyval = GrammarBasePtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 951 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+   (yyval) = GrammarBasePtr::dynamicCast((yyvsp[(1) - (1)]));
 }
-#line 2674 "tars.tab.cpp"
     break;
 
   case 103:
-#line 955 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 955 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(1) - (1)]));
     TypePtr sp = g_parse->findUserType(ident->v);
     if(sp)
     {
-        yyval = GrammarBasePtr::dynamicCast(sp);
+        (yyval) = GrammarBasePtr::dynamicCast(sp);
     }
     else
     {
         g_parse->error("'" + ident->v + "' undefined!");
     }
 }
-#line 2691 "tars.tab.cpp"
     break;
 
   case 104:
-#line 973 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-   yyval = GrammarBasePtr::dynamicCast(g_parse->createVector(TypePtr::dynamicCast(yyvsp[-1])));
+/* Line 1792 of yacc.c  */
+#line 973 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+   (yyval) = GrammarBasePtr::dynamicCast(g_parse->createVector(TypePtr::dynamicCast((yyvsp[(3) - (4)]))));
 }
-#line 2699 "tars.tab.cpp"
     break;
 
   case 105:
-#line 977 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 977 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
    g_parse->error("vector error");
 }
-#line 2707 "tars.tab.cpp"
     break;
 
   case 106:
-#line 981 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 981 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
    g_parse->error("vector missing '>'");
 }
-#line 2715 "tars.tab.cpp"
     break;
 
   case 107:
-#line 985 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 985 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
    g_parse->error("vector missing type");
 }
-#line 2723 "tars.tab.cpp"
     break;
 
   case 108:
-#line 994 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-   yyval = GrammarBasePtr::dynamicCast(g_parse->createMap(TypePtr::dynamicCast(yyvsp[-3]), TypePtr::dynamicCast(yyvsp[-1])));
+/* Line 1792 of yacc.c  */
+#line 994 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+   (yyval) = GrammarBasePtr::dynamicCast(g_parse->createMap(TypePtr::dynamicCast((yyvsp[(3) - (6)])), TypePtr::dynamicCast((yyvsp[(5) - (6)]))));
 }
-#line 2731 "tars.tab.cpp"
     break;
 
   case 109:
-#line 998 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 998 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
    g_parse->error("map error");
 }
-#line 2739 "tars.tab.cpp"
     break;
 
   case 110:
-#line 1007 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1007 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2746 "tars.tab.cpp"
     break;
 
   case 111:
-#line 1010 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr ident = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 1010 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr ident = StringGrammarPtr::dynamicCast((yyvsp[(2) - (2)]));
     ident->v = "::" + ident->v;
-    yyval = GrammarBasePtr::dynamicCast(ident);
+    (yyval) = GrammarBasePtr::dynamicCast(ident);
 }
-#line 2756 "tars.tab.cpp"
     break;
 
   case 112:
-#line 1016 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
-    StringGrammarPtr scoped = StringGrammarPtr::dynamicCast(yyvsp[-2]);
-    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast(yyvsp[0]);
+/* Line 1792 of yacc.c  */
+#line 1016 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
+    StringGrammarPtr scoped = StringGrammarPtr::dynamicCast((yyvsp[(1) - (3)]));
+    StringGrammarPtr ident  = StringGrammarPtr::dynamicCast((yyvsp[(3) - (3)]));
     scoped->v += "::";
     scoped->v += ident->v;
-    yyval = GrammarBasePtr::dynamicCast(scoped);
+    (yyval) = GrammarBasePtr::dynamicCast(scoped);
 }
-#line 2768 "tars.tab.cpp"
     break;
 
   case 113:
-#line 1029 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1029 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2775 "tars.tab.cpp"
     break;
 
   case 114:
-#line 1032 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1032 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2782 "tars.tab.cpp"
     break;
 
   case 115:
-#line 1035 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1035 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2789 "tars.tab.cpp"
     break;
 
   case 116:
-#line 1038 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1038 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2796 "tars.tab.cpp"
     break;
 
   case 117:
-#line 1041 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1041 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2803 "tars.tab.cpp"
     break;
 
   case 118:
-#line 1044 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1044 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2810 "tars.tab.cpp"
     break;
 
   case 119:
-#line 1047 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1047 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2817 "tars.tab.cpp"
     break;
 
   case 120:
-#line 1050 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1050 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2824 "tars.tab.cpp"
     break;
 
   case 121:
-#line 1053 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1053 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2831 "tars.tab.cpp"
     break;
 
   case 122:
-#line 1056 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1056 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2838 "tars.tab.cpp"
     break;
 
   case 123:
-#line 1059 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1059 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2845 "tars.tab.cpp"
     break;
 
   case 124:
-#line 1062 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1062 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2852 "tars.tab.cpp"
     break;
 
   case 125:
-#line 1065 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1065 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2859 "tars.tab.cpp"
     break;
 
   case 126:
-#line 1068 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1068 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2866 "tars.tab.cpp"
     break;
 
   case 127:
-#line 1071 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1071 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2873 "tars.tab.cpp"
     break;
 
   case 128:
-#line 1074 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1074 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2880 "tars.tab.cpp"
     break;
 
   case 129:
-#line 1077 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1077 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2887 "tars.tab.cpp"
     break;
 
   case 130:
-#line 1080 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1080 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2894 "tars.tab.cpp"
     break;
 
   case 131:
-#line 1083 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1083 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2901 "tars.tab.cpp"
     break;
 
   case 132:
-#line 1086 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1086 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2908 "tars.tab.cpp"
     break;
 
   case 133:
-#line 1089 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1089 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2915 "tars.tab.cpp"
     break;
 
   case 134:
-#line 1092 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1092 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2922 "tars.tab.cpp"
     break;
 
   case 135:
-#line 1095 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1095 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2929 "tars.tab.cpp"
     break;
 
   case 136:
-#line 1098 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1098 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2936 "tars.tab.cpp"
     break;
 
   case 137:
-#line 1101 "/data/TarsCpp/tools/tarsgrammar/tars.y"
-{
+/* Line 1792 of yacc.c  */
+#line 1101 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
+    {
 }
-#line 2943 "tars.tab.cpp"
     break;
 
 
-#line 2947 "tars.tab.cpp"
-
+/* Line 1792 of yacc.c  */
+#line 3029 "tars.tab.cpp"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2966,23 +3047,24 @@ yyreduce:
 
   *++yyvsp = yyval;
 
-  /* Now 'shift' the result of the reduction.  Determine what state
+  /* Now `shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
      number reduced by.  */
-  {
-    const int yylhs = yyr1[yyn] - YYNTOKENS;
-    const int yyi = yypgoto[yylhs] + *yyssp;
-    yystate = (0 <= yyi && yyi <= YYLAST && yycheck[yyi] == *yyssp
-               ? yytable[yyi]
-               : yydefgoto[yylhs]);
-  }
+
+  yyn = yyr1[yyn];
+
+  yystate = yypgoto[yyn - YYNTOKENS] + *yyssp;
+  if (0 <= yystate && yystate <= YYLAST && yycheck[yystate] == *yyssp)
+    yystate = yytable[yystate];
+  else
+    yystate = yydefgoto[yyn - YYNTOKENS];
 
   goto yynewstate;
 
 
-/*--------------------------------------.
-| yyerrlab -- here on detecting error.  |
-`--------------------------------------*/
+/*------------------------------------.
+| yyerrlab -- here on detecting error |
+`------------------------------------*/
 yyerrlab:
   /* Make sure we have latest lookahead translation.  See comments at
      user semantic actions for why this is necessary.  */
@@ -3007,7 +3089,7 @@ yyerrlab:
           {
             if (yymsg != yymsgbuf)
               YYSTACK_FREE (yymsg);
-            yymsg = YY_CAST (char *, YYSTACK_ALLOC (YY_CAST (YYSIZE_T, yymsg_alloc)));
+            yymsg = (char *) YYSTACK_ALLOC (yymsg_alloc);
             if (!yymsg)
               {
                 yymsg = yymsgbuf;
@@ -3033,20 +3115,20 @@ yyerrlab:
   if (yyerrstatus == 3)
     {
       /* If just tried and failed to reuse lookahead token after an
-         error, discard it.  */
+	 error, discard it.  */
 
       if (yychar <= YYEOF)
-        {
-          /* Return failure if at end of input.  */
-          if (yychar == YYEOF)
-            YYABORT;
-        }
+	{
+	  /* Return failure if at end of input.  */
+	  if (yychar == YYEOF)
+	    YYABORT;
+	}
       else
-        {
-          yydestruct ("Error: discarding",
-                      yytoken, &yylval);
-          yychar = YYEMPTY;
-        }
+	{
+	  yydestruct ("Error: discarding",
+		      yytoken, &yylval);
+	  yychar = YYEMPTY;
+	}
     }
 
   /* Else will try to reuse lookahead token after shifting the error
@@ -3058,12 +3140,14 @@ yyerrlab:
 | yyerrorlab -- error raised explicitly by YYERROR.  |
 `---------------------------------------------------*/
 yyerrorlab:
-  /* Pacify compilers when the user code never invokes YYERROR and the
-     label yyerrorlab therefore never appears in user code.  */
-  if (0)
-    YYERROR;
 
-  /* Do not reclaim the symbols of the rule whose action triggered
+  /* Pacify compilers like GCC when the user code never invokes
+     YYERROR and the label yyerrorlab therefore never appears in user
+     code.  */
+  if (/*CONSTCOND*/ 0)
+     goto yyerrorlab;
+
+  /* Do not reclaim the symbols of the rule which action triggered
      this YYERROR.  */
   YYPOPSTACK (yylen);
   yylen = 0;
@@ -3076,29 +3160,29 @@ yyerrorlab:
 | yyerrlab1 -- common code for both syntax error and YYERROR.  |
 `-------------------------------------------------------------*/
 yyerrlab1:
-  yyerrstatus = 3;      /* Each real token shifted decrements this.  */
+  yyerrstatus = 3;	/* Each real token shifted decrements this.  */
 
   for (;;)
     {
       yyn = yypact[yystate];
       if (!yypact_value_is_default (yyn))
-        {
-          yyn += YYTERROR;
-          if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYTERROR)
-            {
-              yyn = yytable[yyn];
-              if (0 < yyn)
-                break;
-            }
-        }
+	{
+	  yyn += YYTERROR;
+	  if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYTERROR)
+	    {
+	      yyn = yytable[yyn];
+	      if (0 < yyn)
+		break;
+	    }
+	}
 
       /* Pop the current state because it cannot handle the error token.  */
       if (yyssp == yyss)
-        YYABORT;
+	YYABORT;
 
 
       yydestruct ("Error: popping",
-                  yystos[yystate], yyvsp);
+		  yystos[yystate], yyvsp);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -3123,14 +3207,12 @@ yyacceptlab:
   yyresult = 0;
   goto yyreturn;
 
-
 /*-----------------------------------.
 | yyabortlab -- YYABORT comes here.  |
 `-----------------------------------*/
 yyabortlab:
   yyresult = 1;
   goto yyreturn;
-
 
 #if !defined yyoverflow || YYERROR_VERBOSE
 /*-------------------------------------------------.
@@ -3142,10 +3224,6 @@ yyexhaustedlab:
   /* Fall through.  */
 #endif
 
-
-/*-----------------------------------------------------.
-| yyreturn -- parsing is finished, return the result.  |
-`-----------------------------------------------------*/
 yyreturn:
   if (yychar != YYEMPTY)
     {
@@ -3155,14 +3233,14 @@ yyreturn:
       yydestruct ("Cleanup: discarding lookahead",
                   yytoken, &yylval);
     }
-  /* Do not reclaim the symbols of the rule whose action triggered
+  /* Do not reclaim the symbols of the rule which action triggered
      this YYABORT or YYACCEPT.  */
   YYPOPSTACK (yylen);
   YY_STACK_PRINT (yyss, yyssp);
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-                  yystos[+*yyssp], yyvsp);
+		  yystos[*yyssp], yyvsp);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
@@ -3173,9 +3251,13 @@ yyreturn:
   if (yymsg != yymsgbuf)
     YYSTACK_FREE (yymsg);
 #endif
-  return yyresult;
+  /* Make sure YYID is used.  */
+  return YYID (yyresult);
 }
-#line 1105 "/data/TarsCpp/tools/tarsgrammar/tars.y"
+
+
+/* Line 2055 of yacc.c  */
+#line 1105 "/home/worker/Centos_share/src/TarsCloud/UP-Tars/tars_kiven_dev/TarsCpp/tools/tarsgrammar/tars.y"
 
 
 
