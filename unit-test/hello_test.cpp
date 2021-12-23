@@ -707,7 +707,7 @@ void HelloTest::rpcFromRegistry(Communicator *comm)
 
 	//test rpc loop
 	int count = 10;
-	while(count-- > 10)
+	while(count-- > 0)
 	{
 		int ret;
 		string out1, out2;
@@ -721,7 +721,7 @@ void HelloTest::rpcFromRegistry(Communicator *comm)
 
 	//test rpc hash
 	count = 10;
-	while(count-- > 10)
+	while(count-- > 0)
 	{
 		vector<string> vout;
 
@@ -740,6 +740,31 @@ void HelloTest::rpcFromRegistry(Communicator *comm)
 		}
 	}
 
+}
+
+void HelloTest::rpcConHashFromRegistry(Communicator *comm)
+{
+	HelloPrx prx = comm->stringToProxy<HelloPrx>("TestApp.RpcServer.HelloObj");
+
+	//test rpc consistent hash
+	int count = 10;
+	while(count-- > 0)
+	{
+		std::thread conHash([&](){
+			std::set<std::string> servInfos;
+			for (int j = 0; j < 10; ++j) {
+				std::string serverInfo;
+				int ret = prx->tars_consistent_hash(TC_Thread::CURRENT_THREADID())->testConHash(serverInfo);
+				LOG_CONSOLE_DEBUG << "hashCode:" << TC_Thread::CURRENT_THREADID() << ", serverInfo:" << serverInfo << endl;
+				servInfos.emplace(serverInfo);
+				ASSERT_TRUE(ret == 0);
+			}
+
+			ASSERT_TRUE(servInfos.size() == 1);
+     		});
+
+		conHash.join();
+	}
 }
 
 void HelloTest::checkSyncTimeout(Communicator *comm)
