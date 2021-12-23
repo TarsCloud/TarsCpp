@@ -328,6 +328,8 @@ public:
 
 	void rpcFromRegistry(Communicator *comm);
 
+	void rpcConHashFromRegistry(Communicator *comm);
+
 	void forEach(function<void()> func);
 
 	void forEach(function<void(Communicator *comm)> func);

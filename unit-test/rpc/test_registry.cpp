@@ -195,6 +195,22 @@ TEST_F(HelloTest, registryRpc)
 }
 
 
+//一致hash测试
+TEST_F(HelloTest, registryRpcConHashInvoke)
+{
+	START_FRAMEWORK_SERVER_1_2
+        CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", 9989, 1);
+	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", 9992, 1);
+
+	shared_ptr<Communicator> c = getCommunicator();
+
+	rpcConHashFromRegistry(c.get());
+
+	stopServer(rpc1Server);
+	stopServer(rpc2Server);
+        STOP_FRAMEWORK_SERVER;
+}
+
 TEST_F(HelloTest, registryRpcUpdateList)
 {
 	shared_ptr<Communicator> comm = getCommunicator();
