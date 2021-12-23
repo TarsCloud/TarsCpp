@@ -60,7 +60,7 @@ module Test
 
         bool testCoro(string sIn, out string sOut);
 
-        string testConHash();
+        int testConHash(out string sOut);
     };
 };
 
