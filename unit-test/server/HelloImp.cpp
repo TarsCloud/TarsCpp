@@ -147,4 +147,8 @@ bool HelloImp::testCoro(const std::string& sIn, std::string &sOut, CurrentPtr cu
 	return ServantProxyThreadData::getData()->_sched != NULL;
 }
 
+std::string HelloImp::testConHash(CurrentPtr current) {
+  return ServerConfig::LocalIp;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
