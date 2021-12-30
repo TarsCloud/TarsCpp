@@ -1435,6 +1435,7 @@ void EndpointManager::updateHashProxyWeighted(bool bStatic)
 
 void EndpointManager::updateConHashProxyWeighted(bool bStatic, map<string, AdapterProxy*> &mLastConHashProxys, TC_ConsistentHashNew &conHash)
 {
+    conHash.clear();
     if(_sortActivProxys.empty())
     {    
         TLOGERROR("[EndpointManager::updateHashProxyWeighted _indexActiveProxys is empty], bStatic:" << bStatic << endl);
@@ -1442,7 +1443,6 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, map<string, Adapt
     }
 
     mLastConHashProxys = _sortActivProxys;
-    conHash.clear();
 
     for (auto it = _sortActivProxys.begin(); it != _sortActivProxys.end(); ++it)
     {
