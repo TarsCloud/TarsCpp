@@ -418,7 +418,7 @@ private:
     /*
      * 判断静态权重节点是否有变化
      */
-    bool checkConHashChange(bool bStatic, const vector<AdapterProxy*> &vLastConHashProxys);
+    bool checkConHashChange(bool bStatic, const map<string, AdapterProxy*> &mLastConHashProxys);
 
     /*
      * 更新取模hash方法的静态权重节点信息
@@ -428,7 +428,7 @@ private:
     /*
      * 更新一致性hash方法的静态权重节点信息
      */
-    void updateConHashProxyWeighted(bool bStatic, vector<AdapterProxy*> &vLastConHashProxys, TC_ConsistentHashNew &conHash);
+    void updateConHashProxyWeighted(bool bStatic, map<string, AdapterProxy*> &mLastConHashProxys, TC_ConsistentHashNew &conHash);
 
     /*
      * 根据后端服务的权重值选取一个结点
@@ -466,7 +466,14 @@ private:
      * 活跃的结点
      */
     vector<AdapterProxy*>         _activeProxys;
-    
+
+    /*
+     * 一致性hash使用，保证强一致性
+     * key：host
+     */
+    map<string, AdapterProxy*>            _sortActivProxys;
+    unordered_map<string, AdapterProxy*>  _indexActiveProxys;
+
     /*
      * 部署的结点 包括活跃的和不活跃的
      */
@@ -532,7 +539,7 @@ private:
     /*
      * 一致性hash静态权重时使用
      */
-    vector<AdapterProxy*>         _lastConHashWeightProxys;
+    map<string, AdapterProxy*>    _lastConHashWeightProxys;
 
     /*
      * 一致性hash静态权重时使用
@@ -542,7 +549,7 @@ private:
     /*
      * 一致性hash普通使用
      */
-    vector<AdapterProxy*>         _lastConHashProxys;
+    map<string, AdapterProxy*>    _lastConHashProxys;
 
     /*
      * 一致性hash普通使用
@@ -666,12 +673,12 @@ public:
     /*
      * 根据set获取可用与不可用的结点
      */
-    void getEndpointBySet(const string sName, vector<EndpointInfo> &activeEndPoint, vector<EndpointInfo> &inactiveEndPoint);
+    void getEndpointBySet(const string &sName, vector<EndpointInfo> &activeEndPoint, vector<EndpointInfo> &inactiveEndPoint);
 
     /*
      * 根据地区获取可用与不可用的结点
      */
-    void getEndpointByStation(const string sName, vector<EndpointInfo> &activeEndPoint, vector<EndpointInfo> &inactiveEndPoint);
+    void getEndpointByStation(const string &sName, vector<EndpointInfo> &activeEndPoint, vector<EndpointInfo> &inactiveEndPoint);
 
     /*
      * 按idc获取可用与不可用的结点
@@ -686,12 +693,12 @@ public:
     /*
      * 根据set获取可用与不可用的结点
      */
-    void getTCEndpointBySet(const string sName, vector<TC_Endpoint> &activeEndPoint, vector<TC_Endpoint> &inactiveEndPoint);
+    void getTCEndpointBySet(const string &sName, vector<TC_Endpoint> &activeEndPoint, vector<TC_Endpoint> &inactiveEndPoint);
 
     /*
      * 根据地区获取可用与不可用的结点
      */
-    void getTCEndpointByStation(const string sName, vector<TC_Endpoint> &activeEndPoint, vector<TC_Endpoint> &inactiveEndPoint);
+    void getTCEndpointByStation(const string &sName, vector<TC_Endpoint> &activeEndPoint, vector<TC_Endpoint> &inactiveEndPoint);
 
 protected:
 

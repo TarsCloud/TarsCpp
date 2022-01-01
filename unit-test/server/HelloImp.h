@@ -47,6 +47,8 @@ public:
 
 	virtual bool testCoro(const std::string& sIn, std::string &sOut, CurrentPtr current);
 
+        int testConHash(std::string &sOut, CurrentPtr current);
+
 protected:
     HelloPrx _helloPrx;
 

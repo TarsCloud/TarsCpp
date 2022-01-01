@@ -126,7 +126,7 @@ void TC_ConsistentHashNew::printNode()
             mapNode[_vHashList[i].iIndex] = value;
         }
 
-        cout << "printNode: " << _vHashList[i].iHashCode << "|" << _vHashList[i].iIndex << "|" << mapNode[_vHashList[i].iIndex] << endl;
+        cout << "printNode: " << _vHashList[i].iHashCode << "|" << _vHashList[i].sNode << "|" << _vHashList[i].iIndex << "|" << mapNode[_vHashList[i].iIndex] << endl;
     }
 
     map<unsigned int, unsigned int>::iterator it = mapNode.begin();
@@ -152,6 +152,7 @@ int TC_ConsistentHashNew::addNode(const string & node, unsigned int index, int w
     }
 
     node_T_new stItem;
+    stItem.sNode = node;
     stItem.iIndex = index;
 
     for (int j = 0; j < weight; j++)
@@ -234,6 +235,57 @@ int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
         }
     }
     iIndex = _vHashList[low+1].iIndex;
+    return 0;
+}
+
+int TC_ConsistentHashNew::getNodeName(const string & key, string & sNode)
+{
+    if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
+    {
+        sNode = "";
+        return -1;
+    }
+
+    vector<char> data = TC_MD5::md5bin(key);
+    int32_t iCode = _ptrHashAlg->hash(data.data(), data.size());
+
+    return getNodeName(iCode, sNode);
+}
+
+int TC_ConsistentHashNew::getNodeName(int32_t hashcode, string & sNode)
+{
+    if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
+    {
+        sNode = "";
+        return -1;
+    }
+
+    // 只保留32位
+    int32_t iCode = (hashcode & 0xFFFFFFFFL);
+
+    int low = 0;
+    int high = (int)_vHashList.size();
+
+    if(iCode <= _vHashList[0].iHashCode || iCode > _vHashList[high-1].iHashCode)
+    {
+        sNode = _vHashList[0].sNode;
+        return 0;
+    }
+
+
+    while (low < high - 1)
+    {
+        int mid = (low + high) / 2;
+        if (_vHashList[mid].iHashCode > iCode)
+        {
+            high = mid;
+        }
+        else
+        {
+            low = mid;
+        }
+    }
+    sNode = _vHashList[low+1].sNode;
     return 0;
 }
 
