@@ -325,6 +325,11 @@ public:
      */
     int64_t getMinTimeout() { return _minTimeout; }
 
+    /*
+     * tars_ping间隔，0：不启用
+     */
+    int64_t getTarsPingInterval() { return _tarsPingInterval; }
+
     /**
      * get resource info
      * @return
@@ -523,6 +528,11 @@ protected:
      * 最小的超时时间
      */
     int64_t                _minTimeout;
+
+    /*
+     * tars_ping间隔，0：不启用
+     */
+    int64_t                _tarsPingInterval;
 
 	/**
 	 * ssl ctx

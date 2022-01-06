@@ -48,6 +48,7 @@ Communicator::Communicator()
 , _statReport(NULL)
 , _timeoutLogFlag(true)
 
+, _tarsPingInterval(0)
 // #ifdef TARS_OPENTRACKING
 // , _traceManager(NULL)
 // #endif
@@ -63,6 +64,7 @@ Communicator::Communicator(TC_Config& conf, const string& domain/* = CONFIG_ROOT
 : _initialized(false)
 , _terminating(false)
 , _timeoutLogFlag(true)
+, _tarsPingInterval(0)
 // #ifdef TARS_OPENTRACKING
 // , _traceManager(NULL)
 // #endif
@@ -392,6 +394,13 @@ void Communicator::initialize()
     _minTimeout = TC_Common::strto<int64_t>(getProperty("min-timeout", "100"));
     if(_minTimeout < 1)
         _minTimeout = 1;
+
+    _tarsPingInterval = TC_Common::strto<int64_t>(getProperty("tars-ping-interval", "0"))/1000;
+    TLOGERROR( "[_tarsPingInterval:" << _tarsPingInterval << endl);
+    if (_tarsPingInterval<5 && _tarsPingInterval!=0)
+    {
+        _tarsPingInterval = 5;
+    }
 
     StatFPrx statPrx = NULL;
     if (!statObj.empty())
