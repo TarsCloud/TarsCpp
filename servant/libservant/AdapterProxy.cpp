@@ -43,6 +43,7 @@ AdapterProxy::AdapterProxy(ObjectProxy * pObjectProxy, const EndpointInfo &ep, C
 , _frequenceFailInvoke(0)
 , _frequenceFailTime(0)
 , _nextRetryTime(0)
+, _nextTarsPingTime(0)
 //, _connTimeout(false)
 , _connExc(false)
 , _connExcCnt(0)
@@ -986,6 +987,44 @@ void AdapterProxy::doTimeout()
 
         finishInvoke(msg);
     }
+}
+
+void AdapterProxy::doTarsPing()
+{
+    if (!checkActive(false))
+    {
+        return;
+    }
+
+    time_t now = TNOW;
+    if (now < _nextTarsPingTime)
+    {
+        return;
+    }
+
+    _nextTarsPingTime = now + _communicator->getTarsPingInterval();
+    TLOGTARS("[AdapterProxy::doTarsPing, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
+
+    ReqMessage *msg = new ReqMessage();
+
+    msg->init(ReqMessage::ONE_WAY, _objectProxy->getServantProxy());
+    msg->callback = NULL;
+
+    msg->request.iVersion = TARSVERSION;
+    msg->request.cPacketType = TARSONEWAY;
+    msg->request.sFuncName = "tars_ping";
+    msg->request.sServantName = _objectProxy->name();
+
+    msg->request.iTimeout     = ServantProxy::DEFAULT_ASYNCTIMEOUT;
+
+    msg->proxy         = _objectProxy->getServantProxy();
+    msg->response->iRet = TARSSERVERUNKNOWNERR;
+
+    //调用发起时间
+    msg->iBeginTime   = TNOWMS;
+    msg->pObjectProxy = _objectProxy;
+
+    invoke(msg);
 }
 
 
