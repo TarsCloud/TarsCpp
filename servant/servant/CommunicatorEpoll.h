@@ -292,6 +292,12 @@ protected:
     void doTimeout();
 
     /**
+     * 处理tars_ping
+     * @param pi
+     */
+    void doTarsPing();
+
+    /**
      * 处理stat
      * @param pi
      */

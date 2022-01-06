@@ -426,6 +426,21 @@ void CommunicatorEpoll::doTimeout()
     }
 }
 
+void CommunicatorEpoll::doTarsPing()
+{
+    assert(_threadId == this_thread::get_id());
+
+    if (_communicator->getTarsPingInterval() == 0)
+    {
+        return;
+    }
+
+    for(size_t i = 0; i < getObjNum(); ++i)
+    {
+        getObjectProxy(i)->doTarsPing();
+    }
+}
+
 void CommunicatorEpoll::doStat()
 {
 	assert(_threadId == this_thread::get_id());
@@ -577,6 +592,10 @@ void CommunicatorEpoll::initializeEpoller()
 
 	_timerIds = { id1, id2, id3 };
 
+    if (_communicator->getTarsPingInterval() > 0) {
+        auto id = _epoller->postRepeated(1000 * 2, false, std::bind(&CommunicatorEpoll::doTarsPing, this));
+        _timerIds.emplace_back(id);
+    }
 }
 
 void CommunicatorEpoll::run()
