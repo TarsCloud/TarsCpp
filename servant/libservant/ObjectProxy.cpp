@@ -374,6 +374,19 @@ void ObjectProxy::doTimeout()
     }
 }
 
+void ObjectProxy::doKeepAlive()
+{
+    const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+
+    for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
+    {
+        if(vAdapterProxy[iAdapter] != NULL)
+        {
+            vAdapterProxy[iAdapter]->doKeepAlive();
+        }
+    }
+}
+
 void ObjectProxy::mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg)
 {
     const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();

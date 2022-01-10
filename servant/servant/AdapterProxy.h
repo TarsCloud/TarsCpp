@@ -103,6 +103,11 @@ public:
     void doTimeout();
 
     /**
+     * 发送tars_ping
+     */
+    void doKeepAlive();
+
+    /**
      * 处理stat
      */
     void mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg);
@@ -385,6 +390,10 @@ private:
      */
     time_t                                 _nextRetryTime;
 
+    /*
+     * 下一次发起tars_ping请求的时间
+     */
+    time_t                                 _nextKeepAliveTime;
 
     /*
      * 是否连接异常

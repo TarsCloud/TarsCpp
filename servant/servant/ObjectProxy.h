@@ -101,6 +101,11 @@ public:
     void doTimeout();
 
     /**
+     * 发起tars_ping请求
+     */
+    void doKeepAlive();
+
+    /**
      * 获取CommunicatorEpoll*
      */
     inline CommunicatorEpoll *getCommunicatorEpoll() { return _communicatorEpoll; }
