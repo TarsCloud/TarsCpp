@@ -67,7 +67,7 @@ public:
     /*
      * 初始化
      */
-    bool init(const string & sObjName, const string& setName = "");
+    bool init(const string & sObjName, const string& setName, bool rootServant);
 
     /*
      * 获取所有节点信息的回调处理

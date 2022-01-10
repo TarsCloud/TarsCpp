@@ -70,11 +70,11 @@ ObjectProxy::~ObjectProxy()
 
 }
 
-void ObjectProxy::initialize()
+void ObjectProxy::initialize(bool rootServant)
 {
     _endpointManger.reset(new EndpointManager(this, _communicatorEpoll->getCommunicator(), _communicatorEpoll->isFirstNetThread()));
 
-    _endpointManger->init(_sObjectProxyName, _invokeSetId);
+    _endpointManger->init(_sObjectProxyName, _invokeSetId, rootServant);
 }
 
 const vector<AdapterProxy*> & ObjectProxy::getAdapters()
