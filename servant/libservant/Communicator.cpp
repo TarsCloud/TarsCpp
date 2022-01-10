@@ -577,21 +577,19 @@ int Communicator::reloadProperty(string & sResult)
         "SetDivision=" + sSetDivision + "\r\n" +
         "report-interval=" + TC_Common::tostr(iReportInterval) + "\r\n" +
         "report-timeout=" + TC_Common::tostr(iReportTimeout) + "\r\n";
-//        "sample-rate=" + TC_Common::tostr(iSampleRate) + "\r\n" +
-//        "max-sample-count=" + TC_Common::tostr(iMaxSampleCount) + "\r\n";
 
     return 0;
 }
 
 vector<TC_Endpoint> Communicator::getEndpoint(const string& objName)
 {
-    ServantProxy * pServantProxy = getServantProxy(objName);
+    ServantProxy * pServantProxy = getServantProxy(objName, "", true);
     return pServantProxy->getEndpoint();
 }
 
 vector<TC_Endpoint> Communicator::getEndpoint4All(const string& objName)
 {
-    ServantProxy *pServantProxy = getServantProxy(objName);
+    ServantProxy *pServantProxy = getServantProxy(objName, "", true);
     return pServantProxy->getEndpoint4All();
 }
 
@@ -741,11 +739,11 @@ void Communicator::doStat()
     }
 }
 
-ServantProxy* Communicator::getServantProxy(const string& objectName, const string& setName)
+ServantProxy* Communicator::getServantProxy(const string& objectName, const string& setName, bool rootServant)
 {
     Communicator::initialize();
 
-    return _servantProxyFactory->getServantProxy(objectName, setName);
+    return _servantProxyFactory->getServantProxy(objectName, setName, rootServant);
 }
 
 StatReport* Communicator::getStatReport()

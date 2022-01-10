@@ -412,12 +412,12 @@ ServantProxy::ServantProxy(Communicator *pCommunicator, const string &name, cons
 
 }
 
-void ServantProxy::tars_initialize()
+void ServantProxy::tars_initialize(bool rootServant)
 {
     //等ServantProxy完全创建完以后, 再创建Object
     for (size_t i = 0; i < _communicator->getCommunicatorEpollNum(); ++i)
     {
-        this->getObjectProxy(i)->initialize();
+    	this->getObjectProxy(i)->initialize(rootServant);
     }
 }
 
@@ -535,22 +535,14 @@ void ServantProxy::tars_connect_timeout(int conTimeout)
         conTimeout = 100;
     }
 
-//    if (conTimeout > 5000)
-//    {
-//        conTimeout = 5000;
-//    }
-
 	_connTimeout = conTimeout;
-//    forEachObject([=](ObjectProxy *o) { o->setConTimeout(conTimeout); });
 }
 
 void ServantProxy::tars_async_timeout(int msecond)
 {
-    {
-        TC_LockT<TC_ThreadMutex> lock(*this);
-        //保护，超时时间不能小于_minTimeout毫秒
-        _asyncTimeout = (msecond < _minTimeout) ? _minTimeout : msecond;
-    }
+    TC_LockT<TC_ThreadMutex> lock(*this);
+    //保护，超时时间不能小于_minTimeout毫秒
+    _asyncTimeout = (msecond < _minTimeout) ? _minTimeout : msecond;
 }
 
 int ServantProxy::tars_async_timeout() const
@@ -622,7 +614,6 @@ void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol, int connecti
 	TC_LockT<TC_ThreadMutex> lock(*this);
 
 	_proxyProtocol = protocol;
-//    forEachObject([&](ObjectProxy *o) { o->setProxyProtocol(protocol); });
 
     _connectionSerial = connectionSerial;
 }
@@ -630,8 +621,6 @@ void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol, int connecti
 const ProxyProtocol &ServantProxy::tars_get_protocol() const
 {
 	return _proxyProtocol;
-//    TC_LockT<TC_ThreadMutex> lock(*this);
-//    return _objectProxy->getProxyProtocol();
 }
 
 vector<ServantProxy::SocketOpt> ServantProxy::tars_get_sockopt() const
@@ -653,7 +642,6 @@ void ServantProxy::tars_set_sockopt(int level, int optname, const void *optval, 
 	socketOpt.optlen     = optlen;
 
 	_socketOpts.push_back(socketOpt);
-//    forEachObject([&](ObjectProxy *o) { o->setSocketOpt(level, optname, optval, optlen); });
 }
 
 void ServantProxy::tars_set_check_timeout(const CheckTimeoutInfo& checkTimeoutInfo)
@@ -661,14 +649,6 @@ void ServantProxy::tars_set_check_timeout(const CheckTimeoutInfo& checkTimeoutIn
 	TC_LockT<TC_ThreadMutex> lock(*this);
 
 	_checkTimeoutInfo = checkTimeoutInfo;
-//    forEachObject([&](ObjectProxy *o) {
-//        o->checkTimeoutInfo().minTimeoutInvoke     = checkTimeoutInfo.minTimeoutInvoke;
-//        o->checkTimeoutInfo().checkTimeoutInterval = checkTimeoutInfo.checkTimeoutInterval;
-//        o->checkTimeoutInfo().frequenceFailInvoke  = checkTimeoutInfo.frequenceFailInvoke;
-//        o->checkTimeoutInfo().minFrequenceFailTime = checkTimeoutInfo.minFrequenceFailTime;
-//        o->checkTimeoutInfo().radio                = checkTimeoutInfo.radio;
-//        o->checkTimeoutInfo().tryTimeInterval      = checkTimeoutInfo.tryTimeInterval;
-//    });
 }
 
 CheckTimeoutInfo ServantProxy::tars_get_check_timeout()
@@ -676,7 +656,6 @@ CheckTimeoutInfo ServantProxy::tars_get_check_timeout()
 	TC_LockT<TC_ThreadMutex> lock(*this);
 
 	return _checkTimeoutInfo;
-//    return _objectProxy->checkTimeoutInfo();
 }
 
 void ServantProxy::tars_ping()
@@ -780,7 +759,6 @@ uint32_t ServantProxy::tars_gen_requestid()
 void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 {
 	_pushCallback = cb;
-//    forEachObject([&](ObjectProxy *o) { o->setPushCallbacks(cb); });
 }
 
 ServantProxyCallbackPtr ServantProxy::tars_get_push_callback()
@@ -846,11 +824,8 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
     assert(msg->pMonitor == NULL);
     if (msg->eType == ReqMessage::SYNC_CALL)
     {
-//        msg->bMonitorFin = false;
-
         if (pSptd->_sched)
         {
-            // msg->bCoroFlag = true;
             msg->sched   = pSptd->_sched;
             msg->iCoroId = pSptd->_sched->getCoroutineId();
         }
@@ -872,7 +847,6 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
                 {
                     coroPtr->incReqCount();
 
-                    // msg->bCoroFlag = true;
                     msg->sched   = pSptd->_sched;
                     msg->iCoroId = pSptd->_sched->getCoroutineId();
                 }
@@ -1211,7 +1185,7 @@ ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
                     obj += "@" + _objectProxy->address();
                 }
 
-                ServantPrx prx = _communicator->stringToProxy<ServantPrx>(obj);
+                ServantPrx prx = _communicator->stringToProxy<ServantPrx>(obj, this->tars_setName(), false);
                 prx->tars_set_protocol(tars_get_protocol());
                 prx->tars_connect_timeout(tars_connect_timeout());
                 prx->tars_timeout(tars_timeout());
@@ -1453,7 +1427,7 @@ void ServantProxy::selectNetThreadInfo(ServantProxyThreadData *pSptd, ObjectProx
 
 			pObjProxy = ce->createObjectProxy(this, this->tars_full_name(), this->tars_setName());
 
-			pObjProxy->initialize();
+			pObjProxy->initialize(true);
 		}
 		else
 		{
@@ -1470,7 +1444,7 @@ void ServantProxy::selectNetThreadInfo(ServantProxyThreadData *pSptd, ObjectProx
 				{
 					pObjProxy = ce->createObjectProxy(this, this->tars_full_name(), this->tars_setName());
 
-					pObjProxy->initialize();
+					pObjProxy->initialize(true);
 				}
 			}
 			else

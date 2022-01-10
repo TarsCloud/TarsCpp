@@ -29,7 +29,7 @@ ServantProxyFactory::~ServantProxyFactory()
 {
 }
 
-ServantPrx::element_type* ServantProxyFactory::getServantProxy(const string& name,const string& setName)
+ServantPrx::element_type* ServantProxyFactory::getServantProxy(const string& name,const string& setName, bool rootServant)
 {
     TC_LockT<TC_ThreadRecMutex> lock(*this);
 
@@ -42,7 +42,7 @@ ServantPrx::element_type* ServantProxyFactory::getServantProxy(const string& nam
     ServantPrx sp = new ServantProxy(_comm, name, setName);
 
     //需要主动初始化一次
-    sp->tars_initialize();
+    sp->tars_initialize(rootServant);
 
     int syncTimeout = TC_Common::strto<int>(_comm->getProperty("sync-invoke-timeout", "3000"));
 	int asyncTimeout = TC_Common::strto<int>(_comm->getProperty("async-invoke-timeout", "5000"));

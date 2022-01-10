@@ -333,3 +333,30 @@ TEST_F(HelloTest, winServerCo)
 		stopServer(ws);
 	}
 }
+
+
+TEST_F(HelloTest, winServerHashTag)
+{
+	WinServer ws;
+
+	startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+	string obj = getObj(ws.getConfig(), "WinAdapter");
+
+	size_t pos = obj.find_first_of("@");
+	if(pos != string::npos) {
+		obj = obj.substr(0, pos) + "#9999" + obj.substr(pos);
+	}else{
+		obj += "#9999";
+	}
+
+	HelloPrx prx = ws.getCommunicator()->stringToProxy<HelloPrx>(obj);
+
+	string out;
+
+	bool co = prx->testCoro(_buffer, out);
+
+	EXPECT_FALSE(co);
+
+	stopServer(ws);
+}

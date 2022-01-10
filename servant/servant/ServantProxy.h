@@ -1177,7 +1177,7 @@ protected:
 	/**
 	 *
 	 */
-    void tars_initialize();
+	void tars_initialize(bool rootServant);
 
     /**
      *

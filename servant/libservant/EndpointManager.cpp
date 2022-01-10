@@ -143,13 +143,16 @@ int QueryEpBase::setLocatorPrx(QueryFPrx prx)
     return 0;
 }
 
-bool QueryEpBase::init(const string & sObjName, const string& setName)
+bool QueryEpBase::init(const string & sObjName, const string& setName, bool rootServant)
 {
     _locator = _communicator->getProperty("locator");
 
-    TLOGTARS("QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << endl);
+    TLOGTARS("QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl);
+//	LOG_CONSOLE_DEBUG << "QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl;
 
     _invokeSetId = setName;
+
+    _rootServant = rootServant;
 
     setObjName(sObjName);
 
@@ -174,7 +177,6 @@ void QueryEpBase::setObjName(const string & sObjName)
 
 	    if(pos != string::npos)
 	    {
-		    _rootServant    = false;
 		    _objName        = _objName.substr(0, pos);
 	    }
 
@@ -200,7 +202,6 @@ void QueryEpBase::setObjName(const string & sObjName)
 	    pos = _objName.find_first_of("#");
 	    if(pos != string::npos)
 	    {
-            _rootServant    = false;
 		    _objName = _objName.substr(0, pos);
 	    }
 
@@ -232,7 +233,6 @@ void QueryEpBase::setObjName(const string & sObjName)
         _valid = true;
     }
 
-//    if(!_direct && (!_activeEndpoints.empty() || !_inactiveEndpoints.empty()))
 	if((!_activeEndpoints.empty() || !_inactiveEndpoints.empty()))
 	{
     	//非直接指定端口, 且从cache中能查到服务端口的, 不需要通知所有ObjectProxy更新地址
@@ -400,6 +400,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
         //内部请求主控都是异步请求
         //接口请求主控第一次是同步请求
         bool bSync = (!_valid && _interfaceReq);
+
 	    //如果是异步且不是根servant(通过#1创建的servant, 不主动更新主控信息)
         if(!bSync && !_rootServant)
 	        return;
@@ -2034,7 +2035,7 @@ EndpointThread::EndpointThread(Communicator* pComm, const string & sObjName, Get
 , _type(type)
 , _name(sName)
 {
-    init(sObjName);
+    init(sObjName, "", true);
 }
 
 void EndpointThread::getEndpoints(vector<EndpointInfo> &activeEndPoint, vector<EndpointInfo> &inactiveEndPoint)

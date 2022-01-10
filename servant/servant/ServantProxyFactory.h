@@ -47,7 +47,7 @@ public:
      * @param setName 指定set调用的setid
      * @return ServantPrx
      */
-    ServantPrx::element_type* getServantProxy(const string& name,const string& setName="");
+    ServantPrx::element_type* getServantProxy(const string& name,const string& setName, bool rootServant);
 
 private:
     /**

@@ -58,7 +58,7 @@ public:
     /**
      * initialize
      */
-    void initialize();
+    void initialize(bool rootServant);
 
     /**
      * 加载locator

@@ -203,7 +203,7 @@ public:
     */
    	template<class T> void stringToProxy(const string& objectName, T& proxy, const string& setName = "")
    	{
-        ServantProxy *pServantProxy = getServantProxy(objectName, setName);
+        ServantProxy *pServantProxy = getServantProxy(objectName, setName, true);
         proxy = (typename T::element_type *)(pServantProxy);
     }
 
@@ -349,6 +349,35 @@ protected:
     void initialize();
 
     /**
+	 * 生成代理
+	 * @param T
+	 * @param objectName
+	 * @param setName 指定set调用的setid
+	 * @return T
+	 */
+    template<class T> T stringToProxy(const string& objectName, const string& setName, bool rootServant)
+    {
+    	T prx = NULL;
+
+    	stringToProxy<T>(objectName, prx, setName, rootServant);
+
+    	return prx;
+    }
+
+	/**
+	 * 生成代理
+	 * @param T
+	 * @param objectName
+	 * @param setName 指定set调用的setid
+	 * @param proxy
+	 */
+	template<class T> void stringToProxy(const string& objectName, T& proxy, const string& setName, bool rootServant)
+	{
+		ServantProxy *pServantProxy = getServantProxy(objectName, setName, rootServant);
+		proxy = (typename T::element_type *)(pServantProxy);
+	}
+
+    /**
      * 获取对象代理生成器
      * @return ServantProxyFactoryPtr
      */
@@ -360,7 +389,7 @@ protected:
      * @param setName 指定set调用的setid
      * @return ServantPrx
      */
-    ServantProxy * getServantProxy(const string& objectName,const string& setName="");
+    ServantProxy * getServantProxy(const string& objectName,const string& setName, bool rootServant);
 
     /**
      * 数据加入到异步线程队列里面
