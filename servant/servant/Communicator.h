@@ -328,7 +328,7 @@ public:
     /*
      * tars_ping间隔，0：不启用
      */
-    int64_t getTarsPingInterval() { return _tarsPingInterval; }
+    int64_t getKeepAliveInterval() { return _keepAliveInterval; }
 
     /**
      * get resource info
@@ -503,7 +503,7 @@ protected:
     /*
      * tars_ping间隔，0：不启用
      */
-    int64_t                _tarsPingInterval;
+    int64_t                _keepAliveInterval;
 
 	/**
 	 * ssl ctx
