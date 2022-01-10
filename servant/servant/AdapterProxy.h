@@ -105,7 +105,7 @@ public:
     /**
      * 发送tars_ping
      */
-    void doTarsPing();
+    void doKeepAlive();
 
     /**
      * 处理stat
@@ -393,7 +393,7 @@ private:
     /*
      * 下一次发起tars_ping请求的时间
      */
-    time_t                                 _nextTarsPingTime;
+    time_t                                 _nextKeepAliveTime;
 
     /*
      * 是否连接异常

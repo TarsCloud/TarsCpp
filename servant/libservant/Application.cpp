@@ -962,7 +962,7 @@ void Application::outClient(ostream &os)
     os << TC_Common::outfill("stat")                        << _communicator->getProperty("stat") << endl;
     os << TC_Common::outfill("property")                    << _communicator->getProperty("property") << endl;
     os << TC_Common::outfill("report-interval")             << _communicator->getProperty("report-interval") << endl;
-    os << TC_Common::outfill("tars-ping-interval")             << _communicator->getProperty("tars-ping-interval") << endl;
+    os << TC_Common::outfill("keep-alive-interval")             << _communicator->getProperty("keep-alive-interval") << endl;
 //    os << TC_Common::outfill("sample-rate")                 << _communicator->getProperty("sample-rate") << endl;
 //    os << TC_Common::outfill("max-sample-count")            << _communicator->getProperty("max-sample-count") << endl;
     os << TC_Common::outfill("netthread")                  << _communicator->getProperty("netthread") << endl;

@@ -103,7 +103,7 @@ public:
     /**
      * 发起tars_ping请求
      */
-    void doTarsPing();
+    void doKeepAlive();
 
     /**
      * 获取CommunicatorEpoll*

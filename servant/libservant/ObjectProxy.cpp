@@ -374,7 +374,7 @@ void ObjectProxy::doTimeout()
     }
 }
 
-void ObjectProxy::doTarsPing()
+void ObjectProxy::doKeepAlive()
 {
     const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
 
@@ -382,7 +382,7 @@ void ObjectProxy::doTarsPing()
     {
         if(vAdapterProxy[iAdapter] != NULL)
         {
-            vAdapterProxy[iAdapter]->doTarsPing();
+            vAdapterProxy[iAdapter]->doKeepAlive();
         }
     }
 }
