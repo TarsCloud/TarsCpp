@@ -426,18 +426,18 @@ void CommunicatorEpoll::doTimeout()
     }
 }
 
-void CommunicatorEpoll::doTarsPing()
+void CommunicatorEpoll::doKeepAlive()
 {
     assert(_threadId == this_thread::get_id());
 
-    if (_communicator->getTarsPingInterval() == 0)
+    if (_communicator->getKeepAliveInterval() == 0)
     {
         return;
     }
 
     for(size_t i = 0; i < getObjNum(); ++i)
     {
-        getObjectProxy(i)->doTarsPing();
+        getObjectProxy(i)->doKeepAlive();
     }
 }
 
@@ -592,8 +592,8 @@ void CommunicatorEpoll::initializeEpoller()
 
 	_timerIds = { id1, id2, id3 };
 
-    if (_communicator->getTarsPingInterval() > 0) {
-        auto id = _epoller->postRepeated(1000 * 2, false, std::bind(&CommunicatorEpoll::doTarsPing, this));
+    if (_communicator->getKeepAliveInterval() > 0) {
+        auto id = _epoller->postRepeated(1000 * 2, false, std::bind(&CommunicatorEpoll::doKeepAlive, this));
         _timerIds.emplace_back(id);
     }
 }

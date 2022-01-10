@@ -43,7 +43,7 @@ AdapterProxy::AdapterProxy(ObjectProxy * pObjectProxy, const EndpointInfo &ep, C
 , _frequenceFailInvoke(0)
 , _frequenceFailTime(0)
 , _nextRetryTime(0)
-, _nextTarsPingTime(0)
+, _nextKeepAliveTime(0)
 //, _connTimeout(false)
 , _connExc(false)
 , _connExcCnt(0)
@@ -989,7 +989,7 @@ void AdapterProxy::doTimeout()
     }
 }
 
-void AdapterProxy::doTarsPing()
+void AdapterProxy::doKeepAlive()
 {
     if (!checkActive(false))
     {
@@ -997,13 +997,13 @@ void AdapterProxy::doTarsPing()
     }
 
     time_t now = TNOW;
-    if (now < _nextTarsPingTime)
+    if (now < _nextKeepAliveTime)
     {
         return;
     }
 
-    _nextTarsPingTime = now + _communicator->getTarsPingInterval();
-    TLOGTARS("[AdapterProxy::doTarsPing, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
+    _nextKeepAliveTime = now + _communicator->getKeepAliveInterval();
+    TLOGTARS("[AdapterProxy::doKeepAlive, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
 
     ReqMessage *msg = new ReqMessage();
 

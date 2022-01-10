@@ -295,7 +295,7 @@ protected:
      * 处理tars_ping
      * @param pi
      */
-    void doTarsPing();
+    void doKeepAlive();
 
     /**
      * 处理stat

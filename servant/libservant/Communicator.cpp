@@ -48,7 +48,7 @@ Communicator::Communicator()
 , _statReport(NULL)
 , _timeoutLogFlag(true)
 
-, _tarsPingInterval(0)
+, _keepAliveInterval(0)
 // #ifdef TARS_OPENTRACKING
 // , _traceManager(NULL)
 // #endif
@@ -64,7 +64,7 @@ Communicator::Communicator(TC_Config& conf, const string& domain/* = CONFIG_ROOT
 : _initialized(false)
 , _terminating(false)
 , _timeoutLogFlag(true)
-, _tarsPingInterval(0)
+, _keepAliveInterval(0)
 // #ifdef TARS_OPENTRACKING
 // , _traceManager(NULL)
 // #endif
@@ -395,11 +395,10 @@ void Communicator::initialize()
     if(_minTimeout < 1)
         _minTimeout = 1;
 
-    _tarsPingInterval = TC_Common::strto<int64_t>(getProperty("tars-ping-interval", "0"))/1000;
-    TLOGERROR( "[_tarsPingInterval:" << _tarsPingInterval << endl);
-    if (_tarsPingInterval<5 && _tarsPingInterval!=0)
+    _keepAliveInterval = TC_Common::strto<int64_t>(getProperty("keep-alive-interval", "0"))/1000;
+    if (_keepAliveInterval<5 && _keepAliveInterval!=0)
     {
-        _tarsPingInterval = 5;
+        _keepAliveInterval = 5;
     }
 
     StatFPrx statPrx = NULL;
