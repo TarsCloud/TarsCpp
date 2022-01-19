@@ -579,6 +579,11 @@ void TC_Transceiver::tcpClose(bool deconstructor, CloseReason reason, const stri
 
 //LOG_CONSOLE_DEBUG << this << ", " << _fd << ", " << reason << ", " << err << ", " << deconstructor << endl;
 
+        if(_connTimerId != 0) {
+            _epoller->erase(_connTimerId);
+            _connTimerId = 0;
+        }
+
 		_epoller->releaseEpollInfo(_epollInfo);
 
         _epollInfo.reset();
