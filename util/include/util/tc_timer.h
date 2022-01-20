@@ -208,9 +208,8 @@ protected:
 							p->_fireMillseconds = TC_TimeProvider::getInstance()->getNowMs() + repeatTime;
 							this->post(p);
 						}
-
-						_tmpEvent.erase(p->_uniqueId);
 					}
+					_tmpEvent.erase(p->_uniqueId);
 				}
             };
 		}
