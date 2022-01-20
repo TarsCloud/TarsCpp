@@ -195,6 +195,11 @@ protected:
                 shared_ptr<Func> p = wPtr.lock();
                 if(p)
 				{
+					{
+						std::unique_lock <std::mutex> lock(_mutex);
+						_tmpEvent.erase(p->_uniqueId);
+					}
+
 					if (this->exist(p->_uniqueId, true))
 					{
 						if (p->_cron.isset)
@@ -209,7 +214,6 @@ protected:
 							this->post(p);
 						}
 					}
-					_tmpEvent.erase(p->_uniqueId);
 				}
             };
 		}
