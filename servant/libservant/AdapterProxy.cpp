@@ -145,7 +145,7 @@ void AdapterProxy::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::CloseR
     if(second > 0) 
     {
         _objectProxy->getCommunicatorEpoll()->reConnect(TNOWMS + second * 1000, trans);
-        TLOGERROR("[trans close:" << _objectProxy->name() << "," << trans->getConnectEndpoint().toString() << ", reconnect:" << second << "]" << endl);
+        TLOGWARN("[trans close:" << _objectProxy->name() << "," << trans->getConnectEndpoint().toString() << ", reconnect:" << second << "]" << endl);
     }   
 }
 

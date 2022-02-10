@@ -21,6 +21,7 @@
 // #include "servant/TC_Transceiver.h"
 #include "servant/AdapterProxy.h"
 #include "servant/RemoteLogger.h"
+#include "servant/Message.h"
 #include "tup/Tars.h"
 #include <iostream>
 
@@ -58,7 +59,24 @@ shared_ptr<TC_NetWorkBuffer::Buffer> ProxyProtocol::tarsRequest(RequestPacket& r
 
 	assert(os.getLength() >= 4);
 
-	iHeaderLen = htonl((int)(os.getLength()));
+    iHeaderLen = htonl((int)(os.getLength()));
+
+    if (IS_MSG_TYPE(request.iMessageType, TARSMESSAGETYPEHASH))
+    {
+        auto it = request.status.find(ServantProxy::STATUS_BUSI_HASH_CODE);
+        if (it != request.status.end())
+        {
+            tars::Int64 code = atoll(it->second.c_str());
+            if (code > 0)
+            {
+                code = tars::tars_htonll(code);
+                os.writeBuf("HASH", 4);
+                os.writeBuf((const char *)&code, sizeof(code));
+            }
+        }
+    }
+
+    iHeaderLen = htonl((int)(os.getLength()));
 
 	memcpy((void*)os.getBuffer(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
 

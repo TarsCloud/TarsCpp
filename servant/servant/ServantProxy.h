@@ -760,6 +760,8 @@ public:
 
     static string STATUS_TRACE_KEY; //trace信息
 
+    static string STATUS_BUSI_HASH_CODE;  // 按线程hash值
+
 ///////////////////////////////////////////////////////////////////
 /**
  * socket选项
@@ -997,6 +999,11 @@ public:
      * 获取超时检查参数
      */
     CheckTimeoutInfo tars_get_check_timeout();
+
+    /**
+     * 线程hash, 保证同一key的消息由服务端固定的线程处理
+     */
+    virtual ServantProxy* tars_set_busi_hashcode(int64_t key);
 
     /**
      * hash方法，为保证一段时间内同一个key的消息发送

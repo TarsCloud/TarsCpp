@@ -274,6 +274,9 @@ ThreadPrivateData ServantProxyThreadData::move()
     _data._conHash = false;
     _data._timeout = 0;
 
+    _data._busiHash     = false;
+    _data._busiHashCode = -1;
+
     return data;
 }
 
@@ -385,6 +388,8 @@ string ServantProxy::STATUS_RESULT_DESC   = "STATUS_RESULT_DESC";
 string ServantProxy::STATUS_SETNAME_VALUE = "STATUS_SETNAME_VALUE";
 
 string ServantProxy::STATUS_TRACE_KEY     = "STATUS_TRACE_KEY";
+
+string ServantProxy::STATUS_BUSI_HASH_CODE= "STATUS_BUSI_HASH_CODE";
 
 ////////////////////////////////////
 ServantProxy::ServantProxy(Communicator *pCommunicator, const string &name, const string &setName)
@@ -680,6 +685,18 @@ void ServantProxy::tars_async_ping()
 	tars_invoke_async(TARSONEWAY, "tars_ping", os, m, s, NULL);
 }
 
+ServantProxy* ServantProxy::tars_set_busi_hashcode(int64_t key)
+{
+    ServantProxyThreadData * pSptd = ServantProxyThreadData::getData();
+
+    assert(pSptd != NULL);
+
+    pSptd->_data._busiHash     = true;
+    pSptd->_data._busiHashCode = key;
+
+    return this;
+}
+
 ServantProxy* ServantProxy::tars_hash(int64_t key)
 {
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
@@ -811,6 +828,14 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
 
     //选择网络线程
     selectNetThreadInfo(pSptd, msg->pObjectProxy, pReqQ);
+
+    if (msg->data._busiHash)
+    {
+        SET_MSG_TYPE(msg->request.iMessageType, TARSMESSAGETYPEHASH);
+        msg->request.status[ServantProxy::STATUS_BUSI_HASH_CODE] = std::to_string(msg->data._busiHashCode);
+
+        TLOGTARS("[ServantProxy::invoke, " << msg->request.sServantName << ", busiHash code," << msg->data._busiHashCode << "]" << endl);
+    }
 
     //如果是按set规则调用
     if (msg->pObjectProxy && msg->pObjectProxy->isInvokeBySet())

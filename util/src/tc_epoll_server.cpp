@@ -54,7 +54,7 @@ TC_EpollServer::DataBuffer::DataBuffer(int handleNum)
 	}
 }
 
-const shared_ptr<TC_EpollServer::DataBuffer::DataQueue> &TC_EpollServer::DataBuffer::getDataQueue(uint32_t handleIndex)
+const shared_ptr<TC_EpollServer::DataBuffer::DataQueue> &TC_EpollServer::DataBuffer::getDataQueue(tars::Int64 handleIndex)
 {
 	//如果是队列模式, 则返回handle线程对应的队列
 	if(isQueueMode())
@@ -75,14 +75,30 @@ void TC_EpollServer::DataBuffer::insertRecvQueue(const shared_ptr<RecvContext> &
 {
 	++_iRecvBufferSize;
 
-	getDataQueue(recv->fd())->push_back(recv);
+    tars::Int64 handleIndex = recv->fd();
+    if (isQueueMode())
+    {
+        if (recv->buffer().size() > 12)
+        {
+            string backSign;
+            backSign.assign(recv->buffer().end() - 12, recv->buffer().end());
+            if (strncmp(backSign.c_str(), "HASH", 4) == 0)
+            {
+                memcpy(&handleIndex, backSign.c_str() + 4, sizeof(tars::Int64));
+                handleIndex = tars_ntohll(handleIndex);
+                recv->adapter()->getEpollServer()->tars("adapter: " + recv->adapter()->getName() + ", busiHash: " + TC_Common::tostr<int64_t>(handleIndex));
+            }
+        }
+    }
+
+	getDataQueue(handleIndex)->push_back(recv);
 
 	if(_schedulers[0] != NULL)
 	{
 		//存在调度器, 处于协程中
 		if(isQueueMode())
 		{
-			_schedulers[index(recv->fd())]->notify();
+			_schedulers[index(handleIndex)]->notify();
 		}
 		else
 		{

@@ -109,6 +109,13 @@ struct ThreadPrivateData
     int64_t        _hashCode    = -1;                        //hash值
 
     /**
+     * servant业务线程hash属性，客户端每次调用都进行设置
+     * 如果服务端支持多线程列队模式，则可以设置该值，避免同一客户端的请求都在一个线程处理，充分利用服务端性能
+     */
+    bool           _busiHash    = false;                //是否业务线程取模hash
+    int64_t        _busiHashCode= -1;                   //hash值
+
+    /**
      * 染色信息
      */
     bool           _dyeing      = false;                          //标识当前线程是否需要染色
