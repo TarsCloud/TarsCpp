@@ -35,6 +35,7 @@
 #include "util/tc_cas_queue.h"
 #include "util/tc_coroutine.h"
 #include "util/tc_openssl.h"
+#include "tup/TarsType.h"
 
 using namespace std;
 
@@ -396,9 +397,9 @@ public:
 
     protected:
 
-        inline int index(uint32_t handleIndex) { return handleIndex % _threadDataQueue.size(); }
+        inline int index(tars::Int64 handleIndex) { return handleIndex % _threadDataQueue.size(); }
 
-        const shared_ptr<DataQueue> &getDataQueue(uint32_t handleIndex);
+        const shared_ptr<DataQueue> &getDataQueue(tars::Int64 handleIndex);
 
     protected:
 
