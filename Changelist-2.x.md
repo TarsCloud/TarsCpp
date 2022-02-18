@@ -122,8 +122,8 @@
 - tc_shm when detach, set _pshm = NULL
 
 ### cn
-- 修改 TC_Shm::init in windows 没有设置 _bOwner变量的bug
 - 修改tars-tools.cmake, 在windows 平台下cmake 复制 .tars 到 tarsproto/protocol
+- 修改tars-tools.cmake, 在windows 平台下cmake 复制 .tars 到 tarsproto
 - epoll add/del/mod 等接口增加返回值
 - communicator 结束时调用ServantProxyThreadData reset
 - 尽量去掉libservant中的单例, 这样在一个进程中可以启动多个Application

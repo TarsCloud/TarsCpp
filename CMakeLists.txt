@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.10)
 
 project(tars-cpp)
 
@@ -19,6 +19,20 @@ if("${TARS_CPP_COMMON}" STREQUAL "")
     include("${PROJECT_SOURCE_DIR}/cmake/ParseAsm.cmake")
 
 endif()
+
+include(FetchContent)
+if (NOT DEFINED URL_BASE)
+    set(URL_BASE "github.com")
+    # set(URL_BASE "github.com.cnpmjs.org")
+endif()
+set(TARS_PROTOCOL tarsprotocol)
+set(TARS_PROTOCOL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/servant/protocol)
+FetchContent_Declare(${TARS_PROTOCOL}
+    GIT_REPOSITORY https://${URL_BASE}/cyjseagull/TarsProtocol.git
+    GIT_TAG master
+    SOURCE_DIR ${TARS_PROTOCOL_PATH}
+)
+FetchContent_MakeAvailable(${TARS_PROTOCOL})
 
 # set(major "")
 # set(minor "")
@@ -50,9 +64,7 @@ add_subdirectory(util)
 add_subdirectory(tools)
 add_subdirectory(servant)
 
-IF (NOT ${ONLY_LIB})
-add_subdirectory(examples)
-add_subdirectory(unit-test)
-ENDIF()
-
-
+if (TESTS)
+    add_subdirectory(examples)
+    add_subdirectory(unit-test)
+endif()
