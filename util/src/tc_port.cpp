@@ -272,6 +272,155 @@ std::string TC_Port::exec(const char* cmd, std::string &err)
 	return fileData;
 }
 
+int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vOptions)
+{
+	vector<string> vEnvs;
+
+	if (sExePath.empty())
+	{
+		throw TC_Port_Exception("[TC_Port::forkExec] server exe: " + sExePath + " is empty.");
+	}
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+	if (TC_File::isFileExistEx(sExePath) && !TC_File::canExecutable(sExePath))
+	{
+		TC_File::setExecutable(sExePath, true);
+	}
+#endif
+
+	//
+	// Current directory
+	//
+	const char *pwdCStr = sPwdPath.c_str();
+
+#if TARGET_PLATFORM_WINDOWS
+	vector<string> vArgs;
+	
+	vArgs.insert(vArgs.end(), vOptions.begin(), vOptions.end());
+	
+	string path;
+	for (vector<string>::const_iterator p = vArgs.begin(); p != vArgs.end(); ++p)
+	{
+		path += " " + *p;
+	}
+	
+	string command = sExePath + " " + path;
+	
+	TCHAR p[1024];
+	strncpy_s(p, sizeof(p) / sizeof(TCHAR), command.c_str(), command.length());
+	
+	STARTUPINFO si;
+	memset(&si, 0, sizeof(si));
+	PROCESS_INFORMATION pi;
+	memset(&pi, 0, sizeof(pi));
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_HIDE; //TRUE表示显示创建的进程的窗口
+	
+	if (!CreateProcessA(
+		NULL,   //  指向一个NULL结尾的、用来指定可执行模块的宽字节字符串
+		p,      // 命令行字符串
+		NULL,   //    指向一个SECURITY_ATTRIBUTES结构体，这个结构体决定是否返回的句柄可以被子进程继承。
+		NULL,   //    如果lpProcessAttributes参数为空（NULL），那么句柄不能被继承。<同上>
+		false,  //    指示新进程是否从调用进程处继承了句柄。
+		CREATE_NEW_CONSOLE|CREATE_DEFAULT_ERROR_MODE | NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW,  //  指定附加的、用来控制优先类和进程的创建的标
+		NULL, //    指向一个新进程的环境块。如果此参数为空，新进程使用调用进程的环境
+		pwdCStr, //    指定子进程的工作路径
+		&si, // 决定新进程的主窗体如何显示的STARTUPINFO结构体
+		&pi  // 接收新进程的识别信息的PROCESS_INFORMATION结构体
+	))
+	{
+		string err = TC_Exception::parseError(TC_Exception::getSystemCode());
+	
+		throw TC_Port_Exception("[TC_Port::forkExec] CreateProcessA exception:" + err);
+	}
+	
+	CloseHandle(pi.hThread);
+	CloseHandle(pi.hProcess);
+	
+	return pi.dwProcessId;
+
+#else
+	vector<string> vArgs;
+	vArgs.push_back(sExePath);
+	vArgs.insert(vArgs.end(), vOptions.begin(), vOptions.end());
+
+	int argc = static_cast<int>(vArgs.size());
+	char **argv = static_cast<char **>(malloc((argc + 1) * sizeof(char *)));
+	int i = 0;
+	for (vector<string>::const_iterator p = vArgs.begin(); p != vArgs.end(); ++p, ++i)
+	{
+		assert(i < argc);
+		argv[i] = strdup(p->c_str());
+	}
+	assert(i == argc);
+	argv[argc] = 0;
+
+	pid_t pid = fork();
+	if (pid == -1)
+	{
+		throw TC_Port_Exception("[TC_Port::forkExec] fork exception");
+	}
+
+	if (pid == 0)
+	{
+		int maxFd = static_cast<int>(sysconf(_SC_OPEN_MAX));
+		for (int fd = 3; fd < maxFd; ++fd)
+		{
+			close(fd);
+		}
+
+		//server stdcout 日志在滚动日志显示
+		if (!sRollLogPath.empty())
+		{
+			TC_File::makeDirRecursive(TC_File::extractFilePath(sRollLogPath));
+#if TARGET_PLATFORM_IOS
+			if ((freopen(sRollLogPath.c_str(), "ab", stdout)) != NULL && (freopen(sRollLogPath.c_str(), "ab", stderr)) != NULL)
+#else
+			if ((freopen64(sRollLogPath.c_str(), "ab", stdout)) != NULL && (freopen64(sRollLogPath.c_str(), "ab", stderr)) != NULL)
+#endif
+			{
+				cout << argv[0] << " redirect stdout and stderr  to " << sRollLogPath << endl;
+			}
+			else
+			{
+				//重定向失败 直接退出
+				exit(0);
+			}
+		}
+		else
+		{
+			cout << argv[0] << " cannot redirect stdout and stderr  to log file sRollLogPath is empty" << endl;
+		}
+
+//		for_each(vEnvs.begin(), vEnvs.end(), EnvVal());
+
+		if (strlen(pwdCStr) != 0)
+		{
+			if (chdir(pwdCStr) == -1)
+			{
+				cerr << argv[0] << " cannot change working directory to " << pwdCStr << "|errno=" << errno << endl;
+			}
+		}
+
+		if (execvp(argv[0], argv) == -1)
+		{
+			cerr << "cannot execute " << argv[0] << "|errno=" << strerror(errno) << endl;
+		}
+		exit(0);
+	}
+	else
+	{
+		for (i = 0; argv[i]; i++)
+		{
+			free(argv[i]);
+		}
+		free(argv);
+	}
+	return pid;
+#endif
+}
+
+
 shared_ptr<TC_Port::SigInfo> TC_Port::_sigInfo = std::make_shared<TC_Port::SigInfo>();
 
 

@@ -717,6 +717,9 @@ void Application::main(const TC_Option &option)
 
 	string config = TC_File::load2str(ServerConfig::ConfigFile);
 
+	__out__.debug() << "config:" << ServerConfig::ConfigFile << endl;
+	__out__.debug() << "config:" << config << endl;
+
 	main(config);
 }
 

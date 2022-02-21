@@ -239,52 +239,52 @@ void QueryEpBase::setObjName(const string & sObjName)
         notifyEndpoints(_activeEndpoints,_inactiveEndpoints,true);
     }
 }
-
-vector<string> QueryEpBase::sepEndpoint(const string& sEndpoints)
-{
-	vector<string>  vEndpoints;
-	bool flag = false;
-	string::size_type startPos = 0;
-	string::size_type sepPos = 0;
-	for(string::size_type pos = 0; pos < sEndpoints.size(); pos++)
-	{
-		if(sEndpoints[pos] == ':' && !flag )
-		{
-			sepPos = pos;
-			flag = true;
-		}
-		else if(flag)
-		{
-			if(sEndpoints[pos] == ' ')
-			{
-				continue;
-			}
-
-			if(TC_Port::strncasecmp("tcp", (sEndpoints.c_str() + pos), 3) == 0
-			    || TC_Port::strncasecmp("udp", (sEndpoints.c_str() + pos), 3) == 0
-			    || TC_Port::strncasecmp("ssl", (sEndpoints.c_str() + pos), 3) == 0)
-			{
-				string ep = TC_Common::trim(string(sEndpoints.c_str() + startPos, sepPos - startPos));
-				if(!ep.empty()) {
-					vEndpoints.push_back(ep);
-				}
-				startPos = pos;
-			}
-
-			flag = false;
-		}
-	}
-
-	string ep = sEndpoints.substr(startPos);
-
-	if(!ep.empty()) {
-		vEndpoints.push_back(ep);
-	}
-
-//	vEndpoints.push_back(sEndpoints.substr(startPos));
-
-	return vEndpoints;
-}
+//
+//vector<string> QueryEpBase::sepEndpoint(const string& sEndpoints)
+//{
+//	vector<string>  vEndpoints;
+//	bool flag = false;
+//	string::size_type startPos = 0;
+//	string::size_type sepPos = 0;
+//	for(string::size_type pos = 0; pos < sEndpoints.size(); pos++)
+//	{
+//		if(sEndpoints[pos] == ':' && !flag )
+//		{
+//			sepPos = pos;
+//			flag = true;
+//		}
+//		else if(flag)
+//		{
+//			if(sEndpoints[pos] == ' ')
+//			{
+//				continue;
+//			}
+//
+//			if(TC_Port::strncasecmp("tcp", (sEndpoints.c_str() + pos), 3) == 0
+//			    || TC_Port::strncasecmp("udp", (sEndpoints.c_str() + pos), 3) == 0
+//			    || TC_Port::strncasecmp("ssl", (sEndpoints.c_str() + pos), 3) == 0)
+//			{
+//				string ep = TC_Common::trim(string(sEndpoints.c_str() + startPos, sepPos - startPos));
+//				if(!ep.empty()) {
+//					vEndpoints.push_back(ep);
+//				}
+//				startPos = pos;
+//			}
+//
+//			flag = false;
+//		}
+//	}
+//
+//	string ep = sEndpoints.substr(startPos);
+//
+//	if(!ep.empty()) {
+//		vEndpoints.push_back(ep);
+//	}
+//
+////	vEndpoints.push_back(sEndpoints.substr(startPos));
+//
+//	return vEndpoints;
+//}
 
 void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & setEndpoints)
 {
@@ -297,7 +297,7 @@ void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & se
     bool         bFirstWeightType = true;
     unsigned int iWeightType      = 0;
 
-    vector<string>  vEndpoints = sepEndpoint(sEndpoints);
+    vector<string>  vEndpoints = TC_Endpoint::sepEndpoint(sEndpoints);
 
     for (size_t i = 0; i < vEndpoints.size(); ++i)
     {

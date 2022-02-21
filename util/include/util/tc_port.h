@@ -2,6 +2,7 @@
 #define __TC_PORT_H
 
 #include "util/tc_platform.h"
+#include "util/tc_ex.h"
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 
@@ -35,6 +36,15 @@ using namespace std;
 
 namespace tars
 {
+
+/**
+* @brief 跨平台port异常类
+*/
+struct TC_Port_Exception : public TC_Exception
+{
+	TC_Port_Exception(const string &buffer) : TC_Exception(buffer){};
+	~TC_Port_Exception() throw() {};
+};
 
 class TC_Port
 {
@@ -81,14 +91,47 @@ public:
 
     static int64_t getpid();
 
+	/**
+	 * 获取环境变量
+	 * @param name
+	 * @return
+	 */
     static std::string getEnv(const std::string &name);
 
+	/**
+	 * 设置环境变量
+	 * @param name
+	 * @param value
+	 */
     static void setEnv(const std::string &name, const std::string &value);
 
+	/**
+	 * 运行一个脚本
+	 * @param cmd
+	 * @param err
+	 * @return 程序的标准输出
+	 */
     static std::string exec(const char* cmd);
+
+	/**
+	 * 运行一个脚本(程序+命令行)
+	 * @param cmd
+	 * @param err
+	 * @return: 程序的标准输出
+	 */
 	static std::string exec(const char* cmd, std::string &err);
 
 	/**
+	 * fork子进程并运行程序
+	 * @param sExe: 可执行程序路径
+	 * @param sPwdPath: 程序运行的当前路径
+	 * @param sRollLogPath: 滚动日志路径(stdout会重定向到滚动日志), 为空则不重定向
+	 * @param vOptions: 参数
+	 * @return 子进程id: ==0: 子进程中, >0: 父进程中(子进程pid), 其他抛出异常 TC_Port_Exception
+	 */
+	static int64_t forkExec(const string& sExe, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vOptions);
+
+		/**
 	 * 注册ctrl+c回调事件(SIGINT/CTRL_C_EVENT)
 	 * @param callback
 	 * @return size_t, 注册事件的id, 取消注册时需要
