@@ -155,10 +155,10 @@ private:
      */
     void setObjName(const string & sObjName);
 
-    /*
-     * 解析endpoint
-     */
-    vector<string> sepEndpoint(const string& sEndpoints);
+//    /*
+//     * 解析endpoint
+//     */
+//    vector<string> sepEndpoint(const string& sEndpoints);
 
     /*
      * 从sEndpoints提取ip列表信息

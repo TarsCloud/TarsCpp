@@ -111,7 +111,7 @@ TEST_F(UtilEpollServerTest, RunTcp)
 
 TEST_F(UtilEpollServerTest, RunEnableManualListen)
 {
-	int i = 0;
+//	int i = 0;
 	for(int i = 0; i <= TC_EpollServer::NET_THREAD_MERGE_HANDLES_CO; i++)
 	{
 		MyTcpServer server;

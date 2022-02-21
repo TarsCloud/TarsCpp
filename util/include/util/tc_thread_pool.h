@@ -250,7 +250,6 @@ public:
     */
     void init(size_t num);
 
-
     /**
     * @brief 停止所有线程, 会等待所有线程结束
     */

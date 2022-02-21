@@ -256,6 +256,51 @@ void TC_Endpoint::parse(const string &str)
     //     _authType = 1;
 }
 
+vector<string> TC_Endpoint::sepEndpoint(const string& sEndpoints)
+{
+	vector<string>  vEndpoints;
+	bool flag = false;
+	string::size_type startPos = 0;
+	string::size_type sepPos = 0;
+	for(string::size_type pos = 0; pos < sEndpoints.size(); pos++)
+	{
+		if(sEndpoints[pos] == ':' && !flag )
+		{
+			sepPos = pos;
+			flag = true;
+		}
+		else if(flag)
+		{
+			if(sEndpoints[pos] == ' ')
+			{
+				continue;
+			}
+
+			if(TC_Port::strncasecmp("tcp", (sEndpoints.c_str() + pos), 3) == 0
+			   || TC_Port::strncasecmp("udp", (sEndpoints.c_str() + pos), 3) == 0
+			   || TC_Port::strncasecmp("ssl", (sEndpoints.c_str() + pos), 3) == 0)
+			{
+				string ep = TC_Common::trim(string(sEndpoints.c_str() + startPos, sepPos - startPos));
+				if(!ep.empty()) {
+					vEndpoints.push_back(ep);
+				}
+				startPos = pos;
+			}
+
+			flag = false;
+		}
+	}
+
+	string ep = sEndpoints.substr(startPos);
+
+	if(!ep.empty()) {
+		vEndpoints.push_back(ep);
+	}
+
+	return vEndpoints;
+}
+
+
 /*************************************TC_TCPClient**************************************/
 
 TC_ClientSocket::TC_ClientSocket() : _port(0),_timeout(3000)

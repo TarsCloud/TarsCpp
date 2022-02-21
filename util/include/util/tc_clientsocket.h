@@ -369,6 +369,12 @@ public:
      */
     void parse(const string &desc);
 
+	/*
+	 * 解析成多个endpoint(tcp -h xxx -p yyy:udp -h xxx -p yyy:ssl -h xxx -p xxx)
+	 * 支持ipv6地址
+	 */
+	static vector<string> sepEndpoint(const string& sEndpoints);
+
 private:
     void init(const string& host, int port, int timeout, EType type, int grid, int qos, int weight, unsigned int weighttype, AUTH_TYPE authType);
 
