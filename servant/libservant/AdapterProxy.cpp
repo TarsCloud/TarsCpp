@@ -411,6 +411,8 @@ int AdapterProxy::invoke_connection_parallel(ReqMessage * msg)
 		}
 		else if(ret == TC_Transceiver::eRetError)
 		{
+			TLOGTARS("[AdapterProxy::invoke_connection_parallel send request failed,queue size:" << _timeoutQueue->size() << ",id: " << msg->request.iRequestId << "," << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
+
 			//发送出错了
 			msg->eStatus = ReqMessage::REQ_EXC;
 
