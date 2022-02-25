@@ -1,3 +1,19 @@
+# v3.0.4 20220225
+
+### en
+
+- support tarscpp server run container
+- Fix memory leak caused by timer
+- Fix crash caused by transceiver in case of connection timeout
+- FIx crash caused by epoller
+
+### cn
+
+- 支持框架容器化运行
+- 修复定时器带来的内存泄露
+- 修复 tc_transceiver 在连接超时情况下可能带来的 crash
+- 修复 tc_epoller 可能带来的 crash
+
 # v3.0.4 20220118
 
 ### en

@@ -302,6 +302,12 @@ void TC_Epoller::create(int size, bool createNotify)
 
 void TC_Epoller::close()
 {
+	if(_notify != nullptr)
+	{
+        delete _notify;
+		_notify = nullptr;
+	}
+
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     ::close(_iEpollfd);
 	_iEpollfd = -1;
