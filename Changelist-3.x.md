@@ -1,11 +1,11 @@
-# v3.0.4 20220225
+# v3.0.5 20220301
 
 ### en
 
 - support tarscpp server run container
 - Fix memory leak caused by timer
 - Fix crash caused by transceiver in case of connection timeout
-- FIx crash caused by epoller
+- Fix crash caused by epoller
 
 ### cn
 
