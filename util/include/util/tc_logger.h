@@ -382,12 +382,12 @@ namespace tars
 	{
 	public:
 		/**
-		 * @brief 定义最大的buffer大小(10M)
-		 * @brief Define the maximum buffer size (10M)
+		 * @brief 定义最大的buffer大小(2K)
+		 * @brief Define the maximum buffer size (2K)
 		 */
 		enum
 		{
-			MAX_BUFFER_LENGTH = 1024 * 1024 * 10,
+			MAX_BUFFER_LENGTH = 1024 * 2,
 		};
 
 		/**
