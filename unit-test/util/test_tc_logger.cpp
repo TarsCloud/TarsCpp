@@ -37,9 +37,7 @@ TEST_F(UtilLogTest, fdLog)
 {
 	RemoteTimeLogger::getInstance()->initFormat("./test.log", "%Y%m%d");
 
-	string s= "[{buy_unit:1000,down_price:0,exchange_type:1,high_amount:16000,issue_date:20220224,last_price:42.14,low_amount:1000,money_type:0,par_value:1,position_str:0001732102,price_step:10,relative_code:603102,stkcode_ctrlstr:000000000000\n"
-					"    000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,stkcode_\n"
-					"    status:0,stock_code:732102,stock_name:?ٺ??깺,stock_name_long:,stock_type:4,store_unit:1,sub_stock_type:41,up_price:0}";
+	string s= "test";
 
 	int i = 10000000;
 	while(i > 0)
