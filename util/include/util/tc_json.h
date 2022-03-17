@@ -119,10 +119,10 @@ typedef TC_AutoPtr<JsonValueString> JsonValueStringPtr;
 class JsonValueNum : public JsonValue
 {
 public:
-	JsonValueNum(double d,bool b=false):value(d),lvalue(d),isInt(b)
+	JsonValueNum(double d,bool isInt=false):value(d),lvalue(d),isInt(isInt)
 	{
 	}
-	JsonValueNum(int64_t d,bool b=true):value(d), lvalue(d),isInt(b)
+	JsonValueNum(int64_t d,bool isInt=true):value(d), lvalue(d),isInt(isInt)
 	{
 	}
 	JsonValueNum()

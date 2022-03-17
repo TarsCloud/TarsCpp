@@ -745,63 +745,10 @@ public:
 	 */
     bool isChunked() const { return _bIsChunked; }
 
-    /**
-     * @brief 解析请求head，不解析第一行,
-     *        第一行请求包和响应包不一样， 后面的数据解析为map格式
-     * @brief Resolve the request head without resolving the first line,
-     *        The first row of request and response packages is different, and the subsequent data is parsed into map format
-     * @param szBuffer
-     * @return const char*, 偏移的指针
-     * @return const char*, Offset pointer
-     */
-//    static const char* parseHeader(const char* szBuffer, http_header_type &sHeader);
-//
-//    template<typename ForwardIterator1, typename ForwardIterator2>
-//	static void parseHeader(const ForwardIterator1 &beginIt, const ForwardIterator2 &headerIt, http_header_type &sHeader)
-//	{
-//		sHeader.clear();
-//
-//		string sep      = "\r\n";
-//		string colon    = ":";
-//
-//		bool first      = true;
-//		auto lineStartIt= beginIt;
-//
-//		while (true)
-//		{
-//			auto it = std::search(lineStartIt, headerIt, sep.c_str(), sep.c_str() + sep.size());
-//			if(it == headerIt)
-//			{
-//				break;
-//			}
-//
-//			//first line ignore
-//			if(!first)
-//			{
-//				auto itF = std::search(lineStartIt, it, colon.c_str(), colon.c_str() + colon.size());
-//				if (itF != it)
-//				{
-//					string name;
-//					name.resize(itF - lineStartIt);
-//					std::copy(lineStartIt, itF, name.begin());
-//
-//					string value;
-//					value.resize(it - (itF + 1));
-//					std::copy(itF + 1, it, value.begin());
-//
-//					sHeader.insert(multimap<string, string>::value_type(TC_Common::trim(name, " "),
-//					                                                    TC_Common::trim(value, " ")));
-//
-//				}
-//			}
-//			else
-//			{
-//				first = false;
-//			}
-//
-//			lineStartIt = it + sep.size();
-//		}
-//	}
+	/**
+	 * http头收齐没有
+	 */
+	bool isHeadComplete() const { return _headComplete; };
 
 	/**
 	 * 解析, 尽量避免内存copy, 提升效率
@@ -830,7 +777,7 @@ protected:
 	 * 获取版本
      * get version
 	 */
-	string  _version;
+	string  			_version;
 
     /**
      * http头部内容
@@ -843,6 +790,11 @@ protected:
      * Is it a chunk mode
      */
     bool                _bIsChunked;
+
+	/**
+	 * http header compelete
+	 */
+	bool 				_headComplete;
 };
 
 /********************* TC_HttpCookie***********************/

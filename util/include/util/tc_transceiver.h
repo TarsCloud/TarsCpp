@@ -110,7 +110,8 @@ public:
         CR_ACTIVE           = 9,    //主动调用close触发
         CR_DECONSTRUCTOR    = 10,   //析构
 	    CR_SSL_HANDSHAKE    = 11,   //ssl handshake错误
-    };
+		CR_PEER_CLOSE     	= 12,   //对端主动关闭连接
+	};
 
     /**
      * 鉴权状态
@@ -308,9 +309,9 @@ public:
 
     /*
      * 接受网络请求
-     * @return throw TC_Transceiver_Exception
+     * @return bool false: 对端关闭连接, true: 正常, throw TC_Transceiver_Exception
      */
-    virtual void doResponse() = 0;
+    virtual bool doResponse() = 0;
 
     /*
      * 获取文件描述符
@@ -349,6 +350,12 @@ public:
 	 */
 	inline const TC_Endpoint &getConnectEndpoint() const { return _proxyInfo? _proxyInfo->getEndpoint() : _ep; }
 
+	/**
+	 * 获取连接地址
+	 * @return
+	 */
+	inline TC_Endpoint &getConnectEndpoint() { return _proxyInfo? _proxyInfo->getEndpoint() : _ep; }
+
     /**
      * 端口描述
      */ 
@@ -358,9 +365,15 @@ public:
 	 * @brief is ipv6 socket or not
 	 * @return true if is ipv6
 	 */
-	inline bool isConnectIPv6() const  { return getConnectEndpoint().isIPv6(); }
+	inline bool isConnectIPv6() const  { return !isUnixLocal() && getConnectEndpoint().isIPv6(); }
 
-    /**
+	/**
+	 * is unix local
+	 * @return
+	 */
+	inline bool isUnixLocal() const  { return getConnectEndpoint().isUnixLocal(); }
+
+	/**
      * 设置连接超时时间(tcp下才有效)
      */
     void setConnTimeout(int connTimeout) { _connTimeout = connTimeout; }
@@ -649,7 +662,7 @@ public:
      * 处理返回，判断Recv BufferCache是否有完整的包
      * @return throw
      */
-	virtual void doResponse();
+	virtual bool doResponse();
 };
 
 
@@ -671,7 +684,7 @@ public:
      * 处理返回
      * @return throw 
      */
-	virtual void doResponse();
+	virtual bool doResponse();
 };
 
 //////////////////////////////////////////////////////////
@@ -714,7 +727,7 @@ public:
      * 处理返回，判断Recv BufferCache是否有完整的包
      * @return throw
      */
-	virtual void doResponse();
+	virtual bool doResponse();
 
 protected:
 };

@@ -273,7 +273,7 @@ protected:
     protected:
         shared_ptr<TC_ProxyInfo> onCreateCallback(TC_Transceiver* trans);
         std::shared_ptr<TC_OpenSSL> onOpensslCallback(TC_Transceiver* trans);
-        void onCloseCallback(TC_Transceiver* trans);
+        void onCloseCallback(TC_Transceiver* trans, TC_Transceiver::CloseReason reason, const string &err);
         void onConnectCallback(TC_Transceiver* trans);
         void onRequestCallback(TC_Transceiver* trans);
         TC_NetWorkBuffer::PACKET_TYPE onParserCallback(TC_NetWorkBuffer& buff, TC_Transceiver* trans);
