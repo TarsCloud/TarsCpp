@@ -866,3 +866,25 @@ TEST_F(UtilHttpTest, testIncrementDecode2)
 	ASSERT_TRUE(flag);
 	ASSERT_TRUE(rsp.getContent() == data);
 }
+
+
+TEST_F(UtilHttpTest, testIncrementDecode3)
+{
+	TC_HttpResponse rsp;
+
+	string data = "400 Bad Request: malformed Host header";
+	string s = "HTTP/1.1 400 Bad Request: malformed Host header\r\n";
+	s += "Content-Type: text/plain; charset=utf-8\r\n";
+	s += "Connection: close\r\n\r\n";
+	s += data;
+
+	TC_NetWorkBuffer buff(NULL);
+	buff.addBuffer(s);
+
+	bool flag = rsp.incrementDecode(buff);
+
+	LOG_CONSOLE_DEBUG << rsp.getContent() << endl;
+
+//	ASSERT_TRUE(flag);
+	ASSERT_TRUE(rsp.getContent() == data);
+}

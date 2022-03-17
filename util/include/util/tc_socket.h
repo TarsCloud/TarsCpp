@@ -552,16 +552,24 @@ public:
      */
     static TC_Socket::addr_type createSockAddr(const char *addr);
 
-    /**
-    * @brief 解析地址, 从字符串(ip或域名)端口, 解析到sockaddr_in结构.
-    *
-    * @param sAddr   字符串
-    * @param stAddr  地址
-    * @throws        TC_Socket_Exception
-    * @return
-    */
+	/**
+	 * create sock addr(support ipv4/ipv6/local)
+	 * @param ep
+	 * @return
+	 */
+	static TC_Socket::addr_type createSockAddr(const TC_Endpoint &ep);
+
+	/**
+	* @brief 解析地址, 从字符串(ip或域名)端口, 解析到sockaddr_in结构.
+	*
+	* @param sAddr   字符串
+	* @param stAddr  地址
+	* @throws        TC_Socket_Exception
+	* @return
+	*/
 	static void parseAddrWithPort(const string& host, int port, struct sockaddr_in& addr);
 	static void parseAddrWithPort(const string& host, int port, struct sockaddr_in6& addr);
+	static void parseUnixLocalAddr(const char* sPathName, struct sockaddr_un& addr);
 
 	/**
     * @brief 判断当前socket是否处于EAGAIN/WSAEWOULDBLOCK(异步send/recv函数返回值时判断)

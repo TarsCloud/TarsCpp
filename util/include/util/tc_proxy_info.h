@@ -97,6 +97,12 @@ public:
 	const TC_Endpoint & getEndpoint() const { return _ep; }
 
 	/**
+	 * 返回代理地址
+	 * @return
+	 */
+	TC_Endpoint & getEndpoint() { return _ep; }
+
+	/**
 	 * 是否成功
 	 * @return
 	 */
