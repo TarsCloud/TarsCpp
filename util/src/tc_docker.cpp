@@ -182,7 +182,7 @@ namespace tars
 			const vector<string> &commands,
 			const vector<string> &envs,
 			const map<string, string> &mounts,
-			const map<string, int> &ports,
+			const map<string, pair<string, int>> &ports,
 			const string &restartPolicy,
 			int maximumRetryCount,
 			const string &networkMode,
@@ -249,8 +249,8 @@ namespace tars
 				JsonValueArrayPtr hostPort = new JsonValueArray();
 
 				JsonValueObjPtr hObj = new JsonValueObj();
-				hObj->value["HostIp"] = new JsonValueString("0.0.0.0");
-				hObj->value["HostPort"] = new JsonValueString(TC_Common::tostr(e.second));
+				hObj->value["HostIp"] = new JsonValueString(e.second.first);
+				hObj->value["HostPort"] = new JsonValueString(TC_Common::tostr(e.second.second));
 
 				hostPort->push_back(hObj);
 

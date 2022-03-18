@@ -81,9 +81,9 @@ TEST_F(DockerTest, createAndStart)
 	map<string, string> mounts;
 	mounts["/"] = "/data";
 
-	map<string, int> ports;
-	ports["80/tcp"] = 80;
-	ports["8080/tcp"] = 8080;
+	map<string, pair<string, int>> ports;
+	ports["80/tcp"] = make_pair("0.0.0.0", 80);
+	ports["8080/tcp"] = make_pair("127.0.0.1", 8080);
 
 	vector<string> entrypoints;
 	entrypoints.push_back("sleep");
