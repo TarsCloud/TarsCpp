@@ -1290,8 +1290,8 @@ TC_EpollServer::BindAdapter::~BindAdapter()
 
 void TC_EpollServer::BindAdapter::bind()
 {
-	try
-	{
+	// try
+	// {
 
 		assert(!_s.isValid());
 
@@ -1338,13 +1338,13 @@ void TC_EpollServer::BindAdapter::bind()
 			_s.setNoCloseWait();
 		}
 		_s.setblock(false);
-	}
-	catch(exception &ex)
-	{
-		_s.close();
-		cerr << "bind:" << _ep.toString() << " error:" << ex.what() << endl;
-		throw ex;
-	}
+	// }
+	// catch(exception &ex)
+	// {
+	// 	_s.close();
+	// 	cerr << "bind:" << _ep.toString() << " error:" << ex.what() << endl;
+	// 	throw ex;
+	// }
 }
 
 void TC_EpollServer::BindAdapter::setNetThreads(const vector<NetThread*> &netThreads)
