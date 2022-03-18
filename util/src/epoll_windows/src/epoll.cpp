@@ -6,6 +6,7 @@
 #include <cassert>
 #include <mutex>
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -619,7 +620,7 @@ int epoll_wait(epoll_t port_handle, struct epoll_event *events, int maxevents, i
 
     /* Compute how much overlapped entries can be dequeued at most. */
     int tmp_count = ARRAY_COUNT(entries);
-    DWORD max_entries = min(tmp_count, maxevents);
+    DWORD max_entries = std::min(tmp_count, maxevents);
     ULONG count = 0;
 
     DWORD result = GetQueuedCompletionStatusEx(port_data->getHandle(), entries, max_entries, &count, gqcs_timeout, TRUE);

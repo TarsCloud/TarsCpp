@@ -569,8 +569,9 @@ public:
 	*/
 	static void parseAddrWithPort(const string& host, int port, struct sockaddr_in& addr);
 	static void parseAddrWithPort(const string& host, int port, struct sockaddr_in6& addr);
+#if !TARGET_PLATFORM_WINDOWS
 	static void parseUnixLocalAddr(const char* sPathName, struct sockaddr_un& addr);
-
+#endif
 	/**
     * @brief 判断当前socket是否处于EAGAIN/WSAEWOULDBLOCK(异步send/recv函数返回值时判断)
     *

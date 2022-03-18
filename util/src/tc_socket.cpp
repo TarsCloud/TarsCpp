@@ -374,13 +374,16 @@ TC_Socket::addr_type TC_Socket::createSockAddr(const char *str)
 TC_Socket::addr_type TC_Socket::createSockAddr(const TC_Endpoint &ep)
 {
 	TC_Socket::addr_type addr;
-
+#if !TARGET_PLATFORM_WINDOWS
 	if(ep.isUnixLocal())
 	{
 		addr.first.reset((sockaddr *) new sockaddr_un());
 		addr.second = sizeof(struct sockaddr_un);
 	}
-	else if (TC_Socket::addressIsIPv6(ep.getHost()))
+	else 
+#endif
+
+    if (TC_Socket::addressIsIPv6(ep.getHost()))
 	{
 		addr.first.reset( (sockaddr *)new sockaddr_in6());
 		addr.second = sizeof(struct sockaddr_in6);
@@ -408,12 +411,16 @@ void TC_Socket::parseAddrWithPort(const string& host, int port, struct sockaddr_
     }
 }
 
+#if !TARGET_PLATFORM_WINDOWS
+
 void TC_Socket::parseUnixLocalAddr(const char* sPathName, struct sockaddr_un& addr)
 {
 	memset(&addr, 0x00, sizeof(addr));
 	addr.sun_family = AF_LOCAL;
 	strncpy(addr.sun_path, sPathName, sizeof(addr.sun_path));
 }
+
+#endif
 
 void TC_Socket::parseAddrWithPort(const string& host, int port, struct sockaddr_in6& addr)
 {
