@@ -460,7 +460,7 @@ void TC_Socket::bind(const string &sServerAddr, int port)
     {
         bind(bindAddr, len);
     }
-    catch(const std::exception& e)
+    catch(TC_Socket_Exception & e)
     {
         std::cerr << e.what() << ", " << sServerAddr << ":" << port << endl;
         throw e;
