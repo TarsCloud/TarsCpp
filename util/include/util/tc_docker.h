@@ -99,7 +99,7 @@ public:
 	 * @param commands
 	 * @param envs
 	 * @param mounts: target: source
-	 * @param ports: <port>/<protocol>: hostPort
+	 * @param ports: <port>/<protocol>: <hostIp, hostPort>, 80/tcp:<127.0.0.1, 80>
 	 * @param restartPolicy: "" "no" "always" "unless-stopped" "on-failure"
 	 * @param maximumRetryCount: 最大启动次数 restartPolicy == "on-failure" 才有效
 	 * @param networkMode: bridge, host, none, and container:<name|id>
@@ -114,7 +114,7 @@ public:
 			const vector<string> &commands,
 			const vector<string> &envs,
 			const map<string, string> &mounts,
-			const map<string, int> &ports,
+			const map<string, pair<string, int>> &ports,
 			const string &restartPolicy,
 			int maximumRetryCount,
 			const string &networkMode,
