@@ -219,9 +219,8 @@ TEST_F(DockerTest, inspectImage)
 	TC_Docker docker;
 
 	docker.setDockerUnixLocal("/var/run/docker.sock");
-	docker.setAuthentication("ruanshudong", "", "");
 
-	bool succ = docker.pull("tarscloud/tars.nodejsbase:latest");
+	bool succ = docker.pull("docker.tarsyun.com/tarscloud/tars.nodejsbase:latest");
 
 	if(!succ)
 	{
@@ -231,9 +230,15 @@ TEST_F(DockerTest, inspectImage)
 	ASSERT_TRUE(succ);
 
 	{
-		bool succ = docker.inspectImage("tarscloud/tars.nodejsbase:latest");
+		bool succ = docker.inspectImage("docker.tarsyun.com/tarscloud/tars.nodejsbase:latest");
 		ASSERT_TRUE(succ);
 		LOG_CONSOLE_DEBUG << "inspectImage:" << succ << ", " << (succ ? docker.getResponseMessage() : docker.getErrMessage()) << endl;
+
+		JsonValueObjPtr oPtr = JsonValueObjPtr::dynamicCast(TC_Json::getValue(docker.getResponseMessage()));
+
+		string sha = JsonValueStringPtr::dynamicCast(oPtr->value["Id"])->value;
+
+		LOG_CONSOLE_DEBUG << sha << endl;
 	}
 
 }
