@@ -18,6 +18,7 @@
 #define TC_CPP_TRANSCEIVER_H
 
 #include <list>
+#include "util/tc_platform.h"
 #include "util/tc_network_buffer.h"
 #include "util/tc_clientsocket.h"
 #include "util/tc_epoller.h"
@@ -367,12 +368,22 @@ public:
 	 */
 	inline bool isConnectIPv6() const  { return !isUnixLocal() && getConnectEndpoint().isIPv6(); }
 
+#if !TARGET_PLATFORM_WINDOWS
+
 	/**
 	 * is unix local
 	 * @return
 	 */
 	inline bool isUnixLocal() const  { return getConnectEndpoint().isUnixLocal(); }
+#else
 
+	/**
+	 * is unix local
+	 * @return
+	 */
+	inline bool isUnixLocal() const  { return false; }
+
+#endif
 	/**
      * 设置连接超时时间(tcp下才有效)
      */

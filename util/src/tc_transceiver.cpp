@@ -287,11 +287,13 @@ namespace tars
 
 	void TC_Transceiver::parseConnectAddress()
 	{
+#if !TARGET_PLATFORM_WINDOWS
 		if(isUnixLocal())
 		{
 			TC_Socket::parseUnixLocalAddr(getConnectEndpoint().getHost().c_str(), *(sockaddr_un*)_serverAddr.first.get());
 		}
 		else
+#endif
 		{
 			if (isConnectIPv6())
 			{
