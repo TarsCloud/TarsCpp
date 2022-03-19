@@ -1274,8 +1274,8 @@ public:
 					break;
 				default:
 				{
-					char s[64];
-					snprintf(s, sizeof(s), "read 'Float' type mismatch, tag: %d, get type: %d, headTag: %d.", tag, headType, headTag);
+					char s[96];
+					snprintf(s, sizeof(s), "read 'Float' type mismatch, tag: %d, get type: %d, headTag: %d", tag, headType, headTag);
 					throw TarsDecodeMismatch(s);
 				}
 			}
@@ -1310,7 +1310,7 @@ public:
 					break;
 				default:
 				{
-					char s[64];
+					char s[96];
 					snprintf(s, sizeof(s), "read 'Double' type mismatch, tag: %d, get type: %d, headType: %d.", tag, headType,headTag);
 					throw TarsDecodeMismatch(s);
 				}
