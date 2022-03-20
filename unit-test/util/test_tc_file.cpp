@@ -3,6 +3,7 @@
 //
 
 #include "util/tc_file.h"
+#include "util/tc_config.h"
 #include "gtest/gtest.h"
 
 using namespace tars;
@@ -127,3 +128,25 @@ TEST_F(UtilFileTest, nameAndPath)
 	ASSERT_TRUE(TC_File::excludeFileExt("temp.gif") == "temp");
 }
 
+#define CONFIG "<tars> \r\n \
+<application>\r\n \
+<volumes>\r\n \
+/Volumes/MyData/centos/=/data\r\n \
+/Volumes/MyData/=/mnt/data\r\n \
+</volumes>\r\n\
+<ports>\r\n\
+8080/tcp=0.0.0.0:8080\r\n \
+8081/tcp=0.0.0.0:8081\r\n \
+</ports>\r\n \
+</application>\r\n \
+</tars>"
+
+TEST_F(UtilFileTest, config)
+{
+	TC_Config conf;
+	conf.parseString(CONFIG);
+
+	auto volumes = conf.getDomainKey("/tars/application/volumes");
+
+	ASSERT_TRUE(volumes.size() == 2);
+}
