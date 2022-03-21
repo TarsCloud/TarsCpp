@@ -1,3 +1,28 @@
+
+# v3.0.6 20220321
+
+### en
+
+- Add: test_tc_file add config unittest
+- Add: add tc_docker, docker api for tarsnode/tarsregistry use
+- Add: tc_http_async support unix socket(not work in windows)
+- Add: tc_http parsing supports scenarios where content-length does not exist
+- Fix: Tars.h compiler warning
+- Fix: single timer work cause memory leak in tc_timer
+- Fix: tc_socket bind, throw TC_Socket_Exception with ip port
+- Fix: tc_logger MAX_BUFFER_LENGTH -> 1M
+
+### cn
+
+- 添加: test_tc_file 添加了一个配置的测试用例
+- 添加: 添加 tc_docker, 聚合和docker api, 主要给tarsnode/tarsregistry使用
+- 添加: tc_http_async 支持了 unix socket(windows下不工作)
+- 添加: tc_http 解析支持了http头中content-length不存在的情况
+- 修复: Tars.h 修复了一个编译警告
+- 修复: tc_timer单任务仍然会导致内存泄露的问题
+- 修复: tc_socket调用bind的时, 抛出 TC_Socket_Exception 并附带了ip port
+- 修复: tc_logger MAX_BUFFER_LENGTH 调整为 1M
+
 # v3.0.5 20220301
 
 ### en
