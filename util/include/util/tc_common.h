@@ -363,6 +363,11 @@ public:
     * @return string 转换后的时间字符串
     */
     static string now2msstr();
+
+    /**
+     * @brief 毫秒时间转字符串描述
+     * @return string 转换后的时间字符串
+     */
     static string ms2str(int64_t ms);
     /**
     * @brief  时间转换成GMT字符串，GMT格式:Fri, 12 Jan 2001 18:18:18 GMT
@@ -1075,10 +1080,10 @@ namespace p
     template<>
     struct strto2<string>
     {
-        string operator()(const string &sStr)
-        {
-            return sStr;
-        }
+    	const string &operator()(const string &sStr)
+    	{
+    		return sStr;
+    	}
     };
 
 }
