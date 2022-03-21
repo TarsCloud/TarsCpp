@@ -420,9 +420,7 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 #endif
 }
 
-
 shared_ptr<TC_Port::SigInfo> TC_Port::_sigInfo = std::make_shared<TC_Port::SigInfo>();
-
 
 size_t TC_Port::registerSig(int sig, std::function<void()> callback)
 {
@@ -498,19 +496,15 @@ void TC_Port::registerSig(int sig)
 {
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 	signal(sig, TC_Port::sighandler);
-//    std::thread th(signal, sig, TC_Port::sighandler);
-//    th.detach();
 #else
 	SetConsoleCtrlHandler(TC_Port::HandlerRoutine, TRUE);
-//    std::thread th([] {SetConsoleCtrlHandler(TC_Port::HandlerRoutine, TRUE); });
-//	th.detach();
 #endif
 }
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 void TC_Port::sighandler( int sig_no )
 {
-	std::thread th([&]()
+	std::thread th([=]()
 				   {
 					   unordered_map<size_t, std::function<void()>> data;
 
@@ -540,7 +534,7 @@ void TC_Port::sighandler( int sig_no )
 #else
 BOOL WINAPI TC_Port::HandlerRoutine(DWORD dwCtrlType)
 {
-	std::thread th([&]()
+	std::thread th([=]()
 				   {
 					   unordered_map<size_t, std::function<void()>> data;
 
