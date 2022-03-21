@@ -192,7 +192,7 @@ protected:
 
 	string _dockerUrl = "$var$run$docker.sock:0";
 
-	string _dockerApiVersion = "v1.41";
+	string _dockerApiVersion = "v1.40";
 
 	string _responseMessage;
 
