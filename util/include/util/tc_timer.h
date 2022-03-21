@@ -195,11 +195,6 @@ protected:
                 shared_ptr<Func> p = wPtr.lock();
                 if(p)
 				{
-					{
-						std::unique_lock <std::mutex> lock(_mutex);
-						_tmpEvent.erase(p->_uniqueId);
-					}
-
 					if (this->exist(p->_uniqueId, true))
 					{
 						if (p->_cron.isset)
@@ -265,8 +260,6 @@ protected:
     MAP_EVENT   _mapEvent;      //id, 事件
 
     MAP_TIMER   _mapTimer;      //时间, 事件
-
-	MAP_EVENT   _tmpEvent;      //id, 事件
 
 	atomic_uint _increaseId = {0};
 	
