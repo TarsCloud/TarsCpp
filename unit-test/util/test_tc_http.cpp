@@ -881,7 +881,7 @@ TEST_F(UtilHttpTest, testIncrementDecode3)
 	TC_NetWorkBuffer buff(NULL);
 	buff.addBuffer(s);
 
-	bool flag = rsp.incrementDecode(buff);
+	rsp.incrementDecode(buff);
 
 	LOG_CONSOLE_DEBUG << rsp.getContent() << endl;
 

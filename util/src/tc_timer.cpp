@@ -140,6 +140,8 @@ int64_t TC_TimerBase::fireEvents(int64_t ms)
 
 				func = it->second;
 
+				_tmpEvent[it->first] = it->second;
+
 				_mapEvent.erase(it);
 			}
 		}

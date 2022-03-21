@@ -100,6 +100,7 @@ TEST_F(UtilTimerTest, testRepeatTask)
     TC_Common::msleep(1080);
 
 	//由于精度原因, 有一定误差
+	cout << tPtr->_data.size() << endl;
 	ASSERT_TRUE(tPtr->_data.size() >= 20);
 	ASSERT_TRUE(tPtr->_data.size() <= 21);
 
@@ -207,6 +208,7 @@ TEST_F(UtilTimerTest, testTimerRepeatMem)
 
     //注意timer有精度的问题, 精度只能到5ms, 所以这里有一定的误差!
 	int diff = pa->xxx - xxx;
+	cout << diff << endl;
 	ASSERT_TRUE(diff >= 19);
 	ASSERT_TRUE(diff <= 20);
 
