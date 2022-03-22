@@ -296,6 +296,7 @@ public:
              * @param recv
              */
             inline void push_back(const shared_ptr<RecvContext> &recv ) { _rbuffer.push_back(recv); }
+            inline void push_back(const deque<shared_ptr<RecvContext>> &recv ) { _rbuffer.push_back(recv); }
 
             /**
              * 在队列上等待
@@ -335,6 +336,7 @@ public:
          * @param recv
          */
         void insertRecvQueue(const shared_ptr<RecvContext> &recv);
+        void insertRecvQueue(const deque<shared_ptr<RecvContext>> &recv);
 
         /**
          * 等待在队列上
@@ -427,7 +429,7 @@ public:
         /**
          * wait time for queue
          */
-        int64_t     _iWaitTime = 10000;
+        int64_t     _iWaitTime = 3000;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -663,6 +665,7 @@ public:
         TC_NetWorkBuffer::PACKET_TYPE onParserCallback(TC_NetWorkBuffer& buff, TC_Transceiver *trans);
 
         std::shared_ptr<TC_OpenSSL> onOpensslCallback(TC_Transceiver* trans);
+        void onCompleteNetworkCallback(TC_Transceiver* trans);
 
         bool handleOutputImp(const shared_ptr<TC_Epoller::EpollInfo> &data);
         bool handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> &data);
@@ -727,6 +730,11 @@ public:
          * 还未发送的数据队列
          */ 
         list<shared_ptr<SendContext>> _messages;
+
+        /**
+         * 接收到数据
+         */ 
+        deque<shared_ptr<RecvContext>> _recv;
 
         /**
          * message队列中消息内存大小
@@ -1223,6 +1231,7 @@ public:
          * @param force 强制必须插入(无论是否过载, 比如close事件)
          */
         void insertRecvQueue(const shared_ptr<RecvContext> & recv, bool force = false);
+        void insertRecvQueue(const deque<shared_ptr<RecvContext>> & recv);
 
         /**
          * 接收队列的大小

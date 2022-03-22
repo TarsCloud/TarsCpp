@@ -34,6 +34,20 @@ void TC_TimerBase::clear()
 	_nextTimer = -1;
 }
 
+size_t TC_TimerBase::count()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	return _mapEvent.size();
+}
+
+size_t TC_TimerBase::repeatCount()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	return _repeatIds.size();
+}
+
 uint32_t TC_TimerBase::genUniqueId()
 {
 	uint32_t i = ++_increaseId;

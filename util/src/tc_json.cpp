@@ -641,6 +641,56 @@ bool TC_Json::isspace(char c)
 	return false;
 }
 
+// 两个json串合并
+string TC_Json::mergeJson(const string& json1, const string& json2)
+{
+	string ret;
+	mergeJson(json1, json2, ret);
+	return ret;
+}
+
+void TC_Json::mergeJson(const string& json1, const string& json2, string& jsonRet)
+{
+	JsonValuePtr p1 =TC_Json::getValue(json1);
+	JsonValuePtr p2 =TC_Json::getValue(json2);
+	if (p1->getType() != eJsonTypeObj || p2->getType() != eJsonTypeObj)
+	{
+		throw TC_Json_Exception("Error: mergeing json string must be two json object string");
+	}
+	vector<string> path;
+    mergeObj(p2, p1, path);
+	jsonRet = TC_Json::writeValue(p1);
+}
+
+void TC_Json::mergeObj(JsonValuePtr from, JsonValuePtr to, vector<string>& path)
+{
+	if (from->getType() != eJsonTypeObj)
+	{
+		JsonValuePtr tmp = to;
+		for (size_t i = 0; i < path.size() - 1; i++)
+		{
+			JsonValueObjPtr obj = JsonValueObjPtr::dynamicCast(tmp);
+			if (obj->value.find(path[i]) == obj->value.end())
+			{
+				JsonValuePtr p = new JsonValueObj();
+				obj->value[path[i]] = p;
+			}
+			tmp = obj->value[path[i]];
+		}
+		JsonValueObjPtr::dynamicCast(tmp)->value[path[path.size()-1]] = from;
+		path.pop_back();
+	}
+	else
+	{
+		JsonValueObjPtr fromObj = JsonValueObjPtr::dynamicCast(from);
+		for (auto it = fromObj->value.begin(); it != fromObj->value.end(); it++)
+		{
+			path.push_back(it->first);
+			mergeObj(it->second, to, path);
+		}
+	}
+}
+
 //////////////////////////////////////////////////////
 void TC_JsonWriteOstream::writeValue(const JsonValuePtr & p, ostream& ostr, bool withSpace)
 {

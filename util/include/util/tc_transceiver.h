@@ -153,12 +153,17 @@ public:
 	using onparser_callback = std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer&, TC_Transceiver*)> ;
 	//完整解析完一个包之后的回调
 	using oncompletepackage_callback = std::function<void(TC_Transceiver*)> ;
+    //完整一次网络解析之后回调(一般有多次解析onparser_callback 以及 oncompletepackage_callback 之后回调, 通常在业务层可以在这个函数中可以把解析的数据一次性写入到队列中)
+    using oncompletenetwork_callback = std::function<void(TC_Transceiver*)> ;
 	//cient侧: 发送鉴权包的回调, 业务层在回调里面组织鉴权包
 	using onclientsendauth_callback = std::function<shared_ptr<TC_NetWorkBuffer::Buffer>(TC_Transceiver*)> ;
     //client侧: 收到鉴权包的的回调, 业务层解包(注意返回PACKET_FULL, 表示鉴权成功)
 	using onclientverifyauth_callback = std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer &, TC_Transceiver*)> ;
     //server侧: 验证鉴权包并返回验证包的回调
 	using onserververifyauth_callback = std::function<pair<TC_NetWorkBuffer::PACKET_TYPE, shared_ptr<TC_NetWorkBuffer::Buffer>>(TC_NetWorkBuffer &, TC_Transceiver*)> ;
+
+    //网络层单次时间收发包最长时间(毫秒), 为了避免网络层一直在收包, 没机会发送包, 默认就1ms, 加速范文
+    static uint64_t LONG_NETWORK_TRANS_TIME;
 
     /**
      * 构造函数
@@ -178,13 +183,14 @@ public:
      * 初始化客户端的连接
      * 句柄是connect时创建的
      */
-    void initializeClient(const oncreate_callback &oncreate, 
-            const onclose_callback &onclose, 
-            const onconnect_callback &onconnect, 
-            const onrequest_callback &onrequest, 
-            const onparser_callback &onparser, 
-            const onopenssl_callback &onopenssl,
-            const oncompletepackage_callback &onfinish = oncompletepackage_callback());
+    void initializeClient(const oncreate_callback &oncreate,
+                          const onclose_callback &onclose,
+                          const onconnect_callback &onconnect,
+                          const onrequest_callback &onrequest,
+                          const onparser_callback &onparser,
+                          const onopenssl_callback &onopenssl,
+                          const oncompletepackage_callback &onfinish = oncompletepackage_callback(),
+                          const oncompletenetwork_callback &onfinishAll = oncompletenetwork_callback());
 
     /**
      *
@@ -195,7 +201,8 @@ public:
             const onrequest_callback &onrequest, 
             const onparser_callback &onparser, 
             const onopenssl_callback &onopenssl,
-            const oncompletepackage_callback &onfinish = oncompletepackage_callback());
+            const oncompletepackage_callback &onfinish = oncompletepackage_callback(),
+            const oncompletenetwork_callback &onfinishAll = oncompletenetwork_callback());
 
     /**
      * 设置绑定地址(对客户端有效, 服务端本身就是绑定的)
@@ -629,8 +636,10 @@ protected:
 
 	oncompletepackage_callback      _onCompletePackageCallback;
 
+    oncompletenetwork_callback      _onCompleteNetworkCallback;
+
     onclientsendauth_callback       _onClientSendAuthCallback;
-    
+
     onclientverifyauth_callback     _onClientVerifyAuthCallback;
 
     onserververifyauth_callback     _onServerVerifyAuthCallback;

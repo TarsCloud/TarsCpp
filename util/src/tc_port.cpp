@@ -17,8 +17,15 @@
 #include "util/tc_port.h"
 #include "util/tc_common.h"
 #include "util/tc_logger.h"
+#include "util/tc_file.h"
+#include "util/tc_platform.h"
 #include <thread>
 #include <string.h>
+
+#if TARGET_PLATFORM_LINUX 
+#include <sys/vfs.h>
+#include <sys/sysinfo.h>
+#endif
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 #include <signal.h>

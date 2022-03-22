@@ -320,7 +320,14 @@ public:
 	//Conversion of JSON string to JSON structure
 	static JsonValuePtr getValue(const string & str);
     static JsonValuePtr getValue(const vector<char>& buf);
+
+	// 两个json串合并
+	static string mergeJson(const string& json1, const string& json2);
+	static void mergeJson(const string& json1, const string& json2, string& jsonRet);
 private:
+
+	static void mergeObj(JsonValuePtr from, JsonValuePtr to, vector<string>& path);
+
 	//string 类型到json字符串
 	//string type to json string
 	static void writeString(const JsonValueStringPtr & p, string& ostr);

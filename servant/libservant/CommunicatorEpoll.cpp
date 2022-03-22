@@ -538,28 +538,25 @@ bool CommunicatorEpoll::handleNotify(const shared_ptr<TC_Epoller::EpollInfo> &da
 
     ReqMessage * msg = NULL;
 
-    size_t maxProcessCount = 0;
-
     try
     {
+        int64_t now = TNOWMS;
+
         while (pFDInfo->msgQueue->pop_front(msg))
         {
             msg->pObjectProxy->invoke(msg);
 
-            if(++maxProcessCount > 1000)
+            if(TNOWMS - now >= 1)
             {
                 //避免包太多的时候, 循环占用网路线程, 导致连接都建立不上, 一个包都无法发送出去
 				data->mod(EPOLLOUT);
 
-                TLOGTARS("[CommunicatorEpoll::handle max process count: " << maxProcessCount << ", fd:" << data->fd() << "]" << endl);
                 break;
             }
         }
 
         if (pFDInfo->msgQueue->empty() && pFDInfo->autoDestroy)
         {
-//			LOG_CONSOLE_DEBUG << "iSeq:" << pFDInfo->iSeq << ", fd:" << pFDInfo->notify.notifyFd() << endl;
-
             delete pFDInfo;
             return false;
         }

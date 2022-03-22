@@ -337,7 +337,11 @@ public:
                 }
                 if (flags.size() >= 2)
                 {
-                    maxLen = max(maxLen, TC_Common::strto<unsigned int>(flags[1]));
+                    // TODO(greatsong): std::max Win32下编译有问题, 添加NOMAXMIN宏不起作用
+                    //maxLen = std::max(maxLen, TC_Common::strto<unsigned int>(flags[1]));
+                    auto f = TC_Common::strto<unsigned int>(flags[1]);
+                    if (maxLen < f)
+                        maxLen = f;
                 }
             
                 // type = strtol(tid.substr(0, pos).c_str(), NULL, 16);

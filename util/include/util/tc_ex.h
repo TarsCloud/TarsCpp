@@ -22,8 +22,8 @@
 
 namespace tars
 {
-using namespace std;
 
+using namespace std;
 /////////////////////////////////////////////////
 /** 
 * @file  tc_ex.h 
