@@ -72,6 +72,18 @@ public:
     virtual ~TC_TimerBase();
 
     /**
+     * 事件总个数
+     * @return
+     */
+    size_t count();
+
+    /**
+     * 重复事件个数
+     * @return
+     */
+    size_t repeatCount();
+
+    /**
      * @brief 指定fireMillseconds时间执行
      * @param fireMillseconds, 触发时间(毫秒)
      * @return 返回事件Id
@@ -145,7 +157,7 @@ public:
 
     /**
      * 下一次定时器的时间
-     */ 
+     */
     int64_t nextTimer() const { return _nextTimer; }
 
     /**

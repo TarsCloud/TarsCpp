@@ -1054,20 +1054,11 @@ namespace p
         }
     };
 
+    //for enum
     template<typename D>
     struct strto2
     {
-    	D operator()(const string &sStr, typename std::enable_if<!std::is_enum<D>::value, void ***>::type dummy = 0)
-        {
-            istringstream sBuffer(sStr);
-            D t;
-
-            sBuffer >> t;
-
-            return t;
-        }
-
-        D operator()(const string &sStr, typename std::enable_if<std::is_enum<D>::value, void ***>::type dummy = 0)
+        D operator()(const string &sStr)
         {
     		istringstream sBuffer(sStr);
     		int i;
@@ -1075,10 +1066,27 @@ namespace p
 
     		return (D)i;
         }
+
     };
 
+    //for class
+    template<typename D>
+    struct strto3
+    {
+    	D operator()(const string &sStr)
+    	{
+    		istringstream sBuffer(sStr);
+    		D t;
+
+    		sBuffer >> t;
+
+    		return t;
+    	}
+    };
+
+	//for string
     template<>
-    struct strto2<string>
+    struct strto3<string>
     {
     	const string &operator()(const string &sStr)
     	{
@@ -1091,7 +1099,9 @@ namespace p
 template<typename T>
 T TC_Common::strto(const string &sStr)
 {
-    using strto_type = typename std::conditional<std::is_arithmetic<T>::value, p::strto1<T>, p::strto2<T>>::type;
+	using strto_enum_type = typename std::conditional<std::is_enum<T>::value, p::strto2<T>, p::strto3<T>>::type;
+
+	using strto_type = typename std::conditional<std::is_arithmetic<T>::value, p::strto1<T>, strto_enum_type>::type;
 
     return strto_type()(sStr);
 }

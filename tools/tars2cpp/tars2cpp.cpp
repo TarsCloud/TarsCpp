@@ -1636,17 +1636,17 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
 
     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
 
-    string routekey;
+//    string routekey;
 
     for(size_t i = 0; i < vParamDecl.size(); i++)
     {
         s << TAB << tostr(vParamDecl[i]->getTypeIdPtr()->getTypePtr()) << " "<< vParamDecl[i]->getTypeIdPtr()->getId()
                  << generateInitValue(vParamDecl[i]->getTypeIdPtr()) << ";" << endl;
-
-        if (routekey.empty() && vParamDecl[i]->isRouteKey())
-        {
-            routekey = vParamDecl[i]->getTypeIdPtr()->getId();
-        }
+//
+//        if (routekey.empty() && vParamDecl[i]->isRouteKey())
+//        {
+//            routekey = vParamDecl[i]->getTypeIdPtr()->getId();
+//        }
     }
 
 

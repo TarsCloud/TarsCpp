@@ -91,6 +91,31 @@ void TC_EpollServer::DataBuffer::insertRecvQueue(const shared_ptr<RecvContext> &
 	}
 }
 
+void TC_EpollServer::DataBuffer::insertRecvQueue(const deque<shared_ptr<RecvContext>> &recv)
+{
+	if (recv.empty())
+	{
+		return;
+	}
+
+	_iRecvBufferSize += recv.size();
+
+	getDataQueue(recv.back()->fd())->push_back(recv);
+
+	if (_schedulers[0] != NULL)
+	{
+		//存在调度器, 处于协程中
+		if (isQueueMode())
+		{
+			_schedulers[index(recv.back()->fd())]->notify();
+		}
+		else
+		{
+			_schedulers[index(rand())]->notify();
+		}
+	}
+}
+
 bool TC_EpollServer::DataBuffer::wait(uint32_t handleIndex)
 {
 	return getDataQueue(handleIndex)->wait(_iWaitTime);
@@ -527,9 +552,11 @@ void TC_EpollServer::Connection::initialize(TC_Epoller *epoller, unsigned int ui
 #endif
 
 	_trans->initializeServer(std::bind(&Connection::onCloseCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-	                         std::bind(&Connection::onRequestCallback, this, std::placeholders::_1),
-	                         std::bind(&Connection::onParserCallback, this, std::placeholders::_1, std::placeholders::_2),
-	                         std::bind(&Connection::onOpensslCallback, this, std::placeholders::_1));
+							 std::bind(&Connection::onRequestCallback, this, std::placeholders::_1),
+							 std::bind(&Connection::onParserCallback, this, std::placeholders::_1, std::placeholders::_2),
+							 std::bind(&Connection::onOpensslCallback, this, std::placeholders::_1),
+							 TC_Transceiver::oncompletepackage_callback(),
+							 std::bind(&Connection::onCompleteNetworkCallback, this, std::placeholders::_1));
 
 	_trans->setServerAuthCallback(_pBindAdapter->_onVerifyCallback);
 
@@ -717,6 +744,7 @@ TC_NetWorkBuffer::PACKET_TYPE TC_EpollServer::Connection::onParserCallback(TC_Ne
 		}
 	}
 
+	rbuf.setConnection(this);
 
 	vector<char> ro;
 
@@ -731,11 +759,22 @@ TC_NetWorkBuffer::PACKET_TYPE TC_EpollServer::Connection::onParserCallback(TC_Ne
 		//收到完整的包才算
 		this->_bEmptyConn = false;
 
+		_recv.push_back(recv);
 		//收到完整包
-		insertRecvQueue(recv);
+		// insertRecvQueue(recv);
 	}
 
 	return ret;
+}
+
+void TC_EpollServer::Connection::onCompleteNetworkCallback(TC_Transceiver *trans)
+{
+	_pBindAdapter->insertRecvQueue(_recv);
+
+	//收到完整包
+	// insertRecvQueue(_recv);
+
+	_recv.clear();
 }
 
 int TC_EpollServer::Connection::sendBufferDirect(const char* buff, size_t length)
@@ -1457,6 +1496,29 @@ void TC_EpollServer::BindAdapter::insertRecvQueue(const shared_ptr<RecvContext> 
 	else if (iRet == -1) //超过队列长度4/5，需要进行overload处理
 	{
 		recv->setOverload();
+
+		_dataBuffer->insertRecvQueue(recv);
+	}
+	else //接受队列满，需要丢弃
+	{
+		_epollServer->error("[BindAdapter::insertRecvQueue] overload discard package");
+	}
+}
+
+void TC_EpollServer::BindAdapter::insertRecvQueue(const deque<shared_ptr<RecvContext>> &recv)
+{
+	int iRet = isOverloadorDiscard();
+
+	if (iRet == 0) //未过载
+	{
+		_dataBuffer->insertRecvQueue(recv);
+	}
+	else if (iRet == -1) //超过队列长度4/5，需要进行overload处理
+	{
+		for(auto r : recv)
+		{
+			r->setOverload();
+		}
 
 		_dataBuffer->insertRecvQueue(recv);
 	}

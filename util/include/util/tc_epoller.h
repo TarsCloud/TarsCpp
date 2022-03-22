@@ -94,13 +94,13 @@ public:
 		 * 句柄
 		 * @return
 		 */
-		inline int fd() { return _fd; }
+		inline int fd() const { return _fd; }
 
 		/**
 		 * 是否有效
 		 * @return
 		 */
-		inline bool valid() { return _fd != INVALID_SOCKET; }
+		inline bool valid() const { return _fd != INVALID_SOCKET; }
 
 		/**
 		 * 设置cookie和析构器, 可以在EpollInfo析构时调用

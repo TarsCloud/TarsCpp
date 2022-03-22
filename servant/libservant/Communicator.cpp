@@ -709,20 +709,21 @@ void Communicator::terminate()
 
 void Communicator::pushAsyncThreadQueue(ReqMessage * msg)
 {
-	if(msg->pObjectProxy->getRootServantProxy()->_callback) {
-		ReqMessagePtr msgPtr = msg;
-
-		msg->pObjectProxy->getRootServantProxy()->_callback(msgPtr);
-	}
-    else if (msg->pObjectProxy->getRootServantProxy()->_callbackHash)
+    if (msg->pObjectProxy->getRootServantProxy()->_callback)
+    {
+        ReqMessagePtr msgPtr = msg;
+        msg->pObjectProxy->getRootServantProxy()->_callback(msgPtr);
+    }
+    else if (msg->pObjectProxy->getRootServantProxy()->_callbackHash && msg->adapter )
     {
         //先不考虑每个线程队列数目不一致的情况
-        _asyncThread[((uint32_t)msg->adapter->trans()->fd()) % _asyncThreadNum]->push_back(msg);
+        _asyncThread[((uint32_t) msg->adapter->trans()->fd()) % _asyncThreadNum]->push_back(msg);
     }
-	else {
-		//先不考虑每个线程队列数目不一致的情况
-		_asyncThread[(_asyncSeq++) % _asyncThreadNum]->push_back(msg);
-	}
+    else
+    {
+        //先不考虑每个线程队列数目不一致的情况
+        _asyncThread[(_asyncSeq++) % _asyncThreadNum]->push_back(msg);
+    }
 }
 
 void Communicator::doStat()

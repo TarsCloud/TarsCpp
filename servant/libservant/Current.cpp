@@ -58,7 +58,7 @@ Current::~Current()
 const string &Current::getHostName() const
 {
 	auto it = _request.context.find("node_name");
-	if(it != _request.context.end())
+	if(it != _request.context.end() && !(it->second.empty()) )
 	{
 		return it->second;
 	}

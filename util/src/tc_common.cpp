@@ -1018,7 +1018,6 @@ void TC_Common::getRandomHexChars(char *p, unsigned int len)
 
 }
 
-
 #endif
 
 string TC_Common::nextDate(const string &sDate)

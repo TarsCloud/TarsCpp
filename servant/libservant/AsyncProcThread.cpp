@@ -119,15 +119,10 @@ void AsyncProcThread::callback(ReqMessage * msg)
 	pServantProxyThreadData->_data._dyeing  = msg->data._dyeing;
 	pServantProxyThreadData->_data._dyeingKey = msg->data._dyeingKey;
 	pServantProxyThreadData->_data._cookie = msg->data._cookie;
-//=======
-//	pServantProxyThreadData->_dyeing  = msg->bDyeing;
-//	pServantProxyThreadData->_dyeingKey = msg->sDyeingKey;
 
 	pServantProxyThreadData->_traceCall = msg->bTraceCall;
 	pServantProxyThreadData->initTrace(msg->sTraceKey);
 
-//	pServantProxyThreadData->_cookie = msg->cookie;
-//>>>>>>> origin/delay
 
 	if(msg->adapter)
 	{
