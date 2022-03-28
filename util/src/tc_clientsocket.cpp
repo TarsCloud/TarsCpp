@@ -261,7 +261,7 @@ vector<string> TC_Endpoint::sepEndpoint(const string& sEndpoints)
 	vector<string>  vEndpoints;
 	bool flag = false;
 	string::size_type startPos = 0;
-	string::size_type sepPos = 0;
+	string::size_type sepPos = string::npos;
 	for(string::size_type pos = 0; pos < sEndpoints.size(); pos++)
 	{
 		if(sEndpoints[pos] == ':' && !flag )
@@ -281,7 +281,8 @@ vector<string> TC_Endpoint::sepEndpoint(const string& sEndpoints)
 			   || TC_Port::strncasecmp("ssl", (sEndpoints.c_str() + pos), 3) == 0)
 			{
 				string ep = TC_Common::trim(string(sEndpoints.c_str() + startPos, sepPos - startPos));
-				if(!ep.empty()) {
+				if(!ep.empty())
+				{
 					vEndpoints.push_back(ep);
 				}
 				startPos = pos;
@@ -291,7 +292,7 @@ vector<string> TC_Endpoint::sepEndpoint(const string& sEndpoints)
 		}
 	}
 
-	string ep = sEndpoints.substr(startPos);
+	string ep = sEndpoints.substr(startPos, sepPos-startPos);
 
 	if(!ep.empty()) {
 		vEndpoints.push_back(ep);
