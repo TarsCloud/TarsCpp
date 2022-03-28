@@ -1,4 +1,22 @@
 
+# v3.0.7 20220328
+
+### en
+
+- Add: tc_json adds the function of merge
+- Fix: tc_endpoint sepEndpoint bug
+- Fix:  there is no business interface callback if there is no available node during asynchronous call
+- Optimize: In the service model, after receiving data, it is inserted into the queue in batch
+- Optimize: the time occupation when parsing the protocol at the network layer, and release the network thread every 1ms to reduce the delay
+
+### cn
+
+- 添加: tc_json 添加merge函数
+- 修复: tc_endpoint sepEndpoint bug
+- 修复: 异步调用模式下, 如果没有活跃的节点, 导致回调丢失的问题
+- 优化: 在服务模型中, 接收数据后, 批量插入队列
+- 优化: 网络层延时控制在1ms就释放, 降低服务的延时
+
 # v3.0.6 20220321
 
 ### en
