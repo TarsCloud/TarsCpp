@@ -222,7 +222,7 @@ if (TARS_SSL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND nmake
-                INSTALL_COMMAND nmake install
+                INSTALL_COMMAND nmake install_sw
                 URL_MD5 ac0d4387f3ba0ad741b0580dd45f6ff3
                 )
     else ()
@@ -238,6 +238,7 @@ if (TARS_SSL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
+                INSTALL_COMMAND make install_sw
                 URL_MD5 ac0d4387f3ba0ad741b0580dd45f6ff3
                 )
 
