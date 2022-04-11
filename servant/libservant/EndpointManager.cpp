@@ -739,16 +739,18 @@ void EndpointManager::onUpdateOutter()
 
 void EndpointManager::updateEndpointsOutter(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive)
 {
-//	LOG_CONSOLE_DEBUG << this->_objectProxy << ", " << active.begin()->desc() << endl;
-	//创新新对象, 避免线程冲突
-    _outterUpdate = std::make_shared<OutterUpdate>();
-    _outterUpdate->active    = active;
-    _outterUpdate->inactive  = inactive;
+    // LOG_CONSOLE_DEBUG << this->_objectProxy << ", " << active.begin()->desc() << endl;
+    //创新新对象, 避免线程冲突
+    shared_ptr<OutterUpdate> outterUpdate = std::make_shared<OutterUpdate>();
+    outterUpdate->active    = active;
+    outterUpdate->inactive  = inactive;
+
+    _outterUpdate = outterUpdate;
 
     //更新时间
-	_refreshTime = TNOWMS + _refreshInterval;
+    _refreshTime = TNOWMS + _refreshInterval;
 
-//	updateEndpoints(active, inactive);
+    // updateEndpoints(active, inactive);
 }
 
 void EndpointManager::updateEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive)
