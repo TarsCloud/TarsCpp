@@ -741,14 +741,14 @@ void EndpointManager::updateEndpointsOutter(const set<EndpointInfo> & active, co
 {
 //	LOG_CONSOLE_DEBUG << this->_objectProxy << ", " << active.begin()->desc() << endl;
 	//创新新对象, 避免线程冲突
-    _outterUpdate = std::make_shared<OutterUpdate>();
-    _outterUpdate->active    = active;
-    _outterUpdate->inactive  = inactive;
+    shared_ptr<OutterUpdate> outterUpdate = std::make_shared<OutterUpdate>();
+	outterUpdate->active    = active;
+	outterUpdate->inactive  = inactive;
 
     //更新时间
 	_refreshTime = TNOWMS + _refreshInterval;
 
-//	updateEndpoints(active, inactive);
+	_outterUpdate = outterUpdate;
 }
 
 void EndpointManager::updateEndpoints(const set<EndpointInfo> & active, const set<EndpointInfo> & inactive)

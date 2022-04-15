@@ -820,7 +820,7 @@ int TC_EpollServer::Connection::checkFlow(TC_NetWorkBuffer& sendBuffer, size_t l
 //	且每个检查点, 积压长度都增加或者连续3次发送buffer字节小于1k, 就关闭连接, 主要避免极端情况
 
 	size_t iBackPacketBuffLimit = _pBindAdapter->getBackPacketBuffLimit();
-	if((_messageSize + sendBuffer.getBufferLength()) > iBackPacketBuffLimit)
+	if(iBackPacketBuffLimit > 0 && (_messageSize + sendBuffer.getBufferLength()) > iBackPacketBuffLimit)
 	{
 		if(_accumulateBufferSize == 0)
 		{
