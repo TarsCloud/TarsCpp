@@ -73,6 +73,19 @@ public:
 
     	return jm;
     }
+
+	JsonValueArrayPtr  createArray()
+	{
+		JsonValueArrayPtr pPtr = new JsonValueArray();
+
+		pPtr->value.push_back(new JsonValueString("abc"));
+		pPtr->value.push_back(new JsonValueBoolean(true));
+		pPtr->value.push_back(new JsonValueBoolean(false));
+		pPtr->value.push_back(new JsonValueNum((int64_t)10, true));
+		pPtr->value.push_back(new JsonValueNum(11.f, false));
+
+		return pPtr;
+	}
 };
 
 TEST_F(JsonTest, json)
@@ -121,4 +134,25 @@ TEST_F(JsonTest, jsonMap)
 
 	cout << "json2:" << jMap2.writeToJsonString() << endl;
 	ASSERT_TRUE(jMap == jMap2);
+}
+
+TEST_F(JsonTest, find)
+{
+	JsonValueArrayPtr aPtr = createArray();
+
+	ASSERT_TRUE(aPtr->find(tars::eJsonTypeNum, "0") == aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(tars::eJsonTypeNum, "10") != aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(tars::eJsonTypeNum, "11.f") != aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(tars::eJsonTypeBoolean, "true") != aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(tars::eJsonTypeBoolean, "false") != aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(tars::eJsonTypeString, "abc") != aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(tars::eJsonTypeString, "def") == aPtr->value.end());
+
+	ASSERT_TRUE(aPtr->find(new JsonValueString("abc")) != aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(new JsonValueString("def")) == aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(new JsonValueNum((int64_t)10, true)) != aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(new JsonValueNum(11.f, false)) != aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(new JsonValueNum(0., false)) == aPtr->value.end());
+	ASSERT_TRUE(aPtr->find(new JsonValueBoolean(false)) != aPtr->value.end());
+//	ASSERT_TRUE(aPtr->find(new JsonValueBoolean(true)) != aPtr->value.end());
 }
