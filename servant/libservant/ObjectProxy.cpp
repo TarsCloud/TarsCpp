@@ -75,6 +75,8 @@ void ObjectProxy::initialize(bool rootServant)
     _endpointManger.reset(new EndpointManager(this, _communicatorEpoll->getCommunicator(), _communicatorEpoll->isFirstNetThread()));
 
     _endpointManger->init(_sObjectProxyName, _invokeSetId, rootServant);
+
+	_hasInitialize = true;
 }
 
 const vector<AdapterProxy*> & ObjectProxy::getAdapters()
@@ -105,49 +107,6 @@ int ObjectProxy::loadLocator()
 
     return 0;
 }
-
-//void ObjectProxy::setPushCallbacks(const ServantProxyCallbackPtr& cb)
-//{
-//    _pushCallback = cb;
-//}
-//
-//ServantProxyCallbackPtr ObjectProxy::getPushCallback()
-//{
-//    return _pushCallback;
-//}
-//
-//void ObjectProxy::setProxyProtocol(const ProxyProtocol& protocol)
-//{
-//    if(_hasSetProtocol)
-//    {
-//        return ;
-//    }
-//
-//    _hasSetProtocol = true;
-//    _proxyProtocol  = protocol;
-//}
-//
-//ProxyProtocol& ObjectProxy::getProxyProtocol()
-//{
-//    return _proxyProtocol;
-//}
-//
-//void ObjectProxy::setSocketOpt(int level, int optname, const void *optval, SOCKET_LEN_TYPE optlen)
-//{
-//    SocketOpt socketOpt;
-//
-//    socketOpt.level        = level;
-//    socketOpt.optname = optname;
-//    socketOpt.optval     = optval;
-//    socketOpt.optlen     = optlen;
-//
-//    _socketOpts.push_back(socketOpt);
-//}
-//
-//vector<SocketOpt>& ObjectProxy::getSocketOpt()
-//{
-//    return _socketOpts;
-//}
 
 void ObjectProxy::invoke(ReqMessage * msg)
 {
@@ -251,7 +210,9 @@ void ObjectProxy::onNotifyEndpoints(const set<EndpointInfo> & active,const set<E
 //主控查询到地址后过来的
 void ObjectProxy::doInvoke()
 {
-    TLOGTARS("[ObjectProxy::doInvoke, objname:" << _name << ", begin...]" << endl);
+	assert(this->getCommunicatorEpoll()->getThreadId() == this_thread::get_id());
+
+	TLOGTARS("[ObjectProxy::doInvoke, objname:" << _name << ", begin...]" << endl);
 
     for(auto it = _reqTimeoutQueue.begin(); it != _reqTimeoutQueue.end(); ++it)
 	{
@@ -353,7 +314,13 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 
 void ObjectProxy::doTimeout()
 {
-    const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+	if(!_hasInitialize)
+	{
+		return;
+	}
+	assert(this->getCommunicatorEpoll()->getThreadId() == this_thread::get_id());
+
+	const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
 
     for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
     {
@@ -366,8 +333,6 @@ void ObjectProxy::doTimeout()
     ReqMessage * reqInfo = NULL;
     while(_reqTimeoutQueue.timeout(reqInfo))
     {
-//        TLOGERROR("[ObjectProxy::doTimeout, objname:" << _name << ", queue timeout error]" << endl);
-
         reqInfo->response->iRet = TARSINVOKETIMEOUT;
 
         doInvokeException(reqInfo);
@@ -376,7 +341,13 @@ void ObjectProxy::doTimeout()
 
 void ObjectProxy::doKeepAlive()
 {
-    const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+	if(!_hasInitialize)
+	{
+		return;
+	}
+	assert(this->getCommunicatorEpoll()->getThreadId() == this_thread::get_id());
+
+	const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
 
     for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
     {
@@ -389,7 +360,13 @@ void ObjectProxy::doKeepAlive()
 
 void ObjectProxy::mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg)
 {
-    const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+	if(!_hasInitialize)
+	{
+		return;
+	}
+	assert(this->getCommunicatorEpoll()->getThreadId() == this_thread::get_id());
+
+	const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
     for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
     {
         if(vAdapterProxy[iAdapter] != NULL)
@@ -401,6 +378,12 @@ void ObjectProxy::mergeStat(map<StatMicMsgHead, StatMicMsgBody> & mStatMicMsg)
 
 void ObjectProxy::onSetInactive(const EndpointInfo& ep)
 {
+	if(!_hasInitialize)
+	{
+		return;
+	}
+	assert(this->getCommunicatorEpoll()->getThreadId() == this_thread::get_id());
+
 	const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
 	for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
 	{
