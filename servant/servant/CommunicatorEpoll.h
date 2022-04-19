@@ -221,6 +221,12 @@ public:
      */
 	FDInfo** getNotify() { return _notify; }
 
+	/**
+	 * 获取线程ID
+	 * @return
+	 */
+	const std::thread::id &getThreadId() const { return _threadId; }
+
 protected:
 
 	/**

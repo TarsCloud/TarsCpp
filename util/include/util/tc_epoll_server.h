@@ -312,6 +312,8 @@ public:
              */
             inline bool pop_front(shared_ptr<RecvContext> &data) { return _rbuffer.pop_front(data, 0, false); }
 
+			inline size_t size(){ return _rbuffer.size(); }
+
         protected:
             /**
              * 接收的数据队列
@@ -363,6 +365,14 @@ public:
          * 启用队列模式
          */
         inline void enableQueueMode() { _queueMode = true; }
+
+		/**
+		* handleIndex相应的DataQueue的大小
+		* @param handleIndex
+		* @param data
+		* @return
+		*/
+		size_t size(uint32_t handleIndex){ return getDataQueue(handleIndex)->size(); }
 
         /**
          * 接收buffer的大小

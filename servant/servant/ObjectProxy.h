@@ -259,6 +259,11 @@ private:
      * ServantProxy
      */
     ServantProxy *                        _servantProxy = NULL;
+
+	/**
+	 * 是否完成初始化
+	 */
+	bool 								  _hasInitialize = false;
 };
 ///////////////////////////////////////////////////////////////////////////////////
 }
