@@ -586,7 +586,7 @@ int StatReport::reportPropMsg()
                 if (_propertyPrx)
                 {
                     TLOGTARS("[StatReport::reportPropMsg send size:" << mTemp.size() << "]" << endl);
-                    _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL, mTemp);
+                    _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL, mTemp, ServerConfig::Context);
                 }
                 iLen = iTemLen;
                 mTemp.clear();
@@ -598,7 +598,7 @@ int StatReport::reportPropMsg()
             if (_propertyPrx)
             {
                 TLOGTARS("[StatReport::reportPropMsg send size:" << mTemp.size() << "]" << endl);
-                _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL, mTemp);
+                _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL, mTemp, ServerConfig::Context);
             }
         }
         return 0;

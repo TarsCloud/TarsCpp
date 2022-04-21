@@ -87,7 +87,7 @@ void RemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
             info.sMessage  = sMessage;
             info.eLevel    = level;
             info.sNodeName = _nodeName;
-            _notifyPrx->async_reportNotifyInfo(NULL, info);
+            _notifyPrx->async_reportNotifyInfo(NULL, info, ServerConfig::Context);
         }
     }
     catch(exception &ex)
@@ -113,7 +113,7 @@ void RemoteNotify::report(const string &sMessage, const string & app, const stri
             info.sSet      = "";
             info.sMessage  = sMessage;
             info.sNodeName = sNodeName;
-            _notifyPrx->async_reportNotifyInfo(NULL, info);
+            _notifyPrx->async_reportNotifyInfo(NULL, info, ServerConfig::Context);
         }
     }
     catch(exception &ex)
