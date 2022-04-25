@@ -681,6 +681,7 @@ void EndpointManager::onUpdateOutter()
 //	LOG_CONSOLE_DEBUG << this->_objectProxy << ", valid:" << _valid << ", " << _outterUpdate.get() << endl;
 	assert(this->_objectProxy->getCommunicatorEpoll()->getThreadId() == this_thread::get_id());
 
+    lock_guard<mutex> l(_outterLocker);
     if(_outterUpdate)
     {
 		shared_ptr<OutterUpdate> outterUpdate = _outterUpdate;
@@ -704,6 +705,7 @@ void EndpointManager::updateEndpointsOutter(const set<EndpointInfo> & active, co
     //更新时间
 	_refreshTime = TNOWMS + _refreshInterval;
 
+    lock_guard<mutex> l(_outterLocker);
 	_outterUpdate = outterUpdate;
 }
 

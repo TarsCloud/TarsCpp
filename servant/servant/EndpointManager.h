@@ -562,6 +562,7 @@ private:
         set<EndpointInfo> inactive;
     };
 
+    mutex _outterLocker;
     shared_ptr<OutterUpdate>    _outterUpdate;
 
 };
