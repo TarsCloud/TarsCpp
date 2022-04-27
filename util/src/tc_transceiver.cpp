@@ -85,8 +85,8 @@ bool TC_Transceiver::doConnect(int fd, const struct sockaddr* addr, socklen_t le
 
 //	LOG_CONSOLE_DEBUG << bConnected << endl;
 
-		return bConnected;
-	}
+	return bConnected;
+}
 
 TC_Transceiver::TC_Transceiver(TC_Epoller* epoller, const TC_Endpoint& ep)
 		: _epoller(epoller), _ep(ep), _desc(ep.toString()), _fd(-1), _connStatus(eUnconnected), _sendBuffer(this),

@@ -23,6 +23,14 @@ namespace tars
 
 TC_RollLogger __global_logger_debug__;
 
+static int init_global_debug_log()
+{
+    __global_logger_debug__.modFlag(__global_logger_debug__.HAS_MTIME);
+    return 0;
+    
+}
+static int __global_logger_debug_init__ = init_global_debug_log();
+
 bool TC_LoggerRoll::_bDyeingFlag = false;
 TC_SpinLock TC_LoggerRoll::_mutexDyeing;
 unordered_map<size_t, string>  TC_LoggerRoll::_mapThreadID;

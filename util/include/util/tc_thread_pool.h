@@ -293,7 +293,9 @@ public:
             throw TC_ThreadPool_Exception("[TC_ThreadPoolHash::start] no worker thread!");
         }
     }
-
+    
+    TC_ThreadPool* getThread(size_t index);
+    size_t size() { return _pools.size(); }
 protected:
     TC_ThreadPool* selectThread(const string& hashkey);
 

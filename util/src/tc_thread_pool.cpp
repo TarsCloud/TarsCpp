@@ -191,6 +191,15 @@ void TC_ThreadPoolHash::init(size_t num)
     }
 }
 
+TC_ThreadPool* TC_ThreadPoolHash::getThread(size_t index)
+{
+    if (_pools.empty() || (index + 1) > _pools.size())
+    {
+        return nullptr;
+    }
+    return _pools[index];
+}
+
 TC_ThreadPool* TC_ThreadPoolHash::selectThread(const string& hashkey)
 {
     if (_pools.empty())
