@@ -1,4 +1,4 @@
-# v3.0.8 20220425
+# v3.0.8 20220427
 
 ### en
 
@@ -8,7 +8,8 @@
 - Add: tc_json JsonValueArray add `find` func
 - Optimize: compiler not install openssl docs
 - Optimize: thread process may delay in epoll_server NET_THREAD_MERGE_HANDLES_THREAD mode
-
+- Add: TC_ThreadPoolHash::getThread 
+- Add: LOG_CONSOLE_DEBUG add millsecond time output
 ### cn
 
 - 修复: 修复 EndpointManager updateOutter 并发导致的 crash
@@ -17,6 +18,8 @@
 - Add: tc_json JsonValueArray 添加 `find` 函数
 - 优化: 编译 openssl 时, 不安装 docy
 - 优化: NET_THREAD_MERGE_HANDLES_THREAD 模式下可能的延时问题
+- 添加: TC_ThreadPoolHash::getThread
+- 添加: LOG_CONSOLE_DEBUG 调整为毫秒输出, 方便调试
 
 # v3.0.7 20220328
 
