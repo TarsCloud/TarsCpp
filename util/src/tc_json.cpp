@@ -766,17 +766,17 @@ bool TC_Json::isspace(char c)
 }
 
 // 两个json串合并
-string TC_Json::mergeJson(const string& json1, const string& json2)
+string TC_Json::mergeJson(const string& jsonLow, const string& jsonHigh)
 {
 	string ret;
-	mergeJson(json1, json2, ret);
+	mergeJson(jsonLow, jsonHigh, ret);
 	return ret;
 }
 
-void TC_Json::mergeJson(const string& json1, const string& json2, string& jsonRet)
+void TC_Json::mergeJson(const string& jsonLow, const string& jsonHigh, string& jsonRet)
 {
-	JsonValuePtr p1 =TC_Json::getValue(json1);
-	JsonValuePtr p2 =TC_Json::getValue(json2);
+	JsonValuePtr p1 =TC_Json::getValue(jsonLow);
+	JsonValuePtr p2 =TC_Json::getValue(jsonHigh);
 	if (p1->getType() != eJsonTypeObj || p2->getType() != eJsonTypeObj)
 	{
 		throw TC_Json_Exception("Error: mergeing json string must be two json object string");
