@@ -1934,7 +1934,7 @@ namespace tars
 
 			const char *line    = p;
 
-			const char *lineEnd = TC_Port::strstr(line, "\r\n");
+			const char *lineEnd = strstr(line, "\r\n");
 			if (lineEnd != NULL)
 			{
 				p = lineEnd + 2;
