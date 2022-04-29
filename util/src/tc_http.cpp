@@ -1963,7 +1963,7 @@ namespace tars
 			const char * pCur = header + 4;
 			while (true)
 			{
-				p  = strnstr(pCur, "\r\n", remain_len);
+				p  = TC_Port::strnstr(pCur, "\r\n", remain_len);
 
 //	        p = strstr(pCur , "\r\n");
 				if ( p == NULL )
