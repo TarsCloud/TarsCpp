@@ -8,25 +8,25 @@
 namespace tars
 {
 
-	const char* strnstr(const char* s1, const char* s2, int pos1)
-	{
-		int l1, l2;
-
-		l2 = strlen(s2);
-		if (!l2)
-			return (char *)s1;
-		l1 = strlen(s1);
-
-		pos1 = (pos1 > l1)?l1:pos1;
-
-		while (pos1 >= l2) {
-			pos1--;
-			if (!memcmp(s1, s2, l2))
-				return (char *)s1;
-			s1++;
-		}
-		return NULL;
-	}
+//	const char* strnstr(const char* s1, const char* s2, int pos1)
+//	{
+//		int l1, l2;
+//
+//		l2 = strlen(s2);
+//		if (!l2)
+//			return (char *)s1;
+//		l1 = strlen(s1);
+//
+//		pos1 = (pos1 > l1)?l1:pos1;
+//
+//		while (pos1 >= l2) {
+//			pos1--;
+//			if (!memcmp(s1, s2, l2))
+//				return (char *)s1;
+//			s1++;
+//		}
+//		return NULL;
+//	}
 
 	unordered_map<string, int> TC_Http::HEADER = {
 			{"GET", TC_HttpRequest::REQUEST_GET},
@@ -1136,17 +1136,17 @@ namespace tars
 
 	size_t TC_HttpResponse::parseResponseHeaderString(const char *beginIt, const char *headerIt)
 	{
-		auto it = strnstr(beginIt, "\r\n", headerIt - beginIt);
+		auto it = TC_Port::strnstr(beginIt, "\r\n", headerIt - beginIt);
 
 		assert(it != NULL);
 
-		auto f1 = strnstr(beginIt, " ", it - beginIt);
+		auto f1 = TC_Port::strnstr(beginIt, " ", it - beginIt);
 		if(f1 == NULL)
 		{
 			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse version format error : " + string(beginIt, headerIt - beginIt));
 		}
 
-		auto f2 = strnstr(f1 + 1, " ", it - (f1 + 1));
+		auto f2 = TC_Port::strnstr(f1 + 1, " ", it - (f1 + 1));
 		if(f1 == NULL)
 		{
 			throw TC_HttpResponse_Exception("[TC_HttpResponse_Exception::parseResponeHeader] http response parse status format error : " + string(beginIt, headerIt - beginIt));
@@ -1195,7 +1195,7 @@ namespace tars
 		//解析头部
 		if (_headLength == 0)
 		{
-			const char * p = strnstr(data.buffer(), "\r\n\r\n", data.length());
+			const char * p = TC_Port::strnstr(data.buffer(), "\r\n\r\n", data.length());
 			if(p == NULL)
 			{
 				return false;
@@ -1349,7 +1349,7 @@ namespace tars
 
 		const char *pHeader = sBuffer;
 
-		const char *p = strnstr(sBuffer, "\r\n\r\n", iLength);
+		const char *p = TC_Port::strnstr(sBuffer, "\r\n\r\n", iLength);
 		if ( p == NULL)
 		{
 			return false;
@@ -1390,7 +1390,7 @@ namespace tars
 		{
 			while (true)
 			{
-				p = strnstr(sBuffer, "\r\n", iLength - (sBuffer - pHeader));
+				p = TC_Port::strnstr(sBuffer, "\r\n", iLength - (sBuffer - pHeader));
 				if (p == NULL)
 					return false;
 
@@ -1801,7 +1801,7 @@ namespace tars
 	{
 		assert(sBuffer != NULL);
 
-		const char *p = strnstr(sBuffer, " ", 10);
+		const char *p = TC_Port::strnstr(sBuffer, " ", 10);
 		if(p == NULL)
 		{
 			throw runtime_error("[TC_HttpRequest::decode] http protocol parse error");
@@ -1813,7 +1813,7 @@ namespace tars
 			throw runtime_error("[TC_HttpRequest::decode] protocol not support ");
 		}
 
-		p = strnstr(sBuffer, "\r\n\r\n", iLength);
+		p = TC_Port::strnstr(sBuffer, "\r\n\r\n", iLength);
 		if (p == NULL)
 		{
 			return false;
@@ -1834,7 +1834,7 @@ namespace tars
 			p = sBuffer + _headLength;
 			while (true)
 			{
-				const char *pos  = strnstr(p, "\r\n", iLength - (p - sBuffer));
+				const char *pos  = TC_Port::strnstr(p, "\r\n", iLength - (p - sBuffer));
 
 //	        const char *pos = strstr(p, "\r\n");
 				if (pos == NULL)
@@ -1888,7 +1888,7 @@ namespace tars
 		if(iLen < 10)
 			return false;
 
-		const char *p = strnstr(sBuffer, " ", 10);
+		const char *p = TC_Port::strnstr(sBuffer, " ", 10);
 		if(p == NULL)
 		{
 			throw runtime_error("[TC_HttpRequest::checkRequest] http protocol parse error");
@@ -1900,7 +1900,7 @@ namespace tars
 			throw runtime_error("[TC_HttpRequest::checkRequest] protocol not support: " + string(sBuffer, 8));
 		}
 
-		const char *header = strnstr(sBuffer, "\r\n\r\n", iLen);
+		const char *header = TC_Port::strnstr(sBuffer, "\r\n\r\n", iLen);
 		if ( header == NULL)
 		{
 			return false;
@@ -1910,7 +1910,7 @@ namespace tars
 
 		size_t iHeadLen = pos + 4;
 
-		p =  strnstr(sBuffer, "\r\n", iHeadLen);
+		p =  TC_Port::strnstr(sBuffer, "\r\n", iHeadLen);
 		if(p == NULL)
 		{
 			//first line
@@ -1933,9 +1933,8 @@ namespace tars
 			}
 
 			const char *line    = p;
-//	    const char *lineEnd  = strnstr(line, "\r\n", iLen - (line - sBuffer));
 
-			const char *lineEnd = strstr(line, "\r\n");
+			const char *lineEnd = TC_Port::strstr(line, "\r\n");
 			if (lineEnd != NULL)
 			{
 				p = lineEnd + 2;
@@ -2012,7 +2011,7 @@ namespace tars
 
 		while (true)
 		{
-			auto it = strnstr(lineStartIt, "\r\n", headerIt - lineStartIt);
+			auto it = TC_Port::strnstr(lineStartIt, "\r\n", headerIt - lineStartIt);
 			if(it == NULL)
 			{
 				it = headerIt;
@@ -2022,7 +2021,7 @@ namespace tars
 			//first line ignore
 			if(!first)
 			{
-				auto itF = strnstr(lineStartIt, ":", it - lineStartIt);
+				auto itF = TC_Port::strnstr(lineStartIt, ":", it - lineStartIt);
 				if (itF != NULL)
 				{
 					while(*lineStartIt == ' ')
@@ -2075,13 +2074,13 @@ namespace tars
 
 		assert(p != NULL);
 
-		auto f1 = strnstr(szBuffer, " ", p - szBuffer);
+		auto f1 = TC_Port::strnstr(szBuffer, " ", p - szBuffer);
 		if (f1 == p)
 		{
 			throw TC_HttpRequest_Exception("[TC_HttpRequest::parseRequestHeader] http request format error: " + string(szBuffer, p - szBuffer));
 		}
 
-		auto f2 = strnstr(f1 + 1, " ", p - f1 + 1);//std::search(f1 + 1, p, sep.c_str(), sep.c_str() + sep.size());
+		auto f2 = TC_Port::strnstr(f1 + 1, " ", p - f1 + 1);//std::search(f1 + 1, p, sep.c_str(), sep.c_str() + sep.size());
 		if (f2 == p || f1 >= f2)
 		{
 			throw TC_HttpRequest_Exception("[TC_HttpRequest::parseRequestHeader] http request format error: " + string(szBuffer, p - szBuffer));

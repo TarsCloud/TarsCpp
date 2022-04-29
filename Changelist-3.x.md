@@ -1,4 +1,4 @@
-# v3.0.8 20220427
+# v3.0.8 20220429
 
 ### en
 
@@ -10,6 +10,8 @@
 - Optimize: thread process may delay in epoll_server NET_THREAD_MERGE_HANDLES_THREAD mode
 - Add: TC_ThreadPoolHash::getThread 
 - Add: LOG_CONSOLE_DEBUG add millsecond time output
+- Fix: tc_http strnstr bug cause crash
+
 ### cn
 
 - 修复: 修复 EndpointManager updateOutter 并发导致的 crash
@@ -20,6 +22,7 @@
 - 优化: NET_THREAD_MERGE_HANDLES_THREAD 模式下可能的延时问题
 - 添加: TC_ThreadPoolHash::getThread
 - 添加: LOG_CONSOLE_DEBUG 调整为毫秒输出, 方便调试
+- 修复: tc_http strnstr的bug导致的crash
 
 # v3.0.7 20220328
 
