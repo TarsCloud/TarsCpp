@@ -1,6 +1,7 @@
 ﻿#include "HelloImp.h"
 #include "HelloServer.h"
 #include "servant/RemoteLogger.h"
+#include "Push.h"
 
 using namespace tars;
 
@@ -153,4 +154,9 @@ int HelloImp::testConHash(std::string &sOut, CurrentPtr current)
 	return 0;
 }
 
+int HelloImp::testPushRegister(const string &msg, CurrentPtr current)
+{
+	Push::async_response_push_testPush(current, 0, msg);
+	return 0;
+}
 ///////////////////////////////////////////////////////////////////////////////

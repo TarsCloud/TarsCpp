@@ -1,0 +1,9 @@
+
+module Test
+{
+    interface Push
+    {
+        int testPush(out string msg);
+    };
+};
+

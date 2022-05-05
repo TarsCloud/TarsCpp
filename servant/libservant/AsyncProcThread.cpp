@@ -123,7 +123,6 @@ void AsyncProcThread::callback(ReqMessage * msg)
 	pServantProxyThreadData->_traceCall = msg->bTraceCall;
 	pServantProxyThreadData->initTrace(msg->sTraceKey);
 
-
 	if(msg->adapter)
 	{
 		pServantProxyThreadData->_data._szHost = msg->adapter->endpoint().desc();
@@ -132,6 +131,7 @@ void AsyncProcThread::callback(ReqMessage * msg)
 	try
 	{
 		ReqMessagePtr msgPtr = msg;
+
 		msg->callback->dispatch(msgPtr);
 	}
 	catch (exception& e)
