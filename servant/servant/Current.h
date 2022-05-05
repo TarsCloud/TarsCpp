@@ -251,6 +251,13 @@ public:
      * @param push
      */
 	void sendResponse(int iRet, ResponsePacket &response, const map<string, string>& status, const string& sResultDesc);
+    
+    /**
+     * 针对Push消息的应答数据
+     * @param buff
+     * @param len
+     */
+    void sendPushResponse(int iRet, const string &funcName, TarsOutputStream<BufferWriterVector>& oss);
     /**
      * 设置调用链追踪信息，服务端主动回包时用
      * @param traceCall

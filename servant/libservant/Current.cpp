@@ -275,9 +275,11 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 		response.cPacketType    = TARSNORMAL;
         response.iMessageType   = _request.iMessageType;
         response.iVersion       = _request.iVersion;
-        response.status         = status;
+		for(auto e: status)
+		{
+			response.status.emplace(e);
+		}
         response.context        = _responseContext;
-//        response.sBuffer        = std::move(buffer);
         response.sResultDesc    = sResultDesc;
 
         response.iRet           = iRet;
@@ -300,7 +302,11 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 	    tupResponse.cPacketType    = TARSNORMAL;
 
 	    tupResponse.iVersion       = _request.iVersion;
-	    tupResponse.status         = status;
+		for(auto e: status)
+		{
+			response.status.emplace(e);
+		}
+//	    tupResponse.status         = status;
 	    tupResponse.context        = _responseContext;
 	    tupResponse.sBuffer.swap(response.sBuffer);
 	    tupResponse.sServantName   = _request.sServantName;
@@ -343,6 +349,42 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 
 	_servantHandle->sendResponse(send);
 
+}
+
+
+void Current::sendPushResponse(int iRet, const string &funcName, TarsOutputStream<BufferWriterVector>& oss)
+{
+	ResponsePacket response;
+    oss.swap(response.sBuffer);
+
+	response.iRet           = iRet;
+	response.iRequestId     = 0;
+	response.cPacketType    = TARSNORMAL;
+	response.iMessageType   = 0;
+	response.iVersion		= TARSVERSION;
+	response.context        = _responseContext;
+	response.status["TARS_FUNC"] = funcName;
+
+    shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
+
+    Int32 iHeaderLen = 0;
+
+    TarsOutputStream<BufferWriter> os;
+
+    //先预留4个字节长度
+    os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
+
+    response.writeTo(os);
+
+    assert(os.getLength() >= 4);
+
+    iHeaderLen = htonl((int)(os.getLength()));
+
+    memcpy((void*)os.getBuffer(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
+
+    send->setBuffer(ProxyProtocol::toBuffer(os));
+
+    _servantHandle->sendResponse(send);
 }
 
 void Current::close()

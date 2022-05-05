@@ -588,6 +588,11 @@ namespace Test
         virtual void callback_testPid_exception(tars::Int32 ret)
         { throw std::runtime_error("callback_testPid_exception() override incorrect."); }
 
+        virtual void callback_testPushRegister(tars::Int32 ret)
+        { throw std::runtime_error("callback_testPushRegister() override incorrect."); }
+        virtual void callback_testPushRegister_exception(tars::Int32 ret)
+        { throw std::runtime_error("callback_testPushRegister_exception() override incorrect."); }
+
         virtual void callback_testSyncTrans(tars::Int32 ret,  const std::string& r)
         { throw std::runtime_error("callback_testSyncTrans() override incorrect."); }
         virtual void callback_testSyncTrans_exception(tars::Int32 ret)
@@ -617,7 +622,7 @@ namespace Test
         }
 
     public:
-        virtual int onDispatch(tars::ReqMessagePtr msg)
+        virtual int onDispatch(tars::ReqMessagePtr _msg_)
         {
             static ::std::string __Hello_all[]=
             {
@@ -627,35 +632,37 @@ namespace Test
                 "testDyeingTrans",
                 "testHello",
                 "testPid",
+                "testPushRegister",
                 "testSyncTrans",
                 "testTimeout",
                 "testTrans"
             };
-            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+9, string(msg->request.sFuncName));
+            auto it = _msg_->response->status.find("TARS_FUNC");
+            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+10, (it==_msg_->response->status.end())?_msg_->request.sFuncName:it->second);
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __Hello_all)
             {
                 case 0:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testConHash_exception(msg->response->iRet);
+                        callback_testConHash_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
                     std::string sOut;
                     _is.read(sOut, 1, true);
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -667,13 +674,13 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testConHash", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testConHash", 0, _trace_param_, "");
                     }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(_msg_->response->context);
 
                     callback_testConHash(_ret, sOut);
 
@@ -684,25 +691,25 @@ namespace Test
                 }
                 case 1:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testCoro_exception(msg->response->iRet);
+                        callback_testCoro_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     tars::Bool _ret = false;
                     _is.read(_ret, 0, true);
 
                     std::string sOut;
                     _is.read(sOut, 2, true);
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -714,13 +721,13 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
                     }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(_msg_->response->context);
 
                     callback_testCoro(_ret, sOut);
 
@@ -731,25 +738,25 @@ namespace Test
                 }
                 case 2:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testDyeing_exception(msg->response->iRet);
+                        callback_testDyeing_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
                     std::string strOut;
                     _is.read(strOut, 2, true);
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -761,13 +768,13 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
                     }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(_msg_->response->context);
 
                     callback_testDyeing(_ret, strOut);
 
@@ -778,23 +785,23 @@ namespace Test
                 }
                 case 3:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testDyeingTrans_exception(msg->response->iRet);
+                        callback_testDyeingTrans_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -805,13 +812,13 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
                     }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(_msg_->response->context);
 
                     callback_testDyeingTrans(_ret);
 
@@ -822,25 +829,25 @@ namespace Test
                 }
                 case 4:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testHello_exception(msg->response->iRet);
+                        callback_testHello_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
                     std::string r;
                     _is.read(r, 3, true);
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -852,13 +859,13 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
                     }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(_msg_->response->context);
 
                     callback_testHello(_ret, r);
 
@@ -869,25 +876,25 @@ namespace Test
                 }
                 case 5:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testPid_exception(msg->response->iRet);
+                        callback_testPid_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
                     std::string r;
                     _is.read(r, 1, true);
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -899,13 +906,13 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
                     }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(_msg_->response->context);
 
                     callback_testPid(_ret, r);
 
@@ -916,45 +923,42 @@ namespace Test
                 }
                 case 6:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testSyncTrans_exception(msg->response->iRet);
+                        callback_testPushRegister_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
-                    std::string r;
-                    _is.read(r, 3, true);
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
                             _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                            _p_->value["r"] = tars::JsonOutput::writeJson(r);
                             _trace_param_ = tars::TC_Json::writeValue(_p_);
                         }
                         else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPushRegister", 0, _trace_param_, "");
                     }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(_msg_->response->context);
 
-                    callback_testSyncTrans(_ret, r);
+                    callback_testPushRegister(_ret);
 
                     pCbtd->delResponseContext();
 
@@ -963,69 +967,25 @@ namespace Test
                 }
                 case 7:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testTimeout_exception(msg->response->iRet);
+                        callback_testSyncTrans_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
-                    tars::Int32 _ret;
-                    _is.read(_ret, 0, true);
-
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
-                    {
-                        string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
-                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                        {
-                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                            _trace_param_ = tars::TC_Json::writeValue(_p_);
-                        }
-                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                        {
-                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                        }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
-                    }
-
-                    CallbackThreadData * pCbtd = CallbackThreadData::getData();
-                    assert(pCbtd != NULL);
-
-                    pCbtd->setResponseContext(msg->response->context);
-
-                    callback_testTimeout(_ret);
-
-                    pCbtd->delResponseContext();
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 8:
-                {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_testTrans_exception(msg->response->iRet);
-
-                        return msg->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     tars::Int32 _ret;
                     _is.read(_ret, 0, true);
 
                     std::string r;
                     _is.read(r, 3, true);
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -1037,13 +997,104 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
                     }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
                     assert(pCbtd != NULL);
 
-                    pCbtd->setResponseContext(msg->response->context);
+                    pCbtd->setResponseContext(_msg_->response->context);
+
+                    callback_testSyncTrans(_ret, r);
+
+                    pCbtd->delResponseContext();
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 8:
+                {
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testTimeout_exception(_msg_->response->iRet);
+
+                        return _msg_->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(_msg_->response->sBuffer);
+                    tars::Int32 _ret;
+                    _is.read(_ret, 0, true);
+
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
+                    }
+
+                    CallbackThreadData * pCbtd = CallbackThreadData::getData();
+                    assert(pCbtd != NULL);
+
+                    pCbtd->setResponseContext(_msg_->response->context);
+
+                    callback_testTimeout(_ret);
+
+                    pCbtd->delResponseContext();
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 9:
+                {
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testTrans_exception(_msg_->response->iRet);
+
+                        return _msg_->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(_msg_->response->sBuffer);
+                    tars::Int32 _ret;
+                    _is.read(_ret, 0, true);
+
+                    std::string r;
+                    _is.read(r, 3, true);
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                            _p_->value["r"] = tars::JsonOutput::writeJson(r);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
+                    }
+
+                    CallbackThreadData * pCbtd = CallbackThreadData::getData();
+                    assert(pCbtd != NULL);
+
+                    pCbtd->setResponseContext(_msg_->response->context);
 
                     callback_testTrans(_ret, r);
 
@@ -1244,6 +1295,35 @@ namespace Test
         tars::Promise< HelloPrxCallbackPromise::PromisetestPidPtr > _promise_testPid;
 
     public:
+        struct PromisetestPushRegister: virtual public TC_HandleBase
+        {
+        public:
+            tars::Int32 _ret;
+            map<std::string, std::string> _mRspContext;
+        };
+        
+        typedef tars::TC_AutoPtr< HelloPrxCallbackPromise::PromisetestPushRegister > PromisetestPushRegisterPtr;
+
+        HelloPrxCallbackPromise(const tars::Promise< HelloPrxCallbackPromise::PromisetestPushRegisterPtr > &promise)
+        : _promise_testPushRegister(promise)
+        {}
+        
+        virtual void callback_testPushRegister(const HelloPrxCallbackPromise::PromisetestPushRegisterPtr &ptr)
+        {
+            _promise_testPushRegister.setValue(ptr);
+        }
+        virtual void callback_testPushRegister_exception(tars::Int32 ret)
+        {
+            std::string str("");
+            str += "Function:testPushRegister_exception|Ret:";
+            str += TC_Common::tostr(ret);
+            _promise_testPushRegister.setException(tars::copyException(str, ret));
+        }
+
+    protected:
+        tars::Promise< HelloPrxCallbackPromise::PromisetestPushRegisterPtr > _promise_testPushRegister;
+
+    public:
         struct PromisetestSyncTrans: virtual public TC_HandleBase
         {
         public:
@@ -1333,7 +1413,7 @@ namespace Test
         tars::Promise< HelloPrxCallbackPromise::PromisetestTransPtr > _promise_testTrans;
 
     public:
-        virtual int onDispatch(tars::ReqMessagePtr msg)
+        virtual int onDispatch(tars::ReqMessagePtr _msg_)
         {
             static ::std::string __Hello_all[]=
             {
@@ -1343,26 +1423,27 @@ namespace Test
                 "testDyeingTrans",
                 "testHello",
                 "testPid",
+                "testPushRegister",
                 "testSyncTrans",
                 "testTimeout",
                 "testTrans"
             };
 
-            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+9, string(msg->request.sFuncName));
+            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+10, string(_msg_->request.sFuncName));
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __Hello_all)
             {
                 case 0:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testConHash_exception(msg->response->iRet);
+                        callback_testConHash_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
 
                     HelloPrxCallbackPromise::PromisetestConHashPtr ptr = new HelloPrxCallbackPromise::PromisetestConHash();
 
@@ -1385,7 +1466,7 @@ namespace Test
                         return tars::TARSCLIENTDECODEERR;
                     }
 
-                    ptr->_mRspContext = msg->response->context;
+                    ptr->_mRspContext = _msg_->response->context;
 
                     callback_testConHash(ptr);
 
@@ -1394,15 +1475,15 @@ namespace Test
                 }
                 case 1:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testCoro_exception(msg->response->iRet);
+                        callback_testCoro_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
 
                     HelloPrxCallbackPromise::PromisetestCoroPtr ptr = new HelloPrxCallbackPromise::PromisetestCoro();
 
@@ -1426,7 +1507,7 @@ namespace Test
                         return tars::TARSCLIENTDECODEERR;
                     }
 
-                    ptr->_mRspContext = msg->response->context;
+                    ptr->_mRspContext = _msg_->response->context;
 
                     callback_testCoro(ptr);
 
@@ -1435,15 +1516,15 @@ namespace Test
                 }
                 case 2:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testDyeing_exception(msg->response->iRet);
+                        callback_testDyeing_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
 
                     HelloPrxCallbackPromise::PromisetestDyeingPtr ptr = new HelloPrxCallbackPromise::PromisetestDyeing();
 
@@ -1466,7 +1547,7 @@ namespace Test
                         return tars::TARSCLIENTDECODEERR;
                     }
 
-                    ptr->_mRspContext = msg->response->context;
+                    ptr->_mRspContext = _msg_->response->context;
 
                     callback_testDyeing(ptr);
 
@@ -1475,15 +1556,15 @@ namespace Test
                 }
                 case 3:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testDyeingTrans_exception(msg->response->iRet);
+                        callback_testDyeingTrans_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
 
                     HelloPrxCallbackPromise::PromisetestDyeingTransPtr ptr = new HelloPrxCallbackPromise::PromisetestDyeingTrans();
 
@@ -1505,7 +1586,7 @@ namespace Test
                         return tars::TARSCLIENTDECODEERR;
                     }
 
-                    ptr->_mRspContext = msg->response->context;
+                    ptr->_mRspContext = _msg_->response->context;
 
                     callback_testDyeingTrans(ptr);
 
@@ -1514,15 +1595,15 @@ namespace Test
                 }
                 case 4:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testHello_exception(msg->response->iRet);
+                        callback_testHello_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
 
                     HelloPrxCallbackPromise::PromisetestHelloPtr ptr = new HelloPrxCallbackPromise::PromisetestHello();
 
@@ -1545,7 +1626,7 @@ namespace Test
                         return tars::TARSCLIENTDECODEERR;
                     }
 
-                    ptr->_mRspContext = msg->response->context;
+                    ptr->_mRspContext = _msg_->response->context;
 
                     callback_testHello(ptr);
 
@@ -1554,15 +1635,15 @@ namespace Test
                 }
                 case 5:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testPid_exception(msg->response->iRet);
+                        callback_testPid_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
 
                     HelloPrxCallbackPromise::PromisetestPidPtr ptr = new HelloPrxCallbackPromise::PromisetestPid();
 
@@ -1585,7 +1666,7 @@ namespace Test
                         return tars::TARSCLIENTDECODEERR;
                     }
 
-                    ptr->_mRspContext = msg->response->context;
+                    ptr->_mRspContext = _msg_->response->context;
 
                     callback_testPid(ptr);
 
@@ -1594,15 +1675,54 @@ namespace Test
                 }
                 case 6:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testSyncTrans_exception(msg->response->iRet);
+                        callback_testPushRegister_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
+
+                    HelloPrxCallbackPromise::PromisetestPushRegisterPtr ptr = new HelloPrxCallbackPromise::PromisetestPushRegister();
+
+                    try
+                    {
+                        _is.read(ptr->_ret, 0, true);
+
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testPushRegister_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testPushRegister_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    ptr->_mRspContext = _msg_->response->context;
+
+                    callback_testPushRegister(ptr);
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 7:
+                {
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testSyncTrans_exception(_msg_->response->iRet);
+
+                        return _msg_->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(_msg_->response->sBuffer);
 
                     HelloPrxCallbackPromise::PromisetestSyncTransPtr ptr = new HelloPrxCallbackPromise::PromisetestSyncTrans();
 
@@ -1625,24 +1745,24 @@ namespace Test
                         return tars::TARSCLIENTDECODEERR;
                     }
 
-                    ptr->_mRspContext = msg->response->context;
+                    ptr->_mRspContext = _msg_->response->context;
 
                     callback_testSyncTrans(ptr);
 
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 7:
+                case 8:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testTimeout_exception(msg->response->iRet);
+                        callback_testTimeout_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
 
                     HelloPrxCallbackPromise::PromisetestTimeoutPtr ptr = new HelloPrxCallbackPromise::PromisetestTimeout();
 
@@ -1664,24 +1784,24 @@ namespace Test
                         return tars::TARSCLIENTDECODEERR;
                     }
 
-                    ptr->_mRspContext = msg->response->context;
+                    ptr->_mRspContext = _msg_->response->context;
 
                     callback_testTimeout(ptr);
 
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 8:
+                case 9:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testTrans_exception(msg->response->iRet);
+                        callback_testTrans_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
 
                     HelloPrxCallbackPromise::PromisetestTransPtr ptr = new HelloPrxCallbackPromise::PromisetestTrans();
 
@@ -1704,7 +1824,7 @@ namespace Test
                         return tars::TARSCLIENTDECODEERR;
                     }
 
-                    ptr->_mRspContext = msg->response->context;
+                    ptr->_mRspContext = _msg_->response->context;
 
                     callback_testTrans(ptr);
 
@@ -1729,7 +1849,7 @@ namespace Test
         virtual void setResponseContext(const map<std::string, std::string> &mContext) { _mRspContext = mContext; }
 
     public:
-        int onDispatch(tars::ReqMessagePtr msg)
+        int onDispatch(tars::ReqMessagePtr _msg_)
         {
             static ::std::string __Hello_all[]=
             {
@@ -1739,26 +1859,27 @@ namespace Test
                 "testDyeingTrans",
                 "testHello",
                 "testPid",
+                "testPushRegister",
                 "testSyncTrans",
                 "testTimeout",
                 "testTrans"
             };
 
-            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+9, string(msg->request.sFuncName));
+            pair<string*, string*> r = equal_range(__Hello_all, __Hello_all+10, string(_msg_->request.sFuncName));
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __Hello_all)
             {
                 case 0:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testConHash_exception(msg->response->iRet);
+                        callback_testConHash_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     try
                     {
                         tars::Int32 _ret;
@@ -1766,7 +1887,7 @@ namespace Test
 
                         std::string sOut;
                         _is.read(sOut, 1, true);
-                        setResponseContext(msg->response->context);
+                        setResponseContext(_msg_->response->context);
 
                         callback_testConHash(_ret, sOut);
 
@@ -1789,15 +1910,15 @@ namespace Test
                 }
                 case 1:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testCoro_exception(msg->response->iRet);
+                        callback_testCoro_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     try
                     {
                         tars::Bool _ret = false;
@@ -1805,7 +1926,7 @@ namespace Test
 
                         std::string sOut;
                         _is.read(sOut, 2, true);
-                        setResponseContext(msg->response->context);
+                        setResponseContext(_msg_->response->context);
 
                         callback_testCoro(_ret, sOut);
 
@@ -1828,15 +1949,15 @@ namespace Test
                 }
                 case 2:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testDyeing_exception(msg->response->iRet);
+                        callback_testDyeing_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     try
                     {
                         tars::Int32 _ret;
@@ -1844,7 +1965,7 @@ namespace Test
 
                         std::string strOut;
                         _is.read(strOut, 2, true);
-                        setResponseContext(msg->response->context);
+                        setResponseContext(_msg_->response->context);
 
                         callback_testDyeing(_ret, strOut);
 
@@ -1867,21 +1988,21 @@ namespace Test
                 }
                 case 3:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testDyeingTrans_exception(msg->response->iRet);
+                        callback_testDyeingTrans_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     try
                     {
                         tars::Int32 _ret;
                         _is.read(_ret, 0, true);
 
-                        setResponseContext(msg->response->context);
+                        setResponseContext(_msg_->response->context);
 
                         callback_testDyeingTrans(_ret);
 
@@ -1904,15 +2025,15 @@ namespace Test
                 }
                 case 4:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testHello_exception(msg->response->iRet);
+                        callback_testHello_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     try
                     {
                         tars::Int32 _ret;
@@ -1920,7 +2041,7 @@ namespace Test
 
                         std::string r;
                         _is.read(r, 3, true);
-                        setResponseContext(msg->response->context);
+                        setResponseContext(_msg_->response->context);
 
                         callback_testHello(_ret, r);
 
@@ -1943,15 +2064,15 @@ namespace Test
                 }
                 case 5:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testPid_exception(msg->response->iRet);
+                        callback_testPid_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     try
                     {
                         tars::Int32 _ret;
@@ -1959,7 +2080,7 @@ namespace Test
 
                         std::string r;
                         _is.read(r, 1, true);
-                        setResponseContext(msg->response->context);
+                        setResponseContext(_msg_->response->context);
 
                         callback_testPid(_ret, r);
 
@@ -1982,15 +2103,52 @@ namespace Test
                 }
                 case 6:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testSyncTrans_exception(msg->response->iRet);
+                        callback_testPushRegister_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
+                    try
+                    {
+                        tars::Int32 _ret;
+                        _is.read(_ret, 0, true);
+
+                        setResponseContext(_msg_->response->context);
+
+                        callback_testPushRegister(_ret);
+
+                    }
+                    catch(std::exception &ex)
+                    {
+                        callback_testPushRegister_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+                    catch(...)
+                    {
+                        callback_testPushRegister_exception(tars::TARSCLIENTDECODEERR);
+
+                        return tars::TARSCLIENTDECODEERR;
+                    }
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 7:
+                {
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
+                    {
+                        callback_testSyncTrans_exception(_msg_->response->iRet);
+
+                        return _msg_->response->iRet;
+                    }
+                    tars::TarsInputStream<tars::BufferReader> _is;
+
+                    _is.setBuffer(_msg_->response->sBuffer);
                     try
                     {
                         tars::Int32 _ret;
@@ -1998,7 +2156,7 @@ namespace Test
 
                         std::string r;
                         _is.read(r, 3, true);
-                        setResponseContext(msg->response->context);
+                        setResponseContext(_msg_->response->context);
 
                         callback_testSyncTrans(_ret, r);
 
@@ -2019,23 +2177,23 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 7:
+                case 8:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testTimeout_exception(msg->response->iRet);
+                        callback_testTimeout_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     try
                     {
                         tars::Int32 _ret;
                         _is.read(_ret, 0, true);
 
-                        setResponseContext(msg->response->context);
+                        setResponseContext(_msg_->response->context);
 
                         callback_testTimeout(_ret);
 
@@ -2056,17 +2214,17 @@ namespace Test
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 8:
+                case 9:
                 {
-                    if (msg->response->iRet != tars::TARSSERVERSUCCESS)
+                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
-                        callback_testTrans_exception(msg->response->iRet);
+                        callback_testTrans_exception(_msg_->response->iRet);
 
-                        return msg->response->iRet;
+                        return _msg_->response->iRet;
                     }
                     tars::TarsInputStream<tars::BufferReader> _is;
 
-                    _is.setBuffer(msg->response->sBuffer);
+                    _is.setBuffer(_msg_->response->sBuffer);
                     try
                     {
                         tars::Int32 _ret;
@@ -2074,7 +2232,7 @@ namespace Test
 
                         std::string r;
                         _is.read(r, 3, true);
-                        setResponseContext(msg->response->context);
+                        setResponseContext(_msg_->response->context);
 
                         callback_testTrans(_ret, r);
 
@@ -2113,12 +2271,12 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(sOut, 1);
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2128,7 +2286,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testConHash", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testConHash", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -2143,10 +2301,10 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(sOut, 1, true);
-            if (pSptd && pSptd->_traceCall)
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2158,7 +2316,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testConHash", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testConHash", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -2168,12 +2326,12 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             std::map<string, string> _mStatus;
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2183,7 +2341,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testConHash", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testConHash", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"testConHash", _os, context, _mStatus, callback);
         }
@@ -2212,12 +2370,12 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(sIn, 1);
             _os.write(sOut, 2);
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2228,7 +2386,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testCoro", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testCoro", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -2243,10 +2401,10 @@ namespace Test
             tars::Bool _ret = false;
             _is.read(_ret, 0, true);
             _is.read(sOut, 2, true);
-            if (pSptd && pSptd->_traceCall)
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2258,7 +2416,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testCoro", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testCoro", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -2269,12 +2427,12 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(sIn, 1);
             std::map<string, string> _mStatus;
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2285,7 +2443,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testCoro", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testCoro", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"testCoro", _os, context, _mStatus, callback);
         }
@@ -2316,12 +2474,12 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(strIn, 1);
             _os.write(strOut, 2);
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2332,7 +2490,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeing", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeing", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -2348,10 +2506,10 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(strOut, 2, true);
-            if (pSptd && pSptd->_traceCall)
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2363,7 +2521,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeing", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeing", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -2375,12 +2533,12 @@ namespace Test
             _os.write(strIn, 1);
             std::map<string, string> _mStatus;
             _mStatus.insert(std::make_pair(ServantProxy::STATUS_GRID_KEY, strIn));
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2391,7 +2549,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeing", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeing", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"testDyeing", _os, context, _mStatus, callback);
         }
@@ -2422,12 +2580,12 @@ namespace Test
         tars::Int32 testDyeingTrans(const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2437,7 +2595,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeingTrans", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeingTrans", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -2451,10 +2609,10 @@ namespace Test
             _is.setBuffer(rep->sBuffer);
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
-            if (pSptd && pSptd->_traceCall)
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2465,7 +2623,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeingTrans", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeingTrans", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -2475,12 +2633,12 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             std::map<string, string> _mStatus;
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2490,7 +2648,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeingTrans", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testDyeingTrans", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"testDyeingTrans", _os, context, _mStatus, callback);
         }
@@ -2520,12 +2678,12 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             _os.write(r, 3);
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2537,7 +2695,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testHello", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testHello", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -2552,10 +2710,10 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(r, 3, true);
-            if (pSptd && pSptd->_traceCall)
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2567,7 +2725,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testHello", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testHello", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -2579,12 +2737,12 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             std::map<string, string> _mStatus;
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2596,7 +2754,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testHello", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testHello", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"testHello", _os, context, _mStatus, callback);
         }
@@ -2628,12 +2786,12 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(r, 1);
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2643,7 +2801,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPid", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPid", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -2658,10 +2816,10 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(r, 1, true);
-            if (pSptd && pSptd->_traceCall)
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2673,7 +2831,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPid", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPid", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -2683,12 +2841,12 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             std::map<string, string> _mStatus;
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2698,7 +2856,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPid", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPid", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"testPid", _os, context, _mStatus, callback);
         }
@@ -2722,18 +2880,119 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testPid", _os, context, _mStatus, callback, true);
         }
 
+        tars::Int32 testPushRegister(const std::string & msg,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
+        {
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(msg, 1);
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
+            {
+                _pSptd_->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["msg"] = tars::JsonOutput::writeJson(msg);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPushRegister", 0, _trace_param_, "");
+            }
+
+            std::map<string, string> _mStatus;
+            shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"testPushRegister", _os, context, _mStatus);
+            if(pResponseContext)
+            {
+                pResponseContext->swap(rep->context);
+            }
+
+            tars::TarsInputStream<tars::BufferReader> _is;
+            _is.setBuffer(rep->sBuffer);
+            tars::Int32 _ret;
+            _is.read(_ret, 0, true);
+            if (_pSptd_ && _pSptd_->_traceCall)
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPushRegister", 0, _trace_param_, "");
+            }
+
+            return _ret;
+        }
+
+        void async_testPushRegister(HelloPrxCallbackPtr callback,const std::string &msg,const map<string, string>& context = TARS_CONTEXT())
+        {
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(msg, 1);
+            std::map<string, string> _mStatus;
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
+            {
+                _pSptd_->newSpan();
+                string _trace_param_;
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value["msg"] = tars::JsonOutput::writeJson(msg);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testPushRegister", 0, _trace_param_, "");
+            }
+            tars_invoke_async(tars::TARSNORMAL,"testPushRegister", _os, context, _mStatus, callback);
+        }
+        
+        tars::Future< HelloPrxCallbackPromise::PromisetestPushRegisterPtr > promise_async_testPushRegister(const std::string &msg,const map<string, string>& context)
+        {
+            tars::Promise< HelloPrxCallbackPromise::PromisetestPushRegisterPtr > promise;
+            HelloPrxCallbackPromisePtr callback = new HelloPrxCallbackPromise(promise);
+
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(msg, 1);
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testPushRegister", _os, context, _mStatus, callback);
+
+            return promise.getFuture();
+        }
+
+        void coro_testPushRegister(HelloCoroPrxCallbackPtr callback,const std::string &msg,const map<string, string>& context = TARS_CONTEXT())
+        {
+            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+            _os.write(msg, 1);
+            std::map<string, string> _mStatus;
+            tars_invoke_async(tars::TARSNORMAL,"testPushRegister", _os, context, _mStatus, callback, true);
+        }
+
         tars::Int32 testSyncTrans(tars::Int32 index,const std::string & s,std::string &r,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(index, 1);
             _os.write(s, 2);
             _os.write(r, 3);
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2745,7 +3004,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testSyncTrans", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testSyncTrans", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -2760,10 +3019,10 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(r, 3, true);
-            if (pSptd && pSptd->_traceCall)
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2775,7 +3034,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testSyncTrans", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testSyncTrans", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -2787,12 +3046,12 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             std::map<string, string> _mStatus;
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2804,7 +3063,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testSyncTrans", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testSyncTrans", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"testSyncTrans", _os, context, _mStatus, callback);
         }
@@ -2836,12 +3095,12 @@ namespace Test
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(timeout, 1);
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2852,7 +3111,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTimeout", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTimeout", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -2866,10 +3125,10 @@ namespace Test
             _is.setBuffer(rep->sBuffer);
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
-            if (pSptd && pSptd->_traceCall)
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2880,7 +3139,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTimeout", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTimeout", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -2891,12 +3150,12 @@ namespace Test
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
             _os.write(timeout, 1);
             std::map<string, string> _mStatus;
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2907,7 +3166,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTimeout", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTimeout", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"testTimeout", _os, context, _mStatus, callback);
         }
@@ -2939,12 +3198,12 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             _os.write(r, 3);
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2956,7 +3215,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTrans", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTrans", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -2971,10 +3230,10 @@ namespace Test
             tars::Int32 _ret;
             _is.read(_ret, 0, true);
             _is.read(r, 3, true);
-            if (pSptd && pSptd->_traceCall)
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -2986,7 +3245,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTrans", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTrans", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -2998,12 +3257,12 @@ namespace Test
             _os.write(index, 1);
             _os.write(s, 2);
             std::map<string, string> _mStatus;
-            ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-            if (pSptd && pSptd->_traceCall)
+            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+            if (_pSptd_ && _pSptd_->_traceCall)
             {
-                pSptd->newSpan();
+                _pSptd_->newSpan();
                 string _trace_param_;
-                int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
+                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3015,7 +3274,7 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTrans", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "testTrans", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"testTrans", _os, context, _mStatus, callback);
         }
@@ -3072,31 +3331,31 @@ namespace Test
     {
     public:
         virtual ~Hello(){}
-        virtual tars::Int32 testConHash(std::string &sOut,tars::TarsCurrentPtr current) = 0;
-        static void async_response_testConHash(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &sOut)
+        virtual tars::Int32 testConHash(std::string &sOut,tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testConHash(tars::TarsCurrentPtr _current_, tars::Int32 _ret, const std::string &sOut)
         {
             size_t _rsp_len_ = 0;
-            if (current->getRequestVersion() == TUPVERSION )
+            if (_current_->getRequestVersion() == TUPVERSION )
             {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                tarsAttr.setVersion(current->getRequestVersion());
-                tarsAttr.put("", _ret);
-                tarsAttr.put("tars_ret", _ret);
-                tarsAttr.put("sOut", sOut);
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
+                _tarsAttr_.put("sOut", sOut);
 
                 vector<char> sTupResponseBuffer;
-                tarsAttr.encode(sTupResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
                 _rsp_len_ = sTupResponseBuffer.size();
             }
-            else if (current->getRequestVersion() == JSONVERSION)
+            else if (_current_->getRequestVersion() == JSONVERSION)
             {
                 tars::JsonValueObjPtr _p = new tars::JsonValueObj();
                 _p->value["sOut"] = tars::JsonOutput::writeJson(sOut);
                 _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
                 _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
@@ -3106,13 +3365,13 @@ namespace Test
 
                 _os.write(sOut, 1);
 
-                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
                 _rsp_len_ = _os.getLength();
             }
-            if (current->isTraced())
+            if (_current_->isTraced())
             {
                 string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3124,36 +3383,47 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testConHash", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testConHash", 0, _trace_param_, "");
             }
 
         }
+        static void async_response_push_testConHash(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &sOut)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
 
-        virtual tars::Bool testCoro(const std::string & sIn,std::string &sOut,tars::TarsCurrentPtr current) = 0;
-        static void async_response_testCoro(tars::TarsCurrentPtr current, tars::Bool _ret, const std::string &sOut)
+                _os.write(sOut, 1);
+
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testConHash", _os);
+            }
+        }
+
+        virtual tars::Bool testCoro(const std::string & sIn,std::string &sOut,tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testCoro(tars::TarsCurrentPtr _current_, tars::Bool _ret, const std::string &sOut)
         {
             size_t _rsp_len_ = 0;
-            if (current->getRequestVersion() == TUPVERSION )
+            if (_current_->getRequestVersion() == TUPVERSION )
             {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                tarsAttr.setVersion(current->getRequestVersion());
-                tarsAttr.put("", _ret);
-                tarsAttr.put("tars_ret", _ret);
-                tarsAttr.put("sOut", sOut);
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
+                _tarsAttr_.put("sOut", sOut);
 
                 vector<char> sTupResponseBuffer;
-                tarsAttr.encode(sTupResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
                 _rsp_len_ = sTupResponseBuffer.size();
             }
-            else if (current->getRequestVersion() == JSONVERSION)
+            else if (_current_->getRequestVersion() == JSONVERSION)
             {
                 tars::JsonValueObjPtr _p = new tars::JsonValueObj();
                 _p->value["sOut"] = tars::JsonOutput::writeJson(sOut);
                 _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
                 _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
@@ -3163,13 +3433,13 @@ namespace Test
 
                 _os.write(sOut, 2);
 
-                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
                 _rsp_len_ = _os.getLength();
             }
-            if (current->isTraced())
+            if (_current_->isTraced())
             {
                 string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3181,36 +3451,47 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
             }
 
         }
+        static void async_response_push_testCoro(tars::CurrentPtr _current_, tars::Bool _ret, const std::string &sOut)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
 
-        virtual tars::Int32 testDyeing(const std::string & strIn,std::string &strOut,tars::TarsCurrentPtr current) = 0;
-        static void async_response_testDyeing(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &strOut)
+                _os.write(sOut, 2);
+
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testCoro", _os);
+            }
+        }
+
+        virtual tars::Int32 testDyeing(const std::string & strIn,std::string &strOut,tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testDyeing(tars::TarsCurrentPtr _current_, tars::Int32 _ret, const std::string &strOut)
         {
             size_t _rsp_len_ = 0;
-            if (current->getRequestVersion() == TUPVERSION )
+            if (_current_->getRequestVersion() == TUPVERSION )
             {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                tarsAttr.setVersion(current->getRequestVersion());
-                tarsAttr.put("", _ret);
-                tarsAttr.put("tars_ret", _ret);
-                tarsAttr.put("strOut", strOut);
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
+                _tarsAttr_.put("strOut", strOut);
 
                 vector<char> sTupResponseBuffer;
-                tarsAttr.encode(sTupResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
                 _rsp_len_ = sTupResponseBuffer.size();
             }
-            else if (current->getRequestVersion() == JSONVERSION)
+            else if (_current_->getRequestVersion() == JSONVERSION)
             {
                 tars::JsonValueObjPtr _p = new tars::JsonValueObj();
                 _p->value["strOut"] = tars::JsonOutput::writeJson(strOut);
                 _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
                 _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
@@ -3220,13 +3501,13 @@ namespace Test
 
                 _os.write(strOut, 2);
 
-                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
                 _rsp_len_ = _os.getLength();
             }
-            if (current->isTraced())
+            if (_current_->isTraced())
             {
                 string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3238,34 +3519,45 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
             }
 
         }
+        static void async_response_push_testDyeing(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &strOut)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
 
-        virtual tars::Int32 testDyeingTrans(tars::TarsCurrentPtr current) = 0;
-        static void async_response_testDyeingTrans(tars::TarsCurrentPtr current, tars::Int32 _ret)
+                _os.write(strOut, 2);
+
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testDyeing", _os);
+            }
+        }
+
+        virtual tars::Int32 testDyeingTrans(tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testDyeingTrans(tars::TarsCurrentPtr _current_, tars::Int32 _ret)
         {
             size_t _rsp_len_ = 0;
-            if (current->getRequestVersion() == TUPVERSION )
+            if (_current_->getRequestVersion() == TUPVERSION )
             {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                tarsAttr.setVersion(current->getRequestVersion());
-                tarsAttr.put("", _ret);
-                tarsAttr.put("tars_ret", _ret);
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
 
                 vector<char> sTupResponseBuffer;
-                tarsAttr.encode(sTupResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
                 _rsp_len_ = sTupResponseBuffer.size();
             }
-            else if (current->getRequestVersion() == JSONVERSION)
+            else if (_current_->getRequestVersion() == JSONVERSION)
             {
                 tars::JsonValueObjPtr _p = new tars::JsonValueObj();
                 _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
                 _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
@@ -3273,13 +3565,13 @@ namespace Test
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
                 _os.write(_ret, 0);
 
-                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
                 _rsp_len_ = _os.getLength();
             }
-            if (current->isTraced())
+            if (_current_->isTraced())
             {
                 string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3290,36 +3582,45 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
             }
 
         }
+        static void async_response_push_testDyeingTrans(tars::CurrentPtr _current_, tars::Int32 _ret)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
 
-        virtual tars::Int32 testHello(tars::Int32 index,const std::string & s,std::string &r,tars::TarsCurrentPtr current) = 0;
-        static void async_response_testHello(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &r)
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testDyeingTrans", _os);
+            }
+        }
+
+        virtual tars::Int32 testHello(tars::Int32 index,const std::string & s,std::string &r,tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testHello(tars::TarsCurrentPtr _current_, tars::Int32 _ret, const std::string &r)
         {
             size_t _rsp_len_ = 0;
-            if (current->getRequestVersion() == TUPVERSION )
+            if (_current_->getRequestVersion() == TUPVERSION )
             {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                tarsAttr.setVersion(current->getRequestVersion());
-                tarsAttr.put("", _ret);
-                tarsAttr.put("tars_ret", _ret);
-                tarsAttr.put("r", r);
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
+                _tarsAttr_.put("r", r);
 
                 vector<char> sTupResponseBuffer;
-                tarsAttr.encode(sTupResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
                 _rsp_len_ = sTupResponseBuffer.size();
             }
-            else if (current->getRequestVersion() == JSONVERSION)
+            else if (_current_->getRequestVersion() == JSONVERSION)
             {
                 tars::JsonValueObjPtr _p = new tars::JsonValueObj();
                 _p->value["r"] = tars::JsonOutput::writeJson(r);
                 _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
                 _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
@@ -3329,13 +3630,13 @@ namespace Test
 
                 _os.write(r, 3);
 
-                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
                 _rsp_len_ = _os.getLength();
             }
-            if (current->isTraced())
+            if (_current_->isTraced())
             {
                 string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3347,36 +3648,47 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
             }
 
         }
+        static void async_response_push_testHello(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
 
-        virtual tars::Int32 testPid(std::string &r,tars::TarsCurrentPtr current) = 0;
-        static void async_response_testPid(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &r)
+                _os.write(r, 3);
+
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testHello", _os);
+            }
+        }
+
+        virtual tars::Int32 testPid(std::string &r,tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testPid(tars::TarsCurrentPtr _current_, tars::Int32 _ret, const std::string &r)
         {
             size_t _rsp_len_ = 0;
-            if (current->getRequestVersion() == TUPVERSION )
+            if (_current_->getRequestVersion() == TUPVERSION )
             {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                tarsAttr.setVersion(current->getRequestVersion());
-                tarsAttr.put("", _ret);
-                tarsAttr.put("tars_ret", _ret);
-                tarsAttr.put("r", r);
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
+                _tarsAttr_.put("r", r);
 
                 vector<char> sTupResponseBuffer;
-                tarsAttr.encode(sTupResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
                 _rsp_len_ = sTupResponseBuffer.size();
             }
-            else if (current->getRequestVersion() == JSONVERSION)
+            else if (_current_->getRequestVersion() == JSONVERSION)
             {
                 tars::JsonValueObjPtr _p = new tars::JsonValueObj();
                 _p->value["r"] = tars::JsonOutput::writeJson(r);
                 _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
                 _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
@@ -3386,13 +3698,13 @@ namespace Test
 
                 _os.write(r, 1);
 
-                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
                 _rsp_len_ = _os.getLength();
             }
-            if (current->isTraced())
+            if (_current_->isTraced())
             {
                 string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3404,36 +3716,108 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
             }
 
         }
+        static void async_response_push_testPid(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
 
-        virtual tars::Int32 testSyncTrans(tars::Int32 index,const std::string & s,std::string &r,tars::TarsCurrentPtr current) = 0;
-        static void async_response_testSyncTrans(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &r)
+                _os.write(r, 1);
+
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testPid", _os);
+            }
+        }
+
+        virtual tars::Int32 testPushRegister(const std::string & msg,tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testPushRegister(tars::TarsCurrentPtr _current_, tars::Int32 _ret)
         {
             size_t _rsp_len_ = 0;
-            if (current->getRequestVersion() == TUPVERSION )
+            if (_current_->getRequestVersion() == TUPVERSION )
             {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                tarsAttr.setVersion(current->getRequestVersion());
-                tarsAttr.put("", _ret);
-                tarsAttr.put("tars_ret", _ret);
-                tarsAttr.put("r", r);
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
 
                 vector<char> sTupResponseBuffer;
-                tarsAttr.encode(sTupResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
                 _rsp_len_ = sTupResponseBuffer.size();
             }
-            else if (current->getRequestVersion() == JSONVERSION)
+            else if (_current_->getRequestVersion() == JSONVERSION)
+            {
+                tars::JsonValueObjPtr _p = new tars::JsonValueObj();
+                _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
+                vector<char> sJsonResponseBuffer;
+                tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _rsp_len_ = sJsonResponseBuffer.size();
+            }
+            else
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
+
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _rsp_len_ = _os.getLength();
+            }
+            if (_current_->isTraced())
+            {
+                string _trace_param_;
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
+                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                {
+                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                    _trace_param_ = tars::TC_Json::writeValue(_p_);
+                }
+                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                {
+                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                }
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPushRegister", 0, _trace_param_, "");
+            }
+
+        }
+        static void async_response_push_testPushRegister(tars::CurrentPtr _current_, tars::Int32 _ret)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
+
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testPushRegister", _os);
+            }
+        }
+
+        virtual tars::Int32 testSyncTrans(tars::Int32 index,const std::string & s,std::string &r,tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testSyncTrans(tars::TarsCurrentPtr _current_, tars::Int32 _ret, const std::string &r)
+        {
+            size_t _rsp_len_ = 0;
+            if (_current_->getRequestVersion() == TUPVERSION )
+            {
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
+                _tarsAttr_.put("r", r);
+
+                vector<char> sTupResponseBuffer;
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _rsp_len_ = sTupResponseBuffer.size();
+            }
+            else if (_current_->getRequestVersion() == JSONVERSION)
             {
                 tars::JsonValueObjPtr _p = new tars::JsonValueObj();
                 _p->value["r"] = tars::JsonOutput::writeJson(r);
                 _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
                 _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
@@ -3443,13 +3827,13 @@ namespace Test
 
                 _os.write(r, 3);
 
-                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
                 _rsp_len_ = _os.getLength();
             }
-            if (current->isTraced())
+            if (_current_->isTraced())
             {
                 string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3461,34 +3845,45 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
             }
 
         }
+        static void async_response_push_testSyncTrans(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
 
-        virtual tars::Int32 testTimeout(tars::Int32 timeout,tars::TarsCurrentPtr current) = 0;
-        static void async_response_testTimeout(tars::TarsCurrentPtr current, tars::Int32 _ret)
+                _os.write(r, 3);
+
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testSyncTrans", _os);
+            }
+        }
+
+        virtual tars::Int32 testTimeout(tars::Int32 timeout,tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testTimeout(tars::TarsCurrentPtr _current_, tars::Int32 _ret)
         {
             size_t _rsp_len_ = 0;
-            if (current->getRequestVersion() == TUPVERSION )
+            if (_current_->getRequestVersion() == TUPVERSION )
             {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                tarsAttr.setVersion(current->getRequestVersion());
-                tarsAttr.put("", _ret);
-                tarsAttr.put("tars_ret", _ret);
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
 
                 vector<char> sTupResponseBuffer;
-                tarsAttr.encode(sTupResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
                 _rsp_len_ = sTupResponseBuffer.size();
             }
-            else if (current->getRequestVersion() == JSONVERSION)
+            else if (_current_->getRequestVersion() == JSONVERSION)
             {
                 tars::JsonValueObjPtr _p = new tars::JsonValueObj();
                 _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
                 _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
@@ -3496,13 +3891,13 @@ namespace Test
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
                 _os.write(_ret, 0);
 
-                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
                 _rsp_len_ = _os.getLength();
             }
-            if (current->isTraced())
+            if (_current_->isTraced())
             {
                 string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3513,36 +3908,45 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
             }
 
         }
+        static void async_response_push_testTimeout(tars::CurrentPtr _current_, tars::Int32 _ret)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
 
-        virtual tars::Int32 testTrans(tars::Int32 index,const std::string & s,std::string &r,tars::TarsCurrentPtr current) = 0;
-        static void async_response_testTrans(tars::TarsCurrentPtr current, tars::Int32 _ret, const std::string &r)
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testTimeout", _os);
+            }
+        }
+
+        virtual tars::Int32 testTrans(tars::Int32 index,const std::string & s,std::string &r,tars::TarsCurrentPtr _current_) = 0;
+        static void async_response_testTrans(tars::TarsCurrentPtr _current_, tars::Int32 _ret, const std::string &r)
         {
             size_t _rsp_len_ = 0;
-            if (current->getRequestVersion() == TUPVERSION )
+            if (_current_->getRequestVersion() == TUPVERSION )
             {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                tarsAttr.setVersion(current->getRequestVersion());
-                tarsAttr.put("", _ret);
-                tarsAttr.put("tars_ret", _ret);
-                tarsAttr.put("r", r);
+                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                _tarsAttr_.setVersion(_current_->getRequestVersion());
+                _tarsAttr_.put("", _ret);
+                _tarsAttr_.put("tars_ret", _ret);
+                _tarsAttr_.put("r", r);
 
                 vector<char> sTupResponseBuffer;
-                tarsAttr.encode(sTupResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
+                _tarsAttr_.encode(sTupResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);
                 _rsp_len_ = sTupResponseBuffer.size();
             }
-            else if (current->getRequestVersion() == JSONVERSION)
+            else if (_current_->getRequestVersion() == JSONVERSION)
             {
                 tars::JsonValueObjPtr _p = new tars::JsonValueObj();
                 _p->value["r"] = tars::JsonOutput::writeJson(r);
                 _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
                 vector<char> sJsonResponseBuffer;
                 tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                current->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
                 _rsp_len_ = sJsonResponseBuffer.size();
             }
             else
@@ -3552,13 +3956,13 @@ namespace Test
 
                 _os.write(r, 3);
 
-                current->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
+                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());
                 _rsp_len_ = _os.getLength();
             }
-            if (current->isTraced())
+            if (_current_->isTraced())
             {
                 string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, current->getTraceKey(), _rsp_len_);
+                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
                 if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                 {
                     tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3570,9 +3974,20 @@ namespace Test
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(current->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
             }
 
+        }
+        static void async_response_push_testTrans(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r)
+        {
+            {
+                tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                _os.write(_ret, 0);
+
+                _os.write(r, 3);
+
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testTrans", _os);
+            }
         }
 
     public:
@@ -3586,12 +4001,13 @@ namespace Test
                 "testDyeingTrans",
                 "testHello",
                 "testPid",
+                "testPushRegister",
                 "testSyncTrans",
                 "testTimeout",
                 "testTrans"
             };
 
-            pair<string*, string*> r = equal_range(__Test__Hello_all, __Test__Hello_all+9, _current->getFuncName());
+            pair<string*, string*> r = equal_range(__Test__Hello_all, __Test__Hello_all+10, _current->getFuncName());
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __Test__Hello_all)
             {
@@ -3602,10 +4018,10 @@ namespace Test
                     std::string sOut;
                     if (_current->getRequestVersion() == TUPVERSION)
                     {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                        tarsAttr.setVersion(_current->getRequestVersion());
-                        tarsAttr.decode(_current->getRequestBuffer());
-                        tarsAttr.getByDefault("sOut", sOut, sOut);
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
+                        _tarsAttr_.getByDefault("sOut", sOut, sOut);
                     }
                     else if (_current->getRequestVersion() == JSONVERSION)
                     {
@@ -3616,11 +4032,11 @@ namespace Test
                     {
                         _is.read(sOut, 1, false);
                     }
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3630,7 +4046,7 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testConHash", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testConHash", 0, _trace_param_, "");
                     }
 
                     tars::Int32 _ret = testConHash(sOut, _current);
@@ -3638,12 +4054,12 @@ namespace Test
                     {
                         if (_current->getRequestVersion() == TUPVERSION)
                         {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                            tarsAttr.setVersion(_current->getRequestVersion());
-                            tarsAttr.put("", _ret);
-                            tarsAttr.put("tars_ret", _ret);
-                            tarsAttr.put("sOut", sOut);
-                            tarsAttr.encode(_sResponseBuffer);
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.put("sOut", sOut);
+                            _tarsAttr_.encode(_sResponseBuffer);
                         }
                         else if (_current->getRequestVersion() == JSONVERSION)
                         {
@@ -3659,10 +4075,10 @@ namespace Test
                             _os.write(sOut, 1);
                             _os.swap(_sResponseBuffer);
                         }
-                        if (pSptd && pSptd->_traceCall)
+                        if (_pSptd_ && _pSptd_->_traceCall)
                         {
                             string _trace_param_;
-                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
                             if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                             {
                                 tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3674,13 +4090,13 @@ namespace Test
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testConHash", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testConHash", 0, _trace_param_, "");
                         }
 
                     }
-                    else if(pSptd && pSptd->_traceCall)
+                    else if(_pSptd_ && _pSptd_->_traceCall)
                     {
-                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
                     }
 
                     return tars::TARSSERVERSUCCESS;
@@ -3694,11 +4110,11 @@ namespace Test
                     std::string sOut;
                     if (_current->getRequestVersion() == TUPVERSION)
                     {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                        tarsAttr.setVersion(_current->getRequestVersion());
-                        tarsAttr.decode(_current->getRequestBuffer());
-                        tarsAttr.get("sIn", sIn);
-                        tarsAttr.getByDefault("sOut", sOut, sOut);
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
+                        _tarsAttr_.get("sIn", sIn);
+                        _tarsAttr_.getByDefault("sOut", sOut, sOut);
                     }
                     else if (_current->getRequestVersion() == JSONVERSION)
                     {
@@ -3711,11 +4127,11 @@ namespace Test
                         _is.read(sIn, 1, true);
                         _is.read(sOut, 2, false);
                     }
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3726,7 +4142,7 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
                     }
 
                     tars::Bool _ret = testCoro(sIn,sOut, _current);
@@ -3734,12 +4150,12 @@ namespace Test
                     {
                         if (_current->getRequestVersion() == TUPVERSION)
                         {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                            tarsAttr.setVersion(_current->getRequestVersion());
-                            tarsAttr.put("", _ret);
-                            tarsAttr.put("tars_ret", _ret);
-                            tarsAttr.put("sOut", sOut);
-                            tarsAttr.encode(_sResponseBuffer);
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.put("sOut", sOut);
+                            _tarsAttr_.encode(_sResponseBuffer);
                         }
                         else if (_current->getRequestVersion() == JSONVERSION)
                         {
@@ -3755,10 +4171,10 @@ namespace Test
                             _os.write(sOut, 2);
                             _os.swap(_sResponseBuffer);
                         }
-                        if (pSptd && pSptd->_traceCall)
+                        if (_pSptd_ && _pSptd_->_traceCall)
                         {
                             string _trace_param_;
-                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
                             if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                             {
                                 tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3770,13 +4186,13 @@ namespace Test
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testCoro", 0, _trace_param_, "");
                         }
 
                     }
-                    else if(pSptd && pSptd->_traceCall)
+                    else if(_pSptd_ && _pSptd_->_traceCall)
                     {
-                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
                     }
 
                     return tars::TARSSERVERSUCCESS;
@@ -3790,11 +4206,11 @@ namespace Test
                     std::string strOut;
                     if (_current->getRequestVersion() == TUPVERSION)
                     {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                        tarsAttr.setVersion(_current->getRequestVersion());
-                        tarsAttr.decode(_current->getRequestBuffer());
-                        tarsAttr.get("strIn", strIn);
-                        tarsAttr.getByDefault("strOut", strOut, strOut);
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
+                        _tarsAttr_.get("strIn", strIn);
+                        _tarsAttr_.getByDefault("strOut", strOut, strOut);
                     }
                     else if (_current->getRequestVersion() == JSONVERSION)
                     {
@@ -3807,11 +4223,11 @@ namespace Test
                         _is.read(strIn, 1, true);
                         _is.read(strOut, 2, false);
                     }
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3822,7 +4238,7 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
                     }
 
                     tars::Int32 _ret = testDyeing(strIn,strOut, _current);
@@ -3830,12 +4246,12 @@ namespace Test
                     {
                         if (_current->getRequestVersion() == TUPVERSION)
                         {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                            tarsAttr.setVersion(_current->getRequestVersion());
-                            tarsAttr.put("", _ret);
-                            tarsAttr.put("tars_ret", _ret);
-                            tarsAttr.put("strOut", strOut);
-                            tarsAttr.encode(_sResponseBuffer);
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.put("strOut", strOut);
+                            _tarsAttr_.encode(_sResponseBuffer);
                         }
                         else if (_current->getRequestVersion() == JSONVERSION)
                         {
@@ -3851,10 +4267,10 @@ namespace Test
                             _os.write(strOut, 2);
                             _os.swap(_sResponseBuffer);
                         }
-                        if (pSptd && pSptd->_traceCall)
+                        if (_pSptd_ && _pSptd_->_traceCall)
                         {
                             string _trace_param_;
-                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
                             if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                             {
                                 tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3866,13 +4282,13 @@ namespace Test
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeing", 0, _trace_param_, "");
                         }
 
                     }
-                    else if(pSptd && pSptd->_traceCall)
+                    else if(_pSptd_ && _pSptd_->_traceCall)
                     {
-                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
                     }
 
                     return tars::TARSSERVERSUCCESS;
@@ -3884,9 +4300,9 @@ namespace Test
                     _is.setBuffer(_current->getRequestBuffer());
                     if (_current->getRequestVersion() == TUPVERSION)
                     {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                        tarsAttr.setVersion(_current->getRequestVersion());
-                        tarsAttr.decode(_current->getRequestBuffer());
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
                     }
                     else if (_current->getRequestVersion() == JSONVERSION)
                     {
@@ -3895,11 +4311,11 @@ namespace Test
                     else
                     {
                     }
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3909,7 +4325,7 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
                     }
 
                     tars::Int32 _ret = testDyeingTrans(_current);
@@ -3917,11 +4333,11 @@ namespace Test
                     {
                         if (_current->getRequestVersion() == TUPVERSION)
                         {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                            tarsAttr.setVersion(_current->getRequestVersion());
-                            tarsAttr.put("", _ret);
-                            tarsAttr.put("tars_ret", _ret);
-                            tarsAttr.encode(_sResponseBuffer);
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.encode(_sResponseBuffer);
                         }
                         else if (_current->getRequestVersion() == JSONVERSION)
                         {
@@ -3935,10 +4351,10 @@ namespace Test
                             _os.write(_ret, 0);
                             _os.swap(_sResponseBuffer);
                         }
-                        if (pSptd && pSptd->_traceCall)
+                        if (_pSptd_ && _pSptd_->_traceCall)
                         {
                             string _trace_param_;
-                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
                             if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                             {
                                 tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -3949,13 +4365,13 @@ namespace Test
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testDyeingTrans", 0, _trace_param_, "");
                         }
 
                     }
-                    else if(pSptd && pSptd->_traceCall)
+                    else if(_pSptd_ && _pSptd_->_traceCall)
                     {
-                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
                     }
 
                     return tars::TARSSERVERSUCCESS;
@@ -3970,12 +4386,12 @@ namespace Test
                     std::string r;
                     if (_current->getRequestVersion() == TUPVERSION)
                     {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                        tarsAttr.setVersion(_current->getRequestVersion());
-                        tarsAttr.decode(_current->getRequestBuffer());
-                        tarsAttr.get("index", index);
-                        tarsAttr.get("s", s);
-                        tarsAttr.getByDefault("r", r, r);
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
+                        _tarsAttr_.get("index", index);
+                        _tarsAttr_.get("s", s);
+                        _tarsAttr_.getByDefault("r", r, r);
                     }
                     else if (_current->getRequestVersion() == JSONVERSION)
                     {
@@ -3990,11 +4406,11 @@ namespace Test
                         _is.read(s, 2, true);
                         _is.read(r, 3, false);
                     }
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4006,7 +4422,7 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
                     }
 
                     tars::Int32 _ret = testHello(index,s,r, _current);
@@ -4014,12 +4430,12 @@ namespace Test
                     {
                         if (_current->getRequestVersion() == TUPVERSION)
                         {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                            tarsAttr.setVersion(_current->getRequestVersion());
-                            tarsAttr.put("", _ret);
-                            tarsAttr.put("tars_ret", _ret);
-                            tarsAttr.put("r", r);
-                            tarsAttr.encode(_sResponseBuffer);
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.put("r", r);
+                            _tarsAttr_.encode(_sResponseBuffer);
                         }
                         else if (_current->getRequestVersion() == JSONVERSION)
                         {
@@ -4035,10 +4451,10 @@ namespace Test
                             _os.write(r, 3);
                             _os.swap(_sResponseBuffer);
                         }
-                        if (pSptd && pSptd->_traceCall)
+                        if (_pSptd_ && _pSptd_->_traceCall)
                         {
                             string _trace_param_;
-                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
                             if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                             {
                                 tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4050,13 +4466,13 @@ namespace Test
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testHello", 0, _trace_param_, "");
                         }
 
                     }
-                    else if(pSptd && pSptd->_traceCall)
+                    else if(_pSptd_ && _pSptd_->_traceCall)
                     {
-                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
                     }
 
                     return tars::TARSSERVERSUCCESS;
@@ -4069,10 +4485,10 @@ namespace Test
                     std::string r;
                     if (_current->getRequestVersion() == TUPVERSION)
                     {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                        tarsAttr.setVersion(_current->getRequestVersion());
-                        tarsAttr.decode(_current->getRequestBuffer());
-                        tarsAttr.getByDefault("r", r, r);
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
+                        _tarsAttr_.getByDefault("r", r, r);
                     }
                     else if (_current->getRequestVersion() == JSONVERSION)
                     {
@@ -4083,11 +4499,11 @@ namespace Test
                     {
                         _is.read(r, 1, false);
                     }
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4097,7 +4513,7 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
                     }
 
                     tars::Int32 _ret = testPid(r, _current);
@@ -4105,12 +4521,12 @@ namespace Test
                     {
                         if (_current->getRequestVersion() == TUPVERSION)
                         {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                            tarsAttr.setVersion(_current->getRequestVersion());
-                            tarsAttr.put("", _ret);
-                            tarsAttr.put("tars_ret", _ret);
-                            tarsAttr.put("r", r);
-                            tarsAttr.encode(_sResponseBuffer);
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.put("r", r);
+                            _tarsAttr_.encode(_sResponseBuffer);
                         }
                         else if (_current->getRequestVersion() == JSONVERSION)
                         {
@@ -4126,10 +4542,10 @@ namespace Test
                             _os.write(r, 1);
                             _os.swap(_sResponseBuffer);
                         }
-                        if (pSptd && pSptd->_traceCall)
+                        if (_pSptd_ && _pSptd_->_traceCall)
                         {
                             string _trace_param_;
-                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
                             if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                             {
                                 tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4141,13 +4557,13 @@ namespace Test
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPid", 0, _trace_param_, "");
                         }
 
                     }
-                    else if(pSptd && pSptd->_traceCall)
+                    else if(_pSptd_ && _pSptd_->_traceCall)
                     {
-                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
                     }
 
                     return tars::TARSSERVERSUCCESS;
@@ -4157,17 +4573,105 @@ namespace Test
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
+                    std::string msg;
+                    if (_current->getRequestVersion() == TUPVERSION)
+                    {
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
+                        _tarsAttr_.get("msg", msg);
+                    }
+                    else if (_current->getRequestVersion() == JSONVERSION)
+                    {
+                        tars::JsonValueObjPtr _jsonPtr = tars::JsonValueObjPtr::dynamicCast(tars::TC_Json::getValue(_current->getRequestBuffer()));
+                        tars::JsonInput::readJson(msg, _jsonPtr->value["msg"], true);
+                    }
+                    else
+                    {
+                        _is.read(msg, 1, true);
+                    }
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
+                    {
+                        string _trace_param_;
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                        {
+                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                            _p_->value["msg"] = tars::JsonOutput::writeJson(msg);
+                            _trace_param_ = tars::TC_Json::writeValue(_p_);
+                        }
+                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                        {
+                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                        }
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPushRegister", 0, _trace_param_, "");
+                    }
+
+                    tars::Int32 _ret = testPushRegister(msg, _current);
+                    if(_current->isResponse())
+                    {
+                        if (_current->getRequestVersion() == TUPVERSION)
+                        {
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.encode(_sResponseBuffer);
+                        }
+                        else if (_current->getRequestVersion() == JSONVERSION)
+                        {
+                            tars::JsonValueObjPtr _p = new tars::JsonValueObj();
+                            _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
+                            tars::TC_Json::writeValue(_p, _sResponseBuffer);
+                        }
+                        else
+                        {
+                            tars::TarsOutputStream<tars::BufferWriterVector> _os;
+                            _os.write(_ret, 0);
+                            _os.swap(_sResponseBuffer);
+                        }
+                        if (_pSptd_ && _pSptd_->_traceCall)
+                        {
+                            string _trace_param_;
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
+                            {
+                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
+                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
+                                _trace_param_ = tars::TC_Json::writeValue(_p_);
+                            }
+                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
+                            {
+                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
+                            }
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testPushRegister", 0, _trace_param_, "");
+                        }
+
+                    }
+                    else if(_pSptd_ && _pSptd_->_traceCall)
+                    {
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                    }
+
+                    return tars::TARSSERVERSUCCESS;
+
+                }
+                case 7:
+                {
+                    tars::TarsInputStream<tars::BufferReader> _is;
+                    _is.setBuffer(_current->getRequestBuffer());
                     tars::Int32 index;
                     std::string s;
                     std::string r;
                     if (_current->getRequestVersion() == TUPVERSION)
                     {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                        tarsAttr.setVersion(_current->getRequestVersion());
-                        tarsAttr.decode(_current->getRequestBuffer());
-                        tarsAttr.get("index", index);
-                        tarsAttr.get("s", s);
-                        tarsAttr.getByDefault("r", r, r);
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
+                        _tarsAttr_.get("index", index);
+                        _tarsAttr_.get("s", s);
+                        _tarsAttr_.getByDefault("r", r, r);
                     }
                     else if (_current->getRequestVersion() == JSONVERSION)
                     {
@@ -4182,11 +4686,11 @@ namespace Test
                         _is.read(s, 2, true);
                         _is.read(r, 3, false);
                     }
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4198,7 +4702,7 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
                     }
 
                     tars::Int32 _ret = testSyncTrans(index,s,r, _current);
@@ -4206,12 +4710,12 @@ namespace Test
                     {
                         if (_current->getRequestVersion() == TUPVERSION)
                         {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                            tarsAttr.setVersion(_current->getRequestVersion());
-                            tarsAttr.put("", _ret);
-                            tarsAttr.put("tars_ret", _ret);
-                            tarsAttr.put("r", r);
-                            tarsAttr.encode(_sResponseBuffer);
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.put("r", r);
+                            _tarsAttr_.encode(_sResponseBuffer);
                         }
                         else if (_current->getRequestVersion() == JSONVERSION)
                         {
@@ -4227,10 +4731,10 @@ namespace Test
                             _os.write(r, 3);
                             _os.swap(_sResponseBuffer);
                         }
-                        if (pSptd && pSptd->_traceCall)
+                        if (_pSptd_ && _pSptd_->_traceCall)
                         {
                             string _trace_param_;
-                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
                             if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                             {
                                 tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4242,29 +4746,29 @@ namespace Test
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testSyncTrans", 0, _trace_param_, "");
                         }
 
                     }
-                    else if(pSptd && pSptd->_traceCall)
+                    else if(_pSptd_ && _pSptd_->_traceCall)
                     {
-                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
                     }
 
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 7:
+                case 8:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
                     tars::Int32 timeout;
                     if (_current->getRequestVersion() == TUPVERSION)
                     {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                        tarsAttr.setVersion(_current->getRequestVersion());
-                        tarsAttr.decode(_current->getRequestBuffer());
-                        tarsAttr.get("timeout", timeout);
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
+                        _tarsAttr_.get("timeout", timeout);
                     }
                     else if (_current->getRequestVersion() == JSONVERSION)
                     {
@@ -4275,11 +4779,11 @@ namespace Test
                     {
                         _is.read(timeout, 1, true);
                     }
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4290,7 +4794,7 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
                     }
 
                     tars::Int32 _ret = testTimeout(timeout, _current);
@@ -4298,11 +4802,11 @@ namespace Test
                     {
                         if (_current->getRequestVersion() == TUPVERSION)
                         {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                            tarsAttr.setVersion(_current->getRequestVersion());
-                            tarsAttr.put("", _ret);
-                            tarsAttr.put("tars_ret", _ret);
-                            tarsAttr.encode(_sResponseBuffer);
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.encode(_sResponseBuffer);
                         }
                         else if (_current->getRequestVersion() == JSONVERSION)
                         {
@@ -4316,10 +4820,10 @@ namespace Test
                             _os.write(_ret, 0);
                             _os.swap(_sResponseBuffer);
                         }
-                        if (pSptd && pSptd->_traceCall)
+                        if (_pSptd_ && _pSptd_->_traceCall)
                         {
                             string _trace_param_;
-                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
                             if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                             {
                                 tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4330,19 +4834,19 @@ namespace Test
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTimeout", 0, _trace_param_, "");
                         }
 
                     }
-                    else if(pSptd && pSptd->_traceCall)
+                    else if(_pSptd_ && _pSptd_->_traceCall)
                     {
-                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
                     }
 
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 8:
+                case 9:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -4351,12 +4855,12 @@ namespace Test
                     std::string r;
                     if (_current->getRequestVersion() == TUPVERSION)
                     {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                        tarsAttr.setVersion(_current->getRequestVersion());
-                        tarsAttr.decode(_current->getRequestBuffer());
-                        tarsAttr.get("index", index);
-                        tarsAttr.get("s", s);
-                        tarsAttr.getByDefault("r", r, r);
+                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                        _tarsAttr_.setVersion(_current->getRequestVersion());
+                        _tarsAttr_.decode(_current->getRequestBuffer());
+                        _tarsAttr_.get("index", index);
+                        _tarsAttr_.get("s", s);
+                        _tarsAttr_.getByDefault("r", r, r);
                     }
                     else if (_current->getRequestVersion() == JSONVERSION)
                     {
@@ -4371,11 +4875,11 @@ namespace Test
                         _is.read(s, 2, true);
                         _is.read(r, 3, false);
                     }
-                    ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-                    if (pSptd && pSptd->_traceCall)
+                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
+                    if (_pSptd_ && _pSptd_->_traceCall)
                     {
                         string _trace_param_;
-                        int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
+                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
                         if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                         {
                             tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4387,7 +4891,7 @@ namespace Test
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
                     }
 
                     tars::Int32 _ret = testTrans(index,s,r, _current);
@@ -4395,12 +4899,12 @@ namespace Test
                     {
                         if (_current->getRequestVersion() == TUPVERSION)
                         {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  tarsAttr;
-                            tarsAttr.setVersion(_current->getRequestVersion());
-                            tarsAttr.put("", _ret);
-                            tarsAttr.put("tars_ret", _ret);
-                            tarsAttr.put("r", r);
-                            tarsAttr.encode(_sResponseBuffer);
+                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
+                            _tarsAttr_.setVersion(_current->getRequestVersion());
+                            _tarsAttr_.put("", _ret);
+                            _tarsAttr_.put("tars_ret", _ret);
+                            _tarsAttr_.put("r", r);
+                            _tarsAttr_.encode(_sResponseBuffer);
                         }
                         else if (_current->getRequestVersion() == JSONVERSION)
                         {
@@ -4416,10 +4920,10 @@ namespace Test
                             _os.write(r, 3);
                             _os.swap(_sResponseBuffer);
                         }
-                        if (pSptd && pSptd->_traceCall)
+                        if (_pSptd_ && _pSptd_->_traceCall)
                         {
                             string _trace_param_;
-                            int _trace_param_flag_ = pSptd->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
+                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
                             if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
                             {
                                 tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
@@ -4431,13 +4935,13 @@ namespace Test
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "testTrans", 0, _trace_param_, "");
                         }
 
                     }
-                    else if(pSptd && pSptd->_traceCall)
+                    else if(_pSptd_ && _pSptd_->_traceCall)
                     {
-                        _current->setTrace(pSptd->_traceCall, pSptd->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
+                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
                     }
 
                     return tars::TARSSERVERSUCCESS;

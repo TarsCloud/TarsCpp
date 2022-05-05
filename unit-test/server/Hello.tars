@@ -61,6 +61,8 @@ module Test
         bool testCoro(string sIn, out string sOut);
 
         int testConHash(out string sOut);
+
+        int testPushRegister(string msg);
     };
 };
 

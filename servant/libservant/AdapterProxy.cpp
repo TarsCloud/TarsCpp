@@ -881,10 +881,11 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
     {
         finishInvoke(msg->response->iRet != TARSSERVERSUCCESS);
     }
+
     //同步调用，唤醒ServantProxy线程
     if (msg->eType == ReqMessage::SYNC_CALL)
     {
-        if (!msg->sched)
+		if (!msg->sched)
         {
             assert(msg->pMonitor);
 
@@ -898,12 +899,12 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
         return ;
     }
 
-    //异步调用
+	//异步调用
     if (msg->eType == ReqMessage::ASYNC_CALL)
     {
-        if(!msg->sched)
+		if(!msg->sched)
         {
-            if (msg->callback->getNetThreadProcess())
+			if (msg->callback->getNetThreadProcess())
             {
                 //如果是本线程的回调，直接本线程处理
                 //比如获取endpoint
@@ -923,8 +924,8 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
             }
             else
             {
-                //异步回调，放入回调处理线程中
-                _objectProxy->getCommunicatorEpoll()->pushAsyncThreadQueue(msg);
+				//异步回调，放入回调处理线程中
+				_objectProxy->getCommunicatorEpoll()->pushAsyncThreadQueue(msg);
             }
         }
         else
