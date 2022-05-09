@@ -165,6 +165,13 @@ public:
      */
 	virtual int doClose(CurrentPtr current){ return -1; }
 
+	/**
+	 * tars协议, 没有对应函数时会调用
+	 * @param current
+	 * @return
+	 */
+	virtual int doNoFunc(CurrentPtr current) {return  tars::TARSSERVERNOFUNCERR;}
+
     /**
      * 获得响应的数据队列
      * @return TC_ThreadQueue<ReqMessagePtr>& 

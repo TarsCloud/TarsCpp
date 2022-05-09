@@ -59,8 +59,6 @@ ServantHandle::~ServantHandle()
         }
         ++it;
     }
-
-
 }
 
 void ServantHandle::handleAsyncResponse()
@@ -741,6 +739,11 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
         sResultDesc = "handleTarsProtocol unknown exception error";
     }
 
+	if(ret == TARSSERVERNOFUNCERR)
+	{
+		ret = sit->second->doNoFunc(current);
+	}
+	
     //单向调用或者业务不需要同步返回
     if (current->isResponse())
     {

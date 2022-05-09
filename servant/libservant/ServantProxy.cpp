@@ -1085,7 +1085,6 @@ shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
                               TarsOutputStream<BufferWriterVector>& buf,
                               const map<string, string>& context,
                               const map<string, string>& status)
-                            //   ResponsePacket& rsp)
 {
     ReqMessage * msg = new ReqMessage();
 
@@ -1101,19 +1100,12 @@ shared_ptr<ResponsePacket> ServantProxy::tars_invoke(char  cPacketType,
     msg->request.status       = status;
     msg->request.iTimeout     = _syncTimeout;
 
-//    // 在RequestPacket中的context设置主调信息
-//    if(_masterFlag)
-//    {
-//        msg->request.context.insert(std::make_pair(TARS_MASTER_KEY,ClientConfig::ModuleName));
-//    }
-
 	checkDye(msg->request);
 	checkTrace(msg->request);
 	checkCookie(msg->request);
 	servant_invoke(msg, false);
 
     shared_ptr<ResponsePacket> rsp = msg->response;
-    // rsp = msg->response;
 
 	delete msg;
 	msg = NULL;

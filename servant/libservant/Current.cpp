@@ -351,8 +351,7 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 
 }
 
-
-void Current::sendPushResponse(int iRet, const string &funcName, TarsOutputStream<BufferWriterVector>& oss)
+void Current::sendPushResponse(int iRet, const string &funcName, TarsOutputStream<BufferWriterVector>& oss, const map<string, string> &context)
 {
 	ResponsePacket response;
     oss.swap(response.sBuffer);
@@ -362,7 +361,7 @@ void Current::sendPushResponse(int iRet, const string &funcName, TarsOutputStrea
 	response.cPacketType    = TARSNORMAL;
 	response.iMessageType   = 0;
 	response.iVersion		= TARSVERSION;
-	response.context        = _responseContext;
+	response.context        = context;
 	response.status["TARS_FUNC"] = funcName;
 
     shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
