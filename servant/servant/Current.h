@@ -257,7 +257,7 @@ public:
      * @param buff
      * @param len
      */
-    void sendPushResponse(int iRet, const string &funcName, TarsOutputStream<BufferWriterVector>& oss);
+    void sendPushResponse(int iRet, const string &funcName, TarsOutputStream<BufferWriterVector>& oss, const map<string, string> &context = tars::Current::TARS_STATUS());
     /**
      * 设置调用链追踪信息，服务端主动回包时用
      * @param traceCall

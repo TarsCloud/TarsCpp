@@ -159,6 +159,15 @@ public:
     */
     TC_ConfigDomain* addSubDomain(const string& name);
 
+	/**
+	 * @brief 删除子域
+	 * @brief Erase Subdomain Name
+    *
+    * @param domain               子域的指针
+    * @param domain               subdomain pointer
+	 */
+	void eraseSubTcConfigDomain(vector<string>::iterator itBegin, vector<string>::iterator itEnd);
+
     /**
     * @brief 递归搜索子域 Sub Domain. 
     * @brief Recursive search subdomain Sub Domain.
@@ -210,6 +219,12 @@ public:
     * @return 
     */
     void setParamValue(const string &sLine);
+
+	/**
+	 * @brief Delete Param, 删除参数
+	 * @param sName
+	 */
+	void eraseParamValue(const string &sName);
 
     /**
      * @brief 插入参数，把key里没有的配置项添加到最后 
@@ -490,6 +505,22 @@ public:
      * @param sName param name, like: /Main/Domain<Param>
      */
     void set(const string &sName, const string &value);
+
+	/**
+	 * @brief 删除值
+	 * @brief Delete value
+	 * @param sName, 参数名称,  例如: /Main/Domain<Param>
+	 * @param sName param name, like: /Main/Domain<Param>
+	 */
+	void erase(const string &sName);
+
+	/**
+	 * @brief 删除域
+	 * @brief Delete domain
+	 * @param sName, 参数名称,  例如: /Main/Domain
+	 * @param sName param name, like: /Main/Domain
+	 */
+	void eraseDomain(const string &sName);
 
     /**
     * @brief GetDomainParamMap获取域下面的参数值对. 

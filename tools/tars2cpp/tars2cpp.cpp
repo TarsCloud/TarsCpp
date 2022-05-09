@@ -2619,6 +2619,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
 			s << ", ";
 			s << generateOutH(vParamDecl[i]);
 		}
+		s << ", const map<string, string> &_context = tars::Current::TARS_STATUS()";
 		s << ")" << endl;
 		s << TAB << "{" << endl;
 		INC_TAB;
@@ -2638,7 +2639,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
 
 			s << writeTo(vParamDecl[i]->getTypeIdPtr()) << endl;
 		}
-		s << TAB << "_current_->sendPushResponse( tars::TARSSERVERSUCCESS " << ",\"" << pPtr->getId() << "\"" << ", _os);" << endl;
+		s << TAB << "_current_->sendPushResponse( tars::TARSSERVERSUCCESS " << ",\"" << pPtr->getId() << "\"" << ", _os, _context);" << endl;
 
 		DEL_TAB;
 		s << TAB << "}" << endl;

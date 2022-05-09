@@ -3387,7 +3387,7 @@ namespace Test
             }
 
         }
-        static void async_response_push_testConHash(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &sOut)
+        static void async_response_push_testConHash(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &sOut, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -3395,7 +3395,7 @@ namespace Test
 
                 _os.write(sOut, 1);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testConHash", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testConHash", _os, _context);
             }
         }
 
@@ -3455,7 +3455,7 @@ namespace Test
             }
 
         }
-        static void async_response_push_testCoro(tars::CurrentPtr _current_, tars::Bool _ret, const std::string &sOut)
+        static void async_response_push_testCoro(tars::CurrentPtr _current_, tars::Bool _ret, const std::string &sOut, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -3463,7 +3463,7 @@ namespace Test
 
                 _os.write(sOut, 2);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testCoro", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testCoro", _os, _context);
             }
         }
 
@@ -3523,7 +3523,7 @@ namespace Test
             }
 
         }
-        static void async_response_push_testDyeing(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &strOut)
+        static void async_response_push_testDyeing(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &strOut, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -3531,7 +3531,7 @@ namespace Test
 
                 _os.write(strOut, 2);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testDyeing", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testDyeing", _os, _context);
             }
         }
 
@@ -3586,13 +3586,13 @@ namespace Test
             }
 
         }
-        static void async_response_push_testDyeingTrans(tars::CurrentPtr _current_, tars::Int32 _ret)
+        static void async_response_push_testDyeingTrans(tars::CurrentPtr _current_, tars::Int32 _ret, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
                 _os.write(_ret, 0);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testDyeingTrans", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testDyeingTrans", _os, _context);
             }
         }
 
@@ -3652,7 +3652,7 @@ namespace Test
             }
 
         }
-        static void async_response_push_testHello(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r)
+        static void async_response_push_testHello(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -3660,7 +3660,7 @@ namespace Test
 
                 _os.write(r, 3);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testHello", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testHello", _os, _context);
             }
         }
 
@@ -3720,7 +3720,7 @@ namespace Test
             }
 
         }
-        static void async_response_push_testPid(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r)
+        static void async_response_push_testPid(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -3728,7 +3728,7 @@ namespace Test
 
                 _os.write(r, 1);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testPid", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testPid", _os, _context);
             }
         }
 
@@ -3783,13 +3783,13 @@ namespace Test
             }
 
         }
-        static void async_response_push_testPushRegister(tars::CurrentPtr _current_, tars::Int32 _ret)
+        static void async_response_push_testPushRegister(tars::CurrentPtr _current_, tars::Int32 _ret, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
                 _os.write(_ret, 0);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testPushRegister", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testPushRegister", _os, _context);
             }
         }
 
@@ -3849,7 +3849,7 @@ namespace Test
             }
 
         }
-        static void async_response_push_testSyncTrans(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r)
+        static void async_response_push_testSyncTrans(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -3857,7 +3857,7 @@ namespace Test
 
                 _os.write(r, 3);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testSyncTrans", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testSyncTrans", _os, _context);
             }
         }
 
@@ -3912,13 +3912,13 @@ namespace Test
             }
 
         }
-        static void async_response_push_testTimeout(tars::CurrentPtr _current_, tars::Int32 _ret)
+        static void async_response_push_testTimeout(tars::CurrentPtr _current_, tars::Int32 _ret, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
                 _os.write(_ret, 0);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testTimeout", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testTimeout", _os, _context);
             }
         }
 
@@ -3978,7 +3978,7 @@ namespace Test
             }
 
         }
-        static void async_response_push_testTrans(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r)
+        static void async_response_push_testTrans(tars::CurrentPtr _current_, tars::Int32 _ret, const std::string &r, const map<string, string> &_context = tars::Current::TARS_STATUS())
         {
             {
                 tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -3986,7 +3986,7 @@ namespace Test
 
                 _os.write(r, 3);
 
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testTrans", _os);
+                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"testTrans", _os, _context);
             }
         }
 
