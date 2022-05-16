@@ -269,102 +269,11 @@ public:
      */
     static TC_NetWorkBuffer::PACKET_TYPE tupResponse(TC_NetWorkBuffer &in, ResponsePacket& done)
     {
-        return tupResponseLen<TARS_NET_MIN_PACKAGE_SIZE, TARS_NET_MAX_PACKAGE_SIZE>(in, done);
+        return tupResponseLen(in, done, TARS_NET_MIN_PACKAGE_SIZE, TARS_NET_MAX_PACKAGE_SIZE);
     }
 
-    template<uint32_t iMinLength, uint32_t iMaxLength>
-    static TC_NetWorkBuffer::PACKET_TYPE tupResponseLen(TC_NetWorkBuffer &in, ResponsePacket& rsp)
-    {
-        uint32_t len = (uint32_t)in.getBufferLength();
+    static TC_NetWorkBuffer::PACKET_TYPE tupResponseLen(TC_NetWorkBuffer &in, ResponsePacket& rsp, uint32_t iMinLength, uint32_t iMaxLength);
 
-        //收到的字节数太少, 还需要继续接收
-        if(len < sizeof(uint32_t))
-            return TC_NetWorkBuffer::PACKET_LESS;
-
-        //获取包总体长度
-        uint32_t iHeaderLen = in.getValueOf4();
-
-        //做一下保护,长度大于10M
-        if (iHeaderLen < iMinLength || iHeaderLen > iMaxLength)
-        {
-            throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
-        }
-
-            //包没有接收全
-        if (len < iHeaderLen)
-        {
-            //看看包头是否正确
-            static const uint32_t head = 20;
-
-            if (len >= head)
-            {
-                string buffer;
-                in.getHeader(head, buffer);
-
-                TarsInputStream<BufferReader> is;
-
-                is.setBuffer(buffer.c_str() + sizeof(tars::Int32), head);
-
-                //tup回来是requestpackage
-                RequestPacket rsp;
-
-                is.read(rsp.iVersion, 1, true);
-
-                if (rsp.iVersion != TUPVERSION)
-                {
-                    throw TarsDecodeException("version not correct, version:" + TC_Common::tostr(rsp.iVersion));
-                }
-
-                is.read(rsp.cPacketType, 2, true);
-
-                if (rsp.cPacketType != TARSNORMAL)
-                {
-                    throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
-                }
-
-                is.read(rsp.iMessageType, 3, true);
-                is.read(rsp.iRequestId, 4, true);
-            }
-            return TC_NetWorkBuffer::PACKET_LESS;
-        }
-        else
-        {
-            //buffer包括4个字节长度
-            vector<char> buffer;
-            buffer.resize(iHeaderLen);
-
-            in.getHeader(iHeaderLen, buffer);
-            TarsInputStream<BufferReader> is;
-
-            is.setBuffer(buffer.data() + sizeof(tars::Int32), buffer.size() - sizeof(tars::Int32));
-
-            //TUP的响应包其实也是返回包
-            RequestPacket req;
-            req.readFrom(is);
-
-            if (req.iVersion != TUPVERSION )
-            {
-                throw TarsDecodeException("version not correct, version:" + TC_Common::tostr(req.iVersion));
-            }
-
-            if (req.cPacketType != TARSNORMAL)
-            {
-                throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)req.cPacketType));
-            }
-
-            rsp.cPacketType     = req.cPacketType;
-            rsp.iMessageType    = req.iMessageType;
-            rsp.iRequestId      = req.iRequestId;
-            rsp.iVersion        = req.iVersion;
-            rsp.context         = req.context;
-            //tup的响应包直接放入到sBuffer里面
-            rsp.sBuffer         = buffer;
-
-            in.moveHeader(iHeaderLen);
-        }
-
-        return TC_NetWorkBuffer::PACKET_FULL;
-    }
 	/**
 	* wup响应包(wup的响应会放在ResponsePacket的buffer中)
 	* @param request
@@ -372,101 +281,11 @@ public:
 	*/
 	static TC_NetWorkBuffer::PACKET_TYPE jsonResponse(TC_NetWorkBuffer &in, ResponsePacket& done)
 	{
-		return jsonResponseLen<TARS_NET_MIN_PACKAGE_SIZE, TARS_NET_MAX_PACKAGE_SIZE>(in, done);
+		return jsonResponseLen(in, done, TARS_NET_MIN_PACKAGE_SIZE, TARS_NET_MAX_PACKAGE_SIZE);
 	}
 
-	template<uint32_t iMinLength, uint32_t iMaxLength>
-	static TC_NetWorkBuffer::PACKET_TYPE jsonResponseLen(TC_NetWorkBuffer &in, ResponsePacket& rsp)
-	{
-		uint32_t len = (uint32_t)in.getBufferLength();
+	static TC_NetWorkBuffer::PACKET_TYPE jsonResponseLen(TC_NetWorkBuffer &in, ResponsePacket& rsp, uint32_t iMinLength, uint32_t iMaxLength);
 
-		//收到的字节数太少, 还需要继续接收
-		if (len < sizeof(uint32_t))
-			return TC_NetWorkBuffer::PACKET_LESS;
-
-		//获取包总体长度
-		uint32_t iHeaderLen = in.getValueOf4();
-
-		//做一下保护,长度大于10M
-		if (iHeaderLen < iMinLength || iHeaderLen > iMaxLength)
-		{
-			throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
-		}
-
-		//包没有接收全
-		if (len < iHeaderLen)
-		{
-			//看看包头是否正确
-			static const uint32_t head = 20;
-
-			if (len >= head)
-			{
-				string buffer;
-				in.getHeader(head, buffer);
-
-				TarsInputStream<BufferReader> is;
-				is.setBuffer(buffer.c_str() + sizeof(tars::Int32), head);
-
-				is.read(rsp.iVersion, 1, false);
-
-				if (rsp.iVersion != JSONVERSION)
-				{
-					throw TarsDecodeException("json version not correct, version:" + TC_Common::tostr(rsp.iVersion));
-				}
-
-				is.read(rsp.cPacketType, 2, false);
-
-				if (rsp.cPacketType != TARSNORMAL)
-				{
-					throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
-				}
-
-				is.read(rsp.iMessageType, 3, false);
-				is.read(rsp.iRequestId, 4, false);
-				is.read(rsp.iRet, 5, false);
-
-				if (rsp.iRet < TARSSERVERUNKNOWNERR)
-				{
-					throw TarsDecodeException("response value not correct, value:" + TC_Common::tostr(rsp.iRet));
-				}
-			}
-
-			return TC_NetWorkBuffer::PACKET_LESS;
-		}
-		else
-		{
-			vector<char> buffer;
-			bool ret = in.parseBufferOf4(buffer, iMinLength, iMaxLength);
-			if (!ret)
-			{
-				throw TarsDecodeException("parse buffer exception");
-			}
-
-			TarsInputStream<BufferReader> is;
-			is.setBuffer(buffer.data(), buffer.size());
-
-			rsp.readFrom(is);
-
-			if (rsp.iVersion != JSONVERSION)
-			{
-				throw TarsDecodeException("json version not correct, version:" + TC_Common::tostr(rsp.iVersion));
-			}
-
-			if (rsp.cPacketType != TARSNORMAL)
-			{
-				throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
-			}
-
-			if (rsp.iRet < TARSSERVERUNKNOWNERR)
-			{
-				throw TarsDecodeException("response value not correct, value:" + TC_Common::tostr(rsp.iRet));
-			}
-
-		}
-
-		return TC_NetWorkBuffer::PACKET_FULL;
-	}
-	
 public:
     /**
      * tars请求包
@@ -482,100 +301,10 @@ public:
      */
     static TC_NetWorkBuffer::PACKET_TYPE tarsResponse(TC_NetWorkBuffer &in, ResponsePacket& done)
     {
-        return tarsResponseLen<TARS_NET_MIN_PACKAGE_SIZE, TARS_NET_MAX_PACKAGE_SIZE>(in, done);
+        return tarsResponseLen(in, done, TARS_NET_MIN_PACKAGE_SIZE, TARS_NET_MAX_PACKAGE_SIZE);
     }
 
-    template<uint32_t iMinLength, uint32_t iMaxLength>
-    static TC_NetWorkBuffer::PACKET_TYPE tarsResponseLen(TC_NetWorkBuffer &in, ResponsePacket& rsp)
-    {
-        uint32_t len = (uint32_t)in.getBufferLength();
-
-        //收到的字节数太少, 还需要继续接收
-        if(len < sizeof(uint32_t))
-            return TC_NetWorkBuffer::PACKET_LESS;
-
-        //获取包总体长度
-        uint32_t iHeaderLen = in.getValueOf4();
-
-        //做一下保护,长度大于10M
-        if (iHeaderLen < iMinLength || iHeaderLen > iMaxLength)
-        {
-            throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
-        }
-
-        //包没有接收全
-        if (len < iHeaderLen)
-        {
-            //看看包头是否正确
-            static const uint32_t head = 20;
-
-            if (len >= head)
-            {
-                string buffer;
-                in.getHeader(head, buffer);
-
-                TarsInputStream<BufferReader> is;
-                is.setBuffer(buffer.c_str() + sizeof(tars::Int32), head);
-
-                // ResponsePacket rsp;
-                is.read(rsp.iVersion, 1, false);
-
-                if (rsp.iVersion != TARSVERSION)
-                {
-                    throw TarsDecodeException("version not correct, version:" + TC_Common::tostr(rsp.iVersion));
-                }
-
-                is.read(rsp.cPacketType, 2, false);
-
-                if (rsp.cPacketType != TARSNORMAL)
-                {
-                    throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
-                }
-
-                is.read(rsp.iRequestId, 3, false);
-                is.read(rsp.iMessageType, 4, false);
-                is.read(rsp.iRet, 5, false);
-
-                if (rsp.iRet < TARSSERVERUNKNOWNERR)
-                {
-                    throw TarsDecodeException("response value not correct, value:" + TC_Common::tostr(rsp.iRet));
-                }
-            }
-
-            return TC_NetWorkBuffer::PACKET_LESS;
-        }
-        else
-        {
-	        vector<char> buffer;
-            auto ret = in.parseBufferOf4(buffer, iMinLength, iMaxLength);
-            if (ret == TC_NetWorkBuffer::PACKET_LESS)
-            {
-	            throw TarsDecodeException("parse buffer exception");
-            }
-
-            TarsInputStream<BufferReader> is;
-            is.setBuffer(buffer.data(), buffer.size());
-
-            rsp.readFrom(is);
-
-            if (rsp.iVersion != TARSVERSION)
-            {
-                throw TarsDecodeException("version not correct, version:" + TC_Common::tostr(rsp.iVersion));
-            }
-
-            if (rsp.cPacketType != TARSNORMAL)
-            {
-                throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
-            }
-
-            if (rsp.iRet < TARSSERVERUNKNOWNERR)
-            {
-                throw TarsDecodeException("response value not correct, value:" + TC_Common::tostr(rsp.iRet));
-            }
-        }
-
-        return TC_NetWorkBuffer::PACKET_FULL;
-    }
+    static TC_NetWorkBuffer::PACKET_TYPE tarsResponseLen(TC_NetWorkBuffer &in, ResponsePacket& rsp, uint32_t iMinLength, uint32_t iMaxLength);
 
 	 /**
 	  * tars各种协议响应包解析
@@ -584,141 +313,10 @@ public:
 	  */
 	static TC_NetWorkBuffer::PACKET_TYPE totalResponse(TC_NetWorkBuffer &in, ResponsePacket &done)
 	{
-		return totalResponseLen<TARS_NET_MIN_PACKAGE_SIZE, TARS_NET_MAX_PACKAGE_SIZE>(in, done);
+		return totalResponseLen(in, done, TARS_NET_MIN_PACKAGE_SIZE, TARS_NET_MAX_PACKAGE_SIZE);
 	}
 
-    template <uint32_t iMinLength, uint32_t iMaxLength>
-    static TC_NetWorkBuffer::PACKET_TYPE totalResponseLen(TC_NetWorkBuffer &in, ResponsePacket &rsp)
-    {
-        uint32_t len = (uint32_t)in.getBufferLength();
-
-        //收到的字节数太少, 还需要继续接收
-        if (len < sizeof(uint32_t))
-            return TC_NetWorkBuffer::PACKET_LESS;
-
-        //获取包总体长度
-        uint32_t iHeaderLen = in.getValueOf4();
-
-        //做一下保护,长度大于10M
-        if (iHeaderLen < iMinLength || iHeaderLen > iMaxLength)
-        {
-            throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
-        }
-
-        //包没有接收全
-        if (len < iHeaderLen)
-        {
-            //看看包头是否正确
-            static const uint32_t head = 18;
-
-            if (len >= head)
-            {
-                string buffer;
-                in.getHeader(head, buffer);
-
-                TarsInputStream<BufferReader> is;
-                is.setBuffer(buffer.c_str() + sizeof(tars::Int32), head);
-
-                // ResponsePacket rsp;
-                is.read(rsp.iVersion, 1, false);
-
-                if (rsp.iVersion != TARSVERSION && rsp.iVersion != TUPVERSION && rsp.iVersion != JSONVERSION)
-                {
-                    throw TarsDecodeException("version not correct, version:" + TC_Common::tostr(rsp.iVersion));
-                }
-
-                is.read(rsp.cPacketType, 2, false);
-
-                if (rsp.cPacketType != TARSNORMAL)
-                {
-                    throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
-                }
-
-                is.read(rsp.iRequestId, 3, false);
-                is.read(rsp.iMessageType, 4, false);
-                is.read(rsp.iRet, 5, false);
-
-                if (rsp.iRet < TARSSERVERUNKNOWNERR)
-                {
-                    throw TarsDecodeException("response value not correct, value:" + TC_Common::tostr(rsp.iRet));
-                }
-            }
-
-            return TC_NetWorkBuffer::PACKET_LESS;
-        }
-        else
-        {
-            //看看包头是否正确
-            string buffer;
-            in.getHeader(iHeaderLen, buffer);
-
-            TarsInputStream<BufferReader> is;
-            is.setBuffer(buffer.c_str() + sizeof(tars::Int32), iHeaderLen-sizeof(tars::Int32));
-
-            is.read(rsp.iVersion, 1, false);
-
-            if (rsp.iVersion == TUPVERSION)
-            {
-                //buffer包括4个字节长度
-                vector<char> buffer;
-                buffer.resize(iHeaderLen);
-
-                in.getHeader(iHeaderLen, buffer);
-                TarsInputStream<BufferReader> is;
-
-                is.setBuffer(buffer.data() + sizeof(tars::Int32), buffer.size() - sizeof(tars::Int32));
-
-                //TUP的响应包其实也是返回包
-                RequestPacket req;
-                req.readFrom(is);
-
-                if (req.cPacketType != TARSNORMAL)
-                {
-                    throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)req.cPacketType));
-                }
-
-                rsp.cPacketType = req.cPacketType;
-                rsp.iMessageType = req.iMessageType;
-                rsp.iRequestId = req.iRequestId;
-                rsp.iVersion = req.iVersion;
-                rsp.context = req.context;
-                //tup的响应包直接放入到sBuffer里面
-                rsp.sBuffer = buffer;
-
-                in.moveHeader(iHeaderLen);
-            }
-            else if (rsp.iVersion == TARSVERSION || rsp.iVersion == JSONVERSION)
-            {
-                vector<char> buffer;
-                bool ret = in.parseBufferOf4(buffer, iMinLength, iMaxLength);
-                if (!ret)
-                {
-                    throw TarsDecodeException("parse buffer exception");
-                }
-
-                TarsInputStream<BufferReader> is;
-                is.setBuffer(buffer.data(), buffer.size());
-
-                rsp.readFrom(is);
-
-                if (rsp.cPacketType != TARSNORMAL)
-                {
-                    throw TarsDecodeException("packettype not correct, packettype:" + TC_Common::tostr((int)rsp.cPacketType));
-                }
-
-                if (rsp.iRet < TARSSERVERUNKNOWNERR)
-                {
-                    throw TarsDecodeException("response value not correct, value:" + TC_Common::tostr(rsp.iRet));
-                }
-            }
-            else
-            {
-                throw TarsDecodeException("===>version not correct, version:" + TC_Common::tostr(rsp.iVersion));
-            }
-        }
-
-        return TC_NetWorkBuffer::PACKET_FULL;
-    }
+    static TC_NetWorkBuffer::PACKET_TYPE totalResponseLen(TC_NetWorkBuffer &in, ResponsePacket &rsp, uint32_t iMinLength, uint32_t iMaxLength);
 
 public:
     request_protocol requestFunc;
