@@ -10,6 +10,8 @@
 #include <stdio.h>
 
 #include "util/tc_autoptr.h"
+#include "util/tc_json.h"
+
 using namespace std;
 
 namespace tars
@@ -106,6 +108,7 @@ public:
 	 * @param ipcMode: "none", "private", "shareable", "container:<name|id>", "host"
 	 * @param autoRemove
 	 * @param privileged
+	 * @param extends: 扩展参数
 	 * @return
 	 */
 	bool create(const string &name,
