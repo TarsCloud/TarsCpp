@@ -20,17 +20,17 @@
 namespace tars
 {
 
-int32_t TC_KetamaHashAlg::hash(const char* sKey, size_t length)
+uint32_t TC_KetamaHashAlg::hash(const char* sKey, size_t length)
 {
     vector<char> sMd5 = TC_MD5::md5bin(sKey, length);
     const char *p = (const char *) sMd5.data();
 
-    int32_t hash = ((int32_t)(p[3] & 0xFF) << 24)
-        | ((int32_t)(p[2] & 0xFF) << 16)
-        | ((int32_t)(p[1] & 0xFF) << 8)
-        | ((int32_t)(p[0] & 0xFF));
+    uint32_t hash = ((uint32_t)(p[3] & 0xFF) << 24)
+        | ((uint32_t)(p[2] & 0xFF) << 16)
+        | ((uint32_t)(p[1] & 0xFF) << 8)
+        | ((uint32_t)(p[0] & 0xFF));
 
-    return subTo32Bit(hash);
+    return hash;
 }
 
 TC_HashAlgorithmType TC_KetamaHashAlg::getHashType()
@@ -38,14 +38,14 @@ TC_HashAlgorithmType TC_KetamaHashAlg::getHashType()
     return E_TC_CONHASH_KETAMAHASH;
 }
 
-int32_t TC_DefaultHashAlg::hash(const char* sKey, size_t length)
+uint32_t TC_DefaultHashAlg::hash(const char* sKey, size_t length)
 {
 	vector<char> sMd5 = TC_MD5::md5bin(sKey, length);
     const char *p = (const char *) sMd5.data();
 
-    int32_t hash = (*(int*)(p)) ^ (*(int*)(p+4)) ^ (*(int*)(p+8)) ^ (*(int*)(p+12));
+    uint32_t hash = (*(uint32_t*)(p)) ^ (*(uint32_t*)(p+4)) ^ (*(uint32_t*)(p+8)) ^ (*(uint32_t*)(p+12));
 
-    return subTo32Bit(hash);
+    return hash;
 }
 
 TC_HashAlgorithmType TC_DefaultHashAlg::getHashType()
@@ -168,10 +168,10 @@ int TC_ConsistentHashNew::addNode(const string & node, unsigned int index, int w
 
             for (int i = 0; i < 4; i++)
             {
-                stItem.iHashCode = ((int32_t)(p[i * 4 + 3] & 0xFF) << 24)
-                    | ((int32_t)(p[i * 4 + 2] & 0xFF) << 16)
-                    | ((int32_t)(p[i * 4 + 1] & 0xFF) << 8)
-                    | ((int32_t)(p[i * 4 + 0] & 0xFF));
+                stItem.iHashCode = ((uint32_t)(p[i * 4 + 3] & 0xFF) << 24)
+                    | ((uint32_t)(p[i * 4 + 2] & 0xFF) << 16)
+                    | ((uint32_t)(p[i * 4 + 1] & 0xFF) << 8)
+                    | ((uint32_t)(p[i * 4 + 0] & 0xFF));
                 stItem.iIndex = index;
                 _vHashList.push_back(stItem);
             }
@@ -195,13 +195,13 @@ int TC_ConsistentHashNew::getIndex(const string & key, unsigned int & iIndex)
     }
 
     vector<char> data = TC_MD5::md5bin(key);
-    int32_t iCode = _ptrHashAlg->hash(data.data(), data.size());
+    uint32_t iCode = _ptrHashAlg->hash(data.data(), data.size());
 
     return getIndex(iCode, iIndex);
 }
 
 
-int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
+int TC_ConsistentHashNew::getIndex(uint32_t hashcode, unsigned int & iIndex)
 {
     if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
     {
@@ -209,13 +209,10 @@ int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
         return -1;
     }
 
-    // 只保留32位
-    int32_t iCode = (hashcode & 0xFFFFFFFFL);
-
     int low = 0;
     int high = (int)_vHashList.size();
 
-    if(iCode <= _vHashList[0].iHashCode || iCode > _vHashList[high-1].iHashCode)
+    if(hashcode <= _vHashList[0].iHashCode || hashcode > _vHashList[high-1].iHashCode)
     {
         iIndex = _vHashList[0].iIndex;
         return 0;
@@ -225,7 +222,7 @@ int TC_ConsistentHashNew::getIndex(int32_t hashcode, unsigned int & iIndex)
     while (low < high - 1)
     {
         int mid = (low + high) / 2;
-        if (_vHashList[mid].iHashCode > iCode)
+        if (_vHashList[mid].iHashCode > hashcode)
         {
             high = mid;
         }
@@ -247,12 +244,12 @@ int TC_ConsistentHashNew::getNodeName(const string & key, string & sNode)
     }
 
     vector<char> data = TC_MD5::md5bin(key);
-    int32_t iCode = _ptrHashAlg->hash(data.data(), data.size());
+    uint32_t iCode = _ptrHashAlg->hash(data.data(), data.size());
 
     return getNodeName(iCode, sNode);
 }
 
-int TC_ConsistentHashNew::getNodeName(int32_t hashcode, string & sNode)
+int TC_ConsistentHashNew::getNodeName(uint32_t hashcode, string & sNode)
 {
     if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
     {
@@ -260,13 +257,10 @@ int TC_ConsistentHashNew::getNodeName(int32_t hashcode, string & sNode)
         return -1;
     }
 
-    // 只保留32位
-    int32_t iCode = (hashcode & 0xFFFFFFFFL);
-
     int low = 0;
     int high = (int)_vHashList.size();
 
-    if(iCode <= _vHashList[0].iHashCode || iCode > _vHashList[high-1].iHashCode)
+    if(hashcode <= _vHashList[0].iHashCode || hashcode > _vHashList[high-1].iHashCode)
     {
         sNode = _vHashList[0].sNode;
         return 0;
@@ -276,7 +270,7 @@ int TC_ConsistentHashNew::getNodeName(int32_t hashcode, string & sNode)
     while (low < high - 1)
     {
         int mid = (low + high) / 2;
-        if (_vHashList[mid].iHashCode > iCode)
+        if (_vHashList[mid].iHashCode > hashcode)
         {
             high = mid;
         }
