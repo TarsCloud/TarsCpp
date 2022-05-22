@@ -38,12 +38,8 @@ enum TC_HashAlgorithmType
 class TC_HashAlgorithm : public TC_HandleBase
 {
 public:
-    virtual int32_t hash(const char *sKey, size_t length) = 0;
+    virtual uint32_t hash(const char *sKey, size_t length) = 0;
     virtual TC_HashAlgorithmType getHashType() = 0;
-
-protected:
-    int32_t subTo32Bit(int32_t hash) { return (hash & 0xFFFFFFFFL); }
-
 };
 
 typedef TC_AutoPtr<TC_HashAlgorithm> TC_HashAlgorithmPtr;
@@ -55,7 +51,7 @@ typedef TC_AutoPtr<TC_HashAlgorithm> TC_HashAlgorithmPtr;
 class TC_KetamaHashAlg : public TC_HashAlgorithm
 {
 public:
-    virtual int32_t hash(const char *sKey, size_t length);
+    virtual uint32_t hash(const char *sKey, size_t length);
     virtual TC_HashAlgorithmType getHashType();
 };
 
@@ -66,7 +62,7 @@ public:
 class TC_DefaultHashAlg : public TC_HashAlgorithm
 {
 public:
-    virtual int32_t hash(const char *sKey, size_t length);
+    virtual uint32_t hash(const char *sKey, size_t length);
     virtual TC_HashAlgorithmType getHashType();
 };
 
@@ -94,7 +90,7 @@ public:
          *节点hash值
          *node hash value
         */
-        int32_t iHashCode;
+        uint32_t iHashCode;
 
         /**
          *节点名称
@@ -190,7 +186,7 @@ public:
      * @return        0:获取成功   -1:没有被添加的节点
      * @return        0:obtain successfully  -1:no nodes added
      */
-    int getIndex(int32_t hashcode, unsigned int & iIndex);
+    int getIndex(uint32_t hashcode, unsigned int & iIndex);
 
     /**
      * @brief 获取某hashcode对应到的节点node的名称.
@@ -202,7 +198,7 @@ public:
      * @return        0:获取成功   -1:没有被添加的节点
      * @return        0:obtain successfully  -1:no nodes added
      */
-    int getNodeName(int32_t hashcode, string & sNode);
+    int getNodeName(uint32_t hashcode, string & sNode);
 
     /**
      * @brief 获取当前hash列表的长度.
