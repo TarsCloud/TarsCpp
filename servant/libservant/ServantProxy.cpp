@@ -680,7 +680,7 @@ void ServantProxy::tars_async_ping()
 	tars_invoke_async(TARSONEWAY, "tars_ping", os, m, s, NULL);
 }
 
-ServantProxy* ServantProxy::tars_hash(int64_t key)
+ServantProxy* ServantProxy::tars_hash(uint32_t key)
 {
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
 
@@ -700,7 +700,7 @@ ServantProxy* ServantProxy::tars_hash(int64_t key)
 //	return this;
 //}
 
-ServantProxy* ServantProxy::tars_consistent_hash(int64_t key)
+ServantProxy* ServantProxy::tars_consistent_hash(uint32_t key)
 {
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
 
