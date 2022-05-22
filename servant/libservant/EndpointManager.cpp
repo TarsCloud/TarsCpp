@@ -906,7 +906,7 @@ AdapterProxy * EndpointManager::getNextValidProxy()
     return adapterProxy;
 }
 
-AdapterProxy* EndpointManager::getHashProxy(int64_t hashCode, bool bConsistentHash)
+AdapterProxy* EndpointManager::getHashProxy(uint32_t hashCode, bool bConsistentHash)
 {
     if(_weightType == E_STATIC_WEIGHT)
     {
@@ -932,7 +932,7 @@ AdapterProxy* EndpointManager::getHashProxy(int64_t hashCode, bool bConsistentHa
     }
 }
 
-AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bStatic, vector<size_t> &vRouterCache)
+AdapterProxy* EndpointManager::getHashProxyForWeight(uint32_t hashCode, bool bStatic, vector<size_t> &vRouterCache)
 {
     if(_vRegProxys.empty())
     {
@@ -953,7 +953,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
 
     if(vRouterCache.size() > 0)
     {
-        size_t hash = ((int64_t)hashCode) % vRouterCache.size();
+        size_t hash = hashCode % vRouterCache.size();
 
         //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
         if(hash >= vRouterCache.size())
@@ -988,13 +988,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
 
             do
             {
-                hash = ((int64_t)hashCode) % thisHash.size();
-
-                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-                if(hash >= thisHash.size())
-                {
-                    hash = hash % thisHash.size();
-                }
+                hash = hashCode % thisHash.size();
 
                 if (thisHash[hash]->checkActive(true))
                 {
@@ -1011,13 +1005,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
 
             if(conn.size() > 0)
             {
-                hash = ((int64_t)hashCode) % conn.size();
-
-                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-                if(hash >= conn.size())
-                {
-                    hash = hash % conn.size();
-                }
+                hash = hashCode % conn.size();
 
                 //都有问题, 随机选择一个没有connect超时或者链接异常的发送
                 AdapterProxy *adapterProxy = conn[hash];
@@ -1043,7 +1031,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bSta
 }
 
 
-AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool bStatic)
+AdapterProxy* EndpointManager::getConHashProxyForWeight(uint32_t hashCode, bool bStatic)
 {
     if(_vRegProxys.empty())
     {
@@ -1102,88 +1090,6 @@ AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool b
             }
         }
     }
-    /*if(_consistentHashWeight.size() > 0)
-    {
-        unsigned int iIndex = 0;
-
-        // 通过一致性hash取到对应的节点
-        _consistentHashWeight.getIndex(hashCode, iIndex);
-
-        if(iIndex >= _vRegProxys.size())
-        {
-            iIndex = iIndex % _vRegProxys.size();
-        }
-
-        //被hash到的节点在主控是active的才走在流程
-        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive(true))
-        {
-            return _vRegProxys[iIndex];
-        }
-        else
-        {
-            TLOGWARN("[EndpointManager::getHashProxyForWeight, hash not active," << _objectProxy->name() << "," << _vRegProxys[iIndex]->getTransceiver()->getEndpointInfo().desc() << endl);
-            if(_activeProxys.empty())
-            {
-                TLOGERROR("[EndpointManager::getConHashProxyForWeight _activeEndpoints is empty], bStatic:" << bStatic << endl);
-                return NULL;
-            }
-
-            //在active节点中再次hash
-            vector<AdapterProxy*> thisHash = _activeProxys;
-            vector<AdapterProxy*> conn;
-            size_t hash = 0;
-
-            do
-            {
-                hash = ((int64_t)hashCode) % thisHash.size();
-
-                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-                if(hash >= thisHash.size())
-                {
-                    hash = hash % thisHash.size();
-                }
-
-                if (thisHash[hash]->checkActive(false))
-                {
-                    return thisHash[hash];
-                }
-                if(!thisHash[hash]->isConnTimeout() && !thisHash[hash]->isConnExc())
-                {
-                    conn.push_back(thisHash[hash]);
-                }
-                thisHash.erase(thisHash.begin() + hash);
-            }
-            while(!thisHash.empty());
-
-            if(conn.size() > 0)
-            {
-                hash = ((int64_t)hashCode) % conn.size();
-
-                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-                if(hash >= conn.size())
-                {
-                    hash = hash % conn.size();
-                }
-
-                //都有问题, 随机选择一个没有connect超时或者链接异常的发送
-                AdapterProxy *adapterProxy = conn[hash];
-
-                //该proxy可能已经被屏蔽,需重新连一次
-                adapterProxy->checkActive(true);
-                return adapterProxy;
-            }
-
-            //所有adapter都有问题 选不到结点,随机找一个重试
-            AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
-
-	        adapterProxy->resetRetryTime(false);
-
-	        //该proxy可能已经被屏蔽,需重新连一次
-            adapterProxy->checkActive(true);
-
-            return adapterProxy;
-        }
-    }*/
 
     return getHashProxyForNormal(hashCode);
 }
@@ -1454,7 +1360,7 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, map<string, Adapt
     conHash.sortNode();
 }
 
-AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
+AdapterProxy* EndpointManager::getHashProxyForNormal(uint32_t hashCode)
 {
     if(_vRegProxys.empty())
     {
@@ -1465,13 +1371,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
     // 1 _vRegProxys从客户端启动之后，就不会再改变，除非有节点增加
     // 2 如果有增加节点，则_vRegProxys顺序会重新排序,之前的hash会改变
     // 3 节点下线后，需要下次启动客户端后,_vRegProxys内容才会生效
-    size_t hash = ((int64_t)hashCode) % _vRegProxys.size();
-
-    //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-    if(hash >= _vRegProxys.size())
-    {
-        hash = hash % _vRegProxys.size();
-    }
+    size_t hash = hashCode % _vRegProxys.size();
 
     //被hash到的节点在主控是active的才走在流程
     if (_vRegProxys[hash]->isActiveInReg() && _vRegProxys[hash]->checkActive(true))
@@ -1493,13 +1393,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
 
         do
         {
-            hash = ((int64_t)hashCode) % thisHash.size();
-
-            //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-            if(hash >= thisHash.size())
-            {
-                hash = hash % thisHash.size();
-            }
+            hash = hashCode % thisHash.size();
 
             if (thisHash[hash]->checkActive(true))
             {
@@ -1516,13 +1410,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
 
         if(conn.size() > 0)
         {
-            hash = ((int64_t)hashCode) % conn.size();
-
-            //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-            if(hash >= conn.size())
-            {
-                hash = hash % conn.size();
-            }
+            hash = hashCode % conn.size();
 
             //都有问题, 随机选择一个没有connect超时或者链接异常的发送
             AdapterProxy *adapterProxy = conn[hash];
@@ -1543,7 +1431,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
     }
 }
 
-AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
+AdapterProxy* EndpointManager::getConHashProxyForNormal(uint32_t hashCode)
 {
     if(_vRegProxys.empty())
     {
@@ -1602,90 +1490,7 @@ AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
             }
         }
     }
-/*
-    if(_consistentHash.size() > 0)
-    {
-        unsigned int iIndex = 0;
 
-        // 通过一致性hash取到对应的节点
-        _consistentHash.getIndex(hashCode, iIndex);
-
-        if(iIndex >= _vRegProxys.size())
-        {
-            iIndex = iIndex % _vRegProxys.size();
-        }
-
-        //被hash到的节点在主控是active的才走在流程
-        if (_vRegProxys[iIndex]->isActiveInReg() && _vRegProxys[iIndex]->checkActive(true))
-        {
-            return _vRegProxys[iIndex];
-        }
-        else
-        {
-            TLOGWARN("[EndpointManager::getConHashProxyForNormal, hash not active," << _objectProxy->name() << "," << _vRegProxys[iIndex]->getTransceiver()->getEndpointInfo().desc() << endl);
-            if(_activeProxys.empty())
-            {
-                TLOGERROR("[EndpointManager::getConHashProxyForNormal _activeEndpoints is empty]" << endl);
-                return NULL;
-            }
-
-            //在active节点中再次hash
-            vector<AdapterProxy*> thisHash = _activeProxys;
-            vector<AdapterProxy*> conn;
-            size_t hash = 0;
-
-            do
-            {
-                hash = ((int64_t)hashCode) % thisHash.size();
-
-                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-                if(hash >= thisHash.size())
-                {
-                    hash = hash % thisHash.size();
-                }
-
-                if (thisHash[hash]->checkActive(true))
-                {
-                    return thisHash[hash];
-                }
-                if(!thisHash[hash]->isConnTimeout() &&
-                   !thisHash[hash]->isConnExc())
-                {
-                    conn.push_back(thisHash[hash]);
-                }
-                thisHash.erase(thisHash.begin() + hash);
-            }
-            while(!thisHash.empty());
-
-            if(conn.size() > 0)
-            {
-                hash = ((int64_t)hashCode) % conn.size();
-
-                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
-                if(hash >= conn.size())
-                {
-                    hash = hash % conn.size();
-                }
-
-                //都有问题, 随机选择一个没有connect超时或者链接异常的发送
-                AdapterProxy *adapterProxy = conn[hash];
-
-                //该proxy可能已经被屏蔽,需重新连一次
-                adapterProxy->checkActive(true);
-                return adapterProxy;
-            }
-
-            //所有adapter都有问题 选不到结点,随机找一个重试
-            AdapterProxy * adapterProxy = _activeProxys[((uint32_t)rand() % _activeProxys.size())];
-	        adapterProxy->resetRetryTime(false);
-
-	        //该proxy可能已经被屏蔽,需重新连一次
-            adapterProxy->checkActive(true);
-
-            return adapterProxy;
-        }
-    }
-*/
     return getHashProxyForNormal(hashCode);
 }
 
