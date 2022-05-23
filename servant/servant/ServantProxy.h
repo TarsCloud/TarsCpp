@@ -1009,12 +1009,12 @@ public:
      * @param key
      * @return ServantProxy*
      */
-    virtual ServantProxy* tars_hash(int64_t key);
+    virtual ServantProxy* tars_hash(uint32_t key);
 
     /**
      * 一致性hash方法
      */
-    virtual ServantProxy* tars_consistent_hash(int64_t key);
+    virtual ServantProxy* tars_consistent_hash(uint32_t key);
 
 
     /**
