@@ -112,36 +112,20 @@ void TC_LoggerRoll::flush()
 
 //////////////////////////////////////////////////////////////////
 //
-TC_LoggerThreadGroup::TC_LoggerThreadGroup() : _bTerminate(false), _thread(NULL)
+TC_LoggerThreadGroup::TC_LoggerThreadGroup() : _bTerminate(false)
 {
 }
 
 TC_LoggerThreadGroup::~TC_LoggerThreadGroup()
 {
 	terminate();
-    /*挪到terminate函数中
-	flush();
-
-	{
-		std::lock_guard<std::mutex> guard(_mutex);
-		_bTerminate = true;
-		_cond.notify_all();
-	}
-
-	if(_thread)
-	{
-		_thread->join();
-		delete _thread;
-		_thread = NULL;
-	}
-    */
 }
 
 void TC_LoggerThreadGroup::start(size_t iThreadNum)
 {
-	if(_thread == NULL)
+	if(!_thread)
 	{
-		_thread = new std::thread(&TC_LoggerThreadGroup::run, this);
+		_thread.reset(new std::thread(&TC_LoggerThreadGroup::run, this));
 	}
 }
 
@@ -175,8 +159,6 @@ void TC_LoggerThreadGroup::terminate()
     if (_thread)
     {
         _thread->join();
-        delete _thread;
-        _thread = NULL;
     }
 }
 

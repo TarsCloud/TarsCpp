@@ -289,13 +289,54 @@ namespace tars
 //	shell->value.push_back(new JsonValueString("bash"));
 //	hostConfig->value["Shell"] = shell;
 
-		hostConfig->value["WorkingDir"] = new JsonValueBoolean("/");
+		hostConfig->value["WorkingDir"] = new JsonValueString("/");
 		hostConfig->value["AutoRemove"] = new JsonValueBoolean(autoRemove);
 		hostConfig->value["Privileged"] = new JsonValueBoolean(privileged);
 
 		string json = TC_Json::writeValue(obj);
 
 		request.setPostRequest(_dockerUrl + "/" + _dockerApiVersion + "/containers/create?name=" + name, json);
+
+		request.setHeader("Content-Type", "application/json");
+
+		return createHttpRequest(request);
+	}
+
+	bool TC_Docker::exec(const string &name, const vector<string> &commands, const vector<string> &envs, bool privileged)
+	{
+
+		TC_HttpRequest request;
+
+		JsonValueObjPtr obj = new JsonValueObj();
+
+		if(!commands.empty())
+		{
+			JsonValueArrayPtr cmd = new JsonValueArray();
+			obj->value["Cmd"] = cmd;
+
+			for(auto &c : commands)
+			{
+				cmd->value.push_back(new JsonValueString(c));
+			}
+		}
+
+		if(!envs.empty())
+		{
+			JsonValueArrayPtr env = new JsonValueArray();
+			obj->value["Env"] = env;
+
+			for(auto &e : envs)
+			{
+				env->value.push_back(new JsonValueString(e));
+			}
+		}
+
+		obj->value["WorkingDir"] = new JsonValueString("/");
+		obj->value["Privileged"] = new JsonValueBoolean(privileged);
+
+		string json = TC_Json::writeValue(obj);
+
+		request.setPostRequest(_dockerUrl + "/" + _dockerApiVersion + "/containers/" + name + "/exec", json);
 
 		request.setHeader("Content-Type", "application/json");
 

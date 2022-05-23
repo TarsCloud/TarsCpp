@@ -3302,12 +3302,12 @@ namespace Test
             tars_invoke_async(tars::TARSNORMAL,"testTrans", _os, context, _mStatus, callback, true);
         }
 
-        HelloProxy* tars_hash(int64_t key)
+        HelloProxy* tars_hash(uint32_t key)
         {
             return (HelloProxy*)ServantProxy::tars_hash(key);
         }
 
-        HelloProxy* tars_consistent_hash(int64_t key)
+        HelloProxy* tars_consistent_hash(uint32_t key)
         {
             return (HelloProxy*)ServantProxy::tars_consistent_hash(key);
         }
