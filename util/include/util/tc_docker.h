@@ -126,6 +126,16 @@ public:
 			bool privileged);
 
 	/**
+	 * 执行容器内命令
+	 * @param name
+	 * @param commands
+	 * @param envs
+	 * @param privileged
+	 * @return
+	 */
+	bool exec(const string &name, const vector<string> &commands, const vector<string> &envs, bool privileged);
+
+	/**
 	 * 启动容器(https://docs.docker.com/engine/api/v1.41/#operation/ContainerStart)
 	 * @param containerId: 容器Id or name
 	 * @return

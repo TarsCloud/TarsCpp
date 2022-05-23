@@ -371,7 +371,7 @@ namespace tars
 
 		//线程
 		//Thread
-		std::thread *_thread;
+		unique_ptr<std::thread> _thread;
 	};
 
 	/**
