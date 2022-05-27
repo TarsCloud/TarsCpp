@@ -814,9 +814,9 @@ int TC_Transceiver::doProtocolAnalysis(TC_NetWorkBuffer* buff)
 	{
 		do
 		{
-			ioriginal = buff->getBuffers().size();
+			ioriginal = buff->getBufferLength();
 			ret = _onParserCallback(*buff, this);
-			isurplus = buff->getBuffers().size();
+			isurplus = buff->getBufferLength();
 
 			if (ret == TC_NetWorkBuffer::PACKET_FULL || ret == TC_NetWorkBuffer::PACKET_FULL_CLOSE)
 			{

@@ -405,20 +405,21 @@ string TC_NetWorkBuffer::getBuffersString() const
 {
 	string buffer;
 	buffer.resize(_length);
-
-	getBuffers(&buffer[0], _length);
-
+	if (_length > 0)
+	{
+		getBuffers(&buffer[0], _length);
+	}
 	return buffer;
 }
 
 vector<char> TC_NetWorkBuffer::getBuffers() const
 {
 	vector<char> buffer;
-
 	buffer.resize(_length);
-
-	getBuffers(&buffer[0], _length);
-
+	if (_length > 0)
+	{
+		getBuffers(&buffer[0], _length);
+	}
 	return buffer;
 }
 
