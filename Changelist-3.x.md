@@ -1,3 +1,31 @@
+# v3.0.9 20220530
+
+### en
+
+- Fix: update gtest to fix compiler bug in high gcc
+- Fix: makefile.tars support .cc .c
+- Fix: TC_NetWorkBuffer bug, Optimize doProtocolAnalysis & getBuffers bug cause crash
+- Fix tc_logger thread use unique_ptr
+- Optimize: rpc tars_hash use uint32_t and tars2cpp tars_hash use uint32_t
+- Optimize: move AppProtocol func imp to cpp
+- Add: tc_docker add exec
+- Add: tc_config add erase/eraseDomain
+- Add: servant add doNoFunc
+- Add: add tars interface push support
+
+### en
+
+- 修复: 更新 gtest 在高版本 gcc 下编译的 bug
+- 修复: 修改 makefile.tars 支持 .cc .c
+- 修复: TC_NetWorkBuffer 优化 doProtocolAnalysis 逻辑以及 getBuffers 导致的 crash(windows 下)
+- 修复: tc_logger 线程指针使用 unique_ptr
+- 优化: rpc tars_hash 使用 uint32_t 以及 tars2cpp 调用 tars_hash 使用 uint32_t
+- 优化: AppProtocol 增加实现文件
+- 添加: tc_docker 添加 exec 函数
+- 添加: tc_config 添加 erase/eraseDomain
+- 添加: 服务端 servant 添加 doNoFunc
+- 添加: tars 接口支持 push 接口
+
 # v3.0.8 20220429
 
 ### en
@@ -8,7 +36,7 @@
 - Add: tc_json JsonValueArray add `find` func
 - Optimize: compiler not install openssl docs
 - Optimize: thread process may delay in epoll_server NET_THREAD_MERGE_HANDLES_THREAD mode
-- Add: TC_ThreadPoolHash::getThread 
+- Add: TC_ThreadPoolHash::getThread
 - Add: LOG_CONSOLE_DEBUG add millsecond time output
 - Fix: tc_http strnstr bug cause crash
 
@@ -22,7 +50,7 @@
 - 优化: NET_THREAD_MERGE_HANDLES_THREAD 模式下可能的延时问题
 - 添加: TC_ThreadPoolHash::getThread
 - 添加: LOG_CONSOLE_DEBUG 调整为毫秒输出, 方便调试
-- 修复: tc_http strnstr的bug导致的crash
+- 修复: tc_http strnstr 的 bug 导致的 crash
 
 # v3.0.7 20220328
 
