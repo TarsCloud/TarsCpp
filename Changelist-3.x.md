@@ -1,3 +1,17 @@
+# v3.0.10 20220606
+
+### en
+
+- Add: tc_clientsocket support unix local domain socket
+- Add: tc_http support unix local domain socket, Note that '/' used instead of '$' in the URL. If the port is 0, it is a local socket
+- Add: tc_docker use TC_Http::doRequest
+
+### cn
+
+- Add: tc_clientsocket 支持 unix 本地套接字
+- Add: tc_http 支持本地套接字, 注意 url 中/使用$代替, 端口为 0 的情况下为本地套接字
+- Add: tc_docker 使用 TC_Http::doRequest
+
 # v3.0.9 20220530
 
 ### en
