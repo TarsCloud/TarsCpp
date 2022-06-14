@@ -2542,12 +2542,12 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
 
             s << writeTo(vParamDecl[i]->getTypeIdPtr()) << endl;
         }
+		if (_bTrace)
+		{
+			s << TAB << "_rsp_len_ = _os.getLength();" << endl;
+		}
 
-        s << TAB << "_current_->sendResponse(tars::TARSSERVERSUCCESS, _os.getByteBuffer());" << endl;
-        if (_bTrace)
-        {
-            s << TAB << "_rsp_len_ = _os.getLength();" << endl;
-        }
+        s << TAB << "_current_->sendResponse(tars::TARSSERVERSUCCESS, _os);" << endl;
 
         DEL_TAB;
         s << TAB << "}" << endl;
