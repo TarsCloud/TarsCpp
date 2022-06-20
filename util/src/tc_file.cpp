@@ -601,7 +601,7 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 }
 #endif 
 
-void TC_File::listDirectory(const string &path, vector<string> &files, bool bRecursive)
+void TC_File::listDirectory(const string &path, vector<string> &files, bool bRecursive, bool ignoreHide)
 {
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     vector<string> tf;
@@ -612,14 +612,17 @@ void TC_File::listDirectory(const string &path, vector<string> &files, bool bRec
         if(tf[i] == "." || tf[i] == "..")
             continue;
 
-        string s = path + FILE_SEP + tf[i];
+		if (ignoreHide && tf[i].at(0) == '.')
+			continue;
+
+		string s = path + FILE_SEP + tf[i];
 
         if(isFileExist(s, S_IFDIR))
         {
             files.push_back(simplifyDirectory(s));
             if(bRecursive)
             {
-                listDirectory(s, files, bRecursive);
+                listDirectory(s, files, bRecursive, ignoreHide);
             }
         }
         else
@@ -645,7 +648,7 @@ void TC_File::listDirectory(const string &path, vector<string> &files, bool bRec
 				files.push_back(simplifyDirectory(s));
 				if (bRecursive)
 				{
-					listDirectory(s, files, bRecursive);
+					listDirectory(s, files, bRecursive, ignoreHide);
 				}				
 			}
 			else
