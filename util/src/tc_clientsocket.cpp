@@ -507,7 +507,7 @@ int TC_TCPClient::recv(char *sRecvBuffer, size_t &iRecvLen)
 	}
 
 	const epoll_event &ev  = _epoller->get(0);
-	if(TC_Epoller::errorEvent(ev))
+	if(!TC_Epoller::readEvent(ev) && TC_Epoller::errorEvent(ev))
 	{
 		_socket.close();
 		return EM_CLOSE;
@@ -566,7 +566,7 @@ int TC_TCPClient::recvBySep(string &sRecvBuffer, const string &sSep)
 		}
 
 		const epoll_event &ev  = _epoller->get(0);
-		if(TC_Epoller::errorEvent(ev))
+		if(!TC_Epoller::readEvent(ev) && TC_Epoller::errorEvent(ev))
 		{
 			_socket.close();
 			return EM_CLOSE;
@@ -633,7 +633,7 @@ int TC_TCPClient::recvAll(string &sRecvBuffer)
 		}
 
 		const epoll_event &ev  = _epoller->get(0);
-		if(TC_Epoller::errorEvent(ev))
+		if(!TC_Epoller::readEvent(ev) && TC_Epoller::errorEvent(ev))
 		{
 			_socket.close();
 			return EM_CLOSE;
@@ -693,7 +693,7 @@ int TC_TCPClient::recvLength(char *sRecvBuffer, size_t iRecvLen)
 		}
 
 		const epoll_event &ev  = _epoller->get(0);
-		if(TC_Epoller::errorEvent(ev))
+		if(!TC_Epoller::readEvent(ev) && TC_Epoller::errorEvent(ev))
 		{
 			_socket.close();
 			return EM_CLOSE;
