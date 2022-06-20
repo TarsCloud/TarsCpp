@@ -25,10 +25,6 @@
 #include "util/tc_strptime.h"
 #endif
 
-// #if TARGET_PLATFORM_WINDOWS || TARGET_PLATFORM_IOS
-// #define HOST_NAME_MAX 64
-// #endif
-
 #include <signal.h>
 #include <string.h>
 #include <cmath>
@@ -48,6 +44,14 @@ return true;
 
 const float TC_Common::_EPSILON_FLOAT = 0.000001f;
 const double TC_Common::_EPSILON_DOUBLE = 0.000001;
+
+#if !TARGET_PLATFORM_WINDOWS
+string TC_Common::TimezoneHelper::timezone_local;
+#endif
+
+int64_t TC_Common::TimezoneHelper::timezone_diff_secs = 0;
+
+TC_Common::TimezoneHelper TC_Common::_TimeZoneHelper;
 
 void TC_Common::sleep(uint32_t sec)
 {
@@ -479,45 +483,27 @@ bool TC_Common::isdigit(const string &sInput)
     return true;
 }
 
-
-//用于计算时区差异!
-class TimezoneHelper
+TC_Common::TimezoneHelper::TimezoneHelper()
 {
-public:
-    TimezoneHelper()
-    {
-        struct tm timeinfo;
-        time_t secs, local_secs, gmt_secs;
+	struct tm timeinfo;
+	time_t secs, local_secs, gmt_secs;
 
-        // UTC时间戳
-        time(&secs);
+	// UTC时间戳
+	time(&secs);
 
-        //带时区时间
-        TC_Port::localtime_r(&secs, &timeinfo);
-        local_secs = ::mktime(&timeinfo);
+	//带时区时间
+	TC_Port::localtime_r(&secs, &timeinfo);
+	local_secs = ::mktime(&timeinfo);
 #if !TARGET_PLATFORM_WINDOWS
-        timezone_local = string(timeinfo.tm_zone);
+	timezone_local = string(timeinfo.tm_zone);
 #endif
 
-        //不带时区时间
-        TC_Port::gmtime_r(&secs, &timeinfo);
+	//不带时区时间
+	TC_Port::gmtime_r(&secs, &timeinfo);
 
-        gmt_secs = ::mktime(&timeinfo);
-        timezone_diff_secs = local_secs - gmt_secs;
-    }
-
-#if !TARGET_PLATFORM_WINDOWS
-    static string timezone_local;
-#endif
-
-    static int64_t timezone_diff_secs;
-};
-
-#if !TARGET_PLATFORM_WINDOWS
-string TimezoneHelper::timezone_local;
-#endif
-
-int64_t TimezoneHelper::timezone_diff_secs = 0;
+	gmt_secs = ::mktime(&timeinfo);
+	timezone_diff_secs = local_secs - gmt_secs;
+}
 
 int TC_Common::str2tm(const string &sString, const string &sFormat, struct tm &stTm)
 {
@@ -531,7 +517,6 @@ time_t TC_Common::str2time(const string &sString, const string &sFormat)
     if (0 == str2tm(sString, sFormat, stTm))
     {
         //注意这里没有直接用mktime, mktime会访问时区文件, 会巨慢!
-        static TimezoneHelper helper;
         return TC_Port::timegm(&stTm) - TimezoneHelper::timezone_diff_secs;
     }
     return 0;
@@ -560,7 +545,6 @@ int TC_Common::gettimeofday(struct timeval &tv)
 void TC_Common::tm2time(const time_t &t, struct tm &tt)
 {
     //加快速度, 否则会比较慢, 不用localtime_r(会访问时区文件, 较慢)
-    static TimezoneHelper helper;
     time_t localt = t + TimezoneHelper::timezone_diff_secs;
 
     TC_Port::gmtime_r(&localt, &tt);
@@ -570,6 +554,16 @@ void TC_Common::tm2time(const time_t &t, struct tm &tt)
     tt.tm_zone = const_cast<char *>(local_timezone.c_str());
     tt.tm_gmtoff = TimezoneHelper::timezone_diff_secs;
 #endif
+}
+
+time_t TC_Common::UTC2LocalTime(const string& utcTimeStr)
+{
+	// 2022-06-07T18:04:37.703806784Z
+	if (utcTimeStr.length() < 20 || utcTimeStr.at(10) != 'T' || utcTimeStr.back() != 'Z')
+	{
+		return 0;
+	}
+	return  TC_Common::str2time(utcTimeStr, "%Y-%m-%dT%H:%M:%S") + TimezoneHelper::timezone_diff_secs;
 }
 
 string TC_Common::tm2str(const time_t &t, const string &sFormat)
