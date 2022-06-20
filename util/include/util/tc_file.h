@@ -277,14 +277,15 @@ public:
 #endif
 
 	/**
-	 * @brief 遍历目录, 获取目录下面的所有文件和子目录.
+	 * @brief 遍历目录, 获取目录下面的所有文件和子目录（不包含默认的 . 和 .. ）.
 	 *
 	 * @param path       需要遍历的路径
 	 * @param files      目标路径下面所有文件
 	 * @param bRecursive 是否递归子目录
+	 * @param ignoreHide 以 . 开头的隐藏文件是否忽略(linux有效)
 	 *
 	 **/
-	static void listDirectory(const string &path, vector<string> &files, bool bRecursive);
+	static void listDirectory(const string &path, vector<string> &files, bool bRecursive, bool ignoreHide = false);
 
 	/**
 	* @brief 复制文件或目录.
