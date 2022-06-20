@@ -87,6 +87,18 @@ namespace tars
 class UTIL_DLL_API TC_Common
 {
 public:
+	//用于计算时区差异!
+	class TimezoneHelper
+	{
+	public:
+		TimezoneHelper();
+
+#if !TARGET_PLATFORM_WINDOWS
+		static string timezone_local;
+#endif
+
+		static int64_t timezone_diff_secs;
+	};
 
     static const float  _EPSILON_FLOAT;
     static const double _EPSILON_DOUBLE;
@@ -94,6 +106,8 @@ public:
     static const int64_t ONE_HOUR_MS = 1 * 3600 * 1000L;
     static const int64_t ONE_MIN_MS = 60 * 1000L;
     static const int64_t ONE_DAY_SEC = 86400;
+
+	static TimezoneHelper   _TimeZoneHelper;
 
     /**
     * @brief  跨平台sleep
@@ -432,6 +446,15 @@ public:
      * @return int64_t Take out microseconds of current time.
      */
     static int64_t now2us();
+
+	/**
+	 * @brief  UTC转本地时间戳
+	 * @brief  convert UTC TimeString to local timestamp.
+	 * @param utcTimeStr utc 字符串，格式为：0000-00-00T00:00:00.000Z, 例如：2022-06-07T18:04:37.703806784Z
+	 * @return time_t 当前时间戳，会根据当前时区自动增减时间偏移值
+	 * @return time_t
+	 */
+	static time_t UTC2LocalTime(const string& utcTimeStr);
 
     /**
     * @brief  字符串转化成T型，如果T是数值类型, 如果str为空,则T为0.
