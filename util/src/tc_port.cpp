@@ -571,5 +571,162 @@ BOOL WINAPI TC_Port::HandlerRoutine(DWORD dwCtrlType)
 }
 #endif
 
+// 获取指定进程占用物理内存大小, 单位（字节）
+int64_t TC_Port::getPidMemUsed(int64_t pid, const char unit)
+{
+#if TARGET_PLATFORM_LINUX
+	string filename = "/proc/" + TC_Common::tostr(pid) + "/statm";
+	string stream = TC_File::load2str(filename);
+	cout << stream << endl;
+	if(!stream.empty())
+	{
+		vector<string> vtStatm = TC_Common::sepstr<string>(stream, " ");
+		if (vtStatm.size() >= 2 && TC_Common::isdigit(vtStatm[1]))
+		{
+			return reSize(TC_Common::strto<int>(vtStatm[1]) * 4, unit);
+		}
+	}
+	return -1;
+#else
+	return -1;
+#endif
+}
+
+time_t TC_Port::getUPTime()
+{
+#if TARGET_PLATFORM_LINUX
+
+	string path = "/proc/uptime";
+	string data = TC_File::load2str(path);
+	vector<string> vs = TC_Common::sepstr<string>(data, " ");
+	if (vs.size() != 2)
+	{
+		return 0;
+	}
+
+	return TNOW - (time_t)(TC_Common::strto<double>(vs[0]));
+
+#else
+	return 0;
+#endif
+}
+
+time_t TC_Port::getPidStartTime(int64_t pid)
+{
+#if TARGET_PLATFORM_LINUX
+
+	string statPath = "/proc/" + TC_Common::tostr(pid) + "/stat";
+	string statData = TC_File::load2str(statPath);
+	vector<string> vs = TC_Common::sepstr<string>(statData, " ");
+	if (vs.size() < 22)
+	{
+		return 0;
+	}
+	unsigned int duration = TC_Common::strto<unsigned int>(vs[21]) / HZ;
+	time_t bootTime = getUPTime();
+	if (bootTime == 0)
+	{
+		return 0;
+	}
+	return bootTime + duration;
+#else
+	return -1;
+#endif
+}
+
+bool TC_Port::getSystemMemInfo(int64_t &totalSize, int64_t &availableSize, float &usedPercent, const char unit)
+{
+#if TARGET_PLATFORM_LINUX
+	int fd;
+	if((fd = open("/proc/meminfo", O_RDONLY)) == -1)
+	{
+		return false;
+	}
+
+	int cnt = 0;
+	char buf[8192];
+	char line[1024];
+
+	lseek(fd, 0, SEEK_SET);
+	if((cnt = read(fd, buf, sizeof(buf)-1)) < 0)
+	{
+		return false;
+	}
+
+	buf[cnt] = '\0';
+
+	int pos = 0;
+	char name[32];
+	unsigned int value;
+	unsigned int total = 0;
+	unsigned int available = 0;
+
+	for(int i = 0, count = 0;i <= cnt && count < 2;i++)
+	{
+		line[pos++] = buf[i];
+		if(buf[i] != '\n' && buf[i] != '\0')
+			continue;
+
+		line[pos] = '\0';
+		pos = 0;
+		sscanf(line, "%s%unsigned int", name, &value);
+
+		if(!strcmp(name, "MemTotal:"))
+		{
+			total = value;
+			count++;
+
+		}
+		else if(!strcmp(name, "MemAvailable:"))
+		{
+			available = value;
+			count++;
+		}
+	}
+
+	close(fd);
+
+	usedPercent = (total - available) * 1.0 / total * 100;
+	totalSize = reSize(total, unit);
+	availableSize = reSize(available, unit);
+	return true;
+#else
+	return false;
+#endif
+}
+
+// 获取系统CPU核数
+int TC_Port::getCPUProcessor()
+{
+#if TARGET_PLATFORM_LINUX
+	return get_nprocs();
+#else
+	return -1;
+#endif
+}
+
+bool TC_Port::getDiskInfo(float& usedPercent, int64_t& availableSize, const string& path)
+{
+#if TARGET_PLATFORM_LINUX
+	struct statfs64 buf;
+
+	if(statfs64(path.c_str(),&buf)==-1)
+	{
+		return false;
+	}
+
+	size_t totalSize = (buf.f_blocks / 1024) * (buf.f_bsize / 1024);
+	if (totalSize == 0)
+	{
+		return false;
+	}
+
+	availableSize = (buf.f_bavail / 1024) * (buf.f_bsize / 1024);
+	usedPercent = (totalSize - availableSize) * 1.0 / totalSize * 100;
+	return true;
+#else
+	return false;
+#endif
+}
 
 }
