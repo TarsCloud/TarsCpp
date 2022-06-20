@@ -158,6 +158,52 @@ public:
 	 */
 	static void unregisterTerm(size_t id);
 
+	/**
+	 * 获取指定进程占用物理内存大小, 返回内存大小，默认单位(字节， 还支持K, M, G) (目前linux下才有效)
+	 * @param pid: 目标进程id
+	 * return -1 表示获取失败
+	 *
+	 */
+	static int64_t getPidMemUsed(int64_t pid, const char unit = 'M');
+
+	/**
+	 * 获取进程启动时间(目前linux下才有效)
+	 * @param pid
+	 * @return
+	 */
+	static time_t getPidStartTime(int64_t pid);
+
+	/**
+	 * 服务器启动时间(目前linux下才有效)
+	 * @return
+	 */
+	static time_t getUPTime();
+
+	/**
+	 * 获取系统内存信息(目前linux下才有效)
+	 * @param totalSize, 总内存大小
+	 * @param availableSize , 剩余可用内存大小
+	 * @param usedPercent , 已使用内存百分比
+	 * @param unit, 内存单位
+	 * @return
+	 */
+	static bool getSystemMemInfo(int64_t &totalSize, int64_t &availableSize, float &usedPercent, const char unit = 'M');
+
+	/**
+	 * 获取系统逻辑CPU核数(目前linux下才有效)
+	 * @return -1 表示获取失败
+	 */
+	static int  getCPUProcessor();
+
+	/**
+	 * 获取磁盘信息
+	 * @param usedPercent 磁盘使用百分比
+	 * @param availableSize 剩余磁盘空间（单位M）
+	 * @param path, 为该路径所在目标磁盘
+	 */
+
+	static bool getDiskInfo(float& usedPercent, int64_t& availableSize, const string& path = "/");
+
 protected:
 
 	static size_t registerSig(int sig, std::function<void()> callback);
