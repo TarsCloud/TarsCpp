@@ -571,6 +571,23 @@ BOOL WINAPI TC_Port::HandlerRoutine(DWORD dwCtrlType)
 }
 #endif
 
+
+static int64_t reSize(int64_t i, const char unit)
+{
+	switch (unit)
+	{
+	case 'B':
+		return i * 1024;
+	case 'M':
+		return i / 1024;
+	case 'G':
+		return i / 1048576;
+	default:
+		return i;
+	}
+	return i;    
+}
+
 // 获取指定进程占用物理内存大小, 单位（字节）
 int64_t TC_Port::getPidMemUsed(int64_t pid, const char unit)
 {
