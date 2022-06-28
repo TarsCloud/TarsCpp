@@ -1,3 +1,19 @@
+
+# v3.0.11 20220628
+
+### en
+
+- Add: tc_port add some func(now only work in linux)
+- Add: tc_file listDirectory add ignoreHide
+- Add: tc_common add UTC2LocalTime
+- Fix: tc_clientsocket unix local socket bug
+- Fix: tars2cpp sendResponse use TarsOutputStream
+### cn
+- Add: tc_port 添加了一些linux下的函数, 获取服务的启动时间
+- Add: tc_file listDirectory 添加 ignoreHide参数
+- Add: tc_common 添加 UTC2LocalTime函数
+- Fix: tc_clientsocket unix local socket bug
+- Fix: tars2cpp 回包时使用 TarsOutputStream, 减少一次内存copy
 # v3.0.10 20220606
 
 ### en
