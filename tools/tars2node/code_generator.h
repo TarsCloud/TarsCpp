@@ -150,6 +150,8 @@ private:
 
     void   scan(const string & sFile, bool bNotPrefix);
 
+    void   addTarsPingForProxy(const ContextPtr &cPtr);
+
     string makeName();
 
     string findName(const string & sNamespace, const string & sName, const bool &bBase = false);
