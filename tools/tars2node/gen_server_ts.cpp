@@ -201,7 +201,9 @@ string CodeGenerator::generateTSServerDispatch(const NamespacePtr &nPtr, const I
         if (vParamDecl[i]->isOut())
         {
             StructPtr sPtr = StructPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
-            if (sPtr)
+			VectorPtr vPtr = VectorPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+			MapPtr mPtr = MapPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+			if (sPtr || vPtr || mPtr)
             {
                 dstr << TAB << vParamDecl[i]->getTypeIdPtr()->getId()
                     << " = " << getDefault(vParamDecl[i]->getTypeIdPtr(), "", nPtr->getId(), true)
@@ -220,7 +222,9 @@ string CodeGenerator::generateTSServerDispatch(const NamespacePtr &nPtr, const I
         else
         {
             StructPtr sPtr = StructPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
-            if (sPtr)
+			VectorPtr vPtr = VectorPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+			MapPtr mPtr = MapPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+            if (sPtr || vPtr || mPtr)
             {
                 dstr << TAB << vParamDecl[i]->getTypeIdPtr()->getId()
                     << " = " << getDefault(vParamDecl[i]->getTypeIdPtr(), "", nPtr->getId(), true)

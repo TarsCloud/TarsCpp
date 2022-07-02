@@ -19,7 +19,7 @@
 #define INVOKE_RETURN(protocol, prefix, params) \
     str << TAB << "return this._worker." << TC_Common::lower(protocol) << "_invoke(\"" << oPtr->getId() << "\", "; \
     str << prefix << "." << TC_Common::lower(protocol) << "Encoder"; \
-    str << "(" << sParams << params << "), options, " << prefix << ").then("; \
+    str << "(" << sParams << params << "), tars_options, " << prefix << ").then("; \
     str << prefix << "." << TC_Common::lower(protocol) << "Decoder, "; \
     str << prefix << ".errorResponser);" << endl;
 #define PROTOCOL_PARAMS (sParams.empty() ? "" : ", ") << "version"
@@ -330,7 +330,7 @@ string CodeGenerator::generateTSProxy(const NamespacePtr &nPtr, const InterfaceP
     str << TAB << "})" << endl << endl;     // end of metadata
 
     // generate function body
-    str << TAB << oPtr->getId() << "(" << sParamsWithType << (sParamsWithType.empty() ? "" : ", ") << "options?: " << IDL_NAMESPACE_STR << "Rpc.InvokeProperty) {" << endl;
+    str << TAB << oPtr->getId() << "(" << sParamsWithType << (sParamsWithType.empty() ? "" : ", ") << "tars_options?: " << IDL_NAMESPACE_STR << "Rpc.InvokeProperty) {" << endl;
     INC_TAB;
 
     string sFuncFullName = pPtr->getId() + "Proxy." + oPtr->getId();

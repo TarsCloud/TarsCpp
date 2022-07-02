@@ -214,7 +214,9 @@ string CodeGenerator::generateDispatch(const NamespacePtr &nPtr, const Interface
         {
             //_data_.rsp ? rsp.readFromObject(_data_.rsp) : rsp;
             StructPtr sPtr = StructPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
-            if (sPtr)
+			VectorPtr vPtr = VectorPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+			MapPtr mPtr = MapPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+			if (sPtr || vPtr || mPtr)
             {
                 dstr << TAB << vParamDecl[i]->getTypeIdPtr()->getId()
                     << " = " << getDefault(vParamDecl[i]->getTypeIdPtr(), "", nPtr->getId(), true)
@@ -233,7 +235,9 @@ string CodeGenerator::generateDispatch(const NamespacePtr &nPtr, const Interface
         else
         {
             StructPtr sPtr = StructPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
-            if (sPtr)
+			VectorPtr vPtr = VectorPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+			MapPtr mPtr = MapPtr::dynamicCast(vParamDecl[i]->getTypeIdPtr()->getTypePtr());
+			if (sPtr || vPtr || mPtr)
             {
                 dstr << TAB << vParamDecl[i]->getTypeIdPtr()->getId()
                     << " = " << getDefault(vParamDecl[i]->getTypeIdPtr(), "", nPtr->getId(), true)

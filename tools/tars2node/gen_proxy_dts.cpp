@@ -67,7 +67,7 @@ string CodeGenerator::generateDTSProxy(const InterfacePtr &pPtr)
             funcReturnGeneric += "undefined>";
         }
 
-        str << "options?: " << IDL_NAMESPACE_STR << "Rpc.InvokeProperty): Promise<" << IDL_NAMESPACE_STR << "Rpc.ProxyResponse" << funcReturnGeneric << ">;" << endl;
+        str << "tars_options?: " << IDL_NAMESPACE_STR << "Rpc.InvokeProperty): Promise<" << IDL_NAMESPACE_STR << "Rpc.ProxyResponse" << funcReturnGeneric << ">;" << endl;
 
         str << TAB << "static " << oPtr->getId() << ": " << IDL_NAMESPACE_STR << "Rpc.SharedFunctionInfo" << ";" << endl;
     }
