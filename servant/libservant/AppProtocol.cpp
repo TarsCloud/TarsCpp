@@ -498,7 +498,7 @@ TC_NetWorkBuffer::PACKET_TYPE ProxyProtocol::http1Response(TC_NetWorkBuffer &in,
     {
         context = new shared_ptr<TC_HttpResponse>();
         *context = std::make_shared<TC_HttpResponse>();
-		in.setContextData(context, [](TC_NetWorkBuffer*nb){ shared_ptr<TC_HttpResponse> *p = (shared_ptr<TC_HttpResponse>*)(nb->getContextData()); if(!p) { nb->setContextData(NULL); delete p; }});
+		in.setContextData(context, [](TC_NetWorkBuffer*nb){ shared_ptr<TC_HttpResponse> *p = (shared_ptr<TC_HttpResponse>*)(nb->getContextData()); if(p) { nb->setContextData(NULL); delete p; }});
     }
 
     if((*context)->incrementDecode(in))
