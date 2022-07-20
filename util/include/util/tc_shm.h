@@ -68,7 +68,7 @@ public:
 	*  
 	* @param bOwner  是否拥有共享内存,默认为false 
     */
-    TC_Shm(bool bOwner = false) : _bOwner(bOwner),_shmSize(0),_shmKey(0),_bCreate(true), _pshm(NULL) {}
+    TC_Shm(bool bOwner = false) : _bOwner(bOwner),_shmSize(0),_shmKey(0),_bCreate(true), _pshm(NULL), _shemID(0) {}
 
     /**
 	* @brief 构造函数. 
