@@ -16,6 +16,7 @@
 
 #include "util/tc_thread_pool.h"
 #include "util/tc_common.h"
+#include "util/tc_coroutine.h"
 
 #include <iostream>
 
@@ -227,6 +228,41 @@ void TC_ThreadPoolHash::start()
     {
         _pools[i]->start();
     }
+}
+
+void TC_CoThreadPool::start()    
+{                         
+	std::unique_lock<std::mutex> lock(_mutex);
+
+	if (!_threads.empty())
+	{   
+		throw tars::TC_ThreadPool_Exception("[Co_ThreadPool::start] thread pool has start!");
+	}   
+
+	_bTerminate = false;
+
+	for (size_t i = 0; i < _threadNum; i++)
+	{   
+		_threads.push_back(new thread([this]{
+					auto coroSched = tars::TC_CoroutineScheduler::create();
+					if(!coroSched)                 
+					{
+					throw tars::TC_ThreadPool_Exception("[TC_CoThreadPool::start] TC_CoroutineScheduler::create faild!");
+					}
+					coroSched->setPoolStackSize(_iPoolSize, _iStackSize);
+					coroSched->setNoCoroutineCallback([&](tars::TC_CoroutineScheduler *scheduler){scheduler->terminate();});
+					coroSched->go(std::bind([this]{
+							run();                         
+							tars::TC_CoroutineScheduler::scheduler()->terminate();
+							}));
+					//开启协程循环                 
+					coroSched->run();              
+
+					while(!coroSched->isTerminate());;
+
+
+					}));
+	}   
 }
 
 

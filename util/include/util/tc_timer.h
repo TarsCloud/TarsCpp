@@ -330,12 +330,12 @@ public:
 
 
 protected:
-    virtual void onFireEvent(std::function<void()> func);
+	virtual void onFireEvent(std::function<void()> func);
 
-    /**
-     * 增加了一个最近的定时器, 需要触发wait唤醒, 等到到最新的时间上
-     */ 
-    virtual void onAddTimer();
+	/**
+	 * 增加了一个最近的定时器, 需要触发wait唤醒, 等到到最新的时间上
+	 */ 
+	virtual void onAddTimer();
 
 	void run();
 
@@ -344,6 +344,55 @@ protected:
 
 	TC_ThreadPool _tpool;
 };
+
+
+/** 
+ * @brief  协程定时器类
+ */     
+class TC_CoTimer : public tars::TC_TimerBase
+{       
+	public:
+
+		/**
+		 * 析构
+		 */
+		~TC_CoTimer();
+
+		/**     
+		 * 系统定时器
+		 * @param numThread, 回调线程数, 默认是1个
+		 */
+		void startTimer(int numThread = 1);
+
+		/** 
+		 * 停止定时器
+		 * 如果当前有定时任务正在执行, 会等执行完毕
+		 */     
+		void stopTimer();
+
+		/** 
+		 * @brief
+		 * @return num(RUNNER_EVENT), num(ALL_EVENT), num(REPEAT_EVENT)
+		 */
+		tuple<int64_t, int64_t, int64_t> status();
+
+
+	protected:
+		virtual void onFireEvent(std::function<void()> func);
+
+		/**
+		 * 增加了一个最近的定时器, 需要触发wait唤醒, 等到到最新的时间上
+		 */ 
+		virtual void onAddTimer();
+
+		void run();
+
+	protected:
+		bool        _terminate = false;
+
+		TC_CoThreadPool _tpool;
+};  
+
 
 }
 

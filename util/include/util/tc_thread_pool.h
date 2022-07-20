@@ -305,4 +305,21 @@ private:
 
 };
 
+
+class TC_CoThreadPool : public tars::TC_ThreadPool
+{
+	public:
+		void start();
+
+		void setPoolStackSize(uint32_t iPoolSize, size_t iStackSize)
+		{
+			_iPoolSize = iPoolSize;
+			_iStackSize = iStackSize;
+		}
+
+	protected:
+		uint32_t _iPoolSize = 1;
+
+		size_t _iStackSize = 128*124;
+};
 }

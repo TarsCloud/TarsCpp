@@ -289,6 +289,85 @@ void TC_Timer::run()
 	}
 }
 
+TC_CoTimer::~TC_CoTimer()
+{   
+	stopTimer();
+}   
+
+void TC_CoTimer::startTimer(int numThread)
+{   
+	if (numThread <= 0)
+	{   
+		numThread = 1;
+	}   
+
+	_terminate = false;
+
+	//多个线程, 其中一个给TC_CoTimer::run使用
+	_tpool.init(numThread + 1); 
+	_tpool.start();
+	_tpool.exec(std::bind(&TC_CoTimer::run, this));
+}   
+
+void TC_CoTimer::stopTimer()
+{   
+	if (_terminate)
+	{   
+		return;
+	}   
+
+	{   
+		std::unique_lock<std::mutex> lck(_mutex);
+		_terminate = true;
+		_cond.notify_all();
+	}   
+
+	_tpool.stop();
+}   
+
+void TC_CoTimer::onAddTimer()
+{   
+	_cond.notify_one();
+}   
+
+void TC_CoTimer::onFireEvent(std::function<void()> func)
+{   
+	//执行具体事件对象
+	_tpool.exec(func);
+}   
+
+
+tuple<int64_t, int64_t, int64_t> TC_CoTimer::status()
+{   
+	std::unique_lock<std::mutex> lock(_mutex);
+	return make_tuple(_tpool.getJobNum(), _mapEvent.size(), _repeatIds.size());
+}   
+
+void TC_CoTimer::run()
+{   
+	while (!_terminate)
+	{   
+		try 
+		{   
+			fireEvents(1000);
+
+			std::unique_lock <std::mutex> lock(_mutex);
+
+			uint64_t ms = 1000;
+
+			if (_nextTimer > 0)
+			{   
+				ms = _nextTimer - TNOWMS;
+			}   
+			_cond.wait_for(lock, std::chrono::milliseconds(ms));
+		}   
+		catch (exception & ex) {
+			cerr << ex.what() << endl;
+		}   
+	}
+}
+
+
 }
 
 
