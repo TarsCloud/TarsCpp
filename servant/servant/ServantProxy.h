@@ -1165,7 +1165,6 @@ public:
         msg = NULL;
     }
 
-    // template<typename REQ, typename RSP>
     void common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response, const ServantProxyCallbackPtr &cb, bool bCoro = false)
     {
         if (_connectionSerial <= 0)
