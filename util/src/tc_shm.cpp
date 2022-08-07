@@ -120,11 +120,11 @@ int TC_Shm::del()
     return 0;
 #else
     int iRetCode = 0;
-    if (_pshm != NULL)
+    if (_shemID > 0)
     {
         iRetCode = shmctl(_shemID, IPC_RMID, 0);
 
-        _pshm = NULL;
+		_shemID = 0;
     }
 
     return iRetCode;
