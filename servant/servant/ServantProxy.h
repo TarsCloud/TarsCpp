@@ -23,6 +23,7 @@
 #include "util/tc_autoptr.h"
 #include "util/tc_proxy_info.h"
 #include "util/tc_singleton.h"
+#include "util/tc_custom_protocol.h"
 #include "servant/Message.h"
 #include "servant/AppProtocol.h"
 #include "servant/Current.h"
@@ -1164,8 +1165,8 @@ public:
         msg = NULL;
     }
 
-    template<typename REQ, typename RSP>
-    void common_protocol_call_async(const string &funcName, shared_ptr<REQ> &request, shared_ptr<RSP> &response, const ServantProxyCallbackPtr &cb, bool bCoro = false)
+    // template<typename REQ, typename RSP>
+    void common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response, const ServantProxyCallbackPtr &cb, bool bCoro = false)
     {
         if (_connectionSerial <= 0)
         {
@@ -1179,15 +1180,15 @@ public:
         msg->request.sFuncName    = funcName;
         msg->request.sServantName = tars_name();
         
-        msg->request.sBuffer.resize(sizeof(shared_ptr<REQ>));
+        msg->request.sBuffer.resize(sizeof(shared_ptr<TC_CustomProtoReq>));
 
         msg->deconstructor = [msg] {
-            shared_ptr<REQ> &data = *(shared_ptr<REQ> *)(msg->request.sBuffer.data());
+            shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
             data.reset();
 
             if (!msg->response->sBuffer.empty())
             {
-                shared_ptr<RSP> &rsp = *(shared_ptr<RSP> *)(msg->response->sBuffer.data());
+                shared_ptr<TC_CustomProtoRsp> &rsp = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
                 //主动reset一次
                 rsp.reset();
 
@@ -1195,7 +1196,7 @@ public:
             }
         };
 
-        *(shared_ptr<REQ> *)(msg->request.sBuffer.data()) = request;
+        *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data()) = request;
 
         msg->callback = cb;
 
