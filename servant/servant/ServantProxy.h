@@ -1112,95 +1112,33 @@ public:
                                 bool bCoro = false);
 
 	/**
-	 * http1/2协议同步远程调用
+	 * http协议同步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
     void http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response);
 
     /**
-	 * http1/2协议异步远程调用
+	 * http协议异步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
 	void http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro = false);
 
-    void common_protocol_call(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response)
-    {
-        if (_connectionSerial <= 0)
-        {
-            _connectionSerial = DEFAULT_CONNECTION_SERIAL;
-        }
-        
-        ReqMessage *msg = new ReqMessage();
+	/**
+	 * 通用协议同步调用(这种模式下, 一个连接上只能跑一个请求响应包, 和http模式keep-alive模式类似)
+	 * @param funcName
+	 * @param request
+	 * @param response
+	 */
+    void common_protocol_call(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response);
 
-        msg->init(ReqMessage::SYNC_CALL, this);
-        msg->bFromRpc = true;
-        msg->request.sFuncName    = funcName;
-
-        msg->request.sBuffer.resize(sizeof(shared_ptr<TC_CustomProtoReq>));
-
-        msg->deconstructor = [msg] {
-            shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
-            data.reset();
-
-            if (!msg->response->sBuffer.empty())
-            {
-                shared_ptr<TC_CustomProtoRsp> &rsp = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
-                //主动reset一次
-                rsp.reset();
-
-                msg->response->sBuffer.clear();
-            }
-        };
-
-        shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
-
-        data = request;
-
-        servant_invoke(msg, false);
-
-        response = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
-
-        delete msg;
-        msg = NULL;
-    }
-
-    void common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro = false)
-    {
-        if (_connectionSerial <= 0)
-        {
-            _connectionSerial = DEFAULT_CONNECTION_SERIAL;
-        }
-
-        ReqMessage *msg = new ReqMessage();
-
-        msg->init(ReqMessage::ASYNC_CALL, this);
-        msg->bFromRpc = true;
-        msg->request.sFuncName    = funcName;
-        msg->request.sServantName = tars_name();
-        
-        msg->request.sBuffer.resize(sizeof(shared_ptr<TC_CustomProtoReq>));
-
-        msg->deconstructor = [msg] {
-            shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
-            data.reset();
-
-            if (!msg->response->sBuffer.empty())
-            {
-                shared_ptr<TC_CustomProtoRsp> &rsp = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
-                //主动reset一次
-                rsp.reset();
-
-                msg->response->sBuffer.clear();
-            }
-        };
-
-        *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data()) = request;
-
-        msg->callback = cb;
-
-        servant_invoke(msg, bCoro);
-    }
-
+	/**
+	 * 通用协议异步调用(这种模式下, 一个连接上只能跑一个请求响应包, 和http模式keep-alive模式类似)
+	 * @param funcName
+	 * @param request
+	 * @param cb
+	 * @param bCoro
+	 */
+    void common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro = false);
 
     /**
      * TARS协议同步方法调用
