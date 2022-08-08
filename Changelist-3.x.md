@@ -12,6 +12,7 @@
 - Fix: Asynchronous callback if dyeing open, active enabledying is required
 - Feat: tars2node add tars_ping
 - Feat: add common_protocol_call, Support any short connection mode similar to http
+- Feat: Add server stat(Current)
  
 ### cn
 - Fix: TC_Shm 修复无法删除shm的bug
@@ -23,6 +24,7 @@
 - Fix: 异步回调如果判断如果染色了需要主动enableDyeing
 - Feat: tars2node 添加 tars_ping
 - Feat: ServantProxy添加 common_protocol_call, 支持任何类似http的短连接模式
+- Feat: 增加服务端请求统计(Current)
 
 # v3.0.11 20220628
 
