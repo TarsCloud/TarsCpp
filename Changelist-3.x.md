@@ -1,4 +1,29 @@
 
+# v3.0.12 20220808
+
+### en
+
+- Fix: TC_Shm bug, can not delete shm after detach
+- Fix: http_call memory leak
+- Fix: tars2node list & map as interface paramters bug when http+json call bug
+- Fix: epoll server doResponse close connection when client close connection
+- Fix: getConnStatus bug that return all connections on all listen ports
+- Fix: the problem that no root servantproxy will not be called in the scenario where multi thread calls are started at the same time when serial calls are made(http mode).
+- Fix: Asynchronous callback if dyeing open, active enabledying is required
+- Feat: tars2node add tars_ping
+- Feat: add common_protocol_call, Support any short connection mode similar to http
+ 
+### cn
+- Fix: TC_Shm 修复无法删除shm的bug
+- Fix: http_call内存泄露的bug
+- Fix: tars2node修复当list & map作为接口参数时, 无法通过http+json调用的bug
+- Fix: epoll server 根据 doResponse参数来主动关闭连接的问题, 避免管理连接不及时
+- Fix: getConnStatus 修复返回了所有监听端口的连接的bug
+- Fix: 修复串行调用的时候，同时启动多线程调用的场景，非根servantproxy对应的prx不会被调用的问题
+- Fix: 异步回调如果判断如果染色了需要主动enableDyeing
+- Feat: tars2node 添加 tars_ping
+- Feat: ServantProxy添加 common_protocol_call, 支持任何类似http的短连接模式
+
 # v3.0.11 20220628
 
 ### en
@@ -14,6 +39,7 @@
 - Add: tc_common 添加 UTC2LocalTime函数
 - Fix: tc_clientsocket unix local socket bug
 - Fix: tars2cpp 回包时使用 TarsOutputStream, 减少一次内存copy
+
 # v3.0.10 20220606
 
 ### en
