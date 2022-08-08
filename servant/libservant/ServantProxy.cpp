@@ -1396,6 +1396,84 @@ void ServantProxy::http_call_async(const string &funcName, shared_ptr<TC_HttpReq
 	servant_invoke(msg, bCoro);
 }
 
+void ServantProxy::common_protocol_call(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response)
+{
+	if (_connectionSerial <= 0)
+	{
+		_connectionSerial = DEFAULT_CONNECTION_SERIAL;
+	}
+
+	ReqMessage *msg = new ReqMessage();
+
+	msg->init(ReqMessage::SYNC_CALL, this);
+	msg->bFromRpc = true;
+	msg->request.sFuncName    = funcName;
+
+	msg->request.sBuffer.resize(sizeof(shared_ptr<TC_CustomProtoReq>));
+
+	msg->deconstructor = [msg] {
+		shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
+		data.reset();
+
+		if (!msg->response->sBuffer.empty())
+		{
+			shared_ptr<TC_CustomProtoRsp> &rsp = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
+			//主动reset一次
+			rsp.reset();
+
+			msg->response->sBuffer.clear();
+		}
+	};
+
+	shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
+
+	data = request;
+
+	servant_invoke(msg, false);
+
+	response = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
+
+	delete msg;
+	msg = NULL;
+}
+
+void ServantProxy::common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro)
+{
+	if (_connectionSerial <= 0)
+	{
+		_connectionSerial = DEFAULT_CONNECTION_SERIAL;
+	}
+
+	ReqMessage *msg = new ReqMessage();
+
+	msg->init(ReqMessage::ASYNC_CALL, this);
+	msg->bFromRpc = true;
+	msg->request.sFuncName    = funcName;
+	msg->request.sServantName = tars_name();
+
+	msg->request.sBuffer.resize(sizeof(shared_ptr<TC_CustomProtoReq>));
+
+	msg->deconstructor = [msg] {
+		shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
+		data.reset();
+
+		if (!msg->response->sBuffer.empty())
+		{
+			shared_ptr<TC_CustomProtoRsp> &rsp = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
+			//主动reset一次
+			rsp.reset();
+
+			msg->response->sBuffer.clear();
+		}
+	};
+
+	*(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data()) = request;
+
+	msg->callback = cb;
+
+	servant_invoke(msg, bCoro);
+}
+
 //
 //选取一个网络线程对应的信息
 void ServantProxy::selectNetThreadInfo(ServantProxyThreadData *pSptd, ObjectProxy *&pObjProxy, shared_ptr<ReqInfoQueue> &pReqQ)
