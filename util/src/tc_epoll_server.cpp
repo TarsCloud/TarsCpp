@@ -615,7 +615,6 @@ bool TC_EpollServer::Connection::handleInputImp(const shared_ptr<TC_Epoller::Epo
 
 	try
 	{
-		_trans->doResponse();
 		bool bRet = _trans->doResponse();
 		if(false == bRet)
 		{
