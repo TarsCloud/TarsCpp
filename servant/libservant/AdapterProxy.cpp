@@ -216,7 +216,7 @@ void AdapterProxy::onCompletePackage(TC_Transceiver* trans)
 
 shared_ptr<TC_NetWorkBuffer::Buffer> AdapterProxy::onSendAuthCallback(TC_Transceiver* trans)
 {
-//	LOG_CONSOLE_DEBUG  << "fd:" << trans->fd() << ", " << trans << endl;
+	// LOG_CONSOLE_DEBUG  << "fd:" << trans->fd() << ", " << trans << endl;
 
     // 走框架的AK/SK认证
     BasicAuthInfo info;
@@ -229,7 +229,7 @@ shared_ptr<TC_NetWorkBuffer::Buffer> AdapterProxy::onSendAuthCallback(TC_Transce
     const int kAuthType = 0x40;
     RequestPacket request;
     request.sFuncName       = "InnerAuthServer";
-    request.sServantName    = "authServant";
+    request.sServantName    = _objectProxy->name();
     request.iVersion        = TARSVERSION;
     request.iRequestId      = 1;
     request.cPacketType     = TARSNORMAL;
@@ -242,6 +242,8 @@ shared_ptr<TC_NetWorkBuffer::Buffer> AdapterProxy::onSendAuthCallback(TC_Transce
 TC_NetWorkBuffer::PACKET_TYPE AdapterProxy::onVerifyAuthCallback(TC_NetWorkBuffer &buff, TC_Transceiver*trans)
 {
     shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
+    const int kAuthType = 0x40;
+    rsp->iMessageType = kAuthType;
 
     TC_NetWorkBuffer::PACKET_TYPE ret = _objectProxy->getRootServantProxy()->tars_get_protocol().responseFunc(buff, *rsp.get());
 

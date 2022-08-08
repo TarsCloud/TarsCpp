@@ -23,6 +23,7 @@
 #include "util/tc_autoptr.h"
 #include "util/tc_proxy_info.h"
 #include "util/tc_singleton.h"
+#include "util/tc_custom_protocol.h"
 #include "servant/Message.h"
 #include "servant/AppProtocol.h"
 #include "servant/Current.h"
@@ -1122,6 +1123,85 @@ public:
 	 */
 	void http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro = false);
 
+    void common_protocol_call(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response)
+    {
+        if (_connectionSerial <= 0)
+        {
+            _connectionSerial = DEFAULT_CONNECTION_SERIAL;
+        }
+        
+        ReqMessage *msg = new ReqMessage();
+
+        msg->init(ReqMessage::SYNC_CALL, this);
+        msg->bFromRpc = true;
+        msg->request.sFuncName    = funcName;
+
+        msg->request.sBuffer.resize(sizeof(shared_ptr<TC_CustomProtoReq>));
+
+        msg->deconstructor = [msg] {
+            shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
+            data.reset();
+
+            if (!msg->response->sBuffer.empty())
+            {
+                shared_ptr<TC_CustomProtoRsp> &rsp = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
+                //主动reset一次
+                rsp.reset();
+
+                msg->response->sBuffer.clear();
+            }
+        };
+
+        shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
+
+        data = request;
+
+        servant_invoke(msg, false);
+
+        response = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
+
+        delete msg;
+        msg = NULL;
+    }
+
+    void common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro = false)
+    {
+        if (_connectionSerial <= 0)
+        {
+            _connectionSerial = DEFAULT_CONNECTION_SERIAL;
+        }
+
+        ReqMessage *msg = new ReqMessage();
+
+        msg->init(ReqMessage::ASYNC_CALL, this);
+        msg->bFromRpc = true;
+        msg->request.sFuncName    = funcName;
+        msg->request.sServantName = tars_name();
+        
+        msg->request.sBuffer.resize(sizeof(shared_ptr<TC_CustomProtoReq>));
+
+        msg->deconstructor = [msg] {
+            shared_ptr<TC_CustomProtoReq> &data = *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data());
+            data.reset();
+
+            if (!msg->response->sBuffer.empty())
+            {
+                shared_ptr<TC_CustomProtoRsp> &rsp = *(shared_ptr<TC_CustomProtoRsp> *)(msg->response->sBuffer.data());
+                //主动reset一次
+                rsp.reset();
+
+                msg->response->sBuffer.clear();
+            }
+        };
+
+        *(shared_ptr<TC_CustomProtoReq> *)(msg->request.sBuffer.data()) = request;
+
+        msg->callback = cb;
+
+        servant_invoke(msg, bCoro);
+    }
+
+
     /**
      * TARS协议同步方法调用
      */
@@ -1263,6 +1343,7 @@ private:
     friend class AdapterProxy;
     friend class CommunicatorEpoll;
 
+private:
     /**
      * 通信器
      */
