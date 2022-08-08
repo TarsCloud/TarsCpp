@@ -616,6 +616,12 @@ bool TC_EpollServer::Connection::handleInputImp(const shared_ptr<TC_Epoller::Epo
 	try
 	{
 		_trans->doResponse();
+		bool bRet = _trans->doResponse();
+		if(false == bRet)
+		{
+			netThread->delConnection(this, true, EM_CLIENT_CLOSE);
+			return false;
+		}
 	}
 	catch(const std::exception& ex)
 	{
@@ -681,11 +687,12 @@ void TC_EpollServer::Connection::close()
 
 void TC_EpollServer::Connection::onCloseCallback(TC_Transceiver *trans, TC_Transceiver::CloseReason reason, const string &err)
 {
+	_pBindAdapter->decreaseSendBufferSize(_messages.size());
+
 	if (trans->getEndpoint().isTcp() && trans->isValid())
 	{
 		_pBindAdapter->decreaseSendBufferSize();
 	}
-	_pBindAdapter->decreaseSendBufferSize(_messages.size());
 }
 
 std::shared_ptr<TC_OpenSSL> TC_EpollServer::Connection::onOpensslCallback(TC_Transceiver* trans)
