@@ -1269,7 +1269,7 @@ vector<TC_EpollServer::ConnStatus> TC_EpollServer::ConnectionList::getConnStatus
 	for(size_t i = 1; i <= _total; i++)
 	{
 		//是当前监听端口的连接
-		if(_vConn[i].first != NULL && _vConn[i].first->isTcp()) //getListenfd() == lfd)
+		if(_vConn[i].first != NULL && _vConn[i].first->isTcp() && _vConn[i].first->getBindAdapter()->getSocket().getfd() == lfd) //getListenfd() == lfd)
 		{
 			ConnStatus cs;
 
