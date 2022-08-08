@@ -346,7 +346,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
 
         TLOGTARS("[QueryEpBase::refresh," << _objName << "]" <<endl);
 
-        if(_valid && !_rootServant)
+        if(_valid && !_rootServant && _valid)
         {
             return;
         }
