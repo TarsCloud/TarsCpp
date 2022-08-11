@@ -140,13 +140,19 @@ void AdapterProxy::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::CloseR
 		_objectProxy->getRootServantProxy()->tars_get_push_callback()->onClose();
     }
 
-    int second =_objectProxy->reconnect();
-
-    if(second > 0) 
+    int millisecond =_objectProxy->reconnect();
+    if (millisecond <= 0)
     {
-        _objectProxy->getCommunicatorEpoll()->reConnect(TNOWMS + second * 1000, trans);
-        TLOGERROR("[trans close:" << _objectProxy->name() << "," << trans->getConnectEndpoint().toString() << ", reconnect:" << second << "]" << endl);
-    }   
+        return;
+    }
+
+    if (_objectProxy->reconnectActiveInReg() && !isActiveInReg())
+    {
+        return;
+    }
+
+    _objectProxy->getCommunicatorEpoll()->reConnect(TNOWMS + millisecond, trans);
+    TLOGERROR("[trans close:" << _objectProxy->name() << "," << trans->getConnectEndpoint().toString() << ", reconnect:" << millisecond << " ms]" << endl);
 }
 
 void AdapterProxy::onConnectCallback(TC_Transceiver* trans)
