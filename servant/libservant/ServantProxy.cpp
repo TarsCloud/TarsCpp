@@ -478,6 +478,11 @@ void ServantProxy::tars_reconnect(int second)
     forEachObject([=](ObjectProxy *o) { o->reconnect(second); });
 }
 
+void ServantProxy::tars_reconnect(int millisecond, bool onlyActiveInReg)
+{
+    forEachObject([=](ObjectProxy *o) { o->reconnect(millisecond, onlyActiveInReg); });
+}
+
 TC_Endpoint ServantProxy::tars_invoke_endpoint()
 {
     ServantProxyThreadData *td = ServantProxyThreadData::getData();
