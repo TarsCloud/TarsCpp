@@ -347,7 +347,7 @@ void ObjectProxy::doKeepAlive()
 	}
 	assert(this->getCommunicatorEpoll()->getThreadId() == this_thread::get_id());
 
-	const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+	const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getActiveAdapters();
 
     for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
     {
