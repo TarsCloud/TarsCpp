@@ -931,6 +931,13 @@ public:
     void tars_reconnect(int second);
 
     /**
+     * set auto reconnect time
+     * @param int, millisecond
+     * @param onlyActiveInReg 为true只对在主控注册列表中的有效
+     */
+    void tars_reconnect(int millisecond, bool onlyActiveInReg);
+
+    /**
      * 获取所属的Object名称
      * @return string
      */

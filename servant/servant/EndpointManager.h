@@ -376,6 +376,14 @@ public:
         return _vAllProxys;
     }
 
+    /**
+     * 获取活跃的服务节点
+     */
+    const vector<AdapterProxy*> & getActiveAdapters()
+    {
+        return _activeProxys;
+    }
+
 private:
     virtual void onUpdateOutter();
 
