@@ -1,5 +1,5 @@
 
-# v3.0.12 20220808
+# v3.0.12 20220815
 
 ### en
 
@@ -13,6 +13,8 @@
 - Feat: tars2node add tars_ping
 - Feat: add common_protocol_call, Support any short connection mode similar to http
 - Feat: Add server stat(Current)
+- Feat: Reconnect supports millisecond intervals, and supports reconnection only for those in active state in the master registration list, to avoid invalid operations after capacity reduction on k8s
+
  
 ### cn
 - Fix: TC_Shm 修复无法删除shm的bug
@@ -25,6 +27,7 @@
 - Feat: tars2node 添加 tars_ping
 - Feat: ServantProxy添加 common_protocol_call, 支持任何类似http的短连接模式
 - Feat: 增加服务端请求统计(Current)
+- Feat: reconnect支持毫秒间隔，并且支持只对在主控注册列表里为active状态的进行重连，避免k8s上缩容后无效操作
 
 # v3.0.11 20220628
 
