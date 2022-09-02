@@ -33,6 +33,7 @@ void usage()
     cout << "  --tarsMaster                                create get registry info interface" << endl;
     cout << "  --currentPriority						   use current path first." << endl;
     cout << "  --without-trace                             不需要调用链追踪逻辑" << endl;
+    cout << "  --param-rvalue-ref                          参数使用右值引用(c++11后)" << endl;
     cout << "  tars2cpp support type: bool byte short int long float double vector map" << endl;
     exit(0);
 }
@@ -128,6 +129,12 @@ int main(int argc, char* argv[])
         t2c.setTrace(true);
     }
 
+    // 参数使用指针(需要业务自己释放)
+    if (option.hasParam("param-rvalue-ref"))
+    {
+        t2c.setParamRvalueRef(true);
+    }
+
     if (option.hasParam("xml"))
     {
         vector<string> vXmlIntf;
@@ -173,7 +180,7 @@ int main(int argc, char* argv[])
     }
     catch(exception& e)
     {
-	    cerr<<e.what()<<endl;
+        cerr<<e.what()<<endl;
     }
 
     return 0;

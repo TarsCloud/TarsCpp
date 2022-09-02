@@ -37,6 +37,7 @@ Tars2Cpp::Tars2Cpp()
 // , _unknownField(false)
 , _tarsMaster(false)
 , _bTrace(true)
+, _bPraramRvalueRef(false)
 {
 
 }
@@ -1268,7 +1269,7 @@ string Tars2Cpp::generateH(const ContainerPtr& pPtr) const
 }
 
 /******************************ParamDeclPtr***************************************/
-string Tars2Cpp::generateH(const ParamDeclPtr& pPtr) const
+string Tars2Cpp::generateH(const ParamDeclPtr& pPtr, bool bRvalueRef) const
 {
     ostringstream s;
 
@@ -1280,7 +1281,14 @@ string Tars2Cpp::generateH(const ParamDeclPtr& pPtr) const
     else
     {
         //结构, map, vector, string
-        s << "const " << tostr(pPtr->getTypeIdPtr()->getTypePtr()) << " &";
+        if (bRvalueRef)
+        {
+            s << tostr(pPtr->getTypeIdPtr()->getTypePtr()) << " &&";
+        }
+        else
+        {
+            s << "const " << tostr(pPtr->getTypeIdPtr()->getTypePtr()) << " &";
+        }
     }
 
     if (pPtr->isOut())
@@ -1428,13 +1436,27 @@ string Tars2Cpp::generateDispatchAsync(const OperationPtr& pPtr, const string& c
     string sParams;
     if (pPtr->getReturnPtr()->getTypePtr())
     {
-        sParams = pPtr->getReturnPtr()->getId() + ", ";
+        if (!pPtr->getReturnPtr()->getTypePtr()->isSimple() && _bPraramRvalueRef)
+        {
+            sParams = "std::move(" + pPtr->getReturnPtr()->getId() + "), ";
+        }
+        else
+        {
+            sParams = pPtr->getReturnPtr()->getId() + ", ";
+        }
     }
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
         if (vParamDecl[i]->isOut())
         {
-            sParams += vParamDecl[i]->getTypeIdPtr()->getId() + ", ";
+            if (!vParamDecl[i]->getTypeIdPtr()->getTypePtr()->isSimple() && _bPraramRvalueRef)
+            {
+                sParams += "std::move(" + vParamDecl[i]->getTypeIdPtr()->getId() + "), ";
+            }
+            else
+            {
+                sParams += vParamDecl[i]->getTypeIdPtr()->getId() + ", ";
+            }
         }
     }
     s << tars::TC_Common::trimright(sParams, ", ", false) <<  ");" << endl;
@@ -1503,13 +1525,27 @@ string Tars2Cpp::generateDispatchCoroAsync(const OperationPtr& pPtr, const strin
     string sParams;
     if (pPtr->getReturnPtr()->getTypePtr())
     {
-        sParams = pPtr->getReturnPtr()->getId() + ", ";
+        if (!pPtr->getReturnPtr()->getTypePtr()->isSimple() && _bPraramRvalueRef)
+        {
+            sParams = "std::move(" + pPtr->getReturnPtr()->getId() + "), ";
+        }
+        else
+        {
+            sParams = pPtr->getReturnPtr()->getId() + ", ";
+        }
     }
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
         if (vParamDecl[i]->isOut())
         {
-            sParams += vParamDecl[i]->getTypeIdPtr()->getId() + ", ";
+            if (!vParamDecl[i]->getTypeIdPtr()->getTypePtr()->isSimple() && _bPraramRvalueRef)
+            {
+                sParams += "std::move(" + vParamDecl[i]->getTypeIdPtr()->getId() + "), ";
+            }
+            else
+            {
+                sParams += vParamDecl[i]->getTypeIdPtr()->getId() + ", ";
+            }
         }
     }
     s << tars::TC_Common::trimright(sParams, ", ", false) <<  ");" << endl;
@@ -1565,7 +1601,14 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr) const
         else
         {
             //结构, map, vector, string
-            sParams =  "const " + tostr(pPtr->getReturnPtr()->getTypePtr()) + "& ret, ";
+            if (_bPraramRvalueRef)
+            {
+                sParams = tostr(pPtr->getReturnPtr()->getTypePtr()) + "&& ret, ";
+            }
+            else
+            {
+                sParams = "const " + tostr(pPtr->getReturnPtr()->getTypePtr()) + "& ret, ";
+            }
         }
     }
     for (size_t i = 0; i < vParamDecl.size(); i++)
@@ -1581,7 +1624,14 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr) const
             else
             {
                 //结构, map, vector, string
-                sParams += " const " + tostr(pPtr->getTypeIdPtr()->getTypePtr()) + "&";
+                if (_bPraramRvalueRef)
+                {
+                    sParams += " " + tostr(pPtr->getTypeIdPtr()->getTypePtr()) + "&&";
+                }
+                else
+                {
+                    sParams += " const " + tostr(pPtr->getTypeIdPtr()->getTypePtr()) + "&";
+                }
             }
             sParams += " " + pPtr->getTypeIdPtr()->getId() + ", ";
         }
@@ -1801,7 +1851,14 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
 
     for(size_t i = 0; i < vParamDecl.size(); i++)
     {
-        s << vParamDecl[i]->getTypeIdPtr()->getId();
+        if (!vParamDecl[i]->isOut() && !vParamDecl[i]->getTypeIdPtr()->getTypePtr()->isSimple() && _bPraramRvalueRef)
+        {
+            s << "std::move(" << vParamDecl[i]->getTypeIdPtr()->getId() << ")";
+        }
+        else
+        {
+            s << vParamDecl[i]->getTypeIdPtr()->getId();
+        }
         if(i != vParamDecl.size() - 1)
             s << ",";
         else
@@ -2236,7 +2293,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string& interfaceId) const
+string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string& interfaceId, bool bRvalueRef) const
 {
     ostringstream s;
     vector<ParamDeclPtr>& vParamDecl = pPtr->getAllParamDeclPtr();
@@ -2250,7 +2307,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
     string routekey = "";
     for (size_t i = 0; i < vParamDecl.size(); i++)
     {
-        s << generateH(vParamDecl[i]) << ",";
+        s << generateH(vParamDecl[i], bRvalueRef) << ",";
 
         if (routekey.empty() && vParamDecl[i]->isRouteKey())
         {
@@ -3054,7 +3111,7 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
 
     for (size_t i = 0; i < vOperation.size(); i++)
     {
-        s << generateH(vOperation[i], false, pPtr->getId()); // << endl;
+        s << generateH(vOperation[i], false, pPtr->getId(), false); // << endl;
         s << generateHAsync(vOperation[i], pPtr->getId()) << endl;
     }
 
@@ -3108,7 +3165,7 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
 
     for (size_t i = 0; i < vOperation.size(); i++)
     {
-        s << generateH(vOperation[i], true, pPtr->getId()) << endl;
+        s << generateH(vOperation[i], true, pPtr->getId(), _bPraramRvalueRef) << endl;
     }
 
     DEL_TAB;
