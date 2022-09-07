@@ -610,7 +610,6 @@ bool TC_EpollServer::Connection::handleOutputImp(const shared_ptr<TC_Epoller::Ep
 
 bool TC_EpollServer::Connection::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> &data)
 {
-	// LOG_CONSOLE_DEBUG << endl;
 	TC_EpollServer::NetThread *netThread = (TC_EpollServer::NetThread *)data->cookie();
 
 	try
