@@ -14,41 +14,34 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef _HelloImp_H_
-#define _HelloImp_H_
-
+#include "HelloImp.h"
 #include "servant/Application.h"
-#include "Hello.h"
+#include "HelloServer.h"
 
-/**
- *
- *
- */
-class HelloImp : public TestApp::Hello
+using namespace std;
+
+//////////////////////////////////////////////////////
+void HelloImp::initialize()
 {
-public:
-    /**
-     *
-     */
-    virtual ~HelloImp() {}
+    //initialize servant here:
+    //...
+}
 
-    /**
-     *
-     */
-    virtual void initialize();
+//////////////////////////////////////////////////////
+void HelloImp::destroy()
+{
+    //destroy servant here:
+    //...
+}
 
-    /**
-     *
-     */
-    virtual void destroy();
+int HelloImp::doClose(tars::TarsCurrentPtr current)
+{
+	g_app._pushThread.delCurrent(current);
+}
 
-	virtual int doClose(tars::TarsCurrentPtr current);
-    /**
-     *
-     */
-    virtual int test(tars::TarsCurrentPtr current) { return 0;};
+int HelloImp::registerPush(tars::TarsCurrentPtr current)
+{
+	g_app._pushThread.addCurrent(current);
+    return 0;
+}
 
-    virtual int testHello(const std::string &sReq, std::string &sRsp, tars::TarsCurrentPtr current);
-};
-/////////////////////////////////////////////////////
-#endif

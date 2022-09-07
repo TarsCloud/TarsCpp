@@ -11,6 +11,7 @@ endif()
 
 add_subdirectory(CustomDemo)
 add_subdirectory(AuthDemo)
+add_subdirectory(PushCallbackDemo)
 
 if(TARS_SSL)
 add_subdirectory(SSLDemo)
@@ -44,6 +45,13 @@ if(WIN32)
             DEPENDS AuthServer AuthClient
             USES_TERMINAL
             COMMAND ../examples/scripts/run-auth.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${WORKING_DIRECTORY}
+            COMMENT "call run auth")
+
+    add_custom_target(run-push-callback
+            WORKING_DIRECTORY ${WORKING_DIRECTORY}
+            DEPENDS PushCallbackServer PushCallbackClient
+            USES_TERMINAL
+            COMMAND ../examples/scripts/run-push-callback.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${WORKING_DIRECTORY}
             COMMENT "call run auth")
 
     add_custom_target(run-udp
@@ -148,6 +156,12 @@ else(WIN32)
             DEPENDS AuthServer AuthClient
             COMMAND sh ../examples/scripts/run-auth.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${WORKING_DIRECTORY}
             COMMENT "call run auth")
+
+    add_custom_target(run-push-callback
+            WORKING_DIRECTORY ${WORKING_DIRECTORY}
+            DEPENDS PushCallbackServer PushCallbackClient
+            COMMAND sh ../examples/scripts/run-push-callback.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${WORKING_DIRECTORY}
+            COMMENT "call run push callback")
 
     if(TARS_HTTP2)
     add_custom_target(run-http2
