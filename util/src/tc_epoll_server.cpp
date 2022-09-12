@@ -610,12 +610,16 @@ bool TC_EpollServer::Connection::handleOutputImp(const shared_ptr<TC_Epoller::Ep
 
 bool TC_EpollServer::Connection::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> &data)
 {
-	// LOG_CONSOLE_DEBUG << endl;
 	TC_EpollServer::NetThread *netThread = (TC_EpollServer::NetThread *)data->cookie();
 
 	try
 	{
-		_trans->doResponse();
+		bool bRet = _trans->doResponse();
+		if(false == bRet)
+		{
+			netThread->delConnection(this, true, EM_CLIENT_CLOSE);
+			return false;
+		}
 	}
 	catch(const std::exception& ex)
 	{
@@ -681,11 +685,12 @@ void TC_EpollServer::Connection::close()
 
 void TC_EpollServer::Connection::onCloseCallback(TC_Transceiver *trans, TC_Transceiver::CloseReason reason, const string &err)
 {
+	_pBindAdapter->decreaseSendBufferSize(_messages.size());
+
 	if (trans->getEndpoint().isTcp() && trans->isValid())
 	{
 		_pBindAdapter->decreaseSendBufferSize();
 	}
-	_pBindAdapter->decreaseSendBufferSize(_messages.size());
 }
 
 std::shared_ptr<TC_OpenSSL> TC_EpollServer::Connection::onOpensslCallback(TC_Transceiver* trans)
@@ -1262,7 +1267,7 @@ vector<TC_EpollServer::ConnStatus> TC_EpollServer::ConnectionList::getConnStatus
 	for(size_t i = 1; i <= _total; i++)
 	{
 		//是当前监听端口的连接
-		if(_vConn[i].first != NULL && _vConn[i].first->isTcp()) //getListenfd() == lfd)
+		if(_vConn[i].first != NULL && _vConn[i].first->isTcp() && _vConn[i].first->getBindAdapter()->getSocket().getfd() == lfd) //getListenfd() == lfd)
 		{
 			ConnStatus cs;
 

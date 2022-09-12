@@ -132,13 +132,30 @@ public:
      * reconnect
      * @param second
      */
-    inline void reconnect(int second) { _reConnectSecond = second; }
+    inline void reconnect(int second) { _reConnectSecond = second * 1000; }
+
+    /**
+     * reconnect
+     * @param millisecond
+     * @param onlyActiveInReg true：只对在注控注册的节点有效
+     */
+    inline void reconnect(int millisecond, bool onlyActiveInReg)
+    {
+        _reConnectSecond = millisecond;
+        _onlyActiveInReg = onlyActiveInReg;
+    }
 
 	/**
 	 * reconnect
-	 * @param second
+	 * @return millisecond
 	 */
 	inline int reconnect() { return _reConnectSecond; }
+
+    /**
+     * reconnect
+     * @param second
+     */
+    inline bool reconnectActiveInReg() { return _onlyActiveInReg; }
 
 	/**
      * 判断此obj是否走按set规则调用流程，如果是直连方式，即使服务端是启用set的，也不认为是按set规则调用的
@@ -240,9 +257,10 @@ private:
 
 
     /**
-     * reconnect, 0: not reconnect
+     * reconnect, 0: not reconnect, millisecond
      */
     int                                   _reConnectSecond = 0;
+    bool                                  _onlyActiveInReg = false;
 
 
     /*

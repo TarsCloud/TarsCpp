@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -14,41 +14,12 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef _HelloImp_H_
-#define _HelloImp_H_
-
-#include "servant/Application.h"
-#include "Hello.h"
-
-/**
- *
- *
- */
-class HelloImp : public TestApp::Hello
+module TestApp
 {
-public:
-    /**
-     *
-     */
-    virtual ~HelloImp() {}
 
-    /**
-     *
-     */
-    virtual void initialize();
-
-    /**
-     *
-     */
-    virtual void destroy();
-
-	virtual int doClose(tars::TarsCurrentPtr current);
-    /**
-     *
-     */
-    virtual int test(tars::TarsCurrentPtr current) { return 0;};
-
-    virtual int testHello(const std::string &sReq, std::string &sRsp, tars::TarsCurrentPtr current);
+interface Push
+{
+    int pushMsg(out string sRsp);
 };
-/////////////////////////////////////////////////////
-#endif
+
+}; 

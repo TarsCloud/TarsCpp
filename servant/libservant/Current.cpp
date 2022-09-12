@@ -47,6 +47,10 @@ Current::~Current()
         {
             reportToStat("one_way_client");
         }
+        else if(_request.cPacketType == TARSNORMAL)
+        {
+            reportToStat("stat_from_server");
+        }
         else if (!_isTars && ServerConfig::ReportFlow)
         {
             //非tars客户端 从服务端上报调用信息

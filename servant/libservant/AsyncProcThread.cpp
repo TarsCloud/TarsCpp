@@ -115,11 +115,17 @@ void AsyncProcThread::callback(ReqMessage * msg)
 //	assert(pServantProxyThreadData != NULL);
 
 	//把染色的消息设置在线程私有数据里面
-
 	pServantProxyThreadData->_data._dyeing  = msg->data._dyeing;
 	pServantProxyThreadData->_data._dyeingKey = msg->data._dyeingKey;
-	pServantProxyThreadData->_data._cookie = msg->data._cookie;
 
+	// 如果开启了消息染色需要主动 enableDyeing
+	TarsDyeingSwitch dye;
+	if (msg->data._dyeing)
+	{
+		dye.enableDyeing(msg->data._dyeingKey);
+	}
+
+	pServantProxyThreadData->_data._cookie = msg->data._cookie;
 	pServantProxyThreadData->_traceCall = msg->bTraceCall;
 	pServantProxyThreadData->initTrace(msg->sTraceKey);
 

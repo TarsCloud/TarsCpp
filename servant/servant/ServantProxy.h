@@ -23,6 +23,7 @@
 #include "util/tc_autoptr.h"
 #include "util/tc_proxy_info.h"
 #include "util/tc_singleton.h"
+#include "util/tc_custom_protocol.h"
 #include "servant/Message.h"
 #include "servant/AppProtocol.h"
 #include "servant/Current.h"
@@ -930,6 +931,13 @@ public:
     void tars_reconnect(int second);
 
     /**
+     * set auto reconnect time
+     * @param int, millisecond
+     * @param onlyActiveInReg 为true只对在主控注册列表中的有效
+     */
+    void tars_reconnect(int millisecond, bool onlyActiveInReg);
+
+    /**
      * 获取所属的Object名称
      * @return string
      */
@@ -1111,16 +1119,33 @@ public:
                                 bool bCoro = false);
 
 	/**
-	 * http1/2协议同步远程调用
+	 * http协议同步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
     void http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response);
 
     /**
-	 * http1/2协议异步远程调用
+	 * http协议异步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
 	void http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro = false);
+
+	/**
+	 * 通用协议同步调用(这种模式下, 一个连接上只能跑一个请求响应包, 和http模式keep-alive模式类似)
+	 * @param funcName
+	 * @param request
+	 * @param response
+	 */
+    void common_protocol_call(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response);
+
+	/**
+	 * 通用协议异步调用(这种模式下, 一个连接上只能跑一个请求响应包, 和http模式keep-alive模式类似)
+	 * @param funcName
+	 * @param request
+	 * @param cb
+	 * @param bCoro
+	 */
+    void common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro = false);
 
     /**
      * TARS协议同步方法调用
@@ -1263,6 +1288,7 @@ private:
     friend class AdapterProxy;
     friend class CommunicatorEpoll;
 
+private:
     /**
      * 通信器
      */

@@ -14,8 +14,8 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef _HelloImp_H_
-#define _HelloImp_H_
+#ifndef _SSLImp_H_
+#define _SSLImp_H_
 
 #include "servant/Application.h"
 #include "Hello.h"
@@ -42,13 +42,17 @@ public:
      */
     virtual void destroy();
 
+	/**
+	 * 连接关闭
+	 * @param current
+	 * @return
+	 */
 	virtual int doClose(tars::TarsCurrentPtr current);
-    /**
-     *
-     */
-    virtual int test(tars::TarsCurrentPtr current) { return 0;};
 
-    virtual int testHello(const std::string &sReq, std::string &sRsp, tars::TarsCurrentPtr current);
+    /**
+     * 客户端请求注册push通知
+     */
+    virtual int registerPush(tars::TarsCurrentPtr current);
 };
 /////////////////////////////////////////////////////
 #endif

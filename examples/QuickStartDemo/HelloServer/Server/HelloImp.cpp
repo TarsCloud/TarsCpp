@@ -33,6 +33,10 @@ void HelloImp::destroy()
     //...
 }
 
+int HelloImp::doClose(tars::TarsCurrentPtr current)
+{
+	return 0;
+}
 int HelloImp::testHello(const std::string &sReq, std::string &sRsp, tars::TarsCurrentPtr current)
 {
 //    TLOGDEBUG("HelloImp::testHellosReq:"<<sReq<<endl);

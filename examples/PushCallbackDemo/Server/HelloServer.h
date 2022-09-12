@@ -14,41 +14,40 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef _HelloImp_H_
-#define _HelloImp_H_
+#ifndef _HelloServer_H_
+#define _HelloServer_H_
 
+#include <iostream>
 #include "servant/Application.h"
-#include "Hello.h"
+#include "PushThread.h"
+
+using namespace tars;
 
 /**
  *
- *
- */
-class HelloImp : public TestApp::Hello
+ **/
+class HelloServer : public Application
 {
 public:
     /**
      *
-     */
-    virtual ~HelloImp() {}
+     **/
+    virtual ~HelloServer() {};
 
     /**
      *
-     */
+     **/
     virtual void initialize();
 
     /**
      *
-     */
-    virtual void destroy();
+     **/
+    virtual void destroyApp();
 
-	virtual int doClose(tars::TarsCurrentPtr current);
-    /**
-     *
-     */
-    virtual int test(tars::TarsCurrentPtr current) { return 0;};
-
-    virtual int testHello(const std::string &sReq, std::string &sRsp, tars::TarsCurrentPtr current);
+	PushThread _pushThread;
 };
-/////////////////////////////////////////////////////
+
+extern HelloServer g_app;
+
+////////////////////////////////////////////
 #endif
