@@ -189,7 +189,10 @@ public:
     
     static void addActiveWeight2EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName = "");
     
-    static void cleanEndPoint();;
+    static void cleanEndPoint();
+
+	static void push();
+
 protected:
 
     /**

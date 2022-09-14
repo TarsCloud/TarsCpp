@@ -3,6 +3,7 @@
 #include "QueryImp.h"
 #include "util/tc_logger.h"
 #include "util/tc_clientsocket.h"
+#include "RegisterQueryManager.h"
 
 void QueryImp::initialize()
 {
@@ -51,6 +52,13 @@ int QueryImp::findObjectByIdInSameGroup(const std::string & id, vector<tars::End
     TLOGINFO(__FUNCTION__ << ":" << __LINE__ << "|" << id << "|" << current->getIp() << endl);
 
     int iRet = _db.findObjectByIdInGroupPriority(id, current->getIp(), activeEp, inactiveEp, os);
+
+	LOG_CONSOLE_DEBUG << "activeEp size:" << activeEp.size() << endl;
+
+	for(auto &a : activeEp)
+	{
+		LOG_CONSOLE_DEBUG << a.writeToJsonString() << endl;
+	}
 
     doDaylog(FUNID_findObjectByIdInSameGroup,id,activeEp,inactiveEp,current,os);
 
@@ -194,3 +202,23 @@ string QueryImp::eFunTostr(const FUNID eFnId)
     return sFun;
 }
 
+int QueryImp::doClose(tars::CurrentPtr current)
+{
+	RegisterQueryManager::getInstance()->closeQuery(current);
+	return 0;
+}
+
+Int32 QueryImp::registerQuery(const std::string & id, CurrentPtr current)
+{
+	RegisterQueryManager::getInstance()->registerQuery(id, current);
+
+	return 0;
+}
+
+
+Int32 QueryImp::registerChange(const std::string & id, CurrentPtr current)
+{
+	RegisterQueryManager::getInstance()->registerChange(id, current);
+
+	return 0;
+}

@@ -41,6 +41,12 @@ public:
      */
     virtual void destroy() {};
 
+	/**
+	 *
+	 * @param current
+	 * @return
+	 */
+	virtual int doClose(tars::CurrentPtr current);
     /** 
      * 根据id获取所有该对象的活动endpoint列表
      */
@@ -70,6 +76,23 @@ public:
      * 根据id获取对象同set endpoint列表
      */
     Int32 findObjectByIdInSameSet(const std::string & id,const std::string & setId,vector<tars::EndpointF> &activeEp,vector<tars::EndpointF> &inactiveEp, tars::CurrentPtr current);
+
+	/**
+	 *
+	 * @param ids
+	 * @param current
+	 * @return
+	 */
+	Int32 registerQuery(const std::string & id, CurrentPtr current);
+
+	/**
+	 *
+	 * @param id
+	 * @param current
+	 * @return
+	 */
+	Int32 registerChange(const std::string & id, CurrentPtr current);
+
 private:
     /**
      * 打印按天日志

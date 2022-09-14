@@ -2,6 +2,7 @@
 #include <iterator>
 #include <algorithm>
 #include "DbHandle.h"
+#include "RegisterQueryManager.h"
 
 TC_ReadersWriterData<ObjectsCache> CDbHandle::_objectsCache;
 TC_ReadersWriterData<CDbHandle::SetDivisionCache> CDbHandle::_setDivisionCache;
@@ -42,8 +43,11 @@ int CDbHandle::findObjectById4All(const string& id, vector<EndpointF>& activeEp,
     ObjectsCache::iterator it;
     ObjectsCache& usingCache = _objectsCache.getReaderData();
 
-    if ((it = usingCache.find(id)) != usingCache.end())
+	LOG_CONSOLE_DEBUG << "id:" << id << endl;
+
+	if ((it = usingCache.find(id)) != usingCache.end())
     {
+		LOG_CONSOLE_DEBUG << endl;
         activeEp   = it->second.vActiveEndpoints;
         inactiveEp = it->second.vInactiveEndpoints;
     }
@@ -144,6 +148,7 @@ int CDbHandle::findObjectByIdInGroupPriority(const std::string& sID, const std::
     os << "|(" << iClientGroupID << ")";
     if (iClientGroupID == -1)
     {
+		LOG_CONSOLE_DEBUG << endl;
         return findObjectById4All(sID, vecActive, vecInactive);
     }
 
@@ -582,7 +587,6 @@ void CDbHandle::InsertSetRecord4Inactive(const string& objName, const string& se
 
 void CDbHandle::updateDivisionCache(SetDivisionCache& setDivisionCache,bool updateAll)
 {
-    //ȫ������
     if(updateAll)
     {
         if (setDivisionCache.size() == 0)
@@ -627,6 +631,12 @@ void CDbHandle::updateDivisionCache(SetDivisionCache& setDivisionCache,bool upda
         _setDivisionCache.swap();
     }
 }
+
+void CDbHandle::push()
+{
+	RegisterQueryManager::getInstance()->pushAll();
+}
+
 #if 0
 
 void CDbHandle::updateCpuLoadInfo(vector<EndpointF> &vEndpointF)

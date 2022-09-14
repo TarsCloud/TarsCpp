@@ -491,7 +491,6 @@ TEST_F(HelloTest, registryRpcHashTagInvoke)
 	STOP_FRAMEWORK_SERVER;
 }
 
-
 TEST_F(HelloTest, registryRpcMultiHashTagInvoke)
 {
 	START_FRAMEWORK_SERVER_1_2
@@ -509,6 +508,59 @@ TEST_F(HelloTest, registryRpcMultiHashTagInvoke)
 	int co = prx->testHello(0, _buffer, out);
 
 	ASSERT_TRUE(co == 0);
+
+	stopServer(rpc1Server);
+	stopServer(rpc2Server);
+	STOP_FRAMEWORK_SERVER;
+}
+
+
+TEST_F(HelloTest, registryPush)
+{
+	string obj = "TestApp.RpcServer.HelloObj";
+
+	START_FRAMEWORK_SERVER_1_2
+
+	shared_ptr<Communicator> c = getCommunicator();
+
+	HelloPrx prx = c->stringToProxy<HelloPrx>(obj);
+
+	vector<EndpointInfo> activeEndPoint;
+	vector<EndpointInfo> inactiveEndPoint;
+
+	int co;
+	int i = 20;
+	while(--i)
+	{
+		co = prx->testPort();
+		ASSERT_TRUE(co == 9990 || co == 9991);
+	}
+
+	CDbHandle::cleanEndPoint();
+	CDbHandle::addActiveEndPoint(obj, 9990, 1);
+	CDbHandle::addInactiveEndPoint(obj, 9991, 1);
+	CDbHandle::push();
+
+	TC_Common::sleep(1);
+
+	co = prx->testPort();
+
+	prx->tars_endpoints(activeEndPoint, inactiveEndPoint);
+
+	for(auto e : activeEndPoint)
+	{
+		LOG_CONSOLE_DEBUG << e.getEndpoint().toString() << endl;
+	}
+
+	TC_Common::sleep(1);
+
+	i = 10;
+	while(--i>0)
+	{
+		co = prx->testPort();
+		LOG_CONSOLE_DEBUG << co << endl;
+		ASSERT_TRUE(co == 9990);
+	}
 
 	stopServer(rpc1Server);
 	stopServer(rpc2Server);

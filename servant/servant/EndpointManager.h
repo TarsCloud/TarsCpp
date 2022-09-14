@@ -21,8 +21,10 @@
 #include "servant/EndpointF.h"
 #include "servant/QueryF.h"
 #include "servant/AppProtocol.h"
+#include "servant/QueryPushF.h"
 #include "util/tc_spin_lock.h"
 #include "util/tc_consistent_hash_new.h"
+#include "util/tc_thread_rwlock.h"
 
 namespace tars
 {
@@ -48,6 +50,33 @@ enum  EndpointWeightType
 };
 
 ////////////////////////////////////////////////////////////////////////
+
+class QueryEpBase;
+
+class QueryPushFImp : public QueryPushFPrxCallback
+{
+public:
+	QueryPushFImp(const QueryFPrx &queryFPrx) : _queryFPrx(queryFPrx)
+	{
+	}
+
+	void replacePrx(QueryFPrx queryFPrx);
+
+	void registerQuery(const string &obj, QueryEpBase *pQueryBase);
+
+	virtual void onConnect(const TC_Endpoint& ep);
+
+	virtual void callback_onQuery(const std::string& obj);
+
+protected:
+	QueryFPrx _queryFPrx;
+	std::mutex _mutex;
+	unordered_map<string, unordered_set<QueryEpBase *>> _queryBase;
+
+};
+
+typedef TC_AutoPtr<QueryPushFImp> QueryPushFImpPtr;
+
 /*
  * 路由请求与回调的实现类
  */
@@ -139,12 +168,15 @@ public:
      */
     inline bool getDirectProxy() { return _direct; }
 
-protected:
-
     /*
      * 刷新主控
      */
     void refreshReg(GetEndpointType type,const string & sName);
+
+	/**
+	 *
+	 */
+	void resetRefreshTime();
 
 private:
     
@@ -154,11 +186,6 @@ private:
      * 如果是间接连接，则设置主控代理，并从缓存中加载相应的列表
      */
     void setObjName(const string & sObjName);
-
-//    /*
-//     * 解析endpoint
-//     */
-//    vector<string> sepEndpoint(const string& sEndpoints);
 
     /*
      * 从sEndpoints提取ip列表信息
@@ -186,6 +213,16 @@ private:
     virtual void onUpdateOutter() {};
 
 protected:
+
+	/**
+	 * 初始化locator prx的锁
+	 */
+	static std::mutex		  _mutex;
+
+	/**
+	 * 查询回调
+	 */
+	static QueryPushFImpPtr	  _queryCallback;
 
     /*
      * 通信器
@@ -730,8 +767,7 @@ private:
     /*
      * 锁
      */
-    // TC_ThreadLock                  _mutex;
-    TC_SpinLock                     _mutex;
+	TC_ThreadRWLocker				_mutex;
 
     /*
      * 保存对象的map

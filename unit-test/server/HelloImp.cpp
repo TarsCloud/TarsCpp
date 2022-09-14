@@ -159,4 +159,9 @@ int HelloImp::testPushRegister(const string &msg, CurrentPtr current)
 	Push::async_response_push_testPush(current, 0, msg);
 	return 0;
 }
+
+int HelloImp::testPort(CurrentPtr current)
+{
+	return this->getApplication()->getEpollServer()->getBindAdapter("RpcAdapter")->getEndpoint().getPort();
+}
 ///////////////////////////////////////////////////////////////////////////////

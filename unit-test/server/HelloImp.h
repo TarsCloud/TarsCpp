@@ -51,6 +51,8 @@ public:
 
 	virtual int testPushRegister(const string &msg, CurrentPtr current);
 
+	virtual int testPort(CurrentPtr current);
+
 protected:
     HelloPrx _helloPrx;
 

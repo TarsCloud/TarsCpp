@@ -20,10 +20,62 @@
 #include "servant/AppCache.h"
 #include "servant/Application.h"
 #include "servant/CommunicatorEpoll.h"
-#include "servant/StatReport.h"
+//#include "servant/StatReport.h"
 
 namespace tars
 {
+
+std::mutex QueryEpBase::_mutex;
+QueryPushFImpPtr QueryEpBase::_queryCallback;
+
+void QueryPushFImp::replacePrx(QueryFPrx queryFPrx)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	_queryFPrx = queryFPrx;
+
+	for(auto it : _queryBase)
+	{
+		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first);
+	}
+}
+
+void QueryPushFImp::registerQuery(const string &obj, QueryEpBase *pQueryBase)
+{
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
+		_queryBase[obj].insert(pQueryBase);
+	}
+
+	_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, obj);
+}
+
+void QueryPushFImp::onConnect(const TC_Endpoint& ep)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	for(auto it : _queryBase)
+	{
+		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first);
+	}
+}
+
+void QueryPushFImp::callback_onQuery(const std::string& obj)
+{
+//	LOG_CONSOLE_DEBUG << obj << endl;
+
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	auto it = _queryBase.find(obj);
+	if(it != _queryBase.end())
+	{
+		for(auto &e : it->second)
+		{
+			e->resetRefreshTime();
+		}
+	}
+}
+
 /////////////////////////////////////////////////////////////////////////////
 QueryEpBase::QueryEpBase(Communicator * pComm, bool bFirstNetThread,bool bInterfaceReq)
 : _communicator(pComm)
@@ -138,9 +190,21 @@ void QueryEpBase::callback_findObjectByIdInSameStation_exception( Int32 ret)
 
 int QueryEpBase::setLocatorPrx(QueryFPrx prx)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	if(_queryFPrx)
+	{
+		prx->tars_set_push_callback(_queryFPrx->tars_get_push_callback());
+	}
+
     _queryFPrx = prx;
 
     return 0;
+}
+
+void QueryEpBase::resetRefreshTime()
+{
+	_refreshTime = 0;
 }
 
 bool QueryEpBase::init(const string & sObjName, const string& setName, bool rootServant)
@@ -148,7 +212,6 @@ bool QueryEpBase::init(const string & sObjName, const string& setName, bool root
     _locator = _communicator->getProperty("locator");
 
     TLOGTARS("QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl);
-//	LOG_CONSOLE_DEBUG << "QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl;
 
     _invokeSetId = setName;
 
@@ -205,9 +268,22 @@ void QueryEpBase::setObjName(const string & sObjName)
 		    _objName = _objName.substr(0, pos);
 	    }
 
-        _queryFPrx = _communicator->stringToProxy<QueryFPrx>(_locator);
+		_queryFPrx = _communicator->stringToProxy<QueryFPrx>(_locator);
 
-        string sLocatorKey = _locator;
+		{
+			std::lock_guard<std::mutex> lock(_mutex);
+
+			if(!_queryCallback)
+			{
+				_queryCallback = new QueryPushFImp(_queryFPrx);
+
+				_queryFPrx->tars_set_push_callback(_queryCallback);
+			}
+		}
+
+		_queryCallback->registerQuery(sObjName, this);
+
+		string sLocatorKey = _locator;
 
         //如果启用set，则获取按set分组的缓存
         if(ClientConfig::SetOpen)
@@ -327,6 +403,8 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
         return;
     }
 
+//	LOG_CONSOLE_DEBUG << this->_objName << ", _requestRegistry:" << _requestRegistry << ", _requestTimeout:" << _requestTimeout << ", _refreshTime:" << _refreshTime << endl;
+
     int64_t iNow = TNOWMS;
     //正在请求状态 而且请求超时了，或者第一次
     if(_requestRegistry && _requestTimeout < iNow)
@@ -370,17 +448,17 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            iRet = _queryFPrx->findObjectById4Any(_objName,activeEp,inactiveEp, ServerConfig::Context);
+                            iRet = _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->findObjectById4Any(_objName,activeEp,inactiveEp, ServerConfig::Context);
                             break;
                         }
                     case E_STATION:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
+                            iRet = _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
 	                        break;
                         }
                     case E_SET:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
+                            iRet = _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
                             break;
                         }
                     case E_DEFAULT:
@@ -388,13 +466,13 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                         {
                             if(ClientConfig::SetOpen || !_invokeSetId.empty())
                             {
-                                   //指定set调用时，指定set的优先级最高
+                                //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                iRet = _queryFPrx->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp, ServerConfig::Context);
+                                iRet = _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp, ServerConfig::Context);
                             }
                             else
                             {
-                                iRet = _queryFPrx->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp, ServerConfig::Context);
+                                iRet = _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp, ServerConfig::Context);
                             }
                             break;
                         }
@@ -407,17 +485,17 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            _queryFPrx->async_findObjectById4Any(this,_objName, ServerConfig::Context);
+                            _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_findObjectById4Any(this,_objName, ServerConfig::Context);
                             break;
                         }
                     case E_STATION:
                         {
-                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName, ServerConfig::Context);
+                            _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_findObjectByIdInSameStation(this,_objName,sName, ServerConfig::Context);
                             break;
                         }
                     case E_SET:
                         {
-                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName, ServerConfig::Context);
+                            _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_findObjectByIdInSameSet(this,_objName,sName, ServerConfig::Context);
                             break;
                         }
                     case E_DEFAULT:
@@ -427,11 +505,11 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             {
                                 //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId, ServerConfig::Context);
+                                _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_findObjectByIdInSameSet(this,_objName,setId, ServerConfig::Context);
                             }
                             else
                             {
-                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName, ServerConfig::Context);
+                                _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_findObjectByIdInSameGroup(this,_objName, ServerConfig::Context);
                             }
                             break;
                         }
@@ -1380,7 +1458,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(uint32_t hashCode)
     }
     else
     {
-        TLOGWARN("[EndpointManager::getHashProxyForNormal, hash not active," << _objectProxy->name() << "@" << _vRegProxys[hash]->endpoint().desc() << endl);
+//        TLOGWARN("[EndpointManager::getHashProxyForNormal, hash not active," << _objectProxy->name() << "@" << _vRegProxys[hash]->endpoint().desc() << endl);
         if(_activeProxys.empty())
         {
             TLOGERROR("[EndpointManager::getHashProxyForNormal _activeEndpoints is empty]" << endl);
@@ -1863,8 +1941,6 @@ void EndpointThread::update(const set<EndpointInfo> & active, const set<Endpoint
     set<EndpointInfo>::iterator iter= active.begin();
     for(;iter != active.end(); ++iter)
     {
-//        TC_Endpoint ep = (iter->host(), iter->port(), 3000, iter->type(), iter->grid());
-
         _activeTCEndPoint.push_back(iter->getEndpoint());
 
         _activeEndPoint.push_back(*iter);
@@ -1873,19 +1949,19 @@ void EndpointThread::update(const set<EndpointInfo> & active, const set<Endpoint
     iter = inactive.begin();
     for(;iter != inactive.end(); ++iter)
     {
-//        TC_Endpoint ep(iter->host(), iter->port(), 3000, iter->type(), iter->grid());
-
         _inactiveTCEndPoint.push_back(iter->getEndpoint());
 
         _inactiveEndPoint.push_back(*iter);
     }
 }
+
 /////////////////////////////////////////////////////////////////////////////
 EndpointManagerThread::EndpointManagerThread(Communicator * pComm,const string & sObjName)
 :_communicator(pComm)
 ,_objName(sObjName)
 {
 }
+
 EndpointManagerThread::~EndpointManagerThread()
 {
     map<string,EndpointThread*>::iterator iter;
@@ -1936,7 +2012,6 @@ void EndpointManagerThread::getTCEndpoint(vector<TC_Endpoint> &activeEndPoint, v
 
 void EndpointManagerThread::getTCEndpointByAll(vector<TC_Endpoint> &activeEndPoint, vector<TC_Endpoint> &inactiveEndPoint)
 {
-
     EndpointThread * pThread  = getEndpointThread(E_ALL,"");
 
     pThread->getTCEndpoints(activeEndPoint,inactiveEndPoint);
@@ -1959,21 +2034,33 @@ void EndpointManagerThread::getTCEndpointByStation(const string &sName, vector<T
 
 EndpointThread * EndpointManagerThread::getEndpointThread(GetEndpointType type,const string & sName)
 {
-    TC_LockT<TC_SpinLock> lock(_mutex);
+	string sAllName = TC_Common::tostr((int)type) + ":" + sName;
 
-    string sAllName = TC_Common::tostr((int)type) + ":" +  sName;
+	{
+		TC_RW_RLockT<TC_ThreadRWLocker> lock(_mutex);
 
-    map<string,EndpointThread*>::iterator iter;
-    iter = _info.find(sAllName);
-    if(iter != _info.end())
-    {
-        return iter->second;
-    }
+		auto iter = _info.find(sAllName);
+		if (iter != _info.end())
+		{
+			return iter->second;
+		}
+	}
 
-    EndpointThread * pThread = new EndpointThread(_communicator, _objName, type, sName);
-    _info[sAllName] = pThread;
+	{
+		TC_RW_WLockT<TC_ThreadRWLocker> lock(_mutex);
 
-    return pThread;
+		auto iter = _info.find(sAllName);
+		if (iter != _info.end())
+		{
+			return iter->second;
+		}
+
+		EndpointThread* pThread = new EndpointThread(_communicator, _objName, type, sName);
+		_info[sAllName] = pThread;
+
+		return pThread;
+
+	}
 }
 
 }
