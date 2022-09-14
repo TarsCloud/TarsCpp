@@ -218,7 +218,8 @@ void Current::sendResponse(int iRet, const vector<char> &buff)
 
 	ResponsePacket response;
 	response.sBuffer = buff;
-	sendResponse(iRet, response, TARS_STATUS(), "");
+	response.iRet = iRet;
+	sendResponse(response);
 }
 
 void Current::sendResponse(int iRet, const string &buff)
@@ -230,33 +231,37 @@ void Current::sendResponse(int iRet, const string &buff)
     }
 
     ResponsePacket response;
+	response.iRet = iRet;
     response.sBuffer.assign(buff.begin(), buff.end());
-    sendResponse(iRet, response, TARS_STATUS(), "");
+    sendResponse(response);
 }
 
 void Current::sendResponse(int iRet)
 {
 	ResponsePacket response;
-	sendResponse(iRet, response, TARS_STATUS(), "");
+	response.iRet = iRet;
+	sendResponse(response);
 }
 
 void Current::sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os)
 {
 	ResponsePacket response;
+	response.iRet = iRet;
 	os.swap(response.sBuffer);
-	sendResponse(iRet, response, TARS_STATUS(), "");
+	sendResponse(response);
 }
 
 void Current::sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr)
 {
 	ResponsePacket response;
+	response.iRet = iRet;
 	attr.encode(response.sBuffer);
-	sendResponse(iRet, response, TARS_STATUS(), "");
+	sendResponse(response);
 }
 
-void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string, string>& status, const string & sResultDesc)
+void Current::sendResponse(ResponsePacket &response)
 {
-    _ret = iRet;
+    _ret = response.iRet;
 
     //单向调用不需要返回
     if (_request.cPacketType == TARSONEWAY)
@@ -279,14 +284,15 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 		response.cPacketType    = TARSNORMAL;
         response.iMessageType   = _request.iMessageType;
         response.iVersion       = _request.iVersion;
-		for(auto e: status)
-		{
-			response.status.emplace(e);
-		}
+//		for(auto e: status)
+//		{
+//			response.status.emplace(e);
+//		}
         response.context        = _responseContext;
-        response.sResultDesc    = sResultDesc;
+		response.status			= _responseStatus;
+//        response.sResultDesc    = sResultDesc;
 
-        response.iRet           = iRet;
+//        response.iRet           = iRet;
 
         TLOGTARS("Current::sendResponse :"
                    << response.iMessageType << "|"
@@ -304,13 +310,12 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 	    tupResponse.iRequestId     = _request.iRequestId;
 	    tupResponse.iMessageType   = _request.iMessageType;
 	    tupResponse.cPacketType    = TARSNORMAL;
-
 	    tupResponse.iVersion       = _request.iVersion;
-		for(auto e: status)
-		{
-			response.status.emplace(e);
-		}
-//	    tupResponse.status         = status;
+//		for(auto e: status)
+//		{
+//			response.status.emplace(e);
+//		}
+	    tupResponse.status         = _responseStatus;
 	    tupResponse.context        = _responseContext;
 	    tupResponse.sBuffer.swap(response.sBuffer);
 	    tupResponse.sServantName   = _request.sServantName;
@@ -324,14 +329,14 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
             tarsAttr.encode(response.sBuffer);
         }
         //iRet为0时,不记录在status里面,节省空间
-        if(iRet != 0)
+        if(response.iRet != 0)
         {
-	        tupResponse.status[ServantProxy::STATUS_RESULT_CODE] = TC_Common::tostr(iRet);
+	        tupResponse.status[ServantProxy::STATUS_RESULT_CODE] = TC_Common::tostr(response.iRet);
         }
         //sResultDesc为空时,不记录在status里面,节省空间
-        if(!sResultDesc.empty())
+        if(!response.sResultDesc.empty())
         {
-	        tupResponse.status[ServantProxy::STATUS_RESULT_DESC] = sResultDesc;
+	        tupResponse.status[ServantProxy::STATUS_RESULT_DESC] = response.sResultDesc;
         }
 
         TLOGTARS("Current::sendResponse :"

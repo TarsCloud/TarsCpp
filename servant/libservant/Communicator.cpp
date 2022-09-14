@@ -482,7 +482,7 @@ vector<shared_ptr<CommunicatorEpoll>> Communicator::getAllCommunicatorEpoll()
 
 void Communicator::forEachSchedCommunicatorEpoll(std::function<void(const shared_ptr<CommunicatorEpoll> &)> func)
 {
-	TC_LockT<TC_SpinLock> lock(_schedMutex);
+	TC_LockT<TC_ThreadMutex> lock(_schedMutex);
 	for(auto it : _schedCommunicatorEpoll)
 	{
 		func(it.second);
@@ -498,7 +498,7 @@ shared_ptr<CommunicatorEpoll> Communicator::createSchedCommunicatorEpoll(size_t 
 	communicatorEpoll->initNotify(netThreadSeq, reqInfoQueue);
 
 	{
-		TC_LockT<TC_SpinLock> lock(_schedMutex);
+		TC_LockT<TC_ThreadMutex> lock(_schedMutex);
 
 		_schedCommunicatorEpoll.insert(std::make_pair(netThreadSeq, communicatorEpoll));
 	}
@@ -510,7 +510,7 @@ void Communicator::eraseSchedCommunicatorEpoll(size_t netThreadSeq)
 {
 	shared_ptr<CommunicatorEpoll> ce;
 	{
-		TC_LockT<TC_SpinLock> lock(_schedMutex);
+		TC_LockT<TC_ThreadMutex> lock(_schedMutex);
 
 		ce = _schedCommunicatorEpoll[netThreadSeq];
 
@@ -527,16 +527,12 @@ void Communicator::reloadLocator()
 {
     for (size_t i = 0; i < _communicatorEpoll.size(); ++i)
     {
-		_communicatorEpoll[i]->_epoller->syncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, _communicatorEpoll[i].get()));
-
-//        _communicatorEpoll[i]->loadObjectLocator();
+		_communicatorEpoll[i]->_epoller->asyncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, _communicatorEpoll[i].get()));
     }
 
 	forEachSchedCommunicatorEpoll([](const shared_ptr<CommunicatorEpoll> &c){
-		c->_epoller->syncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, c.get()));
-//		c->loadObjectLocator();
+		c->_epoller->asyncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, c.get()));
 	});
-
 }
 
 int Communicator::reloadProperty(string & sResult)

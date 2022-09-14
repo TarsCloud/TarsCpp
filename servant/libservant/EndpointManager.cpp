@@ -192,7 +192,7 @@ int QueryEpBase::setLocatorPrx(QueryFPrx prx)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 
-	if(_queryFPrx)
+	if(_queryFPrx && _queryFPrx.get() != prx.get())
 	{
 		prx->tars_set_push_callback(_queryFPrx->tars_get_push_callback());
 	}

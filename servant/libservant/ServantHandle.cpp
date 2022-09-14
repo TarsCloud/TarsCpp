@@ -41,13 +41,13 @@ ServantHandle::ServantHandle(Application *application)
 
 ServantHandle::~ServantHandle()
 {
-    auto it = _servants.begin();
-
-    while(it != _servants.end())
+//    auto it = _servants.begin();
+//
+//    while(it != _servants.end())
     {
         try
         {
-            it->second->destroy();
+			_servant->destroy();
         }
         catch(exception &ex)
         {
@@ -57,7 +57,7 @@ ServantHandle::~ServantHandle()
         {
             TLOGERROR("[ServantHandle::destroy unknown exception error]" << endl);
         }
-        ++it;
+//        ++it;
     }
 }
 
@@ -65,25 +65,25 @@ void ServantHandle::handleAsyncResponse()
 {
     ReqMessagePtr resp;
 
-    auto it = _servants.begin();
-
-    while (it != _servants.end())
-    {
-        while (it->second->getResponseQueue().pop_front(resp))
+//    auto it = _servants.begin();
+//
+//    while (it != _servants.end())
+//    {
+        while (_servant->getResponseQueue().pop_front(resp))
         {
             try
             {
                 if (resp->response->iRet == TARSSERVERSUCCESS)
                 {
-                    it->second->doResponse(resp);
+					_servant->doResponse(resp);
                 }
                 else if (resp->pObjectProxy == NULL)
                 {
-                    it->second->doResponseNoRequest(resp);
+					_servant->doResponseNoRequest(resp);
                 }
                 else
                 {
-                    it->second->doResponseException(resp);
+					_servant->doResponseException(resp);
                 }
             }
             catch (exception& e)
@@ -99,8 +99,8 @@ void ServantHandle::handleAsyncResponse()
         //业务处理附加的自有消息
         try
         {
-            it->second->doCustomMessage(false);
-            it->second->doCustomMessage();
+			_servant->doCustomMessage(false);
+			_servant->doCustomMessage();
         }
         catch (exception& e)
         {
@@ -110,20 +110,20 @@ void ServantHandle::handleAsyncResponse()
         {
             TLOGERROR("[ServantHandle::doCustemMessage ex.]" << endl);
         }
-
-        ++it;
-    }
+//
+//        ++it;
+//    }
 }
 
 void ServantHandle::handleCustomMessage(bool bExpectIdle)
 {
-    for (auto it = _servants.begin(); it != _servants.end(); it++)
+//    for (auto it = _servants.begin(); it != _servants.end(); it++)
     {
         //业务处理附加的自有消息
         try
         {
-            it->second->doCustomMessage(bExpectIdle);
-            it->second->doCustomMessage();
+			_servant->doCustomMessage(bExpectIdle);
+			_servant->doCustomMessage();
         }
         catch (exception& e)
         {
@@ -138,15 +138,15 @@ void ServantHandle::handleCustomMessage(bool bExpectIdle)
 
 bool ServantHandle::allFilterIsEmpty()
 {
-	auto it = _servants.begin();
-
-	while (it != _servants.end())
+//	auto it = _servants.begin();
+//
+//	while (it != _servants.end())
 	{
-		if (!it->second->getResponseQueue().empty())
+		if (!_servant->getResponseQueue().empty())
 		{
 			return false;
 		}
-		++it;
+//		++it;
 	}
 	return true;
 }
@@ -158,13 +158,9 @@ void ServantHandle::initialize()
 		ServantProxyThreadData::getData()->_sched = TC_CoroutineScheduler::scheduler();
 	}
 
-    ServantPtr servant = _application->getServantHelper()->create(_bindAdapter->getName());
+    _servant = _application->getServantHelper()->create(_bindAdapter->getName());
 
-    if (servant)
-    {
-        _servants[servant->getName()] = servant;
-    }
-    else
+    if (!_servant)
     {
         TLOGERROR("[ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`]" << endl);
 	    cerr << "ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`]" << endl;
@@ -175,29 +171,29 @@ void ServantHandle::initialize()
 
 	    exit(-1);
     }
-
-    auto it = _servants.begin();
-
-    if(it == _servants.end())
-    {
-        TLOGERROR("[initialize error: no servant exists]" << endl);
-
-        RemoteNotify::getInstance()->report("initialize error: no servant exists.");
-
-        TC_Common::msleep(100);
-
-        exit(-1);
-    }
-
-    while(it != _servants.end())
-    {
+//
+//    auto it = _servants.begin();
+//
+//    if(it == _servants.end())
+//    {
+//        TLOGERROR("[initialize error: no servant exists]" << endl);
+//
+//        RemoteNotify::getInstance()->report("initialize error: no servant exists.");
+//
+//        TC_Common::msleep(100);
+//
+//        exit(-1);
+//    }
+//
+//    while(it != _servants.end())
+//    {
         try
         {
-            it->second->setHandle(this);
+			_servant->setHandle(this);
 
-            it->second->initialize();
+			_servant->initialize();
 
-            TLOGTARS("[" << it->second->getName() << " initialize]" << endl);
+            TLOGTARS("[" << _servant->getName() << " initialize]" << endl);
         }
         catch(exception &ex)
         {
@@ -219,8 +215,8 @@ void ServantHandle::initialize()
 
 			exit(-1);
 		}
-		++it;
-	}
+//		++it;
+//	}
 }
 
 void ServantHandle::heartbeat()
@@ -306,20 +302,20 @@ void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &d
     TLOGTARS("[ServantHandle::handleClose,adapter:" << data->adapter()->getName() << ",peer:" << data->ip() << ":" << data->port() << "]"<< endl);
 
 	CurrentPtr current = createCloseCurrent(data);
-
-	auto sit = _servants.find(current->getServantName());
-
-	if (sit == _servants.end())
-	{
-		TLOGERROR("[TARS]ServantHandle::handleClose,adapter:" << data->adapter()->getName() << ",peer:" << data->ip() << ":" << data->port() << ", " << current->getServantName() << " not found" << endl);
-
-		return;
-	}
+//
+//	auto sit = _servants.find(current->getServantName());
+//
+//	if (sit == _servants.end())
+//	{
+//		TLOGERROR("[TARS]ServantHandle::handleClose,adapter:" << data->adapter()->getName() << ",peer:" << data->ip() << ":" << data->port() << ", " << current->getServantName() << " not found" << endl);
+//
+//		return;
+//	}
 
 	try
 	{
 		//业务逻辑处理
-		sit->second->doClose(current);
+		_servant->doClose(current);
 	}
 	catch (exception& ex)
 	{
@@ -683,75 +679,78 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 		current->setCookie(cookie);
 	}
 //	processSample(current);
+//
+//	auto sit = _servants.find(current->getServantName());
+//
+//    if (sit == _servants.end())
+//    {
+//        current->sendResponse(TARSSERVERNOSERVANTERR);
+//        return;
+//    }
+//	int ret = TARSSERVERUNKNOWNERR;
 
-	auto sit = _servants.find(current->getServantName());
-
-    if (sit == _servants.end())
-    {
-        current->sendResponse(TARSSERVERNOSERVANTERR);
-// #ifdef TARS_OPENTRACKING
-//         finishTracking(TARSSERVERNOSERVANTERR, current);
-// #endif
-        return;
-    }
-
-    int ret = TARSSERVERUNKNOWNERR;
-
-	string sResultDesc = "";
+//	string sResultDesc;
 
 	ResponsePacket response;
-
-    try
-    {
-        //业务逻辑处理
-        ret = sit->second->dispatch(current, response.sBuffer);
-    }
-    catch(TarsDecodeException &ex)
-    {
-        TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
-
-        ret = TARSSERVERDECODEERR;
-
-        sResultDesc = ex.what();
-    }
-    catch(TarsEncodeException &ex)
-    {
-        TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
-
-        ret = TARSSERVERENCODEERR;
-
-        sResultDesc = ex.what();
-    }
-    catch(exception &ex)
-    {
-        TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
-
-        ret = TARSSERVERUNKNOWNERR;
-
-        sResultDesc = ex.what();
-    }
-    catch(...)
-    {
-        TLOGERROR("[ServantHandle::handleTarsProtocol unknown error]" << endl);
-
-        ret = TARSSERVERUNKNOWNERR;
-
-        sResultDesc = "handleTarsProtocol unknown exception error";
-    }
-
-	if(ret == TARSSERVERNOFUNCERR)
+	try
 	{
-		ret = sit->second->doNoFunc(current);
+		if (_servant->getName() != current->getServantName())
+		{
+			response.iRet = _servant->doNoServant(current, response.sBuffer);
+		}
+		else
+		{
+			//业务逻辑处理
+			response.iRet = _servant->dispatch(current, response.sBuffer);
+		}
 	}
-	
+	catch (TarsDecodeException& ex)
+	{
+		TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
+
+		response.iRet = TARSSERVERDECODEERR;
+
+		response.sResultDesc = ex.what();
+	}
+	catch (TarsEncodeException& ex)
+	{
+		TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
+
+		response.iRet = TARSSERVERENCODEERR;
+
+		response.sResultDesc = ex.what();
+	}
+	catch (exception& ex)
+	{
+		TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
+
+		response.iRet = TARSSERVERUNKNOWNERR;
+
+		response.sResultDesc = ex.what();
+	}
+	catch (...)
+	{
+		TLOGERROR("[ServantHandle::handleTarsProtocol unknown error]" << endl);
+
+		response.iRet = TARSSERVERUNKNOWNERR;
+
+		response.sResultDesc = "handleTarsProtocol unknown exception error";
+	}
+
+	if (response.iRet == TARSSERVERNOFUNCERR)
+	{
+		response.iRet = _servant->doNoFunc(current, response.sBuffer);
+	}
+
     //单向调用或者业务不需要同步返回
     if (current->isResponse())
     {
-        current->sendResponse(ret, response, Current::TARS_STATUS(), sResultDesc);
+        current->sendResponse(response);
     }
-#ifdef TARS_OPENTRACKING
-    finishTracking(ret, current);
-#endif
+
+//#ifdef TARS_OPENTRACKING
+//    finishTracking(ret, current);
+//#endif
 }
 
 void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
@@ -760,17 +759,17 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
         << current->getIp() << "|"
         << current->getPort() << "|"
         << current->getServantName() << "]" << endl);
-
-	auto sit = _servants.find(current->getServantName());
-
-	assert(sit != _servants.end());
+//
+//	auto sit = _servants.find(current->getServantName());
+//
+//	assert(sit != _servants.end());
 
 	vector<char> buffer;
 
     try
     {
         //业务逻辑处理
-        sit->second->dispatch(current, buffer);
+		_servant->dispatch(current, buffer);
     }
     catch(exception &ex)
     {

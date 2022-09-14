@@ -497,11 +497,12 @@ protected:
     /**
      * 操作通信器的锁
      */
-    TC_SpinLock			_schedMutex;
+//    TC_SpinLock			_schedMutex;
+	TC_ThreadMutex 			_schedMutex;
 
-    /**
-     * 锁
-     */ 
+	/**
+	 * 锁
+	 */
     std::mutex             _mutex;
 
     /**

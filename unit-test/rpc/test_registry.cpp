@@ -111,22 +111,31 @@ ret = qPrx->testHello(0, _buffer, out); \
 ASSERT_TRUE(ret == 0); \
 ASSERT_TRUE(out == _buffer); }
 
-#define CHECK_REGISTRY_UPDATE {\
-stopServer(rpc1Server); \
+#define CHECK_REGISTRY_UPDATE { \
+LOG_CONSOLE_DEBUG << endl;  \
+stopServer(rpc1Server);         \
+LOG_CONSOLE_DEBUG << endl;  \
 CDbHandle::cleanEndPoint(); \
 CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", 9992, 1); \
 RpcServer rpc3Server; \
 startServer(rpc3Server, RPC3_CONFIG()); \
+LOG_CONSOLE_DEBUG << endl;  \
 wait(6000);                    \
+LOG_CONSOLE_DEBUG << endl;  \
 HelloPrx qPrx = comm->stringToProxy<HelloPrx>("TestApp.RpcServer.HelloObj"); \
 string out = ""; \
+LOG_CONSOLE_DEBUG << endl;  \
 int ret = qPrx->testHello(0, _buffer, out); \
+LOG_CONSOLE_DEBUG << endl;  \
 ASSERT_TRUE(ret == 0); \
 ASSERT_TRUE(out == _buffer); \
 stopServer(rpc2Server); \
+LOG_CONSOLE_DEBUG << endl;  \
 wait(100); \
+LOG_CONSOLE_DEBUG << endl;  \
 out = ""; \
 ret = qPrx->testHello(0, _buffer, out); \
+LOG_CONSOLE_DEBUG << endl;  \
 ASSERT_TRUE(ret == 0); \
 ASSERT_TRUE(out == _buffer); \
 stopServer(rpc3Server); }
@@ -231,11 +240,13 @@ TEST_F(HelloTest, registryRpcUpdateListInCoroutine1)
 	START_FRAMEWORK_SERVER_1_2
 
 	funcInCoroutine([&]()
-	{
-		HELLO_CALL
+			{
+				HELLO_CALL
 
-		CHECK_REGISTRY_UPDATE
-	});
+				CHECK_REGISTRY_UPDATE
+			}
+
+	);
 
 	STOP_FRAMEWORK_SERVER
 }

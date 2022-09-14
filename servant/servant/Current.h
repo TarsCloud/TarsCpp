@@ -36,8 +36,6 @@ class Current : public TC_HandleBase
 public:
     typedef std::map<string, string>    TARS_STATUS;
 
-    typedef std::vector<char>           TARS_BUFFER;
-
     /**
      * 构造函数
      * @param pServantHandle
@@ -109,6 +107,16 @@ public:
      * 获取返回的context(仅TARS协议有效)
      */
     const map<std::string, std::string> & getResponseContext() const {return _responseContext;}
+
+	/**
+	 * 设置返回的status(仅TARS协议有效)
+	 */
+	void setResponseStatus(const map<std::string, std::string> & status){_responseStatus = status;}
+
+	/**
+	 * 获取返回的status(仅TARS协议有效)
+	 */
+	const map<std::string, std::string> & getResponseStatus() const {return _responseStatus;}
 
     /**
      * 关闭当前连接
@@ -197,6 +205,13 @@ public:
 	 */
 	const RequestPacket &getBasePacket() const { return _request; }
 
+	/**
+     * 普通协议的发送响应数据(非TARS协议有效)
+     * @param buff
+     * @param len
+     */
+	void sendResponse(const char* buff, uint32_t len);
+
     /**
      * tars协议的发送响应数据(仅TARS协议有效)
      * @param iRet
@@ -234,30 +249,20 @@ public:
      * @param buff
      */
     void sendResponse(int iRet, const string &buff);
-    
-	/**
-     * 普通协议的发送响应数据(非TARS协议有效)
-     * @param buff
-     * @param len
-     */
-    void sendResponse(const char* buff, uint32_t len);
 
     /**
-     *
-     * @param iRet
+     * TARS协议有效(通常给框架使用, 字段: iRet, sBuffer, sResultDesc必须自己填写, 其他框架填充)
      * @param response
-     * @param status
-     * @param sResultDesc
-     * @param push
      */
-	void sendResponse(int iRet, ResponsePacket &response, const map<string, string>& status, const string& sResultDesc);
+	void sendResponse(ResponsePacket &response);
     
     /**
-     * 针对Push消息的应答数据
+     * TARS协议, 针对Push消息的应答数据
      * @param buff
      * @param len
      */
     void sendPushResponse(int iRet, const string &funcName, TarsOutputStream<BufferWriterVector>& oss, const map<string, string> &context = tars::Current::TARS_STATUS());
+
     /**
      * 设置调用链追踪信息，服务端主动回包时用
      * @param traceCall
@@ -359,6 +364,11 @@ protected:
      * 设置额外返回的内容
      */
     map<std::string, std::string> _responseContext;
+
+	/**
+	 * 设置额外返回的status
+	 */
+	map<std::string, std::string> _responseStatus;
 
     /**
      * cookie

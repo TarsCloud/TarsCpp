@@ -166,11 +166,20 @@ public:
 	virtual int doClose(CurrentPtr current){ return -1; }
 
 	/**
+	 * tars协议, 没有servant时候会调用
+	 * @param current
+	 * @param buffer: 输出的buffer数据
+	 * @return 成功请返回0, 异常可以返回: [TARSSERVERSUCCESS~TARSSERVERUNKNOWNERR]
+	 */
+	virtual int doNoServant(CurrentPtr current, vector<char> &buffer) {return  tars::TARSSERVERNOSERVANTERR;}
+
+	/**
 	 * tars协议, 没有对应函数时会调用
 	 * @param current
-	 * @return
+	 * @param buffer: 输出的buffer数据
+	 * @return  成功请返回0, 异常可以返回: [TARSSERVERSUCCESS~TARSSERVERUNKNOWNERR]
 	 */
-	virtual int doNoFunc(CurrentPtr current) {return  tars::TARSSERVERNOFUNCERR;}
+	virtual int doNoFunc(CurrentPtr current, vector<char> &buffer) {return  tars::TARSSERVERNOFUNCERR;}
 
     /**
      * 获得响应的数据队列
