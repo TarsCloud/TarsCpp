@@ -5,13 +5,16 @@
 #include "RegisterQueryManager.h"
 #include "servant/QueryPushF.h"
 
-void RegisterQueryManager::registerChange(const string &id, CurrentPtr current)
+void RegisterQueryManager::registerChange(const vector<string> &ids, CurrentPtr current)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 
-	_uidToChangeIds[current->getUId()].insert(id);
+	for(auto &id : ids)
+	{
+		_uidToChangeIds[current->getUId()].insert(id);
 
-	_changes[id][current->getUId()] = current;
+		_changes[id][current->getUId()] = current;
+	}
 }
 
 void RegisterQueryManager::registerQuery(const string &id, CurrentPtr current)

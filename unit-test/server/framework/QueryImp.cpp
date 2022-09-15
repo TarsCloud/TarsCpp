@@ -4,6 +4,8 @@
 #include "util/tc_logger.h"
 #include "util/tc_clientsocket.h"
 #include "RegisterQueryManager.h"
+#include "servant/QueryPushF.h"
+//#include "ObjectsCacheManager.h"
 
 void QueryImp::initialize()
 {
@@ -13,7 +15,7 @@ void QueryImp::initialize()
 
 vector<EndpointF> QueryImp::findObjectById(const string & id, tars::CurrentPtr current)
 {
-	LOG_CONSOLE_DEBUG << endl;
+//	LOG_CONSOLE_DEBUG << endl;
     vector<EndpointF> eps = _db.findObjectById(id);
 
     ostringstream os;
@@ -162,44 +164,7 @@ void QueryImp::doDaylog(const FUNID eFnId,const string& id,const vector<tars::En
 
 string QueryImp::eFunTostr(const FUNID eFnId)
 {
-    string sFun = "";
-    switch(eFnId)
-    {
-        case FUNID_findObjectByIdInSameGroup:
-        {
-            sFun = "findObjectByIdInSameGroup";
-        }
-        break;
-        case FUNID_findObjectByIdInSameSet:
-        {
-            sFun = "findObjectByIdInSameSet";
-        }
-        break;
-        case FUNID_findObjectById4Any:
-        {
-            sFun = "findObjectById4All";
-        }
-        break;
-        case FUNID_findObjectById:
-        {
-            sFun = "findObjectById";
-        }
-        break;
-        case FUNID_findObjectById4All:
-        {
-            sFun = "findObjectById4All";
-        }
-        break;
-        case FUNID_findObjectByIdInSameStation:
-        {
-            sFun = "findObjectByIdInSameStation";
-        }
-        break;
-        default:
-            sFun = "UNKNOWN";
-        break;
-    }
-    return sFun;
+	return etos(eFnId).substr(5);
 }
 
 int QueryImp::doClose(tars::CurrentPtr current)
@@ -216,7 +181,7 @@ Int32 QueryImp::registerQuery(const std::string & id, CurrentPtr current)
 }
 
 
-Int32 QueryImp::registerChange(const std::string & id, CurrentPtr current)
+Int32 QueryImp::registerChange(const vector<std::string> & id, CurrentPtr current)
 {
 	RegisterQueryManager::getInstance()->registerChange(id, current);
 

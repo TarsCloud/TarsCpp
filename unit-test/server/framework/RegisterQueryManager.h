@@ -20,7 +20,7 @@ public:
 	void registerQuery(const string &id, CurrentPtr current);
 
 	//
-	void registerChange(const string &id, CurrentPtr current);
+	void registerChange(const vector<string> &ids, CurrentPtr current);
 
 	//
 	void closeQuery(CurrentPtr current);

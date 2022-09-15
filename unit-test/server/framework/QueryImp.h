@@ -9,16 +9,6 @@ using namespace tars;
 
 //////////////////////////////////////////////////////
 
-enum FUNID
-{
-    FUNID_findObjectById              = 0,
-    FUNID_findObjectById4Any          = 1,
-    FUNID_findObjectById4All          = 2,
-    FUNID_findObjectByIdInSameGroup   = 3,
-    FUNID_findObjectByIdInSameStation = 4,
-    FUNID_findObjectByIdInSameSet     = 5
-};
-
 //////////////////////////////////////////////////////
 /**
  * 对象查询接口类
@@ -91,7 +81,7 @@ public:
 	 * @param current
 	 * @return
 	 */
-	Int32 registerChange(const std::string & id, CurrentPtr current);
+	Int32 registerChange(const vector<std::string> & id, CurrentPtr current);
 
 private:
     /**

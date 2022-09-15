@@ -52,6 +52,7 @@ enum  EndpointWeightType
 ////////////////////////////////////////////////////////////////////////
 
 class QueryEpBase;
+class QueryPushFImp;
 
 class QueryPushFImp : public QueryPushFPrxCallback
 {

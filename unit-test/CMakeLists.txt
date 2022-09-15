@@ -8,9 +8,11 @@ link_directories(${CMAKE_BINARY_DIR}/src/gtest/lib)
 link_directories(${CMAKE_BINARY_DIR}/src/gtest/lib64)
 include_directories(./)
 
+include_directories(${tarscpp_SOURCE_DIR}/../objects)
+
 build_tars_server("unit-test" "")
 
 add_definitions(-DCMAKE_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
-target_link_libraries(unit-test ${LIB_GTEST})
+target_link_libraries(unit-test ${LIB_GTEST} objects)
 
-add_dependencies(unit-test FRAMEWORK-PROTOCOL)
+add_dependencies(unit-test FRAMEWORK-PROTOCOL objects)

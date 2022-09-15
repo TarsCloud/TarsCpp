@@ -12,6 +12,7 @@
 #include <set>
 #include "servant/RemoteLogger.h"
 #include "servant/EndpointF.h"
+#include "servant/QueryPushF.h"
 #include "RegistryDescriptor.h"
 
 using namespace tars;
@@ -32,11 +33,11 @@ private:
         std::set<int>     setGroupID;
     };
 
-    enum GroupUseSelect
-    {
-        ENUM_USE_WORK_GROUPID,
-        ENUM_USE_REAL_GROUPID
-    };
+//    enum GroupUseSelect
+//    {
+//        ENUM_USE_WORK_GROUPID,
+//        ENUM_USE_REAL_GROUPID
+//    };
     //set中服务的信息
     struct SetServerInfo
     {

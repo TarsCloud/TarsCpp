@@ -215,23 +215,15 @@ public:
 	template<typename T>
 	void startServer(T &server, TC_Config conf, TC_EpollServer::SERVER_OPEN_COROUTINE openCoroutine = TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD)
 	{
-		LOG_CONSOLE_DEBUG << endl;
-
 		conf.set("/tars/application/server<opencoroutine>", TC_Common::tostr(openCoroutine));
 
 		ASSERT_TRUE(conf.get("/tars/application/server<opencoroutine>") == TC_Common::tostr(openCoroutine));
 
-		LOG_CONSOLE_DEBUG << endl;
-
 		server.main(conf.tostr());
-
-		LOG_CONSOLE_DEBUG << endl;
 
 		server.start();
 
-		LOG_CONSOLE_DEBUG << endl;
 		server.waitForReady();
-		LOG_CONSOLE_DEBUG << endl;
 	}
 
 	void startServer(HelloServer &server, TC_EpollServer::SERVER_OPEN_COROUTINE openCoroutine);
