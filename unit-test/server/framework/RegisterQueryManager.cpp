@@ -5,7 +5,7 @@
 #include "RegisterQueryManager.h"
 #include "servant/QueryPushF.h"
 
-void RegisterQueryManager::registerChange(const vector<string> &ids, CurrentPtr current)
+void RegisterQueryManager::registerChange(const vector<string> &ids, const string &name, CurrentPtr current)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 
@@ -17,7 +17,7 @@ void RegisterQueryManager::registerChange(const vector<string> &ids, CurrentPtr 
 	}
 }
 
-void RegisterQueryManager::registerQuery(const string &id, CurrentPtr current)
+void RegisterQueryManager::registerQuery(const string &id, const string &name, CurrentPtr current)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 

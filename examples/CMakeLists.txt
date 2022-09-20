@@ -21,6 +21,7 @@ add_subdirectory(PushDemo)
 add_subdirectory(QuickStartDemo)
 add_subdirectory(StressDemo)
 add_subdirectory(UdpDemo)
+add_subdirectory(TestDemo)
 
 set(WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 

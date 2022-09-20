@@ -36,7 +36,7 @@ void QueryPushFImp::replacePrx(QueryFPrx queryFPrx)
 
 	for(auto it : _queryBase)
 	{
-		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first);
+		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first, ClientConfig::ModuleName);
 	}
 }
 
@@ -48,7 +48,7 @@ void QueryPushFImp::registerQuery(const string &obj, QueryEpBase *pQueryBase)
 		_queryBase[obj].insert(pQueryBase);
 	}
 
-	_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, obj);
+	_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, obj, ClientConfig::ModuleName);
 }
 
 void QueryPushFImp::onConnect(const TC_Endpoint& ep)
@@ -56,7 +56,7 @@ void QueryPushFImp::onConnect(const TC_Endpoint& ep)
 	std::lock_guard<std::mutex> lock(_mutex);
 	for(auto it : _queryBase)
 	{
-		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first);
+		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first, ClientConfig::ModuleName);
 	}
 }
 

@@ -17,10 +17,10 @@ class RegisterQueryManager : public TC_Singleton<RegisterQueryManager>
 public:
 
 	//
-	void registerQuery(const string &id, CurrentPtr current);
+	void registerQuery(const string &id, const string &name, CurrentPtr current);
 
 	//
-	void registerChange(const vector<string> &ids, CurrentPtr current);
+	void registerChange(const vector<string> &ids, const string &name, CurrentPtr current);
 
 	//
 	void closeQuery(CurrentPtr current);

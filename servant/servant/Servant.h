@@ -196,12 +196,12 @@ protected:
     /**
      * 应用
      */
-    Application *_application;
+    Application *_application = NULL;
 
     /**
      * 所属的Handle
      */
-    TC_EpollServer::Handle* _handle;
+    TC_EpollServer::Handle* _handle = NULL;
 
     /**
      * 异步响应队列, 每个Servant一个队列, 这个用于在ServantImp中, 再异步发请求给其他服务

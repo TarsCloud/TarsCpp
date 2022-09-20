@@ -173,17 +173,17 @@ int QueryImp::doClose(tars::CurrentPtr current)
 	return 0;
 }
 
-Int32 QueryImp::registerQuery(const std::string & id, CurrentPtr current)
+Int32 QueryImp::registerQuery(const std::string & id, const string &name, CurrentPtr current)
 {
-	RegisterQueryManager::getInstance()->registerQuery(id, current);
+	RegisterQueryManager::getInstance()->registerQuery(id, name, current);
 
 	return 0;
 }
 
 
-Int32 QueryImp::registerChange(const vector<std::string> & id, CurrentPtr current)
+Int32 QueryImp::registerChange(const vector<std::string> & id, const string &name, CurrentPtr current)
 {
-	RegisterQueryManager::getInstance()->registerChange(id, current);
+	RegisterQueryManager::getInstance()->registerChange(id, name, current);
 
 	return 0;
 }

@@ -645,14 +645,13 @@ bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
 
 void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 {
-    TLOGTARS("[ServantHandle::handleTarsProtocol current:"
-                << current->getIp() << "|"
-                << current->getPort() << "|"
-                << current->getMessageType() << "|"
-                << current->getServantName() << "|"
-                << current->getFuncName() << "|"
-                << current->getRequestId() << "|"
-                << TC_Common::tostr(current->getRequestStatus()) << "]"<<endl);
+    TLOGTARS("[ServantHandle::handleTarsProtocol servant:" << _servant->getName()
+				<< ", ip: " << current->getIp() << ":" << current->getPort()
+				<< ", message: " << current->getMessageType()
+				<< ", servant: " << current->getServantName()
+				<< ", func:" << current->getFuncName()
+				<< ", requestId: " << current->getRequestId()
+				<< ", status:" << TC_Common::tostr(current->getRequestStatus()) << "]"<<endl);
 
 	//检查set调用合法性
 	if (!checkValidSetInvoke(current))
@@ -678,22 +677,12 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 		cookieOp.setCookie(cookie);
 		current->setCookie(cookie);
 	}
-//	processSample(current);
-//
-//	auto sit = _servants.find(current->getServantName());
-//
-//    if (sit == _servants.end())
-//    {
-//        current->sendResponse(TARSSERVERNOSERVANTERR);
-//        return;
-//    }
-//	int ret = TARSSERVERUNKNOWNERR;
-
-//	string sResultDesc;
 
 	ResponsePacket response;
 	try
 	{
+//		TLOGERROR("[ServantHandle::handleTarsProtocol here] " << _servant->getName() << ", " << current->getServantName() << endl);
+
 		if (_servant->getName() != current->getServantName())
 		{
 			response.iRet = _servant->doNoServant(current, response.sBuffer);
@@ -706,7 +695,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 	}
 	catch (TarsDecodeException& ex)
 	{
-		TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
+		TLOGERROR("[ServantHandle::handleTarsProtocol " << _servant->getName() << ", error:" << ex.what() << "]" << endl);
 
 		response.iRet = TARSSERVERDECODEERR;
 
@@ -714,7 +703,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 	}
 	catch (TarsEncodeException& ex)
 	{
-		TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
+		TLOGERROR("[ServantHandle::handleTarsProtocol " << _servant->getName() << ", error:" << ex.what() << "]" << endl);
 
 		response.iRet = TARSSERVERENCODEERR;
 
@@ -722,7 +711,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 	}
 	catch (exception& ex)
 	{
-		TLOGERROR("[ServantHandle::handleTarsProtocol " << ex.what() << "]" << endl);
+		TLOGERROR("[ServantHandle::handleTarsProtocol " << _servant->getName() << ", error:" << ex.what() << "]" << endl);
 
 		response.iRet = TARSSERVERUNKNOWNERR;
 
@@ -730,7 +719,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 	}
 	catch (...)
 	{
-		TLOGERROR("[ServantHandle::handleTarsProtocol unknown error]" << endl);
+		TLOGERROR("[ServantHandle::handleTarsProtocol " << _servant->getName() << ", unknown error]"<< endl);
 
 		response.iRet = TARSSERVERUNKNOWNERR;
 
