@@ -107,7 +107,7 @@ string doTarsMerge(TC_Option& option, const vector<string>& vTars)
 
 					auto currIt = fileNames.find(currFileName);
 					if(currIt != fileNames.end()) {
-						orderFileNames.insert(currIt->second, fileName);
+						fileNames[fileName] = orderFileNames.insert(currIt->second, fileName);
 					}
 				}
 			}
