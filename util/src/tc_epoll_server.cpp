@@ -75,14 +75,14 @@ void TC_EpollServer::DataBuffer::insertRecvQueue(const shared_ptr<RecvContext> &
 {
 	++_iRecvBufferSize;
 
-	getDataQueue(recv->fd())->push_back(recv);
+	getDataQueue(recv->uid())->push_back(recv);
 
 	if(_schedulers[0] != NULL)
 	{
 		//存在调度器, 处于协程中
 		if(isQueueMode())
 		{
-			_schedulers[index(recv->fd())]->notify();
+			_schedulers[index(recv->uid())]->notify();
 		}
 		else
 		{
@@ -100,14 +100,14 @@ void TC_EpollServer::DataBuffer::insertRecvQueue(const deque<shared_ptr<RecvCont
 
 	_iRecvBufferSize += recv.size();
 
-	getDataQueue(recv.back()->fd())->push_back(recv);
+	getDataQueue(recv.back()->uid())->push_back(recv);
 
 	if (_schedulers[0] != NULL)
 	{
 		//存在调度器, 处于协程中
 		if (isQueueMode())
 		{
-			_schedulers[index(recv.back()->fd())]->notify();
+			_schedulers[index(recv.back()->uid())]->notify();
 		}
 		else
 		{
