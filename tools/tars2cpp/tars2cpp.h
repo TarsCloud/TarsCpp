@@ -96,12 +96,6 @@ public:
     */
     void setTrace(bool bTrace) { _bTrace = bTrace; }
 
-    /**
-    * 参数使用右值引用
-    * @param bPoint
-    */
-    void setParamRvalueRef(bool bRvalue) { _bPraramRvalueRef = bRvalue; }
-
     //下面是编解码的源码生成
 protected:
     /**
@@ -433,7 +427,7 @@ protected:
      *
      * @return string
      */
-    string generateH(const OperationPtr &pPtr, bool bVirtual, const string& interfaceId, bool bRvalueRef) const;
+    string generateH(const OperationPtr &pPtr, bool bVirtual, const string& interfaceId) const;
 
     /**
      * 生成接口的头文件源码
@@ -527,8 +521,6 @@ private:
     bool _tarsMaster;
 
     bool _bTrace;
-
-    bool _bPraramRvalueRef;
 };
 
 #endif
