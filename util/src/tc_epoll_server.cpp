@@ -2338,7 +2338,7 @@ void TC_EpollServer::waitForReady()
 			return;
 		}
 
-		bool flag = _readyCond.wait_for(lock, std::chrono::milliseconds(100), [&]{
+		_readyCond.wait_for(lock, std::chrono::milliseconds(100), [&]{
 			return _readyThreadNum == readyThreadNum;
 		});
 	}

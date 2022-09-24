@@ -37,43 +37,30 @@ void KeepAliveNodeFHelper::setNodeInfo(const CommunicatorPtr &comm, const string
 
 void KeepAliveNodeFHelper::keepAlive(const string &adapter)
 {
-        try
-        {
-            if(_nodePrx)
-            {
-                set<string> s;
-                {
-                    TC_LockT<TC_ThreadMutex> lock(*this);
+	//非admin心跳来的时候才上报
+	if(adapter == "AdminAdapter")
+	{
+		return;
+	}
 
-                    _adapterSet.insert(adapter);
+	try
+	{
+		if(_nodePrx)
+		{
+			ServerInfo si   = _si;
+			si.adapter = adapter;
 
-                    //admin心跳来的时候才上报(减小上报次数)
-                    if(!adapter.empty() && adapter != "AdminAdapter")
-                    {
-                        return;
-                    }
-
-                    s.swap(_adapterSet);
-                }
-                ServerInfo si   = _si;
-                set<string>::const_iterator it = s.begin();
-                while(it != s.end())
-                {
-                    si.adapter      = *it;
-                    _nodePrx->async_keepAlive(NULL,si);
-                    ++it;
-                }
-
-            }
-        }
-        catch(exception &ex)
-        {
-                TLOGERROR("KeepAliveNodeFHelper::keepAlive error:" << ex.what() << endl);
-        }
-        catch(...)
-        {
-                TLOGERROR("KeepAliveNodeFHelper::keepAlive unknown error" << endl);
-        }
+			_nodePrx->async_keepAlive(NULL,si);
+		}
+	}
+	catch(exception &ex)
+	{
+			TLOGERROR("KeepAliveNodeFHelper::keepAlive error:" << ex.what() << endl);
+	}
+	catch(...)
+	{
+			TLOGERROR("KeepAliveNodeFHelper::keepAlive unknown error" << endl);
+	}
 }
 
 void KeepAliveNodeFHelper::keepActiving()

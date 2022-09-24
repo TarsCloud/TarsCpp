@@ -270,18 +270,21 @@ void QueryEpBase::setObjName(const string & sObjName)
 
 		_queryFPrx = _communicator->stringToProxy<QueryFPrx>(_locator);
 
+		if(this->_communicator->getProperty("open-query-push", "n") == "y")
 		{
-			std::lock_guard<std::mutex> lock(_mutex);
-
-			if(!_queryCallback)
 			{
-				_queryCallback = new QueryPushFImp(_queryFPrx);
+				std::lock_guard<std::mutex> lock(_mutex);
 
-				_queryFPrx->tars_set_push_callback(_queryCallback);
+				if (!_queryCallback)
+				{
+					_queryCallback = new QueryPushFImp(_queryFPrx);
+
+					_queryFPrx->tars_set_push_callback(_queryCallback);
+				}
 			}
-		}
 
-		_queryCallback->registerQuery(sObjName, this);
+			_queryCallback->registerQuery(_objName, this);
+		}
 
 		string sLocatorKey = _locator;
 

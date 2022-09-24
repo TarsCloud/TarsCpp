@@ -57,8 +57,7 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
                 sDyeingDir += DYEING_DIR;
                 sDyeingDir += FILE_SEP;
 
-                string sDyeingFile = sDyeingDir;
-                sDyeingFile += DYEING_FILE;
+                string sDyeingFile = TC_File::simplifyDirectory(sDyeingDir + DYEING_FILE);
 
                 TC_File::makeDirRecursive(sDyeingDir);
 
@@ -144,7 +143,7 @@ void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, cons
     _local.start(1);
 
     //初始化本地循环日志
-    _logger.init(_logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + _app + "." + _server, iMaxSize, iMaxNum);
+    _logger.init(TC_File::simplifyDirectory(_logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + _app + "." + _server), iMaxSize, iMaxNum);
     _logger.modFlag(TC_DayLogger::HAS_TIME, false);
     _logger.modFlag(TC_DayLogger::HAS_TIME|TC_DayLogger::HAS_LEVEL|TC_DayLogger::HAS_PID, true);
 
@@ -194,6 +193,11 @@ void LocalRollLogger::enableDyeing(bool bEnable, const string& sDyeingKey/* = ""
 
 LocalRollLogger::RollLogger *LocalRollLogger::logger(const string &suffix)
 {
+	if(suffix.empty())
+	{
+		return &_logger;
+	}
+
 	unordered_map<string, RollLogger*>::iterator it;
 
 	{
@@ -609,8 +613,6 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFi
         sAppSrvName = _hasAppNamePrefix?(_app + "." + _server):"";
         sFilePath = _logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + sAppSrvName;
     }
-//    string sAppSrvName = _hasAppNamePrefix?(_app + "." + _server):"";
-//    string sFilePath   = _logpath + "/" + _app + "/" + _server + "/" + sAppSrvName;
 
     if(!sFile.empty())
     {
@@ -656,10 +658,6 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFi
 
 void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp, const string &sServer, const string &sFile, const string &sFormat,const LogTypePtr& logTypePtr)
 {
-
- //   string sAppSrvName = _hasAppNamePrefix?(sApp + "." + sServer):"";
- //   string sFilePath = _logpath + "/" + sApp + "/" + sServer + "/" + sAppSrvName;
-	
 	string sAppSrvName;
     string sFilePath;
     

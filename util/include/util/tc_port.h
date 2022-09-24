@@ -131,7 +131,22 @@ public:
 	 */
 	static int64_t forkExec(const string& sExe, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vOptions);
 
-		/**
+	/**
+	 * 注册事件回调
+	 * @param sig
+	 * @param callback
+	 * @return
+	 */
+	static size_t registerSig(int sig, std::function<void()> callback);
+
+	/**
+	 * 取消注册
+	 * @param sig
+	 * @param id
+	 */
+	static void unregisterSig(int sig, size_t id);
+
+	/**
 	 * 注册ctrl+c回调事件(SIGINT/CTRL_C_EVENT)
 	 * @param callback
 	 * @return size_t, 注册事件的id, 取消注册时需要
@@ -206,8 +221,6 @@ public:
 
 protected:
 
-	static size_t registerSig(int sig, std::function<void()> callback);
-	static void unregisterSig(int sig, size_t id);
 	static void registerSig(int sig);
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS

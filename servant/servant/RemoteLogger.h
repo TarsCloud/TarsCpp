@@ -151,6 +151,12 @@ public:
      */
     void enableDyeing(bool bEnable, const string& sDyeingKey = "");
 
+	/**
+	 *
+	 * @return
+	 */
+	TC_LoggerThreadGroup *getThreadGroup() { return &_local; }
+
     /**
      * 终止
      */

@@ -1533,13 +1533,14 @@ void ServantProxy::selectNetThreadInfo(ServantProxyThreadData *pSptd, ObjectProx
 	{
 		if( pSptd->_communicatorEpoll )
 		{
-			auto info = pSptd->getCommunicatorEpollInfo(_communicator);
+			//处于网咯线程中
+			auto communicatorEpollInfo = pSptd->getCommunicatorEpollInfo(_communicator);
 
-			assert(info->_info.size() == 1);
-			assert(info->_info[0]._communicatorEpoll.lock().get() == pSptd->_communicatorEpoll);
+			assert(communicatorEpollInfo->_info.size() == 1);
+			assert(communicatorEpollInfo->_info[0]._communicatorEpoll.lock().get() == pSptd->_communicatorEpoll);
 
 			pObjProxy = pSptd->_communicatorEpoll->servantToObjectProxy(this);
-			pReqQ = info->_info[0]._reqQueue.lock();
+			pReqQ = communicatorEpollInfo->_info[0]._reqQueue.lock();
 
 		}
 		else

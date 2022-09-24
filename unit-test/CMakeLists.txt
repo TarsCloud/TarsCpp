@@ -13,6 +13,6 @@ include_directories(${tarscpp_SOURCE_DIR}/../objects)
 build_tars_server("unit-test" "")
 
 add_definitions(-DCMAKE_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
-target_link_libraries(unit-test ${LIB_GTEST} objects)
+target_link_libraries(unit-test ${LIB_GTEST} tarsobjects)
 
-add_dependencies(unit-test FRAMEWORK-PROTOCOL objects)
+add_dependencies(unit-test FRAMEWORK-PROTOCOL tarsobjects)
