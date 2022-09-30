@@ -160,17 +160,27 @@ void ServantHandle::initialize()
 
     _servant = _application->getServantHelper()->create(_bindAdapter->getName());
 
-    if (!_servant)
-    {
-        TLOGERROR("[ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`]" << endl);
-	    cerr << "ServantHandle initialize createServant ret null, for adapter `" +_bindAdapter->getName() + "`]" << endl;
+	if (!_servant)
+	{
+		if(ServerConfig::CheckBindAdapter)
+		{
+			TLOGERROR("[ServantHandle initialize createServant ret null, for adapter `" + _bindAdapter->getName() + "`]"
+					<< endl);
+			cerr << "ServantHandle initialize createServant ret null, for adapter `" + _bindAdapter->getName() + "`]"
+				 << endl;
 
-	    RemoteNotify::getInstance()->report("initialize createServant error: no adapter:" + _bindAdapter->getName());
+			RemoteNotify::getInstance()->report(
+					"initialize createServant error: no adapter:" + _bindAdapter->getName());
 
-	    TC_Common::msleep(100);
+			TC_Common::msleep(100);
 
-	    exit(-1);
-    }
+			exit(-1);
+		}
+		else
+		{
+			return;
+		}
+	}
 //
 //    auto it = _servants.begin();
 //

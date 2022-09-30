@@ -50,19 +50,35 @@ public:
      * 获取该属性的服务名称
      */
     const std::string &getMasterName() const { return _sMasterName; }
-    
+
 public:
+
+	class base
+	{
+	public:
+		virtual ~base(){}
+		virtual string get() = 0;
+		virtual const string &desc() = 0;
+		virtual void set(int o) = 0;
+	};
+
+	static const string Sum;
+	static const string Distr;
+	static const string Avg;
+	static const string Min;
+	static const string Max;
+	static const string Count;
 
     /**
      * 求和
      */
-    class sum
+    class sumProperty : public base
     {
     public:
-        sum() :_d(0)                { }
-        string get();
-        string desc()               { return "Sum"; }
-        void   set(int o)           { _d += o; }
+		sumProperty() :_d(0)                { }
+		virtual string get();
+		virtual const string & desc()               { return Sum; }
+		virtual void   set(int o)           { _d += o; }
     protected:
         void   clear()              { _d  = 0; }
     private:
@@ -72,13 +88,13 @@ public:
     /**
      * 求平均
      */
-    class avg
+    class avgProperty : public base
     {
     public:
-        avg():_sum(0), _count(0)    { }
-        string desc()               { return "Avg"; }
-        string get();
-        void   set(int o)           { _sum += o;++_count; }
+        avgProperty():_sum(0), _count(0)    { }
+		virtual const string & desc()               { return Avg; }
+		virtual string get();
+		virtual void   set(int o)           { _sum += o;++_count; }
     protected:
         void clear()                { _sum = 0; _count = 0; }
     private:
@@ -89,14 +105,14 @@ public:
     /**
      * 分布
      */
-    class distr
+    class distrProperty : public base
     {
     public:
-        distr(){};
-        distr(const vector<int>& range);
-        string desc()               { return "Distr"; }
-        void   set(int o);
-        string get();
+        distrProperty(){};
+        distrProperty(const vector<int>& range);
+		virtual const string & desc()               { return Distr; }
+		virtual void   set(int o);
+		virtual string get();
     protected:
         void clear()                { _result.clear();}
     private:
@@ -107,15 +123,15 @@ public:
     /**
      * 求最大值
      */
-    class max
+    class maxProperty : public base
     {
     public:
-        max() : _d(-9999999)        { }
-        string desc()               { return "Max"; }
-        string get();
-        void   set(int o)           { _d < o?_d = o:1; }
+        maxProperty() : _d(-9999999)        { }
+		virtual const string & desc()               { return Max; }
+		virtual string get();
+		virtual void   set(int o)           { _d < o?_d = o:1; }
     protected:
-        void   clear()              { _d = 0; }
+		virtual void   clear()              { _d = 0; }
     private:
         int   _d;
     };
@@ -123,13 +139,13 @@ public:
     /**
      * 求最小值
      */
-    class min
+    class minProperty : public base
     {
     public:
-        min():_d(0)                 { }
-        string desc()               { return "Min"; }
-        string get();
-        void   set(int o);
+        minProperty():_d(0)                 { }
+		virtual const string &desc()               { return Min; }
+        virtual string get();
+		virtual void   set(int o);
     protected:
         void   clear()              { _d = 0; }
     private:
@@ -139,18 +155,25 @@ public:
     /**
      * 计数
      */
-    class count
+    class countProperty : public base
     {
     public:
-        count():_d(0)               { }
-        string desc()               { return "Count"; }
-        string get();
-        void   set(int o)           { _d++; }
+        countProperty():_d(0)               { }
+		virtual const string &desc()               { return Count; }
+		virtual string get();
+		virtual void   set(int o)           { _d++; }
     protected:
         void   clear()              { _d = 0; }
     private:
         int   _d;
     };
+
+	static shared_ptr<base> sum() { return std::make_shared<sumProperty>(); }
+	static shared_ptr<base> distr() { return std::make_shared<distrProperty>(); }
+	static shared_ptr<base> avg() { return std::make_shared<avgProperty>(); }
+	static shared_ptr<base> min() { return std::make_shared<minProperty>(); }
+	static shared_ptr<base> max() { return std::make_shared<maxProperty>(); }
+	static shared_ptr<base> count() { return std::make_shared<countProperty>(); }
 
 public:
 
@@ -169,24 +192,54 @@ typedef TC_AutoPtr<PropertyReport> PropertyReportPtr;
  * 具体的属性策略管理
  */
 
-template <typename... Params>
 class PropertyReportImp : public PropertyReport, public TC_ThreadMutex
 {
-public:
-    using PropertyReportData = std::tuple<Params...>;
+private:
+	template<class Tuple, std::size_t N>
+	struct TupleTrans
+	{
+		static void trans(const Tuple& t, vector<shared_ptr<PropertyReport::base>> &properties)
+		{
+			TupleTrans<Tuple, N-1>::trans(t, properties);
 
-    PropertyReportImp(Params&&... args) :
-        _propertyReportData(std::forward<Params>(args)...)
+			properties.push_back(std::get<N-1>(t));
+//			pp.template SetResult<N - 1>(iValue);
+		}
+	};
+
+	template<class Tuple>
+	struct TupleTrans<Tuple, 1>
+	{
+		static void trans(const Tuple& t, vector<shared_ptr<PropertyReport::base>> &properties)
+		{
+			properties.push_back(std::get<0>(t));
+		}
+	};
+
+public:
+//    using PropertyReportData = std::tuple<Params...>;
+	PropertyReportImp()
+	{
+	}
+
+	template <typename... Params>
+    PropertyReportImp(Params&&... args)
     {
+		TupleTrans<std::tuple<Params...>, sizeof...(args)>::trans(std::forward<Params>(args)..., _properties);
     }
 
-    // do NOT copy
-    PropertyReportImp(const PropertyReportImp& ) = delete;
-    void operator = (const PropertyReportImp& ) = delete;
+//	template<>
+//	PropertyReportImp(const vector<shared_ptr<PropertyReport::base>> &properies) : _properties(properies)
+//	{
+//	}
 
-    // but CAN move
-    PropertyReportImp(PropertyReportImp&& ) = default;
-    PropertyReportImp& operator= (PropertyReportImp&& ) = default;
+//	// do NOT copy
+//    PropertyReportImp(const PropertyReportImp& ) = delete;
+//    void operator = (const PropertyReportImp& ) = delete;
+//
+//    // but CAN move
+//    PropertyReportImp(PropertyReportImp&& ) = default;
+//    PropertyReportImp& operator= (PropertyReportImp&& ) = default;
 
 
     /**
@@ -195,8 +248,13 @@ public:
     */
     void report(int iValue) override
     {
-        TC_LockT<TC_ThreadMutex> lock(*this);
-        Helper<std::tuple_size<decltype(_propertyReportData)>::value>::Report(*this, iValue);
+		for(auto &property : _properties)
+		{
+			property->set(iValue);
+		}
+
+//        TC_LockT<TC_ThreadMutex> lock(*this);
+//        Helper<std::tuple_size<decltype(_propertyReportData)>::value>::Report(*this, iValue);
     }
 
 
@@ -207,57 +265,90 @@ public:
      */
     vector<pair<string, string> > get() override
     {
-        TC_LockT<TC_ThreadMutex> lock(*this);
-        return Helper<std::tuple_size<decltype(_propertyReportData)>::value>::Get(*this);
+		std::vector<std::pair<std::string, std::string> > vs;
+		for(auto &property : _properties)
+		{
+			vs.push_back(std::make_pair(property->desc(), property->get()));
+		}
+		return vs;
+
+//        TC_LockT<TC_ThreadMutex> lock(*this);
+//        return Helper<std::tuple_size<decltype(_propertyReportData)>::value>::Get(*this);
     }
+
+protected:
+
+	void setProperties(const vector<shared_ptr<PropertyReport::base>> &properties)
+	{
+		_properties = properties;
+	}
+	friend class StatReport;
 
 private:
-    // report helper
-    template <int N, typename DUMMY = void>
-    struct Helper
-    {
-        static void Report(PropertyReportImp<Params...>& pp, int iValue)
-        {
-            static_assert(N >= 1, "Obviously success");
-            Helper<N - 1, DUMMY>::Report(pp, iValue);
-            pp.template SetResult<N - 1>(iValue);
-        }
 
-        static std::vector<std::pair<std::string, std::string>> Get(PropertyReportImp<Params...>& pp)
-        {
-            static_assert(N >= 1, "Obviously success");
-                
-            std::vector<std::pair<std::string, std::string> > vs = Helper<N-1, DUMMY>::Get(pp);
 
-            vs.push_back({std::get<N - 1>(pp._propertyReportData).desc(), std::get<N-1>(pp._propertyReportData).get()});
-            return vs;
-        }
-    };
-
-    template <typename DUMMY>
-    struct Helper<0, DUMMY>
-    {
-        // base template
-        static void Report(PropertyReportImp<Params...>&, int  )
-        {
-        }
-
-        static 
-        std::vector<std::pair<std::string, std::string>> Get(PropertyReportImp<Params...>& )
-        {
-            return std::vector<std::pair<std::string, std::string> >();
-        }
-    };
-
-    template <int I>
-    void SetResult(int iValue)
-    {
-        std::get<I>(_propertyReportData).set(iValue);
-    }
+//	template<typename... Args, std::enable_if_t<sizeof...(Args) == 0, int> = 0>
+//	void print(const std::tuple<Args...>& t)
+//	{
+//		std::cout << "()\n";
+//	}
+//
+//	template<typename... Args, std::enable_if_t<sizeof...(Args) != 0, int> = 0>
+//	void print(const std::tuple<Args...>& t)
+//	{
+//		std::cout << "(";
+//		TuplePrinter<decltype(t), sizeof...(Args)>::print(t);
+//		std::cout << ")\n";
+//	}
+//
+//    // report helper
+//    template <int N, typename DUMMY = void>
+//    struct Helper
+//    {
+//        static void Report(PropertyReportImp<Params...>& pp, int iValue)
+//        {
+//            static_assert(N >= 1, "Obviously success");
+//            Helper<N - 1, DUMMY>::Report(pp, iValue);
+//            pp.template SetResult<N - 1>(iValue);
+//        }
+//
+//        static std::vector<std::pair<std::string, std::string>> Get(PropertyReportImp<Params...>& pp)
+//        {
+//            static_assert(N >= 1, "Obviously success");
+//
+//            std::vector<std::pair<std::string, std::string> > vs = Helper<N-1, DUMMY>::Get(pp);
+//
+//            vs.push_back({std::get<N - 1>(pp._propertyReportData).desc(), std::get<N-1>(pp._propertyReportData).get()});
+//            return vs;
+//        }
+//    };
+//
+//    template <typename DUMMY>
+//    struct Helper<0, DUMMY>
+//    {
+//        // base template
+//        static void Report(PropertyReportImp<Params...>&, int  )
+//        {
+//        }
+//
+//        static
+//        std::vector<std::pair<std::string, std::string>> Get(PropertyReportImp<Params...>& )
+//        {
+//            return std::vector<std::pair<std::string, std::string> >();
+//        }
+//    };
+//
+//    template <int I>
+//    void SetResult(int iValue)
+//    {
+//        std::get<I>(_propertyReportData).set(iValue);
+//    }
     /**
      * 状态报告数据
      */
-    PropertyReportData  _propertyReportData;
+//    PropertyReportData  _propertyReportData;
+
+	vector<shared_ptr<PropertyReport::base>>	_properties;
 };
 
 }

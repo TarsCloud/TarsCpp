@@ -106,7 +106,7 @@ namespace tars
  */
 struct SVT_DLL_API ServerConfig
 {
-    static std::string TarsPath;
+    static std::string TarsPath;			//tars路径: /usr/local/app/tars
     static std::string Application;         //应用名称
     static std::string ServerName;          //服务名称,一个服务名称含一个或多个服务标识
     static std::string BasePath;            //应用程序路径，用于保存远程系统配置的本地目录
@@ -122,16 +122,17 @@ struct SVT_DLL_API ServerConfig
     static std::string Config;              //配置中心地址
     static std::string Notify;              //信息通知中心
     static std::string ConfigFile;          //框架配置文件路径
-    static bool        CloseCout;
+    static bool        CloseCout;			//是否关闭标准输出
     static int         ReportFlow;          //是否服务端上报所有接口stat流量 0不上报 1上报(用于非tars协议服务流量统计)
     static int         IsCheckSet;          //是否对按照set规则调用进行合法性检查 0,不检查，1检查
-    static int        OpenCoroutine;       //是否启用协程处理方式(0~3)
+    static int         OpenCoroutine;       //是否启用协程处理方式(0~3)
     static size_t      CoroutineMemSize;    //协程占用内存空间的最大大小
     static uint32_t    CoroutineStackSize;  //每个协程的栈大小(默认128k)
-	static int         NetThread;           //servernet thread
+	static int         NetThread;           //server net thread
 	static bool        ManualListen;        //是否启用手工端口监听
 	static int         BackPacketLimit;     //回包积压检查
 	static int         BackPacketMin;       //回包速度检查
+	static bool 	   CheckBindAdapter;	//检查配置中bindAdapter
 
 	static std::string CA;
 	static std::string Cert;
@@ -551,6 +552,11 @@ protected:
      * epoll server
      */
     TC_EpollServerPtr   _epollServer;
+
+	/**
+	 * ServerConfig
+	 */
+	ServerConfig		_serverConfig;
 
     /**
      * communicator

@@ -20,7 +20,14 @@
 namespace tars
 {
 
-string PropertyReport::sum::get()
+const string PropertyReport::Sum = "Sum";
+const string PropertyReport::Distr = "Distr";
+const string PropertyReport::Avg = "Avg";
+const string PropertyReport::Min = "Min";
+const string PropertyReport::Max = "Max";
+const string PropertyReport::Count = "Count";
+
+string PropertyReport::sumProperty::get()
 {
     string s = TC_Common::tostr(_d);
 
@@ -29,7 +36,7 @@ string PropertyReport::sum::get()
     return s;
 }
 
-string PropertyReport::avg::get()
+string PropertyReport::avgProperty::get()
 {
     if(_count == 0)
     {
@@ -42,7 +49,7 @@ string PropertyReport::avg::get()
     return s;
 }
 
-PropertyReport::distr::distr(const vector<int>& range)
+PropertyReport::distrProperty::distrProperty(const vector<int>& range)
 {
     _range = range;
 
@@ -53,7 +60,7 @@ PropertyReport::distr::distr(const vector<int>& range)
     _result.resize(_range.size());
 }
 
-void PropertyReport::distr::set(int o)
+void PropertyReport::distrProperty::set(int o)
 {
     vector<int>::iterator it = std::upper_bound(_range.begin(), _range.end(), o);
 
@@ -65,7 +72,7 @@ void PropertyReport::distr::set(int o)
     }
 }
 
-string PropertyReport::distr::get()
+string PropertyReport::distrProperty::get()
 {
     string s = "";
 
@@ -84,7 +91,7 @@ string PropertyReport::distr::get()
     return s;
 }
 
-string PropertyReport::max::get()
+string PropertyReport::maxProperty::get()
 {
     string s = TC_Common::tostr(_d);
 
@@ -93,7 +100,7 @@ string PropertyReport::max::get()
     return s;
 }
 
-string PropertyReport::min::get()
+string PropertyReport::minProperty::get()
 {
     string s = TC_Common::tostr(_d);
 
@@ -102,7 +109,7 @@ string PropertyReport::min::get()
     return s;
 }
 
-void PropertyReport::min::set(int o)
+void PropertyReport::minProperty::set(int o)
 {
     //非0最小值
     if(_d == 0 ||(_d > o && o != 0))
@@ -111,7 +118,7 @@ void PropertyReport::min::set(int o)
     }
 }
 
-string PropertyReport::count::get()
+string PropertyReport::countProperty::get()
 {
     string s = TC_Common::tostr(_d);
 

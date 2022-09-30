@@ -87,7 +87,7 @@ void StatReport::setReportInfo(const StatFPrx& statPrx,
 
     _time          = TNOW;
 
-    _reportInterval    = iReportInterval < 10000 ? 10000 : iReportInterval;
+    _reportInterval    = iReportInterval < 5000 ? 5000 : iReportInterval;
 
     _reportTimeout = iReportTimeout < 5000 ? 5000 : iReportTimeout;
 
@@ -715,6 +715,56 @@ void StatReport::run()
     }
 
     ServantProxyThreadData::g_sp.reset();
+}
+
+PropertyReportPtr StatReport::createPropertyReportWithFlag(const string& strProperty, int flag)
+{
+	Lock lock(*this);
+
+	if(_statPropMsg.find(strProperty) != _statPropMsg.end())
+	{
+		return _statPropMsg[strProperty];
+	}
+
+	vector<shared_ptr<PropertyReport::base>>	properties;
+
+	if(flag & PT_SUM)
+	{
+		properties.push_back(std::make_shared<PropertyReport::sumProperty>());
+	}
+
+	if(flag & PT_COUNT)
+	{
+		properties.push_back(std::make_shared<PropertyReport::countProperty>());
+	}
+
+	if(flag & PT_AVG)
+	{
+		properties.push_back(std::make_shared<PropertyReport::avgProperty>());
+	}
+
+	if(flag & PT_MAX)
+	{
+		properties.push_back(std::make_shared<PropertyReport::maxProperty>());
+	}
+
+	if(flag & PT_MIN)
+	{
+		properties.push_back(std::make_shared<PropertyReport::minProperty>());
+	}
+
+	if(flag & PT_DISTR)
+	{
+		properties.push_back(std::make_shared<PropertyReport::distrProperty>());
+	}
+
+	PropertyReportImp *p = new PropertyReportImp();
+	p->setProperties(properties);
+
+	PropertyReportPtr srPtr(p);
+	_statPropMsg[strProperty] = srPtr;
+
+	return srPtr;
 }
 
 ////////////////////////////////////////////////////////////////

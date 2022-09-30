@@ -68,6 +68,17 @@ public:
         STAT_TIMEOUT    = 1,
         STAT_EXCE       = 2,
     };
+
+	enum PropertyType
+	{
+		PT_SUM 		= 0x01,
+		PT_COUNT 	= 0x02,
+		PT_AVG		= 0x04,
+		PT_MAX		= 0x08,
+		PT_MIN		= 0x10,
+		PT_DISTR    = 0x20,
+	};
+
 public:
     /**
      * 构造函数
@@ -183,12 +194,21 @@ public:
             return _statPropMsg[strProperty];
         }
 
-         PropertyReportPtr srPtr = new PropertyReportImp<decltype(args)...>(std::forward<Args>(args)...);
 
-         _statPropMsg[strProperty] = srPtr;
+        PropertyReportPtr srPtr = new PropertyReportImp(std::forward<Args>(args)...);
 
-         return srPtr;
+        _statPropMsg[strProperty] = srPtr;
+
+        return srPtr;
     }
+
+	/**
+	 * 使用flag来创建, createPropertyStat("test", StatReport::PT_MAX|StatReport::PT_SUM)
+	 * @param strProperty
+	 * @param flag
+	 * @return
+	 */
+	PropertyReportPtr createPropertyReportWithFlag(const string& strProperty, int flag);
 
 public:
 

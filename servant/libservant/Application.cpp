@@ -73,12 +73,11 @@ int        ServerConfig::OpenCoroutine = 0;    //是否启用协程处理方式
 size_t      ServerConfig::CoroutineMemSize; //协程占用内存空间的最大大小
 uint32_t    ServerConfig::CoroutineStackSize;   //每个协程的栈大小(默认128k)
 bool        ServerConfig::ManualListen = false;     //手工启动监听端口
-//bool        ServerConfig::MergeNetImp = false;     //合并网络和处理线程
 int         ServerConfig::NetThread = 1;               //servernet thread
 bool        ServerConfig::CloseCout = true;
 int         ServerConfig::BackPacketLimit = 0;
 int         ServerConfig::BackPacketMin = 1024;
-//int         ServerConfig::Pattern = 0;
+bool         ServerConfig::CheckBindAdapter = true;
 
 #if TARS_SSL
 std::string ServerConfig::CA;
@@ -1114,7 +1113,6 @@ void Application::initializeServer()
 
 #endif
     ServerConfig::TarsPath           = TC_File::simplifyDirectory(ServerConfig::LogPath + FILE_SEP + ".." + FILE_SEP) + FILE_SEP;
-
     ServerConfig::LogSize           = TC_Common::toSize(toDefault(_conf.get("/tars/application/server<logsize>"), "52428800"), 52428800);
     ServerConfig::LogNum            = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<lognum>"), "10"));
     ServerConfig::LocalIp           = _conf.get("/tars/application/server<localip>");
@@ -1131,9 +1129,10 @@ void Application::initializeServer()
     ServerConfig::ManualListen      = _conf.get("/tars/application/server<manuallisten>", "0") == "0" ? false : true;
 //	ServerConfig::MergeNetImp       = _conf.get("/tars/application/server<mergenetimp>", "0") == "0" ? false : true;
 	ServerConfig::NetThread         = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<netthread>"), "1"));
-	ServerConfig::CloseCout        = _conf.get("/tars/application/server<closecout>","1")=="0"?0:1;
-	ServerConfig::BackPacketLimit  = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketlimit>", TC_Common::tostr(100*1024*1024)));
-	ServerConfig::BackPacketMin    = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketmin>", "1024"));
+	ServerConfig::CloseCout        	= _conf.get("/tars/application/server<closecout>","1")=="0"?0:1;
+	ServerConfig::BackPacketLimit  	= TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketlimit>", TC_Common::tostr(100*1024*1024)));
+	ServerConfig::BackPacketMin    	= TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketmin>", "1024"));
+	ServerConfig::CheckBindAdapter	= _conf.get("/tars/application/server<checkbindadapter>","1")=="0"?false:true;
 
 	ServerConfig::Context["node_name"] = ServerConfig::LocalIp;
 #if TARS_SSL
