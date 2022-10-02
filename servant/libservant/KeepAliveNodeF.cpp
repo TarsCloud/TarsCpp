@@ -37,12 +37,6 @@ void KeepAliveNodeFHelper::setNodeInfo(const CommunicatorPtr &comm, const string
 
 void KeepAliveNodeFHelper::keepAlive(const string &adapter)
 {
-	//非admin心跳来的时候才上报
-	if(adapter == "AdminAdapter")
-	{
-		return;
-	}
-
 	try
 	{
 		if(_nodePrx)

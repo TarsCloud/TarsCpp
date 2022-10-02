@@ -73,7 +73,7 @@ protected:
      */
     ServerInfo      _si;
 
-    set<string>     _adapterSet;
+//    set<string>     _adapterSet;
 
 };
 
