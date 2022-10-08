@@ -203,7 +203,6 @@ private:
 			TupleTrans<Tuple, N-1>::trans(t, properties);
 
 			properties.push_back(std::get<N-1>(t));
-//			pp.template SetResult<N - 1>(iValue);
 		}
 	};
 
@@ -225,7 +224,11 @@ public:
 	template <typename... Params>
     PropertyReportImp(Params&&... args)
     {
-		TupleTrans<std::tuple<Params...>, sizeof...(args)>::trans(std::forward<Params>(args)..., _properties);
+		using PropertyReportData = std::tuple<Params...>;
+
+		PropertyReportData propertyReportData(std::forward<Params>(args)...);
+
+		TupleTrans<PropertyReportData, sizeof...(args)>::trans(propertyReportData, _properties);
     }
 
 //	template<>

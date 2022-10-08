@@ -45,7 +45,7 @@ void RemoteNotify::report(const string &sResult, bool bSync)
         if(_notifyPrx)
         {
             ReportInfo info;
-            info.eType     = REPORT;
+            info.eType     = 0;
             info.sApp      = _app;
             info.sServer   = _serverName;
             info.sSet      = _setName;
@@ -79,7 +79,7 @@ void RemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
         if(_notifyPrx)
         {
             ReportInfo info;
-            info.eType     = NOTIFY;
+            info.eType     = 0;
             info.sApp      = _app;
             info.sServer   = _serverName;
             info.sSet      = _setName;
@@ -107,7 +107,7 @@ void RemoteNotify::report(const string &sMessage, const string & app, const stri
         if(_notifyPrx)
         {
             ReportInfo info;
-            info.eType     = REPORT;
+            info.eType     = 0;
             info.sApp      = app;
             info.sServer   = serverName;
             info.sSet      = "";
