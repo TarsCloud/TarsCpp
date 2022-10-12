@@ -1561,6 +1561,12 @@ void ServantProxy::selectNetThreadInfo(ServantProxyThreadData *pSptd, ObjectProx
 				}
 			}
 
+			if(communicatorEpollInfo->_communicator->isTerminating())
+			{
+				throw TarsCommunicatorException("communicator may deconstruct");
+			}
+
+			assert(!communicatorEpollInfo->_communicator->isTerminating());
 			assert(communicatorEpollInfo->_netSeq < _communicator->getCommunicatorEpollNum());
 
 			//循环使用下一个网络线程发送数据

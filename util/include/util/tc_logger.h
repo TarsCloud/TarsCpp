@@ -770,30 +770,32 @@ namespace tars
 		 *
 		 * @param level
 		 * @param int
+		 * @return      成功设置返回0，否则返回-1
+		 * @return      Successfully set to return 0, otherwise return -1
 		 */
 		int setLogLevel(const string &level)
 		{
-			if (level == "ERROR")
+			if (TC_Port::strncasecmp(level.c_str(), "ERROR", level.size()) == 0)
 			{
 				return setLogLevel(ERROR_LOG_LEVEL);
 			}
-			else if (level == "WARN")
+			else if (TC_Port::strncasecmp(level.c_str(), "WARN", level.size()) == 0)
 			{
 				return setLogLevel(WARN_LOG_LEVEL);
 			}
-			else if (level == "DEBUG")
+			else if (TC_Port::strncasecmp(level.c_str(), "DEBUG", level.size()) == 0)
 			{
 				return setLogLevel(DEBUG_LOG_LEVEL);
 			}
-			else if (level == "NONE")
+			else if (TC_Port::strncasecmp(level.c_str(), "NONE", level.size()) == 0)
 			{
 				return setLogLevel(NONE_LOG_LEVEL);
 			}
-			else if (level == "INFO")
+			else if (TC_Port::strncasecmp(level.c_str(), "INFO", level.size()) == 0)
 			{
 				return setLogLevel(INFO_LOG_LEVEL);
 			}
-			else if (level == "TARS")
+			else if (TC_Port::strncasecmp(level.c_str(), "TARS", level.size()) == 0)
 			{
 				return setLogLevel(TARS_LOG_LEVEL);
 			}	
@@ -802,27 +804,27 @@ namespace tars
 
 		bool isNeedLog(const string &level)
 		{
-			if (level == "ERROR")
+			if (TC_Port::strncasecmp(level.c_str(), "ERROR", level.size()) == 0)
 			{
 				return isNeedLog(ERROR_LOG_LEVEL);
 			}
-			else if (level == "WARN")
+			else if (TC_Port::strncasecmp(level.c_str(), "WARN", level.size()) == 0)
 			{
 				return isNeedLog(WARN_LOG_LEVEL);
 			}
-			else if (level == "DEBUG")
+			else if (TC_Port::strncasecmp(level.c_str(), "DEBUG", level.size()) == 0)
 			{
 				return isNeedLog(DEBUG_LOG_LEVEL);
 			}
-			else if (level == "NONE")
+			else if (TC_Port::strncasecmp(level.c_str(), "NONE", level.size()) == 0)
 			{
 				return isNeedLog(NONE_LOG_LEVEL);
 			}
-			else if (level == "INFO")
+			else if (TC_Port::strncasecmp(level.c_str(), "INFO", level.size()) == 0)
 			{
 				return isNeedLog(INFO_LOG_LEVEL);
 			}
-			else if (level == "TARS")
+			else if (TC_Port::strncasecmp(level.c_str(), "TARS", level.size()) == 0)
 			{
 				return isNeedLog(TARS_LOG_LEVEL);
 			}			
