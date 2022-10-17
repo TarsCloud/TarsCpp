@@ -24,6 +24,7 @@
 #include "servant/KeepAliveNodeF.h"
 #include "servant/Cookie.h"
 #include "servant/Application.h"
+#include "servant/KeepAliveNodeF.h"
 // #ifdef TARS_OPENTRACKING
 // #include "servant/text_map_carrier.h"
 // #endif
@@ -207,7 +208,8 @@ void ServantHandle::heartbeat()
 	{
 		_bindAdapter->setHeartBeatTime(fcur);
 
-        TARS_KEEPALIVE(_bindAdapter->getName());
+		this->_application->getNodeHelper()->keepAlive(_bindAdapter->getName());
+//        TARS_KEEPALIVE(_bindAdapter->getName());
 
 		//上报连接数 比率
 		if (_bindAdapter->_pReportConRate)

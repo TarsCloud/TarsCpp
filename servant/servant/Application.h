@@ -35,6 +35,7 @@
 #include "servant/RemoteConfig.h"
 #include "servant/RemoteNotify.h"
 #include "servant/NotifyObserver.h"
+#include "servant/KeepAliveNodeF.h"
 #include "servant/AppCache.h"
 #include "util/tc_openssl.h"
 
@@ -76,13 +77,13 @@ namespace tars
 #define TARS_NOTIFY_ERROR(info)      {RemoteNotify::getInstance()->notify(NOTIFYERROR, info);}
 
 //发送心跳给node 多个adapter分别上报
-#define TARS_KEEPALIVE(adapter)      {KeepAliveNodeFHelper::getInstance()->keepAlive(adapter);}
+//#define TARS_KEEPALIVE(adapter)      {KeepAliveNodeFHelper::getInstance()->keepAlive(adapter);}
 
 //发送激活信息
-#define TARS_KEEPACTIVING            {KeepAliveNodeFHelper::getInstance()->keepActiving();}
+//#define TARS_KEEPACTIVING            {KeepAliveNodeFHelper::getInstance()->keepActiving();}
 
 //发送TARS版本给node
-#define TARS_REPORTVERSION(x)        {KeepAliveNodeFHelper::getInstance()->reportVersion(TARS_VERSION);}
+//#define TARS_REPORTVERSION(x)        {KeepAliveNodeFHelper::getInstance()->reportVersion(TARS_VERSION);}
 
 //////////////////////////////////////////////////////////////////////
 /**
@@ -332,6 +333,12 @@ public:
 	{
 		_servantHelper->addServant<T>(id, this, p, true);
 	}
+
+	/**
+	 * get node helper
+	 * @return
+	 */
+	const shared_ptr<KeepAliveNodeFHelper> &getNodeHelper() { return _nodeHelper; }
 
 	/**
 	 * get servant helper
@@ -630,6 +637,10 @@ protected:
 	 */
 	CommunicatorPtr     _thisCommunicator;
 
+	/**
+	 *
+	 */
+	shared_ptr<KeepAliveNodeFHelper>	_nodeHelper;
 
     /**
      * accept

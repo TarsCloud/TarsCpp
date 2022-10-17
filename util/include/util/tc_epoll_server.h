@@ -2356,18 +2356,18 @@ public:
 	 */
 	void setOnAccept(const accept_callback_functor& f) { _acceptFunc = f; }
 
-    /**
-     * 设置netthread网络线程发送心跳的函数
-     * Function for setting netthreaded network threads to send heartbeats
-     * @param hf [description]
-     */
-    void setHeartBeatFunctor(const heartbeat_callback_functor &heartFunc) { _heartFunc = heartFunc; }
-
-    /**
-     * 心跳函数
-     * @return
-     */
-    heartbeat_callback_functor &getHeartBeatFunctor() { return _heartFunc; }
+//    /**
+//     * 设置netthread网络线程发送心跳的函数
+//     * Function for setting netthreaded network threads to send heartbeats
+//     * @param hf [description]
+//     */
+//    void setHeartBeatFunctor(const heartbeat_callback_functor &heartFunc) { _heartFunc = heartFunc; }
+//
+//    /**
+//     * 心跳函数
+//     * @return
+//     */
+//    heartbeat_callback_functor &getHeartBeatFunctor() { return _heartFunc; }
 
     friend class BindAdapter;
 
@@ -2484,7 +2484,7 @@ private:
      * 发送心跳的函数
      * Heartbeat Sending Function
      */
-    heartbeat_callback_functor _heartFunc;
+//    heartbeat_callback_functor _heartFunc;
 
     /**
      * 接收链接的回调函数
