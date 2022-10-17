@@ -34,14 +34,15 @@ using namespace std;
 
 namespace tars
 {
+class Communicator;
 //////////////////////////////////////////////////////////////////////
 /**
  * 缓存
  */
-class SVT_DLL_API AppCache : public TC_Singleton<AppCache>, public TC_ThreadMutex
+class SVT_DLL_API AppCache : public TC_ThreadMutex
 {    
 public:
-    AppCache()
+    AppCache(Communicator *communicator)
     : _lastSynTime(0)
     , _synInterval(1000)
     {
@@ -86,6 +87,11 @@ public:
     int set(const string &sName,const string &sValue,const string sDomain = ""/*=APPCACHE_ROOT_PATH*/);
 
 private:
+
+	/**
+	 *
+	 */
+	Communicator *_communicator = NULL;
     /*
      * 缓存文件
      */

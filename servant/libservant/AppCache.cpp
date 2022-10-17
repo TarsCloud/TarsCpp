@@ -51,6 +51,7 @@ void AppCache::setCacheInfo(const string &sFile,int32_t iSynInterval)
     }
     catch(exception &e)
     {
+		TC_File::removeFile(_file, false);
         TLOGERROR("[TARS][AppCache setCacheInfo ex:" << e.what() << "]" << endl);
     }
 }
@@ -115,7 +116,7 @@ int AppCache::set(const string &sName,const string &sValue,const string sDomain)
         if(_lastSynTime == 0)   //第一次写数据 打印tarsversion
         {
             m.clear();
-            m["tarsversion"] = ClientConfig::TarsVersion;
+            m["tarsversion"] = _communicator->clientConfig().TarsVersion;
             tConf.insertDomainParam(string(APPCACHE_ROOT_PATH),m,true);
         }
 

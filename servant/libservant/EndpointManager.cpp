@@ -20,7 +20,6 @@
 #include "servant/AppCache.h"
 #include "servant/Application.h"
 #include "servant/CommunicatorEpoll.h"
-//#include "servant/StatReport.h"
 
 namespace tars
 {
@@ -36,7 +35,7 @@ void QueryPushFImp::replacePrx(QueryFPrx queryFPrx)
 
 	for(auto it : _queryBase)
 	{
-		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first, ClientConfig::ModuleName);
+		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first, _queryFPrx->tars_communicator()->clientConfig().ModuleName);
 	}
 }
 
@@ -48,7 +47,7 @@ void QueryPushFImp::registerQuery(const string &obj, QueryEpBase *pQueryBase)
 		_queryBase[obj].insert(pQueryBase);
 	}
 
-	_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, obj, ClientConfig::ModuleName);
+	_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, obj, _queryFPrx->tars_communicator()->clientConfig().ModuleName);
 }
 
 void QueryPushFImp::onConnect(const TC_Endpoint& ep)
@@ -56,7 +55,7 @@ void QueryPushFImp::onConnect(const TC_Endpoint& ep)
 	std::lock_guard<std::mutex> lock(_mutex);
 	for(auto it : _queryBase)
 	{
-		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first, ClientConfig::ModuleName);
+		_queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_registerQuery(NULL, it.first, _queryFPrx->tars_communicator()->clientConfig().ModuleName);
 	}
 }
 
@@ -289,9 +288,9 @@ void QueryEpBase::setObjName(const string & sObjName)
 		string sLocatorKey = _locator;
 
         //如果启用set，则获取按set分组的缓存
-        if(ClientConfig::SetOpen)
+        if(_communicator->clientConfig().SetOpen)
         {
-            sLocatorKey += "_" + ClientConfig::SetDivision;
+            sLocatorKey += "_" + _communicator->clientConfig().SetDivision;
         }
 
         string objName = _objName + string(_invokeSetId.empty() ? "" : ":") + _invokeSetId;
@@ -299,8 +298,8 @@ void QueryEpBase::setObjName(const string & sObjName)
         //[间接连接]第一次使用cache，如果是接口级请求则不从缓存读取
         if(!_interfaceReq)
         {
-            sEndpoints = AppCache::getInstance()->get(objName,sLocatorKey);
-            sInactiveEndpoints = AppCache::getInstance()->get("inactive_"+objName,sLocatorKey);
+            sEndpoints = _communicator->getAppCache()->get(objName,sLocatorKey);
+            sInactiveEndpoints = _communicator->getAppCache()->get("inactive_"+objName,sLocatorKey);
         }
     }
 
@@ -467,10 +466,10 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                     case E_DEFAULT:
                     default:
                         {
-                            if(ClientConfig::SetOpen || !_invokeSetId.empty())
+                            if(_communicator->clientConfig().SetOpen || !_invokeSetId.empty())
                             {
                                 //指定set调用时，指定set的优先级最高
-                                string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
+                                string setId = _invokeSetId.empty()?_communicator->clientConfig().SetDivision : _invokeSetId;
                                 iRet = _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp, ServerConfig::Context);
                             }
                             else
@@ -504,10 +503,10 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                     case E_DEFAULT:
                     default:
                         {
-                            if(ClientConfig::SetOpen || !_invokeSetId.empty())
+                            if(_communicator->clientConfig().SetOpen || !_invokeSetId.empty())
                             {
                                 //指定set调用时，指定set的优先级最高
-                                string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
+                                string setId = _invokeSetId.empty()?_communicator->clientConfig().SetDivision:_invokeSetId;
                                 _queryFPrx->tars_hash((uint64_t)_queryFPrx.get())->async_findObjectByIdInSameSet(this,_objName,setId, ServerConfig::Context);
                             }
                             else
@@ -713,18 +712,18 @@ void QueryEpBase::setEndPointToCache(bool bInactive)
 
     //如果启用set，则按set分组保存
     string sLocatorKey = _locator;
-    if(ClientConfig::SetOpen)
+    if(_communicator->clientConfig().SetOpen)
     {
-        sLocatorKey += "_" + ClientConfig::SetDivision;
+        sLocatorKey += "_" + _communicator->clientConfig().SetDivision;
     }
     string objName = _objName + string(_invokeSetId.empty()?"":":") + _invokeSetId;
     if(bInactive)
     {
-        AppCache::getInstance()->set("inactive_"+objName,sEndpoints,sLocatorKey);
+		_communicator->getAppCache()->set("inactive_"+objName,sEndpoints,sLocatorKey);
     }
     else
     {
-        AppCache::getInstance()->set(objName,sEndpoints,sLocatorKey);
+		_communicator->getAppCache()->set(objName,sEndpoints,sLocatorKey);
     }
 
     TLOGTARS("[setEndPointToCache,obj:" << _objName << ",invokeSetId:" << _invokeSetId << ",endpoint:" << sEndpoints << "]" << endl);

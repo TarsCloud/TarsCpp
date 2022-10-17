@@ -41,9 +41,6 @@ ServantHandle::ServantHandle(Application *application)
 
 ServantHandle::~ServantHandle()
 {
-//    auto it = _servants.begin();
-//
-//    while(it != _servants.end())
     {
         try
         {
@@ -60,7 +57,6 @@ ServantHandle::~ServantHandle()
         {
             TLOGERROR("[ServantHandle::destroy unknown exception error]" << endl);
         }
-//        ++it;
     }
 }
 
@@ -68,59 +64,51 @@ void ServantHandle::handleAsyncResponse()
 {
     ReqMessagePtr resp;
 
-//    auto it = _servants.begin();
-//
-//    while (it != _servants.end())
-//    {
-        while (_servant->getResponseQueue().pop_front(resp))
-        {
-            try
-            {
-                if (resp->response->iRet == TARSSERVERSUCCESS)
-                {
-					_servant->doResponse(resp);
-                }
-                else if (resp->pObjectProxy == NULL)
-                {
-					_servant->doResponseNoRequest(resp);
-                }
-                else
-                {
-					_servant->doResponseException(resp);
-                }
-            }
-            catch (exception& e)
-            {
-                TLOGERROR("[ServantHandle::doResponse ex:" << e.what() << "]" << endl);
-            }
-            catch (...)
-            {
-                TLOGERROR("[ServantHandle::doResponse error]" << endl);
-            }
-        }
+	while (_servant->getResponseQueue().pop_front(resp))
+	{
+		try
+		{
+			if (resp->response->iRet == TARSSERVERSUCCESS)
+			{
+				_servant->doResponse(resp);
+			}
+			else if (resp->pObjectProxy == NULL)
+			{
+				_servant->doResponseNoRequest(resp);
+			}
+			else
+			{
+				_servant->doResponseException(resp);
+			}
+		}
+		catch (exception& e)
+		{
+			TLOGERROR("[ServantHandle::doResponse ex:" << e.what() << "]" << endl);
+		}
+		catch (...)
+		{
+			TLOGERROR("[ServantHandle::doResponse error]" << endl);
+		}
+	}
 
-        //业务处理附加的自有消息
-        try
-        {
-			_servant->doCustomMessage(false);
-			_servant->doCustomMessage();
-        }
-        catch (exception& e)
-        {
-            TLOGERROR("[ServantHandle::doCustemMessage ex:" << e.what() << "]" << endl);
-        }
-        catch (...)
-        {
-            TLOGERROR("[ServantHandle::doCustemMessage ex.]" << endl);
-        }
-//
-//        ++it;
-//    }
+	//业务处理附加的自有消息
+	try
+	{
+		_servant->doCustomMessage(false);
+		_servant->doCustomMessage();
+	}
+	catch (exception& e)
+	{
+		TLOGERROR("[ServantHandle::doCustemMessage ex:" << e.what() << "]" << endl);
+	}
+	catch (...)
+	{
+		TLOGERROR("[ServantHandle::doCustemMessage ex.]" << endl);
+	}
 }
 
 void ServantHandle::handleCustomMessage(bool bExpectIdle)
 {
-//    for (auto it = _servants.begin(); it != _servants.end(); it++)
     {
         //业务处理附加的自有消息
         try
@@ -141,15 +129,11 @@ void ServantHandle::handleCustomMessage(bool bExpectIdle)
 
 bool ServantHandle::allFilterIsEmpty()
 {
-//	auto it = _servants.begin();
-//
-//	while (it != _servants.end())
 	{
 		if (!_servant->getResponseQueue().empty())
 		{
 			return false;
 		}
-//		++it;
 	}
 	return true;
 }
@@ -165,7 +149,7 @@ void ServantHandle::initialize()
 
 	if (!_servant)
 	{
-		if(ServerConfig::CheckBindAdapter)
+		if(_application->applicationConfig().checkBindAdapter)
 		{
 			TLOGERROR("[ServantHandle initialize createServant ret null, for adapter `" + _bindAdapter->getName() + "`]"
 					<< endl);
@@ -184,52 +168,35 @@ void ServantHandle::initialize()
 			return;
 		}
 	}
-//
-//    auto it = _servants.begin();
-//
-//    if(it == _servants.end())
-//    {
-//        TLOGERROR("[initialize error: no servant exists]" << endl);
-//
-//        RemoteNotify::getInstance()->report("initialize error: no servant exists.");
-//
-//        TC_Common::msleep(100);
-//
-//        exit(-1);
-//    }
-//
-//    while(it != _servants.end())
-//    {
-        try
-        {
-			_servant->setHandle(this);
 
-			_servant->initialize();
+	try
+	{
+		_servant->setHandle(this);
 
-            TLOGTARS("[" << _servant->getName() << " initialize]" << endl);
-        }
-        catch(exception &ex)
-        {
-            TLOGERROR("[initialize error:" << ex.what() << "]" << endl);
+		_servant->initialize();
 
-            RemoteNotify::getInstance()->report("initialize error:" + string(ex.what()));
+		TLOGTARS("[" << _servant->getName() << " initialize]" << endl);
+	}
+	catch(exception &ex)
+	{
+		TLOGERROR("[initialize error:" << ex.what() << "]" << endl);
 
-	        TC_Common::msleep(100);
+		RemoteNotify::getInstance()->report("initialize error:" + string(ex.what()));
 
-	        exit(-1);
-        }
-        catch(...)
-        {
-            TLOGERROR("[initialize unknown exception error]" << endl);
+		TC_Common::msleep(100);
 
-            RemoteNotify::getInstance()->report("initialize unknown exception error");
+		exit(-1);
+	}
+	catch(...)
+	{
+		TLOGERROR("[initialize unknown exception error]" << endl);
 
-	        TC_Common::msleep(100);
+		RemoteNotify::getInstance()->report("initialize unknown exception error");
 
-			exit(-1);
-		}
-//		++it;
-//	}
+		TC_Common::msleep(100);
+
+		exit(-1);
+	}
 }
 
 void ServantHandle::heartbeat()
@@ -315,15 +282,6 @@ void ServantHandle::handleClose(const shared_ptr<TC_EpollServer::RecvContext> &d
     TLOGTARS("[ServantHandle::handleClose,adapter:" << data->adapter()->getName() << ",peer:" << data->ip() << ":" << data->port() << "]"<< endl);
 
 	CurrentPtr current = createCloseCurrent(data);
-//
-//	auto sit = _servants.find(current->getServantName());
-//
-//	if (sit == _servants.end())
-//	{
-//		TLOGERROR("[TARS]ServantHandle::handleClose,adapter:" << data->adapter()->getName() << ",peer:" << data->ip() << ":" << data->port() << ", " << current->getServantName() << " not found" << endl);
-//
-//		return;
-//	}
 
 	try
 	{
@@ -579,15 +537,16 @@ bool ServantHandle::processCookie(const CurrentPtr &current, map<string, string>
 bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
 {
 	/*是否允许检查合法性*/
-	if (ServerConfig::IsCheckSet == 0)
+	if (_application->applicationConfig().isCheckSet == 0)
 	{
 		//不检查
 		return true;
 	}
 
+	auto clientConfig = _application->getThisCommunicator()->clientConfig();
     bool isSetInvoke = IS_MSG_TYPE(current->getMessageType(), tars::TARSMESSAGETYPESETNAME);
     //客户端按set规则调用且服务端启用set
-    if (isSetInvoke && ClientConfig::SetOpen)
+    if (isSetInvoke && clientConfig.SetOpen)
     {
         /**
          * 合法性规则:
@@ -605,20 +564,20 @@ bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
 
 			sSetName = setIt->second;
 
-            if (ClientConfig::SetDivision == sSetName)
+            if (clientConfig.SetDivision == sSetName)
             {
                 return true;
             }
             else
             {
                 //属于同一地区是也属于合法调用
-                string setArea1 = ClientConfig::SetDivision.substr(0,ClientConfig::SetDivision.find_last_of("."));
+                string setArea1 = clientConfig.SetDivision.substr(0, clientConfig.SetDivision.find_last_of("."));
                 string setArea2 = sSetName.substr(0,sSetName.find_last_of("."));
                 if (setArea1 == setArea2)
                 {
                     return true;
                 }
-                else if (ClientConfig::SetDivision.substr(0,ClientConfig::SetDivision.find_first_of(".")) !=
+                else if (clientConfig.SetDivision.substr(0, clientConfig.SetDivision.find_first_of(".")) !=
                          sSetName.substr(0,sSetName.find_first_of(".")))
                 {
                     //属于不同的set之间调用也属于合法
@@ -631,7 +590,7 @@ bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
                             << current->getMessageType() << "|"
                             << current->getServantName() << "|"
                             << current->getFuncName() << "|client:"
-                            << ClientConfig::SetDivision << "|server:"
+                            << clientConfig.SetDivision << "|server:"
                             << sSetName << "]" << endl);
                     current->sendResponse(TARSINVOKEBYINVALIDESET);
                     return false;
@@ -645,7 +604,7 @@ bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
                             << current->getMessageType() << "|"
                             << current->getServantName() << "|"
                             << current->getFuncName() << "|client:"
-                            << ClientConfig::SetDivision << "|server:"
+                            << clientConfig.SetDivision << "|server:"
                             << sSetName << "]" << endl);
             current->sendResponse(TARSINVOKEBYINVALIDESET);
             return false;
@@ -694,8 +653,6 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 	ResponsePacket response;
 	try
 	{
-//		TLOGERROR("[ServantHandle::handleTarsProtocol here] " << _servant->getName() << ", " << current->getServantName() << endl);
-
 		if (_servant->getName() != current->getServantName())
 		{
 			response.iRet = _servant->doNoServant(current, response.sBuffer);
@@ -761,10 +718,6 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
         << current->getIp() << "|"
         << current->getPort() << "|"
         << current->getServantName() << "]" << endl);
-//
-//	auto sit = _servants.find(current->getServantName());
-//
-//	assert(sit != _servants.end());
 
 	vector<char> buffer;
 

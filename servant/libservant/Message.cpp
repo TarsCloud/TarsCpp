@@ -28,6 +28,11 @@ void ReqMessage::init(CallType eCallType, ServantProxy *prx)
 	iCoroId        = 0;
 }
 
+const string &ReqMessage::moduleName()
+{
+	return proxy->tars_communicator()->clientConfig().ModuleName;
+}
+
 ReqMessage::~ReqMessage()
 {
 	if(deconstructor)

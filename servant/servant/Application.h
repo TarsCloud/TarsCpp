@@ -35,6 +35,7 @@
 #include "servant/RemoteConfig.h"
 #include "servant/RemoteNotify.h"
 #include "servant/NotifyObserver.h"
+#include "servant/AppCache.h"
 #include "util/tc_openssl.h"
 
 namespace tars
@@ -103,41 +104,45 @@ namespace tars
 //////////////////////////////////////////////////////////////////////
 /**
  * 服务基本信息
+ * 建议不再使用这个类, 使用Application中的成员变量(Application::ApplicationConfig)
+ * 如果一个进程中存在多个服务的时候, 会有bug(当然这种情况一般不会出现)
+ * 保留ServerConfig的原因是为了兼容旧版本
  */
 struct SVT_DLL_API ServerConfig
 {
-    static std::string TarsPath;			//tars路径: /usr/local/app/tars
-    static std::string Application;         //应用名称
-    static std::string ServerName;          //服务名称,一个服务名称含一个或多个服务标识
-    static std::string BasePath;            //应用程序路径，用于保存远程系统配置的本地目录
-    static std::string DataPath;            //应用程序数据路径用于保存普通数据文件
-    static std::string LocalIp;             //本机IP
-    static std::string LogPath;             //log路径
-    static int         LogSize;             //log大小(字节)
-    static int         LogNum;              //log个数()
-    static std::string LogLevel;            //log日志级别
-    static std::string Local;               //本地套接字
-    static std::string Node;                //本机node地址
-    static std::string Log;                 //日志中心地址
-    static std::string Config;              //配置中心地址
-    static std::string Notify;              //信息通知中心
-    static std::string ConfigFile;          //框架配置文件路径
-    static bool        CloseCout;			//是否关闭标准输出
-    static int         ReportFlow;          //是否服务端上报所有接口stat流量 0不上报 1上报(用于非tars协议服务流量统计)
-    static int         IsCheckSet;          //是否对按照set规则调用进行合法性检查 0,不检查，1检查
-    static int         OpenCoroutine;       //是否启用协程处理方式(0~3)
-    static size_t      CoroutineMemSize;    //协程占用内存空间的最大大小
-    static uint32_t    CoroutineStackSize;  //每个协程的栈大小(默认128k)
-	static int         NetThread;           //server net thread
-	static bool        ManualListen;        //是否启用手工端口监听
-	static int         BackPacketLimit;     //回包积压检查
-	static int         BackPacketMin;       //回包速度检查
-	static bool 	   CheckBindAdapter;	//检查配置中bindAdapter
-
+	////////////////////////////////////////////////////////////////////////////////////
+	//兼容老版本而存在
+	static std::string TarsPath;				//tars路径: /usr/local/app/tars
+	static std::string Application;         	//应用名称
+	static std::string ServerName;          	//服务名称,一个服务名称含一个或多个服务标识
+	static std::string BasePath;            	//应用程序路径，用于保存远程系统配置的本地目录
+	static std::string DataPath;            	//应用程序数据路径用于保存普通数据文件
+	static std::string LocalIp;             	//本机IP
+	static std::string LogPath;             	//log路径
+	static int         LogSize;             	//循环log大小(字节)
+	static int         LogNum;              	//循环log个数()
+	static std::string LogLevel;            	//循环log日志级别
+	static std::string Local;               	//本地绑定的管理地址
+	static std::string Node;                	//本机node地址
+	static std::string Log;                 	//日志中心地址
+	static std::string Config;              	//配置中心地址
+	static std::string Notify;              	//信息通知中心
+	static std::string ConfigFile;          	//框架配置文件路径
+	static bool        CloseCout;				//是否关闭标准输出
+	static int         ReportFlow;         //是否服务端上报所有接口stat流量 0不上报 1上报(用于非tars协议服务流量统计)
+	static int         IsCheckSet;         //是否对按照set规则调用进行合法性检查 0,不检查，1检查
+	static int         OpenCoroutine;      //是否启用协程处理方式(0~3)
+	static size_t      CoroutineMemSize;    	//协程占用内存空间的最大大小
+	static uint32_t    CoroutineStackSize;  	//每个协程的栈大小(默认128k)
+	static int         NetThread;          	//server net thread
+	static bool        ManualListen;   //是否启用手工端口监听
+	static int         BackPacketLimit;    //回包积压检查
+	static int         BackPacketMin;  //回包速度检查
+	static bool 	   CheckBindAdapter;//检查配置中bindAdapter
 	static std::string CA;
 	static std::string Cert;
 	static std::string Key;
-	static bool VerifyClient;
+	static bool 	   VerifyClient;
 	static std::string Ciphers;
 
 	static map<string, string> Context;     //框架内部用, 传递节点名称(以域名形式部署时)
@@ -152,6 +157,49 @@ class PropertyReport;
 class Application: public BaseNotify
 {
 public:
+	/**
+	 * 每个application有自己的!
+	 */
+	struct ApplicationConfig
+	{
+		std::string tarsPath;				//tars路径: /usr/local/app/tars
+		std::string application;         	//应用名称
+		std::string serverName;          	//服务名称,一个服务名称含一个或多个服务标识
+		std::string basePath;            	//应用程序路径，用于保存远程系统配置的本地目录
+		std::string dataPath;            	//应用程序数据路径用于保存普通数据文件
+		std::string localIp;             	//本机IP
+		std::string logPath;             	//log路径
+		int         logSize;             	//循环log大小(字节)
+		int         logNum;              	//循环log个数()
+		std::string logLevel;            	//循环log日志级别
+		std::string local;               	//本地绑定的管理地址
+		std::string node;                	//本机node地址
+		std::string log;                 	//日志中心地址
+		std::string config;              	//配置中心地址
+		std::string notify;              	//信息通知中心
+		std::string configFile;          	//框架配置文件路径
+		bool        closeCout;				//是否关闭标准输出
+		int         reportFlow = 1;         //是否服务端上报所有接口stat流量 0不上报 1上报(用于非tars协议服务流量统计)
+		int         isCheckSet = 1;         //是否对按照set规则调用进行合法性检查 0,不检查，1检查
+		int         openCoroutine = 0;      //是否启用协程处理方式(0~3)
+		size_t      coroutineMemSize;    	//协程占用内存空间的最大大小
+		uint32_t    coroutineStackSize;  	//每个协程的栈大小(默认128k)
+		int         netThread;          	//server net thread
+		bool        manualListen = false;   //是否启用手工端口监听
+		int         backPacketLimit = 0;    //回包积压检查
+		int         backPacketMin =  1024;  //回包速度检查
+		bool 	    checkBindAdapter = true;//检查配置中bindAdapter
+
+		std::string ca;
+		std::string cert;
+		std::string key;
+		bool 		verifyClient = false;
+		std::string ciphers;
+
+		//copy到静态变量
+		void copyToStatic();
+	};
+
     /**
      * 应用构造
      */
@@ -162,7 +210,7 @@ public:
      */
     virtual ~Application();
 
-    /**
+	/**
      * 初始化 --config=xxxx
      * @param argv
      */
@@ -190,28 +238,49 @@ public:
      */
     void waitForReady();
 
-public:
     /**
      * 获取配置文件
      *
      * @return TC_Config&
      */
     TC_Config &getConfig() { return _conf; }
+
+	/**
+	 *
+	 * @return
+	 */
 	const TC_Config &getConfig() const { return _conf; }
 
 	/**
-	 * 获取通信器
+	 * 服务基本配置信息
+	 * @return
+	 */
+	const ApplicationConfig &applicationConfig() const { return _serverConfig ;}
+
+	/**
+	 * 获取通信器(静态全局)
 	 *
 	 * @return CommunicatorPtr&
 	 */
     static CommunicatorPtr& getCommunicator();
 
-    /**
-     * 获取服务Server对象
-     *
-     * @return TC_EpollServerPtr&
-     */
+	/**
+	 * 每个Server自己的通信器(如果只有一个Server, 那么通信器也是全局的)
+	 * @return
+	 */
+	CommunicatorPtr getThisCommunicator();
+
+	/**
+	 * 获取服务Server对象
+	 *
+	 * @return TC_EpollServerPtr&
+	 */
     TC_EpollServerPtr &getEpollServer() { return _epollServer; }
+
+	/**
+	 * epoll server
+	 * @return
+	 */
 	const TC_EpollServerPtr &getEpollServer() const { return _epollServer; }
 
 	/**
@@ -417,7 +486,6 @@ protected:
      */
     bool cmdSetDyeing(const string &command, const string &params, string &result);
 
-
     /**
      * 设置是否关闭stdcout/stderr/stdin 服务重启能才生效
      * @param command
@@ -452,17 +520,6 @@ protected:
      * @param cPtr
      */
     void onAccept(TC_EpollServer::Connection* cPtr);
-
-    // /**
-    //  *
-    //  *
-    //  * @param command
-    //  * @param params
-    //  * @param result
-    //  *
-    //  * @return bool
-    //  */
-    // void addServantOnClose(const string& servant, const TC_EpollServer::close_functor& f);
 
 protected:
     /**
@@ -542,6 +599,11 @@ protected:
      */
     string setDivision(void);
 
+	/**
+	 * 通知静态和非静态变量的配置信息
+	 * @param serverConfig
+	 */
+	void syncServerConfig(const ApplicationConfig &serverConfig);
 protected:
     /**
      * config
@@ -551,17 +613,23 @@ protected:
     /**
      * epoll server
      */
-    TC_EpollServerPtr   _epollServer;
+    TC_EpollServerPtr   	_epollServer;
 
 	/**
-	 * ServerConfig
+	 * ApplicationConfig
 	 */
-	ServerConfig		_serverConfig;
+	struct ApplicationConfig	_serverConfig;
 
     /**
      * communicator
      */
-    static CommunicatorPtr     _communicator;
+    static CommunicatorPtr  _communicator;
+
+	/**
+	 * communicator
+	 */
+	CommunicatorPtr     _thisCommunicator;
+
 
     /**
      * accept

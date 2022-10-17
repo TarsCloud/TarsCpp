@@ -26,25 +26,25 @@ namespace tars
 {
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-
-string ClientConfig::LocalIp = "127.0.0.1";
-
-string ClientConfig::ModuleName = "unknown";
-
-set<string> ClientConfig::SetLocalIp;
-
-bool ClientConfig::SetOpen = false;
-
-string ClientConfig::SetDivision = "";
-
-string ClientConfig::TarsVersion = string(TARS_VERSION);
+//
+//string ClientConfig::LocalIp = "127.0.0.1";
+//
+//string ClientConfig::ModuleName = "unknown";
+//
+//set<string> ClientConfig::SetLocalIp;
+//
+//bool ClientConfig::SetOpen = false;
+//
+//string ClientConfig::SetDivision = "";
+//
+//string ClientConfig::TarsVersion = string(TARS_VERSION);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 Communicator::Communicator()
 : _initialized(false)
 , _terminating(false)
-
+, _appCache(this)
 , _statReport(NULL)
 , _timeoutLogFlag(true)
 
@@ -63,6 +63,7 @@ Communicator::Communicator()
 Communicator::Communicator(TC_Config& conf, const string& domain/* = CONFIG_ROOT_PATH*/)
 : _initialized(false)
 , _terminating(false)
+, _appCache(this)
 , _timeoutLogFlag(true)
 , _keepAliveInterval(0)
 // #ifdef TARS_OPENTRACKING
@@ -242,15 +243,15 @@ void Communicator::initialize()
 	});
 
 
-	ClientConfig::TarsVersion   = TARS_VERSION;
+	_clientConfig.TarsVersion   = TARS_VERSION;
 
-    ClientConfig::SetOpen = TC_Common::lower(getProperty("enableset", "n")) == "y" ? true : false;
+    _clientConfig.SetOpen = TC_Common::lower(getProperty("enableset", "n")) == "y" ? true : false;
 
-    if (ClientConfig::SetOpen)
+    if (_clientConfig.SetOpen)
     {
-        ClientConfig::SetDivision = getProperty("setdivision");
+        _clientConfig.SetDivision = getProperty("setdivision");
 
-        vector<string> vtSetDivisions = TC_Common::sepstr<string>(ClientConfig::SetDivision, ".");
+        vector<string> vtSetDivisions = TC_Common::sepstr<string>(_clientConfig.SetDivision, ".");
 
         string sWildCard = "*";
 
@@ -259,24 +260,24 @@ void Communicator::initialize()
             || vtSetDivisions[1] == sWildCard)
         {
             //set分组名不对时默认没有打开set分组
-            ClientConfig::SetOpen = false;
+            _clientConfig.SetOpen = false;
             setProperty("enableset", "n");
-            TLOGERROR("[set division name error:" << ClientConfig::SetDivision << ", client failed to open set]" << endl);
+            TLOGERROR("[set division name error:" << _clientConfig.SetDivision << ", client failed to open set]" << endl);
         }
     }
 
-    ClientConfig::LocalIp = getProperty("localip", "");
+    _clientConfig.LocalIp = getProperty("localip", "");
 
-    if (ClientConfig::SetLocalIp.empty())
+    if (_clientConfig.SetLocalIp.empty())
     {
         vector<string> v = TC_Socket::getLocalHosts();
         for (size_t i = 0; i < v.size(); i++)
         {
-            if (v[i] != "127.0.0.1" && ClientConfig::LocalIp.empty())
+            if (v[i] != "127.0.0.1" && _clientConfig.LocalIp.empty())
             {
-                ClientConfig::LocalIp = v[i];
+                _clientConfig.LocalIp = v[i];
             }
-            ClientConfig::SetLocalIp.insert(v[i]);
+            _clientConfig.SetLocalIp.insert(v[i]);
         }
     }
 
@@ -290,10 +291,10 @@ void Communicator::initialize()
     catch (TC_File_Exception& ex)
     {
         //取失败则使用ip代替进程名
-        exe = ClientConfig::LocalIp;
+        exe = _clientConfig.LocalIp;
     }
 
-    ClientConfig::ModuleName = getProperty("modulename", exe);
+    _clientConfig.ModuleName = getProperty("modulename", exe);
 
 #if TARS_SSL
 
@@ -378,7 +379,7 @@ void Communicator::initialize()
     }
 
     //异步队列数目上报
-    _reportAsyncQueue= getStatReport()->createPropertyReport(ClientConfig::ModuleName  + ".asyncqueue", PropertyReport::avg());
+    _reportAsyncQueue= getStatReport()->createPropertyReport(_clientConfig.ModuleName  + ".asyncqueue", PropertyReport::avg());
     
     //初始化统计上报接口
     string statObj = getProperty("stat", "");
@@ -414,8 +415,8 @@ void Communicator::initialize()
         propertyPrx = stringToProxy<PropertyFPrx>(propertyObj);
     }
 
-    string sSetDivision = ClientConfig::SetOpen ? ClientConfig::SetDivision : "";
-    _statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
+    string sSetDivision = _clientConfig.SetOpen ? _clientConfig.SetDivision : "";
+    _statReport->setReportInfo(statPrx, propertyPrx, _clientConfig.ModuleName, _clientConfig.LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
 
 #if TARS_OPENTRACKING
 	string collector_host = getProperty("collector_host", "");
@@ -424,8 +425,8 @@ void Communicator::initialize()
     {
         //init zipkin config
         zipkin::ZipkinOtTracerOptions options;
-        options.service_name = ClientConfig::ModuleName;
-        options.service_address = {zipkin::IpVersion::v4, ClientConfig::LocalIp};
+        options.service_name = _clientConfig.ModuleName;
+        options.service_address = {zipkin::IpVersion::v4, _clientConfig.LocalIp};
 
         options.sample_rate = strtod(getProperty("sample_rate", "1.0").c_str(), NULL);
         options.collector_host = collector_host;
@@ -565,8 +566,8 @@ int Communicator::reloadProperty(string & sResult)
         propertyPrx = stringToProxy<PropertyFPrx>(propertyObj);
     }
 
-    string sSetDivision = ClientConfig::SetOpen ? ClientConfig::SetDivision : "";
-    _statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
+    string sSetDivision = _clientConfig.SetOpen ? _clientConfig.SetDivision : "";
+    _statReport->setReportInfo(statPrx, propertyPrx, _clientConfig.ModuleName, _clientConfig.LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
 
     sResult = "locator=" + getProperty("locator", "") + "\r\n" +
         "stat=" + statObj + "\r\n" + "property=" + propertyObj + "\r\n" +

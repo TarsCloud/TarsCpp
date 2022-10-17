@@ -106,7 +106,7 @@ struct ThreadPrivateData
      */
     bool           _hash        = false;                            //是否普通取模hash
     bool           _conHash     = false;                          //是否一致性hash
-    uint32_t        _hashCode    = 0;                        //hash值
+    uint32_t       _hashCode    = 0;                        //hash值
 
     /**
      * 染色信息
@@ -184,6 +184,12 @@ struct ReqMessage : public TC_HandleBase
      * 初始化
      */
     void init(CallType eCallType, ServantProxy *proxy);
+
+	/**
+	 * 发送的模块名称
+	 * @return
+	 */
+	const string &moduleName();
 
     ReqStatus                   eStatus;        //调用的状态
     CallType                    eType;          //调用类型

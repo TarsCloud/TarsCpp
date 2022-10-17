@@ -246,11 +246,11 @@ void StatReport::report(const string& strModuleName,
     {
         if (!_setName.empty())
         {
-            head.masterName = _moduleName + "." + _setName + _setArea + _setID + "@" + ClientConfig::TarsVersion;
+            head.masterName = _moduleName + "." + _setName + _setArea + _setID + "@" + this->_communicator->clientConfig().TarsVersion;
         }
         else
         {
-            head.masterName = _moduleName + "@" + ClientConfig::TarsVersion;
+            head.masterName = _moduleName + "@" + this->_communicator->clientConfig().TarsVersion;
         }
 
         if (!setdivision.empty()) //被调没有启用set分组,slavename保持原样
@@ -338,7 +338,7 @@ void StatReport::report(const string& strMasterName,
     StatMicMsgHead head;
     StatMicMsgBody body;
 
-    head.masterName     = trimAndLimitStr(strMasterName + "@" + ClientConfig::TarsVersion, MAX_MASTER_NAME_LEN);
+    head.masterName     = trimAndLimitStr(strMasterName + "@" + this->_communicator->clientConfig().TarsVersion, MAX_MASTER_NAME_LEN);
     head.masterIp       = trimAndLimitStr(strMasterIp,      MAX_MASTER_IP_LEN);
     head.slaveName      = trimAndLimitStr(strSlaveName,     MAX_MASTER_NAME_LEN);
     head.slaveIp        = trimAndLimitStr(strSlaveIp,       MAX_MASTER_IP_LEN);

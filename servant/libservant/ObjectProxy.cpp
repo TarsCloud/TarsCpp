@@ -47,10 +47,10 @@ ObjectProxy::ObjectProxy(CommunicatorEpoll *pCommunicatorEpoll, ServantProxy *se
     {
         _name = sObjectProxyName;
         //启用set或者指定set调用
-        if(ClientConfig::SetOpen || !_invokeSetId.empty())
+        if(_communicatorEpoll->getCommunicator()->clientConfig().SetOpen || !_invokeSetId.empty())
         {
             //指定set调用时，指定set的优先级最高
-            _invokeSetId  = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
+            _invokeSetId  = _invokeSetId.empty()?_communicatorEpoll->getCommunicator()->clientConfig().SetDivision:_invokeSetId;
             _isInvokeBySet = true;
         }
     }

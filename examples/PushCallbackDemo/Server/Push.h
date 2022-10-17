@@ -88,7 +88,7 @@ namespace TestApp
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "pushMsg", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", _msg_->moduleName(), "pushMsg", 0, _trace_param_, "");
                     }
 
                     CallbackThreadData * pCbtd = CallbackThreadData::getData();
@@ -298,7 +298,7 @@ namespace TestApp
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "pushMsg", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, this->tars_communicator()->clientConfig().ModuleName, tars_name(), "pushMsg", 0, _trace_param_, "");
             }
 
             std::map<string, string> _mStatus;
@@ -328,7 +328,7 @@ namespace TestApp
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "pushMsg", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, this->tars_communicator()->clientConfig().ModuleName, tars_name(), "pushMsg", 0, _trace_param_, "");
             }
 
             return _ret;
@@ -353,7 +353,7 @@ namespace TestApp
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + "." + ServerConfig::ServerName, tars_name(), "pushMsg", 0, _trace_param_, "");
+                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, this->tars_communicator()->clientConfig().ModuleName, tars_name(), "pushMsg", 0, _trace_param_, "");
             }
             tars_invoke_async(tars::TARSNORMAL,"pushMsg", _os, context, _mStatus, callback);
         }
@@ -458,7 +458,7 @@ namespace TestApp
                 {
                     _trace_param_ = "{\"trace_param_over_max_len\":true}";
                 }
-                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "pushMsg", 0, _trace_param_, "");
+                TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", _current_->getServantHandle()->getApplication()->getThisCommunicator()->clientConfig().ModuleName, "pushMsg", 0, _trace_param_, "");
             }
 
         }
@@ -521,7 +521,7 @@ namespace TestApp
                         {
                             _trace_param_ = "{\"trace_param_over_max_len\":true}";
                         }
-                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", ServerConfig::Application + "." + ServerConfig::ServerName, "pushMsg", 0, _trace_param_, "");
+                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", _current->moduleName(), "pushMsg", 0, _trace_param_, "");
                     }
 
                     tars::Int32 _ret = pushMsg(sRsp, _current);
@@ -565,7 +565,7 @@ namespace TestApp
                             {
                                 _trace_param_ = "{\"trace_param_over_max_len\":true}";
                             }
-                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", ServerConfig::Application + "." + ServerConfig::ServerName, "pushMsg", 0, _trace_param_, "");
+                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", _current->moduleName(), "pushMsg", 0, _trace_param_, "");
                         }
 
                     }

@@ -284,6 +284,12 @@ public:
 	 * @return
 	 */
 	bool connectionExists() const;
+
+	/**
+	 *
+	 * @return
+	 */
+	const string &moduleName() const;
 protected:
 
     friend class ServantHandle;

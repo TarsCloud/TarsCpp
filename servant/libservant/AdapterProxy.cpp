@@ -269,13 +269,14 @@ TC_NetWorkBuffer::PACKET_TYPE AdapterProxy::onVerifyAuthCallback(TC_NetWorkBuffe
 void AdapterProxy::initStatHead()
 {
 	vector <string> vtSetInfo;
-	if(!ClientConfig::SetDivision.empty() && StatReport::divison2SetInfo(ClientConfig::SetDivision, vtSetInfo)) 	{
+	auto clientConfig = this->_communicator->clientConfig();
+	if(!clientConfig.SetDivision.empty() && StatReport::divison2SetInfo(clientConfig.SetDivision, vtSetInfo)) 	{
 		//主调(client)启用set
-		_statHead.masterName = StatReport::trimAndLimitStr(ClientConfig::ModuleName + "." + vtSetInfo[0] + vtSetInfo[1] + vtSetInfo[2] + "@" + ClientConfig::TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
+		_statHead.masterName = StatReport::trimAndLimitStr(clientConfig.ModuleName + "." + vtSetInfo[0] + vtSetInfo[1] + vtSetInfo[2] + "@" + clientConfig.TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
 	}
 	else
 	{
-		_statHead.masterName = StatReport::trimAndLimitStr(ClientConfig::ModuleName + "@" + ClientConfig::TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
+		_statHead.masterName = StatReport::trimAndLimitStr(clientConfig.ModuleName + "@" + clientConfig.TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
 	}
 
     string sSlaveSet = _ep.setDivision();

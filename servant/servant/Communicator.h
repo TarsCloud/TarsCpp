@@ -23,11 +23,10 @@
 #include "servant/Global.h"
 #include "servant/ServantProxy.h"
 #include "servant/ServantProxyFactory.h"
-//#include "servant/ObjectProxyFactory.h"
 #include "servant/AsyncProcThread.h"
-// #include "servant/CommunicatorEpoll.h"
 #include "servant/StatReport.h"
 #include "servant/RemoteLogger.h"
+#include "servant/AppCache.h"
 
 #include "util/tc_openssl.h"
 
@@ -115,6 +114,7 @@ namespace tars
 
 class CommunicatorEpoll;
 class TC_OpenSSL;
+class AppCache;
 
 ////////////////////////////////////////////////////////////////////////
 /**
@@ -122,31 +122,35 @@ class TC_OpenSSL;
  */
 struct ClientConfig
 {
-    /**
-     * 客户端IP地址
-     */
-    static string          LocalIp;
-    /**
-     * 客户端模块名称
-     */
-    static string          ModuleName;
-    /**
-     * 客户端所有的IP地址
-     */
-    static set<string>     SetLocalIp;
-   /**
-   *客户端是否打开set分组
-   */
-   static bool             SetOpen;
-   /**
-   *客户端set分组
-   */
-   static string           SetDivision;
+	/**
+	 * 客户端IP地址
+	 */
+	string LocalIp = "127.0.0.1";
 
-   /**
-    * 客户端的版本号
-    */
-   static string           TarsVersion;
+	/**
+	 * 客户端模块名称
+	 */
+	string ModuleName = "unknown";
+
+	/**
+	 * 客户端所有的IP地址
+	 */
+	set<string> SetLocalIp;
+
+	/**
+	*客户端是否打开set分组
+	*/
+	bool SetOpen;
+
+	/**
+	*客户端set分组
+	*/
+	string SetDivision;
+
+	/**
+	 * 客户端的版本号
+	 */
+	string TarsVersion = TARS_VERSION;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -342,6 +346,11 @@ public:
 	 */
 	bool isTerminating();
 
+	/**
+	 *
+	 * @return
+	 */
+	const ClientConfig &clientConfig() { return _clientConfig; }
 protected:
     /**
      * 初始化
@@ -440,6 +449,12 @@ protected:
 	void eraseSchedCommunicatorEpoll(size_t netThreadSeq);
 
 	/**
+	 * 存储ip list配置
+	 * @return
+	 */
+	AppCache *getAppCache() { return &_appCache; }
+
+	/**
      * 框架内部需要直接访问通信器的类
      */
     friend class AdapterProxy;
@@ -458,6 +473,10 @@ protected:
 
 	friend class ServantProxyThreadData;
 
+	friend class Application;
+
+	friend class QueryEpBase;
+
 protected:
     /**
      * 是否初始化
@@ -468,6 +487,16 @@ protected:
      * 停止标志
      */
     bool  _terminating;
+
+	/**
+	 *
+	 */
+	ClientConfig	_clientConfig;
+
+	/**
+	 *
+	 */
+	AppCache			_appCache;
 
     /**
      * 客户端的属性配置
@@ -497,7 +526,6 @@ protected:
     /**
      * 操作通信器的锁
      */
-//    TC_SpinLock			_schedMutex;
 	TC_ThreadMutex 			_schedMutex;
 
 	/**

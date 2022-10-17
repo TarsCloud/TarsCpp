@@ -51,10 +51,13 @@ Current::~Current()
         {
             reportToStat("stat_from_server");
         }
-        else if (!_isTars && ServerConfig::ReportFlow)
+        else if (!_isTars && _servantHandle)
         {
-            //非tars客户端 从服务端上报调用信息
-            reportToStat("not_tars_client");
+			if(_servantHandle->getApplication()->applicationConfig().reportFlow)
+			{
+				//非tars客户端 从服务端上报调用信息
+				reportToStat("not_tars_client");
+			}
         }
     }
 }
@@ -442,6 +445,11 @@ string Current::getTraceKey() const
 bool Current::connectionExists() const
 {
 	return _data->connectionExists();
+}
+
+const string &Current::moduleName() const
+{
+	return _servantHandle->getApplication()->getThisCommunicator()->clientConfig().ModuleName;
 }
 
 

@@ -1410,7 +1410,7 @@ string Tars2Cpp::generateDispatchAsync(const OperationPtr& pPtr, const string& c
         DEL_TAB;
         s << TAB << "}" << endl;
 
-        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, \"\", _msg_->moduleName(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
         s << endl;
@@ -1784,7 +1784,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
         DEL_TAB;
         s << TAB << "}" << endl;
 
-        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, \"\", _current->moduleName(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
         s << endl;
@@ -1962,7 +1962,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
         s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
-        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, \"\", _current->moduleName(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
         s << endl;
@@ -2132,7 +2132,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
-        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + \".\" + ServerConfig::ServerName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, this->tars_communicator()->clientConfig().ModuleName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
     }
@@ -2315,7 +2315,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
             s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
             DEL_TAB;
             s << TAB << "}" << endl;
-            s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + \".\" + ServerConfig::ServerName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+            s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, this->tars_communicator()->clientConfig().ModuleName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
             DEL_TAB;
             s << TAB << "}" << endl;
             s << endl;
@@ -2394,7 +2394,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
                 s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
                 DEL_TAB;
                 s << TAB << "}" << endl;
-                s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + \".\" + ServerConfig::ServerName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+                s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, this->tars_communicator()->clientConfig().ModuleName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
                 DEL_TAB;
                 s << TAB << "}" << endl;
                 s << endl;
@@ -2583,7 +2583,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
             s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
             DEL_TAB;
             s << TAB << "}" << endl;
-            s << TAB << "TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+            s << TAB << "TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, \"\", _current_->getServantHandle()->getApplication()->getThisCommunicator()->clientConfig().ModuleName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
             DEL_TAB;
             s << TAB << "}" << endl;
             s << endl;

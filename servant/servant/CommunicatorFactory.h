@@ -40,10 +40,24 @@ public:
      */
     ~CommunicatorFactory(){};
 
+	/**
+	 * 是否已经存在通信器
+	 * @param name
+	 * @return
+	 */
+	bool hasCommunicator(const string& name = "default")
+	{
+		TC_LockT<TC_ThreadRecMutex> lock(*this);
+
+		auto it = _comms.find(name);
+
+		return it != _comms.end();
+	}
+
     /**
      * 获取CommunicatorPtr对象
      * @param name
-     * @return ServantPrx
+     * @return CommunicatorPtr
      */
     CommunicatorPtr getCommunicator(const string& name = "default")
     {
@@ -61,10 +75,10 @@ public:
     }
     
      /**
-     * 获取CommunicatorPtr对象 
+     * 获取CommunicatorPtr对象, 没有则创建
      * @param conf 
-     * @param name
-     * @return ServantPrx
+     * @param name: 通信器名称
+     * @return CommunicatorPtr
      */
     CommunicatorPtr getCommunicator(TC_Config& conf, const string& name = "default")
     {
