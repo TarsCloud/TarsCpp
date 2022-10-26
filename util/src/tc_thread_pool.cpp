@@ -155,17 +155,17 @@ bool TC_ThreadPool::waitForAllDone(int millsecond)
 {
     std::unique_lock<std::mutex> lock(_mutex);
 
-    if (_tasks.empty())
+	if (_tasks.empty() && _atomic == 0)
         return true;
 
     if (millsecond < 0)
     {
-        _condition.wait(lock, [this] { return _tasks.empty(); });
+        _condition.wait(lock, [this] { return _tasks.empty() && _atomic == 0; });
         return true;
     }
     else
     {
-        return _condition.wait_for(lock, std::chrono::milliseconds(millsecond), [this] { return _tasks.empty(); });
+        return _condition.wait_for(lock, std::chrono::milliseconds(millsecond), [this] { return _tasks.empty() && _atomic == 0; });
     }
 }
 
