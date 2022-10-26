@@ -888,3 +888,25 @@ TEST_F(UtilHttpTest, testIncrementDecode3)
 //	ASSERT_TRUE(flag);
 	ASSERT_TRUE(rsp.getContent() == data);
 }
+
+
+TEST_F(UtilHttpTest, testBaidus)   //此时使用的是TEST_F宏
+{
+	string url = "https://www.baidu.com";
+	TC_HttpRequest stHttpReq;
+	stHttpReq.setUserAgent("E71/SymbianOS/9.1 Series60/3.0");
+	stHttpReq.setHeader("Connection", "Close");
+	stHttpReq.setAcceptEncoding("gzip, deflate, br");
+	stHttpReq.setGetRequest(url);
+
+	string sSendBuffer = stHttpReq.encode();
+
+	TC_HttpResponse stHttpRsp;
+	int iRet = stHttpReq.doRequest(stHttpRsp, 5000);
+
+	LOG_CONSOLE_DEBUG << TC_Common::tostr(stHttpRsp.getHeaders().begin(), stHttpRsp.getHeaders().end(), " ") << endl;
+	ASSERT_TRUE(iRet == 0);
+	ASSERT_TRUE(stHttpRsp.getHeaders().size() > 5);
+
+	ASSERT_TRUE(stHttpRsp.getContentLength() == stHttpRsp.getContent().length());
+}

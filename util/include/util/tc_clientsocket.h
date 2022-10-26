@@ -542,7 +542,9 @@ public:
         /**EM_CONNECT:Server Connection Failed**/
         EM_CONNECT  = -6,        /** EM_CONNECT : 服务器连接失败*/
         /**EM_SOCKET : SOCKET Initialize Failed**/
-        EM_SOCKET   = -7        /**EM_SOCKET : SOCKET初始化失败*/
+        EM_SOCKET   = -7,        /**EM_SOCKET : SOCKET初始化失败*/
+		/**EM_HTTPS : HTTPS send Failed**/
+		EM_HTTPS	= -8		/**EM_HTTPS : 发送https请求失败*/
     };
 
 protected:

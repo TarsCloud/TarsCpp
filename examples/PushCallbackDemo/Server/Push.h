@@ -30,6 +30,8 @@ namespace TestApp
         { throw std::runtime_error("callback_pushMsg() override incorrect."); }
         virtual void callback_pushMsg_exception(tars::Int32 ret)
         { throw std::runtime_error("callback_pushMsg_exception() override incorrect."); }
+        virtual void callback_pushMsg(tars::Int32 ret, std::string&&  sRsp)
+        { callback_pushMsg(ret, sRsp); }
 
     public:
         virtual const map<std::string, std::string> & getResponseContext() const
@@ -96,7 +98,7 @@ namespace TestApp
 
                     pCbtd->setResponseContext(_msg_->response->context);
 
-                    callback_pushMsg(_ret, sRsp);
+                    callback_pushMsg(_ret, std::move(sRsp));
 
                     pCbtd->delResponseContext();
 
@@ -246,7 +248,7 @@ namespace TestApp
                         _is.read(sRsp, 1, true);
                         setResponseContext(_msg_->response->context);
 
-                        callback_pushMsg(_ret, sRsp);
+                        callback_pushMsg(_ret, std::move(sRsp));
 
                     }
                     catch(std::exception &ex)
