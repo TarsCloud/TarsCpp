@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
     }
     catch(exception& e)
     {
-	    cerr<<e.what()<<endl;
+        cerr<<e.what()<<endl;
     }
 
     return 0;
