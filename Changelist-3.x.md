@@ -1,3 +1,25 @@
+# v3.0.13 20221027
+### en
+- Fix: TC_Port::getSystemMemInfo not close fd bug
+- Fix: threadpool waitForAllDone not quit bug in some time
+- Fix: tc_common str2tm add memset tm
+- Fix: QueueMode bug when fd=-1
+- Fix: tarsmerge bug when multi tars files, orderFileNames.erase(it->second) cause crash
+- Fix: [MSVC][std:c++latest] Fix compiler error
+- Feat: tc_http dorequest support https
+- Feat: ServantHandle&async_callback支持右值引用参数
+- Feat: PushCallbackDemo
+
+### cn
+- 修复: TC_Port::getSystemMemInfo异常时没有关闭句柄的bug
+- 修复: 线程池 waitForAllDone 有时候不退出的bug
+- 修复: tc_common str2tm 初始化tm(memset), 会导致时间获取不准
+- 修复: 服务QueueMode模式下fd=-1导致进错队列的bug
+- 修复: tars2merge 多层嵌套tars文件，当第二次移除同一元素时会崩溃 orderFileNames.erase(it->second);
+- 修复: [MSVC][std:c++latest] 修复编译错误
+- 新增: 新增 PushCallbackDemo
+- 新增: tc_http dorequest 支持 https
+- 新增: ServantHandle&async_callback支持右值引用参数
 
 # v3.0.12 20220815
 
