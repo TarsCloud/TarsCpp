@@ -76,15 +76,6 @@ namespace tars
 //上报错误信息
 #define TARS_NOTIFY_ERROR(info)      {RemoteNotify::getInstance()->notify(NOTIFYERROR, info);}
 
-//发送心跳给node 多个adapter分别上报
-//#define TARS_KEEPALIVE(adapter)      {KeepAliveNodeFHelper::getInstance()->keepAlive(adapter);}
-
-//发送激活信息
-//#define TARS_KEEPACTIVING            {KeepAliveNodeFHelper::getInstance()->keepActiving();}
-
-//发送TARS版本给node
-//#define TARS_REPORTVERSION(x)        {KeepAliveNodeFHelper::getInstance()->reportVersion(TARS_VERSION);}
-
 //////////////////////////////////////////////////////////////////////
 /**
  * 添加前置的命令处理方法
@@ -319,7 +310,7 @@ public:
     template<typename T>
     void addServant(const string &id)
     {
-	    _servantHelper->addServant<T>(id, this, true);
+	    _servantHelper->addServant(id, []{return new T();}, this, true);
     }
 
 	/**
@@ -331,14 +322,28 @@ public:
 	template<typename T, typename P>
 	void addServantWithParams(const string &id, const P &p)
 	{
-		_servantHelper->addServant<T>(id, this, p, true);
+		_servantHelper->addServant(id, [&](const P &p){return new T(p);}, this, p, true);
 	}
+
+	/**
+	 *
+	 * @param id
+	 * @param createServant
+	 */
+	void addServant(const std::string& id, std::function<tars::Servant*()> createServant);
 
 	/**
 	 * get node helper
 	 * @return
 	 */
+
 	const shared_ptr<KeepAliveNodeFHelper> &getNodeHelper() { return _nodeHelper; }
+
+	/**
+	 * get remote config helper
+	 * @return
+	 */
+	const shared_ptr<RemoteConfig> &getRemoteConfigHelper() { return _remoteConfigHelper; }
 
 	/**
 	 * get servant helper
@@ -638,9 +643,14 @@ protected:
 	CommunicatorPtr     _thisCommunicator;
 
 	/**
-	 *
+	 * tarsnode交互
 	 */
 	shared_ptr<KeepAliveNodeFHelper>	_nodeHelper;
+
+	/**
+	 * 远程配置
+	 */
+	shared_ptr<RemoteConfig>			_remoteConfigHelper;
 
     /**
      * accept

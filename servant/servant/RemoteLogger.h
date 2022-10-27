@@ -73,8 +73,6 @@ protected:
 
     TC_RollLogger *_dyeingRollLogger;
 
-//    static int  _dyeingThread;
-
     string _app;
     string _server;
     string _logPath;

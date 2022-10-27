@@ -108,6 +108,12 @@ const static string CONFIG_ROOT_PATH = string("/tars/application/client");
  * -
  */
 
+namespace tarssdk
+{
+class Sdk;
+class Communicator;
+class Application;
+}
 
 namespace tars
 {
@@ -150,7 +156,7 @@ struct ClientConfig
 	/**
 	 * 客户端的版本号
 	 */
-	string TarsVersion = TARS_VERSION;
+	string TarsVersion;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -210,30 +216,6 @@ public:
         ServantProxy *pServantProxy = getServantProxy(objectName, setName, true);
         proxy = (typename T::element_type *)(pServantProxy);
     }
-
-    /**
-     * 获取公有网络线程个数
-     * @return
-     */
-    inline size_t getCommunicatorEpollNum()
-    {
-		return _communicatorEpoll.size();
-    }
-
-     /*
-     *获取公有网络线程的对象
-     */
-    inline const shared_ptr<CommunicatorEpoll> &getCommunicatorEpoll(size_t iNum)
-    {
-        assert(iNum < getCommunicatorEpollNum());
-        return _communicatorEpoll[iNum];
-    }
-
-    /**
-     * 获取所有的网络通信器(包括公有和私有的)
-     * @return
-     */
-	vector<shared_ptr<CommunicatorEpoll>> getAllCommunicatorEpoll();
 
     /**
      * 获取属性
@@ -351,6 +333,15 @@ public:
 	 * @return
 	 */
 	const ClientConfig &clientConfig() { return _clientConfig; }
+
+	/**
+	 * 获取通用对象
+	 * @param objectName
+	 * @param setName 指定set调用的setid
+	 * @return ServantPrx
+	 */
+	ServantProxy * getServantProxy(const string& objectName,const string& setName, bool rootServant);
+
 protected:
     /**
      * 初始化
@@ -385,20 +376,35 @@ protected:
 		ServantProxy *pServantProxy = getServantProxy(objectName, setName, rootServant);
 		proxy = (typename T::element_type *)(pServantProxy);
 	}
+	/**
+	 * 获取公有网络线程个数
+	 * @return
+	 */
+	inline size_t getCommunicatorEpollNum()
+	{
+		return _communicatorEpoll.size();
+	}
+
+	/*
+	*获取公有网络线程的对象
+	*/
+	inline const shared_ptr<CommunicatorEpoll> &getCommunicatorEpoll(size_t iNum)
+	{
+		assert(iNum < getCommunicatorEpollNum());
+		return _communicatorEpoll[iNum];
+	}
+
+	/**
+	 * 获取所有的网络通信器(包括公有和私有的)
+	 * @return
+	 */
+	vector<shared_ptr<CommunicatorEpoll>> getAllCommunicatorEpoll();
 
     /**
      * 获取对象代理生成器
      * @return ServantProxyFactoryPtr
      */
     ServantProxyFactory * servantProxyFactory();
-
-    /**
-     * 获取通用对象
-     * @param objectName
-     * @param setName 指定set调用的setid
-     * @return ServantPrx
-     */
-    ServantProxy * getServantProxy(const string& objectName,const string& setName, bool rootServant);
 
     /**
      * 数据加入到异步线程队列里面
@@ -476,6 +482,12 @@ protected:
 	friend class Application;
 
 	friend class QueryEpBase;
+
+	friend class StatReport;
+
+	friend class tarssdk::Sdk;
+	friend class tarssdk::Communicator;
+	friend class tarssdk::Application;
 
 protected:
     /**

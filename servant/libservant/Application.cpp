@@ -212,11 +212,6 @@ void reportRspQueue(TC_EpollServer *epollServer)
     }
 }
 
-//void heartBeatFunc(const string& adapterName)
-//{
-//    TARS_KEEPALIVE(adapterName);
-//}
-
 void Application::manualListen()
 {
     vector<TC_EpollServer::BindAdapterPtr> v = getEpollServer()->getBindAdapters();
@@ -227,15 +222,16 @@ void Application::manualListen()
     }
 }
 
+void Application::addServant(const std::string& id, std::function<tars::Servant*()> createServant)
+{
+	_servantHelper->addServant(id, createServant, this, true);
+}
+
 void Application::waitForShutdown()
 {
 	assert(_epollServer);
 
     _epollServer->setCallbackFunctor(reportRspQueue);
-
-//    _epollServer->setHeartBeatFunctor([=](const string& adapterName){
-//		_nodeHelper->keepAlive(adapterName);
-//	});
 
 	_epollServer->setDestroyAppFunctor([&](TC_EpollServer *epollServer){
 
@@ -450,7 +446,7 @@ bool Application::cmdLoadConfig(const string& command, const string& params, str
 
     string filename = TC_Common::trim(params);
 
-    if (RemoteConfig::getInstance()->addConfig(filename, result, false))
+    if (_remoteConfigHelper->addConfig(filename, result, false))
     {
         RemoteNotify::getInstance()->report(result);
 
@@ -562,7 +558,7 @@ bool Application::cmdLoadProperty(const string& command, const string& params, s
         _serverConfig.config = _conf.get("/tars/application/server<config>");
 		ServerConfig::Config = _serverConfig.config;
 
-        RemoteConfig::getInstance()->setConfigInfo(_thisCommunicator, _serverConfig.config, _serverConfig.application, _serverConfig.serverName, _serverConfig.basePath,setDivision(), 5);
+		_remoteConfigHelper->setConfigInfo(_thisCommunicator, _serverConfig.config, _serverConfig.application, _serverConfig.serverName, _serverConfig.basePath,setDivision(), 5);
 
         _serverConfig.notify = _conf.get("/tars/application/server<notify>");
 		ServerConfig::Notify = _serverConfig.notify;
@@ -715,7 +711,7 @@ bool Application::addConfig(const string &filename)
 {
     string result;
 
-    if (RemoteConfig::getInstance()->addConfig(filename, result, false))
+    if (_remoteConfigHelper->addConfig(filename, result, false))
     {
         RemoteNotify::getInstance()->report(result);
 
@@ -731,7 +727,7 @@ bool Application::addAppConfig(const string &filename)
     string result = "";
 
     // true-只获取应用级别配置
-    if (RemoteConfig::getInstance()->addConfig(filename, result, true))
+    if (_remoteConfigHelper->addConfig(filename, result, true))
 
     {
         RemoteNotify::getInstance()->report(result);
@@ -1344,7 +1340,8 @@ void Application::initializeServer()
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到配置中心代理
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set remote config] ") << "OK" << endl;
-    RemoteConfig::getInstance()->setConfigInfo(_thisCommunicator, _serverConfig.config, _serverConfig.application, _serverConfig.serverName, _serverConfig.basePath,setDivision());
+	_remoteConfigHelper = std::make_shared<RemoteConfig>();
+	_remoteConfigHelper->setConfigInfo(_thisCommunicator, _serverConfig.config, _serverConfig.application, _serverConfig.serverName, _serverConfig.basePath,setDivision());
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到信息中心代理
@@ -1363,7 +1360,7 @@ void Application::initializeServer()
 
     if (!_serverConfig.local.empty())
     {
-        _servantHelper->addServant<AdminServant>("AdminObj", this);
+        _servantHelper->addServant("AdminObj", []{return new AdminServant();}, this);
 
         string adminAdapter = "AdminAdapter";
 

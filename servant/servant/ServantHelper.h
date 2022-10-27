@@ -42,22 +42,23 @@ typedef TC_AutoPtr<ServantHelperCreation> ServantHelperCreationPtr;
 /**
  * Servant
  */
-template<class T>
 struct ServantCreation : public ServantHelperCreation
 {
-    ServantCreation(Application *application) : _application(application){}
-    ServantPtr create(const string &s) { T *p = new T; p->setName(s); p->setApplication(_application); return p; }
+    ServantCreation(std::function<tars::Servant*()> createServant, Application *application) : _createServant(createServant), _application(application){}
+    ServantPtr create(const string &s) { auto p = _createServant(); p->setName(s); p->setApplication(_application); return p; }
+	std::function<tars::Servant*()> _createServant;
     Application *_application;
 };
 
 /**
  * Servant
  */
-template<class T, class P>
+template<class P>
 struct ServantCreationWithParams : public ServantHelperCreation
 {
-	ServantCreationWithParams(Application *application, const P &p) : _application(application), _p(p) {}
-	ServantPtr create(const string &s) { T *p = new T(_p); p->setName(s); p->setApplication(_application); return p; }
+	ServantCreationWithParams(std::function<tars::Servant*(const P &p)> createServant, Application *application, const P &p) : _createServant(createServant), _application(application), _p(p) {}
+	ServantPtr create(const string &s) { auto p = _createServant(_p); p->setName(s); p->setApplication(_application); return p; }
+	std::function<tars::Servant*()> _createServant;
 	Application *_application;
 	P _p;
 };
@@ -67,7 +68,7 @@ struct ServantCreationWithParams : public ServantHelperCreation
 /**
  * Servant管理
  */
-class SVT_DLL_API ServantHelperManager// : public TC_Singleton<ServantHelperManager>
+class SVT_DLL_API ServantHelperManager
 {
 public:
     /**
@@ -83,15 +84,14 @@ public:
      * @param T
      * @param id
      */
-    template<typename T>
-    void addServant(const string &id, Application *application, bool check = false)
+    void addServant(const string &id, std::function<tars::Servant*()> createServant, Application *application, bool check = false)
     {
         if(check && _servant_adapter.end() == _servant_adapter.find(id))
         {
             cerr<<"[ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not set conf in the web)]"<<endl;
 			throw runtime_error("[ServantHelperManager::addServant " + id + " not find adapter.(maybe not set conf in the web)]");
         }
-        _servant_creator[id] = new ServantCreation<T>(application);
+        _servant_creator[id] = new ServantCreation(createServant, application);
     }
 
 	/**
@@ -99,15 +99,15 @@ public:
 	 * @param T
 	 * @param id
 	 */
-	template<typename T, typename P>
-	void addServant(const string &id, Application *application, const P &p,  bool check = false)
+	template<typename P>
+	void addServant(const string &id, std::function<tars::Servant*(const P &p)> createServant, Application *application, const P &p,  bool check = false)
 	{
 		if(check && _servant_adapter.end() == _servant_adapter.find(id))
 		{
 			cerr<<"[TARS]ServantHelperManager::addServant "<< id <<" not find adapter.(maybe not conf in the web)"<<endl;
 			throw runtime_error("[TARS]ServantHelperManager::addServant " + id + " not find adapter.(maybe not conf in the web)");
 		}
-		_servant_creator[id] = new ServantCreationWithParams<T, P>(application, p);
+		_servant_creator[id] = new ServantCreationWithParams<P>(createServant, application, p);
 	}
 
     /**

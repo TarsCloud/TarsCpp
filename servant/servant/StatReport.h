@@ -115,9 +115,8 @@ public:
                        int iReportTimeout = 5000);
 
     /**
-     * 设置模块间调用数据
+     * 设置模块间调用数据(框架内部使用)
      * @param strModuleName, 被调模块. 一般采用app.servername 例如:Comm.BindServer
-     * @param setdivision,被调set信息,=>>MTT.s.s
      * @param strInterfaceName,被调接口.一般为函数名
      * @param strModuleIp,被调ip
      * @param shSlavePort,被调port
@@ -129,7 +128,6 @@ public:
      * 。
      */
     void report(const string& strModuleName,
-                 const string& setdivision,
                 const string& strInterfaceName,
                 const string& strModuleIp,
                 uint16_t iPort,
@@ -139,7 +137,7 @@ public:
                 bool bFromClient = true);
 
      /**
-     * 设置模块间调用数据
+     * 上报模块间调用数据(外部可以独立使用)
      * @param strMasterName     主调用方的名字
      * @param strMasterIp       主调用方的地址
      * @param strSlaveName      被调用方的名字

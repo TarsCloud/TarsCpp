@@ -43,7 +43,7 @@ namespace tars
  *
  */
 
-class SVT_DLL_API RemoteConfig : public TC_Singleton<RemoteConfig>
+class SVT_DLL_API RemoteConfig
 {
 public:
     /**

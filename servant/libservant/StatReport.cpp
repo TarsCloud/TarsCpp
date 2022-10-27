@@ -222,9 +222,18 @@ string StatReport::getServerName(string sModuleName)
     return  sModuleName;
 }
 
+//void StatReport::report(const string& strInterfaceName,
+//		const string& strModuleIp,
+//		uint16_t iPort,
+//		StatResult eResult,
+//		int  iSptime,
+//		int  iReturnValue,
+//		bool bFromClient)
+//{
+//	report(this->_communicator->clientConfig().ModuleName, this->_communicator->clientConfig().SetDivision, strInterfaceName, strModuleIp, iPort, eResult, iSptime, iReturnValue, bFromClient);
+//}
 
 void StatReport::report(const string& strModuleName,
-                        const string& setdivision,
                         const string& strInterfaceName,
                         const string& strModuleIp,
                         uint16_t iPort,
@@ -253,7 +262,9 @@ void StatReport::report(const string& strModuleName,
             head.masterName = _moduleName + "@" + this->_communicator->clientConfig().TarsVersion;
         }
 
-        if (!setdivision.empty()) //被调没有启用set分组,slavename保持原样
+		const string& setdivision = this->_communicator->clientConfig().SetDivision;
+
+		if (!setdivision.empty()) //被调没有启用set分组,slavename保持原样
         {
             vector <string> vtSetInfo;
             if(divison2SetInfo(setdivision, vtSetInfo))

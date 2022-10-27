@@ -418,12 +418,17 @@ TC_EpollServer::BindAdapter* Current::getBindAdapter()
 
 void Current::reportToStat(const string& sObj)
 {
-    StatReport* stat = Application::getCommunicator()->getStatReport();
+	if(this->_servantHandle)
+	{
+		auto _comm = this->_servantHandle->getApplication()->getThisCommunicator();
+		StatReport* stat = _comm->getStatReport();
 
-    if(stat && stat->getStatPrx())
-    {
-        stat->report(sObj, "", _request.sFuncName, _data->ip(), 0, (StatReport::StatResult)_ret, TNOWMS - _data->recvTimeStamp(), 0, false);
-    }
+		if (stat && stat->getStatPrx())
+		{
+			stat->report(sObj, _request.sFuncName, _data->ip(), 0, (StatReport::StatResult)_ret,
+					TNOWMS - _data->recvTimeStamp(), 0, false);
+		}
+	}
 }
 
 void Current::setTrace(bool traceCall, const string& traceKey)
