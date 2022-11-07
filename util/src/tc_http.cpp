@@ -1,4 +1,4 @@
-﻿#include "util/tc_http.h"
+#include "util/tc_http.h"
 #include "util/tc_port.h"
 #include "util/tc_common.h"
 #include "util/tc_clientsocket.h"
@@ -2258,36 +2258,41 @@ int TC_HttpRequest::doRequest(const string &sSendBuffer, TC_TCPClient &tcpClient
 
 		iRet = tcpClient.recv(recvBuffer->free(), iRecvLen);
 
-		if (iRet != TC_ClientSocket::EM_SUCCESS)
-		{
-			return iRet;
-		}
 
-#if TARS_SSL
-		iRet = ssl->read(recvBuffer->free(), iRecvLen, in);
-		if (iRet != 0)
-		{
-			return iRet;
-		}
-
-		rbuf = ssl->recvBuffer();
-#else
 		if (iRet == TC_ClientSocket::EM_SUCCESS)
 		{
-			recvBuffer->addWriteIdx(iRecvLen);
-		}
+			if(this->_httpURL._iURLType == TC_URL::HTTPS)
+			{
+#if TARS_SSL
+				iRet = ssl->read(recvBuffer->free(), iRecvLen, in);
+				if (iRet != 0)
+				{
+					return iRet;
+				}
+
+				rbuf = ssl->recvBuffer();
+#else
+				return TC_ClientSocket::EM_HTTPS;
 
 #endif
+			}
+			else
+			{
+					recvBuffer->addWriteIdx(iRecvLen);
+				
+			}
+		}
+		
 		switch (iRet)
 		{
 		case TC_ClientSocket::EM_SUCCESS:
-			if (stHttpRsp.incrementDecode(*rbuf))
+			if (stHttpRsp.incrementDecode(*rbuf->getBuffer()))
 			{
 				return TC_ClientSocket::EM_SUCCESS;
 			}
 			continue;
 		case TC_ClientSocket::EM_CLOSE:
-			stHttpRsp.incrementDecode(*rbuf);
+			stHttpRsp.incrementDecode(*rbuf->getBuffer());
 			return TC_ClientSocket::EM_SUCCESS;
 		default:
 			return iRet;
