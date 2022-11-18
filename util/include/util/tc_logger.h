@@ -849,6 +849,13 @@ namespace tars
 		 */
 		void enableSqareWrapper(bool bEnable) { _bHasSquareBracket = bEnable; }
 
+        /**
+         * @brief 每行日志的前缀
+         * @brief Prefix of each log line
+         * @param str
+         */
+        void setPrefix(const string &str) { _sPrefix = str; }
+
 		/**
 		* @brief TARS记日志
 		* @brief TARS Log
@@ -898,6 +905,11 @@ namespace tars
 		void head(char *c, int len, int level)
 		{
 			size_t n = 0;
+
+            if (!_sPrefix.empty())
+            {
+                n += snprintf(c + n, len - n, "%s%s", _sPrefix.c_str(), _sSepar.c_str());
+            }
 
 			if (hasFlag(TC_Logger::HAS_MTIME))
 			{
@@ -1037,6 +1049,12 @@ namespace tars
 		 * Is [] added to the date part
 		 */
 		bool _bHasSquareBracket;
+
+        /**
+         * 前缀
+         * prefix
+         */
+        string _sPrefix;
 	};
 
 	template <typename WriteT, template <class> class RollPolicy>
