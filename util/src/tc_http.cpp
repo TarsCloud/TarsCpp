@@ -2279,6 +2279,7 @@ int TC_HttpRequest::doRequest(const string &sSendBuffer, TC_TCPClient &tcpClient
 			else
 			{
 					recvBuffer->addWriteIdx(iRecvLen);
+					rbuf->addLength(iRecvLen);
 				
 			}
 		}
@@ -2286,13 +2287,13 @@ int TC_HttpRequest::doRequest(const string &sSendBuffer, TC_TCPClient &tcpClient
 		switch (iRet)
 		{
 		case TC_ClientSocket::EM_SUCCESS:
-			if (stHttpRsp.incrementDecode(*rbuf->getBuffer()))
+			if (stHttpRsp.incrementDecode(*rbuf))
 			{
 				return TC_ClientSocket::EM_SUCCESS;
 			}
 			continue;
 		case TC_ClientSocket::EM_CLOSE:
-			stHttpRsp.incrementDecode(*rbuf->getBuffer());
+			stHttpRsp.incrementDecode(*rbuf);
 			return TC_ClientSocket::EM_SUCCESS;
 		default:
 			return iRet;
