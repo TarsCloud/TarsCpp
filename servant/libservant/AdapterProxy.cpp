@@ -1002,6 +1002,11 @@ void AdapterProxy::doTimeout()
 
 void AdapterProxy::doKeepAlive()
 {
+    if (!isActiveInReg()) 
+    {
+        return;
+    }
+    
     if (!checkActive(false))
     {
         return;
