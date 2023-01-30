@@ -379,8 +379,12 @@ public:
     /**
      * 获取活跃的服务节点
      */
-    const vector<AdapterProxy*> & getActiveAdapters()
+    const vector<AdapterProxy*> & getActiveAdapters(bool refreshFromReg = false)
     {
+        if (refreshFromReg)
+        {
+            refreshReg(E_DEFAULT, "");
+        }
         return _activeProxys;
     }
 
