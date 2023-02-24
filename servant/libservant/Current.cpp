@@ -128,8 +128,8 @@ int Current::getMessageType() const
 struct timeval Current::getRecvTime() const
 {
     timeval tm;
-    tm.tv_sec  = _data->recvTimeStamp() / 1000;
-    tm.tv_usec = (_data->recvTimeStamp() % 1000) * 1000;
+    tm.tv_sec  = _data->recvTimeStampUs() / 1000000;
+    tm.tv_usec = _data->recvTimeStampUs() % 1000000;
 
     return tm;
 }
