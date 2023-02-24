@@ -28,6 +28,7 @@ namespace tars
 {
 #define TNOW     TC_TimeProvider::getInstance()->getNow()
 #define TNOWMS   TC_TimeProvider::getInstance()->getNowMs()
+#define TNOWUS   TC_TimeProvider::getInstance()->getNowUs()
 
 /////////////////////////////////////////////////
 /**
@@ -94,6 +95,14 @@ public:
      * @return void
      */
     uint64_t getNowMs();
+
+    /**
+     * @brief 获取us时间.
+     *
+     * @para timeval
+     * @return void
+     */
+    uint64_t getNowUs();
 
 protected:
 	static TC_TimeProvider *g_tp;
