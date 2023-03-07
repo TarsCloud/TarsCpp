@@ -1,3 +1,17 @@
+
+# v3.0.14 20230307
+### en
+- Fix: tars2node to avoid warning
+- Fix: possible memory leaks
+- Feat: log add prefix
+- Feat: add tc_split
+
+### cn
+- 修复: tars2node to avoid warning
+- 修复: 可能的内存泄漏
+- 特性: 日志增加前缀
+- 特性: 添加tc_split
+
 # v3.0.13 20221117
 ### en
 - Fix: TC_Port::getSystemMemInfo not close fd bug
