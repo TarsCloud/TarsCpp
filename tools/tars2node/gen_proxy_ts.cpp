@@ -199,7 +199,7 @@ string CodeGenerator::generateTSProxy(const NamespacePtr &nPtr, const InterfaceP
     DEL_TAB;
     str << TAB << "};" << endl;
     DEL_TAB;
-    str << TAB << "} catch (e) {" << endl;
+    str << TAB << "} catch (e:any) {" << endl;
     INC_TAB;
     str << TAB << "throw _makeError(data, e.message, " << IDL_NAMESPACE_STR << "Rpc.error.CLIENT.DECODE_ERROR);" << endl;
     DEL_TAB;
@@ -311,7 +311,7 @@ string CodeGenerator::generateTSProxy(const NamespacePtr &nPtr, const InterfaceP
     DEL_TAB;
     str << TAB << "};" << endl;
     DEL_TAB;
-    str << TAB << "} catch (e) {" << endl;
+    str << TAB << "} catch (e:any) {" << endl;
     INC_TAB;
     str << TAB << "throw _makeError(data, e.message, " << IDL_NAMESPACE_STR << "Rpc.error.CLIENT.DECODE_ERROR);" << endl;
     DEL_TAB;
