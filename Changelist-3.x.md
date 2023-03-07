@@ -5,12 +5,14 @@
 - Fix: possible memory leaks
 - Feat: log add prefix
 - Feat: add tc_split
+- Feat: refreshReg when keep alive
 
 ### cn
 - 修复: tars2node to avoid warning
 - 修复: 可能的内存泄漏
 - 特性: 日志增加前缀
 - 特性: 添加tc_split
+- 特性: keepAlive的时候refreshReg
 
 # v3.0.13 20221117
 ### en
