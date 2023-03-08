@@ -221,6 +221,11 @@ public:
 	 */
 	TC_TimeoutQueueNew<ReqMessage*> * getTimeoutQueue() { return _timeoutQueue.get(); }
 
+    /**
+     * 模块间调用信息的统计
+     */
+    void stat(ReqMessage * msg);
+
 protected:
 
     //创建完网络句柄后的回调
@@ -267,11 +272,6 @@ private:
      * 初始化模块间调用信息的头部
      */
     void initStatHead();
-
-    /**
-     * 模块间调用信息的统计
-     */
-    void stat(ReqMessage * msg);
 
     /**
      * 模块间调用信息的合并
