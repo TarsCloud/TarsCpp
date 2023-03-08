@@ -237,6 +237,11 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
     //标识请求异常
     msg->eStatus = ReqMessage::REQ_EXC;
 
+    if (!msg->adapter)
+    {
+        msg->adapter->stat(msg);
+    }
+
     if(msg->eType == ReqMessage::SYNC_CALL)
     {
         if(!msg->sched)
