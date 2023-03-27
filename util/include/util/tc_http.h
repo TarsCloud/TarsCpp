@@ -1753,6 +1753,23 @@ protected:
      * @brief Resolve URL
      */
     void parseURL(const string& sUrl);
+	/**
+	 * 阻塞方式发送网络数据
+	 * @param in
+	 * @param tcpClient
+	 * @return
+	 */
+	int sendNetBuffer(TC_NetWorkBuffer &in, TC_TCPClient &tcpClient);
+
+	/**
+	 * 发送http请求
+	 * @param sendBuffer
+	 * @param tcpClient
+	 * @param stHttpRep
+	 * @param iTimeout
+	 * @return
+	 */
+	int doRequest(const string &sendBuffer, TC_TCPClient &tcpClient, TC_HttpResponse &stHttpRep);
 
 protected:
 

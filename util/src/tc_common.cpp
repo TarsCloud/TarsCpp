@@ -507,6 +507,7 @@ TC_Common::TimezoneHelper::TimezoneHelper()
 
 int TC_Common::str2tm(const string &sString, const string &sFormat, struct tm &stTm)
 {
+	memset(&stTm, 0, sizeof(stTm));
     char *p = strptime(sString.c_str(), sFormat.c_str(), &stTm);
     return (p != NULL) ? 0 : -1;
 }

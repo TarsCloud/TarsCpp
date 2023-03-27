@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -41,7 +41,7 @@ void TC_NetWorkBuffer::Buffer::alloc(size_t len)
 		_capacity = len;
 		if(_buffer)
 		{
-			delete _buffer;
+			delete[] _buffer;
 			_buffer = NULL;
 		}
 	}

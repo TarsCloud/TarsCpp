@@ -1,4 +1,44 @@
 
+# v3.0.14 20230307
+### en
+- Fix: tars2node to avoid warning
+- Fix: possible memory leaks
+- Feat: log add prefix
+- Feat: add tc_split
+- Feat: refreshReg when keep alive
+
+### cn
+- 修复: tars2node to avoid warning
+- 修复: 可能的内存泄漏
+- 特性: 日志增加前缀
+- 特性: 添加tc_split
+- 特性: keepAlive的时候refreshReg
+
+# v3.0.13 20221117
+### en
+- Fix: TC_Port::getSystemMemInfo not close fd bug
+- Fix: threadpool waitForAllDone not quit bug in some time
+- Fix: tc_common str2tm add memset tm
+- Fix: QueueMode bug when fd=-1
+- Fix: tarsmerge bug when multi tars files, orderFileNames.erase(it->second) cause crash
+- Fixed the HTTP client crash when compiling with SSL and the unusable HTTP client when compiling without SSL
+- Fix: [MSVC][std:c++latest] Fix compiler error
+- Feat: tc_http dorequest support https
+- Feat: ServantHandle&async_callback支持右值引用参数
+- Feat: PushCallbackDemo
+
+### cn
+- 修复: TC_Port::getSystemMemInfo异常时没有关闭句柄的bug
+- 修复: 线程池 waitForAllDone 有时候不退出的bug
+- 修复: tc_common str2tm 初始化tm(memset), 会导致时间获取不准
+- 修复: 服务QueueMode模式下fd=-1导致进错队列的bug
+- 修复: tars2merge 多层嵌套tars文件，当第二次移除同一元素时会崩溃 orderFileNames.erase(it->second);
+- 修复: [MSVC][std:c++latest] 修复编译错误
+- 修复: tc http在https模式下http doRequest的crash
+- 新增: 新增 PushCallbackDemo
+- 新增: tc_http dorequest 支持 https
+- 新增: ServantHandle&async_callback支持右值引用参数
+
 # v3.0.12 20220815
 
 ### en

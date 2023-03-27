@@ -330,7 +330,7 @@ protected:
      *
      * @return string
      */
-    string generateH(const ParamDeclPtr &pPtr) const;
+    string generateH(const ParamDeclPtr &pPtr, bool bRvalueRef) const;
 
     /**
      *

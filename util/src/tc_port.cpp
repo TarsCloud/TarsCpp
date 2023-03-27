@@ -668,6 +668,7 @@ bool TC_Port::getSystemMemInfo(int64_t &totalSize, int64_t &availableSize, float
 	lseek(fd, 0, SEEK_SET);
 	if((cnt = read(fd, buf, sizeof(buf)-1)) < 0)
 	{
+		close(fd);
 		return false;
 	}
 
