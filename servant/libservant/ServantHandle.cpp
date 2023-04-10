@@ -254,6 +254,7 @@ CurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvCon
     try
     {
         current->initialize(data);
+        current->_reqTime.setDispatchTimeStamp(TNOWUS);
     }
     catch (TarsDecodeException &ex)
     {
@@ -355,6 +356,8 @@ void ServantHandle::handleTimeout(const shared_ptr<TC_EpollServer::RecvContext> 
     {
         current->sendResponse(TARSSERVERQUEUETIMEOUT);
     }
+
+    reportReqTime(data, current);
 }
 
 void ServantHandle::handleOverload(const shared_ptr<TC_EpollServer::RecvContext> &data)
@@ -373,6 +376,8 @@ void ServantHandle::handleOverload(const shared_ptr<TC_EpollServer::RecvContext>
     {
         current->sendResponse(TARSSERVEROVERLOAD);
     }
+
+    reportReqTime(data, current);
 }
 
 void ServantHandle::handle(const shared_ptr<TC_EpollServer::RecvContext> &data)
@@ -389,6 +394,8 @@ void ServantHandle::handle(const shared_ptr<TC_EpollServer::RecvContext> &data)
     {
         handleNoTarsProtocol(current);
     }
+
+    reportReqTime(data, current);
 }
 
 
@@ -785,6 +792,18 @@ void ServantHandle::handleNoTarsProtocol(const TarsCurrentPtr &current)
 	{
 		current->sendResponse((const char *)(buffer.data()), (uint32_t)buffer.size());
 	}
+}
+
+void ServantHandle::reportReqTime(const shared_ptr<TC_EpollServer::RecvContext> &data, const CurrentPtr &current) {
+    current->_reqTime.setFinishTimeStamp(TNOWUS);
+
+    // 上报队列等待时间
+    if (data->adapter()->_pReportQueueWaitTime)
+        data->adapter()->_pReportQueueWaitTime->report(current->_reqTime.queueWaitTime());
+
+    // 上报业务线程处理时间
+    if (data->adapter()->_pReportServantHandleTime)
+        data->adapter()->_pReportServantHandleTime->report(current->_reqTime.servantHandleTime());
 }
 
 ////////////////////////////////////////////////////////////////////////////

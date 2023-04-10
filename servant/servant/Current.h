@@ -21,6 +21,7 @@
 #include "tup/RequestF.h"
 #include "tup/tup.h"
 #include "servant/BaseF.h"
+#include "ReqTime.h"
 
 namespace tars
 {
@@ -325,6 +326,11 @@ protected:
     }
 
 protected:
+    /**
+     * 相关时间戳
+     */
+    ReqTime _reqTime;
+
     /**
      * 操作类指针
      */
