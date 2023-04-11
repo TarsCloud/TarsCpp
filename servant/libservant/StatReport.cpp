@@ -509,7 +509,7 @@ int StatReport::reportPropMsg()
                vector<pair<string, string> > v = it->second->get();
                for(size_t i = 0; i < v.size(); i++)
                {
-                //    bool bFlag = false;
+                   bool bFlag = true;
                 //    if(v[i].first == "Sum")
                 //    {
                 //         if(v[i].second != "0")
@@ -545,7 +545,13 @@ int StatReport::reportPropMsg()
                 //         bFlag = true;
                 //    }
 
-                //    if(bFlag)
+                   if(v[i].first == "Min")
+                   {
+                       if(v[i].second == "0")
+                           bFlag = false;
+                   }
+
+                   if(bFlag)
                    {
                         StatPropInfo sp;
                         sp.policy = v[i].first;
