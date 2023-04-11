@@ -168,7 +168,7 @@ int Current::getCloseType() const
 
 void Current::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    _reqTime.setRecvTimeStamp(data->recvTimeStampUs());
+    _reqTime.setStartTimeStamp(data->recvTimeStampUs());
 
 	_data = data;
 
