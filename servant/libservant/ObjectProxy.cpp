@@ -279,8 +279,6 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 				{
 					TLOGERROR("[ObjectProxy::doInvokeException exp:unknown line:|"<<__LINE__<<endl);
 				}
-                delete msg;
-                msg = NULL;
 			}
 			else
 			{
