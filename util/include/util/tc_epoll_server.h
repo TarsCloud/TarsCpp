@@ -1454,6 +1454,8 @@ public:
         PropertyReport *_pReportQueue = NULL;
         PropertyReport *_pReportConRate = NULL;
         PropertyReport *_pReportTimeoutNum = NULL;
+        PropertyReport *_pReportQueueWaitTime = NULL;
+        PropertyReport *_pReportServantHandleTime = NULL;
 
     protected:
         /**

@@ -184,6 +184,8 @@ protected:
      * @return bool 如果调用合法返回true，如果调用非法则返回false
      */
 	bool checkValidSetInvoke(const CurrentPtr &current);
+
+    void reportReqTime(const shared_ptr<TC_EpollServer::RecvContext> &data, const CurrentPtr &current);
 protected:
 	/**
 	 * application

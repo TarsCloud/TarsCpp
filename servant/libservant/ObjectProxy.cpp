@@ -237,7 +237,7 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
     //标识请求异常
     msg->eStatus = ReqMessage::REQ_EXC;
 
-    if (!msg->adapter)
+    if (msg->adapter)
     {
         msg->adapter->stat(msg);
     }
@@ -291,6 +291,8 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
                 else
                 {
                     TLOGERROR("[ObjectProxy::doInvokeException push adapter is null|" << __LINE__ << endl);
+                    delete msg;
+                    msg = NULL;
                 }
 			}
 		}
