@@ -1,4 +1,16 @@
 
+
+# v3.0.15 20230415
+### en
+- Fix: adapter memory leak
+- Fix: set property report min = 0
+- Feat: add getTimeUs
+
+### cn
+- 修复: Adapter未连接时可能的内存泄漏 
+- 修复: Property上报min默认为0
+- 特性: 增加微秒接口
+
 # v3.0.14 20230307
 ### en
 - Fix: tars2node to avoid warning
