@@ -282,18 +282,8 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 			}
 			else
 			{
-                //先确保adapter 非null
-                if (msg->adapter)
-                {
-                    //异步回调，放入回调处理线程中
-                    _communicatorEpoll->pushAsyncThreadQueue(msg);
-                }
-                else
-                {
-                    TLOGERROR("[ObjectProxy::doInvokeException push adapter is null|" << __LINE__ << endl);
-                    delete msg;
-                    msg = NULL;
-                }
+                _communicatorEpoll->pushAsyncThreadQueue(msg);
+                TLOGERROR("[ObjectProxy::doInvokeException push adapter is null|" << __LINE__ << endl);
 			}
 		}
 		else
