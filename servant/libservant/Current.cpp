@@ -128,8 +128,8 @@ int Current::getMessageType() const
 struct timeval Current::getRecvTime() const
 {
     timeval tm;
-    tm.tv_sec  = _data->recvTimeStamp() / 1000;
-    tm.tv_usec = (_data->recvTimeStamp() % 1000) * 1000;
+    tm.tv_sec  = _data->recvTimeStampUs() / 1000000;
+    tm.tv_usec = _data->recvTimeStampUs() % 1000000;
 
     return tm;
 }
@@ -168,6 +168,8 @@ int Current::getCloseType() const
 
 void Current::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
+    _reqTime.setStartTimeStamp(data->recvTimeStampUs());
+
 	_data = data;
 
 	Application *application = (Application*)this->_servantHandle->getApplication();

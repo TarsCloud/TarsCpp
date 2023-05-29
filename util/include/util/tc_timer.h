@@ -58,11 +58,11 @@ protected:
         uint32_t                _uniqueId = 0;
 	};
 
-    typedef std::unordered_set<uint64_t> EVENT_SET;
+    typedef std::set<uint64_t> EVENT_SET;
 
     typedef std::unordered_map<uint64_t, shared_ptr<Func>> MAP_EVENT;
 
-    typedef map<uint64_t, unordered_set<uint64_t>> MAP_TIMER;
+    typedef map<uint64_t, set<uint64_t>> MAP_TIMER;
 
 public:
 

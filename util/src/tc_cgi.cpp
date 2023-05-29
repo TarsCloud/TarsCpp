@@ -435,7 +435,7 @@ void TC_Cgi::parseFormData(multimap<string, string> &mmpParams, const string &sB
                 sTheFile = sName;
 
                 //打开文件
-                if ( (fp = fopen(sUploadFileName.c_str(),"w")) == NULL)
+                if ( (fp = fopen(sUploadFileName.c_str(),"wb")) == NULL)
                 {
                     mmpParams.clear();          //clear , exception safe
                     THROW_EXCEPTION_SYSCODE(TC_Cgi_Exception, "[TC_Cgi::parseFormData] Upload File '" + sValue + "' to '" + sUploadFileName +"' error");

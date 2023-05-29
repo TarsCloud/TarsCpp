@@ -1427,6 +1427,14 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
 
                 p = _communicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".timeoutNum", PropertyReport::sum());
                 bindAdapter->_pReportTimeoutNum = p.get();
+
+                p = _communicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".queueWaitTime",
+                                                                         PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
+                bindAdapter->_pReportQueueWaitTime = p.get();
+
+                p = _communicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".servantHandleTime",
+                                                                         PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
+                bindAdapter->_pReportServantHandleTime = p.get();
             }
         }
     }

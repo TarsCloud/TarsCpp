@@ -187,7 +187,7 @@ public:
                 , _adapter(adapter)
                 , _isClosed(isClosed)
                 , _closeType(closeType)
-                , _recvTimeStamp(TNOWMS)
+                , _recvTimeStamp(TNOWUS)
         {}
         inline int threadIndex() const     { return _threadIndex; }
         inline uint32_t uid() const        { return _uid; }
@@ -196,7 +196,8 @@ public:
         inline uint16_t port() const       { parseIpPort(); return _port; }
         inline vector<char> & buffer()     { return _rbuffer; }
         inline const vector<char> & buffer() const { return _rbuffer; }
-        inline int64_t recvTimeStamp() const { return _recvTimeStamp; }
+        inline int64_t recvTimeStamp() const { return _recvTimeStamp/1000; }
+        inline int64_t recvTimeStampUs() const { return _recvTimeStamp; }
         inline bool isOverload() const     { return _isOverload; }
         inline void setOverload()          { _isOverload = true; }
         inline bool isClosed() const       { return _isClosed; }
@@ -232,7 +233,7 @@ public:
         bool _isOverload = false;     /**是否已过载 */
         bool _isClosed = false;       /**是否已关闭*/
         int _closeType;     /*如果是关闭消息包，则标识关闭类型,0:表示客户端主动关闭；1:服务端主动关闭;2:连接超时服务端主动关闭*/
-        int64_t _recvTimeStamp;  /**接收到数据的时间*/
+        int64_t _recvTimeStamp;  /**接收到数据的时间,微秒*/
     };
 
     /**
@@ -1453,6 +1454,8 @@ public:
         PropertyReport *_pReportQueue = NULL;
         PropertyReport *_pReportConRate = NULL;
         PropertyReport *_pReportTimeoutNum = NULL;
+        PropertyReport *_pReportQueueWaitTime = NULL;
+        PropertyReport *_pReportServantHandleTime = NULL;
 
     protected:
         /**

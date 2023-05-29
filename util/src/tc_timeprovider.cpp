@@ -114,6 +114,14 @@ uint64_t TC_TimeProvider::getNowMs()
     return tv.tv_sec * (int64_t)1000 + tv.tv_usec / 1000;
 }
 
+uint64_t TC_TimeProvider::getNowUs()
+{
+    struct timeval tv;
+    getNow(&tv);
+
+    return tv.tv_sec * (int64_t)1000000 + tv.tv_usec;
+}
+
 void TC_TimeProvider::run()
 {
     memset(_tsc, 0x00, sizeof(_tsc));

@@ -363,7 +363,7 @@ struct TarsStructBase
 protected:
 	TarsStructBase() {}
 
-	~TarsStructBase() {}
+	virtual ~TarsStructBase() {}
 };
 
 struct TarsProtoException : public std::runtime_error
