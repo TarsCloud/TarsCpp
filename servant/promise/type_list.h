@@ -41,7 +41,7 @@ struct TypeAtImpl<0, TypeList<T, List...> > {
 template <> struct TypeAtImpl<0, TypeList<> > {};
 
 template <size_t N, typename... List>
-using TypeAt = typename TypeAtImpl<N, List...>::Type;
+using TypeAt = typename TypeAtImpl<N, TypeList<List...> >::Type;
 
 // index of a type in a given type list.
 template <typename T, typename List>
