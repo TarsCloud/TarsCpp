@@ -70,7 +70,7 @@ string Builtin::def() const
     switch(_kind)
     {
     case Builtin::KindBool:
-        return "true";
+        return "false";
     case Builtin::KindByte:
     case Builtin::KindShort:
     case Builtin::KindInt:
