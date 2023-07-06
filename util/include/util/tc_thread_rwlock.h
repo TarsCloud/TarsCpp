@@ -45,73 +45,19 @@ protected:
 	{
 	public:
 		//获取读锁
-		void readLock()
-		{
-			//加锁, 直到可读
-			unique_lock<mutex> lck(_mutex);
-			_cond.wait(lck, std::bind(&TC_SharedMutex::isReadCond, this));
-			_readCount++;
-		}
+		void readLock();
 
-		bool tryReadLock()
-		{
-			unique_lock<mutex> lck(_mutex);
-			if(_cond.wait_for(lck, std::chrono::seconds(0)) == std::cv_status::timeout)
-			{
-				return false;
-			}
-
-			if(isReadCond())
-			{
-				_readCount++;
-				return true;
-			}
-
-			return false;
-		}
+		bool tryReadLock();
 
 		//解读锁
-		void unReadLock()
-		{
-			unique_lock<mutex> lck(_mutex);
-			_readCount--;
-			_cond.notify_all();
-		}
-		
-		void writeLock()
-		{
-			unique_lock<mutex> lck(_mutex);
-			_cond.wait(lck, std::bind([](const bool *is_w, const size_t *read_c) -> bool
-			{
-				return false == *is_w && 0 == *read_c;
-			}, &_isWrite, &_readCount));
+		void unReadLock();
 
-			_isWrite = true;
-		}
+		void writeLock();
 
-		bool tryWriteLock()
-		{
-			unique_lock<mutex> lck(_mutex);
-			if(_cond.wait_for(lck, std::chrono::seconds(0)) == std::cv_status::timeout)
-			{
-				return false;
-			}
+		bool tryWriteLock();
 
-			if(isWriteCond())
-			{
-				_isWrite = true;
-				return true;
-			}
+		void unWriteLock();
 
-			return false;
-		}
-
-		void unWriteLock()
-		{
-			unique_lock<mutex> lck(_mutex);
-			_isWrite = false;
-			_cond.notify_all();
-		}
 	private:
 		// 锁
 		mutex _mutex;
