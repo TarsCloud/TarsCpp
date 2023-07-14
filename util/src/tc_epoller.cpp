@@ -327,7 +327,7 @@ void TC_Epoller::releaseEpollInfo(const shared_ptr<TC_Epoller::EpollInfo> &epoll
 {
 	if(epollInfo)
 	{
-		epollInfo->clearCallback();
+//		epollInfo->clearCallback();     //may cause epoll crash
         epollInfo->release();
 	}
 }
