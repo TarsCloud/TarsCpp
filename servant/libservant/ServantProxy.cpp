@@ -628,6 +628,16 @@ const ProxyProtocol &ServantProxy::tars_get_protocol() const
 	return _proxyProtocol;
 }
 
+void ServantProxy::tars_open_keepalive(bool keepAlive)
+{
+    _openKeepAlive  = keepAlive;
+}
+
+bool ServantProxy::tars_open_keepalive() const
+{
+    return _openKeepAlive;
+}
+
 vector<ServantProxy::SocketOpt> ServantProxy::tars_get_sockopt() const
 {
 	TC_LockT<TC_ThreadMutex> lock(*this);

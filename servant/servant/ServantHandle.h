@@ -185,6 +185,11 @@ protected:
      */
 	bool checkValidSetInvoke(const CurrentPtr &current);
 
+    /**
+     * 上报监控统计
+     * @param data
+     * @param current
+     */
     void reportReqTime(const shared_ptr<TC_EpollServer::RecvContext> &data, const CurrentPtr &current);
 protected:
 	/**

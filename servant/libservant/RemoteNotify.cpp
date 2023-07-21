@@ -29,6 +29,7 @@ int RemoteNotify::setNotifyInfo(const CommunicatorPtr &comm, const string &obj, 
     {
         _notifyPrx  = _comm->stringToProxy<NotifyPrx>(obj);
         _notifyPrx->tars_timeout(500);
+        _notifyPrx->tars_open_keepalive(false);
     }
 
     _setName        = sSetName;

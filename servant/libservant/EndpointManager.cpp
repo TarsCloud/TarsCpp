@@ -206,6 +206,7 @@ void QueryEpBase::setObjName(const string & sObjName)
 	    }
 
         _queryFPrx = _communicator->stringToProxy<QueryFPrx>(_locator);
+        _queryFPrx->tars_open_keepalive(false);
 
         string sLocatorKey = _locator;
 
