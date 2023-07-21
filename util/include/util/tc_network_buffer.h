@@ -327,9 +327,15 @@ public:
 
 	typedef std::list<std::shared_ptr<Buffer>>::const_iterator buffer_list_iterator;
 
-	class buffer_iterator : public std::iterator<std::random_access_iterator_tag, char>
+	class buffer_iterator
 	{
 	public:
+		typedef char value_type;
+		typedef char* pointer;
+		typedef char& reference;
+		typedef std::ptrdiff_t difference_type;
+		typedef std::random_access_iterator_tag iterator_category;
+		
 		buffer_iterator(const TC_NetWorkBuffer *buffer, size_t offset) : _buffer(buffer)
 		{
 			parseOffset(offset);
