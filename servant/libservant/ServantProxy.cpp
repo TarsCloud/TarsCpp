@@ -618,6 +618,8 @@ void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol, int connecti
 {
 	TC_LockT<TC_ThreadMutex> lock(*this);
 
+    _openKeepAlive = false;
+
 	_proxyProtocol = protocol;
 
     _connectionSerial = connectionSerial;
