@@ -30,6 +30,8 @@ int RemoteConfig::setConfigInfo(const CommunicatorPtr &comm, const string &obj, 
     if(!obj.empty())
     {
         _configPrx      = _comm->stringToProxy<ConfigPrx>(obj);
+        _configPrx->tars_open_keepalive(false);
+
     }
     _app           = app;
     _serverName    = serverName;
