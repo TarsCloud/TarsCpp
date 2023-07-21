@@ -885,17 +885,6 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
 // 	finishTrack(msg);
 // #endif
 
-    //单向调用
-    if (msg->eType == ReqMessage::ONE_WAY)
-    {
-        TLOGTARS("[AdapterProxy::finishInvokeMsg " << _objectProxy->name() << ", " << _trans->getConnectionString()
-                 << " ,id:" << msg->response->iRequestId
-                 << " ,one way call]" << endl);
-        delete msg;
-        msg = NULL;
-        return ;
-    }
-
     //stat 上报调用统计
     stat(msg);
 
@@ -904,6 +893,18 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
     {
         finishInvoke(msg->response->iRet != TARSSERVERSUCCESS);
     }
+
+    //单向调用
+    if (msg->eType == ReqMessage::ONE_WAY)
+    {
+        TLOGTARS("[AdapterProxy::finishInvokeMsg " << _objectProxy->name() << ", " << _trans->getConnectionString()
+                                                   << " ,id:" << msg->response->iRequestId
+                                                   << " ,one way call]" << endl);
+        delete msg;
+        msg = NULL;
+        return ;
+    }
+
 
     //同步调用，唤醒ServantProxy线程
     if (msg->eType == ReqMessage::SYNC_CALL)
@@ -996,19 +997,23 @@ void AdapterProxy::doTimeout()
 
         msg->eStatus = ReqMessage::REQ_TIME;
 
-        //有可能是单向调用超时了
-        if (msg->eType == ReqMessage::ONE_WAY)
-        {
-            delete msg;
-            msg = NULL;
-            continue;
-        }
-
+//        //有可能是单向调用超时了
+//        if (msg->eType == ReqMessage::ONE_WAY)
+//        {
+//            delete msg;
+//            msg = NULL;
+//            continue;
+//        }
+//
         //如果是异步调用超时
         if (msg->eType == ReqMessage::ASYNC_CALL)
         {
             //_connExcCnt大于0说明是网络连接异常引起的超时
             msg->response->iRet = (_connExcCnt > 0 ? TARSPROXYCONNECTERR : TARSASYNCCALLTIMEOUT);
+        }
+        else if (msg->eType == ReqMessage::SYNC_CALL)
+        {
+            msg->response->iRet = TARSASYNCCALLTIMEOUT;
         }
 
         finishInvoke(msg);
