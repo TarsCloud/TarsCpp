@@ -28,7 +28,22 @@
 
 namespace tars
 {
-    
+
+class PingCallback : public ServantProxyCallback
+{
+protected:
+    virtual int onDispatch(ReqMessagePtr msg)
+    {
+        if(msg->response->iRet == JCESERVERNOSERVANTERR || msg->response->iRet == JCESERVERNOFUNCERR)
+        {
+            this->_servantPrx->taf_open_keepalive(false);
+        }
+        return 0;
+    }
+
+};
+
+
 std::atomic<int> AdapterProxy::_idGen;
 
 AdapterProxy::AdapterProxy(ObjectProxy * pObjectProxy, const EndpointInfo &ep, Communicator* pCom)
@@ -1022,12 +1037,13 @@ void AdapterProxy::doKeepAlive()
     TLOGTARS("[AdapterProxy::doKeepAlive, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
 
     ReqMessage *msg = new ReqMessage();
+    ServantProxyCallbackPtr callback = new PingCallback();
 
-    msg->init(ReqMessage::ONE_WAY, _objectProxy->getServantProxy());
-    msg->callback = NULL;
+    msg->init(ReqMessage::ASYNC_CALL, _objectProxy->getServantProxy());
+    msg->callback = callback;
 
     msg->request.iVersion = TARSVERSION;
-    msg->request.cPacketType = TARSONEWAY;
+    msg->request.cPacketType = TARSNORMAL;
     msg->request.sFuncName = "tars_ping";
     msg->request.sServantName = _objectProxy->name();
 
