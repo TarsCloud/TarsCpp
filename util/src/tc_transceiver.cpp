@@ -93,15 +93,6 @@ TC_Transceiver::TC_Transceiver(TC_Epoller* epoller, const TC_Endpoint& ep)
 		: _epoller(epoller), _ep(ep), _desc(ep.toString()), _fd(-1), _connStatus(eUnconnected), _sendBuffer(this),
 		  _recvBuffer(this), _authState(eAuthInit)
 {
-	// LOG_CONSOLE_DEBUG << endl;
-	if (ep.isUdp())
-	{
-		_pRecvBuffer = std::make_shared<TC_NetWorkBuffer::Buffer>();
-		_nRecvBufferSize = DEFAULT_RECV_BUFFERSIZE;
-		_pRecvBuffer->alloc(_nRecvBufferSize);
-	}
-
-//    _serverAddr = TC_Socket::createSockAddr(_ep.getHost().c_str());
 	_serverAddr = TC_Socket::createSockAddr(_ep);
 }
 
@@ -259,8 +250,24 @@ shared_ptr<TC_Epoller::EpollInfo> TC_Transceiver::bindFd(int fd)
 
 void TC_Transceiver::setUdpRecvBuffer(size_t nSize)
 {
-	_nRecvBufferSize = nSize;
-	_pRecvBuffer->alloc(_nRecvBufferSize);
+    _nRecvBufferSize = nSize;
+
+    if(_ep.isUdp() && _fd > 0)
+    {
+        TC_Socket s;
+        s.init(_fd, false, AF_INET);
+        s.setRecvBufferSize(nSize);
+    }
+}
+
+void TC_Transceiver::setUdpSendBuffer(size_t nSize)
+{
+    if(_ep.isUdp() && _fd > 0)
+    {
+        TC_Socket s;
+        s.init(_fd, false, AF_INET);
+        s.setSendBufferSize(nSize);
+    }
 }
 
 void TC_Transceiver::checkConnect()
@@ -1302,7 +1309,7 @@ bool TC_UDPTransceiver::doResponse()
 	int64_t now = TNOWMS;
 	do
 	{
-		_recvBuffer.clearBuffers();
+//		_recvBuffer.clearBuffers();
 
 		auto data = _recvBuffer.getOrCreateBuffer(_nRecvBufferSize, _nRecvBufferSize);
 
@@ -1361,7 +1368,9 @@ int TC_UDPTransceiver::recv(void* buf, uint32_t len, uint32_t flag)
 {
 	if (!isValid()) return -1;
 
-	_clientAddr = TC_Socket::createSockAddr(_ep.getHost().c_str());
+    if(!_clientAddr.first) {
+        _clientAddr = TC_Socket::createSockAddr(_ep.getHost().c_str());
+    }
 
 	int iRet = ::recvfrom(_fd, (char*)buf, len, flag, _clientAddr.first.get(),
 			&_clientAddr.second); //need check from_ip & port
