@@ -993,6 +993,11 @@ void TC_EpollServer::Connection::setUdpRecvBuffer(size_t nSize)
 	_trans->setUdpRecvBuffer(nSize);
 }
 
+void TC_EpollServer::Connection::setUdpSendBuffer(size_t nSize)
+{
+    _trans->setUdpSendBuffer(nSize);
+}
+
 bool TC_EpollServer::Connection::setClose()
 {
 	_bClose = true;
@@ -1600,7 +1605,7 @@ TC_EpollServer::NetThread::NetThread(int threadIndex, TC_EpollServer *epollServe
 	: _epoller(NULL)
 	, _threadIndex(threadIndex)
 	, _epollServer(epollServer)
-	, _nUdpRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
+//	, _nUdpRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
 {
 	_list = std::make_shared<ConnectionList>(_epollServer);
 }
@@ -1671,10 +1676,11 @@ void TC_EpollServer::NetThread::addUdpConnection(TC_EpollServer::Connection *cPt
 
 	cPtr->initialize(_epoller, uid, this);
 
-	//udp分配接收buffer
-	cPtr->setUdpRecvBuffer(_nUdpRecvBufferSize);
+    //udp分配接收buffer
+    cPtr->setUdpRecvBuffer(_epollServer->getUdpRecvBufferSize());
+    cPtr->setUdpSendBuffer(_epollServer->getUdpSendBufferSize());
 
-	_list->add(cPtr, cPtr->getTimeout() + TNOW);
+    _list->add(cPtr, cPtr->getTimeout() + TNOW);
 
 	cPtr->registerEvent(this);
 }

@@ -140,7 +140,8 @@ public:
     enum
     {
         MIN_EMPTY_CONN_TIMEOUT  = 5 * 1000,      /*空链接超时时间(ms)*/
-        DEFAULT_RECV_BUFFERSIZE = 64 * 1024     /*缺省数据接收buffer的大小*/
+        DEFAULT_UDP_RECV_BUFFERSIZE = 1024 * 1024,      /*缺省UDP数据接收buffer的大小*/
+        DEFAULT_UDP_SEND_BUFFERSIZE = 1024 * 1024       /*缺省UDP数据发送buffer的大小*/
     };
 
     //定义加入到网络线程的fd类别
@@ -646,6 +647,12 @@ public:
          *@param nSize
          */
         void setUdpRecvBuffer(size_t nSize);
+
+        /**
+         * 对于udp方式的连接，分配指定大小的发送缓冲区
+         *@param nSize
+         */
+        void setUdpSendBuffer(size_t nSize);
 
         /**
          * 是否是tcp连接
@@ -1719,12 +1726,12 @@ public:
             _list->setEmptyConnTimeout(emptyCheckTimeout); 
         }
 
-        /**
-         *设置udp的接收缓存区大小，单位是B,最小值为8192，最大值为DEFAULT_RECV_BUFFERSIZE
-         */
-        inline void setUdpRecvBufferSize(size_t nSize = DEFAULT_RECV_BUFFERSIZE) {
-            _nUdpRecvBufferSize = (nSize >= 8192 && nSize <= DEFAULT_RECV_BUFFERSIZE) ? nSize : DEFAULT_RECV_BUFFERSIZE;
-        }
+//        /**
+//         *设置udp的接收缓存区大小，单位是B,最小值为8192，最大值为DEFAULT_RECV_BUFFERSIZE
+//         */
+//        inline void setUdpRecvBufferSize(size_t nSize = DEFAULT_RECV_BUFFERSIZE) {
+//            _nUdpRecvBufferSize = (nSize >= 8192 && nSize <= DEFAULT_RECV_BUFFERSIZE) ? nSize : DEFAULT_RECV_BUFFERSIZE;
+//        }
 
     protected:
 
@@ -1837,10 +1844,10 @@ public:
         //  */
         // int                     _iEmptyCheckTimeout;
 
-        /**
-         * udp连接时接收包缓存大小,针对所有udp接收缓存有效
-         */
-        size_t                  _nUdpRecvBufferSize;
+//        /**
+//         * udp连接时接收包缓存大小,针对所有udp接收缓存有效
+//         */
+//        size_t                  _nUdpRecvBufferSize;
 
         /**
          * 初始化对象
@@ -2372,6 +2379,37 @@ public:
      */
     heartbeat_callback_functor &getHeartBeatFunctor() { return _heartFunc; }
 
+    /**
+     *设置udp的接收缓存区大小
+     */
+    inline void setUdpRecvBufferSize(size_t nSize = DEFAULT_UDP_RECV_BUFFERSIZE)
+    {
+        _nUdpRecvBufferSize = nSize;
+    }
+
+    /**
+     * 获取udp的接收缓存区大小
+     */
+    inline size_t getUdpRecvBufferSize()
+    {
+        return _nUdpRecvBufferSize;
+    }
+    /**
+     *设置udp的接收缓存区大小
+     */
+    inline void setUdpSendBufferSize(size_t nSize = DEFAULT_UDP_SEND_BUFFERSIZE)
+    {
+        _nUdpSendBufferSize = nSize;
+    }
+
+    /**
+     *获取udp的接收缓存区大小
+     */
+    inline size_t getUdpSendBufferSize()
+    {
+        return _nUdpSendBufferSize;
+    }
+
     friend class BindAdapter;
 
 protected:
@@ -2407,11 +2445,6 @@ private:
      * server 模式
      */
     SERVER_OPEN_COROUTINE _openCoroutine = NET_THREAD_QUEUE_HANDLES_THREAD;
-
-//    /**
-//     * 是否已经结束
-//     */
-//    bool                    _terminate = false;
 
     /**
      * 网络线程
@@ -2474,6 +2507,17 @@ private:
 	size_t _iCoroutineStackSize = 64*1024;
 
     /**
+     * UDP接收buffer大小(内核参数)
+     */
+    size_t _nUdpRecvBufferSize = DEFAULT_UDP_RECV_BUFFERSIZE;
+
+    /**
+     * UDP发送buffer大小(内核参数)
+     */
+    size_t _nUdpSendBufferSize = DEFAULT_UDP_SEND_BUFFERSIZE;
+
+
+        /**
      * 应用回调
      */
     application_callback_functor _hf;
