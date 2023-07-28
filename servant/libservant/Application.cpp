@@ -698,6 +698,10 @@ void Application::main(int argc, char *argv[])
 
 void Application::main(const TC_Option &option)
 {
+    //增加一把全局静态锁, 避免一个进程内, 多个服务同时初始化时带来bug(一般测试中才会这样!)
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+
     __out__.modFlag(0xfffff, false);
     //直接输出编译的TAF版本
     if (option.hasParam("version"))
