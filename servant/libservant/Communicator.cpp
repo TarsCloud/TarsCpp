@@ -539,6 +539,7 @@ void Communicator::reloadLocator()
 
 int Communicator::reloadProperty(string & sResult)
 {
+    Communicator::initialize();
 //    size_t num = getCommunicatorEpollNum();
 
 	reloadLocator();
