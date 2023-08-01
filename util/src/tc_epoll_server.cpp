@@ -1484,25 +1484,25 @@ void TC_EpollServer::BindAdapter::enableManualListen()
 
 void TC_EpollServer::BindAdapter::manualListen()
 {
-	if(!this->getSocket().isValid())
+	if(!this->getSocket().isValid() && !_epollServer->isTerminate())
 	{
 		weak_ptr<BindAdapter> weakPtr = shared_from_this();
 
 		auto func = std::bind(&TC_EpollServer::listenCallback, _epollServer, weakPtr);
 
-		_epollServer->getEpoller()->syncCallback(func);
+		_epollServer->getEpoller()->asyncCallback(func);
 	}
 }
 
 void TC_EpollServer::BindAdapter::cancelListen()
 {
-	if(this->getSocket().isValid())
+	if(this->getSocket().isValid() && !_epollServer->isTerminate())
 	{
 		weak_ptr<BindAdapter> weakPtr = shared_from_this();
 
 		auto func = std::bind(&TC_EpollServer::listenCallback, _epollServer, weakPtr);
 
-		_epollServer->getEpoller()->syncCallback(func);
+		_epollServer->getEpoller()->asyncCallback(func);
 	}
 }
 
