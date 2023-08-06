@@ -646,7 +646,7 @@ void AdapterProxy::finishInvoke(bool bFail)
         _frequenceFailInvoke++;
 
         //检查是否到了连续失败次数,且至少在5s以上
-        if (_frequenceFailInvoke >= info.frequenceFailInvoke && now >= _frequenceFailTime)
+        if (_frequenceFailInvoke >= info.frequenceFailInvoke && (now >= _frequenceFailTime || info.frequenceFailInvoke == 1))
         {
             setInactive();
 
