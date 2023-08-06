@@ -38,7 +38,7 @@ namespace tars
  * 如果是灰度状态的服务, 服务失效后如果请求切换, 也只会转发到相同灰度状态的服务
  * @uint16_t minTimeoutInvoke, 计算的最小的超时次数, 默认2次(在checkTimeoutInterval时间内超过了minTimeoutInvoke, 才计算超时)
  * @uint32_t frequenceFailInvoke, 连续失败次数
- * @uint32_t checkTimeoutInterval, 统计时间间隔, (默认60s, 不能小于30s)
+ * @uint32_t checkTimeoutInterval, 统计时间间隔, (默认60s)
  * @float radio, 超时比例 > 该值则认为超时了 ( 0.1<=radio<=1.0 )
  * @uint32_t tryTimeInterval, 重试时间间隔
  */
