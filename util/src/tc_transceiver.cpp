@@ -52,9 +52,13 @@ int TC_Transceiver::createSocket(bool udp, bool isLocal, bool isIpv6)
 	{
 		if (!isLocal)
 		{
-			s.setTcpNoDelay();
-			s.setKeepAlive();
-			s.setNoCloseWait();
+            try
+            {
+                s.setNoCloseWait();
+                s.setKeepAlive();
+                s.setTcpNoDelay();
+            }catch(exception &ex) {
+            }
 		}
 	}
 	else
