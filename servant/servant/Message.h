@@ -27,9 +27,7 @@ namespace tars
 {
 
 /**
-
- * 超时一定比率后进行切换
- * 设置超时检查参数
+ * 熔断保护, 超时一定比率后进行切换, 设置超时检查参数
  * 计算到某台服务器的超时率, 如果连续超时次数或者超时比例超过阀值
  * 1 默认5s内, 超时调用次数>=minTimeoutInvoke, 超时比率大于=radio
  * 2 超时持续时间>=minFrequenceFailTime, 且 连续超时次数>=frequenceFailInvoke, 如果frequenceFailInvoke==1, 则马上屏蔽
