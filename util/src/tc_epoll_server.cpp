@@ -1391,11 +1391,17 @@ void TC_EpollServer::BindAdapter::bind()
 		if (_ep.isTcp())
 		{
 			_s.listen(10240);
-			_s.setKeepAlive();
-			_s.setTcpNoDelay();
 
-			//不要设置close wait否则http服务回包主动关闭连接会有问题
-			_s.setNoCloseWait();
+            try
+            {
+                //不要设置close wait否则http服务回包主动关闭连接会有问题
+                _s.setNoCloseWait();
+                _s.setKeepAlive();
+                _s.setTcpNoDelay();
+            }
+            catch(exception &ex)
+            {
+            }
 		}
 		_s.setblock(false);
 	// }
@@ -1928,9 +1934,17 @@ bool TC_EpollServer::accept(int fd, int domain)
 		// LOG_CONSOLE_DEBUG << "fd:" << fd << ", cfd:" << cs.getfd() << endl;
 
 		cs.setblock(false);
-		cs.setKeepAlive();
-		cs.setTcpNoDelay();
-		cs.setCloseWaitDefault();
+
+        try
+        {
+            cs.setKeepAlive();
+            cs.setTcpNoDelay();
+            cs.setCloseWaitDefault();
+        }
+        catch(exception &ex)
+        {
+            error("accept [" + ip + ":" + TC_Common::tostr(port) + "] set keep alive error:" + string(ex.what()));
+        }
 
 		const std::vector<NetThread *> &netThreads = adapter->getNetThreads();
 
