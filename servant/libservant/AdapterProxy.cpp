@@ -713,13 +713,12 @@ bool AdapterProxy::checkActive(bool connecting)
                 << ", connExcCnt:" << _connExcCnt
                 << ", total:" << _totalInvoke << "]" << endl);
 
-
-
-    //失效且没有到下次重试时间, 直接返回不可用
-    if ((!_activeStatus) && (now < _nextRetryTime))
+    //不是强制重连, 失效且没有到下次重试时间, 直接返回不可用
+    if (!connecting && (!_activeStatus) && (now < _nextRetryTime))
     {
-        TLOGTARS("[AdapterProxy::checkActive,not reach retry time ," << _objectProxy->name() << ","
-                                                                            << _trans->getConnectionString() << endl);
+        TLOGTARS("[AdapterProxy::checkActive, not reach retry time ," << _objectProxy->name()
+                                                                      << ", isValid:" << _trans->isValid()
+                                                                      << _trans->getConnectionString() << endl);
         return false;
     }
 
