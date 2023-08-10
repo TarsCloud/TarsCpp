@@ -9,6 +9,7 @@ CustomServer g_app;
 
 static TC_NetWorkBuffer::PACKET_TYPE parse(TC_NetWorkBuffer &in, vector<char> &out)
 {
+    LOG_CONSOLE_DEBUG << "buff len:" << in.getBufferLength() << endl;
 	size_t len = sizeof(tars::Int32);
 
 	if (in.getBufferLength() < len)
@@ -27,10 +28,10 @@ static TC_NetWorkBuffer::PACKET_TYPE parse(TC_NetWorkBuffer &in, vector<char> &o
 
 	iHeaderLen = ntohl(iHeaderLen);
 
-	if (iHeaderLen > 100000 || iHeaderLen < (int)sizeof(unsigned int))
-	{
-		throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
-	}
+//	if (iHeaderLen > 1000000 || iHeaderLen < (int)sizeof(unsigned int))
+//	{
+//		throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
+//	}
 
 	if (in.getBufferLength() < (uint32_t)iHeaderLen)
 	{
