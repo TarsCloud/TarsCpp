@@ -343,6 +343,12 @@ public:
     inline const TC_Endpoint& getEndpoint() const { return _ep; }
 
     /**
+     * 设置端口信息
+     * @param ep
+     */
+    inline void setEndpoint(const TC_Endpoint & ep )  { _ep = ep; }
+
+    /**
      * 获取openssl
      */ 
     inline const std::shared_ptr<TC_OpenSSL>& getOpenSSL() { return _openssl; }
