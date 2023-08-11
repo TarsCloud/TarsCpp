@@ -106,7 +106,7 @@ struct ThreadPrivateData
      */
     bool           _hash        = false;                            //是否普通取模hash
     bool           _conHash     = false;                          //是否一致性hash
-    uint32_t        _hashCode    = 0;                        //hash值
+    size_t         _hashCode    = 0;                        //hash值
 
     /**
      * 染色信息

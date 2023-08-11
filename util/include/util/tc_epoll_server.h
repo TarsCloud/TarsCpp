@@ -374,7 +374,7 @@ public:
 		* @param data
 		* @return
 		*/
-		size_t size(uint32_t handleIndex){ return getDataQueue(handleIndex)->size(); }
+		size_t size(size_t handleIndex){ return getDataQueue(handleIndex)->size(); }
 
         /**
          * 接收buffer的大小
@@ -410,9 +410,9 @@ public:
 
     protected:
 
-        inline int index(uint32_t handleIndex) { return handleIndex % _threadDataQueue.size(); }
+        inline size_t index(size_t handleIndex) { return handleIndex % _threadDataQueue.size(); }
 
-        const shared_ptr<DataQueue> &getDataQueue(uint32_t handleIndex);
+        const shared_ptr<DataQueue> &getDataQueue(size_t handleIndex);
 
     protected:
 
