@@ -993,6 +993,11 @@ void TC_EpollServer::Connection::setUdpRecvBuffer(size_t nSize)
 	_trans->setUdpRecvBuffer(nSize);
 }
 
+void TC_EpollServer::Connection::setUdpSendBuffer(size_t nSize)
+{
+    _trans->setUdpSendBuffer(nSize);
+}
+
 bool TC_EpollServer::Connection::setClose()
 {
 	_bClose = true;
@@ -1386,11 +1391,17 @@ void TC_EpollServer::BindAdapter::bind()
 		if (_ep.isTcp())
 		{
 			_s.listen(10240);
-			_s.setKeepAlive();
-			_s.setTcpNoDelay();
 
-			//不要设置close wait否则http服务回包主动关闭连接会有问题
-			_s.setNoCloseWait();
+            try
+            {
+                //不要设置close wait否则http服务回包主动关闭连接会有问题
+                _s.setNoCloseWait();
+                _s.setKeepAlive();
+                _s.setTcpNoDelay();
+            }
+            catch(exception &ex)
+            {
+            }
 		}
 		_s.setblock(false);
 	// }
@@ -1479,25 +1490,25 @@ void TC_EpollServer::BindAdapter::enableManualListen()
 
 void TC_EpollServer::BindAdapter::manualListen()
 {
-	if(!this->getSocket().isValid())
+	if(!this->getSocket().isValid() && !_epollServer->isTerminate())
 	{
 		weak_ptr<BindAdapter> weakPtr = shared_from_this();
 
 		auto func = std::bind(&TC_EpollServer::listenCallback, _epollServer, weakPtr);
 
-		_epollServer->getEpoller()->syncCallback(func);
+		_epollServer->getEpoller()->asyncCallback(func);
 	}
 }
 
 void TC_EpollServer::BindAdapter::cancelListen()
 {
-	if(this->getSocket().isValid())
+	if(this->getSocket().isValid() && !_epollServer->isTerminate())
 	{
 		weak_ptr<BindAdapter> weakPtr = shared_from_this();
 
 		auto func = std::bind(&TC_EpollServer::listenCallback, _epollServer, weakPtr);
 
-		_epollServer->getEpoller()->syncCallback(func);
+		_epollServer->getEpoller()->asyncCallback(func);
 	}
 }
 
@@ -1600,7 +1611,7 @@ TC_EpollServer::NetThread::NetThread(int threadIndex, TC_EpollServer *epollServe
 	: _epoller(NULL)
 	, _threadIndex(threadIndex)
 	, _epollServer(epollServer)
-	, _nUdpRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
+//	, _nUdpRecvBufferSize(DEFAULT_RECV_BUFFERSIZE)
 {
 	_list = std::make_shared<ConnectionList>(_epollServer);
 }
@@ -1671,10 +1682,11 @@ void TC_EpollServer::NetThread::addUdpConnection(TC_EpollServer::Connection *cPt
 
 	cPtr->initialize(_epoller, uid, this);
 
-	//udp分配接收buffer
-	cPtr->setUdpRecvBuffer(_nUdpRecvBufferSize);
+    //udp分配接收buffer
+    cPtr->setUdpRecvBuffer(_epollServer->getUdpRecvBufferSize());
+    cPtr->setUdpSendBuffer(_epollServer->getUdpSendBufferSize());
 
-	_list->add(cPtr, cPtr->getTimeout() + TNOW);
+    _list->add(cPtr, cPtr->getTimeout() + TNOW);
 
 	cPtr->registerEvent(this);
 }
@@ -1922,9 +1934,17 @@ bool TC_EpollServer::accept(int fd, int domain)
 		// LOG_CONSOLE_DEBUG << "fd:" << fd << ", cfd:" << cs.getfd() << endl;
 
 		cs.setblock(false);
-		cs.setKeepAlive();
-		cs.setTcpNoDelay();
-		cs.setCloseWaitDefault();
+
+        try
+        {
+            cs.setKeepAlive();
+            cs.setTcpNoDelay();
+            cs.setCloseWaitDefault();
+        }
+        catch(exception &ex)
+        {
+            error("accept [" + ip + ":" + TC_Common::tostr(port) + "] set keep alive error:" + string(ex.what()));
+        }
 
 		const std::vector<NetThread *> &netThreads = adapter->getNetThreads();
 

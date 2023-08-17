@@ -389,10 +389,6 @@ void Communicator::initialize()
 
     int iReportTimeout = TC_Common::strto<int>(getProperty("report-timeout", "5000"));
 
-//    int iSampleRate = TC_Common::strto<int>(getProperty("sample-rate", "1000"));
-
-	// int iMaxSampleCount = TC_Common::strto<int>(getProperty("max-sample-count", "100"));
-
     int iMaxReportSize = TC_Common::strto<int>(getProperty("max-report-size", "1400"));
 
     _timeoutLogFlag = TC_Common::strto<bool>(getProperty("timeout-log-flag", "1"));
@@ -405,6 +401,7 @@ void Communicator::initialize()
     if (!statObj.empty())
     {
         statPrx = stringToProxy<StatFPrx>(statObj);
+        statPrx->tars_open_keepalive(false);
     }
 
     //上报Property信息的代理
@@ -412,6 +409,7 @@ void Communicator::initialize()
     if (!propertyObj.empty())
     {
         propertyPrx = stringToProxy<PropertyFPrx>(propertyObj);
+        propertyPrx->tars_open_keepalive(false);
     }
 
     string sSetDivision = ClientConfig::SetOpen ? ClientConfig::SetDivision : "";
@@ -541,6 +539,7 @@ void Communicator::reloadLocator()
 
 int Communicator::reloadProperty(string & sResult)
 {
+    Communicator::initialize();
 //    size_t num = getCommunicatorEpollNum();
 
 	reloadLocator();

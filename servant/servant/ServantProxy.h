@@ -990,6 +990,18 @@ public:
      */
 	const ProxyProtocol &tars_get_protocol() const;
 
+    /**
+     * 开启keepAlive(第三方协议如果开启, 会有问题, 因为keepalive使用tars_ping)
+     * @param keepAlive
+     */
+    void tars_open_keepalive(bool keepAlive);
+
+    /**
+     * 是否开启keepAlive
+     * @return
+     */
+    bool tars_open_keepalive() const;
+
 	/**
     *设置套接字选项
     */
@@ -1378,6 +1390,11 @@ private:
 	 * 请求和响应的协议解析器
 	 */
 	ProxyProtocol                         _proxyProtocol;
+
+    /**
+     * 默认开启(公共服务以及第三方协议, 则不开启)
+     */
+    bool 			_openKeepAlive = true;
 
 	/*
 	 * push消息 callback

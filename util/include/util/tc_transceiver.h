@@ -251,6 +251,11 @@ public:
     void setUdpRecvBuffer(size_t nSize);
 
     /**
+     * 设置udp发送buffer大小(只对udp有效)
+     */
+    void setUdpSendBuffer(size_t nSize);
+
+    /**
      * 设置socket opt
      */
     void setSocketOpt(const vector<SocketOpt> &socketOpts) { _socketOpts = socketOpts; }
@@ -336,6 +341,12 @@ public:
      * 获取端口信息(服务器地址)
      */
     inline const TC_Endpoint& getEndpoint() const { return _ep; }
+
+    /**
+     * 设置端口信息
+     * @param ep
+     */
+    inline void setEndpoint(const TC_Endpoint & ep )  { _ep = ep; }
 
     /**
      * 获取openssl
@@ -599,11 +610,6 @@ protected:
      * 最后一个包的发送地址
      */
     TC_Socket::addr_type    _lastAddr;
-
-    /*
-     * 接收缓存(udp情况才有效)
-     */
-    shared_ptr<TC_NetWorkBuffer::Buffer> _pRecvBuffer;
 
     /*
      * 接收缓存大小(udp情况才有效)

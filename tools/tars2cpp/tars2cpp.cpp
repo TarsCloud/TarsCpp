@@ -366,7 +366,15 @@ string Tars2Cpp::writeTo(const TypeIdPtr& pPtr) const
             }
             else
             {
-                s << TAB << "if (" << pPtr->getId() << " != " << sDefault << ")" << endl;
+                //bool类型, 都传输, 为了避免之前调整bool缺省值的bug
+                if(!(bPtr && bPtr->kind() == Builtin::KindBool))
+                {
+                    s << TAB << "if (" << pPtr->getId() << " != " << sDefault << ")" << endl;
+                }
+                else
+                {
+                    s << TAB << "//bool类型, 都传输, 为了兼容调整bool缺省值的带来的问题" << endl;
+                }
             }
 
             s << TAB << "{" << endl;

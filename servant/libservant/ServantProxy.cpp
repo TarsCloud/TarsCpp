@@ -618,6 +618,8 @@ void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol, int connecti
 {
 	TC_LockT<TC_ThreadMutex> lock(*this);
 
+    _openKeepAlive = false;
+
 	_proxyProtocol = protocol;
 
     _connectionSerial = connectionSerial;
@@ -626,6 +628,16 @@ void ServantProxy::tars_set_protocol(const ProxyProtocol& protocol, int connecti
 const ProxyProtocol &ServantProxy::tars_get_protocol() const
 {
 	return _proxyProtocol;
+}
+
+void ServantProxy::tars_open_keepalive(bool keepAlive)
+{
+    _openKeepAlive  = keepAlive;
+}
+
+bool ServantProxy::tars_open_keepalive() const
+{
+    return _openKeepAlive;
 }
 
 vector<ServantProxy::SocketOpt> ServantProxy::tars_get_sockopt() const

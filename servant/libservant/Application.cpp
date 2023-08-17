@@ -726,6 +726,9 @@ void Application::main(const TC_Option &option)
 
 void Application::main(const string &config)
 {
+    //增加一把全局静态锁, 避免一个进程内, 多个服务同时初始化时带来bug(一般测试中才会这样!)
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
 
     try
     {

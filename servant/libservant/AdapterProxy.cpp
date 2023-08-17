@@ -28,7 +28,22 @@
 
 namespace tars
 {
-    
+
+class PingCallback : public ServantProxyCallback
+{
+protected:
+    virtual int onDispatch(ReqMessagePtr msg)
+    {
+        if(msg->response->iRet == TARSSERVERNOSERVANTERR || msg->response->iRet == TARSSERVERNOFUNCERR)
+        {
+            this->_servantPrx->tars_open_keepalive(false);
+        }
+        return 0;
+    }
+
+};
+
+
 std::atomic<int> AdapterProxy::_idGen;
 
 AdapterProxy::AdapterProxy(ObjectProxy * pObjectProxy, const EndpointInfo &ep, Communicator* pCom)
@@ -631,7 +646,7 @@ void AdapterProxy::finishInvoke(bool bFail)
         _frequenceFailInvoke++;
 
         //检查是否到了连续失败次数,且至少在5s以上
-        if (_frequenceFailInvoke >= info.frequenceFailInvoke && now >= _frequenceFailTime)
+        if (_frequenceFailInvoke >= info.frequenceFailInvoke && (now >= _frequenceFailTime || info.frequenceFailInvoke == 1))
         {
             setInactive();
 
@@ -698,13 +713,12 @@ bool AdapterProxy::checkActive(bool connecting)
                 << ", connExcCnt:" << _connExcCnt
                 << ", total:" << _totalInvoke << "]" << endl);
 
-
-
-    //失效且没有到下次重试时间, 直接返回不可用
-    if ((!_activeStatus) && (now < _nextRetryTime))
+    //不是强制重连, 失效且没有到下次重试时间, 直接返回不可用
+    if (!connecting && (!_activeStatus) && (now < _nextRetryTime))
     {
-        TLOGTARS("[AdapterProxy::checkActive,not reach retry time ," << _objectProxy->name() << ","
-                                                                            << _trans->getConnectionString() << endl);
+        TLOGTARS("[AdapterProxy::checkActive, not reach retry time ," << _objectProxy->name()
+                                                                      << ", isValid:" << _trans->isValid()
+                                                                      << _trans->getConnectionString() << endl);
         return false;
     }
 
@@ -870,17 +884,6 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
 // 	finishTrack(msg);
 // #endif
 
-    //单向调用
-    if (msg->eType == ReqMessage::ONE_WAY)
-    {
-        TLOGTARS("[AdapterProxy::finishInvokeMsg " << _objectProxy->name() << ", " << _trans->getConnectionString()
-                 << " ,id:" << msg->response->iRequestId
-                 << " ,one way call]" << endl);
-        delete msg;
-        msg = NULL;
-        return ;
-    }
-
     //stat 上报调用统计
     stat(msg);
 
@@ -889,6 +892,18 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
     {
         finishInvoke(msg->response->iRet != TARSSERVERSUCCESS);
     }
+
+    //单向调用
+    if (msg->eType == ReqMessage::ONE_WAY)
+    {
+        TLOGTARS("[AdapterProxy::finishInvokeMsg " << _objectProxy->name() << ", " << _trans->getConnectionString()
+                                                   << " ,id:" << msg->response->iRequestId
+                                                   << " ,one way call]" << endl);
+        delete msg;
+        msg = NULL;
+        return ;
+    }
+
 
     //同步调用，唤醒ServantProxy线程
     if (msg->eType == ReqMessage::SYNC_CALL)
@@ -981,19 +996,23 @@ void AdapterProxy::doTimeout()
 
         msg->eStatus = ReqMessage::REQ_TIME;
 
-        //有可能是单向调用超时了
-        if (msg->eType == ReqMessage::ONE_WAY)
-        {
-            delete msg;
-            msg = NULL;
-            continue;
-        }
-
+//        //有可能是单向调用超时了
+//        if (msg->eType == ReqMessage::ONE_WAY)
+//        {
+//            delete msg;
+//            msg = NULL;
+//            continue;
+//        }
+//
         //如果是异步调用超时
         if (msg->eType == ReqMessage::ASYNC_CALL)
         {
             //_connExcCnt大于0说明是网络连接异常引起的超时
             msg->response->iRet = (_connExcCnt > 0 ? TARSPROXYCONNECTERR : TARSASYNCCALLTIMEOUT);
+        }
+        else if (msg->eType == ReqMessage::SYNC_CALL)
+        {
+            msg->response->iRet = TARSASYNCCALLTIMEOUT;
         }
 
         finishInvoke(msg);
@@ -1022,12 +1041,13 @@ void AdapterProxy::doKeepAlive()
     TLOGTARS("[AdapterProxy::doKeepAlive, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
 
     ReqMessage *msg = new ReqMessage();
+    ServantProxyCallbackPtr callback = new PingCallback();
 
-    msg->init(ReqMessage::ONE_WAY, _objectProxy->getServantProxy());
-    msg->callback = NULL;
+    msg->init(ReqMessage::ASYNC_CALL, _objectProxy->getServantProxy());
+    msg->callback = callback;
 
     msg->request.iVersion = TARSVERSION;
-    msg->request.cPacketType = TARSONEWAY;
+    msg->request.cPacketType = TARSNORMAL;
     msg->request.sFuncName = "tars_ping";
     msg->request.sServantName = _objectProxy->name();
 

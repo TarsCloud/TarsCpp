@@ -987,6 +987,18 @@ protected:
 #define DLOG            (RemoteTimeLogger::getInstance()->logger()->any())
 #define FDLOG(x)        (RemoteTimeLogger::getInstance()->logger(x)->any())
 #define FFDLOG(x,y,z)   (RemoteTimeLogger::getInstance()->logger(x,y,z)->any())
+
+//如果编译时指定了DEBUG，则不输出远程日志，直接输出到标准窗口
+#ifdef DEBUG
+#define DEBUG_DAY_LOG LOG_DEBUG
+#define ERR_DAY_LOG LOG_ERROR
+#define FDLOG_DEBUG(x) LOG_DEBUG
+#else
+#define DEBUG_DAY_LOG FDLOG("debug") << FILE_FUNC_LINE << "|"
+#define ERR_DAY_LOG FDLOG("error") << FILE_FUNC_LINE << "|"
+#define FDLOG_DEBUG(x) FDLOG(x) << FILE_FUNC_LINE << "|"
+#endif
+
 ///////////////////////////////////////////
 /**
  *  调用链追踪

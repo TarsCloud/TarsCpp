@@ -327,7 +327,7 @@ void TC_Epoller::releaseEpollInfo(const shared_ptr<TC_Epoller::EpollInfo> &epoll
 {
 	if(epollInfo)
 	{
-		epollInfo->clearCallback();
+//		epollInfo->clearCallback();     //may cause epoll crash
         epollInfo->release();
 	}
 }
@@ -492,8 +492,8 @@ void TC_Epoller::reset()
 void TC_Epoller::syncCallback(const std::function<void()>& func, int64_t millseconds)
 {
 	TC_Epoller::NotifyInfo syncNotify;
-	std::mutex	syncMutex;
-	std::condition_variable syncCond;
+	shared_ptr<std::mutex>	syncMutex = std::make_shared<std::mutex>();
+	shared_ptr<std::condition_variable>	syncCond = std::make_shared<std::condition_variable>();
 
 	syncNotify.init(this);
 
@@ -508,23 +508,23 @@ void TC_Epoller::syncCallback(const std::function<void()>& func, int64_t millsec
         {
         }
 
-        std::unique_lock<std::mutex> lock(syncMutex);
-        syncCond.notify_one();
+        std::unique_lock<std::mutex> lock(*syncMutex.get());
+        syncCond->notify_one();
 
         return false;
     };
 
-    std::unique_lock<std::mutex> lock(syncMutex);
+    std::unique_lock<std::mutex> lock(*syncMutex.get());
 
     syncNotify.getEpollInfo()->registerCallback(callbacks, EPOLLOUT);
 
     if (millseconds >= 0)
     {
-        syncCond.wait_for(lock, std::chrono::milliseconds(millseconds));
+        syncCond->wait_for(lock, std::chrono::milliseconds(millseconds));
     }
     else
     {
-        syncCond.wait(lock);
+        syncCond->wait(lock);
     }
 }
 

@@ -1934,6 +1934,10 @@ bool TC_HttpRequest::checkRequest(const char* sBuffer, size_t iLen)
 				len = TC_Common::strto<size_t>(TC_Common::trim(string(line + 15, lineEnd), " "));
 			}
 		}
+		else
+		{
+			break;
+		}
 	}
 
 	if (bChunk)

@@ -1,4 +1,47 @@
+# v3.0.16 20230810
+### en
+- please notice!!!! default value of bool in tars struct set to false
+- fix: tc_timer stopTimer clear all timer
+- fix: application init add globe lock, only main(const string &config)
+- fix: udp send/recv buffer set
+- fix: TC_NetworkBuffer, support C++17,
+- fix: TC_Http some packets causing infinite loops
+- fix: epoller syncCallback may cause crash
+- fix: TC_ThreadRWLocker tryWriteLock & tryReadLock bug
+- fix: promise compiler bug, TypeAt<0, char, int, double> n = 0,  error: wrong number of template arguments (4, should be 2)
+- fix: tc_cgi open file with binary mode
+- TarsStructBase use virtual deconstructor
+- Optimize AdapterProxy::checkActive and force connection establishment if there are no services to choose from
+- comunicator reloadProperty add initialize
+- Add try catch when tcp setKeepAlive
+- AdapterProxy checktimout check
+- Rpc call record exeception in sync mode
+- In keepalive mode, tars_ping is called: When the response is no func or no servant, cancel keepalive
+- Do not enable keepalive in third-party protocol mode
+- When keepalive mode is enabled, each obj can independently set keepalive mode
+- tc_epoll_server manualListen/cancelListen use asyncCallback
 
+### cn
+- 特别注意: tars协议中bool类型的缺省值改为false
+- fix: tc_timer stopTimer时清除掉所有事件
+- fix: 增加Application全局初始化锁
+- fix: 设置udp模式下send/recv buffer大小的bug
+- fix: TC_NetworkBuffer编译支持C++17,
+- fix: TC_Http 在某些异常包导致的死循环
+- fix: TC_Epoller syncCallback可能导致的crash
+- fix: TC_ThreadRWLocker tryWriteLock & tryReadLock bug
+- fix: promise 编译错误 TypeAt<0, char, int, double> n = 0,  error: wrong number of template arguments (4, should be 2)
+- fix: tc_cgi 打开文件使用binary mode
+- 优化: TarsStructBase使用虚拟析构函数
+- 优化: AdapterProxy::checkActive 当没有服务时, 强制发起连接
+- 优化: 通信器comunicator reloadProperty 添加初始化判断
+- 优化: 增加try catch 当设置tcp setKeepAlive
+- 优化: AdapterProxy中检查超时的参数和逻辑
+- feat: rpc完善异常上报
+- feat: 启用keepalive模式下, 如果响应表示无服务或接口, 则取消keepalive
+- feat: 不要启用keepalive在第三方协议模式下
+- feat: 可以针对obj独立开启是否keepalive
+- feat: tc_epoll_server manualListen/cancelListen使用 asyncCallback
 
 # v3.0.15 20230415
 ### en

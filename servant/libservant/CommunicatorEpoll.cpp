@@ -47,7 +47,7 @@ CommunicatorEpoll::CommunicatorEpoll(Communicator * pCommunicator,size_t netThre
     }
 
     //检查超时请求的时间间隔，单位:ms
-    _timeoutCheckInterval = TC_Common::strto<int64_t>(pCommunicator->getProperty("timeoutcheckinterval", "1000"));
+    _timeoutCheckInterval = TC_Common::strto<int64_t>(pCommunicator->getProperty("timeoutcheckinterval", "100"));
     if(_timeoutCheckInterval < 1)
     {
         _timeoutCheckInterval = 5;
@@ -437,7 +437,10 @@ void CommunicatorEpoll::doKeepAlive()
 
     for(size_t i = 0; i < getObjNum(); ++i)
     {
-        getObjectProxy(i)->doKeepAlive();
+        if(getObjectProxy(i)->getServantProxy()->tars_open_keepalive())
+        {
+            getObjectProxy(i)->doKeepAlive();
+        }
     }
 }
 

@@ -45,11 +45,11 @@ static TC_NetWorkBuffer::PACKET_TYPE customResponse(TC_NetWorkBuffer &in, Respon
 
 	iHeaderLen = ntohl(iHeaderLen);
 
-	if (iHeaderLen > 100000 || iHeaderLen < (int)sizeof(unsigned int))
-	{
-		throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
-	}
-
+//	if (iHeaderLen > 100000 || iHeaderLen < (int)sizeof(unsigned int))
+//	{
+//		throw TarsDecodeException("packet length too long or too short,len:" + TC_Common::tostr(iHeaderLen));
+//	}
+//
 	if (in.getBufferLength() < (uint32_t)iHeaderLen)
 	{
 		return TC_NetWorkBuffer::PACKET_LESS;
@@ -77,11 +77,12 @@ static shared_ptr<TC_NetWorkBuffer::Buffer> customRequest(RequestPacket& request
 {
 	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
 
-    unsigned int net_bufflength = htonl(request.sBuffer.size()+8);
+    int32_t len = request.sBuffer.size()+8;
+    unsigned int net_bufflength = htonl(len);
     unsigned char * bufflengthptr = (unsigned char*)(&net_bufflength);
 
 	vector<char> buffer;
-	buffer.resize(request.sBuffer.size()+8);
+	buffer.resize(len);
 
 	memcpy(buffer.data(), bufflengthptr, sizeof(unsigned int));
 

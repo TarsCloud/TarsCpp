@@ -238,6 +238,7 @@ void TC_Timer::stopTimer()
 		return;
 	}
 
+    clear();
 	{
 		std::unique_lock<std::mutex> lck(_mutex);
 		_terminate = true;
