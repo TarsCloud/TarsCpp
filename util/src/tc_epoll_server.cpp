@@ -54,7 +54,7 @@ TC_EpollServer::DataBuffer::DataBuffer(int handleNum)
 	}
 }
 
-const shared_ptr<TC_EpollServer::DataBuffer::DataQueue> &TC_EpollServer::DataBuffer::getDataQueue(uint32_t handleIndex)
+const shared_ptr<TC_EpollServer::DataBuffer::DataQueue> &TC_EpollServer::DataBuffer::getDataQueue(size_t handleIndex)
 {
 	//如果是队列模式, 则返回handle线程对应的队列
 	if(isQueueMode())

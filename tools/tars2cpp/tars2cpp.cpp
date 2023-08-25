@@ -3144,7 +3144,7 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
         s << generateHAsync(vOperation[i], pPtr->getId()) << endl;
     }
 
-    s << TAB << pPtr->getId() << "Proxy* tars_hash(uint32_t key)" << endl;
+    s << TAB << pPtr->getId() << "Proxy* tars_hash(size_t key)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
     s << TAB << "return (" << pPtr->getId() + "Proxy*)ServantProxy::tars_hash(key);" << endl;
@@ -3152,7 +3152,7 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     s << TAB << "}" << endl;
     s << endl;
 
-    s << TAB << pPtr->getId() << "Proxy* tars_consistent_hash(uint32_t key)" << endl;
+    s << TAB << pPtr->getId() << "Proxy* tars_consistent_hash(size_t key)" << endl;
     s << TAB << "{" << endl;
     INC_TAB;
     s << TAB << "return (" << pPtr->getId() + "Proxy*)ServantProxy::tars_consistent_hash(key);" << endl;
