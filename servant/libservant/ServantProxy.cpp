@@ -1328,7 +1328,7 @@ int ServantProxy::servant_invoke(ReqMessage *msg, bool bCoroAsync)
     return 0;
 }
 
-void ServantProxy::http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response)
+void ServantProxy::http_call(const string &funcName, const shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response)
 {
 	if (_connectionSerial <= 0)
 	{
@@ -1372,7 +1372,7 @@ void ServantProxy::http_call(const string &funcName, shared_ptr<TC_HttpRequest> 
 	msg = NULL;
 }
 
-void ServantProxy::http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro)
+void ServantProxy::http_call_async(const string &funcName, const shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro)
 {
 	if (_connectionSerial <= 0)
 	{
@@ -1413,7 +1413,7 @@ void ServantProxy::http_call_async(const string &funcName, shared_ptr<TC_HttpReq
 	servant_invoke(msg, bCoro);
 }
 
-void ServantProxy::common_protocol_call(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response)
+void ServantProxy::common_protocol_call(const string &funcName, const shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response)
 {
 	if (_connectionSerial <= 0)
 	{
@@ -1454,7 +1454,7 @@ void ServantProxy::common_protocol_call(const string &funcName, shared_ptr<TC_Cu
 	msg = NULL;
 }
 
-void ServantProxy::common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro)
+void ServantProxy::common_protocol_call_async(const string &funcName, const shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro)
 {
 	if (_connectionSerial <= 0)
 	{
