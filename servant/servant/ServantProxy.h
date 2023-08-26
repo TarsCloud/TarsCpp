@@ -1134,13 +1134,13 @@ public:
 	 * http协议同步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
-    void http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response);
+    void http_call(const string &funcName, const shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response);
 
     /**
 	 * http协议异步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
-	void http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro = false);
+	void http_call_async(const string &funcName, const shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro = false);
 
 	/**
 	 * 通用协议同步调用(这种模式下, 一个连接上只能跑一个请求响应包, 和http模式keep-alive模式类似)
@@ -1148,7 +1148,7 @@ public:
 	 * @param request
 	 * @param response
 	 */
-    void common_protocol_call(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response);
+    void common_protocol_call(const string &funcName, const shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response);
 
 	/**
 	 * 通用协议异步调用(这种模式下, 一个连接上只能跑一个请求响应包, 和http模式keep-alive模式类似)
@@ -1157,7 +1157,7 @@ public:
 	 * @param cb
 	 * @param bCoro
 	 */
-    void common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro = false);
+    void common_protocol_call_async(const string &funcName, const shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro = false);
 
     /**
      * TARS协议同步方法调用
