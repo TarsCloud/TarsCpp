@@ -880,6 +880,10 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
     bool bEmpty = false;
     bool bSync  = (msg->eType == ReqMessage::SYNC_CALL);
 
+    //赋值出来, 避免极端情况(异步请求都处理完了, msg已经释放, 才进入到后面的判断, 目前发现在麒麟OS上会出现)
+    auto sched = msg->sched;
+    auto pObjectProxy = msg->pObjectProxy;
+
     if (!pReqQ->push_back(msg, bEmpty))
     {
         TLOGERROR("[ServantProxy::invoke msgQueue push_back error thread seq:" << pSptd->_reqQNo << "]" << endl);
@@ -890,16 +894,16 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
         throw TarsClientQueueException("client queue full");
     }
 
-    if (msg->sched)
+    if (sched)
     {
 //		LOG_CONSOLE_DEBUG << "in sched handle: " << this << ", " << msg->request.sServantName << endl;
 
         //协程中, 直接发包了
-        msg->pObjectProxy->getCommunicatorEpoll()->handle(pSptd->_reqQNo);
+        pObjectProxy->getCommunicatorEpoll()->handle(pSptd->_reqQNo);
     }
     else
     {
-        msg->pObjectProxy->getCommunicatorEpoll()->notify(pSptd->_reqQNo);
+        pObjectProxy->getCommunicatorEpoll()->notify(pSptd->_reqQNo);
     }
 
     if (bSync)
