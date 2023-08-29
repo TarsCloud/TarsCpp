@@ -336,7 +336,7 @@ void TC_Socket::parseAddr(const addr_type& addr, string& host, uint16_t &port)
     int iDomain;
     sockaddr_in6 *addr6;
     sockaddr_in *addr4;
-    if (addr.second == sizeof(sizeof(struct sockaddr_in6)))
+    if (addr.second == sizeof(struct sockaddr_in6))
     {
         iDomain = AF_INET6;
         addr6 = (sockaddr_in6 *) addr.first.get();
