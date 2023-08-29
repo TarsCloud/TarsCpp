@@ -149,7 +149,7 @@ public:
 	 * reconnect
 	 * @return millisecond
 	 */
-	inline int reconnect() { return _reConnectSecond; }
+	inline int64_t reconnect() { return _reConnectSecond; }
 
     /**
      * reconnect
@@ -263,7 +263,7 @@ private:
     /**
      * reconnect, 0: not reconnect, millisecond
      */
-    int                                   _reConnectSecond = 0;
+    int64_t                                _reConnectSecond = 0;
     bool                                  _onlyActiveInReg = false;
 
 

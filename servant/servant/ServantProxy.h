@@ -120,8 +120,8 @@ public:
 
 public:
 
-    static thread_local shared_ptr<ServantProxyThreadData> g_sp;
-    static unsigned int _traceParamMaxLen;
+	static thread_local shared_ptr<ServantProxyThreadData> g_sp;
+	
 
     /**
      * global Immortal ptr, 避免Immortal提前被释放掉
@@ -483,18 +483,10 @@ public:
         unsigned int maxLen = std::get<1>(flags);
         return TraceContext::needParam(es, type, len, maxLen);
     }
-    static void setTraceParamMaxLen(unsigned int len)
-    {
-        // 最最大保护，不超过10M
-        if (len < 1024 * 10)
-        {
-            _traceParamMaxLen = len;
-        }
-    }
-    static unsigned int getTraceParamMaxLen()
-    {
-        return _traceParamMaxLen;
-    }
+    static void setTraceParamMaxLen(unsigned int len);
+
+    static unsigned int getTraceParamMaxLen();
+
     ////////////////////////////////////////////////////////////////////////////////////调用链追踪 end/////
 
 };
@@ -646,6 +638,12 @@ public:
         return _bNetThreadProcess;
     }
 
+	/**
+	 *
+	 * @return
+	 */
+	virtual const map<std::string, std::string> & getResponseContext() const;
+
 public:
 	/**
 	 * dispatch, call onDispatch
@@ -669,9 +667,11 @@ protected:
     virtual void onClose(const TC_Endpoint& ep) {onClose();};
 
 	/**
-	 * 连接已建立(push callback 才有效)
+	 * 连接已建立(push callback 才有效), fd为socket句柄
 	 */
-    virtual void onConnect(const TC_Endpoint& ep) {};
+	virtual void onConnect(const TC_Endpoint& ep) {}
+
+	virtual void onConnect(const TC_Endpoint& ep, int fd) {}
 
 	friend class AdapterProxy;
 protected:

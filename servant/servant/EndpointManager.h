@@ -399,28 +399,28 @@ private:
     /*
      * 根据hash值选取一个结点
      */
-    AdapterProxy* getHashProxy(uint32_t hashCode,  bool bConsistentHash = false);
+    AdapterProxy* getHashProxy(int64_t hashCode,  bool bConsistentHash = false);
 
 
     /*
      * 根据hash值按取模方式，从正常节点中选取一个结点
      */
-    AdapterProxy* getHashProxyForNormal(uint32_t hashCode);
+    AdapterProxy* getHashProxyForNormal(int64_t hashCode);
 
     /*
      * 根据hash值按一致性hash方式，从正常节点中选取一个结点
      */
-    AdapterProxy* getConHashProxyForNormal(uint32_t hashCode);
+    AdapterProxy* getConHashProxyForNormal(int64_t hashCode);
 
     /*
      * 根据hash值按取模方式，从静态权重节点中选取一个结点
      */
-    AdapterProxy* getHashProxyForWeight(uint32_t hashCode, bool bStatic, vector<size_t> &vRouterCache);
+    AdapterProxy* getHashProxyForWeight(int64_t hashCode, bool bStatic, vector<size_t> &vRouterCache);
 
     /*
      * 根据hash值按一致性hash方式，从静态权重节点中选取一个结点
      */
-    AdapterProxy* getConHashProxyForWeight(uint32_t hashCode, bool bStatic);
+    AdapterProxy* getConHashProxyForWeight(int64_t hashCode, bool bStatic);
 
     /*
      * 判断静态权重节点是否有变化

@@ -258,7 +258,7 @@ CurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvCon
     }
     catch (TarsDecodeException &ex)
     {
-        TLOGERROR("[ServantHandle::handle request protocol decode error:" << ex.what() << "]" << endl);
+        TLOGERROR("[ServantHandle::createCurrent request protocol decode error:" << ex.what() << "]" << endl);
         close(data);
         return NULL;
     }

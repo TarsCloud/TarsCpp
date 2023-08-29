@@ -273,7 +273,7 @@ public:
 	 * get notify observer
 	 * @return
 	 */
-	shared_ptr<NotifyObserver> &getNotifyObserver() { return _notifyObserver; }
+	const shared_ptr<NotifyObserver> &getNotifyObserver() { return _notifyObserver; }
 
     /**
      * 非tars协议server，设置Servant的协议解析器
