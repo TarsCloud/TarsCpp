@@ -404,5 +404,22 @@ void ObjectProxy::onSetInactive(const EndpointInfo& ep)
 	}
 }
 
+void ObjectProxy::close()
+{
+    if(!_hasInitialize)
+    {
+        return;
+    }
+    assert(this->getCommunicatorEpoll()->getThreadId() == this_thread::get_id());
+
+    const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+    for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
+    {
+        if(vAdapterProxy[iAdapter] != NULL)
+        {
+            vAdapterProxy[iAdapter]->onClose();
+        }
+    }
+}
 //////////////////////////////////////////////////////////////////////////////////
 }

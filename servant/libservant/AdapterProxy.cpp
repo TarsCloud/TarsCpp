@@ -152,7 +152,7 @@ void AdapterProxy::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::CloseR
 {
     if(_objectProxy->getRootServantProxy()->tars_get_push_callback())
     {
-		_objectProxy->getRootServantProxy()->tars_get_push_callback()->onClose();
+		_objectProxy->getRootServantProxy()->tars_get_push_callback()->onClose(trans->getConnectEndpoint());
     }
 
     int millisecond =_objectProxy->reconnect();
@@ -166,7 +166,7 @@ void AdapterProxy::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::CloseR
         return;
     }
 
-    _objectProxy->getCommunicatorEpoll()->reConnect(TNOWMS + millisecond, trans);
+    _objectProxy->getCommunicatorEpoll()->reConnect(TNOWMS + millisecond, this);
     TLOGERROR("[trans close:" << _objectProxy->name() << "," << trans->getConnectEndpoint().toString() << ", reconnect:" << millisecond << " ms]" << endl);
 }
 
@@ -762,11 +762,17 @@ void AdapterProxy::onSetInactive()
 	_trans->close();
 }
 
-//屏蔽结点
+void AdapterProxy::onClose()
+{
+    _trans->close();
+}
+
+//屏蔽节点
 void AdapterProxy::setInactive()
 {
 	onSetInactive();
 
+    //通知根servant下面的所有servant都屏蔽
 	_objectProxy->getRootServantProxy()->onSetInactive(_ep);
 
     TLOGTARS("[AdapterProxy::setInactive, " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", inactive]" << endl);

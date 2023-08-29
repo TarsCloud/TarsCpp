@@ -19,6 +19,8 @@ public:
      */
     HelloImp();
 
+    static set<int32_t> _current;
+
 public:
     /**
      * 对象初始化
@@ -29,6 +31,13 @@ public:
      * 对象销毁
      */
     virtual void destroy();
+
+    /**
+     * 关闭连接
+     * @param current
+     * @return
+     */
+    virtual int doClose(CurrentPtr current);
 
 public:
     int testTrans(int index, const string &s, string &r, CurrentPtr current);
@@ -51,6 +60,7 @@ public:
 
 	virtual int testPushRegister(const string &msg, CurrentPtr current);
 
+    virtual int testClose(CurrentPtr current);
 protected:
     HelloPrx _helloPrx;
 

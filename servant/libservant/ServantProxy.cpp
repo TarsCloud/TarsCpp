@@ -686,7 +686,6 @@ void ServantProxy::tars_ping()
 	tars_invoke(TARSNORMAL, "tars_ping", os, m, s);
 }
 
-
 void ServantProxy::tars_async_ping()
 {
 	map<string, string> m;
@@ -708,14 +707,6 @@ ServantProxy* ServantProxy::tars_hash(size_t key)
 
     return this;
 }
-
-//ServantProxy* ServantProxy::tars_direct()
-//{
-//	ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-//
-//	pSptd->_direct = true;
-//	return this;
-//}
 
 ServantProxy* ServantProxy::tars_consistent_hash(size_t key)
 {
@@ -756,7 +747,6 @@ ServantProxy* ServantProxy::tars_set_timeout(int msecond)
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);
 
-//     pSptd->_hasTimeout = true;
     pSptd->_data._timeout = msecond;
 
     return this;
@@ -1224,7 +1214,7 @@ ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
 
 void ServantProxy::travelObjectProxys(ServantProxy *prx, function<void(ObjectProxy*)> f)
 {
-	vector<ObjectProxy*> objectProxys;
+//	vector<ObjectProxy*> objectProxys;
 
 	size_t num = _communicator->getCommunicatorEpollNum();
 
@@ -1278,27 +1268,71 @@ void ServantProxy::tars_update_endpoints(const set<EndpointInfo> &active, const 
 	onNotifyEndpoints(NULL, active, inactive);
 }
 
+//在网络线程中回调
 void ServantProxy::onNotifyEndpoints(CommunicatorEpoll *communicatorEpoll, const set<EndpointInfo> &active, const set<EndpointInfo> &inactive)
 {
-	//更新子servant proxy的地址
-	for (size_t i = 0; i < _servantList.size(); i++)
-	{
-		ServantProxy* prx = _servantList[i].get();
+    //更新子servant proxy的地址
+    for (size_t i = 0; i < _servantList.size(); i++)
+    {
+        ServantProxy* prx = _servantList[i].get();
 
-		travelObjectProxys(prx, [&](ObjectProxy *op){
-			if(op->getEndpointManager())
-			{
-				op->getEndpointManager()->updateEndpointsOutter(active, inactive);
-			}
-		});
-	}
+        travelObjectProxys(prx, [&](ObjectProxy *op){
+            if(op->getEndpointManager())
+            {
+                op->getEndpointManager()->updateEndpointsOutter(active, inactive);
+            }
+        });
+    }
 
-	travelObjectProxys(this, [&](ObjectProxy *op){
-		if(op->getEndpointManager())
-		{
-			op->getEndpointManager()->updateEndpointsOutter(active, inactive);
-		}
-	});
+    travelObjectProxys(this, [&](ObjectProxy *op){
+        if(op->getEndpointManager())
+        {
+            op->getEndpointManager()->updateEndpointsOutter(active, inactive);
+        }
+    });
+}
+
+void ServantProxy::tars_close()
+{
+    tars_open_keepalive(false);
+    tars_reconnect(0);
+
+    size_t num = _communicator->getCommunicatorEpollNum();
+
+    for (size_t i = 0; i < num; ++i)
+    {
+        auto ce = _communicator->getCommunicatorEpoll(i);
+
+        ce->notifyClose(this);
+    }
+
+    //协程通信器也需要
+    _communicator->forEachSchedCommunicatorEpoll([&](const shared_ptr<CommunicatorEpoll>& ce)
+                                                 {
+                                                     ce->notifyClose(this);
+                                                 });
+
+}
+
+//在网络线程中回调
+void ServantProxy::onClose(CommunicatorEpoll *communicatorEpoll)
+{
+    for (size_t i = 0; i < _servantList.size(); i++)
+    {
+        ServantProxy* prx = _servantList[i].get();
+
+        ObjectProxy *op = communicatorEpoll->servantToObjectProxy(prx);
+        if(op)
+        {
+            op->close();
+        }
+    }
+
+    ObjectProxy *op = communicatorEpoll->servantToObjectProxy(this);
+    if(op)
+    {
+        op->close();
+    }
 }
 
 void ServantProxy::onSetInactive(const EndpointInfo &ep)
@@ -1306,11 +1340,47 @@ void ServantProxy::onSetInactive(const EndpointInfo &ep)
     if (!_rootPrx)
         return;
 
-    for (size_t i = 0; i < _rootPrx->_servantList.size(); i++)
-    {
-        ServantPrx &prx = _rootPrx->_servantList[i];
+    size_t num = _communicator->getCommunicatorEpollNum();
 
-        prx->forEachObject([&](ObjectProxy *o) { o->onSetInactive(ep); });
+    for (size_t i = 0; i < num; ++i)
+    {
+        auto ce = _communicator->getCommunicatorEpoll(i);
+
+        ce->notifySetInactive(this, ep);
+    }
+
+    //协程通信器也需要
+    _communicator->forEachSchedCommunicatorEpoll([&](const shared_ptr<CommunicatorEpoll>& ce)
+                                                 {
+                                                     ce->notifySetInactive(this, ep);
+                                                 });
+
+//    for (size_t i = 0; i < _rootPrx->_servantList.size(); i++)
+//    {
+//        ServantPrx &prx = _rootPrx->_servantList[i];
+//
+//        prx->forEachObject([&](ObjectProxy *o) { o->onSetInactive(ep); });
+//    }
+}
+
+//在网络线程中回调
+void ServantProxy::onSetInactive(CommunicatorEpoll *communicatorEpoll, const EndpointInfo &ep)
+{
+    for (size_t i = 0; i < _servantList.size(); i++)
+    {
+        ServantProxy* prx = _servantList[i].get();
+
+        ObjectProxy *op = communicatorEpoll->servantToObjectProxy(prx);
+        if(op)
+        {
+            op->onSetInactive(ep);
+        }
+    }
+
+    ObjectProxy *op = communicatorEpoll->servantToObjectProxy(this);
+    if(op)
+    {
+        op->onSetInactive(ep);
     }
 }
 

@@ -38,7 +38,12 @@ public:
 		_msg = msg;
 	}
 
-	string _msg;
+    virtual void onClose(const TC_Endpoint& ep) {
+        _close = true;
+    };
+
+    string _msg;
+    bool _close = false;
 };
 
 typedef TC_AutoPtr<RegisterPushCallBack> RegisterPushCallBackPtr;
@@ -69,3 +74,35 @@ TEST_F(HelloTest, push)
 	stopServer(ws);
 }
 
+
+TEST_F(HelloTest, pushClose)
+{
+    shared_ptr<Communicator> comm = getCommunicator();
+
+    WinServer ws;
+    startServer(ws, WIN_CONFIG());
+
+    string obj = getObj(ws.getConfig(), "WinAdapter");
+
+    HelloPrx prx = comm->stringToProxy<HelloPrx>(obj);
+
+    RegisterPushCallBackPtr callback = new RegisterPushCallBack();
+
+    prx->tars_set_push_callback(callback);
+
+    string msg = TC_Common::now2str();
+
+    prx->testPushRegister(msg);
+
+    TC_Common::msleep(50);
+
+    ASSERT_TRUE(callback->_msg == msg);
+
+    prx->tars_close();
+
+    TC_Common::msleep(50);
+
+    ASSERT_TRUE(callback->_close);
+
+    stopServer(ws);
+}

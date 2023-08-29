@@ -159,4 +159,21 @@ int HelloImp::testPushRegister(const string &msg, CurrentPtr current)
 	Push::async_response_push_testPush(current, 0, msg);
 	return 0;
 }
+
+set<int32_t> HelloImp::_current;
+
+int HelloImp::testClose(CurrentPtr current)
+{
+//    LOG_CONSOLE_DEBUG << endl;
+    _current.insert(current->getUId());
+    return 0;
+}
+
+int HelloImp::doClose(CurrentPtr current)
+{
+//    LOG_CONSOLE_DEBUG << endl;
+    _current.erase(current->getUId());
+    return 0;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
