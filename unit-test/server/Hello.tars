@@ -42,6 +42,11 @@ module Test
         0 optional map<JsonKey, JsonData> json;
     };
 
+    struct JsonDouble
+    {
+        1 optional double d;
+    };
+
     interface Hello
     {
         int testTrans(int index, string s, out string r);

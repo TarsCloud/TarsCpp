@@ -156,3 +156,16 @@ TEST_F(JsonTest, find)
 	ASSERT_TRUE(aPtr->find(new JsonValueBoolean(false)) != aPtr->value.end());
 //	ASSERT_TRUE(aPtr->find(new JsonValueBoolean(true)) != aPtr->value.end());
 }
+
+TEST_F(JsonTest, jsonDouble)
+{
+	JsonDouble jValue;
+    jValue.d = 1.32e1;
+    string v = jValue.writeToJsonString();
+
+    cout << "json1:" << v << endl;
+    v = "{\"d\":1.32e1}";
+
+    jValue.readFromJsonString(v);
+    cout << jValue.d << endl;
+}
