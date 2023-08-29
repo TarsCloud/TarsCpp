@@ -209,11 +209,15 @@ public:
      */
     inline int getId() const { return _id; }
 
-
 	/**
 	 * 屏蔽结点
 	 */
 	void onSetInactive();
+
+    /**
+     * 关闭连接
+     */
+    void onClose();
 
 	/**
 	 * get timeout queue

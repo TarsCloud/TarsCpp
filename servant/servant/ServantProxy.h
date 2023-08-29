@@ -924,6 +924,14 @@ public:
      */
     void tars_connect_timeout(int conTimeout);
 
+    /**
+     * 主动关闭到服务器端的连接
+     * 1 如果有keepalive也关闭
+     * 2 如果后续发起请求, 会自动建立连接, 但是不再自动开启keepalive
+     * 3 如果设置了重连时间, 也取消重连
+     */
+    void tars_close();
+
 	/**
 	 * set auto reconnect time
 	 * @return int, second
@@ -1286,15 +1294,26 @@ private:
 	void onNotifyEndpoints(CommunicatorEpoll *communicatorEpoll, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
 
 	/**
-	 * 端口不活跃
+	 * 设置端口不活跃(内部AdapterProxy的回调)
 	 */
     void onSetInactive(const EndpointInfo &ep);
+
+    /**
+     * 设置端口不活跃, 每个通信器自己的回调
+     */
+    void onSetInactive(CommunicatorEpoll *communicatorEpoll, const EndpointInfo &ep);
+
     /**
      * 检查是否需要设置cookie
      * @param  req
      */
     void checkCookie(RequestPacket &req);
 
+    /**
+     * 关闭连接
+     * @param communicatorEpoll
+     */
+    void onClose(CommunicatorEpoll *communicatorEpoll);
 private:
     friend class ObjectProxy;
     friend class AdapterProxy;

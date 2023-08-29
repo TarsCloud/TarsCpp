@@ -206,6 +206,10 @@ public:
 	 */
 	void onSetInactive(const EndpointInfo& ep);
 
+    /**
+     * 关闭所有网络连接
+     */
+    void close();
 protected:
 
 	/**

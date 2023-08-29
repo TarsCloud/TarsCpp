@@ -63,6 +63,8 @@ module Test
         int testConHash(out string sOut);
 
         int testPushRegister(string msg);
+
+        int testClose();
     };
 };
 

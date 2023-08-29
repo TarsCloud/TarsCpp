@@ -163,11 +163,17 @@ public:
     void notify(size_t iSeq);
 
     /**
-     * 主动更新ip list
-     * @param active
-     * @param inactive
+     * 主动关闭连接
+     * @param servantProxy
      */
-    void notifyUpdateEndpoints(ServantProxy *servantProxy, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
+    void notifyClose(ServantProxy *servantProxy);
+
+    /**
+     * 通知设置连接为inactive状态
+     * @param servantProxy
+     * @param ep
+     */
+    void notifySetInactive(ServantProxy *servantProxy, const EndpointInfo &ep);
 
     /**
      * 数据加入到异步线程队列里面
@@ -179,7 +185,7 @@ public:
 	 * set reconnect
 	 * @param time
 	 */
-	inline void reConnect(int64_t ms, TC_Transceiver*p) { _reconnect[ms] = p; }
+	inline void reConnect(int64_t ms, AdapterProxy*p) { _reconnect[ms] = p; }
 
 	/**
 	 * communicator resource desc
@@ -434,7 +440,7 @@ protected:
     /**
      * auto reconnect TC_Transceiver
      */
-	unordered_map<int64_t, TC_Transceiver*> _reconnect;
+	unordered_map<int64_t, AdapterProxy*> _reconnect;
 
 	/**
 	 * 统计数据
