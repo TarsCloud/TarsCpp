@@ -55,6 +55,7 @@ ObjectProxy::ObjectProxy(CommunicatorEpoll *pCommunicatorEpoll, ServantProxy *se
         }
     }
 
+    //#, hash模式, 创建多个连接的情况(http)
 	pos = _name.find_first_of('#');
 
 	if(pos != string::npos)

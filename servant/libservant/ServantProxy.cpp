@@ -31,7 +31,7 @@ namespace tars
 shared_ptr<ServantProxyThreadData::Immortal> ServantProxyThreadData::g_immortal;
 
 thread_local shared_ptr<ServantProxyThreadData> ServantProxyThreadData::g_sp;
-unsigned int ServantProxyThreadData::_traceParamMaxLen = 1;     // 默认1K
+unsigned int _traceParamMaxLen = 1;     // 默认1K
 
 ///////////////////////////////////////////////////////////////
 SeqManager::SeqManager(uint16_t iNum)
@@ -109,6 +109,20 @@ void SeqManager::del(uint16_t iSeq)
 
 ///////////////////////////////////////////////////////////////
 
+void ServantProxyThreadData::setTraceParamMaxLen(unsigned int len)
+{
+    // 最最大保护，不超过10M
+    if (len < 1024 * 10)
+    {
+        _traceParamMaxLen = len;
+    }
+}
+
+unsigned int ServantProxyThreadData::getTraceParamMaxLen()
+{
+    return _traceParamMaxLen;
+}
+
 ServantProxyThreadData::Immortal::Immortal()
 {
     _pSeq.reset(new SeqManager(MAX_CLIENT_NOTIFYEVENT_NUM));
@@ -165,8 +179,6 @@ ServantProxyThreadData::~ServantProxyThreadData()
 //     LOG_CONSOLE_DEBUG << endl;
     try
     {
-//		TC_LockT<TC_SpinLock> lock(_mutex);
-
 		//先释放公有的网络通信器的信息
 		for(auto it = _communicatorEpollInfo.begin(); it != _communicatorEpollInfo.end(); ++it)
 		{
@@ -304,6 +316,18 @@ ServantProxyCallback::ServantProxyCallback()
 int ServantProxyCallback::dispatch(ReqMessagePtr msg)
 {
     return onDispatch(msg);
+}
+
+const map<std::string, std::string> & ServantProxyCallback::getResponseContext() const
+{
+	CallbackThreadData * pCbtd = CallbackThreadData::getData();
+	assert(pCbtd != NULL);
+
+	if(!pCbtd->getContextValid())
+	{
+		throw TC_Exception("cann't get response context");
+	}
+	return pCbtd->getResponseContext();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -896,8 +920,6 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
 
     if (sched)
     {
-//		LOG_CONSOLE_DEBUG << "in sched handle: " << this << ", " << msg->request.sServantName << endl;
-
         //协程中, 直接发包了
         pObjectProxy->getCommunicatorEpoll()->handle(pSptd->_reqQNo);
     }

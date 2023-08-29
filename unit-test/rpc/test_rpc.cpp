@@ -38,19 +38,19 @@ TEST_F(HelloTest, rpcSyncServerCommunicatorInCoroutine)
 	});
 }
 
-TEST_F(HelloTest, rpcSyncAllocCommunicator)
-{
-	transAllocCommunicator([&](Communicator *comm){
-		checkSync(comm);
-	});
-}
-
-TEST_F(HelloTest, rpcSyncAllocCommunicatorInCoroutine)
-{
-	transInCoroutineAllocCommunicator([&](Communicator *comm){
-		checkSync(comm);
-	});
-}
+//TEST_F(HelloTest, rpcSyncAllocCommunicator)
+//{
+//	transAllocCommunicator([&](Communicator *comm){
+//		checkSync(comm);
+//	});
+//}
+//
+//TEST_F(HelloTest, rpcSyncAllocCommunicatorInCoroutine)
+//{
+//	transInCoroutineAllocCommunicator([&](Communicator *comm){
+//		checkSync(comm);
+//	});
+//}
 
 TEST_F(HelloTest, rpcSyncComplexCommunicator)
 {

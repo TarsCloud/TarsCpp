@@ -175,9 +175,11 @@ void AdapterProxy::onConnectCallback(TC_Transceiver* trans)
 	// LOG_CONSOLE_DEBUG << "fd:" << trans->fd() << ", " << trans << endl;
     addConnExc(false);
 
-    if(_objectProxy->getRootServantProxy()->tars_get_push_callback())
+    if(auto cb = _objectProxy->getRootServantProxy()->tars_get_push_callback())
     {
-		_objectProxy->getRootServantProxy()->tars_get_push_callback()->onConnect(trans->getConnectEndpoint());
+		cb->onConnect(trans->getConnectEndpoint());
+        // 回调socket句柄, 外部可获取本地socket相关信息, 如：合规留痕需要
+		cb->onConnect(trans->getConnectEndpoint(), trans->fd());
     }
 
 	_objectProxy->onConnect(this);
