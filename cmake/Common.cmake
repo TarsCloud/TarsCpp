@@ -89,6 +89,7 @@ IF (WIN32)
     add_definitions(-DNOMINMAX)
 ENDIF ()
 
+
 #-------------------------------------------------------------
 set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
 
