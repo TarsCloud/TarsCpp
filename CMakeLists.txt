@@ -20,16 +20,16 @@ if("${TARS_CPP_COMMON}" STREQUAL "")
 
 endif()
 
-# set(major "")
-# set(minor "")
-# set(patch "")
-# get_version(major minor patch)
-
-# set(TARS_VERSION ${major}.${minor}.${patch})
-
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
-
 message("TARS_VERSION:              ${TARS_VERSION}")
+
+if(WIN32)
+option(ENABLE_MT "option for /MT" OFF)
+if(ENABLE_MT)
+    include(${PROJECT_SOURCE_DIR}/cmake/compiler_flags_overrides.cmake)
+endif(ENABLE_MT)
+message("ENABLE_MT:                 ${ENABLE_MT}")
+endif(WIN32)
 
 set(CLEAR_INCLUDE "clear-install.cmake")
 FILE(WRITE ${CLEAR_INCLUDE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_INSTALL_PREFIX}/include)\n")
