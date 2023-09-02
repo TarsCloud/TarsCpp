@@ -24,7 +24,7 @@ add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 message("TARS_VERSION:              ${TARS_VERSION}")
 
 if(WIN32)
-option(ENABLE_MT "option for /MT" OFF)
+option(ENABLE_MT "option for /MT" ON)
 if(ENABLE_MT)
     include(${PROJECT_SOURCE_DIR}/cmake/compiler_flags_overrides.cmake)
 endif(ENABLE_MT)
