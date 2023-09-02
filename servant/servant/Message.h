@@ -52,7 +52,7 @@ struct CheckTimeoutInfo
     , checkTimeoutInterval(5)
     , frequenceFailInvoke(3)
     , minFrequenceFailTime(2)
-    , radio(0.3)
+    , radio(0.3f)
     , tryTimeInterval(10)
     , maxConnectExc(1)
     {
