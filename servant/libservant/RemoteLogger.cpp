@@ -555,7 +555,7 @@ void TimeWriteT::writeError(const deque<pair<size_t, string> > &buffer)
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-RemoteTimeLogger::RemoteTimeLogger() : _defaultLogger(NULL),_hasSufix(true),_hasAppNamePrefix(true),_concatStr("_"),_separ("|"),_hasSquareBracket(false),_local(true),_remote(true)
+RemoteTimeLogger::RemoteTimeLogger() : _defaultLogger(NULL),_hasSufix(true),_hasAppNamePrefix(true),_concatStr("_"),_separ("|"),_hasSquareBracket(false),_local(true),_remote(true),_logStatReport(false)
 {
 }
 
