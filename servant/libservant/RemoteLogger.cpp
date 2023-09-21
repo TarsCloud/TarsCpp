@@ -643,7 +643,7 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFi
 	////////////
     PropertyReportPtr reportSuccPtr = NULL;
     PropertyReportPtr reportFailPtr = NULL;
-    if (_remote && _logStatReport)
+    if (_remote && _logStatReport && _comm)
     {
         string sKey   = _app + "." + _server + "." + sFile;
         reportSuccPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_succ", PropertyReport::sum());
@@ -713,7 +713,7 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp
 
     PropertyReportPtr reportSuccPtr = NULL;
     PropertyReportPtr reportFailPtr = NULL;
-    if (_remote && _logStatReport)
+    if (_remote && _logStatReport && _comm)
     {
         string sKey   = _app + "." + _server + "." + sFile;
         reportSuccPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_succ", PropertyReport::sum());
