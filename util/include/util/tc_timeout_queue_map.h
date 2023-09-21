@@ -1,568 +1,532 @@
-﻿/**
- * Tencent is pleased to support the open source community by making Tars available.
- *
- * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
- *
- * Licensed under the BSD 3-Clause License (the "License"); you may not use this file except 
- * in compliance with the License. You may obtain a copy of the License at
- *
- * https://opensource.org/licenses/BSD-3-Clause
- *
- * Unless required by applicable law or agreed to in writing, software distributed 
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
- * specific language governing permissions and limitations under the License.
- */
+﻿#pragma once
 
-#ifndef __TC_TIMEOUT_QUEUE_MAP_H
-#define __TC_TIMEOUT_QUEUE_MAP_H
-
+#include <deque>
 #include <iostream>
+#include <list>
 #include <cassert>
-#include "util/tc_timeprovider.h"
-
-using namespace std;
+#include <map>
+#include <chrono>
+#include <mutex>
+#include <functional>
 
 namespace tars
 {
-/////////////////////////////////////////////////
 /**
- * @file tc_timeout_queue_map.h
- * @brief 超时队列.
- *
+ * 带队列模式的map, 并可以根据超时时间淘汰历史数据
+ * - 向队列中Push的时候, 也会按照先后顺序排序
+ * - 调用timeout, 会将超时的数据从内部删除
  */
-/////////////////////////////////////////////////
-
-//超时时间精确单位是100ms
-#define MAX_TIME_OUT    60000
-
-template<class T>
+template<class K, class T>
 class TC_TimeoutQueueMap
 {
 public:
 
-    struct PtrInfo;
-    struct NodeInfo;
-    struct SendInfo;
+	struct PtrInfo;
 
-    struct NodeInfo
-    {
-        NodeInfo()
-        :id(0)
-        ,free(true)
-        ,noSendNext(0)
-        ,noSendPrev(0)
-        ,noSendPrevEnd(false)
-        ,timeoutNext(0)
-        ,timeoutPrev(0)
-        ,timeoutPrevEnd(false)
-        ,freeNext(0)
-        {
-        }
-        //request id
-        uint16_t    id;
+	struct NodeInfo;
 
-        //是否空闲
-        bool        free;
+	typedef std::map<K, PtrInfo> data_type;
 
-        bool        hasSend;
+	typedef std::list<NodeInfo> time_type;
 
-        //未发送链表下一个id
-        uint16_t    noSendNext; 
-        //未发送链表前一个id
-        uint16_t    noSendPrev;
-        //如果为false noSendPrev的值是requestid
-        //如果为true noSendPrev的值是
-        bool        noSendPrevEnd;
+	typedef std::function<void(const K & k, T &)> data_functor;
 
-        //超时链表的下一个id
-        uint16_t    timeoutNext;
-        //超时链表的前一个id
-        uint16_t    timeoutPrev;
-        //如果为false timeoutPrev的值是requestid
-        //如果为true timeoutPrev的值是timeout数组的id
-        bool        timeoutPrevEnd;
+	struct PtrInfo
+	{
+		T ptr;
 
-        //空闲链表的下一个id
-        uint16_t    freeNext;
+		typename time_type::iterator timeIter;
+	};
 
-        T           ptr;
-    };
+	struct NodeInfo
+	{
+		bool hasPoped;
+
+		int64_t createTime;
+
+		typename data_type::iterator dataIter;
+	};
+
+	/**
+	 * @brief 超时队列，缺省5s超时.
+	 *
+	 * @param timeout 超时设定时间
+	 * @param size
+	 */
+	TC_TimeoutQueueMap(int timeout = 5 * 1000)
+		: _timeout(timeout)
+	{
+		_firstNoPopIter = _time.end();
+	}
+
+	/**
+	 * @brief 设置超时时间(毫秒).
+	 *
+	 * @param timeout
+	 */
+	void setTimeout(time_t timeout)
+	{
+		_timeout = timeout;
+	}
+
+	/**
+	 * @brief 获取超时时间
+	 * @return [description]
+	 */
+	time_t getTimeout() const
+	{
+		return _timeout;
+	}
+
+	/**
+	 * 清空数据
+	 */
+	void clear();
 
     /**
-     * @brief 超时队列，缺省5s超时.
+     * @brief 是否存在key
      *
-     * @param timeout 超时设定时间
-     * @param size
+     * @param k 指定的数据的key
+     * @return bool, true: 存在, false: 不存在
      */
-    TC_TimeoutQueueMap()
-    :_noSendHead(0)
-    ,_noSendTail(0)
-    ,_noSendSize(0)
-    ,_freeHead(1)
-    ,_timeoutPtr(0)
-    ,_timeoutPtrTime(0)
-    {
-        _dataSize = 51200;
-        _data = NULL;
-        _data = new NodeInfo[_dataSize];
-        assert(NULL != _data);
-
-        for(uint16_t i = 1; i < _dataSize; ++i)
-        {
-            _data[i].id = i;
-            _data[i].free = true;
-            _data[i].noSendNext = 0; 
-            _data[i].noSendPrev = 0;
-            _data[i].timeoutNext = 0;
-            _data[i].timeoutPrev = 0;
-            _data[i].freeNext = i+1;
-        }
-        //最后free链表的next要改成0
-        _data[_dataSize-1].freeNext = 0;
-        _freeHead = 1;
-        _freeTail = _dataSize-1;
-
-        _timeoutSize = MAX_TIME_OUT >> 5;
-        _timeoutHead = NULL;
-        _timeoutHead = new uint16_t[_timeoutSize];
-
-        for(uint16_t i = 0; i < _timeoutSize; ++i)
-        {
-            _timeoutHead[i] = 0;
-        }
-
-        _timeoutPtr = 0;
-        _timeoutPtrTime = 0;
-    }
+    bool has(const K & k);
 
     /**
-     * @brief  产生该队列的下一个ID
-     */
-    uint32_t generateId();
-
-    /**
-     * 要发送的链表是否为空
-     */
-    bool sendListEmpty()
-    {
-        return (0 == _noSendHead);
-    }
-
-    /**
-     * 获取要发送的数据
-     */
-    bool getSend(T & t);
-
-    /**
-     * 把已经发送的数据从list里面删除
-     */
-    void popSend(bool del = false);
-
-    /**
-     *获取要发送list的size
-     */
-    size_t getSendListSize()
-    {
-        return _noSendSize;
-    }
-
-    /**
-     * @brief 获取指定id的数据.
+     * @brief 是否存在key
      *
-     * @param id 指定的数据的id
-     * @param T 指定id的数据
-     * @return bool get的结果
+     * @param k 指定的数据的key
+     * @return T, 如果获取不到, 则抛出异常
      */
-    bool get(uint16_t uniqId, T & t,bool bErase = true);
+    T get(const K & k);
 
     /**
-     * @brief 删除.
-     *
-     * @param uniqId 要删除的数据的id
-     * @param T     被删除的数据
-     * @return bool 删除结果
-     */
-    bool erase(uint16_t uniqId, T & t);
+	 * @brief 获取指定key的数据.
+	 *
+	 * @param k 指定的数据的key
+	 * @param t 获取指定key的数据
+	 * @return bool, true: 获取到数据, false: 没有获取到数据
+	 */
+	bool get(const K & k, T & t, bool bErase = true);
+
+	/**
+	 * @brief, 获取数据并更新时间链, 从而能够不超时
+	 * @param k 指定的数据的key
+	 * @param t 获取指定key的数据
+	 * @return bool, true: 获取到数据, false: 没有获取到数据
+	 */
+	bool getAndRefresh(const K & k, T & t);
+
+	/**
+	 * @brief 删除.
+	 *
+	 * @param k 指定的数据的key
+	 * @return bool, true: 数据存在, false: 数据不存在
+	 */
+	bool erase(const K & k);
+
+	/**
+	 * @brief 删除.
+	 *
+	 * @param k 指定的数据的key
+	 * @param t 如果数据存在, 则返回删除的数据
+	 * @return bool, true: 数据存在, false: 数据不存在
+	 */
+	bool erase(const K & k, T & t);
+
+	/**
+	 * @brief 设置消息到队列尾端, 如果key存在, 则覆盖之前的
+	 *
+	 * @param k      数据的key
+	 * @param ptr    要插入到队列尾端的消息
+	 */
+	void push(const K & k, const T & ptr);
+
+	/**
+	 * @brief 超时删除数据
+	 */
+	void timeout();
+
+	/**
+	 * @brief 删除超时的数据，并用df对数据做处理
+	 */
+	void timeout(const data_functor & df);
+
+	/**
+	 * @brief 取出队列头部的消息
+	 *
+	 * @param t
+	 * @return true: 存在数据, false: 没有数据
+	 */
+	bool pop(T & t);
 
     /**
-     * @brief 设置消息到队列尾端.
-     *
-     * @param ptr        要插入到队列尾端的消息
-     * @param uniqId     序列号
-     * @param timeout    超时时间
-     * @return true  成功 false 失败
+     * 获取队列头部数据, 如果没有则抛出异常
+     * @return
      */
-    uint16_t push(T& ptr, uint16_t id, int64_t timeout,bool hasSend = true);
+    std::pair<K, T> front();
 
-    /**
-     * @brief 超时删除数据
-     */
-    bool timeout(T & t);
+	/**
+	 * @brief 队列中的数据.
+	 *
+	 * @return size_t
+	 */
+	size_t size() const
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		return _data.size();
+	}
 
-    /**
-     * @brief 队列中的数据.
-     *
-     * @return size_t
-     */
-    size_t size() const { return _dataSize; }
-private:
-    void delFromTimeout(uint16_t id);
-    void delFromData(uint16_t id);
-    void delFromNoSend(uint16_t id);
+	/**
+	 * @brief is empty
+	 * @return
+	 */
+	bool empty() const
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		return _data.empty();
+	}
 
 protected:
-    uint32_t    _uniqId;
-
-    uint16_t    _dataSize;
-
-    //未发送列表的head
-    uint16_t    _noSendHead; 
-    uint16_t    _noSendTail;
-
-    uint16_t    _noSendSize;
-
-    uint16_t *  _timeoutHead;
-    uint16_t    _timeoutSize;
-
-    uint16_t    _freeHead;
-    uint16_t    _freeTail;
-
-    uint16_t    _timeoutPtr;
-    int64_t     _timeoutPtrTime;
-
-    NodeInfo *  _data;
+	int64_t _timeout;
+	data_type _data;
+	time_type _time;
+	typename time_type::iterator _firstNoPopIter;
+	mutable std::mutex _mutex;
 };
 
-template<typename T> bool TC_TimeoutQueueMap<T>::getSend(T & t)
+template<typename K, typename T>
+void TC_TimeoutQueueMap<K, T>::clear()
 {
-    //链表为空返回失败
-    if(0 == _noSendHead)
-    {
-        return false;
-    }
-
-    assert(!_data[_noSendHead].hasSend);
-    assert(!_data[_noSendHead].free);
-    t = _data[_noSendHead].ptr;
-    return true;
+	std::lock_guard<std::mutex> lock(_mutex);
+	_data.clear();
+	_time.clear();
+	_firstNoPopIter = _time.end();
 }
 
 
-template<typename T> void TC_TimeoutQueueMap<T>::popSend(bool del)
+template<typename K, typename T>
+bool TC_TimeoutQueueMap<K, T>::has(const K & k)
 {
-    assert(0 != _noSendHead);
-    assert(!_data[_noSendHead].hasSend);
-    assert(!_data[_noSendHead].free);
+    std::lock_guard<std::mutex> lock(_mutex);
+    typename data_type::iterator it = _data.find(k);
 
-    uint16_t popId = _noSendHead;
-
-    //置成已经发送
-    _data[popId].hasSend = true;
-
-    //从nosend 里面删除
-    delFromNoSend(popId);
-
-    if(del)
-    {
-        delFromTimeout(popId);
-        delFromData(popId);
-    }
+    return it != _data.end();
 }
 
-template<typename T> bool TC_TimeoutQueueMap<T>::get(uint16_t id, T & t, bool bErase)
+template<typename K, typename T>
+T TC_TimeoutQueueMap<K, T>::get(const K & k)
 {
-    assert(id < _dataSize);
-    if(id >= _dataSize)
+    std::lock_guard<std::mutex> lock(_mutex);
+    typename data_type::iterator it = _data.find(k);
+
+    if(it != _data.end())
     {
-        return false;
+        return it->second.ptr;
     }
 
-    if(_data[id].free)
-    {
-        return false;
-    }
-
-    t = _data[id].ptr;
-
-    if(bErase)
-    {
-        delFromTimeout(id);
-        delFromData(id);
-    }
-
-    return true;
+    std::runtime_error("no data");
+    return it->second.ptr;
 }
 
-template<typename T> uint32_t TC_TimeoutQueueMap<T>::generateId()
+template<typename K, typename T>
+bool TC_TimeoutQueueMap<K, T>::get(const K & k, T & t, bool bErase)
 {
-    if(0 == _freeHead)
-    {
-        return 0;
-    }
-    assert(0 != _freeTail);
+	std::lock_guard<std::mutex> lock(_mutex);
 
-    //从free里面找一个
-    uint16_t id = _freeHead;
-    NodeInfo & node = _data[_freeHead];
-    assert(node.free);
-    node.free = false;
+	typename data_type::iterator it = _data.find(k);
 
-    //修改free链表
-    _freeHead = node.freeNext;
-    if(0 == _freeHead)
-    {
-        _freeTail = 0;
-    }
-    
-    return id;
+	if (it == _data.end())
+	{
+		return false;
+	}
+
+	t = it->second.ptr;
+
+	if (bErase)
+	{
+		if (_firstNoPopIter == it->second.timeIter)
+		{
+			++_firstNoPopIter;
+		}
+		_time.erase(it->second.timeIter);
+		_data.erase(it);
+	}
+
+	return true;
 }
 
-template<typename T> uint16_t TC_TimeoutQueueMap<T>::push(T& ptr, uint16_t id, int64_t timeout, bool hasSend)
+template<typename K, typename T>
+bool TC_TimeoutQueueMap<K, T>::getAndRefresh(const K & k, T & t)
 {
-    //cerr<<"push:"<<id<<endl;
-    assert(id < _dataSize);
-    if(id >= _dataSize)
-    {
-        return false;
-    }
+	std::lock_guard<std::mutex> lock(_mutex);
 
-    if(_data[id].free)
-    {
-        return false;
-    }
+	typename data_type::iterator it = _data.find(k);
 
-    //时间链表 初始化
-    int64_t timeoutSelf = ( timeout >> 6);
-    if(0 == _timeoutPtrTime)
-    {
-        assert(0 == _timeoutPtr);
-        _timeoutPtrTime = (TNOWMS >> 6);
-    }
+	if (it == _data.end())
+	{
+		return false;
+	}
 
-    if(timeoutSelf <= _timeoutPtrTime)
-    {
-        assert(false);
-        return 0;
-    }
+	t = it->second.ptr;
 
-    //检查超时时间是否合法
-    if((timeoutSelf - _timeoutPtrTime) >= (int64_t)_timeoutSize)
-    {
-        assert(false);
-        return 0;
-    }
+	//从时间队列中删除
+	if (_firstNoPopIter == it->second.timeIter)
+	{
+		++_firstNoPopIter;
+	}
+	_time.erase(it->second.timeIter);
 
-    //从free里面找一个
-#if 0
-    uint16_t id = _freeHead;
-    NodeInfo & node = _data[_freeHead];
-    assert(node.free);
-    node.ptr = ptr;
-    node.hasSend = hasSend;
-    node.free = false;
+	//再插入到时间队列末尾
+	NodeInfo ni;
 
-    //修改free链表
-    _freeHead = node.freeNext;
-    if(0 == _freeHead)
-    {
-        _freeTail = 0;
-    }
-#endif
-    NodeInfo & node = _data[id];
-    node.ptr = ptr;
-    node.hasSend = hasSend;
+	ni.createTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-    //加入到时间链表里面
-    uint16_t timeoutPtr;
-    timeoutPtr = (uint16_t)(timeoutSelf - _timeoutPtrTime) + _timeoutPtr;
-    timeoutPtr = timeoutPtr % _timeoutSize;
+	ni.dataIter = it;
 
-    if(0 == _timeoutHead[timeoutPtr])
-    {
-        node.timeoutNext = 0;
-    }
-    else
-    {
-        uint16_t nextId = _timeoutHead[timeoutPtr];
-        assert(_data[nextId].timeoutPrevEnd);
-        _data[nextId].timeoutPrev = id;
-        _data[nextId].timeoutPrevEnd = false;
+	ni.hasPoped = false;
 
-        _data[id].timeoutNext = nextId;
-    }
-    node.timeoutPrevEnd = true;
-    node.timeoutPrev = timeoutPtr;
-    _timeoutHead[timeoutPtr] = id;
-    
-    //没有发送放到list队列里面
-    if(!hasSend)
-    {
-        _noSendSize ++;
-        if(0 == _noSendTail)
-        {
-            assert(0 == _noSendHead);
-            _noSendHead = id;
-            _data[id].noSendPrev = 0;
-        }
-        else
-        {
-            assert(0 != _noSendHead);
-            _data[_noSendTail].noSendNext = id;
-            _data[id].noSendPrev = _noSendTail;
-        }
-        _data[id].noSendNext = 0;
-        _noSendTail = id;
-    }
+	_time.push_back(ni);
 
-    return id;
+	typename time_type::iterator tmp = _time.end();
+
+	--tmp;
+
+	it->second.timeIter = tmp;
+
+	if (_firstNoPopIter == _time.end())
+	{
+		_firstNoPopIter = tmp;
+	}
+
+	return true;
 }
 
-template<typename T> bool TC_TimeoutQueueMap<T>::timeout(T & t)
+template<typename K, typename T>
+void TC_TimeoutQueueMap<K, T>::push(const K & k, const T & ptr)
 {
-    if(0 == _timeoutPtrTime)
-    {
-        return false;
-    }
+	std::lock_guard<std::mutex> lock(_mutex);
 
-    int64_t nowSelf = TNOWMS >> 6;
+	typename data_type::iterator it = _data.find(k);
 
-    while(true)
-    {
-        if(_timeoutPtrTime >= nowSelf)
-        {
-            return false;
-        }
-        if(0 == _timeoutHead[_timeoutPtr])
-        {
-            _timeoutPtr++;
-            _timeoutPtrTime ++;
-            if(_timeoutSize == _timeoutPtr)
-            {
-                _timeoutPtr = 0;
-            }
-        }
-        else
-        {
-            uint16_t id = _timeoutHead[_timeoutPtr];
-            NodeInfo & node = _data[id];
-            t = node.ptr;
-            if(!node.hasSend)
-            {
-                delFromNoSend(id);
-            }
-            delFromTimeout(id);
-            delFromData(id);
-            return true;
-        }
-    }
-    return true;
+	//如果重复插入的数据, 先从时间队列中删除
+	if (it != _data.end())
+	{
+		if (_firstNoPopIter == it->second.timeIter)
+		{
+			_firstNoPopIter++;
+		}
+		_time.erase(it->second.timeIter);
+		it->second.ptr = ptr;
+	}
+	else
+	{
+		PtrInfo pi;
+		pi.ptr = ptr;
+
+		//写入新数据, 返回新的迭代器内容
+		std::pair<typename data_type::iterator, bool> result;
+
+		result = _data.insert(make_pair(k, pi));
+
+		it = result.first;
+	}
+
+	//更新时间队列
+	NodeInfo ni;
+
+	ni.createTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+	ni.dataIter = it;
+
+	ni.hasPoped = false;
+
+	_time.push_back(ni);
+
+	typename time_type::iterator tmp = _time.end();
+
+	--tmp;
+
+	it->second.timeIter = tmp;
+
+	if (_firstNoPopIter == _time.end())
+	{
+		_firstNoPopIter = tmp;
+	}
 }
 
-template<typename T> bool TC_TimeoutQueueMap<T>::erase(uint16_t id, T & t)
+template<typename K, typename T>
+void TC_TimeoutQueueMap<K, T>::timeout()
 {
-    //cerr<<"line:"<<__LINE__<<" erase:"<<id<<endl;
-    assert(id < _dataSize);
-    if(id >= _dataSize)
-    {
-        return false;
-    }
+	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-    if(_data[id].free)
-    {
-        return false;
-    }
+	while (true)
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
 
-    t = _data[id].ptr;
-    if(!_data[id].hasSend)
-    {
-        delFromNoSend(id);
-    }
-    delFromTimeout(id);
-    delFromData(id);
+		typename time_type::iterator it = _time.begin();
 
-    return true;
+		if (it != _time.end() && ms - it->createTime > _timeout)
+		{
+			_data.erase(it->dataIter);
+
+			if (_firstNoPopIter == it)
+			{
+				++_firstNoPopIter;
+			}
+			_time.erase(it);
+		}
+		else
+		{
+			break;
+		}
+	}
 }
 
-template<typename T> void TC_TimeoutQueueMap<T>::delFromTimeout(uint16_t delId)
+template<typename K, typename T>
+void TC_TimeoutQueueMap<K, T>::timeout(const data_functor & df)
 {
-    //从超时里面删除
-    if(_data[delId].timeoutPrevEnd)
-    {
-        //cerr<<"line:"<<__LINE__<<endl;
-        uint16_t nextId;
-        uint16_t timeoutId;
-        timeoutId = _data[delId].timeoutPrev;
-        nextId = _data[delId].timeoutNext;
+	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-        _timeoutHead[timeoutId] = nextId;
-        if(0 != nextId)
-        {
-            _data[nextId].timeoutPrevEnd = true;
-            _data[nextId].timeoutPrev = timeoutId;
-        }
-    }
-    else
-    {
-        //cerr<<"line:"<<__LINE__<<endl;
-        uint16_t prevId,nextId;
-        prevId = _data[delId].timeoutPrev;
-        nextId = _data[delId].timeoutNext;
+	while (true)
+	{
+		{
+			_mutex.lock();
 
-        assert(0 != prevId);
-        _data[prevId].timeoutNext = nextId;
-        if(0 != nextId)
-        {
-            _data[nextId].timeoutPrev = prevId;
-        }
-    }
+			typename time_type::iterator it = _time.begin();
+
+			if (it != _time.end() && ms - it->createTime > _timeout)
+			{
+				auto v = *it->dataIter;
+
+				_data.erase(it->dataIter);
+
+				if (_firstNoPopIter == it)
+				{
+					_firstNoPopIter++;
+				}
+				_time.erase(it);
+
+				_mutex.unlock();
+
+				try { df(v.first, v.second.ptr); } catch (...) {}
+			}
+			else
+			{
+				_mutex.unlock();
+				break;
+			}
+		}
+
+	}
 }
 
-template<typename T> void TC_TimeoutQueueMap<T>::delFromData(uint16_t id)
+template<typename K, typename T>
+bool TC_TimeoutQueueMap<K, T>::erase(const K & k)
 {
-    //放了链表最后
-    _data[id].freeNext = 0;
-    if(0 == _freeTail)
-    {
-        assert(0 == _freeHead);
-        _freeHead = id;
-    }
-    else
-    {
-        assert(0 != _freeHead);
-        _data[_freeTail].freeNext = id;
-    }
-    _freeTail = id;
-    _data[id].free = true;
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	typename data_type::iterator it = _data.find(k);
+
+	if (it == _data.end())
+	{
+		return false;
+	}
+
+	if (_firstNoPopIter == it->second.timeIter)
+	{
+		_firstNoPopIter++;
+	}
+	_time.erase(it->second.timeIter);
+
+	_data.erase(it);
+
+	return true;
 }
 
-template<typename T> void TC_TimeoutQueueMap<T>::delFromNoSend(uint16_t id)
+template<typename K, typename T>
+bool TC_TimeoutQueueMap<K, T>::erase(const K & k, T & t)
 {
-    uint16_t prevId,nextId;
-    prevId = _data[id].noSendPrev;
-    nextId = _data[id].noSendNext;
+	std::lock_guard<std::mutex> lock(_mutex);
 
-    assert(_noSendSize>0);
-    _noSendSize --;
+	typename data_type::iterator it = _data.find(k);
 
-    if(0 == prevId)
-    {
-        _noSendHead = nextId;
-    }
-    else
-    {
-        _data[prevId].noSendNext = nextId;
-    }
+	if (it == _data.end())
+	{
+		return false;
+	}
 
-    if(0 == nextId)
-    {
-        _noSendTail = 0;
-    }
-    else
-    {
-        _data[nextId].noSendPrev = prevId;
-    }
+	t = it->second.ptr;
+
+	if (_firstNoPopIter == it->second.timeIter)
+	{
+		_firstNoPopIter++;
+	}
+	_time.erase(it->second.timeIter);
+
+	_data.erase(it);
+
+	return true;
 }
-/////////////////////////////////////////////////////////////////
+
+template<typename K, typename T>
+bool TC_TimeoutQueueMap<K, T>::pop(T & ptr)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	if (_time.empty())
+	{
+		return false;
+	}
+
+	typename time_type::iterator it = _time.begin();
+
+	if (it->hasPoped == true)
+	{
+		it = _firstNoPopIter;
+	}
+
+	if (it == _time.end())
+	{
+		return false;
+	}
+
+	assert(it->hasPoped == false);
+
+	ptr = it->dataIter->second.ptr;
+
+	it->hasPoped = true;
+
+	_firstNoPopIter = it;
+
+	++_firstNoPopIter;
+
+	return true;
 }
-#endif
+
+template<typename K, typename T>
+std::pair<K, T> TC_TimeoutQueueMap<K, T>::front()
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+
+    if (_time.empty())
+    {
+        throw std::runtime_error("no data exists");
+    }
+
+    typename time_type::iterator it = _time.begin();
+
+    if (it->hasPoped == true)
+    {
+        it = _firstNoPopIter;
+    }
+
+    if (it == _time.end())
+    {
+        throw std::runtime_error("no data exists");
+    }
+
+    assert(it->hasPoped == false);
+
+    return std::make_pair(it->dataIter->first, it->dataIter->second.ptr);
+}
+}
