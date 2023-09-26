@@ -340,6 +340,34 @@ public:
     }
 
     /**
+     * @brief Replace other types of smart pointers with current types of smart pointers
+     * @brief 将其他类型的智能指针换成当前类型的智能指针.
+     *
+     * @param Y
+     * @param r
+     * @return TC_AutoPtr
+     */
+    template<class Y>
+    static TC_AutoPtr staticCast(const TC_AutoPtr<Y>& r)
+    {
+        return TC_AutoPtr(static_cast<T*>(r._ptr));
+    }
+
+    /**
+     * @brief Convert pointers of other native types into smart pointers of the current type
+     * @brief 将其他原生类型的指针转换成当前类型的智能指针.
+     *
+     * @param Y
+     * @param p
+     * @return TC_AutoPtr
+     */
+    template<class Y>
+    static TC_AutoPtr staticCast(Y* p)
+    {
+        return TC_AutoPtr(static_cast<T*>(p));
+    }
+
+    /**
      * @brief Get Native Pointer
      * @brief 获取原生指针.
      *
