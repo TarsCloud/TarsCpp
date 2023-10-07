@@ -1,6 +1,6 @@
 
 
-set(TARS_VERSION "3.0.16")
+set(TARS_VERSION "3.0.17")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 
 set(CMAKE_VERBOSE_MAKEFILE off)

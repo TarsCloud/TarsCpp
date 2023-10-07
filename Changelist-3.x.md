@@ -1,3 +1,40 @@
+# v3.0.17 20231007
+### en
+- fix remote logger, set _logStatReport default value
+- fix time logger crash bug when comm not initialize
+- fix cmake clear install
+- fix tc_json double bug
+- fix commumicator ssl ctx init bug
+- fix tc_socket sizeof duplicate bug
+- fix push callbak onClose(ep)
+- fix http_call request use const
+- open /MT in windows by default
+- push callback add onConnected
+- tarsregistry update self ip list
+- ServantProxy add tars_close, close fd of prx
+- hash code type use size_t
+- add tc_timeout_queue_map(key value cache+queue)
+- add tc_socket_async
+- Update Contributing.md
+
+### cn
+- 修复: 远程日志未设置_logStatReport缺省值的问题
+- 修复: 通信器未初始化时, 按天日志可能会crash的问题
+- 修复: cmake清除installde问题
+- 修复: tc_json double类型解析的bug
+- 修复: 通信器ssl ctx初始化的问题
+- 修复: tc_socket中使用sizeof有误的问题
+- 修复: push callbak中onClose(ep)没有被回调的问题
+- 修复: http_call请求参数使用const
+- windows编译默认开启/MT
+- push callback 添加 onConnected回调
+- tarsregistry更新自己的ip list
+- ServantProxy 添加了tars_close, 关闭自己的句柄
+- hash code 类型统一修改为 size_t
+- 添加工具类: tc_timeout_queue_map(key value cache+queue)
+- 添加工具类: tc_socket_async
+- 修改Contributing.md
+
 # v3.0.16 20230810
 ### en
 - please notice!!!! default value of bool in tars struct set to false
