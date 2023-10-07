@@ -8,6 +8,7 @@
 - fix tc_socket sizeof duplicate bug
 - fix push callbak onClose(ep)
 - fix http_call request use const
+- tc_autoptr add staticCast
 - open /MT in windows by default
 - push callback add onConnected
 - tarsregistry update self ip list
@@ -26,6 +27,7 @@
 - 修复: tc_socket中使用sizeof有误的问题
 - 修复: push callbak中onClose(ep)没有被回调的问题
 - 修复: http_call请求参数使用const
+- tc_autoptr 添加 staticCast
 - windows编译默认开启/MT
 - push callback 添加 onConnected回调
 - tarsregistry更新自己的ip list
