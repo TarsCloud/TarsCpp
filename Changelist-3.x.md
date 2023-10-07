@@ -8,12 +8,14 @@
 - fix tc_socket sizeof duplicate bug
 - fix push callbak onClose(ep)
 - fix http_call request use const
+- fix ServantProxy::invoke crash on QiLin OS
 - tc_autoptr add staticCast
 - open /MT in windows by default
 - push callback add onConnected
 - tarsregistry update self ip list
 - ServantProxy add tars_close, close fd of prx
 - hash code type use size_t
+- set max tars package size 100M
 - add tc_timeout_queue_map(key value cache+queue)
 - add tc_socket_async
 - Update Contributing.md
@@ -27,12 +29,15 @@
 - 修复: tc_socket中使用sizeof有误的问题
 - 修复: push callbak中onClose(ep)没有被回调的问题
 - 修复: http_call请求参数使用const
+- 修复: 在麒麟OS上, ServantProxy::invoke 的 crash
 - tc_autoptr 添加 staticCast
 - windows编译默认开启/MT
 - push callback 添加 onConnected回调
 - tarsregistry更新自己的ip list
 - ServantProxy 添加了tars_close, 关闭自己的句柄
 - hash code 类型统一修改为 size_t
+- 最大网络包调整为100M
+- 
 - 添加工具类: tc_timeout_queue_map(key value cache+queue)
 - 添加工具类: tc_socket_async
 - 修改Contributing.md
