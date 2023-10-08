@@ -16,7 +16,7 @@
 
 #include "util/tc_gzip.h"
 
-#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+#if TARS_GZIP
 
 #include <zlib.h>
 #include <string.h>
