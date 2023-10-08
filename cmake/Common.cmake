@@ -40,10 +40,15 @@ option(ONLY_LIB "option for only lib" ON)
 #-------------------------------------------------------------
 
 IF (UNIX)
-    set(CMAKE_INSTALL_PREFIX "/usr/local/tars/cpp" CACHE STRING "set install path" FORCE)
+    set(INSTALL_PREFIX "/usr/local/tars/cpp" CACHE STRING "set install path" FORCE)
 ELSE()
-    set(CMAKE_INSTALL_PREFIX "c:/tars/cpp" CACHE STRING "set install path" FORCE)
+    set(INSTALL_PREFIX "c:/tars/cpp" CACHE STRING "set install path" FORCE)
 ENDIF()
+
+#工程INSTALL目录
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${INSTALL_PREFIX}" CACHE STRING "set install path" FORCE)
+endif()
 
 #-------------------------------------------------------------
 IF (APPLE)
