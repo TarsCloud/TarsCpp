@@ -40,9 +40,9 @@ option(ONLY_LIB "option for only lib" ON)
 #-------------------------------------------------------------
 
 IF (UNIX)
-    set(INSTALL_PREFIX "/usr/local/tars/cpp" CACHE STRING "set install path" FORCE)
+    set(INSTALL_PREFIX "/usr/local/tars/cpp" CACHE STRING "set install path" )
 ELSE()
-    set(INSTALL_PREFIX "c:/tars/cpp" CACHE STRING "set install path" FORCE)
+    set(INSTALL_PREFIX "c:/tars/cpp" CACHE STRING "set install path")
 ENDIF()
 
 #工程INSTALL目录
