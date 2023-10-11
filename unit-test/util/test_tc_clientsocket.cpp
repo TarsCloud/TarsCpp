@@ -30,7 +30,7 @@ public:
 TEST_F(UtilClientSocketTest, testParseEndpoint)
 {
 	TC_Endpoint ep;
-	ep.parse("tcp -h 127.0.0.1 -p 17890 -t 3000:");
+	ep.parse("tcp -h 127.0.0.1 -p 17890 -p 3000");
 
 	ASSERT_TRUE(ep.isTcp());
 	ASSERT_TRUE(ep.getHost() == "127.0.0.1");
