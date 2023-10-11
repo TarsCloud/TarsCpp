@@ -90,16 +90,22 @@ uint64_t TC_TimeProvider::GetCycleCount()
 void TC_TimeProvider::getNow(timeval *tv)
 {
 #if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
-
-    int idx = _buf_idx;
-    *tv = _t[idx];
-    if(fabs(_cpu_cycle - 0) < 0.0001 && _use_tsc)
+    if(GetCycleCount() != 0)
     {
-        addTimeOffset(*tv, idx);
+        int idx = _buf_idx;
+        *tv = _t[idx];
+        if (fabs(_cpu_cycle - 0) < 0.0001 && _use_tsc)
+        {
+            addTimeOffset(*tv, idx);
+        }
+        else
+        {
+            TC_Common::gettimeofday(*tv);
+        }
     }
     else
     {
-        TC_Common::gettimeofday(*tv); 
+        TC_Common::gettimeofday(*tv);
     }
 #else
 	TC_Common::gettimeofday(*tv);
