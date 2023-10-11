@@ -922,9 +922,9 @@ namespace tars
 
 				TC_Port::localtime_r(&t, &tt);
 
-				const char *szFormat = (_bHasSquareBracket) ? ("[%04d-%02d-%02d %02d:%02d:%02d.%03ld]%s") : ("%04d-%02d-%02d %02d:%02d:%02d.%03ld%s");
+				const char *szFormat = (_bHasSquareBracket) ? ("[%04d-%02d-%02d %02d:%02d:%02d.%03d]%s") : ("%04d-%02d-%02d %02d:%02d:%02d.%03d%s");
 				n += snprintf(c + n, len - n, szFormat,
-					tt.tm_year + 1900, tt.tm_mon + 1, tt.tm_mday, tt.tm_hour, tt.tm_min, tt.tm_sec, duration_in_ms % 1000, _sSepar.c_str());
+					tt.tm_year + 1900, tt.tm_mon + 1, tt.tm_mday, tt.tm_hour, tt.tm_min, tt.tm_sec, (int)(duration_in_ms % 1000), _sSepar.c_str());
 			}
 			else if (hasFlag(TC_Logger::HAS_TIME))
 			{
