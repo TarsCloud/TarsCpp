@@ -120,6 +120,7 @@ public:
 			shared_ptr<TC_EpollServer::SendContext> send = data->createSendContext();
 
 			string buff(data->buffer().data(), data->buffer().size());
+//            cout << "handle:" << buff << endl;
 
 			buff += "-" + TC_Common::tostr(TC_Thread::CURRENT_THREADID());
 
@@ -234,7 +235,7 @@ public:
 
 	void bindTcpQueue(const std::string &str)
 	{
-		TC_EpollServer::BindAdapterPtr lsPtr = _epollServer->createBindAdapter<TcpQueueHandle>("TcpQueueAdapter", str, 5);
+        TC_EpollServer::BindAdapterPtr lsPtr = _epollServer->createBindAdapter<TcpQueueHandle>("TcpQueueAdapter", str, 5);
 
 		lsPtr->enableQueueMode();
 

@@ -40,8 +40,10 @@ void TC_EpollServer::RecvContext::parseIpPort() const
 	}
 }
 
-TC_EpollServer::DataBuffer::DataBuffer(int handleNum)
+TC_EpollServer::DataBuffer::DataBuffer(int handleNum, TC_EpollServer *epollServer)
 {
+    _epollServer = epollServer;
+
 	for(int i = 0; i < handleNum; i++)
 	{
 		_threadDataQueue.push_back(std::make_shared<DataQueue>());
@@ -59,6 +61,7 @@ const shared_ptr<TC_EpollServer::DataBuffer::DataQueue> &TC_EpollServer::DataBuf
 	//如果是队列模式, 则返回handle线程对应的队列
 	if(isQueueMode())
 	{
+//        LOG_CONSOLE_DEBUG << "handleIndex:" << handleIndex << ", data queue index:" << index(handleIndex) << endl;
 		return _threadDataQueue[index(handleIndex)];
 	}
 
@@ -73,21 +76,38 @@ void TC_EpollServer::DataBuffer::notifyBuffer(uint32_t handleIndex)
 
 void TC_EpollServer::DataBuffer::insertRecvQueue(const shared_ptr<RecvContext> &recv)
 {
+//    LOG_CONSOLE_DEBUG << endl;
 	++_iRecvBufferSize;
 
-	getDataQueue(recv->uid())->push_back(recv);
+    if(_epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD || _epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_CO)
+    {
+        //协程模式本身也是队列模式
+        getDataQueue(recv->threadIndex())->push_back(recv);
+    }
+    else
+    {
+        //非协程模式下, getDataQueue会判断是否是队列模式
+        getDataQueue(recv->uid())->push_back(recv);
+    }
 
 	if(_schedulers[0] != NULL)
 	{
-		//存在调度器, 处于协程中
-		if(isQueueMode())
-		{
-			_schedulers[index(recv->uid())]->notify();
-		}
-		else
-		{
-			_schedulers[index(rand())]->notify();
-		}
+        if(_epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD || _epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_CO)
+        {
+            _schedulers[index(recv->threadIndex())]->notify();
+        }
+        else
+        {
+            //存在调度器, 处于协程中
+            if (isQueueMode())
+            {
+                _schedulers[index(recv->uid())]->notify();
+            }
+            else
+            {
+                _schedulers[index(rand())]->notify();
+            }
+        }
 	}
 }
 
@@ -100,19 +120,33 @@ void TC_EpollServer::DataBuffer::insertRecvQueue(const deque<shared_ptr<RecvCont
 
 	_iRecvBufferSize += recv.size();
 
-	getDataQueue(recv.back()->uid())->push_back(recv);
+
+    if(_epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD || _epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_CO)
+    {
+        //协程模式本身也是队列模式
+        getDataQueue(recv.back()->threadIndex())->push_back(recv);
+    }
+    else
+    {
+        //非协程模式下, getDataQueue会判断是否是队列模式
+        getDataQueue(recv.back()->uid())->push_back(recv);
+    }
 
 	if (_schedulers[0] != NULL)
 	{
-		//存在调度器, 处于协程中
-		if (isQueueMode())
-		{
-			_schedulers[index(recv.back()->uid())]->notify();
-		}
-		else
-		{
-			_schedulers[index(rand())]->notify();
-		}
+        if(_epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD || _epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_CO)
+        {
+            _schedulers[index(recv.back()->threadIndex())]->notify();
+        }
+        else
+        {
+            //存在调度器, 处于协程中
+            if (isQueueMode()) {
+                _schedulers[index(recv.back()->uid())]->notify();
+            } else {
+                _schedulers[index(rand())]->notify();
+            }
+        }
 	}
 }
 
@@ -331,6 +365,7 @@ void TC_EpollServer::Handle::handleOnceThread()
 
 	while ((loop--) > 0 && _dataBuffer->pop(_handleIndex, data))
 	{
+//        LOG_CONSOLE_DEBUG << "handleIndex1:" << _handleIndex << endl;
 		try
 		{
 			//上报心跳
@@ -377,6 +412,7 @@ void TC_EpollServer::Handle::handleOnceThread()
 		}
 	}
 
+//    LOG_CONSOLE_DEBUG << "handleIndex2:" << _handleIndex << ", size:" << _dataBuffer->size(_handleIndex) << endl;
 
 	if (loop <= 0 && _dataBuffer->size(_handleIndex) > 0)
 	{
@@ -384,6 +420,8 @@ void TC_EpollServer::Handle::handleOnceThread()
 		//NET_THREAD_QUEUE_HANDLES_THREAD模式下不需要通知，handleLoopThread循环中会自动再次处理
 		if (_epollServer->getOpenCoroutine() == NET_THREAD_MERGE_HANDLES_THREAD)
 		{
+//            LOG_CONSOLE_DEBUG << "notifyFilter:" << _handleIndex << endl;
+
 			notifyFilter();
 		}
 	}
@@ -610,7 +648,9 @@ bool TC_EpollServer::Connection::handleOutputImp(const shared_ptr<TC_Epoller::Ep
 
 bool TC_EpollServer::Connection::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> &data)
 {
-	TC_EpollServer::NetThread *netThread = (TC_EpollServer::NetThread *)data->cookie();
+//    LOG_CONSOLE_DEBUG << endl;
+
+    TC_EpollServer::NetThread *netThread = (TC_EpollServer::NetThread *)data->cookie();
 
 	try
 	{
@@ -1660,7 +1700,7 @@ void TC_EpollServer::NetThread::addTcpConnection(TC_EpollServer::Connection *cPt
 {
 	uint32_t uid = _list->getUniqId();
 
-	// LOG_CONSOLE_DEBUG << "uid:" << uid << endl;
+//    LOG_CONSOLE_DEBUG << "uid:" << uid << ", " << this->_threadIndex << endl;
 
 	cPtr->initialize(_epoller, uid, this);
 
@@ -1931,7 +1971,7 @@ bool TC_EpollServer::accept(int fd, int domain)
 			return true;
 		}
 
-		// LOG_CONSOLE_DEBUG << "fd:" << fd << ", cfd:" << cs.getfd() << endl;
+//        cou<< "fd:" << fd << ", cfd:" << cs.getfd() << endl;
 
 		cs.setblock(false);
 
