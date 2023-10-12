@@ -705,7 +705,12 @@ void HelloTest::rpcFromRegistry(Communicator *comm)
 	ASSERT_TRUE(ret == 0);
 	ASSERT_TRUE(out == _buffer);
 
-	//test rpc loop
+    //先调用几次
+    ret = qPrx->testPid(out);
+    ret = qPrx->testPid(out);
+    ASSERT_TRUE(ret == 0);
+
+    //test rpc loop
 	int count = 10;
 	while(count-- > 0)
 	{
@@ -755,7 +760,7 @@ void HelloTest::rpcConHashFromRegistry(Communicator *comm)
 			for (int j = 0; j < 10; ++j) {
 				std::string serverInfo;
 				int ret = prx->tars_consistent_hash(TC_Thread::CURRENT_THREADID())->testConHash(serverInfo);
-				LOG_CONSOLE_DEBUG << "hashCode:" << TC_Thread::CURRENT_THREADID() << ", serverInfo:" << serverInfo << endl;
+//				LOG_CONSOLE_DEBUG << "hashCode:" << TC_Thread::CURRENT_THREADID() << ", serverInfo:" << serverInfo << endl;
 				servInfos.emplace(serverInfo);
 				ASSERT_TRUE(ret == 0);
 			}
