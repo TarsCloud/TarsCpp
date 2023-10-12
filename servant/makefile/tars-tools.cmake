@@ -79,6 +79,8 @@ ELSE ()
 	MESSAGE(STATUS "================ ERROR: This platform is unsupported!!! ================")
 ENDIF (UNIX)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char")
+
 set(TARS_RELEASE "${PROJECT_BINARY_DIR}/run-release.cmake")
 FILE(WRITE ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo release all)\n")
 
