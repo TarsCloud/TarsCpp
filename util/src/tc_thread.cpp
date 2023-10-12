@@ -249,14 +249,14 @@ bool TC_Thread::isAlive() const
     return _running;
 }
 
-    uint64_t TC_Thread::CURRENT_THREADID()
+uint64_t TC_Thread::CURRENT_THREADID()
 {
     static thread_local uint64_t threadId = 0;
     if(threadId == 0 )
     {
         std::stringstream ss;
         ss << std::this_thread::get_id();
-        threadId = TC_Common::strto<uint64_t>(ss.str().c_str());
+        threadId = std::strtoll(ss.str().c_str(), NULL, 0);
     }
     return threadId;
 }

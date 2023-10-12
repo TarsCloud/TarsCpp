@@ -3,6 +3,8 @@
 
 TEST_F(HelloTest, rpcASyncGlobalCommunicator)
 {
+    cout << TC_Thread::CURRENT_THREADID() << endl;
+
 	shared_ptr<Communicator> c = getCommunicator();
 
 	transGlobalCommunicator([&](Communicator *comm){
