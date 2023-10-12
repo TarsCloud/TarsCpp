@@ -662,6 +662,8 @@ void TC_Transceiver::doRequest()
 		auto data = _sendBuffer.getBufferPointer();
 		assert(data.first != NULL && data.second != 0);
 
+//        LOG_CONSOLE_DEBUG << "doRequest buff :" << string(data.first, (uint32_t)data.second) << endl;
+
 		int iRet = this->send(data.first, (uint32_t)data.second, 0);
 
 		if (iRet <= 0)
