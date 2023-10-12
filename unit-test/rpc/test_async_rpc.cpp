@@ -1,15 +1,20 @@
 ﻿
 #include "hello_test.h"
 
+
 TEST_F(HelloTest, rpcASyncGlobalCommunicator)
 {
     cout << TC_Thread::CURRENT_THREADID() << endl;
 
-	shared_ptr<Communicator> c = getCommunicator();
+    {
+        shared_ptr<Communicator> c = getCommunicator();
 
-	transGlobalCommunicator([&](Communicator *comm){
-		checkASync(comm);
-	}, c.get());
+        transGlobalCommunicator([&](Communicator *comm) {
+            checkASync(comm);
+        }, c.get());
+    }
+
+    cout << getFdCounts() << endl;
 }
 
 
