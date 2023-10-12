@@ -76,10 +76,11 @@ TEST_F(UtilEpollServerTest, RunUdp)
 
 		for (int i = 0; i < 10; i++)
 		{
-			iRet = client.sendRecv("abc", 3, recvBuffer, recvLenth);
+            string buff = "abc-" + TC_Common::tostr(i);
+			iRet = client.sendRecv(buff.c_str(), buff.size(), recvBuffer, recvLenth);
 
 			ASSERT_TRUE(iRet == 0);
-			ASSERT_TRUE(string(recvBuffer, recvLenth) == "abc");
+			ASSERT_TRUE(string(recvBuffer, recvLenth) == buff);
 		}
 
 		stopServer(server);

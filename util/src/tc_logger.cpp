@@ -33,7 +33,7 @@ static int __global_logger_debug_init__ = init_global_debug_log();
 
 bool TC_LoggerRoll::_bDyeingFlag = false;
 TC_SpinLock TC_LoggerRoll::_mutexDyeing;
-unordered_map<size_t, string>  TC_LoggerRoll::_mapThreadID;
+unordered_map<uint64_t, string>  TC_LoggerRoll::_mapThreadID;
 
 const string LogByDay::FORMAT = "%Y%m%d";
 const string LogByHour::FORMAT = "%Y%m%d%H";

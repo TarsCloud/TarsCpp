@@ -264,7 +264,7 @@ namespace tars
 		 * Stained thread ID collection
 		 *
 		 */
-		static unordered_map<size_t, string> _mapThreadID;
+		static unordered_map<uint64_t, string> _mapThreadID;
 	};
 
 	typedef TC_AutoPtr<TC_LoggerRoll> TC_LoggerRollPtr;
@@ -944,7 +944,7 @@ namespace tars
 
 			if (hasFlag(TC_Logger::HAS_PID))
 			{
-				n += snprintf(c + n, len - n, "%zd%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());               
+				n += snprintf(c + n, len - n, "%lld%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());
 			}
 
 			if (hasFlag(TC_Logger::HAS_LEVEL))

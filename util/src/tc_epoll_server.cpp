@@ -120,7 +120,6 @@ void TC_EpollServer::DataBuffer::insertRecvQueue(const deque<shared_ptr<RecvCont
 
 	_iRecvBufferSize += recv.size();
 
-
     if(_epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD || _epollServer->getOpenCoroutine() == TC_EpollServer::NET_THREAD_MERGE_HANDLES_CO)
     {
         //协程模式本身也是队列模式
@@ -752,6 +751,8 @@ void TC_EpollServer::Connection::onRequestCallback(TC_Transceiver *trans)
 	{
 		auto it = _messages.begin();
 
+//        LOG_CONSOLE_DEBUG << string((*it)->buffer()->buffer(), (*it)->buffer()->length()) << ", message:" << _messages.size() << endl;
+
 		TC_Transceiver::ReturnStatus iRet = _trans->sendRequest((*it)->buffer(), (*it)->getRecvContext()->addr());
 
 		if (iRet == TC_Transceiver::eRetError)
@@ -978,6 +979,8 @@ int TC_EpollServer::Connection::sendBuffer()
 	//计算还有多少数据没有发送出去
 	size_t lastLeftBufferSize = _messageSize + sendBuffer.getBufferLength();
 
+//    LOG_CONSOLE_DEBUG << "buff size:" << sendBuffer.getBufferLength() << ", " << sendBuffer.getBuffersString() << endl;
+
 	_trans->doRequest();
 
 	//需要关闭链接
@@ -1000,7 +1003,9 @@ int TC_EpollServer::Connection::send(const shared_ptr<SendContext> &sc)
 	//队列不为空, 直接进队列
 	const shared_ptr<TC_NetWorkBuffer::Buffer>& buff = sc->buffer();
 
-	if(_messages.empty())
+//    LOG_CONSOLE_DEBUG << string(buff->buffer(), buff->length()) << ", message:" << _messages.size() << endl;
+
+    if(_messages.empty())
 	{
 		_trans->sendRequest(buff, sc->getRecvContext()->addr());
 	}
@@ -1014,11 +1019,13 @@ int TC_EpollServer::Connection::send(const shared_ptr<SendContext> &sc)
 	//数据没有发送完
 	if(!buff->empty())
 	{
-		_messageSize += sc->buffer()->length();
+		_messageSize += buff->length();
 
 		_messages.push_back(sc);
 	}
-	
+
+//    LOG_CONSOLE_DEBUG << "buff size:" << buff->length() << ", message:" << _messages.size()  << endl;
+
     auto cl = _connList.lock();
 	if(cl)
 	{

@@ -1815,7 +1815,7 @@ public:
         /**
          * net线程的id
          */
-        size_t                  _threadId;
+        uint64_t                _threadId;
 
         /**
          * 线程索引
