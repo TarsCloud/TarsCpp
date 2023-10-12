@@ -327,7 +327,7 @@ public:
          * 构造, 传入handle处理线程,
          * @param handleNum
          */
-        DataBuffer(int handleNum);
+        DataBuffer(int handleNum, TC_EpollServer *epollServer);
 
         /**
          * 通知唤醒
@@ -417,6 +417,10 @@ public:
     protected:
 
         /**
+         * epoll server
+         */
+        TC_EpollServer                  *_epollServer;
+        /**
          * 接收队列数据总个数
          */
         atomic<size_t>                  _iRecvBufferSize {0};
@@ -441,7 +445,7 @@ public:
         /**
          * wait time for queue
          */
-        int64_t     _iWaitTime = 3000;
+        int64_t     _iWaitTime = 1000;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1432,7 +1436,7 @@ public:
 
             _iHandleNum = n;
 
-            _dataBuffer.reset(new DataBuffer(_iHandleNum));
+            _dataBuffer.reset(new DataBuffer(_iHandleNum, this->_epollServer));
 
             for (size_t i = 0; i < _iHandleNum; ++i)
             {
