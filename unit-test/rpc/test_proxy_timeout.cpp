@@ -10,22 +10,28 @@ TEST_F(HelloTest, proxyInvokeTimeout)
 		checkSyncTimeout(comm);
 	}, c.get());
 
+    LOG_CONSOLE_DEBUG << endl;
+
 	transInCoroutineGlobalCommunicator([&](Communicator *comm){
 		checkSyncTimeout(comm);
 	}, c.get());
 
+    LOG_CONSOLE_DEBUG << endl;
 	transServerCommunicator([&](Communicator *comm){
 		checkSyncTimeout(comm);
 	});
 
+    LOG_CONSOLE_DEBUG << endl;
 	transInCoroutineServerCommunicator([&](Communicator *comm){
 		checkSyncTimeout(comm);
 	});
 
+    LOG_CONSOLE_DEBUG << endl;
 	transAllocCommunicator([&](Communicator *comm){
 		checkSyncTimeout(comm);
 	});
 
+    LOG_CONSOLE_DEBUG << endl;
 	transInCoroutineAllocCommunicator([&](Communicator *comm){
 		checkSyncTimeout(comm);
 	});

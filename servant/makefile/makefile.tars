@@ -7,7 +7,7 @@ TARS_PATH    :=/usr/local/tars/cpp
 
 CC          = gcc
 CXX         = g++
-CFLAGS      += -std=c++11 -g -O2 -Wno-deprecated -Wall
+CFLAGS      += -std=c++11 -g -O2 -Wno-deprecated -Wall -fsigned-char
 
 #-------------------------------------------------------------------------------
 
