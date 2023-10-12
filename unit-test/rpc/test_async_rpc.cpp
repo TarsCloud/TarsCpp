@@ -1,11 +1,19 @@
 ﻿
 #include "hello_test.h"
 
+TEST_F(HelloTest, test)
+{
+    {
+        HelloServer server;
+        startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) 1);
+
+        stopServer(server);
+    }
+}
+
 
 TEST_F(HelloTest, rpcASyncGlobalCommunicator)
 {
-    cout << TC_Thread::CURRENT_THREADID() << endl;
-
     {
         shared_ptr<Communicator> c = getCommunicator();
 
@@ -13,8 +21,6 @@ TEST_F(HelloTest, rpcASyncGlobalCommunicator)
             checkASync(comm);
         }, c.get());
     }
-
-    cout << getFdCounts() << endl;
 }
 
 

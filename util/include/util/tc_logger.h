@@ -945,9 +945,14 @@ namespace tars
 			if (hasFlag(TC_Logger::HAS_PID))
 			{
 #if __WORDSIZE == 64
-                n += snprintf(c + n, len - n, "%ld%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());
+
+#if TARGET_PLATFORM_IOS
+                n += snprintf(c + n, len - n, "%llu%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());
 #else
-                n += snprintf(c + n, len - n, "%lld%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());
+                n += snprintf(c + n, len - n, "%lu%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());
+#endif
+#else
+                n += snprintf(c + n, len - n, "%llu%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());
 #endif
 			}
 
