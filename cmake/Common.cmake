@@ -65,8 +65,8 @@ ENDIF()
 
 set(PLATFORM)
 IF (UNIX)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11  -Wno-deprecated -fno-strict-aliasing -Wno-overloaded-virtual")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fsigned-char")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fsigned-char -std=c++11  -Wno-deprecated -fno-strict-aliasing -Wno-overloaded-virtual")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-builtin-macro-redefined -D__FILE__='\"$(notdir $(abspath $<))\"'")
     
     set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Wall -g")
@@ -90,7 +90,7 @@ ELSE ()
     MESSAGE(STATUS "================ ERROR: This platform is unsupported!!! ================")
 ENDIF (UNIX)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char")
 
 IF (WIN32)
     add_definitions(-DNOMINMAX)
