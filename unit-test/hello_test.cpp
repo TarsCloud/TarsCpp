@@ -506,6 +506,7 @@ void HelloTest::checkSync(Communicator *comm, const string &adapter)
 	HelloPrx prx = getObj<HelloPrx>(comm, adapter);
 	int64_t start = TC_Common::now2us();
 
+    prx->tars_ping();
 	string out;
 	//发起远程调用
 	for (int j = 0; j < _count; ++j) {

@@ -259,6 +259,7 @@ public:
 //		comm->setProperty("asyncqueuecap", "1000000");
 
 		string obj = getObj(_conf, adapter);
+        LOG_CONSOLE_DEBUG << obj << endl;
 		T prx =  comm->stringToProxy<T>(obj);
 
 		prx->tars_timeout(60000);
