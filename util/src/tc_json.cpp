@@ -1,6 +1,7 @@
 ﻿#include "util/tc_json.h"
 
-#include <math.h>
+#include <cmath>
+#include <ctgmath>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
