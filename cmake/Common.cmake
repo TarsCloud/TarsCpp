@@ -84,7 +84,7 @@ IF (UNIX)
 ELSEIF (WIN32)
     set(PLATFORM "window")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4101 /wd4244 /wd4996 /wd4091 /wd4503 /wd4819 /wd4200 /wd4800 /wd4267 /wd4834 /wd4267")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj " )
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj /SAFESEH:NO" )
 
 ELSE ()
     MESSAGE(STATUS "================ ERROR: This platform is unsupported!!! ================")
