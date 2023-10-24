@@ -8,7 +8,7 @@ endif(UNIX)
 option(TARS_SSL "option for ssl" OFF)
 option(TARS_HTTP2 "option for http2" OFF)
 option(TARS_PROTOBUF "option for protocol" OFF)
-option(TARS_GPERF    "option for gperf" OFF)
+#option(TARS_GPERF    "option for gperf" OFF)
 
 #IF(UNIX)
 #    FIND_PACKAGE(ZLIB)
@@ -30,9 +30,9 @@ if (TARS_GZIP)
     add_definitions(-DTARS_GZIP=1)
 endif ()
 
-if (TARS_GPERF)
-    add_definitions(-DTARS_GPERF=1)
-endif ()
+#if (TARS_GPERF)
+#    add_definitions(-DTARS_GPERF=1)
+#endif ()
 
 if (TARS_SSL)
     add_definitions(-DTARS_SSL=1)
@@ -57,50 +57,50 @@ set(LIB_SSL)
 set(LIB_CRYPTO)
 set(LIB_PROTOBUF)
 set(LIB_GTEST)
-set(LIB_GPERF)
-set(LIB_TCMALLOC_PROFILER)
-set(LIB_TCMALLOC_MINIMAL)
+#set(LIB_GPERF)
+#set(LIB_TCMALLOC_PROFILER)
+#set(LIB_TCMALLOC_MINIMAL)
 #-------------------------------------------------------------
 
 add_custom_target(thirdparty)
 
 include(ExternalProject)
-
-if (TARS_GPERF)
-
-    set(GPERF_DIR_INC "${THIRDPARTY_PATH}/gperf/include")
-    set(GRPEF_DIR_LIB "${THIRDPARTY_PATH}/gperf/lib")
-    include_directories(${GPERF_DIR_INC})
-    link_directories(${GRPEF_DIR_LIB})
-
-    if (UNIX)
-        set(LIB_GPERF "profiler")
-        set(LIB_TCMALLOC_PROFILER "tcmalloc_and_profiler")
-        set(LIB_TCMALLOC_MINIMAL "tcmalloc_and_minimal")
-
-        ExternalProject_Add(ADD_${LIB_GPERF}
-                URL https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com//src/gperftools-2.7.tar.gz
-                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
-                PREFIX ${CMAKE_BINARY_DIR}
-                INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/src/gperf --disable-shared --disable-debugalloc
-                SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gperf-lib
-                BUILD_IN_SOURCE 1
-                BUILD_COMMAND make
-                URL_MD5 c6a852a817e9160c79bdb2d3101b4601
-                )
-
-        add_dependencies(thirdparty ADD_${LIB_GPERF})
-
-        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/gperf/bin/pprof
-                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
-                DESTINATION thirdparty/bin/)
-        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gperf/lib DESTINATION thirdparty)
-        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gperf/include/gperftools DESTINATION thirdparty/include)
-
-    endif (UNIX)
-
-endif (TARS_GPERF)
+#
+#if (TARS_GPERF)
+#
+#    set(GPERF_DIR_INC "${THIRDPARTY_PATH}/gperf/include")
+#    set(GRPEF_DIR_LIB "${THIRDPARTY_PATH}/gperf/lib")
+#    include_directories(${GPERF_DIR_INC})
+#    link_directories(${GRPEF_DIR_LIB})
+#
+#    if (UNIX)
+#        set(LIB_GPERF "profiler")
+#        set(LIB_TCMALLOC_PROFILER "tcmalloc_and_profiler")
+#        set(LIB_TCMALLOC_MINIMAL "tcmalloc_and_minimal")
+#
+#        ExternalProject_Add(ADD_${LIB_GPERF}
+#                URL https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com//src/gperftools-2.7.tar.gz
+#                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
+#                PREFIX ${CMAKE_BINARY_DIR}
+#                INSTALL_DIR ${CMAKE_SOURCE_DIR}
+#                CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/src/gperf --disable-shared --disable-debugalloc
+#                SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gperf-lib
+#                BUILD_IN_SOURCE 1
+#                BUILD_COMMAND make
+#                URL_MD5 c6a852a817e9160c79bdb2d3101b4601
+#                )
+#
+#        add_dependencies(thirdparty ADD_${LIB_GPERF})
+#
+#        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/gperf/bin/pprof
+#                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
+#                DESTINATION thirdparty/bin/)
+#        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gperf/lib DESTINATION thirdparty)
+#        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gperf/include/gperftools DESTINATION thirdparty/include)
+#
+#    endif (UNIX)
+#
+#endif (TARS_GPERF)
 
 
 if(WIN32)
@@ -401,4 +401,4 @@ message("TARS_GZIP:                 ${TARS_GZIP}")
 message("TARS_HTTP2:                ${TARS_HTTP2}")
 message("TARS_SSL:                  ${TARS_SSL}")
 message("TARS_PROTOBUF:             ${TARS_PROTOBUF}")
-message("TARS_GPERF:                ${TARS_GPERF}")
+#message("TARS_GPERF:                ${TARS_GPERF}")
