@@ -106,7 +106,7 @@ IF (WIN32)
 ENDIF ()
 
 #-------------------------------------------------------------
-set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
+set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp" CACHE STRING "set tars2cpp")
 
 message("----------------------------------------------------")
 message("CMAKE_SOURCE_DIR:          ${CMAKE_SOURCE_DIR}")
