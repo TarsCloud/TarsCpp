@@ -200,7 +200,8 @@ protected:
     /**
      * 处理对象
      */
-    unordered_map<string, ServantPtr> _servants;
+    ServantPtr _servant;
+//    unordered_map<string, ServantPtr> _servants;
 
 
 // #ifdef TARS_OPENTRACKING
