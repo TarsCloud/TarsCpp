@@ -168,7 +168,7 @@ public:
     /**
      * 构造函数
      * @param epoller
-     * @param ep, 服务端地址 
+     * @param ep, 如果是服务器端的连接, 则为服务端地址, 如果为客户端发起的连接, 也为服务器地址
      */
     TC_Transceiver(TC_Epoller* epoller, const TC_Endpoint &ep);
 
@@ -477,7 +477,7 @@ protected:
 	/**
 	 * 解析域名
 	 */
-	void parseConnectAddress();
+	void parseConnectAddress(const TC_Endpoint &ep);
 
     /**
      * 发送鉴权代码

@@ -53,7 +53,8 @@ static TC_NetWorkBuffer::PACKET_TYPE parse(TC_NetWorkBuffer &in, vector<char> &o
 void
 HelloServer::initialize()
 {
-
+//    this->_epollServer->setUdpRecvBufferSize(10 * 1024 * 1024);
+//    this->_epollServer->setUdpSendBufferSize(10 * 1024 * 1024);
 	g_HelloServerObj = ServerConfig::Application + "." + ServerConfig::ServerName +".HelloObj@" + getEpollServer()->getBindAdapter("HelloAdapter")->getEndpoint().toString();
 	g_TransDstServerObj = ServerConfig::Application + "." + ServerConfig::ServerName +".TransDstObj@" + getEpollServer()->getBindAdapter("TransDstAdapter")->getEndpoint().toString();
 

@@ -95,9 +95,9 @@ int HelloImp::testHello(int index, const string& s, string& r, CurrentPtr curren
 //
 //	if(index % 10000 == 0)
 //	{
-		// LOG_CONSOLE_DEBUG << index << endl;
 //	}
 	++hello_count;
+//    LOG_CONSOLE_DEBUG << hello_count << ", fd:" << current->getFd() << ", " << current->getIp() << ":" << current->getPort() << endl;
 
 	r = s;
     return 0;

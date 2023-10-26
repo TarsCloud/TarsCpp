@@ -166,6 +166,8 @@ void TC_Transceiver::initializeServer(const onclose_callback& onclose,
 
 	_onCompleteNetworkCallback = onfinishAll;
 
+    parseConnectAddress(_ep);
+
 #if TARS_SSL
     if (isSSL()) 
     {
@@ -243,7 +245,7 @@ shared_ptr<TC_Epoller::EpollInfo> TC_Transceiver::bindFd(int fd)
 				_socketOpts[i].optlen);
 	}
 
-	_clientAddr = TC_Socket::createSockAddr(_ep.getHost().c_str());
+	_clientAddr = TC_Socket::createSockAddr(_ep);
 
 	getpeername(_fd, _clientAddr.first.get(), &_clientAddr.second);
 
@@ -289,7 +291,7 @@ void TC_Transceiver::checkConnect()
 			THROW_ERROR(TC_Transceiver_Exception, CR_Connect, "connect " + _desc + " error:" + err);
 		}
 
-		_clientAddr = TC_Socket::createSockAddr(_ep.getHost().c_str());
+		_clientAddr = TC_Socket::createSockAddr(_ep);
 
 		getpeername(_fd, _clientAddr.first.get(), &_clientAddr.second);
 
@@ -306,26 +308,23 @@ void TC_Transceiver::checkConnect()
 	}
 }
 
-void TC_Transceiver::parseConnectAddress()
+void TC_Transceiver::parseConnectAddress(const TC_Endpoint &ep)
 {
 #if !TARGET_PLATFORM_WINDOWS
 	if (isUnixLocal())
 	{
-		TC_Socket::parseUnixLocalAddr(getConnectEndpoint().getHost().c_str(),
-				*(sockaddr_un*)_serverAddr.first.get());
+		TC_Socket::parseUnixLocalAddr(ep.getHost().c_str(), *(sockaddr_un*)_serverAddr.first.get());
 	}
 	else
 #endif
 	{
 		if (isConnectIPv6())
 		{
-			TC_Socket::parseAddrWithPort(getConnectEndpoint().getHost(), getConnectEndpoint().getPort(),
-					*(sockaddr_in6*)_serverAddr.first.get());
+			TC_Socket::parseAddrWithPort(ep.getHost(), ep.getPort(), *(sockaddr_in6*)_serverAddr.first.get());
 		}
 		else
 		{
-			TC_Socket::parseAddrWithPort(getConnectEndpoint().getHost(), getConnectEndpoint().getPort(),
-					*(sockaddr_in*)_serverAddr.first.get());
+			TC_Socket::parseAddrWithPort(ep.getHost(), ep.getPort(), *(sockaddr_in*)_serverAddr.first.get());
 		}
 	}
 }
@@ -367,7 +366,7 @@ void TC_Transceiver::connect()
 		}
 
 		//每次连接前都重新解析一下地址, 避免dns变了!
-		parseConnectAddress();
+		parseConnectAddress(getConnectEndpoint());
 	}
 	else
 	{
@@ -386,7 +385,7 @@ void TC_Transceiver::connect()
 		}
 
 		//每次连接前都重新解析一下地址, 避免dns变了!
-		parseConnectAddress();
+		parseConnectAddress(getConnectEndpoint());
 
 		bool bConnected = doConnect(_fd, _serverAddr.first.get(), _serverAddr.second);
 		if (bConnected)
@@ -857,6 +856,12 @@ int TC_Transceiver::doProtocolAnalysis(TC_NetWorkBuffer* buff)
 				throw TC_Transceiver_Exception(err);
 			}
 
+            if(ret == TC_NetWorkBuffer::PACKET_ERR && _ep.isUdp())
+            {
+                //udp包如果存在解析错误, 则将所有包都清掉, 避免一个包的污染
+                _recvBuffer.clearBuffers();
+            }
+
 		} while (ret == TC_NetWorkBuffer::PACKET_FULL);
 
 		if (_onCompleteNetworkCallback)
@@ -1317,7 +1322,7 @@ bool TC_UDPTransceiver::doResponse()
 	{
 //		_recvBuffer.clearBuffers();
 
-		auto data = _recvBuffer.getOrCreateBuffer(_nRecvBufferSize, _nRecvBufferSize);
+		auto data = _recvBuffer.getOrCreateBuffer(_nRecvBufferSize, _nRecvBufferSize * 2);
 
 		uint32_t left = (uint32_t)data->left();
 
@@ -1341,6 +1346,8 @@ bool TC_UDPTransceiver::doResponse()
 	return iRet != 0;
 }
 
+#include <arpa/inet.h>
+
 int TC_UDPTransceiver::send(const void* buf, uint32_t len, uint32_t flag)
 {
 	if (!isValid()) return -1;
@@ -1349,11 +1356,11 @@ int TC_UDPTransceiver::send(const void* buf, uint32_t len, uint32_t flag)
 	if (_isServer)
 	{
 		iRet = ::sendto(_fd, (const char*)buf, len, flag, _lastAddr.first.get(), _lastAddr.second);
-	}
+    }
 	else
 	{
 		iRet = ::sendto(_fd, (const char*)buf, len, flag, _serverAddr.first.get(), _serverAddr.second);
-	}
+    }
 
 	if (iRet > 0)
 	{
@@ -1374,16 +1381,15 @@ int TC_UDPTransceiver::recv(void* buf, uint32_t len, uint32_t flag)
 {
 	if (!isValid()) return -1;
 
-    if(!_clientAddr.first) {
-        _clientAddr = TC_Socket::createSockAddr(_ep.getHost().c_str());
-    }
+    TC_Socket::addr_type clientAddr = TC_Socket::createSockAddr(_ep);
 
-	int iRet = ::recvfrom(_fd, (char*)buf, len, flag, _clientAddr.first.get(),
-			&_clientAddr.second); //need check from_ip & port
+    _clientAddr = clientAddr;
+
+	int iRet = ::recvfrom(_fd, (char*)buf, len, flag, clientAddr.first.get(), &clientAddr.second); //need check from_ip & port
 
 	if (!_isServer)
 	{
-		//客户端才会关闭连接, 会重建socket, 服务端不会
+        //客户端才会关闭连接, 会重建socket, 服务端不会
 		if (iRet < 0 && !TC_Socket::isPending())
 		{
 			THROW_ERROR(TC_Transceiver_Exception, CR_RECV,
