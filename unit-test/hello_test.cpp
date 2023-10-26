@@ -170,6 +170,7 @@ void ClientHelloCallback::callback_testHello(int ret, const string &r)
 {
 	callback_count++;
 
+//    LOG_CONSOLE_DEBUG << "callback_count:" << callback_count << endl;
 	if(!_prx)
 	{
 		ASSERT_TRUE(ret == 0);
@@ -551,6 +552,8 @@ void HelloTest::checkASync(Communicator *comm, const string &adapter)
 
 		prx->async_testHello(p, j, _buffer);
 	}
+
+    TC_Common::sleep(1);
 
 	waitForFinish(callback_count, _count);
 

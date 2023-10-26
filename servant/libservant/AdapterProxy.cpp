@@ -194,6 +194,7 @@ void AdapterProxy::onRequestCallback(TC_Transceiver* trans)
 TC_NetWorkBuffer::PACKET_TYPE AdapterProxy::onParserCallback(TC_NetWorkBuffer& buff, TC_Transceiver* trans)
 {
 //	LOG_CONSOLE_DEBUG  << "fd:" << trans->fd() << ", " << trans<< endl;
+
     try
     {
         shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
@@ -843,11 +844,11 @@ void AdapterProxy::finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp)
 	}
 	else
 	{
-		//这里的队列中的发送链表中的数据可能已经在timeout的时候删除了，因此可能会core，在erase中要加判断
+        //这里的队列中的发送链表中的数据可能已经在timeout的时候删除了，因此可能会core，在erase中要加判断
 		//获取请求信息
 		bool retErase = _timeoutQueue->erase(rsp->iRequestId, msg);
 
-		//找不到此id信息
+        //找不到此id信息
 		if (!retErase)
 		{
 			if (_timeoutLogFlag)
@@ -885,7 +886,6 @@ void AdapterProxy::finishInvoke(shared_ptr<ResponsePacket> & rsp)
 void AdapterProxy::finishInvoke(ReqMessage * msg)
 {
     // assert(msg->eStatus != ReqMessage::REQ_REQ);
-
     TLOGTARS("[AdapterProxy::finishInvokeMsg " << _objectProxy->name() << ", " << _trans->getConnectionString() << " ,id:" << msg->response->iRequestId << "]" << endl);
 
 // #ifdef TARS_OPENTRACKING
