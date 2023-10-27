@@ -258,47 +258,64 @@ void TC_Endpoint::parse(const string &str)
 
 vector<string> TC_Endpoint::sepEndpoint(const string& sEndpoints)
 {
-	vector<string>  vEndpoints;
-	bool flag = false;
-	string::size_type startPos = 0;
-	string::size_type sepPos = string::npos;
-	for(string::size_type pos = 0; pos < sEndpoints.size(); pos++)
-	{
-		if(sEndpoints[pos] == ':' && !flag )
-		{
-			sepPos = pos;
-			flag = true;
-		}
-		else if(flag)
-		{
-			if(sEndpoints[pos] == ' ')
-			{
-				continue;
-			}
+    std::vector<std::string> result;
 
-			if(TC_Port::strncasecmp("tcp", (sEndpoints.c_str() + pos), 3) == 0
-			   || TC_Port::strncasecmp("udp", (sEndpoints.c_str() + pos), 3) == 0
-			   || TC_Port::strncasecmp("ssl", (sEndpoints.c_str() + pos), 3) == 0)
-			{
-				string ep = TC_Common::trim(string(sEndpoints.c_str() + startPos, sepPos - startPos));
-				if(!ep.empty())
-				{
-					vEndpoints.push_back(ep);
-				}
-				startPos = pos;
-			}
+    std::function<size_t(const std::string &str, size_t)> findSep = [](const std::string &str, size_t startPos) -> size_t {
+        // 查找下一个协议出现的位置
+        size_t udpPos = str.find("udp", startPos);
+        size_t tcpPos = str.find("tcp", startPos);
+        size_t sslPos = str.find("ssl", startPos);
 
-			flag = false;
-		}
-	}
+        // 找到最小的非空位置
+        size_t foundPos = std::string::npos;
+        if (udpPos != std::string::npos) {
+            foundPos = udpPos;
+        }
+        if (tcpPos != std::string::npos) {
+            if (foundPos == std::string::npos || tcpPos < foundPos) {
+                foundPos = tcpPos;
+            }
+        }
+        if (sslPos != std::string::npos) {
+            if (foundPos == std::string::npos || sslPos < foundPos) {
+                foundPos = sslPos;
+            }
+        }
 
-	string ep = sEndpoints.substr(startPos, sepPos-startPos);
+        return foundPos;
+    };
 
-	if(!ep.empty()) {
-		vEndpoints.push_back(ep);
-	}
+    size_t startPos = 0;
+    size_t foundPos = findSep(sEndpoints, startPos);
 
-	return vEndpoints;
+    while (foundPos != std::string::npos) {
+
+        size_t lastFoundPos = foundPos;
+        startPos = foundPos + 3;  // 增加3以跳过协议名称的长度
+        foundPos = findSep(sEndpoints, startPos);
+
+        //把上一个找到的字符串分隔并记录
+        if(foundPos != std::string::npos)
+        {
+            string ep = TC_Common::trim(sEndpoints.substr(lastFoundPos, foundPos - lastFoundPos), " :");
+            if(!ep.empty())
+            {
+                result.push_back(ep);
+            }
+        }
+        else
+        {
+            //找不到下个了, 记录上一个并结束循环
+            string ep = TC_Common::trim(sEndpoints.substr(lastFoundPos), " :");
+            if(!ep.empty())
+            {
+                result.push_back(ep);
+            }
+            break;
+        }
+    }
+
+    return result;
 }
 
 

@@ -148,12 +148,15 @@ bool QueryEpBase::init(const string & sObjName, const string& setName, bool root
     _locator = _communicator->getProperty("locator");
 
     TLOGTARS("QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl);
-//	LOG_CONSOLE_DEBUG << "QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl;
 
     _invokeSetId = setName;
 
     _rootServant = rootServant;
 
+    if(sObjName.find("UdpIpv6Obj") != string::npos)
+    {
+        LOG_CONSOLE_DEBUG << "QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl;
+    }
     setObjName(sObjName);
 
     return true;
