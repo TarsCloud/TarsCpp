@@ -309,7 +309,7 @@ void TC_Epoller::close()
 	}
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-    LOG_CONSOLE_DEBUG << endl;
+//    LOG_CONSOLE_DEBUG << endl;
     ::close(_iEpollfd);
 	_iEpollfd = -1;
 
