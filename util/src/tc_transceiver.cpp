@@ -1346,8 +1346,6 @@ bool TC_UDPTransceiver::doResponse()
 	return iRet != 0;
 }
 
-#include <arpa/inet.h>
-
 int TC_UDPTransceiver::send(const void* buf, uint32_t len, uint32_t flag)
 {
 	if (!isValid()) return -1;
