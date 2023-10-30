@@ -125,8 +125,6 @@ public:
     }
 };
 
-//typedef std::function<vector<char>(RequestPacket&, TC_Transceiver *)> request_protocol;
-
 typedef std::function<shared_ptr<TC_NetWorkBuffer::Buffer>(RequestPacket&, TC_Transceiver*)> request_protocol;
 
 typedef std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer&, ResponsePacket&)> response_protocol;
@@ -286,7 +284,6 @@ public:
 
 	static TC_NetWorkBuffer::PACKET_TYPE jsonResponseLen(TC_NetWorkBuffer &in, ResponsePacket& rsp, uint32_t iMinLength, uint32_t iMaxLength);
 
-public:
     /**
      * tars请求包
      * @param request

@@ -620,9 +620,6 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 	}
 //	processSample(current);
 
-//	auto sit = _servants.find(current->getServantName());
-
-//    if (sit == _servants.end())
     if(_servant->getName() != current->getServantName())
     {
         current->sendResponse(TARSSERVERNOSERVANTERR);
