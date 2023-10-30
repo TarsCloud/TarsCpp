@@ -890,6 +890,7 @@ TEST_F(UtilHttpTest, testIncrementDecode3)
 }
 
 
+#if TARS_HTTPS
 TEST_F(UtilHttpTest, testBaidus)   //此时使用的是TEST_F宏
 {
 	string url = "https://www.baidu.com";
@@ -910,3 +911,4 @@ TEST_F(UtilHttpTest, testBaidus)   //此时使用的是TEST_F宏
 
 	ASSERT_TRUE(stHttpRsp.getContentLength() == stHttpRsp.getContent().length());
 }
+#endif
