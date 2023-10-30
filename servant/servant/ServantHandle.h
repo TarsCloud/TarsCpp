@@ -66,6 +66,11 @@ public:
      */
 	Application *getApplication() { return _application; }
 
+    /**
+     * 获取实际的servant
+     * @return
+     */
+    ServantPtr getServant() { return _servant; }
 protected:
     /**
      * 线程初始化
@@ -201,7 +206,6 @@ protected:
      * 处理对象
      */
     ServantPtr _servant;
-//    unordered_map<string, ServantPtr> _servants;
 
 
 // #ifdef TARS_OPENTRACKING

@@ -37,6 +37,7 @@ void HelloImp::destroy()
 int HelloImp::doClose(tars::TarsCurrentPtr current)
 {
 	g_app._pushThread.delCurrent(current);
+    return 0;
 }
 
 int HelloImp::registerPush(tars::TarsCurrentPtr current)
