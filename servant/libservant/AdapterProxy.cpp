@@ -34,7 +34,7 @@ class PingCallback : public ServantProxyCallback
 protected:
     virtual int onDispatch(ReqMessagePtr msg)
     {
-        if(msg->response->iRet == TARSSERVERNOSERVANTERR || msg->response->iRet == TARSSERVERNOFUNCERR)
+        if(msg->response == nullptr || msg->response->iRet == TARSSERVERNOSERVANTERR || msg->response->iRet == TARSSERVERNOFUNCERR)
         {
             this->_servantPrx->tars_open_keepalive(false);
         }
