@@ -160,7 +160,7 @@ TEST_F(DockerTest, inspectContainer)
 	entrypoints.push_back("sleep");
 	entrypoints.push_back("100");
 
-	bool succ = docker.create("test", "tarscloud/tars.nodejsbase:latest", entrypoints, {},{}, {}, {}, "", 0, "host", "none", true, false);
+	bool succ = docker.create("test", "busybox", entrypoints, {},{}, {}, {}, "", 0, "host", "none", true, false);
 	LOG_CONSOLE_DEBUG << "inspectContainer:" << succ << ", " << (succ ? docker.getResponseMessage() : docker.getErrMessage()) << endl;
 
 	ASSERT_TRUE(succ);

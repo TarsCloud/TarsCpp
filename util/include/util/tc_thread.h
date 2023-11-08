@@ -206,7 +206,8 @@ public:
 	 *
 	 * @return 
 	 */
-    static size_t CURRENT_THREADID();
+    static uint64_t CURRENT_THREADID();
+
 protected:
 
 	/**

@@ -152,7 +152,7 @@ void AdapterProxy::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::CloseR
 {
     if(_objectProxy->getRootServantProxy()->tars_get_push_callback())
     {
-		_objectProxy->getRootServantProxy()->tars_get_push_callback()->onClose();
+		_objectProxy->getRootServantProxy()->tars_get_push_callback()->onClose(trans->getConnectEndpoint());
     }
 
     int millisecond =_objectProxy->reconnect();
@@ -166,7 +166,7 @@ void AdapterProxy::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::CloseR
         return;
     }
 
-    _objectProxy->getCommunicatorEpoll()->reConnect(TNOWMS + millisecond, trans);
+    _objectProxy->getCommunicatorEpoll()->reConnect(TNOWMS + millisecond, this);
     TLOGERROR("[trans close:" << _objectProxy->name() << "," << trans->getConnectEndpoint().toString() << ", reconnect:" << millisecond << " ms]" << endl);
 }
 
@@ -175,9 +175,11 @@ void AdapterProxy::onConnectCallback(TC_Transceiver* trans)
 	// LOG_CONSOLE_DEBUG << "fd:" << trans->fd() << ", " << trans << endl;
     addConnExc(false);
 
-    if(_objectProxy->getRootServantProxy()->tars_get_push_callback())
+    if(auto cb = _objectProxy->getRootServantProxy()->tars_get_push_callback())
     {
-		_objectProxy->getRootServantProxy()->tars_get_push_callback()->onConnect(trans->getConnectEndpoint());
+		cb->onConnect(trans->getConnectEndpoint());
+        // 回调socket句柄, 外部可获取本地socket相关信息, 如：合规留痕需要
+		cb->onConnect(trans->getConnectEndpoint(), trans->fd());
     }
 
 	_objectProxy->onConnect(this);
@@ -192,6 +194,7 @@ void AdapterProxy::onRequestCallback(TC_Transceiver* trans)
 TC_NetWorkBuffer::PACKET_TYPE AdapterProxy::onParserCallback(TC_NetWorkBuffer& buff, TC_Transceiver* trans)
 {
 //	LOG_CONSOLE_DEBUG  << "fd:" << trans->fd() << ", " << trans<< endl;
+
     try
     {
         shared_ptr<ResponsePacket> rsp = std::make_shared<ResponsePacket>();
@@ -762,11 +765,17 @@ void AdapterProxy::onSetInactive()
 	_trans->close();
 }
 
-//屏蔽结点
+void AdapterProxy::onClose()
+{
+    _trans->close();
+}
+
+//屏蔽节点
 void AdapterProxy::setInactive()
 {
 	onSetInactive();
 
+    //通知根servant下面的所有servant都屏蔽
 	_objectProxy->getRootServantProxy()->onSetInactive(_ep);
 
     TLOGTARS("[AdapterProxy::setInactive, " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", inactive]" << endl);
@@ -835,11 +844,11 @@ void AdapterProxy::finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp)
 	}
 	else
 	{
-		//这里的队列中的发送链表中的数据可能已经在timeout的时候删除了，因此可能会core，在erase中要加判断
+        //这里的队列中的发送链表中的数据可能已经在timeout的时候删除了，因此可能会core，在erase中要加判断
 		//获取请求信息
 		bool retErase = _timeoutQueue->erase(rsp->iRequestId, msg);
 
-		//找不到此id信息
+        //找不到此id信息
 		if (!retErase)
 		{
 			if (_timeoutLogFlag)
@@ -877,7 +886,6 @@ void AdapterProxy::finishInvoke(shared_ptr<ResponsePacket> & rsp)
 void AdapterProxy::finishInvoke(ReqMessage * msg)
 {
     // assert(msg->eStatus != ReqMessage::REQ_REQ);
-
     TLOGTARS("[AdapterProxy::finishInvokeMsg " << _objectProxy->name() << ", " << _trans->getConnectionString() << " ,id:" << msg->response->iRequestId << "]" << endl);
 
 // #ifdef TARS_OPENTRACKING

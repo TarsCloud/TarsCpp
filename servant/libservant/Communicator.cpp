@@ -58,6 +58,9 @@ Communicator::Communicator()
     WSAStartup(MAKEWORD(2, 2), &wsadata);
 #endif
 
+#if TARS_SSL
+	_ctx = TC_OpenSSL::newCtx("", "", "", false, "");
+#endif
 }
 
 Communicator::Communicator(TC_Config& conf, const string& domain/* = CONFIG_ROOT_PATH*/)
@@ -70,6 +73,11 @@ Communicator::Communicator(TC_Config& conf, const string& domain/* = CONFIG_ROOT
 // #endif
 {
     setProperty(conf, domain);
+
+#if TARS_SSL
+	_ctx = TC_OpenSSL::newCtx("", "", "", false, "");
+#endif
+
 }
 
 Communicator::~Communicator()
@@ -153,9 +161,9 @@ shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string & objName)
 		return TC_OpenSSL::newSSL(it->second);
 	}
 
-	if(!_ctx) {
-		_ctx = TC_OpenSSL::newCtx("", "", "", false, "");
-	}
+//	if(!_ctx) {
+//		_ctx = TC_OpenSSL::newCtx("", "", "", false, "");
+//	}
 
 	return TC_OpenSSL::newSSL(_ctx);
 #else

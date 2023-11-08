@@ -203,12 +203,28 @@ void CommunicatorEpoll::terminate()
 	notifyTerminate();
 }
 
-void CommunicatorEpoll::notifyUpdateEndpoints(ServantProxy *servantProxy, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
+//void CommunicatorEpoll::notifyUpdateEndpoints(ServantProxy *servantProxy, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive)
+//{
+//    CommunicatorEpoll *ce = this;
+//
+//    _epoller->asyncCallback([=]()
+//                            { servantProxy->onNotifyEndpoints(ce, active, inactive); });
+//}
+
+void CommunicatorEpoll::notifyClose(ServantProxy *servantProxy)
 {
     CommunicatorEpoll *ce = this;
 
     _epoller->asyncCallback([=]()
-                            { servantProxy->onNotifyEndpoints(ce, active, inactive); });
+                            { servantProxy->onClose(ce); });
+}
+
+void CommunicatorEpoll::notifySetInactive(ServantProxy *servantProxy, const EndpointInfo &ep)
+{
+    CommunicatorEpoll *ce = this;
+
+    _epoller->asyncCallback([=]()
+                            { servantProxy->onSetInactive(ce, ep); });
 }
 
 int CommunicatorEpoll::loadObjectLocator()
@@ -366,7 +382,7 @@ bool CommunicatorEpoll::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> &
     catch(const std::exception& e)
     {
 //		LOG_CONSOLE_DEBUG << "[CommunicatorEpoll::handleInputImp] error:" << e.what() << endl;
-        TLOGTARS("[CommunicatorEpoll::handleInputImp] error:" << e.what() << endl);
+//        TLOGTARS("[CommunicatorEpoll::handleInputImp] error:" << e.what() << endl);
         adapterProxy->addConnExc(true);
         return false;
     }
@@ -391,7 +407,7 @@ bool CommunicatorEpoll::handleOutputImp(const shared_ptr<TC_Epoller::EpollInfo> 
     {
 //		LOG_CONSOLE_DEBUG << "[CommunicatorEpoll::handleOutputImp] error:" << e.what() << endl;
 
-		TLOGTARS("[CommunicatorEpoll::handleOutputImp] error:" << e.what() << endl);
+//		TLOGTARS("[CommunicatorEpoll::handleOutputImp] error:" << e.what() << endl);
         adapterProxy->addConnExc(true);
         return false;
     }
@@ -506,7 +522,7 @@ void CommunicatorEpoll::doReconnect()
 
 	int64_t iNow = TNOWMS;
 
-    set<TC_Transceiver*> does;
+    set<AdapterProxy*> does;
 	while(!_reconnect.empty())
 	{
 		auto it = _reconnect.begin();
@@ -517,14 +533,15 @@ void CommunicatorEpoll::doReconnect()
 		}
 
         //一次循环同一个节点只尝试一次重试,以避免多次触发close，导致重连的间隔无效
-        if (does.find(it->second) != does.end())
+        //如果已经取消重练了, 则不再重连
+        if (does.find(it->second) != does.end() || it->second->getObjProxy()->reconnect() > 0)
         {
             _reconnect.erase(it++);
         }
         else
         {
             does.insert(it->second);
-            it->second->connect();
+            it->second->trans()->connect();
             _reconnect.erase(it++);
         }
 	}

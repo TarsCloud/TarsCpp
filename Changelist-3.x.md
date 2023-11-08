@@ -1,3 +1,86 @@
+# v3.0.18 20231106
+### en
+- fix: udp ipv6 bug
+- fix: unit-test get fd counts in mac
+- fix: udp send/recv bug when multi net threads in communicator
+- fix: servanthandle only keep one servant
+- fix: cmake /SAFESEH:NO
+- fix: cmake -fsigned-char only in unix
+- fix: epoll server fd leak in co mode
+- fix: tc_logger snprintf compiler warning
+- fix: epoll server queue mode in co mode
+- fix: cmake CMAKE_INSTALL_PREFIX
+- update NotifyF.tars, delete some interface not used
+- Optimize the initialization process of Current to improve performance
+- feat: Application add: getBindAdapter by obj 
+- not compiler gtest mock(mac latest gcc gtest can not compiler)
+- support arm32 compiler
+- support cpu(i686) compiler
+- support arm cross compiler(CMAKE_TOOLCHAIN_FILE)
+
+### cn
+- 修复: udp ipv6的bug
+- 修复: mac下unit-test中fd的计算
+- 修复: 多线程的通信器模式下, udp收发包的bug
+- 修复: ServantHandle只保留一个Servant, 提高性能
+- 修复: cmake /SAFESEH:NO
+- 修复: cmake 默认打开-fsigned-char, 避免arm下编译的问题
+- 修复: epollserver 在协程模式下句柄的泄露(不影响业务)
+- 修复: tc_logger snprintf 中的编译警告
+- 修复: epoll server队列模式在协程模式下的bug
+- 修复: cmake CMAKE_INSTALL_PREFIX
+- 更新NotifyF.tars, 删除了不再使用的接口
+- 优化了Current初始化过程, 提高性能
+- Application添加根据obj获取BindAdapter的函数: getBindAdapter
+- 不再编译gtest mock
+- 支持arm32的编译
+- 支持cpu为i686的编译
+- 支持了arm交叉编译, 支持CMAKE_TOOLCHAIN_FILE
+- 
+# v3.0.17 20231007
+### en
+- fix remote logger, set _logStatReport default value
+- fix time logger crash bug when comm not initialize
+- fix cmake clear install
+- fix tc_json double bug
+- fix commumicator ssl ctx init bug
+- fix tc_socket sizeof duplicate bug
+- fix push callbak onClose(ep)
+- fix http_call request use const
+- fix ServantProxy::invoke crash on QiLin OS
+- tc_autoptr add staticCast
+- open /MT in windows by default
+- push callback add onConnected
+- tarsregistry update self ip list
+- ServantProxy add tars_close, close fd of prx
+- hash code type use size_t
+- set max tars package size 100M
+- add tc_timeout_queue_map(key value cache+queue)
+- add tc_socket_async
+- Update Contributing.md
+
+### cn
+- 修复: 远程日志未设置_logStatReport缺省值的问题
+- 修复: 通信器未初始化时, 按天日志可能会crash的问题
+- 修复: cmake清除installde问题
+- 修复: tc_json double类型解析的bug
+- 修复: 通信器ssl ctx初始化的问题
+- 修复: tc_socket中使用sizeof有误的问题
+- 修复: push callbak中onClose(ep)没有被回调的问题
+- 修复: http_call请求参数使用const
+- 修复: 在麒麟OS上, ServantProxy::invoke 的 crash
+- tc_autoptr 添加 staticCast
+- windows编译默认开启/MT
+- push callback 添加 onConnected回调
+- tarsregistry更新自己的ip list
+- ServantProxy 添加了tars_close, 关闭自己的句柄
+- hash code 类型统一修改为 size_t
+- 最大网络包调整为100M
+- 
+- 添加工具类: tc_timeout_queue_map(key value cache+queue)
+- 添加工具类: tc_socket_async
+- 修改Contributing.md
+
 # v3.0.16 20230810
 ### en
 - please notice!!!! default value of bool in tars struct set to false

@@ -4,12 +4,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(WIN32)
-	set(TARS2CPP "c:/tars/cpp/tools/tars2cpp.exe")
-	set(TARSMERGE "c:/tars/cpp/tools/tarsmerge")
+	set(TARS2CPP "c:/tars/cpp/tools/tars2cpp.exe" CACHE STRING "set tars2cpp path")
+	set(TARSMERGE "c:/tars/cpp/tools/tarsmerge" CACHE STRING "set tarsmerge path")
 	set(TARS_PATH "c:/tars/cpp")
 else()
-	set(TARS2CPP "/usr/local/tars/cpp/tools/tars2cpp")
-	set(TARSMERGE "/usr/local/tars/cpp/tools/tarsmerge")
+	set(TARS2CPP "/usr/local/tars/cpp/tools/tars2cpp" CACHE STRING "set tars2cpp path")
+	set(TARSMERGE "/usr/local/tars/cpp/tools/tarsmerge" CACHE STRING "set tarsmerge path")
 	set(TARS_PATH "/usr/local/tars/cpp")
 endif()
 
@@ -54,8 +54,8 @@ set(TARS_TOKEN "" CACHE STRING "set web token")
 
 set(PLATFORM)
 IF (UNIX)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11  -Wno-deprecated -fno-strict-aliasing -Wno-overloaded-virtual")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fsigned-char")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fsigned-char -std=c++11  -Wno-deprecated -fno-strict-aliasing -Wno-overloaded-virtual")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-builtin-macro-redefined -D__FILE__='\"$(notdir $(abspath $<))\"'")
 
 	set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Wall -g")
@@ -72,12 +72,24 @@ IF (UNIX)
 
 ELSEIF (WIN32)
 	set(PLATFORM "window")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4101 /wd4244 /wd4996 /wd4091 /wd4503 /wd4819 /wd4200 /wd4800 /wd4267")
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj ")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4101 /wd4244 /wd4996 /wd4091 /wd4503 /wd4819 /wd4200 /wd4800 /wd4267 /wd4251 /wd4275")
+
+	SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+	SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
+	SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO")
+
+	#Release生成PDB
+	SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /OPT:ICF /OPT:REF /DEBUG")
+	SET(CMAKE_STATIC_LINKER_FLAGS_RELEASE "${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /DEBUG")
+	SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /OPT:ICF /OPT:REF /DEBUG")
+
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj")
 
 ELSE ()
 	MESSAGE(STATUS "================ ERROR: This platform is unsupported!!! ================")
 ENDIF (UNIX)
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char")
 
 set(TARS_RELEASE "${PROJECT_BINARY_DIR}/run-release.cmake")
 FILE(WRITE ${TARS_RELEASE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E echo release all)\n")
@@ -465,6 +477,7 @@ endif()
 message("-------------------------------------------------------------------------------------")
 message("CMAKE_SOURCE_DIR:          ${CMAKE_SOURCE_DIR}")
 message("CMAKE_BINARY_DIR:          ${CMAKE_BINARY_DIR}")
+message("CMAKE_INSTALL_PREFIX:      ${CMAKE_INSTALL_PREFIX}")
 message("PROJECT_SOURCE_DIR:        ${PROJECT_SOURCE_DIR}")
 message("CMAKE_BUILD_TYPE:          ${CMAKE_BUILD_TYPE}")
 message("PLATFORM:                  ${PLATFORM}")

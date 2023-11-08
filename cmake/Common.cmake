@@ -1,6 +1,6 @@
 
 
-set(TARS_VERSION "3.0.16")
+set(TARS_VERSION "3.0.18")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 
 set(CMAKE_VERBOSE_MAKEFILE off)
@@ -40,10 +40,15 @@ option(ONLY_LIB "option for only lib" ON)
 #-------------------------------------------------------------
 
 IF (UNIX)
-    set(CMAKE_INSTALL_PREFIX "/usr/local/tars/cpp" CACHE STRING "set install path" FORCE)
+    set(INSTALL_PREFIX "/usr/local/tars/cpp" CACHE STRING "set install path" )
 ELSE()
-    set(CMAKE_INSTALL_PREFIX "c:\\tars\\cpp" CACHE STRING "set install path" FORCE)
+    set(INSTALL_PREFIX "c:/tars/cpp" CACHE STRING "set install path")
 ENDIF()
+
+#工程INSTALL目录
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${INSTALL_PREFIX}" CACHE STRING "set install path" FORCE)
+endif()
 
 #-------------------------------------------------------------
 IF (APPLE)
@@ -60,8 +65,8 @@ ENDIF()
 
 set(PLATFORM)
 IF (UNIX)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11  -Wno-deprecated -fno-strict-aliasing -Wno-overloaded-virtual")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fsigned-char")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fsigned-char -std=c++11  -Wno-deprecated -fno-strict-aliasing -Wno-overloaded-virtual")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-builtin-macro-redefined -D__FILE__='\"$(notdir $(abspath $<))\"'")
     
     set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Wall -g")
@@ -78,19 +83,30 @@ IF (UNIX)
 
 ELSEIF (WIN32)
     set(PLATFORM "window")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4101 /wd4244 /wd4996 /wd4091 /wd4503 /wd4819 /wd4200 /wd4800 /wd4267 /wd4834 /wd4267")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj " )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4101 /wd4244 /wd4996 /wd4091 /wd4503 /wd4819 /wd4200 /wd4800 /wd4267 /wd4251 /wd4275")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj" )
+
+    SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+    SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
+    SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO")
+
+    #Release生成PDB
+    SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /OPT:ICF /OPT:REF /DEBUG")
+    SET(CMAKE_STATIC_LINKER_FLAGS_RELEASE "${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /DEBUG")
+    SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /OPT:ICF /OPT:REF /DEBUG")
 
 ELSE ()
     MESSAGE(STATUS "================ ERROR: This platform is unsupported!!! ================")
 ENDIF (UNIX)
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char")
 
 IF (WIN32)
     add_definitions(-DNOMINMAX)
 ENDIF ()
 
 #-------------------------------------------------------------
-set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp")
+set(TARS2CPP "${CMAKE_BINARY_DIR}/bin/tars2cpp" CACHE STRING "set tars2cpp")
 
 message("----------------------------------------------------")
 message("CMAKE_SOURCE_DIR:          ${CMAKE_SOURCE_DIR}")

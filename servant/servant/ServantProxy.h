@@ -120,8 +120,8 @@ public:
 
 public:
 
-    static thread_local shared_ptr<ServantProxyThreadData> g_sp;
-    static unsigned int _traceParamMaxLen;
+	static thread_local shared_ptr<ServantProxyThreadData> g_sp;
+	
 
     /**
      * global Immortal ptr, 避免Immortal提前被释放掉
@@ -483,18 +483,10 @@ public:
         unsigned int maxLen = std::get<1>(flags);
         return TraceContext::needParam(es, type, len, maxLen);
     }
-    static void setTraceParamMaxLen(unsigned int len)
-    {
-        // 最最大保护，不超过10M
-        if (len < 1024 * 10)
-        {
-            _traceParamMaxLen = len;
-        }
-    }
-    static unsigned int getTraceParamMaxLen()
-    {
-        return _traceParamMaxLen;
-    }
+    static void setTraceParamMaxLen(unsigned int len);
+
+    static unsigned int getTraceParamMaxLen();
+
     ////////////////////////////////////////////////////////////////////////////////////调用链追踪 end/////
 
 };
@@ -646,6 +638,12 @@ public:
         return _bNetThreadProcess;
     }
 
+	/**
+	 *
+	 * @return
+	 */
+	virtual const map<std::string, std::string> & getResponseContext() const;
+
 public:
 	/**
 	 * dispatch, call onDispatch
@@ -669,9 +667,11 @@ protected:
     virtual void onClose(const TC_Endpoint& ep) {onClose();};
 
 	/**
-	 * 连接已建立(push callback 才有效)
+	 * 连接已建立(push callback 才有效), fd为socket句柄
 	 */
-    virtual void onConnect(const TC_Endpoint& ep) {};
+	virtual void onConnect(const TC_Endpoint& ep) {}
+
+	virtual void onConnect(const TC_Endpoint& ep, int fd) {}
 
 	friend class AdapterProxy;
 protected:
@@ -924,6 +924,14 @@ public:
      */
     void tars_connect_timeout(int conTimeout);
 
+    /**
+     * 主动关闭到服务器端的连接
+     * 1 如果有keepalive也关闭
+     * 2 如果后续发起请求, 会自动建立连接, 但是不再自动开启keepalive
+     * 3 如果设置了重连时间, 也取消重连
+     */
+    void tars_close();
+
 	/**
 	 * set auto reconnect time
 	 * @return int, second
@@ -1029,12 +1037,12 @@ public:
      * @param key
      * @return ServantProxy*
      */
-    virtual ServantProxy* tars_hash(uint32_t key);
+    virtual ServantProxy* tars_hash(size_t key);
 
     /**
      * 一致性hash方法
      */
-    virtual ServantProxy* tars_consistent_hash(uint32_t key);
+    virtual ServantProxy* tars_consistent_hash(size_t key);
 
 
     /**
@@ -1134,13 +1142,13 @@ public:
 	 * http协议同步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
-    void http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response);
+    void http_call(const string &funcName, const shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response);
 
     /**
 	 * http协议异步远程调用
 	 * @param funcName: 调用名称, 这里只是做统计用
 	 */
-	void http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro = false);
+	void http_call_async(const string &funcName, const shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro = false);
 
 	/**
 	 * 通用协议同步调用(这种模式下, 一个连接上只能跑一个请求响应包, 和http模式keep-alive模式类似)
@@ -1148,7 +1156,7 @@ public:
 	 * @param request
 	 * @param response
 	 */
-    void common_protocol_call(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response);
+    void common_protocol_call(const string &funcName, const shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response);
 
 	/**
 	 * 通用协议异步调用(这种模式下, 一个连接上只能跑一个请求响应包, 和http模式keep-alive模式类似)
@@ -1157,7 +1165,7 @@ public:
 	 * @param cb
 	 * @param bCoro
 	 */
-    void common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro = false);
+    void common_protocol_call_async(const string &funcName, const shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro = false);
 
     /**
      * TARS协议同步方法调用
@@ -1286,15 +1294,26 @@ private:
 	void onNotifyEndpoints(CommunicatorEpoll *communicatorEpoll, const set<EndpointInfo> & active,const set<EndpointInfo> & inactive);
 
 	/**
-	 * 端口不活跃
+	 * 设置端口不活跃(内部AdapterProxy的回调)
 	 */
     void onSetInactive(const EndpointInfo &ep);
+
+    /**
+     * 设置端口不活跃, 每个通信器自己的回调
+     */
+    void onSetInactive(CommunicatorEpoll *communicatorEpoll, const EndpointInfo &ep);
+
     /**
      * 检查是否需要设置cookie
      * @param  req
      */
     void checkCookie(RequestPacket &req);
 
+    /**
+     * 关闭连接
+     * @param communicatorEpoll
+     */
+    void onClose(CommunicatorEpoll *communicatorEpoll);
 private:
     friend class ObjectProxy;
     friend class AdapterProxy;

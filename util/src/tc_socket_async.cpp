@@ -61,7 +61,7 @@ TC_SocketAsync::~TC_SocketAsync()
 void TC_SocketAsync::resetTrans(const TC_Endpoint & ep)
 {
     _ep = ep;
-#if TAF_SSL
+#if TARS_SSL
     if (_ep.isSSL())
     {
         _trans.reset(new TC_SSLTransceiver(_core->getEpoller(), _ep));
@@ -115,7 +115,7 @@ shared_ptr<TC_ProxyInfo> TC_SocketAsync::onCreateCallback(TC_Transceiver* trans)
 std::shared_ptr<TC_OpenSSL> TC_SocketAsync::onOpensslCallback(TC_Transceiver* trans)
 {
 //	LOG_CONSOLE_DEBUG << endl;
-#if TAF_SSL
+#if TARS_SSL
 
 	if(trans->isSSL()) {
 		if (!_ctx) {
@@ -362,7 +362,7 @@ void TC_SocketAsync::reConnect()
 
 void TC_SocketAsync::setCtx(const std::string& cafile, const std::string& certfile, const std::string& keyfile, bool verifyClient, const string &ciphers)
 {
-#if TAF_SSL
+#if TARS_SSL
 	_ctx = TC_OpenSSL::newCtx(cafile, certfile, keyfile, verifyClient, ciphers);
 #endif
 }

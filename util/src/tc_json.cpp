@@ -1,6 +1,7 @@
 ﻿#include "util/tc_json.h"
 
-#include <math.h>
+#include <cmath> 
+#include <ctgmath>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -429,6 +430,7 @@ JsonValueNumPtr TC_Json::getNum(BufferJsonReader & reader,char head)
 			{
 				bOk=true;
 				bExponential=(bool)(c-0x30);
+                iExponential=c-0x30;
 			}
 			else
 			{

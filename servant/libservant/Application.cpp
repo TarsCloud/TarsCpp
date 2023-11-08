@@ -970,8 +970,6 @@ void Application::outClient(ostream &os)
     os << TC_Common::outfill("property")                    << _communicator->getProperty("property") << endl;
     os << TC_Common::outfill("report-interval")             << _communicator->getProperty("report-interval") << endl;
     os << TC_Common::outfill("keep-alive-interval")             << _communicator->getProperty("keep-alive-interval") << endl;
-//    os << TC_Common::outfill("sample-rate")                 << _communicator->getProperty("sample-rate") << endl;
-//    os << TC_Common::outfill("max-sample-count")            << _communicator->getProperty("max-sample-count") << endl;
     os << TC_Common::outfill("netthread")                  << _communicator->getProperty("netthread") << endl;
     os << TC_Common::outfill("asyncthread")                 << _communicator->getProperty("asyncthread") << endl;
     os << TC_Common::outfill("modulename")                  << _communicator->getProperty("modulename") << endl;
@@ -1018,6 +1016,13 @@ void Application::onAccept(TC_EpollServer::Connection* cPtr)
     {
         _acceptFuncs[i](cPtr);
     }
+}
+
+TC_EpollServer::BindAdapterPtr Application::getBindAdapter(const string &obj)
+{
+    string adapter = this->_servantHelper->getServantAdapter(obj);
+
+    return _epollServer->getBindAdapter(adapter);
 }
 
 //void Application::addServantOnClose(const string& servant, const TC_EpollServer::close_functor& cf)

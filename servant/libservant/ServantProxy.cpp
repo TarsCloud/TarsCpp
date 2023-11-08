@@ -31,7 +31,7 @@ namespace tars
 shared_ptr<ServantProxyThreadData::Immortal> ServantProxyThreadData::g_immortal;
 
 thread_local shared_ptr<ServantProxyThreadData> ServantProxyThreadData::g_sp;
-unsigned int ServantProxyThreadData::_traceParamMaxLen = 1;     // 默认1K
+unsigned int _traceParamMaxLen = 1;     // 默认1K
 
 ///////////////////////////////////////////////////////////////
 SeqManager::SeqManager(uint16_t iNum)
@@ -109,6 +109,20 @@ void SeqManager::del(uint16_t iSeq)
 
 ///////////////////////////////////////////////////////////////
 
+void ServantProxyThreadData::setTraceParamMaxLen(unsigned int len)
+{
+    // 最最大保护，不超过10M
+    if (len < 1024 * 10)
+    {
+        _traceParamMaxLen = len;
+    }
+}
+
+unsigned int ServantProxyThreadData::getTraceParamMaxLen()
+{
+    return _traceParamMaxLen;
+}
+
 ServantProxyThreadData::Immortal::Immortal()
 {
     _pSeq.reset(new SeqManager(MAX_CLIENT_NOTIFYEVENT_NUM));
@@ -165,8 +179,6 @@ ServantProxyThreadData::~ServantProxyThreadData()
 //     LOG_CONSOLE_DEBUG << endl;
     try
     {
-//		TC_LockT<TC_SpinLock> lock(_mutex);
-
 		//先释放公有的网络通信器的信息
 		for(auto it = _communicatorEpollInfo.begin(); it != _communicatorEpollInfo.end(); ++it)
 		{
@@ -304,6 +316,18 @@ ServantProxyCallback::ServantProxyCallback()
 int ServantProxyCallback::dispatch(ReqMessagePtr msg)
 {
     return onDispatch(msg);
+}
+
+const map<std::string, std::string> & ServantProxyCallback::getResponseContext() const
+{
+	CallbackThreadData * pCbtd = CallbackThreadData::getData();
+	assert(pCbtd != NULL);
+
+	if(!pCbtd->getContextValid())
+	{
+		throw TC_Exception("cann't get response context");
+	}
+	return pCbtd->getResponseContext();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -686,7 +710,6 @@ void ServantProxy::tars_ping()
 	tars_invoke(TARSNORMAL, "tars_ping", os, m, s);
 }
 
-
 void ServantProxy::tars_async_ping()
 {
 	map<string, string> m;
@@ -697,7 +720,7 @@ void ServantProxy::tars_async_ping()
 	tars_invoke_async(TARSONEWAY, "tars_ping", os, m, s, NULL);
 }
 
-ServantProxy* ServantProxy::tars_hash(uint32_t key)
+ServantProxy* ServantProxy::tars_hash(size_t key)
 {
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
 
@@ -709,15 +732,7 @@ ServantProxy* ServantProxy::tars_hash(uint32_t key)
     return this;
 }
 
-//ServantProxy* ServantProxy::tars_direct()
-//{
-//	ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
-//
-//	pSptd->_direct = true;
-//	return this;
-//}
-
-ServantProxy* ServantProxy::tars_consistent_hash(uint32_t key)
+ServantProxy* ServantProxy::tars_consistent_hash(size_t key)
 {
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
 
@@ -756,7 +771,6 @@ ServantProxy* ServantProxy::tars_set_timeout(int msecond)
     ServantProxyThreadData *pSptd = ServantProxyThreadData::getData();
     assert(pSptd != NULL);
 
-//     pSptd->_hasTimeout = true;
     pSptd->_data._timeout = msecond;
 
     return this;
@@ -890,6 +904,10 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
     bool bEmpty = false;
     bool bSync  = (msg->eType == ReqMessage::SYNC_CALL);
 
+    //赋值出来, 避免极端情况(异步请求都处理完了, msg已经释放, 才进入到后面的判断, 目前发现在麒麟OS上会出现)
+    auto sched = msg->sched;
+    auto pObjectProxy = msg->pObjectProxy;
+
     if (!pReqQ->push_back(msg, bEmpty))
     {
         TLOGERROR("[ServantProxy::invoke msgQueue push_back error thread seq:" << pSptd->_reqQNo << "]" << endl);
@@ -900,16 +918,14 @@ void ServantProxy::invoke(ReqMessage *msg, bool bCoroAsync)
         throw TarsClientQueueException("client queue full");
     }
 
-    if (msg->sched)
+    if (sched)
     {
-//		LOG_CONSOLE_DEBUG << "in sched handle: " << this << ", " << msg->request.sServantName << endl;
-
         //协程中, 直接发包了
-        msg->pObjectProxy->getCommunicatorEpoll()->handle(pSptd->_reqQNo);
+        pObjectProxy->getCommunicatorEpoll()->handle(pSptd->_reqQNo);
     }
     else
     {
-        msg->pObjectProxy->getCommunicatorEpoll()->notify(pSptd->_reqQNo);
+        pObjectProxy->getCommunicatorEpoll()->notify(pSptd->_reqQNo);
     }
 
     if (bSync)
@@ -1224,7 +1240,7 @@ ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
 
 void ServantProxy::travelObjectProxys(ServantProxy *prx, function<void(ObjectProxy*)> f)
 {
-	vector<ObjectProxy*> objectProxys;
+//	vector<ObjectProxy*> objectProxys;
 
 	size_t num = _communicator->getCommunicatorEpollNum();
 
@@ -1278,27 +1294,71 @@ void ServantProxy::tars_update_endpoints(const set<EndpointInfo> &active, const 
 	onNotifyEndpoints(NULL, active, inactive);
 }
 
+//在网络线程中回调
 void ServantProxy::onNotifyEndpoints(CommunicatorEpoll *communicatorEpoll, const set<EndpointInfo> &active, const set<EndpointInfo> &inactive)
 {
-	//更新子servant proxy的地址
-	for (size_t i = 0; i < _servantList.size(); i++)
-	{
-		ServantProxy* prx = _servantList[i].get();
+    //更新子servant proxy的地址
+    for (size_t i = 0; i < _servantList.size(); i++)
+    {
+        ServantProxy* prx = _servantList[i].get();
 
-		travelObjectProxys(prx, [&](ObjectProxy *op){
-			if(op->getEndpointManager())
-			{
-				op->getEndpointManager()->updateEndpointsOutter(active, inactive);
-			}
-		});
-	}
+        travelObjectProxys(prx, [&](ObjectProxy *op){
+            if(op->getEndpointManager())
+            {
+                op->getEndpointManager()->updateEndpointsOutter(active, inactive);
+            }
+        });
+    }
 
-	travelObjectProxys(this, [&](ObjectProxy *op){
-		if(op->getEndpointManager())
-		{
-			op->getEndpointManager()->updateEndpointsOutter(active, inactive);
-		}
-	});
+    travelObjectProxys(this, [&](ObjectProxy *op){
+        if(op->getEndpointManager())
+        {
+            op->getEndpointManager()->updateEndpointsOutter(active, inactive);
+        }
+    });
+}
+
+void ServantProxy::tars_close()
+{
+    tars_open_keepalive(false);
+    tars_reconnect(0);
+
+    size_t num = _communicator->getCommunicatorEpollNum();
+
+    for (size_t i = 0; i < num; ++i)
+    {
+        auto ce = _communicator->getCommunicatorEpoll(i);
+
+        ce->notifyClose(this);
+    }
+
+    //协程通信器也需要
+    _communicator->forEachSchedCommunicatorEpoll([&](const shared_ptr<CommunicatorEpoll>& ce)
+                                                 {
+                                                     ce->notifyClose(this);
+                                                 });
+
+}
+
+//在网络线程中回调
+void ServantProxy::onClose(CommunicatorEpoll *communicatorEpoll)
+{
+    for (size_t i = 0; i < _servantList.size(); i++)
+    {
+        ServantProxy* prx = _servantList[i].get();
+
+        ObjectProxy *op = communicatorEpoll->servantToObjectProxy(prx);
+        if(op)
+        {
+            op->close();
+        }
+    }
+
+    ObjectProxy *op = communicatorEpoll->servantToObjectProxy(this);
+    if(op)
+    {
+        op->close();
+    }
 }
 
 void ServantProxy::onSetInactive(const EndpointInfo &ep)
@@ -1306,11 +1366,47 @@ void ServantProxy::onSetInactive(const EndpointInfo &ep)
     if (!_rootPrx)
         return;
 
-    for (size_t i = 0; i < _rootPrx->_servantList.size(); i++)
-    {
-        ServantPrx &prx = _rootPrx->_servantList[i];
+    size_t num = _communicator->getCommunicatorEpollNum();
 
-        prx->forEachObject([&](ObjectProxy *o) { o->onSetInactive(ep); });
+    for (size_t i = 0; i < num; ++i)
+    {
+        auto ce = _communicator->getCommunicatorEpoll(i);
+
+        ce->notifySetInactive(this, ep);
+    }
+
+    //协程通信器也需要
+    _communicator->forEachSchedCommunicatorEpoll([&](const shared_ptr<CommunicatorEpoll>& ce)
+                                                 {
+                                                     ce->notifySetInactive(this, ep);
+                                                 });
+
+//    for (size_t i = 0; i < _rootPrx->_servantList.size(); i++)
+//    {
+//        ServantPrx &prx = _rootPrx->_servantList[i];
+//
+//        prx->forEachObject([&](ObjectProxy *o) { o->onSetInactive(ep); });
+//    }
+}
+
+//在网络线程中回调
+void ServantProxy::onSetInactive(CommunicatorEpoll *communicatorEpoll, const EndpointInfo &ep)
+{
+    for (size_t i = 0; i < _servantList.size(); i++)
+    {
+        ServantProxy* prx = _servantList[i].get();
+
+        ObjectProxy *op = communicatorEpoll->servantToObjectProxy(prx);
+        if(op)
+        {
+            op->onSetInactive(ep);
+        }
+    }
+
+    ObjectProxy *op = communicatorEpoll->servantToObjectProxy(this);
+    if(op)
+    {
+        op->onSetInactive(ep);
     }
 }
 
@@ -1328,7 +1424,7 @@ int ServantProxy::servant_invoke(ReqMessage *msg, bool bCoroAsync)
     return 0;
 }
 
-void ServantProxy::http_call(const string &funcName, shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response)
+void ServantProxy::http_call(const string &funcName, const shared_ptr<TC_HttpRequest> &request, shared_ptr<TC_HttpResponse> &response)
 {
 	if (_connectionSerial <= 0)
 	{
@@ -1372,7 +1468,7 @@ void ServantProxy::http_call(const string &funcName, shared_ptr<TC_HttpRequest> 
 	msg = NULL;
 }
 
-void ServantProxy::http_call_async(const string &funcName, shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro)
+void ServantProxy::http_call_async(const string &funcName, const shared_ptr<TC_HttpRequest> &request, const HttpCallbackPtr &cb, bool bCoro)
 {
 	if (_connectionSerial <= 0)
 	{
@@ -1413,7 +1509,7 @@ void ServantProxy::http_call_async(const string &funcName, shared_ptr<TC_HttpReq
 	servant_invoke(msg, bCoro);
 }
 
-void ServantProxy::common_protocol_call(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response)
+void ServantProxy::common_protocol_call(const string &funcName, const shared_ptr<TC_CustomProtoReq> &request, shared_ptr<TC_CustomProtoRsp> &response)
 {
 	if (_connectionSerial <= 0)
 	{
@@ -1454,7 +1550,7 @@ void ServantProxy::common_protocol_call(const string &funcName, shared_ptr<TC_Cu
 	msg = NULL;
 }
 
-void ServantProxy::common_protocol_call_async(const string &funcName, shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro)
+void ServantProxy::common_protocol_call_async(const string &funcName, const shared_ptr<TC_CustomProtoReq> &request, const ServantProxyCallbackPtr &cb, bool bCoro)
 {
 	if (_connectionSerial <= 0)
 	{

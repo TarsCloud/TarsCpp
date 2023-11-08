@@ -264,7 +264,7 @@ namespace tars
 		 * Stained thread ID collection
 		 *
 		 */
-		static unordered_map<size_t, string> _mapThreadID;
+		static unordered_map<uint64_t, string> _mapThreadID;
 	};
 
 	typedef TC_AutoPtr<TC_LoggerRoll> TC_LoggerRollPtr;
@@ -922,9 +922,9 @@ namespace tars
 
 				TC_Port::localtime_r(&t, &tt);
 
-				const char *szFormat = (_bHasSquareBracket) ? ("[%04d-%02d-%02d %02d:%02d:%02d.%03ld]%s") : ("%04d-%02d-%02d %02d:%02d:%02d.%03ld%s");
+				const char *szFormat = (_bHasSquareBracket) ? ("[%04d-%02d-%02d %02d:%02d:%02d.%03d]%s") : ("%04d-%02d-%02d %02d:%02d:%02d.%03d%s");
 				n += snprintf(c + n, len - n, szFormat,
-					tt.tm_year + 1900, tt.tm_mon + 1, tt.tm_mday, tt.tm_hour, tt.tm_min, tt.tm_sec, duration_in_ms % 1000, _sSepar.c_str());
+					tt.tm_year + 1900, tt.tm_mon + 1, tt.tm_mday, tt.tm_hour, tt.tm_min, tt.tm_sec, (int)(duration_in_ms % 1000), _sSepar.c_str());
 			}
 			else if (hasFlag(TC_Logger::HAS_TIME))
 			{
@@ -944,7 +944,16 @@ namespace tars
 
 			if (hasFlag(TC_Logger::HAS_PID))
 			{
-				n += snprintf(c + n, len - n, "%zd%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());               
+#if __WORDSIZE == 64
+
+#if TARGET_PLATFORM_IOS
+                n += snprintf(c + n, len - n, "%llu%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());
+#else
+                n += snprintf(c + n, len - n, "%lu%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());
+#endif
+#else
+                n += snprintf(c + n, len - n, "%llu%s", TC_Thread::CURRENT_THREADID(), _sSepar.c_str());
+#endif
 			}
 
 			if (hasFlag(TC_Logger::HAS_LEVEL))

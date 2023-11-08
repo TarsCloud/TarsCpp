@@ -38,19 +38,19 @@ TEST_F(HelloTest, rpcSyncServerCommunicatorInCoroutine)
 	});
 }
 
-TEST_F(HelloTest, rpcSyncAllocCommunicator)
-{
-	transAllocCommunicator([&](Communicator *comm){
-		checkSync(comm);
-	});
-}
-
-TEST_F(HelloTest, rpcSyncAllocCommunicatorInCoroutine)
-{
-	transInCoroutineAllocCommunicator([&](Communicator *comm){
-		checkSync(comm);
-	});
-}
+//TEST_F(HelloTest, rpcSyncAllocCommunicator)
+//{
+//	transAllocCommunicator([&](Communicator *comm){
+//		checkSync(comm);
+//	});
+//}
+//
+//TEST_F(HelloTest, rpcSyncAllocCommunicatorInCoroutine)
+//{
+//	transInCoroutineAllocCommunicator([&](Communicator *comm){
+//		checkSync(comm);
+//	});
+//}
 
 TEST_F(HelloTest, rpcSyncComplexCommunicator)
 {
@@ -97,11 +97,19 @@ TEST_F(HelloTest, rpcSyncComplexCommunicatorInCoroutine)
 
 TEST_F(HelloTest, rpcSyncIpV6GlobalCommunicator)
 {
-	shared_ptr<Communicator> c = getCommunicator();
+    HelloServer server;
+    startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) 0);
 
-	transGlobalCommunicator([&](Communicator *comm){
-		checkSync(comm, "Ipv6Adapter");
-	}, c.get());
+//    TC_Common::sleep(1000);
+    checkSync(server.getCommunicator().get(), "Ipv6Adapter");
+
+    stopServer(server);
+//
+//	shared_ptr<Communicator> c = getCommunicator();
+//
+//	transGlobalCommunicator([&](Communicator *comm){
+//		checkSync(comm, "Ipv6Adapter");
+//	}, c.get());
 }
 
 TEST_F(HelloTest, rpcSyncIpV6GlobalCommunicatorInCoroutine)

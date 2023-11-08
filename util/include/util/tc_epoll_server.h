@@ -327,7 +327,7 @@ public:
          * 构造, 传入handle处理线程,
          * @param handleNum
          */
-        DataBuffer(int handleNum);
+        DataBuffer(int handleNum, TC_EpollServer *epollServer);
 
         /**
          * 通知唤醒
@@ -374,7 +374,7 @@ public:
 		* @param data
 		* @return
 		*/
-		size_t size(uint32_t handleIndex){ return getDataQueue(handleIndex)->size(); }
+		size_t size(size_t handleIndex){ return getDataQueue(handleIndex)->size(); }
 
         /**
          * 接收buffer的大小
@@ -410,12 +410,16 @@ public:
 
     protected:
 
-        inline int index(uint32_t handleIndex) { return handleIndex % _threadDataQueue.size(); }
+        inline size_t index(size_t handleIndex) { return handleIndex % _threadDataQueue.size(); }
 
-        const shared_ptr<DataQueue> &getDataQueue(uint32_t handleIndex);
+        const shared_ptr<DataQueue> &getDataQueue(size_t handleIndex);
 
     protected:
 
+        /**
+         * epoll server
+         */
+        TC_EpollServer                  *_epollServer;
         /**
          * 接收队列数据总个数
          */
@@ -441,7 +445,7 @@ public:
         /**
          * wait time for queue
          */
-        int64_t     _iWaitTime = 3000;
+        int64_t     _iWaitTime = 1000;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1432,7 +1436,7 @@ public:
 
             _iHandleNum = n;
 
-            _dataBuffer.reset(new DataBuffer(_iHandleNum));
+            _dataBuffer.reset(new DataBuffer(_iHandleNum, this->_epollServer));
 
             for (size_t i = 0; i < _iHandleNum; ++i)
             {
@@ -1811,7 +1815,7 @@ public:
         /**
          * net线程的id
          */
-        size_t                  _threadId;
+        uint64_t                _threadId;
 
         /**
          * 线程索引

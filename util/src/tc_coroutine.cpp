@@ -326,8 +326,6 @@ TC_CoroutineScheduler::TC_CoroutineScheduler()
 , _currentCoro(NULL)
 , _all_coro(NULL)
 {
-    // LOG_CONSOLE_DEBUG << endl;
-
     _epoller = new TC_Epoller();
 
     _epoller->create(10240);
@@ -335,7 +333,6 @@ TC_CoroutineScheduler::TC_CoroutineScheduler()
 
 TC_CoroutineScheduler::~TC_CoroutineScheduler()
 {
-    // LOG_CONSOLE_DEBUG << endl;
     if(_epoller)
 	{
 		delete _epoller;
@@ -666,6 +663,12 @@ void TC_CoroutineScheduler::terminate()
 	assert(_epoller);
 
 	_epoller->terminate();
+//
+//    if(_epoller)
+//    {
+//        delete _epoller;
+//        _epoller = NULL;
+//    }
 }
 
 uint32_t TC_CoroutineScheduler::generateId()
@@ -816,6 +819,8 @@ void TC_Coroutine::run()
     handleCoro();
 
     destroy();
+
+//    TC_CoroutineScheduler::reset();
 }
 
 void TC_Coroutine::terminate()

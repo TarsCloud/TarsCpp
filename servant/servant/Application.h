@@ -211,6 +211,11 @@ public:
      * @return TC_EpollServerPtr&
      */
     TC_EpollServerPtr &getEpollServer() { return _epollServer; }
+
+    /**
+     * 获取服务server对象
+     * @return
+     */
 	const TC_EpollServerPtr &getEpollServer() const { return _epollServer; }
 
 	/**
@@ -273,7 +278,7 @@ public:
 	 * get notify observer
 	 * @return
 	 */
-	shared_ptr<NotifyObserver> &getNotifyObserver() { return _notifyObserver; }
+	const shared_ptr<NotifyObserver> &getNotifyObserver() { return _notifyObserver; }
 
     /**
      * 非tars协议server，设置Servant的协议解析器
@@ -288,6 +293,13 @@ public:
      * @param cb
      */
     void addAcceptCallback(const TC_EpollServer::accept_callback_functor& cb);
+
+    /**
+     * 根据obj名称获取到BindAdpaterPtr
+     * @param obj
+     * @return 如果获取不到返回NULL
+     */
+    TC_EpollServer::BindAdapterPtr getBindAdapter(const string &obj);
 
 protected:
     /**

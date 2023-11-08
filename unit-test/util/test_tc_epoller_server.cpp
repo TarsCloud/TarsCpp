@@ -76,10 +76,11 @@ TEST_F(UtilEpollServerTest, RunUdp)
 
 		for (int i = 0; i < 10; i++)
 		{
-			iRet = client.sendRecv("abc", 3, recvBuffer, recvLenth);
+            string buff = "abc-" + TC_Common::tostr(i);
+			iRet = client.sendRecv(buff.c_str(), buff.size(), recvBuffer, recvLenth);
 
 			ASSERT_TRUE(iRet == 0);
-			ASSERT_TRUE(string(recvBuffer, recvLenth) == "abc");
+			ASSERT_TRUE(string(recvBuffer, recvLenth) == buff);
 		}
 
 		stopServer(server);
@@ -126,15 +127,18 @@ TEST_F(UtilEpollServerTest, RunEnableManualListen)
 		ASSERT_TRUE(iRet == -6);
 
 		server.startManualListen();
+        TC_Common::msleep(50);
 		iRet = client.sendRecv("abc", 3, recvBuffer, recvLenth);
 		ASSERT_TRUE(iRet == 0);
 		ASSERT_TRUE(string(recvBuffer, recvLenth) == "abc");
 
 		server.cancelManualListen();
+        TC_Common::msleep(50);
 		iRet = client.sendRecv("abc", 3, recvBuffer, recvLenth);
 		ASSERT_TRUE(iRet != TC_ClientSocket::EM_SUCCESS);
 
 		server.startManualListen();
+        TC_Common::msleep(50);
 		iRet = client.sendRecv("abc", 3, recvBuffer, recvLenth);
 		ASSERT_TRUE(iRet == 0);
 		ASSERT_TRUE(string(recvBuffer, recvLenth) == "abc");
@@ -242,15 +246,18 @@ TEST_F(UtilEpollServerTest, ConnectionMax)
 TEST_F(UtilEpollServerTest, QueueMode)
 {
 	for(int i = 0; i <= TC_EpollServer::NET_THREAD_MERGE_HANDLES_CO; i++)
+//int i = 2;
 	{
+//        LOG_CONSOLE_DEBUG << "i:" << i << endl;
 		MyTcpServer server;
 
 		startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) i);
 
 		vector<TC_TCPClient *> conns;
 
+        int conn = 10;
 		//注意服务连接数是10个
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < conn; i++) {
 			TC_TCPClient *client =
 				new TC_TCPClient(QUEUE_HOST_EP.getHost(), QUEUE_HOST_EP.getPort(), QUEUE_HOST_EP.getTimeout());
 
@@ -265,7 +272,9 @@ TEST_F(UtilEpollServerTest, QueueMode)
 				char recvBuffer[1024] = {0};
 				size_t recvLenth = 1024;
 
-				iRet = client->sendRecv("abc", 3, recvBuffer, recvLenth);
+//                LOG_CONSOLE_DEBUG << "send:" << i << endl;
+
+                iRet = client->sendRecv("abc", 3, recvBuffer, recvLenth);
 
 				ASSERT_TRUE(iRet == 0);
 

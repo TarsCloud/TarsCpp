@@ -55,6 +55,7 @@ ObjectProxy::ObjectProxy(CommunicatorEpoll *pCommunicatorEpoll, ServantProxy *se
         }
     }
 
+    //#, hash模式, 创建多个连接的情况(http)
 	pos = _name.find_first_of('#');
 
 	if(pos != string::npos)
@@ -404,5 +405,22 @@ void ObjectProxy::onSetInactive(const EndpointInfo& ep)
 	}
 }
 
+void ObjectProxy::close()
+{
+    if(!_hasInitialize)
+    {
+        return;
+    }
+    assert(this->getCommunicatorEpoll()->getThreadId() == this_thread::get_id());
+
+    const vector<AdapterProxy*> & vAdapterProxy = _endpointManger->getAdapters();
+    for(size_t iAdapter=0; iAdapter< vAdapterProxy.size();++iAdapter)
+    {
+        if(vAdapterProxy[iAdapter] != NULL)
+        {
+            vAdapterProxy[iAdapter]->onClose();
+        }
+    }
+}
 //////////////////////////////////////////////////////////////////////////////////
 }

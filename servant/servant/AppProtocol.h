@@ -35,7 +35,7 @@ namespace tars
 class TC_Transceiver;
 
 #define TARS_NET_MIN_PACKAGE_SIZE 5
-#define TARS_NET_MAX_PACKAGE_SIZE 1024*1024*10
+#define TARS_NET_MAX_PACKAGE_SIZE 1024*1024*100
 
 template<typename T>
 T net2host(T len)
@@ -124,8 +124,6 @@ public:
         return TC_NetWorkBuffer::PACKET_FULL;
     }
 };
-
-//typedef std::function<vector<char>(RequestPacket&, TC_Transceiver *)> request_protocol;
 
 typedef std::function<shared_ptr<TC_NetWorkBuffer::Buffer>(RequestPacket&, TC_Transceiver*)> request_protocol;
 
@@ -286,7 +284,6 @@ public:
 
 	static TC_NetWorkBuffer::PACKET_TYPE jsonResponseLen(TC_NetWorkBuffer &in, ResponsePacket& rsp, uint32_t iMinLength, uint32_t iMaxLength);
 
-public:
     /**
      * tars请求包
      * @param request

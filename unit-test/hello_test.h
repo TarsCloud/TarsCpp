@@ -259,6 +259,7 @@ public:
 //		comm->setProperty("asyncqueuecap", "1000000");
 
 		string obj = getObj(_conf, adapter);
+        LOG_CONSOLE_DEBUG << obj << endl;
 		T prx =  comm->stringToProxy<T>(obj);
 
 		prx->tars_timeout(60000);
@@ -267,12 +268,34 @@ public:
 		return prx;
 	}
 
+    int GetUsedFileDescriptorCount()
+    {
+        // 使用 shell 命令 "lsof" 获取已使用的文件句柄数量
+        FILE* file = popen("lsof -p $$ | wc -l", "r");
+        if (!file) {
+            std::cerr << "can not lsof" << std::endl;
+            return -1;
+        }
+
+        char buffer[128];
+        std::string result;
+        while (fgets(buffer, sizeof(buffer), file) != NULL) {
+            result += buffer;
+        }
+        pclose(file);
+
+        // 解析结果并提取文件句柄数量
+        int usedFileDescriptors = std::stoi(result);
+        return usedFileDescriptors;
+    }
+
 	int getFdCounts()
 	{
-		//linux下才生效, 其他平台都是返回的0
-		vector<string> fds;
-		TC_File::listDirectory("/proc/" + TC_Common::tostr(getpid()) + "/fd", fds, false);
-		return fds.size();
+#if TARGET_PLATFORM_WINDOWS
+        return 0;
+#else
+        return GetUsedFileDescriptorCount();
+#endif
 	}
 
 	int getSocketFd(int iSocketType = SOCK_DGRAM, int iDomain = AF_INET)

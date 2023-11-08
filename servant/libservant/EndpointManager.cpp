@@ -148,12 +148,15 @@ bool QueryEpBase::init(const string & sObjName, const string& setName, bool root
     _locator = _communicator->getProperty("locator");
 
     TLOGTARS("QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl);
-//	LOG_CONSOLE_DEBUG << "QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl;
 
     _invokeSetId = setName;
 
     _rootServant = rootServant;
 
+    if(sObjName.find("UdpIpv6Obj") != string::npos)
+    {
+        LOG_CONSOLE_DEBUG << "QueryEpBase::init sObjName:" << sObjName << ", sLocator:" << _locator << ", setName:" << setName << ", rootServant: " << rootServant << endl;
+    }
     setObjName(sObjName);
 
     return true;
@@ -181,6 +184,13 @@ void QueryEpBase::setObjName(const string & sObjName)
 	    }
 
 	    _direct = true;
+
+		//如果就是主控, 则认为是非direct
+		size_t pos = _locator.find_first_not_of('@');
+		if(pos != string::npos && _objName == _locator.substr(0, pos))
+		{
+			_direct = false;
+		}
 
         _valid = true;
     }
@@ -347,7 +357,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
 
         TLOGTARS("[QueryEpBase::refresh," << _objName << "]" <<endl);
 
-        if(_valid && !_rootServant && _valid)
+        if(_valid && !_rootServant)
         {
             return;
         }
@@ -357,7 +367,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
         bool bSync = (!_valid && _interfaceReq);
 
 	    //如果是异步且不是根servant(通过#1创建的servant, 不主动更新主控信息)
-        if(!bSync && !_rootServant)
+        if(!bSync && !_rootServant && _valid)
 	        return;
 
         try
@@ -907,7 +917,7 @@ AdapterProxy * EndpointManager::getNextValidProxy()
     return adapterProxy;
 }
 
-AdapterProxy* EndpointManager::getHashProxy(uint32_t hashCode, bool bConsistentHash)
+AdapterProxy* EndpointManager::getHashProxy(int64_t hashCode, bool bConsistentHash)
 {
     if(_weightType == E_STATIC_WEIGHT)
     {
@@ -933,7 +943,7 @@ AdapterProxy* EndpointManager::getHashProxy(uint32_t hashCode, bool bConsistentH
     }
 }
 
-AdapterProxy* EndpointManager::getHashProxyForWeight(uint32_t hashCode, bool bStatic, vector<size_t> &vRouterCache)
+AdapterProxy* EndpointManager::getHashProxyForWeight(int64_t hashCode, bool bStatic, vector<size_t> &vRouterCache)
 {
     if(_vRegProxys.empty())
     {
@@ -954,7 +964,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(uint32_t hashCode, bool bSt
 
     if(vRouterCache.size() > 0)
     {
-        size_t hash = hashCode % vRouterCache.size();
+        size_t hash = ((int64_t)hashCode) % vRouterCache.size();
 
         //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
         if(hash >= vRouterCache.size())
@@ -989,7 +999,13 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(uint32_t hashCode, bool bSt
 
             do
             {
-                hash = hashCode % thisHash.size();
+                hash = ((int64_t)hashCode) % thisHash.size();
+
+                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
+                if(hash >= thisHash.size())
+                {
+                    hash = hash % thisHash.size();
+                }
 
                 if (thisHash[hash]->checkActive(true))
                 {
@@ -1006,7 +1022,13 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(uint32_t hashCode, bool bSt
 
             if(conn.size() > 0)
             {
-                hash = hashCode % conn.size();
+                hash = ((int64_t)hashCode) % conn.size();
+
+                //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
+                if(hash >= conn.size())
+                {
+                    hash = hash % conn.size();
+                }
 
                 //都有问题, 随机选择一个没有connect超时或者链接异常的发送
                 AdapterProxy *adapterProxy = conn[hash];
@@ -1032,7 +1054,7 @@ AdapterProxy* EndpointManager::getHashProxyForWeight(uint32_t hashCode, bool bSt
 }
 
 
-AdapterProxy* EndpointManager::getConHashProxyForWeight(uint32_t hashCode, bool bStatic)
+AdapterProxy* EndpointManager::getConHashProxyForWeight(int64_t hashCode, bool bStatic)
 {
     if(_vRegProxys.empty())
     {
@@ -1361,7 +1383,7 @@ void EndpointManager::updateConHashProxyWeighted(bool bStatic, map<string, Adapt
     conHash.sortNode();
 }
 
-AdapterProxy* EndpointManager::getHashProxyForNormal(uint32_t hashCode)
+AdapterProxy* EndpointManager::getHashProxyForNormal(int64_t hashCode)
 {
     if(_vRegProxys.empty())
     {
@@ -1372,7 +1394,13 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(uint32_t hashCode)
     // 1 _vRegProxys从客户端启动之后，就不会再改变，除非有节点增加
     // 2 如果有增加节点，则_vRegProxys顺序会重新排序,之前的hash会改变
     // 3 节点下线后，需要下次启动客户端后,_vRegProxys内容才会生效
-    size_t hash = hashCode % _vRegProxys.size();
+    size_t hash = ((int64_t)hashCode) % _vRegProxys.size();
+
+    //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
+    if(hash >= _vRegProxys.size())
+    {
+        hash = hash % _vRegProxys.size();
+    }
 
     //被hash到的节点在主控是active的才走在流程
     if (_vRegProxys[hash]->isActiveInReg() && _vRegProxys[hash]->checkActive(true))
@@ -1394,7 +1422,13 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(uint32_t hashCode)
 
         do
         {
-            hash = hashCode % thisHash.size();
+            hash = ((int64_t)hashCode) % thisHash.size();
+
+            //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
+            if(hash >= thisHash.size())
+            {
+                hash = hash % thisHash.size();
+            }
 
             if (thisHash[hash]->checkActive(true))
             {
@@ -1411,7 +1445,13 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(uint32_t hashCode)
 
         if(conn.size() > 0)
         {
-            hash = hashCode % conn.size();
+            hash = ((int64_t)hashCode) % conn.size();
+
+            //这里做判断的原因是：32位系统下，如果hashCode为负值，hash经过上面的计算会是一个超大值，导致越界
+            if(hash >= conn.size())
+            {
+                hash = hash % conn.size();
+            }
 
             //都有问题, 随机选择一个没有connect超时或者链接异常的发送
             AdapterProxy *adapterProxy = conn[hash];
@@ -1432,7 +1472,7 @@ AdapterProxy* EndpointManager::getHashProxyForNormal(uint32_t hashCode)
     }
 }
 
-AdapterProxy* EndpointManager::getConHashProxyForNormal(uint32_t hashCode)
+AdapterProxy* EndpointManager::getConHashProxyForNormal(int64_t hashCode)
 {
     if(_vRegProxys.empty())
     {

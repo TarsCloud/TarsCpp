@@ -52,7 +52,7 @@ struct CheckTimeoutInfo
     , checkTimeoutInterval(5)
     , frequenceFailInvoke(3)
     , minFrequenceFailTime(2)
-    , radio(0.3)
+    , radio(0.3f)
     , tryTimeInterval(10)
     , maxConnectExc(1)
     {
@@ -106,7 +106,7 @@ struct ThreadPrivateData
      */
     bool           _hash        = false;                            //是否普通取模hash
     bool           _conHash     = false;                          //是否一致性hash
-    uint32_t        _hashCode    = 0;                        //hash值
+    int64_t        _hashCode    = -1;                        //hash值
 
     /**
      * 染色信息

@@ -1,13 +1,26 @@
 ﻿
 #include "hello_test.h"
 
+TEST_F(HelloTest, test)
+{
+    {
+        HelloServer server;
+        startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) 1);
+
+        stopServer(server);
+    }
+}
+
+
 TEST_F(HelloTest, rpcASyncGlobalCommunicator)
 {
-	shared_ptr<Communicator> c = getCommunicator();
+    {
+        shared_ptr<Communicator> c = getCommunicator();
 
-	transGlobalCommunicator([&](Communicator *comm){
-		checkASync(comm);
-	}, c.get());
+        transGlobalCommunicator([&](Communicator *comm) {
+            checkASync(comm);
+        }, c.get());
+    }
 }
 
 
