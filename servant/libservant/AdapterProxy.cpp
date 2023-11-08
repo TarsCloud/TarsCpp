@@ -1050,6 +1050,7 @@ void AdapterProxy::doKeepAlive()
 
     ReqMessage *msg = new ReqMessage();
     ServantProxyCallbackPtr callback = new PingCallback();
+    callback->setServantPrx(_objectProxy->getServantProxy());
 
     msg->init(ReqMessage::ASYNC_CALL, _objectProxy->getServantProxy());
     msg->callback = callback;
