@@ -54,6 +54,7 @@ namespace tars
 std::string ServerConfig::TarsPath;         //服务路径
 std::string ServerConfig::Application;      //应用名称
 std::string ServerConfig::ServerName;       //服务名称,一个服务名称含一个或多个服务标识
+std::string ServerConfig::NodeName;         //服务如果部署在框架上, 则表示节点名称, 从模板中获取(framework>=3.0.17才支持), 否则为LocalIp
 std::string ServerConfig::LocalIp;          //本机IP
 std::string ServerConfig::BasePath;         //应用程序路径，用于保存远程系统配置的本地目录
 std::string ServerConfig::DataPath;         //应用程序路径，用于本地数据
@@ -69,27 +70,60 @@ std::string ServerConfig::LogLevel;         //log日志级别
 std::string ServerConfig::ConfigFile;       //框架配置文件路径
 int         ServerConfig::ReportFlow = 1;       //是否服务端上报所有接口stat流量 0不上报 1上报 (用于非tars协议服务流量统计)
 int         ServerConfig::IsCheckSet = 1;       //是否对按照set规则调用进行合法性检查 0,不检查，1检查
-int        ServerConfig::OpenCoroutine = 0;    //是否启用协程处理方式
+int         ServerConfig::OpenCoroutine = 0;    //是否启用协程处理方式
 size_t      ServerConfig::CoroutineMemSize; //协程占用内存空间的最大大小
 uint32_t    ServerConfig::CoroutineStackSize;   //每个协程的栈大小(默认128k)
 bool        ServerConfig::ManualListen = false;     //手工启动监听端口
-//bool        ServerConfig::MergeNetImp = false;     //合并网络和处理线程
 int         ServerConfig::NetThread = 1;               //servernet thread
 bool        ServerConfig::CloseCout = true;
 int         ServerConfig::BackPacketLimit = 0;
 int         ServerConfig::BackPacketMin = 1024;
-//int         ServerConfig::Pattern = 0;
-
-#if TARS_SSL
 std::string ServerConfig::CA;
 std::string ServerConfig::Cert;
 std::string ServerConfig::Key;
-bool ServerConfig::VerifyClient = false;
+bool        ServerConfig::VerifyClient = false;
 std::string ServerConfig::Ciphers;
-#endif
-
 map<string, string> ServerConfig::Context;
 
+ServerBaseInfo ServerConfig::toServerBaseInfo()
+{
+    ServerBaseInfo serverBaseInfo;
+    serverBaseInfo.TarsPath = TarsPath;
+    serverBaseInfo.Application = Application;
+    serverBaseInfo.ServerName = ServerName;
+    serverBaseInfo.NodeName = NodeName;
+    serverBaseInfo.BasePath = BasePath;
+    serverBaseInfo.DataPath = DataPath;
+    serverBaseInfo.LocalIp = LocalIp;
+    serverBaseInfo.LogPath = LogPath;
+    serverBaseInfo.LogSize = LogSize;
+    serverBaseInfo.LogNum = LogNum;
+    serverBaseInfo.LogLevel = LogLevel;
+    serverBaseInfo.Local = Local;
+    serverBaseInfo.Node = Node;
+    serverBaseInfo.Log = Log;
+    serverBaseInfo.Config = Config;
+    serverBaseInfo.Notify = Notify;
+    serverBaseInfo.ConfigFile = ConfigFile;
+    serverBaseInfo.CloseCout = CloseCout;
+    serverBaseInfo.ReportFlow = ReportFlow;
+    serverBaseInfo.IsCheckSet = IsCheckSet;
+    serverBaseInfo.OpenCoroutine = OpenCoroutine;
+    serverBaseInfo.CoroutineMemSize = CoroutineMemSize;
+    serverBaseInfo.CoroutineStackSize = CoroutineStackSize;
+    serverBaseInfo.NetThread = NetThread;
+    serverBaseInfo.ManualListen = ManualListen;
+    serverBaseInfo.BackPacketLimit = BackPacketLimit;
+    serverBaseInfo.BackPacketMin = BackPacketMin;
+    serverBaseInfo.CA = CA;
+    serverBaseInfo.Cert = Cert;
+    serverBaseInfo.Key = Key;
+    serverBaseInfo.VerifyClient = VerifyClient;
+    serverBaseInfo.Ciphers = Ciphers;
+    serverBaseInfo.Context = Context;
+
+    return serverBaseInfo;
+}
 ///////////////////////////////////////////////////////////////////////////////////////////
 //TC_Config                       Application::_conf;
 //TC_EpollServerPtr               Application::_epollServer  = NULL;
@@ -746,6 +780,8 @@ void Application::main(const string &config)
         //初始化Server部分
         initializeServer();
 
+        _serverBaseInfo = ServerConfig::toServerBaseInfo();
+
         vector <TC_EpollServer::BindAdapterPtr> adapters;
 
         //绑定对象和端口
@@ -1041,6 +1077,7 @@ void Application::outServer(ostream &os)
 {
 	os << TC_Common::outfill("Application(app)")            << ServerConfig::Application << endl;
 	os << TC_Common::outfill("ServerName(server)")          << ServerConfig::ServerName << endl;
+    os << TC_Common::outfill("NodeName(nodename)")          << ServerConfig::NodeName << endl;
 	os << TC_Common::outfill("BasePath(basepath)")          << ServerConfig::BasePath << endl;
 	os << TC_Common::outfill("DataPath(datapath)")          << ServerConfig::DataPath << endl;
 	os << TC_Common::outfill("LocalIp(localip)")            << ServerConfig::LocalIp << endl;
@@ -1059,7 +1096,6 @@ void Application::outServer(ostream &os)
 	os << TC_Common::outfill("CloseCout(closecout)")          << ServerConfig::CloseCout << endl;
 	os << TC_Common::outfill("NetThread(netthread)")          << ServerConfig::NetThread << endl;
 	os << TC_Common::outfill("ManualListen(manuallisten)")       << ServerConfig::ManualListen << endl;
-//	os << TC_Common::outfill("MergeNetImp(mergenetimp)")       << ServerConfig::MergeNetImp << endl;
 	os << TC_Common::outfill("ReportFlow(reportflow)")                  << ServerConfig::ReportFlow<< endl;
 	os << TC_Common::outfill("BackPacketLimit(backpacketlimit)")  << ServerConfig::BackPacketLimit<< endl;
 	os << TC_Common::outfill("BackPacketMin(backpacketmin)")  << ServerConfig::BackPacketMin<< endl;
@@ -1126,6 +1162,7 @@ void Application::initializeServer()
     ServerConfig::LogSize           = TC_Common::toSize(toDefault(_conf.get("/tars/application/server<logsize>"), "52428800"), 52428800);
     ServerConfig::LogNum            = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<lognum>"), "10"));
     ServerConfig::LocalIp           = _conf.get("/tars/application/server<localip>");
+    ServerConfig::NodeName          = toDefault(_conf.get("/tars/application/server<nodename>"), ServerConfig::LocalIp);
     ServerConfig::Local             = _conf.get("/tars/application/server<local>");
     ServerConfig::Node              = _conf.get("/tars/application/server<node>");
     ServerConfig::Log               = _conf.get("/tars/application/server<log>");
