@@ -17,6 +17,7 @@
 #include "servant/RemoteLogger.h"
 #include "servant/Communicator.h"
 #include "servant/Application.h"
+#include "servant/LogF.h"
 
 namespace tars
 {

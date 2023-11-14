@@ -26,6 +26,10 @@
 #include "servant/NotifyObserver.h"
 #include "servant/AuthLogic.h"
 #include "servant/CommunicatorFactory.h"
+#include "servant/StatReport.h"
+#include "servant/RemoteLogger.h"
+#include "servant/RemoteConfig.h"
+#include "servant/RemoteNotify.h"
 
 #include <signal.h>
 #if TARGET_PLATFORM_LINUX

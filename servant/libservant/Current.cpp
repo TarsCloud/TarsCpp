@@ -411,6 +411,11 @@ ServantHandle* Current::getServantHandle()
     return _servantHandle;
 }
 
+string Current::getModuleName()
+{
+    return _servantHandle->getModuleName();
+}
+
 TC_EpollServer::BindAdapter* Current::getBindAdapter()
 {
     return _data->adapter().get();
@@ -437,7 +442,7 @@ bool Current::isTraced() const
     return _traceCall;
 }
 
-string Current::getTraceKey() const
+const string &Current::getTraceKey() const
 {
     return _traceKey;
 }

@@ -57,6 +57,11 @@ Application* Servant::getApplication() const
     return _application;
 }
 
+string Servant::getModuleName()
+{
+    return _application->getServerBaseInfo().Application + "." + _application->getServerBaseInfo().ServerName;
+}
+
 void Servant::setHandle(TC_EpollServer::Handle* handle)
 {
     _handle = handle;

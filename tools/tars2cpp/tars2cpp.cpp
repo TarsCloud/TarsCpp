@@ -1425,7 +1425,7 @@ string Tars2Cpp::generateDispatchAsync(const OperationPtr& pPtr, const string& c
         DEL_TAB;
         s << TAB << "}" << endl;
 
-        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, \"\", getModuleName(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
         s << endl;
@@ -1843,7 +1843,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
         DEL_TAB;
         s << TAB << "}" << endl;
 
-        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, \"\", getModuleName(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
         s << endl;
@@ -2035,7 +2035,7 @@ string Tars2Cpp::generateServantDispatch(const OperationPtr& pPtr, const string&
         s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
-        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, \"\", getModuleName(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
         s << endl;
@@ -2205,7 +2205,7 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
         s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
-        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + \".\" + ServerConfig::ServerName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+        s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, tars_moduleName(), tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
         DEL_TAB;
         s << TAB << "}" << endl;
     }
@@ -2401,7 +2401,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
             s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
             DEL_TAB;
             s << TAB << "}" << endl;
-            s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, ServerConfig::Application + \".\" + ServerConfig::ServerName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+            s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, tars_moduleName(), tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
             DEL_TAB;
             s << TAB << "}" << endl;
             s << endl;
@@ -2480,7 +2480,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
                 s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
                 DEL_TAB;
                 s << TAB << "}" << endl;
-                s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, ServerConfig::Application + \".\" + ServerConfig::ServerName, tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+                s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, tars_moduleName(), tars_name(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
                 DEL_TAB;
                 s << TAB << "}" << endl;
                 s << endl;
@@ -2499,7 +2499,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
             INC_TAB;
             s << TAB << "TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, \"\", \"\", \"" << pPtr->getId() << "\", 0, \"\", \"\");" << endl;
             DEL_TAB;
-            s << "}" << endl;
+            s << TAB << "}" << endl;
         }
         DEL_TAB;
         s << TAB << "}" << endl;
@@ -2669,7 +2669,12 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
             s << TAB << "_trace_param_ = " << G_TRACE_PARAM_OVER_MAX_LEN << ";" << endl;
             DEL_TAB;
             s << TAB << "}" << endl;
-            s << TAB << "TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, \"\", ServerConfig::Application + \".\" + ServerConfig::ServerName, \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+            s << TAB << "if(_current_->getServantHandle())" << endl;
+            s << TAB << "{" << endl;
+            INC_TAB;
+            s << TAB << "TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, \"\", _current_->getModuleName(), \"" << pPtr->getId() << "\", 0, _trace_param_, \"\");" << endl;
+            DEL_TAB;
+            s << TAB << "}" << endl;
             DEL_TAB;
             s << TAB << "}" << endl;
             s << endl;
@@ -3440,11 +3445,8 @@ void Tars2Cpp::generateH(const ContextPtr &pPtr) const
         {
             s << "#include \"servant/ServantProxy.h\"" << endl;
             s << "#include \"servant/Servant.h\"" << endl;
-	        s << "#include \"promise/promise.h\"" << endl;
-            if (_bTrace)
-            {
-                s << "#include \"servant/Application.h\"" << endl;
-            }
+            s << "#include \"promise/promise.h\"" << endl;
+
             break;
         }
     }

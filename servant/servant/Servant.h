@@ -78,6 +78,12 @@ public:
     Application* getApplication() const;
 
     /**
+     * 获取服务端的名称: app.server
+     * @return
+     */
+    string getModuleName();
+
+    /**
      * 获取所属的Handle
      * @return HandlePtr& 
      */
@@ -216,36 +222,36 @@ class ServantCallback : public ServantProxyCallback
 public:
     /**
      * 构造函数，type用来区分同一链路上的多种cb对象类型
-     * @param type 
-     * @param servant 
-     * @param current 
+     * @param type
+     * @param servant
+     * @param current
      */
     ServantCallback(const string& type, const ServantPtr& servant, const CurrentPtr& current);
 
     /**
-     * callback的响应接口 
-     * @param msg 
-     * @return int 
+     * callback的响应接口
+     * @param msg
+     * @return int
      */
     virtual int onDispatch(ReqMessagePtr msg);
 
     /**
      * 连接关闭
-     * @param msg 
-     * @return int 
-     */    
+     * @param msg
+     * @return int
+     */
     virtual void onClose()
     {
     }
     /**
      * 获得生成时所属的servant
-     * @return const ServantPtr& 
+     * @return const ServantPtr&
      */
     const ServantPtr& getServant();
 
     /**
      * 获得网络上下文
-     * @return const CurrentPtr& 
+     * @return const CurrentPtr&
      */
     const CurrentPtr& getCurrent();
 
@@ -261,7 +267,7 @@ protected:
 //////////////////////////////////////////////////////////////////////
 
 //线程私有数据
-class CallbackThreadData //: public TC_ThreadPool::ThreadData
+class CallbackThreadData
 {
 public:
     static thread_local shared_ptr<CallbackThreadData> g_sp;
