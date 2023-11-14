@@ -158,12 +158,41 @@ bool QueryEpBase::init(const string & sObjName, const string& setName, bool root
     return true;
 }
 
+void QueryEpBase::loadFromCache()
+{
+    string sLocatorKey = _locator;
+
+    //如果启用set，则获取按set分组的缓存
+    if (ClientConfig::SetOpen)
+    {
+        sLocatorKey += "_" + ClientConfig::SetDivision;
+    }
+
+    string objName = _objName + string(_invokeSetId.empty() ? "" : ":") + _invokeSetId;
+
+    string sEndpoints = AppCache::getInstance()->get(objName, sLocatorKey);
+    string sInactiveEndpoints = AppCache::getInstance()->get("inactive_" + objName, sLocatorKey);
+
+    setEndpoints(sEndpoints,_activeEndpoints);
+    setEndpoints(sInactiveEndpoints,_inactiveEndpoints);
+
+    if(!_activeEndpoints.empty())
+    {
+        _valid = true;
+    }
+
+    if((!_activeEndpoints.empty() || !_inactiveEndpoints.empty()))
+    {
+        //非直接指定端口, 且从cache中能查到服务端口的, 不需要通知所有ObjectProxy更新地址
+        notifyEndpoints(_activeEndpoints,_inactiveEndpoints,true);
+    }
+}
+
 void QueryEpBase::setObjName(const string & sObjName)
 {
     string::size_type pos = sObjName.find_first_of('@');
 
     string sEndpoints;
-    string sInactiveEndpoints;
 
     if (pos != string::npos)
     {
@@ -189,6 +218,14 @@ void QueryEpBase::setObjName(const string & sObjName)
 		}
 
         _valid = true;
+
+        setEndpoints(sEndpoints, _activeEndpoints);
+
+        if(!_activeEndpoints.empty())
+        {
+            //非直接指定端口, 且从cache中能查到服务端口的, 不需要通知所有ObjectProxy更新地址
+            notifyEndpoints(_activeEndpoints, _inactiveEndpoints, true);
+        }
     }
     else
     {
@@ -214,37 +251,15 @@ void QueryEpBase::setObjName(const string & sObjName)
         _queryFPrx = _communicator->stringToProxy<QueryFPrx>(_locator);
         _queryFPrx->tars_open_keepalive(false);
 
-        string sLocatorKey = _locator;
-
-        //如果启用set，则获取按set分组的缓存
-        if(ClientConfig::SetOpen)
-        {
-            sLocatorKey += "_" + ClientConfig::SetDivision;
-        }
-
-        string objName = _objName + string(_invokeSetId.empty() ? "" : ":") + _invokeSetId;
-
         //[间接连接]第一次使用cache，如果是接口级请求则不从缓存读取
         if(!_interfaceReq)
         {
-            sEndpoints = AppCache::getInstance()->get(objName,sLocatorKey);
-            sInactiveEndpoints = AppCache::getInstance()->get("inactive_"+objName,sLocatorKey);
+            loadFromCache();
         }
     }
 
-    setEndpoints(sEndpoints,_activeEndpoints);
-    setEndpoints(sInactiveEndpoints,_inactiveEndpoints);
-
-    if(!_activeEndpoints.empty())
-    {
-        _valid = true;
-    }
-
-	if((!_activeEndpoints.empty() || !_inactiveEndpoints.empty()))
-	{
-    	//非直接指定端口, 且从cache中能查到服务端口的, 不需要通知所有ObjectProxy更新地址
-        notifyEndpoints(_activeEndpoints,_inactiveEndpoints,true);
-    }
+    //重置刷新时间, 保证会马上刷新主控ip list
+    _refreshTime = 0;
 }
 
 void QueryEpBase::setEndpoints(const string & sEndpoints, set<EndpointInfo> & setEndpoints)
@@ -576,6 +591,12 @@ void QueryEpBase::doEndpoints(const vector<EndpointF>& activeEp, const vector<En
 
 void QueryEpBase::doEndpointsExp(int iRet)
 {
+    if(_interfaceReq && _activeEndpoints.empty() && _inactiveEndpoints.empty())
+    {
+        //如果没有任何节点, 则从文件中加载一次
+        loadFromCache();
+    }q
+
     _failTimes++;
     _requestRegistry = false;
 

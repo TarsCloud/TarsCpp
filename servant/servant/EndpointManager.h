@@ -146,6 +146,10 @@ protected:
      */
     void refreshReg(GetEndpointType type,const string & sName);
 
+    /**
+     * 从cache中加载ip list
+     */
+    void loadFromCache();
 private:
     
     /*
