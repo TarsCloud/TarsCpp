@@ -14,6 +14,9 @@ option(TARS_HTTP2 "open http2 support" @TARS_HTTP2@)
 set(TARS_INC "${TARS_PATH}/include")
 set(TARS_LIB_DIR "${TARS_PATH}/lib" )
 
+# set tars2cpp flag: list(APPEND TARS_TOOL_FLAG "--with-tars")
+list(APPEND TARS_TOOL_FLAG "")
+
 if(WIN32)
 	set (LIB_TARS_SERVANT "${TARS_LIB_DIR}/tarsservant.lib")
 	set (LIB_TARS_UTIL "${TARS_LIB_DIR}/tarsutil.lib")
