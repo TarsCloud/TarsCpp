@@ -28,6 +28,10 @@ void AppCache::setCacheInfo(const string &sFile,int32_t iSynInterval)
     {
         TC_LockT<TC_ThreadMutex> lock(*this);
 
+        if(!_file.empty())
+        {
+            return;
+        }
         string sPath = TC_File::extractFilePath(sFile);
 
         TC_File::makeDirRecursive(sPath);
