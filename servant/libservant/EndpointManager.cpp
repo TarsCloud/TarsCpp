@@ -591,11 +591,11 @@ void QueryEpBase::doEndpoints(const vector<EndpointF>& activeEp, const vector<En
 
 void QueryEpBase::doEndpointsExp(int iRet)
 {
-    if(_interfaceReq && _activeEndpoints.empty() && _inactiveEndpoints.empty())
+    if(!_interfaceReq && _activeEndpoints.empty() && _inactiveEndpoints.empty())
     {
         //如果没有任何节点, 则从文件中加载一次
         loadFromCache();
-    }q
+    }
 
     _failTimes++;
     _requestRegistry = false;
