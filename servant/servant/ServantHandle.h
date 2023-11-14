@@ -67,6 +67,12 @@ public:
 	Application *getApplication() { return _application; }
 
     /**
+     * 获取服务端的名称: app.server
+     * @return
+     */
+    string getModuleName();
+
+    /**
      * 获取实际的servant
      * @return
      */

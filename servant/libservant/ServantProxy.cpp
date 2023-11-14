@@ -330,6 +330,20 @@ const map<std::string, std::string> & ServantProxyCallback::getResponseContext()
 	return pCbtd->getResponseContext();
 }
 
+void ServantProxyCallback::setServantPrx(const ServantPrx &prx)
+{
+    _servantPrx = prx;
+
+    _moduleName = std::make_shared<string>(_servantPrx->_communicator->getProperty("modulename"));
+}
+
+string ServantProxyCallback::getModuleName()
+{
+    auto moduleName = _moduleName;
+
+    return *moduleName.get();
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 int HttpServantProxyCallback::onDispatch(ReqMessagePtr msg)
@@ -417,6 +431,8 @@ ServantProxy::ServantProxy(Communicator *pCommunicator, const string &name, cons
 	_proxyProtocol.requestFunc  = ProxyProtocol::tarsRequest;
 	_proxyProtocol.responseFunc = ProxyProtocol::tarsResponse;
 
+    _moduleName = _communicator->getProperty("modulename", TC_File::extractFileName(TC_File::getExePath()));
+
     //在每个公有网络线程对象中创建ObjectProxy
     for (size_t i = 0; i < _communicator->getCommunicatorEpollNum(); ++i)
     {
@@ -452,6 +468,11 @@ ServantProxy::~ServantProxy()
 const string &ServantProxy::tars_name() const
 {
     return _objectProxy->name();
+}
+
+const string &ServantProxy::tars_moduleName() const
+{
+    return _moduleName;
 }
 
 string ServantProxy::tars_full_name() const
@@ -1785,6 +1806,9 @@ vector<TC_Endpoint> ServantProxy::getEndpoint4All()
     return activeEndPoint;
 }
 
-
+void TARS_TRACE(const string &traceKey, const char *annotation, const string &client, const string &server, const char* func, int ret, const string &data, const string &ex)
+{
+    FDLOG(TRACE_LOG_FILENAME) << traceKey << "|" << annotation << "|" << client << "|" << server << "|" << func << "|" << TNOWMS << "|" << ret << "|" << TC_Base64::encode(data) << "|" << ex << endl;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////
 }

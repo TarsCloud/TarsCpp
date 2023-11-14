@@ -15,9 +15,11 @@
  */
 #include "util/tc_platform.h"
 #include "servant/AdminServant.h"
-#include "servant/Application.h"
 #include "servant/NotifyObserver.h"
 #include "servant/ServantHelper.h"
+#include "servant/RemoteNotify.h"
+#include "servant/RemoteLogger.h"
+#include "servant/Application.h"
 
 namespace tars
 {

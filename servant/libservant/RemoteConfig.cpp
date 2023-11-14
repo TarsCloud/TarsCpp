@@ -18,6 +18,7 @@
 #include "util/tc_file.h"
 #include "servant/Communicator.h"
 #include "servant/RemoteNotify.h"
+#include "servant/ConfigF.h"
 #include "servant/Application.h"
 #include <fstream>
 

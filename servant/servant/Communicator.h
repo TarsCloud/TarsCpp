@@ -23,9 +23,7 @@
 #include "servant/Global.h"
 #include "servant/ServantProxy.h"
 #include "servant/ServantProxyFactory.h"
-//#include "servant/ObjectProxyFactory.h"
 #include "servant/AsyncProcThread.h"
-// #include "servant/CommunicatorEpoll.h"
 #include "servant/StatReport.h"
 #include "servant/RemoteLogger.h"
 

@@ -15,7 +15,6 @@
  */
 
 #include "servant/RemoteNotify.h"
-#include "servant/Communicator.h"
 #include "servant/RemoteLogger.h"
 #include "servant/Application.h"
 

@@ -43,6 +43,9 @@ namespace tars
  *
  */
 
+class ConfigProxy;
+typedef tars::TC_AutoPtr<ConfigProxy> ConfigPrx;
+
 class SVT_DLL_API RemoteConfig : public TC_Singleton<RemoteConfig>
 {
 public:

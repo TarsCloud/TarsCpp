@@ -122,6 +122,12 @@ public:
     ServantHandle* getServantHandle();
 
     /**
+     * 当前此服务端的名称: app.server, 给调用链使用
+     * @return
+     */
+    string getModuleName();
+
+    /**
      * 获取来源的Adapter
      * @return TC_EpollServer::BindAdapter*
      */
@@ -270,10 +276,11 @@ public:
      * 是否需要追踪调用链
      */
 	bool isTraced() const;
+
     /**
      * 调用链追踪Key
      */
-	string getTraceKey() const;
+	const string &getTraceKey() const;
 
 	/**
 	 * 服务器端连接是否还存在

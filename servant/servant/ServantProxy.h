@@ -28,6 +28,7 @@
 #include "servant/AppProtocol.h"
 #include "servant/Current.h"
 #include "servant/EndpointInfo.h"
+
 #include <tuple>
 #include <cmath>
 #include <algorithm>
@@ -36,6 +37,22 @@ namespace tars
 
 class CommunicatorEpoll;
 class EndpointInfo;
+
+
+///////////////////////////////////////////
+/**
+ *  调用链追踪
+ */
+#define TRACE_ANNOTATION_TS "ts"
+#define TRACE_ANNOTATION_TE "te"
+#define TRACE_ANNOTATION_CS "cs"
+#define TRACE_ANNOTATION_CR "cr"
+#define TRACE_ANNOTATION_SR "sr"
+#define TRACE_ANNOTATION_SS "ss"
+
+#define TRACE_LOG_FILENAME "_t_trace_"
+// traceKey: traceType-TraceID|SpanID|ParentSpanID
+void TARS_TRACE(const string &traceKey, const char *annotation, const string &client, const string &server, const char* func, int ret, const string &data, const string &ex);
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -600,7 +617,7 @@ public:
      * 设置发起调用的servant
      * @param prx
      */
-	void setServantPrx(const ServantPrx &prx) { _servantPrx = prx; }
+	void setServantPrx(const ServantPrx &prx);
 
     /**
      * 获取类型
@@ -673,6 +690,12 @@ protected:
 
 	virtual void onConnect(const TC_Endpoint& ep, int fd) {}
 
+    /**
+     * get module name
+     * @return
+     */
+    string getModuleName();
+
 	friend class AdapterProxy;
 protected:
 
@@ -696,6 +719,11 @@ protected:
      * servant prx
      */
 	ServantPrx _servantPrx;
+
+    /**
+     * moduleName for trace
+     */
+    shared_ptr<string> _moduleName;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // for http
@@ -950,6 +978,12 @@ public:
      * @return string
      */
     const string &tars_name() const;
+
+    /**
+     * 当前客户端的moduleName
+     * @return
+     */
+    const string &tars_moduleName() const;
 
     /**
      * set name
@@ -1430,6 +1464,10 @@ private:
 	 */
 	vector<SocketOpt>                     _socketOpts;
 
+    /**
+     * 对应通信内部的moduleName
+     */
+    string                                _moduleName;
 };
 }
 #endif

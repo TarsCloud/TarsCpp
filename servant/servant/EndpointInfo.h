@@ -17,11 +17,9 @@
 #ifndef __TARS_ENDPOINT_INFO_H_
 #define __TARS_ENDPOINT_INFO_H_
 
-//#include "servant/Global.h"
 #include "util/tc_socket.h"
 #include "util/tc_clientsocket.h"
 #include "servant/EndpointF.h"
-//#include "AuthF.h"
 
 #if TARGET_PLATFORM_WINDOWS
 #include <WS2tcpip.h>
