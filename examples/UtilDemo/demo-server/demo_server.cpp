@@ -204,7 +204,7 @@ public:
 
 	void initialize()
 	{
-		g_group.start(1);
+		g_group.start();
 
 		g_logger.init("./debug", 1024 * 1024, 10);
 		g_logger.modFlag(TC_RollLogger::HAS_LEVEL | TC_RollLogger::HAS_PID, true);

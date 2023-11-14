@@ -127,6 +127,11 @@ void LocalRollLogger::terminate()
 
 void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, const string &sLogpath, int iMaxSize, int iMaxNum, const CommunicatorPtr &comm, const string &sLogObj)
 {
+    if (_local.isStart())
+    {
+        return;
+    }
+
     _app       = sApp;
     _server    = sServer;
     _logpath   = sLogpath;
@@ -142,7 +147,7 @@ void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, cons
     //生成目录
     TC_File::makeDirRecursive(_logpath + FILE_SEP + _app + FILE_SEP + _server);
 
-    _local.start(1);
+    _local.start();
 
     //初始化本地循环日志
     _logger.init(_logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + _app + "." + _server, iMaxSize, iMaxNum);
@@ -235,8 +240,8 @@ LocalRollLogger::RollLogger *LocalRollLogger::logger(const string &suffix)
 
 TarsLoggerThread::TarsLoggerThread()
 {
-    _local.start(1);
-    _remote.start(1);
+    _local.start();
+    _remote.start();
 }
 
 TarsLoggerThread::~TarsLoggerThread()
