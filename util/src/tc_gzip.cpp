@@ -42,7 +42,7 @@ bool TC_GZip::compress(const char *src, size_t length, string& buffer)
     static char gz_simple_header[] = { '\037', '\213', '\010', '\000', '\000', '\000', '\000', '\000', '\002', '\377' };
 
     size_t destLen   = sizeof(gz_simple_header) + length * 2;
-    char *out        = new char[destLen];
+    char *out        = new char[destLen + 1];
 
     stream.next_out  = (Bytef *)out;
     stream.avail_out = destLen;
@@ -100,7 +100,7 @@ bool TC_GZip::compress(const char *src, size_t length, vector<char>& buffer)
     static char gz_simple_header[] = { '\037', '\213', '\010', '\000', '\000', '\000', '\000', '\000', '\002', '\377' };
 
     size_t destLen   = sizeof(gz_simple_header) + length * 2;
-    char *out        = new char[destLen];
+    char *out        = new char[destLen + 1];
 
     stream.next_out  = (Bytef *)out;
     stream.avail_out = destLen;
