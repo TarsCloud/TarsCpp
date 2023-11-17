@@ -27,7 +27,7 @@ public:
      */
     virtual void initialize()
     {
-        files["test.conf"] = "test-content";
+
     };
 
     /**
@@ -52,6 +52,8 @@ public:
     virtual int loadConfig(const std::string & app, const std::string & server, const std::string & filename, string &config, tars::CurrentPtr current)
     {
     	LOG_CONSOLE_DEBUG << app << ", " << server << ", " << filename << endl;
+
+        std::lock_guard<std::mutex> lock(_mutex);
 
         map<string, string>::iterator it =files.find(filename);
         if(it!=files.end()){
@@ -144,8 +146,17 @@ public:
 
         return 0;
     }
+
+    /**
+     *
+     * @param name
+     * @param content
+     */
+    static void setConfigFile(const string &name, const string &content);
+
 private:
-    map<string, string> files;
+    static std::mutex _mutex;
+    static map<string, string> files;
 };
 
 #endif /* TARS_TARS_TEST_TESTCODE_INCLUDE_STUB_CONFIGIMP_H_ */

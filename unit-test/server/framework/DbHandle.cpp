@@ -618,7 +618,6 @@ void CDbHandle::updateDivisionCache(SetDivisionCache& setDivisionCache,bool upda
             }
             else if(tmpsetCache.count(it->first))
             {
-                //�����������нڵ㶼û������set��ɾ�������е�set��Ϣ
                 tmpsetCache.erase(it->first);
             }
 
