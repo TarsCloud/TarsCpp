@@ -108,10 +108,10 @@ private:
      */
     inline void localRename(const string& oldFile, const string& newFile);
 
-	/**
-	*   获取hostname， 给k8s版本使用
-	*/
-	string getHostName();
+//	/**
+//	*   获取hostname， 给k8s版本使用
+//	*/
+//	string getHostName();
 
 protected:
 

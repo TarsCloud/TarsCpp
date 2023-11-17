@@ -1,7 +1,9 @@
 ﻿
 #include "hello_test.h"
 #include "../server/WinServer.h"
-
+#include "server/FrameworkServer.h"
+#include "server/framework/DbHandle.h"
+#include "server/framework/ConfigImp.h"
 
 
 TEST_F(HelloTest, winServerInCoroutine)
@@ -360,3 +362,64 @@ TEST_F(HelloTest, winServerHashTag)
 
 	stopServer(ws);
 }
+
+TEST_F(HelloTest, winServerConfig)
+{
+    TC_File::removeFile("./test.conf", true);
+    TC_File::removeFile("./test.conf.1.bak", true);
+    TC_File::removeFile("./test.conf.2.bak", true);
+    TC_File::removeFile("./test.conf.3.bak", true);
+    TC_File::removeFile("./test.conf.4.bak", true);
+    TC_File::removeFile("./FrameworkServer.tarsdat", true);
+
+    FrameworkServer fs;
+    startServer(fs, FRAMEWORK_CONFIG());
+
+    {
+        WinServer ws;
+
+        startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+        ASSERT_TRUE(!TC_File::isFileExist("./test.conf"));
+
+        stopServer(ws);
+    }
+
+    CDbHandle::addActiveEndPoint("TestApp.FrameworkServer.ConfigObj", 11003, 1);
+    {
+        WinServer ws;
+
+        startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+        ASSERT_TRUE(TC_File::isFileExist("./test.conf"));
+
+        stopServer(ws);
+    }
+
+    CDbHandle::cleanEndPoint();
+
+    {
+        WinServer ws;
+
+        startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+        ASSERT_TRUE(TC_File::isFileExist("./test.conf"));
+
+        stopServer(ws);
+    }
+
+    ConfigImp::setConfigFile("test.conf", "content");
+    {
+        WinServer ws;
+
+        startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+        ASSERT_TRUE(TC_File::isFileExist("./test.conf"));
+        ASSERT_TRUE(TC_File::isFileExist("./test.conf.1.bak"));
+        EXPECT_EQ(TC_File::load2str("./test.conf"), "content");
+
+        stopServer(ws);
+    }
+    stopServer(fs);
+}
+

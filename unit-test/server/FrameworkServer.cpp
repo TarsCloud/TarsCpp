@@ -21,7 +21,9 @@ FrameworkServer::~FrameworkServer()
 void
 FrameworkServer::initialize()
 {
-	addServant<ConfigImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".ConfigObj");
+    ConfigImp::setConfigFile("test.conf", "test-content");
+
+    addServant<ConfigImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".ConfigObj");
 	addServant<QueryImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".QueryObj");
 	addServant<StatImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".StatObj");
 	addServant<LogImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".LogObj");
