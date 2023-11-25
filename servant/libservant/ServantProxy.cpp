@@ -341,6 +341,10 @@ string ServantProxyCallback::getModuleName()
 {
     auto moduleName = _moduleName;
 
+    if(!moduleName)
+    {
+        return ServerConfig::Application + "." + ServerConfig::ServerName;
+    }
     return *moduleName.get();
 }
 
@@ -811,6 +815,7 @@ uint32_t ServantProxy::tars_gen_requestid()
 void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 {
 	_pushCallback = cb;
+    cb->setServantPrx(this);
 }
 
 ServantProxyCallbackPtr ServantProxy::tars_get_push_callback()
