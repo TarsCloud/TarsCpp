@@ -74,15 +74,15 @@ namespace tars
 //上报错误信息
 #define TARS_NOTIFY_ERROR(info)      {RemoteNotify::getInstance()->notify(NOTIFYERROR, info);}
 
-//发送心跳给node 多个adapter分别上报
-#define TARS_KEEPALIVE(adapter)      {KeepAliveNodeFHelper::getInstance()->keepAlive(adapter);}
-
-//发送激活信息
-#define TARS_KEEPACTIVING            {KeepAliveNodeFHelper::getInstance()->keepActiving();}
-
-//发送TARS版本给node
-#define TARS_REPORTVERSION(x)        {KeepAliveNodeFHelper::getInstance()->reportVersion(TARS_VERSION);}
-
+////发送心跳给node 多个adapter分别上报
+//#define TARS_KEEPALIVE(adapter)      {KeepAliveNodeFHelper::getInstance()->keepAlive(adapter);}
+//
+////发送激活信息
+//#define TARS_KEEPACTIVING            {KeepAliveNodeFHelper::getInstance()->keepActiving();}
+//
+////发送TARS版本给node
+//#define TARS_REPORTVERSION(x)        {KeepAliveNodeFHelper::getInstance()->reportVersion(TARS_VERSION);}
+//
 //////////////////////////////////////////////////////////////////////
 /**
  * 添加前置的命令处理方法
@@ -192,6 +192,7 @@ struct SVT_DLL_API ServerConfig
 };
 
 class PropertyReport;
+class KeepAliveNodeFHelper;
 
 //////////////////////////////////////////////////////////////////////
 /**
@@ -608,6 +609,8 @@ protected:
      */
     string setDivision(void);
 
+    friend class ServantHandle;
+
 protected:
 
     /**
@@ -652,6 +655,8 @@ protected:
 
 	size_t 								_ctrlCId = -1;
 	size_t  							_termId = -1;
+
+    shared_ptr<KeepAliveNodeFHelper>    _keepAliveNodeFHelper;
 
     PropertyReport * _pReportQueue;
     PropertyReport * _pReportConRate;
