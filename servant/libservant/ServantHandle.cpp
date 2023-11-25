@@ -195,7 +195,7 @@ void ServantHandle::heartbeat()
     {
         _bindAdapter->setHeartBeatTime(fcur);
 
-        TARS_KEEPALIVE(_bindAdapter->getName());
+        _application->_keepAliveNodeFHelper->keepAlive(_bindAdapter->getName());
 
         //上报连接数 比率
         if (_bindAdapter->_pReportConRate)

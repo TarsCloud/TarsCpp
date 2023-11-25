@@ -200,11 +200,11 @@ void reportRspQueue(TC_EpollServer *epollServer)
     }
 }
 
-void heartBeatFunc(const string& adapterName)
-{
-    TARS_KEEPALIVE(adapterName);
-}
-
+//void heartBeatFunc(const string& adapterName)
+//{
+//    TARS_KEEPALIVE(adapterName);
+//}
+//
 void Application::manualListen()
 {
     vector<TC_EpollServer::BindAdapterPtr> v = getEpollServer()->getBindAdapters();
@@ -221,7 +221,9 @@ void Application::waitForShutdown()
 
     _epollServer->setCallbackFunctor(reportRspQueue);
 
-    _epollServer->setHeartBeatFunctor(heartBeatFunc);
+    _epollServer->setHeartBeatFunctor([&](const string &adapter){
+        _keepAliveNodeFHelper->keepAlive(adapter);
+    });
 
 	_epollServer->setDestroyAppFunctor([&](TC_EpollServer *epollServer){
 
@@ -812,7 +814,8 @@ void Application::main(const string &config)
                 do
                 {
                     //发送心跳给node, 表示正在启动
-                    TARS_KEEPACTIVING;
+                    _keepAliveNodeFHelper->keepActiving();
+//                    TARS_KEEPACTIVING;
 
                     //等待initialize初始化完毕
                     std::unique_lock<std::mutex> lock(mtx);
@@ -891,10 +894,12 @@ void Application::main(const string &config)
 	    TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_RESOURCE, Application::cmdViewResource);
 
         //上报版本
-        TARS_REPORTVERSION(TARS_VERSION);
+        _keepAliveNodeFHelper->reportVersion(TARS_VERSION);
+//        TARS_REPORTVERSION(TARS_VERSION);
 
         //发送心跳给node, 表示启动了
-        TARS_KEEPALIVE("");
+        _keepAliveNodeFHelper->keepAlive();
+//        TARS_KEEPALIVE("");
 
         //发送给notify表示服务启动了
         RemoteNotify::getInstance()->report("restart");
@@ -1305,7 +1310,8 @@ void Application::initializeServer()
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到Node的代理
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set node proxy]") << "OK" << endl;
-    KeepAliveNodeFHelper::getInstance()->setNodeInfo(_communicator, ServerConfig::Node, ServerConfig::Application, ServerConfig::ServerName);
+    _keepAliveNodeFHelper = std::make_shared<KeepAliveNodeFHelper>();
+    _keepAliveNodeFHelper->setNodeInfo(_communicator, ServerConfig::Node, ServerConfig::Application, ServerConfig::ServerName);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化管理对象
