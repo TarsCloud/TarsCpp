@@ -392,17 +392,17 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            iRet = _queryFPrx->findObjectById4Any(_objName,activeEp,inactiveEp, ServerConfig::Context);
+                            iRet = _queryFPrx->findObjectById4Any(_objName,activeEp,inactiveEp);
                             break;
                         }
                     case E_STATION:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
+                            iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp);
 	                        break;
                         }
                     case E_SET:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp, ServerConfig::Context);
+                            iRet = _queryFPrx->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp);
                             break;
                         }
                     case E_DEFAULT:
@@ -412,11 +412,11 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             {
                                    //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                iRet = _queryFPrx->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp, ServerConfig::Context);
+                                iRet = _queryFPrx->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp);
                             }
                             else
                             {
-                                iRet = _queryFPrx->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp, ServerConfig::Context);
+                                iRet = _queryFPrx->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp);
                             }
                             break;
                         }
@@ -429,17 +429,17 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            _queryFPrx->async_findObjectById4Any(this,_objName, ServerConfig::Context);
+                            _queryFPrx->async_findObjectById4Any(this,_objName);
                             break;
                         }
                     case E_STATION:
                         {
-                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName, ServerConfig::Context);
+                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName);
                             break;
                         }
                     case E_SET:
                         {
-                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName, ServerConfig::Context);
+                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName);
                             break;
                         }
                     case E_DEFAULT:
@@ -449,11 +449,11 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             {
                                 //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId, ServerConfig::Context);
+                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId);
                             }
                             else
                             {
-                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName, ServerConfig::Context);
+                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName);
                             }
                             break;
                         }

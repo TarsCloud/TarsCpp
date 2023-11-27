@@ -437,7 +437,7 @@ bool Application::cmdLoadConfig(const string& command, const string& params, str
 
     string filename = TC_Common::trim(params);
 
-    if (RemoteConfig::getInstance()->addConfig(filename, result, false))
+    if (_remoteConfig->addConfig(filename, result, false))
     {
         RemoteNotify::getInstance()->report(result);
 
@@ -541,22 +541,23 @@ bool Application::cmdLoadProperty(const string& command, const string& params, s
         _communicator->reloadProperty(sResult);
 
         //加载远程对象
-        ServerConfig::Log = _conf.get("/tars/application/server<log>");
+        _serverBaseInfo.Log = _conf.get("/tars/application/server<log>");
+//        ServerConfig::Log = _serverBaseInfo.Log;
 
-        RemoteTimeLogger::getInstance()->setLogInfo(_communicator, ServerConfig::Log, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath,setDivision());
+        RemoteTimeLogger::getInstance()->setLogInfo(_communicator, _serverBaseInfo.Log, _serverBaseInfo.Application, _serverBaseInfo.ServerName, _serverBaseInfo.LogPath,setDivision());
 
-        ServerConfig::Config = _conf.get("/tars/application/server<config>");
+        _serverBaseInfo.Config = _conf.get("/tars/application/server<config>");
 
-        RemoteConfig::getInstance()->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath,setDivision(), 5);
+        _remoteConfig->setConfigInfo(_communicator, _serverBaseInfo.Config, _serverBaseInfo.Application, _serverBaseInfo.ServerName, _serverBaseInfo.BasePath, setDivision(), 5, _serverBaseInfo.Context);
 
-        ServerConfig::Notify = _conf.get("/tars/application/server<notify>");
+        _serverBaseInfo.Notify = _conf.get("/tars/application/server<notify>");
 
-        RemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision(), ServerConfig::LocalIp);
+        RemoteNotify::getInstance()->setNotifyInfo(_communicator, _serverBaseInfo.Notify, _serverBaseInfo.Application, _serverBaseInfo.ServerName, setDivision(), _serverBaseInfo.NodeName);
 
         result = "loaded config items:\r\n" + sResult +
-                 "log=" + ServerConfig::Log + "\r\n" +
-                 "config=" + ServerConfig::Config + "\r\n" +
-                 "notify=" + ServerConfig::Notify + "\r\n";
+                 "log=" + _serverBaseInfo.Log + "\r\n" +
+                 "config=" + _serverBaseInfo.Config + "\r\n" +
+                 "notify=" + _serverBaseInfo.Notify + "\r\n";
     }
     catch (TC_Config_Exception & ex)
     {
@@ -699,7 +700,7 @@ bool Application::addConfig(const string &filename)
 {
     string result;
 
-    if (RemoteConfig::getInstance()->addConfig(filename, result, false))
+    if (_remoteConfig->addConfig(filename, result, false))
     {
         RemoteNotify::getInstance()->report(result);
 
@@ -715,8 +716,7 @@ bool Application::addAppConfig(const string &filename)
     string result = "";
 
     // true-只获取应用级别配置
-    if (RemoteConfig::getInstance()->addConfig(filename, result, true))
-
+    if (_remoteConfig->addConfig(filename, result, true))
     {
         RemoteNotify::getInstance()->report(result);
 
@@ -1183,13 +1183,11 @@ void Application::initializeServer()
     ServerConfig::CoroutineMemSize  =  TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinememsize>"), "1G"), 1024*1024*1024);
     ServerConfig::CoroutineStackSize= (uint32_t)TC_Common::toSize(toDefault(_conf.get("/tars/application/server<coroutinestack>"), "128K"), 1024*128);
     ServerConfig::ManualListen      = _conf.get("/tars/application/server<manuallisten>", "0") == "0" ? false : true;
-//	ServerConfig::MergeNetImp       = _conf.get("/tars/application/server<mergenetimp>", "0") == "0" ? false : true;
 	ServerConfig::NetThread         = TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<netthread>"), "1"));
 	ServerConfig::CloseCout        = _conf.get("/tars/application/server<closecout>","1")=="0"?0:1;
 	ServerConfig::BackPacketLimit  = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketlimit>", TC_Common::tostr(100*1024*1024)));
 	ServerConfig::BackPacketMin    = TC_Common::strto<int>(_conf.get("/tars/application/server<backpacketmin>", "1024"));
 
-	ServerConfig::Context["node_name"] = ServerConfig::LocalIp;
 #if TARS_SSL
 	ServerConfig::CA                = _conf.get("/tars/application/server<ca>");
 	ServerConfig::Cert              = _conf.get("/tars/application/server<cert>");
@@ -1207,7 +1205,6 @@ void Application::initializeServer()
 	}
 #endif
 
-
     if (ServerConfig::LocalIp.empty())
     {
         // ServerConfig::LocalIp = "127.0.0.1";
@@ -1224,6 +1221,7 @@ void Application::initializeServer()
             }
         }
     }
+    ServerConfig::Context["node_name"] = ServerConfig::NodeName;
 
     onServerConfig();
 
@@ -1300,7 +1298,8 @@ void Application::initializeServer()
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到配置中心代理
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set remote config] ") << "OK" << endl;
-    RemoteConfig::getInstance()->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath,setDivision());
+    _remoteConfig = std::make_shared<RemoteConfig>();
+    _remoteConfig->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath, setDivision(), 5, ServerConfig::Context);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到信息中心代理

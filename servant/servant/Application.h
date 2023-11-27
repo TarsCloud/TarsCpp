@@ -658,6 +658,8 @@ protected:
 
     shared_ptr<KeepAliveNodeFHelper>    _keepAliveNodeFHelper;
 
+    shared_ptr<RemoteConfig>            _remoteConfig;
+
     PropertyReport * _pReportQueue;
     PropertyReport * _pReportConRate;
     PropertyReport * _pReportTimeoutNum;
