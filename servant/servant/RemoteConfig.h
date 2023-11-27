@@ -46,7 +46,7 @@ namespace tars
 class ConfigProxy;
 typedef tars::TC_AutoPtr<ConfigProxy> ConfigPrx;
 
-class SVT_DLL_API RemoteConfig : public TC_Singleton<RemoteConfig>
+class SVT_DLL_API RemoteConfig //: public TC_Singleton<RemoteConfig>
 {
 public:
     /**
@@ -60,7 +60,7 @@ public:
      *
      * @return int
      */
-    int setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath,const string& setdivision="",int maxBakNum = 5);
+    int setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath, const string& setdivision="",int maxBakNum = 5, const map<string, string> &context = {});
 
     /**
      * 读取ConfigServer上配置文件到本地，并备份原文件
@@ -139,6 +139,11 @@ protected:
      * 路径
      */
     string          _basePath;
+
+    /**
+     *
+     */
+    map<string, string> _context;
 
     /**
      * set信息
