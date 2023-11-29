@@ -1044,8 +1044,9 @@ int TC_TCPTransceiver::send(const void* buf, uint32_t len, uint32_t flag)
 
 	if (iRet < 0 && !TC_Socket::isPending())
 	{
-		THROW_ERROR(TC_Transceiver_Exception, CR_SEND,
-				"TC_TCPTransceiver::send, " + _desc + ", fd:" + TC_Common::tostr(_fd));
+        tcpClose(false, CR_SEND, "TC_TCPTransceiver::send, " + _desc + ", fd:" + TC_Common::tostr(_fd));
+        return -1;
+//		THROW_ERROR(TC_Transceiver_Exception, CR_SEND, "TC_TCPTransceiver::send, " + _desc + ", fd:" + TC_Common::tostr(_fd));
 	}
 
 #if TARGET_PLATFORM_WINDOWS

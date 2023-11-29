@@ -374,6 +374,7 @@ int AdapterProxy::invoke_connection_serial(ReqMessage * msg)
 			_requestMsg  = NULL;
 
 			msg->eStatus = ReqMessage::REQ_EXC;
+            msg->response->iRet = TARSSENDREQUESTERR;
 
 			finishInvoke(msg);
 
@@ -441,6 +442,7 @@ int AdapterProxy::invoke_connection_parallel(ReqMessage * msg)
 
 			//发送出错了
 			msg->eStatus = ReqMessage::REQ_EXC;
+            msg->response->iRet = TARSSENDREQUESTERR;
 
 			finishInvoke(msg);
 
