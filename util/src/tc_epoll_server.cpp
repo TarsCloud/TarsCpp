@@ -664,7 +664,7 @@ bool TC_EpollServer::Connection::handleInputImp(const shared_ptr<TC_Epoller::Epo
     catch(const std::exception& ex)
     {
         // LOG_CONSOLE_DEBUG << ex.what() << endl;
-        _logger->error(ex.what());
+//        _logger->error(ex.what());
         netThread->delConnection(this, true, EM_CLIENT_CLOSE);
         return false;
     }
