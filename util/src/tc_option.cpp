@@ -41,12 +41,45 @@ void TC_Option::decode(int argc, char *argv[])
         }
     }
 }
+
+std::vector<std::string> TC_Option::parseString(const std::string& input)
+{
+    std::vector<std::string> result;
+    std::string currentString;
+
+    bool insideQuotes = false;
+
+    for (char c : input) {
+        if ((c == ' ' || c == '\t') && !insideQuotes) {
+            if (!currentString.empty()) {
+                result.push_back(currentString);
+                currentString.clear();
+            }
+        } else if (c == '"' && !insideQuotes) {
+//            currentString += c;
+            insideQuotes = true;
+        } else if (c == '"' && insideQuotes) {
+//            currentString += c;
+            insideQuotes = false;
+        } else {
+            currentString += c;
+        }
+    }
+
+    if (!currentString.empty()) {
+        result.push_back(currentString);
+    }
+
+    return result;
+}
+
 void TC_Option::decode(const char *command)
 {
     _mParam.clear();
     if(command == NULL)
         return;
-    vector<string> v = TC_Common::sepstr<string>(command, " \t");
+//    vector<string> v = TC_Common::sepstr<string>(command, " \t");
+    vector<string> v = parseString(command);
 
     for(size_t i = 0; i < v.size(); i++)
     {
