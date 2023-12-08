@@ -134,6 +134,8 @@ struct SVT_DLL_API ServerBaseInfo
     bool        ManualListen;        //是否启用手工端口监听
     int         BackPacketLimit;     //回包积压检查
     int         BackPacketMin;       //回包速度检查
+    int         BakFlag = 0;
+    int         BakType = 0;
 
     std::string CA;
     std::string Cert;
@@ -175,7 +177,8 @@ struct SVT_DLL_API ServerConfig
 	static bool        ManualListen;        //是否启用手工端口监听
 	static int         BackPacketLimit;     //回包积压检查
 	static int         BackPacketMin;       //回包速度检查
-
+    static int         BakFlag;             //是否启用是备机: 0: 非备机, 1: 备机
+    static int         BakType;             //主备切换类型: 0 不需要主备切换，1：自动主从切换， 2：自动切换但是不屏蔽主控路由
 	static std::string CA;                  //ssl ca
 	static std::string Cert;                //ssl 证书
 	static std::string Key;                 //ssl 私钥
@@ -377,7 +380,19 @@ protected:
      * 初始化ServerConfig之后, 给app调整自定义配置值的机会
      */    
     virtual void onServerConfig(){};
-   
+
+    /**
+     * 成为主机(企业版功能)
+     * 一主多备模式下, 切换成主机模式下回调给业务
+     */
+    virtual void onMaster() {};
+
+    /**
+     * 成为备机(企业版功能)
+     * 一主多备模式下, 切换成备机模式下回调给业务
+     */
+    virtual void onSlave() {};
+
     /**
      * 处理加载配置的命令
      * 处理完成后继续通知Servant
@@ -611,6 +626,12 @@ protected:
 
     friend class ServantHandle;
 
+private:
+    /**
+     * 检查主备状态(企业版框架才支持)
+     */
+    void checkMasterSlave(int timeout);
+
 protected:
 
     /**
@@ -660,9 +681,13 @@ protected:
 
     shared_ptr<RemoteConfig>            _remoteConfig;
 
-    PropertyReport * _pReportQueue;
-    PropertyReport * _pReportConRate;
-    PropertyReport * _pReportTimeoutNum;
+    TC_ThreadLock                       _masterSlaveLock;
+    bool                                _terminateCheckMasterSlave = false;
+    std::thread                         *_masterSlaveCheckThread = nullptr;        //主备模式检查线程(企业版框架功能)
+
+//    PropertyReport * _pReportQueue{};
+//    PropertyReport * _pReportConRate{};
+//    PropertyReport * _pReportTimeoutNum{};
 };
 ////////////////////////////////////////////////////////////////////
 }
