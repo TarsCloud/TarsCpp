@@ -866,6 +866,22 @@ void Application::main(const string &config)
             }
         }
 
+        if (!_communicator->getProperty("locator").empty() && _serverBaseInfo.BakType > 0)
+        {
+            int timeout = TC_Common::strto<int>(_conf.get("/tars/application/server<ms-check-timeout>", "5000"));
+            if (timeout < 5000)
+            {
+                timeout = 5000;
+            }
+
+            _masterSlaveCheckThread = new std::thread(std::bind(&Application::checkMasterSlave, this, timeout));
+        }
+        else
+        {
+            // 非主备模式时，默认响应 onMaster
+            onMaster();
+        }
+
         //动态加载配置文件
         TARS_ADD_ADMIN_CMD_PREFIX(TARS_CMD_LOAD_CONFIG, Application::cmdLoadConfig);
 
@@ -1361,22 +1377,6 @@ void Application::initializeServer()
 
     }
 
-    if (!_communicator->getProperty("locator").empty() && _serverBaseInfo.BakType > 0)
-    {
-        int timeout = TC_Common::strto<int>(_conf.get("/tars/application/server<ms-check-timeout>", "5000"));
-        if (timeout < 5000)
-        {
-            timeout = 5000;
-        }
-
-        _masterSlaveCheckThread = new std::thread(std::bind(&Application::checkMasterSlave, this, timeout));
-    }
-    else
-    {
-        // 非主备模式时，默认响应 onMaster
-        onMaster();
-    }
-
     //队列取平均值
     if(!_communicator->getProperty("property").empty())
     {
@@ -1563,7 +1563,7 @@ void Application::outAdapter(ostream &os, const string &v, TC_EpollServer::BindA
 
 void Application::checkMasterSlave(int timeout)
 {
-    time_t lastExceptionTime = 0;
+    int exceptionTimes = 0;
 
     GetMasterSlaveLock req;
     req.application = _serverBaseInfo.Application;
@@ -1575,7 +1575,6 @@ void Application::checkMasterSlave(int timeout)
     req.timeout = timeout;
 
     bool firstCheck = true;
-    int checkInterval = timeout/2;
 
     QueryFPrx queryFPrx = Application::getCommunicator()->stringToProxy<QueryFPrx>(Application::getCommunicator()->getProperty("locator"));
 
@@ -1609,41 +1608,34 @@ void Application::checkMasterSlave(int timeout)
                     onSlave();
                 }
                 firstCheck = false;
-            } else if (2 == ret)
-            {
-                // 服务端内部异常，不做任何处理
-                TLOG_ERROR("getLocker return exception, ret:" << ret << endl);
-                req.lastErr = true;
-            } else if (ret < 0)
+            } else
             {
                 TLOG_ERROR("getLocker return exception, ret:" << ret << endl);
                 req.lastErr = true;
             }
+
+            exceptionTimes = 0;
         }
         catch (exception &ex)
         {
+            ++exceptionTimes;
             TLOG_ERROR("getLocker call exception:" << ex.what() << endl);
-            if (req.isMaster)
-            {
-                if (lastExceptionTime == 0)
-                {
-                    lastExceptionTime = TNOW;
-                }
-                else if (TNOW >= lastExceptionTime + timeout - checkInterval)
-                {
-                    // 判断该服务其他机器能否通，如果能通，那么不变，不能通，则自己降为备
-                    // TODO，tars_ping 其他机器先不做，直接降为备机，因为这里调所有主控都失败才会切换
-                    req.isMaster = false;
-                    TLOG_ERROR("The service node has become the slave node because call getLocker exception." << endl);
-                    TARS_NOTIFY_ERROR(
-                            "Auto change to be slave, This service node has become the slave node because call getLocker exception!");
-                    onSlave();
-                }
-            }
+//            if (req.isMaster)
+//            {
+//                if (exceptionTimes > 3)
+//                {
+//                    //持续3次都无法访问主控, 则认为自己异常了!!
+//                    req.isMaster = false;
+//                    TLOG_ERROR("The service node has become the slave node because call getLocker exception." << endl);
+//                    TARS_NOTIFY_ERROR(
+//                            "Auto change to be slave, This service node has become the slave node because call getLocker exception!");
+//                    onSlave();
+//                }
+//            }
         }
 
         TC_ThreadLock::Lock lock(_masterSlaveLock);
-        _masterSlaveLock.timedWait(checkInterval);
+        _masterSlaveLock.timedWait(timeout/3);
     }
     while(!_terminateCheckMasterSlave);
 }
