@@ -567,14 +567,14 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
     }
 //	processSample(current);
 
-    if (_servant->getName() != current->getServantName())
-    {
-        current->sendResponse(TARSSERVERNOSERVANTERR);
-// #ifdef TARS_OPENTRACKING
-//         finishTracking(TARSSERVERNOSERVANTERR, current);
-// #endif
-        return;
-    }
+//    if (_servant->getName() != current->getServantName())
+//    {
+//        current->sendResponse(TARSSERVERNOSERVANTERR);
+//// #ifdef TARS_OPENTRACKING
+////         finishTracking(TARSSERVERNOSERVANTERR, current);
+//// #endif
+//        return;
+//    }
 
     int ret = TARSSERVERUNKNOWNERR;
 
@@ -585,7 +585,14 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
     try
     {
         //业务逻辑处理
-        ret = _servant->dispatch(current, response.sBuffer);
+        if (_servant->getName() != current->getServantName())
+        {
+            ret = _servant->doNoServant(current, response.sBuffer);
+        }
+        else
+        {
+            ret = _servant->dispatch(current, response.sBuffer);
+        }
     }
     catch (TarsDecodeException &ex)
     {
@@ -622,7 +629,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 
     if (ret == TARSSERVERNOFUNCERR)
     {
-        ret = _servant->doNoFunc(current);
+        ret = _servant->doNoFunc(current, response.sBuffer);
     }
 
     //单向调用或者业务不需要同步返回
