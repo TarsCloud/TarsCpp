@@ -71,13 +71,13 @@ public:
      */
     Int32 findObjectByIdInSameSet(const std::string & id,const std::string & setId,vector<tars::EndpointF> &activeEp,vector<tars::EndpointF> &inactiveEp, tars::CurrentPtr current);
 
-    /** 注册id变化的通知, 通知时会通知所有的变化内容(企业版功能)
-     *
-     * @param ids         对象名称
+    /** 注册数据通知, 同时上报本地缓存数据的最后时间, 如果服务端发现变化则全量推送(企业版功能)
+     * 可以定时上报数据
+     * @param timestamp <数据类型, 最后数据时间戳>
      * @param name       当前模块名称
      * @return:  0-成功  others-失败
      */
-    Int32 registerChange(const vector<string> &ids, const string &name, CurrentPtr current) { return -1; };
+    Int32 registerChange(const map<string, string> &timestamp, const string &name, CurrentPtr current) { return -1; };
 
     /** 注册id变化的通知, 通知时后需要自己主动find(企业版功能)
      *
