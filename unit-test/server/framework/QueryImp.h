@@ -71,6 +71,13 @@ public:
      */
     Int32 findObjectByIdInSameSet(const std::string & id,const std::string & setId,vector<tars::EndpointF> &activeEp,vector<tars::EndpointF> &inactiveEp, tars::CurrentPtr current);
 
+    /** 查找某个obj部署在哪些节点上 (企业版功能)
+     *
+     * @param id       obj名称
+     * @return:  0-成功  others-失败
+     */
+    int findObjectNodeName(const string &id, vector<string> &nodeName, CurrentPtr current) { return -1; };
+
     /** 注册数据通知, 同时上报本地缓存数据的最后时间, 如果服务端发现变化则全量推送(企业版功能)
      * 可以定时上报数据
      * @param timestamp <数据类型, 最后数据时间戳>
