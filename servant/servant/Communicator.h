@@ -26,7 +26,7 @@
 #include "servant/AsyncProcThread.h"
 #include "servant/StatReport.h"
 #include "servant/RemoteLogger.h"
-
+#include "servant/QueryF.h"
 #include "util/tc_openssl.h"
 
 // #ifdef TARS_OPENTRACKING
@@ -340,6 +340,11 @@ public:
 	 */
 	bool isTerminating();
 
+    /**
+     * 如果没有配置locator, 则返回null
+     * @return
+     */
+    const QueryFPrx &getLocatorPrx() { return _queryFPrx; }
 protected:
     /**
      * 初始化
@@ -477,7 +482,12 @@ protected:
      */
     map<string, map<string, string>>   _objInfo;
 
-	/**
+    /*
+     * 主控的路由代理
+     */
+    QueryFPrx                 _queryFPrx;
+
+    /**
      * ServantProxy代码的工厂类
      */
     ServantProxyFactory* _servantProxyFactory;

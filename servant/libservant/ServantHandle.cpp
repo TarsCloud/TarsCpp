@@ -44,7 +44,10 @@ ServantHandle::~ServantHandle()
 {
     try
     {
-        _servant->destroy();
+        if(_servant)
+        {
+            _servant->destroy();
+        }
     }
     catch (exception &ex)
     {

@@ -420,6 +420,13 @@ void Communicator::initialize()
         propertyPrx->tars_open_keepalive(false);
     }
 
+    string locator = getProperty("locator", "");
+    if(!locator.empty())
+    {
+        _queryFPrx = stringToProxy<QueryFPrx>(locator);
+        _queryFPrx->tars_open_keepalive(false);
+    }
+
     string sSetDivision = ClientConfig::SetOpen ? ClientConfig::SetDivision : "";
     _statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
 
