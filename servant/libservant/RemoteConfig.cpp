@@ -147,8 +147,7 @@ string RemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigOnly)
 //        	throw runtime_error("remote config file is empty:" + sFileName);
         }
 
-        string newFile = TC_File::simplifyDirectory(
-                _basePath + FILE_SEP + sFileName + "." + TC_Common::tostr(time(NULL)));
+        string newFile = TC_File::simplifyDirectory( _basePath + FILE_SEP + sFileName + "." + TC_Common::tostr(time(NULL)));
 
         std::ofstream out(newFile.c_str());
 

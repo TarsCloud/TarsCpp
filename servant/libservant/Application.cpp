@@ -181,6 +181,11 @@ CommunicatorPtr& Application::getCommunicator()
     return _communicator;
 }
 
+CommunicatorPtr& Application::getApplicationCommunicator()
+{
+    return _applicationCommunicator;
+}
+
 void reportRspQueue(TC_EpollServer *epollServer)
 {
     if (!g_pReportRspQueue)
@@ -551,23 +556,23 @@ bool Application::cmdLoadProperty(const string& command, const string& params, s
         string sResult;
 
         //加载通讯器属性
-        _communicator->setProperty(_conf);
+        _applicationCommunicator->setProperty(_conf);
 
-        _communicator->reloadProperty(sResult);
+        _applicationCommunicator->reloadProperty(sResult);
 
         //加载远程对象
         _serverBaseInfo.Log = _conf.get("/tars/application/server<log>");
 //        ServerConfig::Log = _serverBaseInfo.Log;
 
-        RemoteTimeLogger::getInstance()->setLogInfo(_communicator, _serverBaseInfo.Log, _serverBaseInfo.Application, _serverBaseInfo.ServerName, _serverBaseInfo.LogPath,setDivision());
+        RemoteTimeLogger::getInstance()->setLogInfo(_applicationCommunicator, _serverBaseInfo.Log, _serverBaseInfo.Application, _serverBaseInfo.ServerName, _serverBaseInfo.LogPath,setDivision());
 
         _serverBaseInfo.Config = _conf.get("/tars/application/server<config>");
 
-        _remoteConfig->setConfigInfo(_communicator, _serverBaseInfo.Config, _serverBaseInfo.Application, _serverBaseInfo.ServerName, _serverBaseInfo.BasePath, setDivision(), 5, _serverBaseInfo.Context);
+        _remoteConfig->setConfigInfo(_applicationCommunicator, _serverBaseInfo.Config, _serverBaseInfo.Application, _serverBaseInfo.ServerName, _serverBaseInfo.BasePath, setDivision(), 5, _serverBaseInfo.Context);
 
         _serverBaseInfo.Notify = _conf.get("/tars/application/server<notify>");
 
-        RemoteNotify::getInstance()->setNotifyInfo(_communicator, _serverBaseInfo.Notify, _serverBaseInfo.Application, _serverBaseInfo.ServerName, setDivision(), _serverBaseInfo.NodeName);
+        RemoteNotify::getInstance()->setNotifyInfo(_applicationCommunicator, _serverBaseInfo.Notify, _serverBaseInfo.Application, _serverBaseInfo.ServerName, setDivision(), _serverBaseInfo.NodeName);
 
         result = "loaded config items:\r\n" + sResult +
                  "log=" + _serverBaseInfo.Log + "\r\n" +
@@ -659,8 +664,8 @@ bool Application::cmdReloadLocator(const string& command, const string& params, 
         }
         else
         {
-            _communicator->setProperty("locator", sLocator);
-            _communicator->reloadLocator();
+            _applicationCommunicator->setProperty("locator", sLocator);
+            _applicationCommunicator->reloadLocator();
             result = sLocator + " set succ.";
         }
 
@@ -680,7 +685,7 @@ bool Application::cmdViewResource(const string& command, const string& params, s
 
 	ostringstream os;
 
-	os << _communicator->getResourcesInfo() << endl;
+	os << _applicationCommunicator->getResourcesInfo() << endl;
 
 	os << OUT_LINE << endl;
 
@@ -866,7 +871,7 @@ void Application::main(const string &config)
             }
         }
 
-        if (!_communicator->getProperty("locator").empty() && _serverBaseInfo.BakType > 0)
+        if (!_applicationCommunicator->getProperty("locator").empty() && _serverBaseInfo.BakType > 0)
         {
             int timeout = TC_Common::strto<int>(_conf.get("/tars/application/server<ms-check-timeout>", "5000"));
             if (timeout < 5000)
@@ -1023,7 +1028,16 @@ void Application::initializeClient()
 	__out__.info()  << "\n" << OUT_LINE_LONG << endl;
 
     //初始化通信器
-    _communicator = CommunicatorFactory::getInstance()->getCommunicator(_conf);
+    if(!_communicator)
+    {
+        _communicator = CommunicatorFactory::getInstance()->getCommunicator(_conf);
+        _applicationCommunicator = _communicator;
+    }
+    else
+    {
+        //一个进程内嵌多个Application时发生, 正常业务服务不会发生
+        _applicationCommunicator = CommunicatorFactory::getInstance()->getCommunicator(_conf, TC_Common::tostr(this));
+    }
 
 	__out__.info()  << TC_Common::outfill("[proxy config]:") << endl;
 
@@ -1038,19 +1052,19 @@ void Application::outClient(ostream &os)
 {
 	os << OUT_LINE << "\n" << TC_Common::outfill("[load client]:") << endl;
 
-    os << TC_Common::outfill("locator")                     << _communicator->getProperty("locator") << endl;
-    os << TC_Common::outfill("sync-invoke-timeout")         << _communicator->getProperty("sync-invoke-timeout") << endl;
-    os << TC_Common::outfill("async-invoke-timeout")        << _communicator->getProperty("async-invoke-timeout") << endl;
-    os << TC_Common::outfill("refresh-endpoint-interval")   << _communicator->getProperty("refresh-endpoint-interval") << endl;
-    os << TC_Common::outfill("stat")                        << _communicator->getProperty("stat") << endl;
-    os << TC_Common::outfill("property")                    << _communicator->getProperty("property") << endl;
-    os << TC_Common::outfill("report-interval")             << _communicator->getProperty("report-interval") << endl;
-    os << TC_Common::outfill("keep-alive-interval")             << _communicator->getProperty("keep-alive-interval") << endl;
-    os << TC_Common::outfill("netthread")                  << _communicator->getProperty("netthread") << endl;
-    os << TC_Common::outfill("asyncthread")                 << _communicator->getProperty("asyncthread") << endl;
-    os << TC_Common::outfill("modulename")                  << _communicator->getProperty("modulename") << endl;
-    os << TC_Common::outfill("enableset")                     << _communicator->getProperty("enableset") << endl;
-    os << TC_Common::outfill("setdivision")                 << _communicator->getProperty("setdivision") << endl;
+    os << TC_Common::outfill("locator")                     << _applicationCommunicator->getProperty("locator") << endl;
+    os << TC_Common::outfill("sync-invoke-timeout")         << _applicationCommunicator->getProperty("sync-invoke-timeout") << endl;
+    os << TC_Common::outfill("async-invoke-timeout")        << _applicationCommunicator->getProperty("async-invoke-timeout") << endl;
+    os << TC_Common::outfill("refresh-endpoint-interval")   << _applicationCommunicator->getProperty("refresh-endpoint-interval") << endl;
+    os << TC_Common::outfill("stat")                        << _applicationCommunicator->getProperty("stat") << endl;
+    os << TC_Common::outfill("property")                    << _applicationCommunicator->getProperty("property") << endl;
+    os << TC_Common::outfill("report-interval")             << _applicationCommunicator->getProperty("report-interval") << endl;
+    os << TC_Common::outfill("keep-alive-interval")             << _applicationCommunicator->getProperty("keep-alive-interval") << endl;
+    os << TC_Common::outfill("netthread")                  << _applicationCommunicator->getProperty("netthread") << endl;
+    os << TC_Common::outfill("asyncthread")                 << _applicationCommunicator->getProperty("asyncthread") << endl;
+    os << TC_Common::outfill("modulename")                  << _applicationCommunicator->getProperty("modulename") << endl;
+    os << TC_Common::outfill("enableset")                     << _applicationCommunicator->getProperty("enableset") << endl;
+    os << TC_Common::outfill("setdivision")                 << _applicationCommunicator->getProperty("setdivision") << endl;
 }
 
 string Application::toDefault(const string &s, const string &sDefault)
@@ -1256,7 +1270,10 @@ void Application::initializeServer()
             }
         }
     }
+
+    //设置节点名称, 请求tarsregistry会在context中带过去, 方便知道从哪来的请求
     ServerConfig::Context["node_name"] = ServerConfig::NodeName;
+    _applicationCommunicator->setProperty("node_name", ServerConfig::NodeName);
 
     onServerConfig();
 
@@ -1307,7 +1324,7 @@ void Application::initializeServer()
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化本地Log
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set roll logger] ") << "OK" << endl;
-    LocalRollLogger::getInstance()->setLogInfo(ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath, ServerConfig::LogSize, ServerConfig::LogNum, _communicator, ServerConfig::Log);
+    LocalRollLogger::getInstance()->setLogInfo(ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath, ServerConfig::LogSize, ServerConfig::LogNum, _applicationCommunicator, ServerConfig::Log);
     _epollServer->setLocalLogger(LocalRollLogger::getInstance()->logger());
 
     //初始化是日志为同步
@@ -1328,24 +1345,24 @@ void Application::initializeServer()
     //初始化到LogServer代理
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set time logger] ") << "OK" << endl;
     bool bLogStatReport = (_conf.get("/tars/application/server<logstatreport>", "0") == "1") ? true : false;
-    RemoteTimeLogger::getInstance()->setLogInfo(_communicator, ServerConfig::Log, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath, setDivision(), bLogStatReport);
+    RemoteTimeLogger::getInstance()->setLogInfo(_applicationCommunicator, ServerConfig::Log, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::LogPath, setDivision(), bLogStatReport);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到配置中心代理
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set remote config] ") << "OK" << endl;
     _remoteConfig = std::make_shared<RemoteConfig>();
-    _remoteConfig->setConfigInfo(_communicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath, setDivision(), 5, ServerConfig::Context);
+    _remoteConfig->setConfigInfo(_applicationCommunicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath, setDivision(), 5, ServerConfig::Context);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到信息中心代理
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set remote notify] ") << "OK" << endl;
-    RemoteNotify::getInstance()->setNotifyInfo(_communicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision(), ServerConfig::LocalIp);
+    RemoteNotify::getInstance()->setNotifyInfo(_applicationCommunicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision(), ServerConfig::LocalIp);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到Node的代理
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set node proxy]") << "OK" << endl;
     _keepAliveNodeFHelper = std::make_shared<KeepAliveNodeFHelper>();
-    _keepAliveNodeFHelper->setNodeInfo(_communicator, ServerConfig::Node, ServerConfig::Application, ServerConfig::ServerName);
+    _keepAliveNodeFHelper->setNodeInfo(_applicationCommunicator, ServerConfig::Node, ServerConfig::Application, ServerConfig::ServerName);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化管理对象
@@ -1378,7 +1395,7 @@ void Application::initializeServer()
     }
 
     //队列取平均值
-    if(!_communicator->getProperty("property").empty())
+    if(!_applicationCommunicator->getProperty("property").empty())
     {
         string sRspQueue;
         sRspQueue += ServerConfig::Application;
@@ -1386,7 +1403,7 @@ void Application::initializeServer()
         sRspQueue += ServerConfig::ServerName;
         sRspQueue += ".sendrspqueue";
 
-        g_pReportRspQueue = _communicator->getStatReport()->createPropertyReport(sRspQueue, PropertyReport::avg());
+        g_pReportRspQueue = _applicationCommunicator->getStatReport()->createPropertyReport(sRspQueue, PropertyReport::avg());
     }
 
     TarsTimeLogger::getInstance()->enableLocal(TRACE_LOG_FILENAME, false);
@@ -1505,23 +1522,23 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
             adapters.push_back(bindAdapter);
 
             //队列取平均值
-            if(!_communicator->getProperty("property").empty())
+            if(!_applicationCommunicator->getProperty("property").empty())
             {
                 PropertyReportPtr p;
-                p = _communicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".queue", PropertyReport::avg());
+                p = _applicationCommunicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".queue", PropertyReport::avg());
                 bindAdapter->_pReportQueue = p.get();
 
-                p = _communicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".connectRate", PropertyReport::avg());
+                p = _applicationCommunicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".connectRate", PropertyReport::avg());
                 bindAdapter->_pReportConRate = p.get();
 
-                p = _communicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".timeoutNum", PropertyReport::sum());
+                p = _applicationCommunicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".timeoutNum", PropertyReport::sum());
                 bindAdapter->_pReportTimeoutNum = p.get();
 
-                p = _communicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".queueWaitTime",
+                p = _applicationCommunicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".queueWaitTime",
                                                                          PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
                 bindAdapter->_pReportQueueWaitTime = p.get();
 
-                p = _communicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".servantHandleTime",
+                p = _applicationCommunicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".servantHandleTime",
                                                                          PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
                 bindAdapter->_pReportServantHandleTime = p.get();
             }
@@ -1576,7 +1593,7 @@ void Application::checkMasterSlave(int timeout)
 
     bool firstCheck = true;
 
-    QueryFPrx queryFPrx = Application::getCommunicator()->stringToProxy<QueryFPrx>(Application::getCommunicator()->getProperty("locator"));
+    QueryFPrx queryFPrx = _applicationCommunicator->stringToProxy<QueryFPrx>(_applicationCommunicator->getProperty("locator"));
 
     do
     {

@@ -259,6 +259,12 @@ public:
     static CommunicatorPtr& getCommunicator();
 
     /**
+     * application自己的通信器, 当一个进程中内嵌多个Application时出现, 否则等于getCommunicator()
+     * @return
+     */
+    CommunicatorPtr& getApplicationCommunicator();
+
+    /**
      * 获取服务Server对象
      *
      * @return TC_EpollServerPtr&
@@ -655,6 +661,12 @@ protected:
     static CommunicatorPtr     _communicator;
 
     /**
+     * communicator 每个application都自带一个, 如果_communicator已经存在, 则创建新的, 否则和_communicatory一样
+     * 解决一个进程中内嵌多个Application时, 共享通信器的问题!
+     */
+    CommunicatorPtr     _applicationCommunicator;
+
+    /**
      * accept
      */
     std::vector<TC_EpollServer::accept_callback_functor> _acceptFuncs;
@@ -685,9 +697,7 @@ protected:
     bool                                _terminateCheckMasterSlave = false;
     std::thread                         *_masterSlaveCheckThread = nullptr;        //主备模式检查线程(企业版框架功能)
 
-//    PropertyReport * _pReportQueue{};
-//    PropertyReport * _pReportConRate{};
-//    PropertyReport * _pReportTimeoutNum{};
+
 };
 ////////////////////////////////////////////////////////////////////
 }
