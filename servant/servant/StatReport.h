@@ -26,16 +26,7 @@
 /////////////////////////////////////////////////////////////////////////
 /*
     属性上报使用方式:
-    StatReport report;
-    report->setReportInfo( pPtr,strMasterName,strMasterIp, 5 );
-    vector<int> v;
-    v.push_back(1000);
-    v.push_back(1001);
-    v.push_back(1002);
-    v.push_back(1003);
-    v.push_back(1004);
-
-    PropertyReportPtr srPtr = report->createPropertyReport("test", PropertyReport::sum(), PropertyReport::dist(v));
+    PropertyReportPtr srPtr = report->createPropertyReport("test", PropertyReport::sum());
     srPtr->report(i);
 */
 
@@ -87,8 +78,6 @@ public:
      * @param strModuleIp, 模块ip
      * @param iReportInterval, 上报间隔单位秒
      * @param iMaxReporSize一次最大上报包长度。 跟udp最大允许包8k、MTU长度1472有关，暂定取值范围[500-1400]
-     * @param iSampleRate, 采样比率1/1000
-     * @param iMaxSampleCount, 最大采样数
      * @param iReportTimeout, 上报接口调用的超时时间
      * @param sContainer, 设置上报的容器名
      */
@@ -98,8 +87,6 @@ public:
                        const string& strModuleIp,
                        const string& strSetDivision,
                        int iReportInterval = 60,
-                       int iSampleRate = 1000,
-                       unsigned int iMaxSampleCount = 100,
                        int iMaxReportSize = 1400,
                        int iReportTimeout = 5000);
 
@@ -244,10 +231,10 @@ public:
     */
     static bool divison2SetInfo(const string& str, vector<string>& vtSetInfo);
 
-    /*
-    * func: tars.xxxServer =>> xxxServer
-    */
-    static string getServerName(string sModuleName);
+//    /*
+//    * func: tars.xxxServer =>> xxxServer
+//    */
+//    static string getServerName(string sModuleName);
 
 private:
 
@@ -301,10 +288,6 @@ private:
 
     string              _ip;
 
-    int                 _sampleRate; //生成模块间调用时序图的采样比率
-
-    unsigned int        _maxSampleCount; //1分钟内最大采样条数
-
     StatFPrx            _statPrx;
 
     MapStatMicMsg       _statMicMsgClient;
@@ -316,10 +299,6 @@ private:
     PropertyFPrx        _propertyPrx;
 
     map<string, PropertyReportPtr>          _statPropMsg;
-
-private:
-
-    size_t                _retValueNumLimit;    
 
 };
 ///////////////////////////////////////////////////////////

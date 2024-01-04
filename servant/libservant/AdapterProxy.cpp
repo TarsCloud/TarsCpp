@@ -287,14 +287,17 @@ TC_NetWorkBuffer::PACKET_TYPE AdapterProxy::onVerifyAuthCallback(TC_NetWorkBuffe
 void AdapterProxy::initStatHead()
 {
 	vector <string> vtSetInfo;
-	if(!ClientConfig::SetDivision.empty() && StatReport::divison2SetInfo(ClientConfig::SetDivision, vtSetInfo)) 	{
+
+	if(!_communicator->getClientConfig().SetDivision.empty() && StatReport::divison2SetInfo(_communicator->getClientConfig().SetDivision, vtSetInfo)) 	{
 		//主调(client)启用set
-		_statHead.masterName = StatReport::trimAndLimitStr(ClientConfig::ModuleName + "." + vtSetInfo[0] + vtSetInfo[1] + vtSetInfo[2] + "@" + ClientConfig::TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
+		_statHead.masterName = StatReport::trimAndLimitStr(_communicator->getClientConfig().ModuleName + "." + vtSetInfo[0] + vtSetInfo[1] + vtSetInfo[2] + "@" + _communicator->getClientConfig().TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
 	}
 	else
 	{
-		_statHead.masterName = StatReport::trimAndLimitStr(ClientConfig::ModuleName + "@" + ClientConfig::TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
+		_statHead.masterName = StatReport::trimAndLimitStr(_communicator->getClientConfig().ModuleName + "@" + _communicator->getClientConfig().TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
 	}
+
+    _statHead.masterIp = _communicator->getClientConfig().NodeName;
 
     string sSlaveSet = _ep.setDivision();
     const string sSlaveName = getSlaveName(_objectProxy->name());

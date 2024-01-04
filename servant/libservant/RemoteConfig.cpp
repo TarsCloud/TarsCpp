@@ -27,7 +27,7 @@ namespace tars
 
 int
 RemoteConfig::setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string &app, const string &serverName,
-                            const string &basePath, const string &setdivision, int maxBakNum, const map<string, string> &context)
+                            const string &basePath, const string &setdivision, int maxBakNum)
 {
     TC_LockT<TC_ThreadMutex> lock(_mutex);
 
@@ -41,7 +41,6 @@ RemoteConfig::setConfigInfo(const CommunicatorPtr &comm, const string &obj, cons
     _app = app;
     _serverName = serverName;
     _basePath = basePath;
-    _context = context;
     _maxBakNum = maxBakNum;
     _setdivision = setdivision;
     return 0;
@@ -117,7 +116,7 @@ string RemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigOnly)
             {
                 if (_setdivision.empty())
                 {
-                    ret = _configPrx->loadConfig(_app, (bAppConfigOnly ? "" : _serverName), sFileName, stream, _context);
+                    ret = _configPrx->loadConfig(_app, (bAppConfigOnly ? "" : _serverName), sFileName, stream, _comm->getClientConfig().Context);
                 } else
                 {
                     struct ConfigInfo confInfo;
@@ -126,7 +125,7 @@ string RemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigOnly)
                     confInfo.filename = sFileName;
                     confInfo.bAppOnly = bAppConfigOnly;
                     confInfo.setdivision = _setdivision;
-                    ret = _configPrx->loadConfigByInfo(confInfo, stream, _context);
+                    ret = _configPrx->loadConfigByInfo(confInfo, stream, _comm->getClientConfig().Context);
                 }
 
                 break;

@@ -69,7 +69,7 @@ public:
 
     void operator()(ostream &of, const deque<pair<size_t, string> > &ds);
 
-    void setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx, const string & sLogObj);
+    void setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx);
 
 protected:
 
@@ -86,6 +86,7 @@ protected:
      */
     LogPrx                _logPrx;
 
+    map<string, string>   _context;
 };
 
 

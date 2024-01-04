@@ -568,11 +568,11 @@ bool Application::cmdLoadProperty(const string& command, const string& params, s
 
         _serverBaseInfo.Config = _conf.get("/tars/application/server<config>");
 
-        _remoteConfig->setConfigInfo(_applicationCommunicator, _serverBaseInfo.Config, _serverBaseInfo.Application, _serverBaseInfo.ServerName, _serverBaseInfo.BasePath, setDivision(), 5, _serverBaseInfo.Context);
+        _remoteConfig->setConfigInfo(_applicationCommunicator, _serverBaseInfo.Config, _serverBaseInfo.Application, _serverBaseInfo.ServerName, _serverBaseInfo.BasePath, setDivision(), 5);
 
         _serverBaseInfo.Notify = _conf.get("/tars/application/server<notify>");
 
-        RemoteNotify::getInstance()->setNotifyInfo(_applicationCommunicator, _serverBaseInfo.Notify, _serverBaseInfo.Application, _serverBaseInfo.ServerName, setDivision(), _serverBaseInfo.NodeName);
+        RemoteNotify::getInstance()->setNotifyInfo(_applicationCommunicator, _serverBaseInfo.Notify, _serverBaseInfo.Application, _serverBaseInfo.ServerName, setDivision());
 
         result = "loaded config items:\r\n" + sResult +
                  "log=" + _serverBaseInfo.Log + "\r\n" +
@@ -1272,8 +1272,8 @@ void Application::initializeServer()
     }
 
     //设置节点名称, 请求tarsregistry会在context中带过去, 方便知道从哪来的请求
-    ServerConfig::Context["node_name"] = ServerConfig::NodeName;
-    _applicationCommunicator->setProperty("node_name", ServerConfig::NodeName);
+    _applicationCommunicator->_clientConfig.NodeName = ServerConfig::NodeName;
+    _applicationCommunicator->_clientConfig.Context["node_name"] = ServerConfig::NodeName;
 
     onServerConfig();
 
@@ -1351,12 +1351,12 @@ void Application::initializeServer()
     //初始化到配置中心代理
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set remote config] ") << "OK" << endl;
     _remoteConfig = std::make_shared<RemoteConfig>();
-    _remoteConfig->setConfigInfo(_applicationCommunicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath, setDivision(), 5, ServerConfig::Context);
+    _remoteConfig->setConfigInfo(_applicationCommunicator, ServerConfig::Config, ServerConfig::Application, ServerConfig::ServerName, ServerConfig::BasePath, setDivision(), 5);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到信息中心代理
     __out__.info() << OUT_LINE << "\n" << TC_Common::outfill("[set remote notify] ") << "OK" << endl;
-    RemoteNotify::getInstance()->setNotifyInfo(_applicationCommunicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision(), ServerConfig::LocalIp);
+    RemoteNotify::getInstance()->setNotifyInfo(_applicationCommunicator, ServerConfig::Notify, ServerConfig::Application, ServerConfig::ServerName, setDivision());
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //初始化到Node的代理
@@ -1397,11 +1397,7 @@ void Application::initializeServer()
     //队列取平均值
     if(!_applicationCommunicator->getProperty("property").empty())
     {
-        string sRspQueue;
-        sRspQueue += ServerConfig::Application;
-        sRspQueue += ".";
-        sRspQueue += ServerConfig::ServerName;
-        sRspQueue += ".sendrspqueue";
+        string sRspQueue= "sendrspqueue";
 
         g_pReportRspQueue = _applicationCommunicator->getStatReport()->createPropertyReport(sRspQueue, PropertyReport::avg());
     }
