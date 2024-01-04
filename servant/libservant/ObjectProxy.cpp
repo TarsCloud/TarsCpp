@@ -26,7 +26,6 @@
 
 namespace tars
 {
-///////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////
 ObjectProxy::ObjectProxy(CommunicatorEpoll *pCommunicatorEpoll, ServantProxy *servantProxy, const string & sObjectProxyName,const string& setName)
@@ -47,10 +46,10 @@ ObjectProxy::ObjectProxy(CommunicatorEpoll *pCommunicatorEpoll, ServantProxy *se
     {
         _name = sObjectProxyName;
         //启用set或者指定set调用
-        if(ClientConfig::SetOpen || !_invokeSetId.empty())
+        if(pCommunicatorEpoll->getCommunicator()->getClientConfig().SetOpen || !_invokeSetId.empty())
         {
             //指定set调用时，指定set的优先级最高
-            _invokeSetId  = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
+            _invokeSetId  = _invokeSetId.empty()?pCommunicatorEpoll->getCommunicator()->getClientConfig().SetDivision:_invokeSetId;
             _isInvokeBySet = true;
         }
     }

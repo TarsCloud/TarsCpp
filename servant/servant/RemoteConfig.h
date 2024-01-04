@@ -60,7 +60,7 @@ public:
      *
      * @return int
      */
-    int setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath, const string& setdivision="",int maxBakNum = 5, const map<string, string> &context = {});
+    int setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath, const string& setdivision="",int maxBakNum = 5);
 
     /**
      * 读取ConfigServer上配置文件到本地，并备份原文件
@@ -108,11 +108,6 @@ private:
      */
     inline void localRename(const string& oldFile, const string& newFile);
 
-//	/**
-//	*   获取hostname， 给k8s版本使用
-//	*/
-//	string getHostName();
-
 protected:
 
     /**
@@ -139,11 +134,6 @@ protected:
      * 路径
      */
     string          _basePath;
-
-    /**
-     *
-     */
-    map<string, string> _context;
 
     /**
      * set信息

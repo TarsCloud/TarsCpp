@@ -459,7 +459,7 @@ bool ServantHandle::processCookie(const CurrentPtr &current, map<string, string>
 bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
 {
     /*是否允许检查合法性*/
-    if (ServerConfig::IsCheckSet == 0)
+    if (_application->getServerBaseInfo().IsCheckSet == 0)
     {
         //不检查
         return true;
@@ -467,7 +467,7 @@ bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
 
     bool isSetInvoke = IS_MSG_TYPE(current->getMessageType(), tars::TARSMESSAGETYPESETNAME);
     //客户端按set规则调用且服务端启用set
-    if (isSetInvoke && ClientConfig::SetOpen)
+    if (isSetInvoke && _application->getApplicationCommunicator()->getClientConfig().SetOpen)
     {
         /**
          * 合法性规则:
@@ -486,18 +486,18 @@ bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
 
             sSetName = setIt->second;
 
-            if (ClientConfig::SetDivision == sSetName)
+            if (_application->getApplicationCommunicator()->getClientConfig().SetDivision == sSetName)
             {
                 return true;
             } else
             {
                 //属于同一地区是也属于合法调用
-                string setArea1 = ClientConfig::SetDivision.substr(0, ClientConfig::SetDivision.find_last_of("."));
+                string setArea1 = _application->getApplicationCommunicator()->getClientConfig().SetDivision.substr(0, _application->getApplicationCommunicator()->getClientConfig().SetDivision.find_last_of("."));
                 string setArea2 = sSetName.substr(0, sSetName.find_last_of("."));
                 if (setArea1 == setArea2)
                 {
                     return true;
-                } else if (ClientConfig::SetDivision.substr(0, ClientConfig::SetDivision.find_first_of(".")) !=
+                } else if (_application->getApplicationCommunicator()->getClientConfig().SetDivision.substr(0, _application->getApplicationCommunicator()->getClientConfig().SetDivision.find_first_of(".")) !=
                            sSetName.substr(0, sSetName.find_first_of(".")))
                 {
                     //属于不同的set之间调用也属于合法
@@ -509,7 +509,7 @@ bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
                                       << current->getMessageType() << "|"
                                       << current->getServantName() << "|"
                                       << current->getFuncName() << "|client:"
-                                      << ClientConfig::SetDivision << "|server:"
+                                      << _application->getApplicationCommunicator()->getClientConfig().SetDivision << "|server:"
                                       << sSetName << "]" << endl);
                     current->sendResponse(TARSINVOKEBYINVALIDESET);
                     return false;
@@ -522,7 +522,7 @@ bool ServantHandle::checkValidSetInvoke(const CurrentPtr &current)
                               << current->getMessageType() << "|"
                               << current->getServantName() << "|"
                               << current->getFuncName() << "|client:"
-                              << ClientConfig::SetDivision << "|server:"
+                              << _application->getApplicationCommunicator()->getClientConfig().SetDivision << "|server:"
                               << sSetName << "]" << endl);
             current->sendResponse(TARSINVOKEBYINVALIDESET);
             return false;

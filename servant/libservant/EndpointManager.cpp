@@ -163,9 +163,9 @@ void QueryEpBase::loadFromCache()
     string sLocatorKey = _locator;
 
     //如果启用set，则获取按set分组的缓存
-    if (ClientConfig::SetOpen)
+    if (_communicator->getClientConfig().SetOpen)
     {
-        sLocatorKey += "_" + ClientConfig::SetDivision;
+        sLocatorKey += "_" + _communicator->getClientConfig().SetDivision;
     }
 
     string objName = _objName + string(_invokeSetId.empty() ? "" : ":") + _invokeSetId;
@@ -383,9 +383,6 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
 
         try
         {
-            map<string, string> context;
-            context["node_name"] = _communicator->getProperty("node_name");
-
             if(bSync)
             {
                 vector<EndpointF> activeEp;
@@ -395,31 +392,31 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            iRet = _queryFPrx->findObjectById4Any(_objName,activeEp,inactiveEp, context);
+                            iRet = _queryFPrx->findObjectById4Any(_objName,activeEp,inactiveEp, _communicator->getClientConfig().Context);
                             break;
                         }
                     case E_STATION:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp, context);
+                            iRet = _queryFPrx->findObjectByIdInSameStation(_objName,sName,activeEp,inactiveEp, _communicator->getClientConfig().Context);
 	                        break;
                         }
                     case E_SET:
                         {
-                            iRet = _queryFPrx->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp, context);
+                            iRet = _queryFPrx->findObjectByIdInSameSet(_objName,sName,activeEp,inactiveEp, _communicator->getClientConfig().Context);
                             break;
                         }
                     case E_DEFAULT:
                     default:
                         {
-                            if(ClientConfig::SetOpen || !_invokeSetId.empty())
+                            if(_communicator->getClientConfig().SetOpen || !_invokeSetId.empty())
                             {
                                    //指定set调用时，指定set的优先级最高
-                                string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                iRet = _queryFPrx->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp, context);
+                                string setId = _invokeSetId.empty()?_communicator->getClientConfig().SetDivision:_invokeSetId;
+                                iRet = _queryFPrx->findObjectByIdInSameSet(_objName,setId,activeEp,inactiveEp, _communicator->getClientConfig().Context);
                             }
                             else
                             {
-                                iRet = _queryFPrx->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp, context);
+                                iRet = _queryFPrx->findObjectByIdInSameGroup(_objName,activeEp,inactiveEp, _communicator->getClientConfig().Context);
                             }
                             break;
                         }
@@ -432,31 +429,31 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            _queryFPrx->async_findObjectById4Any(this,_objName, context);
+                            _queryFPrx->async_findObjectById4Any(this,_objName, _communicator->getClientConfig().Context);
                             break;
                         }
                     case E_STATION:
                         {
-                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName, context);
+                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName, _communicator->getClientConfig().Context);
                             break;
                         }
                     case E_SET:
                         {
-                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName, context);
+                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName, _communicator->getClientConfig().Context);
                             break;
                         }
                     case E_DEFAULT:
                     default:
                         {
-                            if(ClientConfig::SetOpen || !_invokeSetId.empty())
+                            if(_communicator->getClientConfig().SetOpen || !_invokeSetId.empty())
                             {
                                 //指定set调用时，指定set的优先级最高
-                                string setId = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
-                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId, context);
+                                string setId = _invokeSetId.empty()?_communicator->getClientConfig().SetDivision:_invokeSetId;
+                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId, _communicator->getClientConfig().Context);
                             }
                             else
                             {
-                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName, context);
+                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName, _communicator->getClientConfig().Context);
                             }
                             break;
                         }
@@ -663,9 +660,9 @@ void QueryEpBase::setEndPointToCache(bool bInactive)
 
     //如果启用set，则按set分组保存
     string sLocatorKey = _locator;
-    if(ClientConfig::SetOpen)
+    if(_communicator->getClientConfig().SetOpen)
     {
-        sLocatorKey += "_" + ClientConfig::SetDivision;
+        sLocatorKey += "_" + _communicator->getClientConfig().SetDivision;
     }
     string objName = _objName + string(_invokeSetId.empty()?"":":") + _invokeSetId;
     if(bInactive)

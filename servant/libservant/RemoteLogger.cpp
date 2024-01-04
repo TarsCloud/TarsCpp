@@ -84,7 +84,8 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
     {
         try
         {
-            _logPrx->logger(DYEING_DIR, DYEING_FILE, "roll", "%Y%m%d", vRemoteDyeing, ServerConfig::Context);
+
+            _logPrx->logger(DYEING_DIR, DYEING_FILE, "roll", "%Y%m%d", vRemoteDyeing, _context);
         }
         catch(exception &ex)
         {
@@ -93,14 +94,19 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
     }
 }
 
-void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx, const string &sLogObj)
+void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx)
 {
     _app     = sApp;
     _server  = sServer;
     _logPath = sLogPath;
     _maxSize = iMaxSize;
     _maxNum  = iMaxNum;
+    _logPrx  = logPrx;
 
+    if(_logPrx)
+    {
+        _context["node_name"] = _logPrx->tars_communicator()->getClientConfig().NodeName;
+    }
 }
 
 
@@ -157,7 +163,7 @@ void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, cons
     sync(false);
 
     //设置染色日志信息
-    _logger.getWriteT().setDyeingLogInfo(sApp, sServer, sLogpath, iMaxSize, iMaxNum, _logPrx, sLogObj);
+    _logger.getWriteT().setDyeingLogInfo(sApp, sServer, sLogpath, iMaxSize, iMaxNum, _logPrx);
 
 }
 
@@ -228,7 +234,7 @@ LocalRollLogger::RollLogger *LocalRollLogger::logger(const string &suffix)
 	logger->modFlag(TC_DayLogger::HAS_TIME|TC_DayLogger::HAS_LEVEL|TC_DayLogger::HAS_PID, true);
 
 	//设置染色日志信息
-	logger->getWriteT().setDyeingLogInfo(_app, _server, _logpath, _logger.getMaxSize(), _logger.getMaxSize(), _logPrx, _logObj);
+	logger->getWriteT().setDyeingLogInfo(_app, _server, _logpath, _logger.getMaxSize(), _logger.getMaxSize(), _logPrx);
 
 	_logger_ex[suffix] = logger;
 
@@ -348,7 +354,7 @@ void RemoteTimeWriteT::sync2remote(const vector<string> &v)
         stInfo.sSepar            = _timeWrite->_separ;
         stInfo.sLogType          = _timeWrite->_logType;
 
-        _timeWrite->_logPrx->loggerbyInfo(stInfo,v, ServerConfig::Context);
+        _timeWrite->_logPrx->loggerbyInfo(stInfo,v, _timeWrite->_logPrx->tars_communicator()->getClientConfig().Context);
 
         if (_timeWrite->_reportSuccPtr)
         {
@@ -370,7 +376,7 @@ void RemoteTimeWriteT::sync2remoteDyeing(const vector<string> &v)
 {
     try
     {
-        _timeWrite->_logPrx->logger(DYEING_DIR, DYEING_FILE, "", _timeWrite->_format, v, ServerConfig::Context);
+        _timeWrite->_logPrx->logger(DYEING_DIR, DYEING_FILE, "", _timeWrite->_format, v, _timeWrite->_logPrx->tars_communicator()->getClientConfig().Context);
     }
     catch(exception &ex)
     {
@@ -650,7 +656,7 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFi
     PropertyReportPtr reportFailPtr = NULL;
     if (_remote && _logStatReport && _comm)
     {
-        string sKey   = _app + "." + _server + "." + sFile;
+        string sKey   = sFile;
         reportSuccPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_succ", PropertyReport::sum());
         reportFailPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_fail", PropertyReport::sum());
     }
@@ -720,7 +726,7 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp
     PropertyReportPtr reportFailPtr = NULL;
     if (_remote && _logStatReport && _comm)
     {
-        string sKey   = _app + "." + _server + "." + sFile;
+        string sKey   = sFile;
         reportSuccPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_succ", PropertyReport::sum());
         reportFailPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_fail", PropertyReport::sum());
     }

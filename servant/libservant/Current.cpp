@@ -51,8 +51,9 @@ Current::~Current()
         {
             reportToStat("stat_from_server");
         }
-        else if (!_isTars && ServerConfig::ReportFlow)
+        else if (!_isTars && _servantHandle && _servantHandle->getApplication()->getServerBaseInfo().ReportFlow)
         {
+
             //非tars客户端 从服务端上报调用信息
             reportToStat("not_tars_client");
         }
@@ -423,11 +424,15 @@ TC_EpollServer::BindAdapter* Current::getBindAdapter()
 
 void Current::reportToStat(const string& sObj)
 {
-    StatReport* stat = Application::getCommunicator()->getStatReport();
-
-    if(stat && stat->getStatPrx())
+    if(_servantHandle)
     {
-        stat->report(sObj, "", _request.sFuncName, _data->ip(), 0, (StatReport::StatResult)_ret, TNOWMS - _data->recvTimeStamp(), 0, false);
+        StatReport *stat = _servantHandle->getApplication()->getApplicationCommunicator()->getStatReport();
+
+        if (stat && stat->getStatPrx())
+        {
+            stat->report(sObj, "", _request.sFuncName, _data->ip(), 0, (StatReport::StatResult) _ret,
+                         TNOWMS - _data->recvTimeStamp(), 0, false);
+        }
     }
 }
 
