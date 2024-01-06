@@ -217,7 +217,7 @@ void ServantHandle::heartbeat()
 
 CurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    CurrentPtr current = new Current(this);
+    CurrentPtr current = new Current(shared_from_this());
 
     try
     {
@@ -262,10 +262,10 @@ CurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvCon
 
 CurrentPtr ServantHandle::createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    CurrentPtr current = new Current(this);
+    CurrentPtr current = new Current(shared_from_this());
 
     current->initializeClose(data);
-    current->setReportStat(false);
+//    current->setReportStat(false);
     current->setCloseType(data->closeType());
     return current;
 }
@@ -551,7 +551,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
     }
 
     //处理染色消息
-    string dyeingKey = "";
+    string dyeingKey;
     TarsDyeingSwitch dyeSwitch;
     if (processDye(current, dyeingKey))
     {
@@ -638,7 +638,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
     //单向调用或者业务不需要同步返回
     if (current->isResponse())
     {
-        current->sendResponse(ret, response, Current::TARS_STATUS(), sResultDesc);
+        current->sendResponse(ret, response, {}, sResultDesc);
     }
 #ifdef TARS_OPENTRACKING
     finishTracking(ret, current);
