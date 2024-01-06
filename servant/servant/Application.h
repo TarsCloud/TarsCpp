@@ -366,6 +366,12 @@ public:
      */
     const ServerBaseInfo &getServerBaseInfo() const { return _serverBaseInfo; }
 
+    /**
+     * 是否已经结束了
+     * @return
+     */
+    bool isTerminate();
+
 protected:
     /**
      * 初始化, 只会进程调用一次

@@ -2567,7 +2567,7 @@ string Tars2Cpp::generateH(const OperationPtr& pPtr, bool bVirtual, const string
         s << endl;
         s << TAB << "vector<char> sTupResponseBuffer;" << endl;
         s << TAB << "_tarsAttr_.encode(sTupResponseBuffer);"<< endl;
-        s << TAB << "_current_->sendResponse(tars::TARSSERVERSUCCESS, sTupResponseBuffer);" << endl;
+        s << TAB << "_current_->sendResponse(tars::TARSSERVERSUCCESS, _tarsAttr_);" << endl;
         if (_bTrace)
         {
             s << TAB << "_rsp_len_ = sTupResponseBuffer.size();" << endl;

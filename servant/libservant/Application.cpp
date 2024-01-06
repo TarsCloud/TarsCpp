@@ -1115,6 +1115,11 @@ TC_EpollServer::BindAdapterPtr Application::getBindAdapter(const string &obj)
     return _epollServer->getBindAdapter(adapter);
 }
 
+bool Application::isTerminate()
+{
+    return !_epollServer || _epollServer->isTerminate();
+}
+
 //void Application::addServantOnClose(const string& servant, const TC_EpollServer::close_functor& cf)
 //{
 //    string adapterName = _servantHelper->getServantAdapter(servant);

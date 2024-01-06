@@ -24,11 +24,11 @@
 namespace tars
 {
 //////////////////////////////////////////////////////////////////
-Current::Current(ServantHandle *pServantHandle)
+Current::Current(const shared_ptr<ServantHandle> & pServantHandle)
     : _servantHandle(pServantHandle)
     , _response(true)
     , _ret(0)
-    , _reportStat(true)
+//    , _reportStat(true)
     , _traceCall(false)
 
 {
@@ -36,28 +36,34 @@ Current::Current(ServantHandle *pServantHandle)
 
 Current::~Current()
 {
-    //TUP调用或单向调用，从服务端上报调用信息
-    if(_reportStat)
-    {
-        if(_request.iVersion == TUPVERSION )
-        {
-            reportToStat("tup_client");
-        }
-        else if(_request.cPacketType == TARSONEWAY)
-        {
-            reportToStat("one_way_client");
-        }
-        else if(_request.cPacketType == TARSNORMAL)
-        {
-            reportToStat("stat_from_server");
-        }
-        else if (!_isTars && _servantHandle && _servantHandle->getApplication()->getServerBaseInfo().ReportFlow)
-        {
-
-            //非tars客户端 从服务端上报调用信息
-            reportToStat("not_tars_client");
-        }
-    }
+//    //TUP调用或单向调用，从服务端上报调用信息
+//    if(_reportStat && _servantHandle->getApplication()->getServerBaseInfo().ReportFlow && _servantHandle && _servantHandle->getApplication() && !_servantHandle->getApplication()->isTerminate() && !_servantHandle->getApplication()->getApplicationCommunicator()->isTerminating())
+//    {
+//        StatReport *stat = _servantHandle->getApplication()->getApplicationCommunicator()->getStatReport();
+//
+//        if (stat && stat->getStatPrx())
+//        {
+//            auto func = [&](const char *obj)
+//            {
+//                stat->report(obj, "", _request.sFuncName, _data->ip(), 0, (StatReport::StatResult) _ret,
+//                             TNOWMS - _data->recvTimeStamp(), 0, false);
+//            };
+//
+//            if (_request.iVersion == TUPVERSION)
+//            {
+//                func("tup_client");
+//            } else if (_request.cPacketType == TARSONEWAY)
+//            {
+//                func("one_way_client");
+//            } else if (_request.cPacketType == TARSNORMAL)
+//            {
+//                func("stat_from_server");
+//            } else if (!_isTars)
+//            {
+//                func("not_tars_client");
+//            }
+//        }
+//    }
 }
 
 const string &Current::getHostName() const
@@ -135,11 +141,16 @@ struct timeval Current::getRecvTime() const
     return tm;
 }
 
-void Current::setReportStat(bool bReport)
+int64_t Current::recvTimeStampUs() const
 {
-    _reportStat = bReport;
+    return _data->recvTimeStampUs();
 }
 
+//void Current::setReportStat(bool bReport)
+//{
+//    _reportStat = bReport;
+//}
+//
 const vector<char>& Current::getRequestBuffer() const
 {
 	if (_isTars)
@@ -173,10 +184,6 @@ void Current::initialize(const shared_ptr<TC_EpollServer::RecvContext> &data)
 
 	_data = data;
 
-//	Application *application = (Application*)this->_servantHandle->getApplication();
-
-//    _request.sServantName = application->getServantHelper()->getAdapterServant(_data->adapter()->getName());
-
 	_isTars = _data->adapter()->isTarsProtocol();
 
     if (_isTars)
@@ -193,11 +200,7 @@ void Current::initializeClose(const shared_ptr<TC_EpollServer::RecvContext> &dat
 {
 	_data = data;
 
-//	Application *application = (Application*)this->_servantHandle->getApplication();
-
     _request.sServantName = this->_servantHandle->getServant()->getName();
-
-//    _request.sServantName = application->getServantHelper()->getAdapterServant(_data->adapter()->getName());
 }
 
 void Current::initialize(const vector<char>& sRecvBuffer)
@@ -212,7 +215,6 @@ void Current::initialize(const vector<char>& sRecvBuffer)
 void Current::sendResponse(const char *buff, uint32_t len)
 {
 	shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
-	// send->buffer()->assign(buff, len);
 	send->buffer()->addBuffer(buff, len);
 	_servantHandle->sendResponse(send);
 }
@@ -227,7 +229,7 @@ void Current::sendResponse(int iRet, const vector<char> &buff)
 
 	ResponsePacket response;
 	response.sBuffer = buff;
-	sendResponse(iRet, response, TARS_STATUS(), "");
+	sendResponse(iRet, response, {}, "");
 }
 
 void Current::sendResponse(int iRet, const string &buff)
@@ -240,27 +242,27 @@ void Current::sendResponse(int iRet, const string &buff)
 
     ResponsePacket response;
     response.sBuffer.assign(buff.begin(), buff.end());
-    sendResponse(iRet, response, TARS_STATUS(), "");
+    sendResponse(iRet, response, {}, "");
 }
 
 void Current::sendResponse(int iRet)
 {
 	ResponsePacket response;
-	sendResponse(iRet, response, TARS_STATUS(), "");
+	sendResponse(iRet, response, {}, "");
 }
 
 void Current::sendResponse(int iRet, tars::TarsOutputStream<tars::BufferWriterVector>& os)
 {
 	ResponsePacket response;
 	os.swap(response.sBuffer);
-	sendResponse(iRet, response, TARS_STATUS(), "");
+	sendResponse(iRet, response, {}, "");
 }
 
 void Current::sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr)
 {
 	ResponsePacket response;
 	attr.encode(response.sBuffer);
-	sendResponse(iRet, response, TARS_STATUS(), "");
+	sendResponse(iRet, response, {}, "");
 }
 
 void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string, string>& status, const string & sResultDesc)
@@ -288,7 +290,7 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 		response.cPacketType    = TARSNORMAL;
         response.iMessageType   = _request.iMessageType;
         response.iVersion       = _request.iVersion;
-		for(auto e: status)
+		for(const auto& e: status)
 		{
 			response.status.emplace(e);
 		}
@@ -360,6 +362,16 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 
 	send->setBuffer(ProxyProtocol::toBuffer(os));
 
+    {
+        StatReport *stat = _servantHandle->getApplication()->getApplicationCommunicator()->getStatReport();
+
+        if (stat && stat->getStatPrx())
+        {
+            stat->report("stat_from_server", "", getFuncName(), getIp(), 0, (StatReport::StatResult) _ret,
+                         TNOWMS - recvTimeStampUs() / 1000, 0, false);
+        }
+    }
+
 	_servantHandle->sendResponse(send);
 
 }
@@ -401,7 +413,7 @@ void Current::sendPushResponse(int iRet, const string &funcName, TarsOutputStrea
 
 void Current::close()
 {
-    if (_servantHandle)
+    if (_servantHandle && !_servantHandle->getApplication()->isTerminate())
     {
         _servantHandle->close(_data);
     }
@@ -409,7 +421,7 @@ void Current::close()
 
 ServantHandle* Current::getServantHandle()
 {
-    return _servantHandle;
+    return _servantHandle.get();
 }
 
 string Current::getModuleName()
@@ -421,20 +433,19 @@ TC_EpollServer::BindAdapter* Current::getBindAdapter()
 {
     return _data->adapter().get();
 }
-
-void Current::reportToStat(const string& sObj)
-{
-    if(_servantHandle)
-    {
-        StatReport *stat = _servantHandle->getApplication()->getApplicationCommunicator()->getStatReport();
-
-        if (stat && stat->getStatPrx())
-        {
-            stat->report(sObj, "", _request.sFuncName, _data->ip(), 0, (StatReport::StatResult) _ret,
-                         TNOWMS - _data->recvTimeStamp(), 0, false);
-        }
-    }
-}
+//
+//void Current::reportToStat(const string& sObj)
+//{
+//    if(_data->adapter() )
+//    {
+//        StatReport *stat = comm->getStatReport();
+//
+//        if (stat && stat->getStatPrx())
+//        {
+//            stat->report(sObj, "", _request.sFuncName, _data->ip(), 0, (StatReport::StatResult) _ret, TNOWMS - _data->recvTimeStamp(), 0, false);
+//        }
+//    }
+//}
 
 void Current::setTrace(bool traceCall, const string& traceKey)
 {

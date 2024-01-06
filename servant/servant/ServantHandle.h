@@ -39,7 +39,7 @@ class Application;
 /**
  * 处理网络请求线程
  */
-class ServantHandle : public TC_EpollServer::Handle
+class ServantHandle : public TC_EpollServer::Handle, public enable_shared_from_this<ServantHandle>
 {
 public:
     /**

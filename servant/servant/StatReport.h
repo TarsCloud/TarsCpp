@@ -301,6 +301,9 @@ private:
     map<string, PropertyReportPtr>          _statPropMsg;
 
 };
+
+//typedef TC_AutoPtr<StatReport> StatReportPtr;
+
 ///////////////////////////////////////////////////////////
 }
 
