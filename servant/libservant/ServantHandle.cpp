@@ -162,7 +162,7 @@ void ServantHandle::initialize()
 
     try
     {
-        _servant->setHandle(this);
+        _servant->setHandle(shared_from_this());
 
         _servant->initialize();
 

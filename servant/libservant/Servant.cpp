@@ -27,7 +27,7 @@ namespace tars
 
 thread_local shared_ptr<CallbackThreadData> CallbackThreadData::g_sp;
 
-Servant::Servant():_handle(NULL)
+Servant::Servant() //:_handle(NULL)
 {
 }
 
@@ -62,14 +62,14 @@ string Servant::getModuleName()
     return _application->getServerBaseInfo().Application + "." + _application->getServerBaseInfo().ServerName;
 }
 
-void Servant::setHandle(TC_EpollServer::Handle* handle)
+void Servant::setHandle(const shared_ptr<ServantHandle> &handle)
 {
     _handle = handle;
 }
 
-TC_EpollServer::Handle* Servant::getHandle()
+shared_ptr<ServantHandle> Servant::getHandle()
 {
-    return _handle;
+    return _handle.lock();
 }
 
 int Servant::dispatch(CurrentPtr current, vector<char> &buffer)

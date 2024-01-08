@@ -29,6 +29,7 @@ namespace tars
 {
 
 class Application;
+class ServantHandle;
 
 ////////////////////////////////////////////////////////////////////
 /**
@@ -63,7 +64,7 @@ public:
      * 设置所属的Handle
      * @param handle 
      */
-    void setHandle(TC_EpollServer::Handle* handle);
+    void setHandle(const shared_ptr<ServantHandle> &handle);
 
     /**
      * 设置全局的应用
@@ -87,7 +88,7 @@ public:
      * 获取所属的Handle
      * @return HandlePtr& 
      */
-    TC_EpollServer::Handle* getHandle();
+    shared_ptr<ServantHandle> getHandle();
 
     /**
      * 初始化
@@ -208,7 +209,7 @@ protected:
     /**
      * 所属的Handle
      */
-    TC_EpollServer::Handle* _handle;
+    std::weak_ptr<ServantHandle> _handle;
 
     /**
      * 异步响应队列, 每个Servant一个队列, 这个用于在ServantImp中, 再异步发请求给其他服务
