@@ -84,7 +84,7 @@
 
 .code
 
-jump_fcontext PROC EXPORT FRAME
+tars_jump_fcontext PROC EXPORT FRAME
     .endprolog
 
     ; prepare stack
@@ -201,5 +201,5 @@ ENDIF
 
     ; indirect jump to context
     jmp  r10
-jump_fcontext ENDP
+tars_jump_fcontext ENDP
 END

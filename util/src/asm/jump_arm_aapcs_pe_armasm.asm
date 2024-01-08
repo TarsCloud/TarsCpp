@@ -26,9 +26,9 @@
 
     AREA |.text|, CODE
     ALIGN 4
-    EXPORT jump_fcontext
+    EXPORT tars_jump_fcontext
 
-jump_fcontext PROC
+tars_jump_fcontext PROC
     ; save LR as PC
     push {lr}
     ; save hidden,V1-V8,LR

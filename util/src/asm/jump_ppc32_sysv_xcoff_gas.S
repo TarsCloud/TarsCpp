@@ -72,13 +72,13 @@
  *  -------------------------------------------------  *
  *                                                     *
  *******************************************************/
-.globl .jump_fcontext
-.globl  jump_fcontext[DS]
+.globl .tars_jump_fcontext
+.globl  tars_jump_fcontext[DS]
 .align 2 
-.csect	jump_fcontext[DS]
-jump_fcontext:
-  .long	.jump_fcontext
-.jump_fcontext:
+.csect	tars_jump_fcontext[DS]
+tars_jump_fcontext:
+  .long	.tars_jump_fcontext
+.tars_jump_fcontext:
     # reserve space on stack
     subi  r1, r1, 244
 

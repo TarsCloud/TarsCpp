@@ -72,13 +72,13 @@
  *  -------------------------------------------------  *
  *                                                     *
  *******************************************************/
-.globl .ontop_fcontext
-.globl  ontop_fcontext[DS]
+.globl .tars_ontop_fcontext
+.globl  tars_ontop_fcontext[DS]
 .align 2 
-.csect	ontop_fcontext[DS]
-ontop_fcontext:
-  .long	.ontop_fcontext
-.ontop_fcontext:
+.csect	tars_ontop_fcontext[DS]
+tars_ontop_fcontext:
+  .long	.tars_ontop_fcontext
+.tars_ontop_fcontext:
     # reserve space on stack
     subi  r1, r1, 244
 
