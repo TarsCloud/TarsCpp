@@ -150,7 +150,7 @@ bool HelloImp::testCoro(const std::string& sIn, std::string &sOut, CurrentPtr cu
 
 int HelloImp::testConHash(std::string &sOut, CurrentPtr current)
 {
-	sOut = _handle->getBindAdapter()->getEndpoint().toString();
+	sOut = getHandle()->getBindAdapter()->getEndpoint().toString();
 	return 0;
 }
 
