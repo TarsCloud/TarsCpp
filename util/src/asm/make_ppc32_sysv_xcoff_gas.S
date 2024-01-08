@@ -72,18 +72,18 @@
  *  -------------------------------------------------  *
  *                                                     *
  *******************************************************/
-	.globl	make_fcontext[DS]
-	.globl .make_fcontext[PR]
+	.globl	tars_make_fcontext[DS]
+	.globl .tars_make_fcontext[PR]
 	.align 2 
-	.csect  make_fcontext[DS]
-make_fcontext:
-	.long .make_fcontext[PR]
-	.csect .make_fcontext[PR], 3
-#.make_fcontext:
+	.csect  tars_make_fcontext[DS]
+tars_make_fcontext:
+	.long .tars_make_fcontext[PR]
+	.csect .tars_make_fcontext[PR], 3
+#.tars_make_fcontext:
     # save return address into R6
     mflr  6
 
-    # first arg of make_fcontext() == top address of context-function
+    # first arg of tars_make_fcontext() == top address of context-function
     # shift address in R3 to lower 16 byte boundary
     clrrwi  3, 3, 4
 
@@ -91,7 +91,7 @@ make_fcontext:
     # including 64 byte of linkage + parameter area (R1 % 16 == 0)
     subi  3, 3, 336
 
-    # third arg of make_fcontext() == address of context-function
+    # third arg of tars_make_fcontext() == address of context-function
     stw  5, 240(3)
 
     # set back-chain to zero
