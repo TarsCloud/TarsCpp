@@ -114,7 +114,9 @@ void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, con
 
 LocalRollLogger::~LocalRollLogger()
 {
-	for(auto e : _logger_ex)
+    terminate();
+
+	for(const auto& e : _logger_ex)
 	{
 		delete e.second;
 	}
@@ -518,7 +520,7 @@ void TimeWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &buf
     {
         try
         {
-            _logPrx->logger(DYEING_DIR, DYEING_FILE, "day", "%Y%m%d", vDyeingLog, ServerConfig::Context);
+            _logPrx->logger(DYEING_DIR, DYEING_FILE, "day", "%Y%m%d", vDyeingLog, _logPrx->tars_communicator()->getClientConfig().Context);
         }
         catch(exception &ex)
         {

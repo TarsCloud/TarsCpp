@@ -814,12 +814,14 @@ uint32_t ServantProxy::tars_gen_requestid()
 
 void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 {
+    std::lock_guard<std::mutex> lock(_mutex);
 	_pushCallback = cb;
     cb->setServantPrx(this);
 }
 
 ServantProxyCallbackPtr ServantProxy::tars_get_push_callback()
 {
+    std::lock_guard<std::mutex> lock(_mutex);
 	return _pushCallback;
 }
 

@@ -581,7 +581,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
 
     int ret = TARSSERVERUNKNOWNERR;
 
-    string sResultDesc = "";
+    string sResultDesc;
 
     ResponsePacket response;
 
