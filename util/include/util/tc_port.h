@@ -124,14 +124,21 @@ public:
 	/**
 	 * fork子进程并运行程序
 	 * @param sExe: 可执行程序路径
-	 * @param sPwdPath: 程序运行的当前路径
-	 * @param sRollLogPath: 滚动日志路径(stdout会重定向到滚动日志), 为空则不重定向
-	 * @param vOptions: 参数
+	 * @param sPwdPath:  设置程序运行的当前路径(chdir)
+	 * @param sRollLogPath: 重定向输出路径(stdout/stderr会重定向到该日志文件), 为空则不重定向
+	 * @param vArgs: 参数
 	 * @return 子进程id: ==0: 子进程中, >0: 父进程中(子进程pid), 其他抛出异常 TC_Port_Exception
 	 */
-	static int64_t forkExec(const string& sExe, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vOptions);
+	static int64_t forkExec(const string& sExe, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vArgs);
 
-		/**
+#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
+    /**
+     * 关闭所有当前进程的文件句柄(除了stdin/stdout/stderr)
+     */
+    static void closeAllFileDescriptors();
+#endif
+
+    /**
 	 * 注册ctrl+c回调事件(SIGINT/CTRL_C_EVENT)
 	 * @param callback
 	 * @return size_t, 注册事件的id, 取消注册时需要
