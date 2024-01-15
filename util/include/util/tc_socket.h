@@ -586,12 +586,12 @@ public:
     */
     static bool isInProgress();
 
-    /**
-    * @brief 关闭句柄
-    *
-    * @return
-    */
-    static void closeSocketNoThrow(int);
+//    /**
+//    * @brief 关闭句柄
+//    *
+//    * @return
+//    */
+//    static void closeSocketNoThrow(int);
 
     #if 0
     /**

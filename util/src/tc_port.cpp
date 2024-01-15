@@ -41,6 +41,10 @@
 #include "util/tc_strptime.h"
 #endif
 
+#if TARGET_PLATFORM_IOS
+#include <sys/sysctl.h>
+#endif
+
 namespace tars
 {
 
@@ -280,6 +284,51 @@ std::string TC_Port::exec(const char* cmd, std::string &err)
 	return fileData;
 }
 
+#if TARGET_PLATFORM_LINUX
+void TC_Port::closeAllFileDescriptors() {
+    DIR *dir;
+    struct dirent *entry;
+    int fd;
+
+    dir = opendir("/proc/self/fd");
+    if (dir == NULL) {
+        perror("Cannot open /proc/self/fd");
+        exit(EXIT_FAILURE);
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        fd = atoi(entry->d_name);
+        if (fd > STDERR_FILENO) { // Skip stdin, stdout, and stderr
+            close(fd);
+        }
+    }
+
+    closedir(dir);
+}
+
+#elif TARGET_PLATFORM_IOS
+
+void TC_Port::closeAllFileDescriptors()
+{
+    int max_fd;
+    int fd;
+    size_t len = sizeof(max_fd);
+
+    // Get the maximum file descriptor number for the current process
+    if (sysctlbyname("kern.maxfilesperproc", &max_fd, &len, NULL, 0) < 0)
+    {
+        return;
+    }
+
+    for (fd = STDERR_FILENO + 1; fd < max_fd; fd++)
+    {
+        close(fd);
+    }
+}
+
+#endif
+
+
 int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vOptions)
 {
 	vector<string> vEnvs;
@@ -348,8 +397,18 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 	return pi.dwProcessId;
 
 #else
+
+    string bin = sExePath;
+    if(!TC_File::isAbsolute(bin))
+    {
+        char current_directory[FILENAME_MAX] = {0x00};
+        getcwd(current_directory, sizeof(current_directory));
+
+        bin = TC_File::simplifyDirectory(string(current_directory) + FILE_SEP + bin);
+    }
+
 	vector<string> vArgs;
-	vArgs.push_back(sExePath);
+	vArgs.push_back(bin);
 	vArgs.insert(vArgs.end(), vOptions.begin(), vOptions.end());
 
 	int argc = static_cast<int>(vArgs.size());
@@ -371,49 +430,28 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 
 	if (pid == 0)
 	{
-		int maxFd = static_cast<int>(sysconf(_SC_OPEN_MAX));
-		for (int fd = 3; fd < maxFd; ++fd)
-		{
-			close(fd);
-		}
+        closeAllFileDescriptors();
 
-		//server stdcout 日志在滚动日志显示
+		//stdout/stderr 重定向到日志文件里面
 		if (!sRollLogPath.empty())
 		{
 			TC_File::makeDirRecursive(TC_File::extractFilePath(sRollLogPath));
 #if TARGET_PLATFORM_IOS
-			if ((freopen(sRollLogPath.c_str(), "ab", stdout)) != NULL && (freopen(sRollLogPath.c_str(), "ab", stderr)) != NULL)
+			freopen(sRollLogPath.c_str(), "ab", stdout);
+            freopen(sRollLogPath.c_str(), "ab", stderr);
 #else
-			if ((freopen64(sRollLogPath.c_str(), "ab", stdout)) != NULL && (freopen64(sRollLogPath.c_str(), "ab", stderr)) != NULL)
+			freopen64(sRollLogPath.c_str(), "ab", stdout);
+            freopen64(sRollLogPath.c_str(), "ab", stderr);
 #endif
-			{
-				cout << argv[0] << " redirect stdout and stderr  to " << sRollLogPath << endl;
-			}
-			else
-			{
-				//重定向失败 直接退出
-				exit(0);
-			}
 		}
-		else
-		{
-			cout << argv[0] << " cannot redirect stdout and stderr  to log file sRollLogPath is empty" << endl;
-		}
-
-//		for_each(vEnvs.begin(), vEnvs.end(), EnvVal());
 
 		if (strlen(pwdCStr) != 0)
 		{
-			if (chdir(pwdCStr) == -1)
-			{
-				cerr << argv[0] << " cannot change working directory to " << pwdCStr << "|errno=" << errno << endl;
-			}
+			chdir(pwdCStr);
 		}
 
-		if (execvp(argv[0], argv) == -1)
-		{
-			cerr << "cannot execute " << argv[0] << "|errno=" << strerror(errno) << endl;
-		}
+		execvp(argv[0], argv);
+
 		exit(0);
 	}
 	else
