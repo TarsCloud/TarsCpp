@@ -22,6 +22,10 @@
 
 TEST_F(HelloTest, testAdmin)
 {
+    LocalRollLogger::getInstance()->setLogInfo("tars", "test", ".", 1024*1024*10, 5, nullptr, "");
+
+    LocalRollLogger::getInstance()->logger()->setLogLevel("TARS");
+
 	FrameworkServer fs;
 	startServer(fs, FRAMEWORK_CONFIG());
 
@@ -31,15 +35,17 @@ TEST_F(HelloTest, testAdmin)
 	WinServer ws;
 	startServer(ws, WIN_CONFIG());
 
-//	auto c = getCommunicator();
-
 	CommunicatorPtr c = ws.getCommunicator();
 
 	string adminObj = "AdminObj@" + getLocalEndpoint(WIN_CONFIG()).toString();
 
 	AdminFPrx adminFPrx = c->stringToProxy<AdminFPrx>(adminObj);
 
+    adminFPrx->tars_ping();
+
+    LOG_CONSOLE_DEBUG << endl;
 	string loadconfig = adminFPrx->notify("tars.loadconfig test.conf");
+    LOG_CONSOLE_DEBUG << loadconfig << endl;
 
 	EXPECT_TRUE(loadconfig.find("[succ] get remote config:") != string::npos);
 	loadconfig = adminFPrx->notify("tars.loadconfig no-test.conf");

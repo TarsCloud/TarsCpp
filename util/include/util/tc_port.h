@@ -105,6 +105,12 @@ public:
 	 */
     static void setEnv(const std::string &name, const std::string &value);
 
+    /**
+     * kill某个pid的进程
+     * @param pid
+     */
+    static void kill(int64_t pid);
+
 	/**
 	 * 运行一个脚本
 	 * @param cmd

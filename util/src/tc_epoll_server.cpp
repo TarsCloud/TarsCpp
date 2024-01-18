@@ -2227,6 +2227,11 @@ void TC_EpollServer::setEmptyConnTimeout(int timeout)
     }
 }
 
+void TC_EpollServer::setAdapter(const vector <TC_EpollServer::BindAdapterPtr> &adapters)
+{
+    _bindAdapters = adapters;
+}
+
 int TC_EpollServer::bind(BindAdapterPtr & lsPtr)
 {
     auto it = _listeners.begin();
@@ -2247,7 +2252,11 @@ int TC_EpollServer::bind(BindAdapterPtr & lsPtr)
         _listeners[lsPtr->getSocket().getfd()] = lsPtr;
     }
 
-    _bindAdapters.push_back(lsPtr);
+    //如果adapter没有添加过, 则添加
+    if(!getBindAdapter(lsPtr->getName()))
+    {
+        _bindAdapters.push_back(lsPtr);
+    }
 
     return lsPtr->getSocket().getfd();
 }
