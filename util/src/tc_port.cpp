@@ -251,6 +251,23 @@ void TC_Port::setEnv(const string &name, const string &value)
 #endif
 }
 
+void TC_Port::kill(int64_t pid)
+{
+#if TARGET_PLATFORM_WINDOWS
+    HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+        if (hProcess == NULL)
+        {
+            return;
+        }
+
+        ::TerminateProcess(hProcess, 0);
+
+        CloseHandle(hProcess);
+#else
+    ::kill(static_cast<pid_t>(pid), SIGKILL);
+#endif
+}
+
 string TC_Port::exec(const char *cmd)
 {
 	string err;

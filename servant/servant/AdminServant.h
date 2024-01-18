@@ -65,6 +65,10 @@ public:
      */
     string notify(const string &command, CurrentPtr current);
 
+    /**
+     * 获取服务的pid
+     */
+    long getPid(CurrentPtr current);
 };
 ////////////////////////////////////////////////////////////////
 }

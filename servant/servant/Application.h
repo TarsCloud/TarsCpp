@@ -604,9 +604,20 @@ protected:
     TC_EpollServer::BindAdapter::EOrder parseOrder(const string &s);
 
     /**
+     * 初始化adapter
+     */
+    void initializeAdapter();
+
+    /**
+     * 根据配置创建adapter
+     * @return
+     */
+    vector<TC_EpollServer::BindAdapterPtr> createAdapter();
+
+    /**
      * bind server adapter
      */
-    void bindAdapter(vector<TC_EpollServer::BindAdapterPtr> &adapters);
+    void bindAdapters();
 
     /**
      * set adapter

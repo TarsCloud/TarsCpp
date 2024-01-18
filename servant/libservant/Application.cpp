@@ -778,9 +778,6 @@ void Application::main(const TC_Option &option)
 
 	string config = TC_File::load2str(ServerConfig::ConfigFile);
 
-	__out__.debug() << "config:" << ServerConfig::ConfigFile << endl;
-	__out__.debug() << "config:" << config << endl;
-
 	main(config);
 }
 
@@ -800,6 +797,9 @@ void Application::main(const string &config)
         //解析配置文件
         parseConfig(config);
 
+        __out__.debug() << "config:" << ServerConfig::ConfigFile << endl;
+        __out__.debug() << "config:" << config << endl;
+
         //初始化Proxy部分
         initializeClient();
 
@@ -808,21 +808,7 @@ void Application::main(const string &config)
 
         _serverBaseInfo = ServerConfig::toServerBaseInfo();
 
-        vector <TC_EpollServer::BindAdapterPtr> adapters;
-
-        //绑定对象和端口
-        bindAdapter(adapters);
-
-        stringstream os;
-
-        //输出所有adapter
-        outAllAdapter(os);
-
-	    __out__.info() << os.str();
-
-	    __out__.info() << "\n" << TC_Common::outfill("[initialize server] ", '.')  << " [Done]" << endl;
-
-	    __out__.info() << OUT_LINE_LONG << endl;
+        initializeAdapter();
 
         {
             bool initing = true;
@@ -835,7 +821,6 @@ void Application::main(const string &config)
                 {
                     //发送心跳给node, 表示正在启动
                     _keepAliveNodeFHelper->keepActiving();
-//                    TARS_KEEPACTIVING;
 
                     //等待initialize初始化完毕
                     std::unique_lock<std::mutex> lock(kmtx);
@@ -870,6 +855,9 @@ void Application::main(const string &config)
                 exit(-1);
             }
         }
+
+        //绑定对象和端口
+        bindAdapters();
 
         if (!_applicationCommunicator->getProperty("locator").empty() && _serverBaseInfo.BakType > 0)
         {
@@ -989,6 +977,51 @@ void Application::main(const string &config)
     LocalRollLogger::getInstance()->sync(false);
 }
 
+void Application::initializeAdapter()
+{
+    //创建adapter, 不绑定端口
+    vector <TC_EpollServer::BindAdapterPtr> adapters = createAdapter();
+
+    if (!_serverBaseInfo.Local.empty())
+    {
+        _servantHelper->addServant<AdminServant>("AdminObj", this);
+
+        string adminAdapter = "AdminAdapter";
+
+        _servantHelper->setAdapterServant(adminAdapter, "AdminObj");
+
+        TC_EpollServer::BindAdapterPtr lsPtr = _epollServer->createBindAdapter<ServantHandle>(adminAdapter, _serverBaseInfo.Local, 1, this);
+
+        setAdapter(lsPtr, adminAdapter);
+
+        lsPtr->setMaxConns(TC_EpollServer::BindAdapter::DEFAULT_MAX_CONN);
+
+        lsPtr->setQueueCapacity(TC_EpollServer::BindAdapter::DEFAULT_QUEUE_CAP);
+
+        lsPtr->setQueueTimeout(TC_EpollServer::BindAdapter::DEFAULT_QUEUE_TIMEOUT);
+
+        lsPtr->setProtocolName("tars");
+
+        lsPtr->setProtocol(AppProtocol::parse);
+
+        adapters.push_back(lsPtr);
+//            _epollServer->bind(lsPtr);
+    }
+
+    _epollServer->setAdapter(adapters);
+
+    stringstream os;
+
+    //输出所有adapter
+    outAllAdapter(os);
+
+    __out__.info() << os.str();
+
+    __out__.info() << "\n" << TC_Common::outfill("[initialize server] ", '.')  << " [Done]" << endl;
+
+    __out__.info() << OUT_LINE_LONG << endl;
+
+}
 
 void Application::parseConfig(const string &config)
 {
@@ -1038,6 +1071,7 @@ void Application::initializeClient()
         //一个进程内嵌多个Application时发生, 正常业务服务不会发生
         _applicationCommunicator = CommunicatorFactory::getInstance()->getCommunicator(_conf, TC_Common::tostr(this));
     }
+    _applicationCommunicator->initialize();
 
 	__out__.info()  << TC_Common::outfill("[proxy config]:") << endl;
 
@@ -1193,7 +1227,6 @@ void Application::initializeServer()
 
     ServerConfig::ServerName        = toDefault(_conf.get("/tars/application/server<server>"), exe);
 
-
 #if TARGET_PLATFORM_WINDOWS    
     ServerConfig::BasePath          = TC_File::simplifyDirectory(_conf.get("/tars/application/server<basepath.win>")) + FILE_SEP;
     if (ServerConfig::BasePath == FILE_SEP)
@@ -1315,9 +1348,6 @@ void Application::initializeServer()
     _epollServer->setOnAccept(std::bind(&Application::onAccept, this, std::placeholders::_1));
 
     //初始化服务是否对空链接进行超时检查
-//    bool bEnable = (_conf.get("/tars/application/server<emptyconcheck>","0")=="1")?true:false;
-
-//    _epollServer->enAntiEmptyConnAttack(bEnable);
     _epollServer->setEmptyConnTimeout(TC_Common::strto<int>(toDefault(_conf.get("/tars/application/server<emptyconntimeout>"), "0")));
 
 
@@ -1373,32 +1403,6 @@ void Application::initializeServer()
     //初始化管理对象
     __out__.info()  << OUT_LINE << "\n" << TC_Common::outfill("[set admin adapter]") << "OK" << endl;
 
-    if (!ServerConfig::Local.empty())
-    {
-        _servantHelper->addServant<AdminServant>("AdminObj", this);
-
-        string adminAdapter = "AdminAdapter";
-
-	    _servantHelper->setAdapterServant(adminAdapter, "AdminObj");
-
-        TC_EpollServer::BindAdapterPtr lsPtr = _epollServer->createBindAdapter<ServantHandle>(adminAdapter, ServerConfig::Local, 1, this);
-
-	    setAdapter(lsPtr, adminAdapter);
-
-        lsPtr->setMaxConns(TC_EpollServer::BindAdapter::DEFAULT_MAX_CONN);
-
-        lsPtr->setQueueCapacity(TC_EpollServer::BindAdapter::DEFAULT_QUEUE_CAP);
-
-        lsPtr->setQueueTimeout(TC_EpollServer::BindAdapter::DEFAULT_QUEUE_TIMEOUT);
-
-        lsPtr->setProtocolName("tars");
-
-        lsPtr->setProtocol(AppProtocol::parse);
-
-        _epollServer->bind(lsPtr);
-
-    }
-
     //队列取平均值
     if(!_applicationCommunicator->getProperty("property").empty())
     {
@@ -1450,9 +1454,11 @@ void Application::setAdapter(TC_EpollServer::BindAdapterPtr& adapter, const stri
 
 }
 
-void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
+vector<TC_EpollServer::BindAdapterPtr> Application::createAdapter()
 {
-    string sPrefix = ServerConfig::Application + "." + ServerConfig::ServerName + ".";
+    vector<TC_EpollServer::BindAdapterPtr> adapters;
+
+    string sPrefix = _serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".";
 
     vector<string> adapterName;
 
@@ -1473,13 +1479,13 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
             ep.parse(_conf[sLastPath + "<endpoint>"]);
             if (ep.getHost() == "localip")
             {
-                ep.setHost(ServerConfig::LocalIp);
+                ep.setHost(_serverBaseInfo.LocalIp);
             }
 
             TC_EpollServer::BindAdapterPtr bindAdapter = _epollServer->createBindAdapter<ServantHandle>(adapterName[i], _conf[sLastPath + "<endpoint>"], TC_Common::strto<int>(_conf.get(sLastPath + "<threads>", "1")), this);
 
             //init auth & ssl
-	        setAdapter(bindAdapter, adapterName[i]);
+            setAdapter(bindAdapter, adapterName[i]);
 
             bindAdapter->setMaxConns(TC_Common::strto<int>(_conf.get(sLastPath + "<maxconns>", "128")));
 
@@ -1495,11 +1501,11 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
 
             bindAdapter->setProtocolName(_conf.get(sLastPath + "<protocol>", "tars"));
 
-	        bindAdapter->setBackPacketBuffLimit(ServerConfig::BackPacketLimit);
+            bindAdapter->setBackPacketBuffLimit(ServerConfig::BackPacketLimit);
 
-	        bindAdapter->setBackPacketBuffMin(ServerConfig::BackPacketMin);
+            bindAdapter->setBackPacketBuffMin(ServerConfig::BackPacketMin);
 
-	        if (bindAdapter->isTarsProtocol())
+            if (bindAdapter->isTarsProtocol())
             {
                 bindAdapter->setProtocol(AppProtocol::parse);
             }
@@ -1513,14 +1519,11 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
             }
 #endif
 
-            if(ServerConfig::ManualListen) {
+            if(_serverBaseInfo.ManualListen)
+            {
                 //手工监听
                 bindAdapter->enableManualListen();
             }
-
-            _epollServer->bind(bindAdapter);
-
-            adapters.push_back(bindAdapter);
 
             //队列取平均值
             if(!_applicationCommunicator->getProperty("property").empty())
@@ -1536,14 +1539,26 @@ void Application::bindAdapter(vector<TC_EpollServer::BindAdapterPtr>& adapters)
                 bindAdapter->_pReportTimeoutNum = p.get();
 
                 p = _applicationCommunicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".queueWaitTime",
-                                                                         PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
+                                                                                    PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
                 bindAdapter->_pReportQueueWaitTime = p.get();
 
                 p = _applicationCommunicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".servantHandleTime",
-                                                                         PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
+                                                                                    PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
                 bindAdapter->_pReportServantHandleTime = p.get();
             }
+
+            adapters.push_back(bindAdapter);
         }
+    }
+
+    return adapters;
+}
+
+void Application::bindAdapters()
+{
+    for(auto adapter : _epollServer->getBindAdapters())
+    {
+        _epollServer->bind(adapter);
     }
 }
 
