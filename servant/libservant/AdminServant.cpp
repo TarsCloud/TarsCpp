@@ -44,6 +44,8 @@ void AdminServant::shutdown(CurrentPtr current)
 {
 	TLOGERROR("[TARS][AdminServant::shutdown] from node" << endl);
 
+    _application->getApplicationCommunicator()->terminate();
+    _application->terminate();
 #if TARGET_PLATFORM_WINDOWS
 	HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 	if (hProcess == NULL)

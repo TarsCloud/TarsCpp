@@ -1005,7 +1005,9 @@ void Application::initializeAdapter()
         lsPtr->setProtocol(AppProtocol::parse);
 
         adapters.push_back(lsPtr);
-//            _epollServer->bind(lsPtr);
+
+        //admin端口先做绑定, 服务就算一直卡着initialize, 也能被外部管理了.
+        _epollServer->bind(lsPtr);
     }
 
     _epollServer->setAdapter(adapters);
@@ -1558,7 +1560,11 @@ void Application::bindAdapters()
 {
     for(auto adapter : _epollServer->getBindAdapters())
     {
-        _epollServer->bind(adapter);
+        if(!adapter->getSocket().isValid())
+        {
+            //未绑定, 才绑定
+            _epollServer->bind(adapter);
+        }
     }
 }
 

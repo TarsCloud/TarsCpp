@@ -82,6 +82,13 @@ public:
 	 */
 	static bool isAbsolute(const string &sFullFileName);
 
+    /**
+     * 如果是相对路径则转换为绝对路径
+     * @param sFullFileName
+     * @return
+     */
+    static string toAbsolute(const string &sFullFileName);
+
 	/**
 	* @brief 判断给定路径的文件是否存在.
 	* 如果文件是符号连接,则以符号连接判断而不是以符号连接指向的文件判断

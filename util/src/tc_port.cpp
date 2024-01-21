@@ -251,6 +251,17 @@ void TC_Port::setEnv(const string &name, const string &value)
 #endif
 }
 
+string TC_Port::getCwd()
+{
+    char currentDirectory[FILENAME_MAX] = {0x00};
+#if TARGET_PLATFORM_WINDOWS
+    _getcwd(currentDirectory, sizeof(currentDirectory));
+#else
+    getcwd(currentDirectory, sizeof(currentDirectory));
+#endif
+    return currentDirectory;
+}
+
 void TC_Port::kill(int64_t pid)
 {
 #if TARGET_PLATFORM_WINDOWS
@@ -627,6 +638,7 @@ BOOL WINAPI TC_Port::HandlerRoutine(DWORD dwCtrlType)
 }
 #endif
 
+#if TARGET_PLATFORM_LINUX
 
 static int64_t reSize(int64_t i, const char unit)
 {
@@ -643,6 +655,7 @@ static int64_t reSize(int64_t i, const char unit)
 	}
 	return i;    
 }
+#endif
 
 // 获取指定进程占用物理内存大小, 单位（字节）
 int64_t TC_Port::getPidMemUsed(int64_t pid, const char unit)
