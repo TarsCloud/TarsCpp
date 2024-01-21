@@ -106,6 +106,12 @@ public:
     static void setEnv(const std::string &name, const std::string &value);
 
     /**
+     * 获取当前进程的目录
+     * @return
+     */
+    static string getCwd();
+
+    /**
      * kill某个pid的进程
      * @param pid
      */

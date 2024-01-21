@@ -65,5 +65,27 @@ string EndpointInfo::createCompareDesc()
 	return ss.str();
 }
 
+
+EndpointF EndpointInfo::toEndpointF(const TC_Endpoint &tep, const string &nodeName)
+{
+    EndpointF ep;
+    ep.host = tep.getHost();
+    ep.port = tep.getPort();
+    ep.istcp = tep.getType();
+    ep.nodeName = nodeName;
+    if(ep.nodeName.empty())
+    {
+        ep.nodeName = tep.getHost();
+    }
+    ep.timeout = tep.getTimeout();
+    ep.authType = tep.getAuthType();
+    ep.qos = tep.getQos();
+    ep.weight = tep.getWeight();
+    ep.weightType = tep.getWeightType();
+
+    return ep;
+}
+
+
 ///////////////////////////////////////////////////////////
 }

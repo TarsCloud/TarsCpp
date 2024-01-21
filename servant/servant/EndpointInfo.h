@@ -56,6 +56,13 @@ public:
 	EndpointInfo(const EndpointF &ep);
 
     /**
+     * 转换
+     * @param ep
+     * @return
+     */
+    static EndpointF toEndpointF(const TC_Endpoint &ep, const string &nodeName);
+
+    /**
      * get endpoint
      * @return
      */

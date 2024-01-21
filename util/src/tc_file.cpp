@@ -60,6 +60,15 @@ bool TC_File::isAbsolute(const string &sFullFileName)
 #endif
 }
 
+string TC_File::toAbsolute(const string &sFullFileName)
+{
+    if(!isAbsolute(sFullFileName))
+    {
+        return simplifyDirectory(TC_Port::getCwd() + FILE_SEP + sFullFileName);
+    }
+    return sFullFileName;
+}
+
 bool TC_File::isFileExist(const string &sFullFileName, mode_t iFileType)
 {	
 	TC_Port::stat_t f_stat;
