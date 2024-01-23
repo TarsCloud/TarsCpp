@@ -310,8 +310,31 @@ public:
 	*/		
 	static bool startWindowsPanfu(const string & sPath);
 
+    /**
+     * 连接参数, 变成路径
+     * @tparam T
+     * @tparam Args
+     * @param t
+     * @param args
+     * @return
+     */
+    template<typename T, typename... Args>
+    static std::string joinPaths(T t, Args... args) {
+        return string(t) + FILE_SEP + joinPaths(args...);
+    }
 private:
-	static bool isPanfu(const string & sPath);
+    // Base case: single argument
+    template<typename T>
+    static std::string joinPaths(T t) {
+        return t;
+    }
+
+    /**
+     * 是否是windows的盘符
+     * @param sPath
+     * @return
+     */
+    static bool isPanfu(const string & sPath);
 };
 }
 #endif // TC_FILE_H
