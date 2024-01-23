@@ -67,7 +67,7 @@ string AdminServant::notify(const string &command, CurrentPtr current)
     return this->getApplication()->getNotifyObserver()->notify(command, current);
 }
 
-long AdminServant::getPid(CurrentPtr current)
+tars::Int64 AdminServant::getPid(CurrentPtr current)
 {
     return getpid();
 }
