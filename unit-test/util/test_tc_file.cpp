@@ -150,3 +150,10 @@ TEST_F(UtilFileTest, config)
 
 	ASSERT_TRUE(volumes.size() == 2);
 }
+
+TEST_F(UtilFileTest, join)
+{
+    string v = TC_File::joinPaths("abc", string("def"), string("ddd"));
+
+    cout << v << endl;
+}
