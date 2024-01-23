@@ -68,7 +68,7 @@ public:
     /**
      * 获取服务的pid
      */
-    long getPid(CurrentPtr current);
+    tars::Int64 getPid(CurrentPtr current);
 };
 ////////////////////////////////////////////////////////////////
 }
