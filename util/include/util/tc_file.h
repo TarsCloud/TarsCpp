@@ -320,7 +320,11 @@ public:
      */
     template<typename T, typename... Args>
     static std::string joinPaths(T t, Args... args) {
-        return string(t) + FILE_SEP + joinPaths(args...);
+        std::string str_t = string(t);
+        if (!str_t.empty() && str_t.back() != FILE_SEP[0])
+            str_t += FILE_SEP;
+        return str_t + joinPaths(args...);
+//        return string(t) + FILE_SEP + joinPaths(args...);
     }
 private:
     // Base case: single argument
