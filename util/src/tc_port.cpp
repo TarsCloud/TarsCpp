@@ -44,7 +44,9 @@
 #endif
 
 #if TARGET_PLATFORM_IOS
+#include <sys/types.h>
 #include <sys/sysctl.h>
+#include <mach/mach.h>
 #include <libproc.h>
 #include <sys/proc_info.h>
 #endif
@@ -756,7 +758,7 @@ time_t TC_Port::getUPTime()
     size_t size = sizeof(boottime);
     int mib[2] = { CTL_KERN, KERN_BOOTTIME };
     if (sysctl(mib, 2, &boottime, &size, NULL, 0) != -1 && boottime.tv_sec != 0) {
-        time_t bsec = boottime.tv_sec, busec = boottime.tv_usec;
+        time_t bsec = boottime.tv_sec;//, busec = boottime.tv_usec;
         time_t now = time(NULL);
         return now - bsec;
     } else {
@@ -972,8 +974,24 @@ int TC_Port::getCPUProcessor()
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
     return sysinfo.dwNumberOfProcessors;
+#elif TARGET_PLATFORM_IOS
+    int nm[2];
+    size_t len = 4;
+    uint32_t count;
+
+    nm[0] = CTL_HW;
+    nm[1] = HW_AVAILCPU;
+    sysctl(nm, 2, &count, &len, NULL, 0);
+
+    if (count < 1) {
+        nm[1] = HW_NCPU;
+        sysctl(nm, 2, &count, &len, NULL, 0);
+        if (count < 1) { count = 1; }
+    }
+    return count;
+#else
+    return get_nprocs();
 #endif
-	return get_nprocs();
 }
 
 bool TC_Port::getDiskInfo(float& usedPercent, int64_t& availableSize, const string& path)

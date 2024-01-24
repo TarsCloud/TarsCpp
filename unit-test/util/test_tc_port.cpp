@@ -44,55 +44,61 @@ TEST_F(UtilPortTest, testGetPidMemUsed)
 
 TEST_F(UtilPortTest, testGetPidStartTime)
 {
-int64_t t = TC_Port::getPidStartTime(TC_Port::getpid());
-cout << "time_t:" << t <<
-endl;
+    int64_t t = TC_Port::getPidStartTime(TC_Port::getpid());
+    cout << "testGetPidStartTime:" << t << endl;
 
-ASSERT_TRUE(t
->= TNOW);
+    ASSERT_TRUE(t >= time(NULL));
 }
 
 TEST_F(UtilPortTest, testGetUPTime)
 {
-time_t t = TC_Port::getUPTime();
-cout << "time_t:" << t <<
-endl;
-ASSERT_TRUE(t >= TNOW);
+    time_t t = TC_Port::getUPTime();
+    cout << "testGetUPTime:" << t/60/60/24 << "day" << endl;
+    ASSERT_TRUE(t > 0);
 }
 
 TEST_F(UtilPortTest, testGetSystemMemInfo)
 {
-int64_t totalSize = 0;
-int64_t availableSize = 0;
-float usedPercent = 0;
+    int64_t totalSize = 0;
+    int64_t availableSize = 0;
+    float usedPercent = 0;
 
-int flag = TC_Port::getSystemMemInfo(totalSize, availableSize, usedPercent);
+    bool flag = TC_Port::getSystemMemInfo(totalSize, availableSize, usedPercent);
 
-ASSERT_TRUE(flag == 0);
-ASSERT_TRUE(totalSize > 0);
-ASSERT_TRUE(availableSize > 0);
-ASSERT_TRUE(usedPercent > 0);
-
+    cout << "totalSize: " << totalSize << endl;
+    cout << "availableSize: " << availableSize << endl;
+    cout << "usedPercent: " << usedPercent << endl;
+    ASSERT_TRUE(flag);
+    ASSERT_TRUE(totalSize > 0);
+    ASSERT_TRUE(availableSize > 0);
+    ASSERT_TRUE(usedPercent > 0);
 }
 
 TEST_F(UtilPortTest, testGetCPUProcessor)
 {
-ASSERT_TRUE(TC_Port::getCPUProcessor() > 0);
+    int n = TC_Port::getCPUProcessor();
+
+    cout << "cpu: " << n << endl;
+
+    ASSERT_TRUE(n > 0);
 }
 
-TEST_F(UtilPortTest, testGetCPUProcessor)
+TEST_F(UtilPortTest, testGetDiskInfo)
 {
-float usedPercent = 0;
-int64_t availableSize = 0;
+    float usedPercent = 0;
+    int64_t availableSize = 0;
 
 #if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
-TC_Port::getDiskInfo(usedPercent, availableSize, "/");
+    TC_Port::getDiskInfo(usedPercent, availableSize, "/");
 #else
-TC_Port::getDiskInfo(usedPercent, availableSize, "c:\\");
+    TC_Port::getDiskInfo(usedPercent, availableSize, "c:\\");
 #endif
 
-ASSERT_TRUE(usedPercent > 0);
-ASSERT_TRUE(availableSize > 0);
+    cout << "usedPercent: " << usedPercent << endl;
+    cout << "availableSize: " << availableSize << endl;
+
+    ASSERT_TRUE(usedPercent > 0);
+    ASSERT_TRUE(availableSize > 0);
 }
 
 
