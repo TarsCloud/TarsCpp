@@ -759,8 +759,8 @@ time_t TC_Port::getUPTime()
     int mib[2] = { CTL_KERN, KERN_BOOTTIME };
     if (sysctl(mib, 2, &boottime, &size, NULL, 0) != -1 && boottime.tv_sec != 0) {
         time_t bsec = boottime.tv_sec;//, busec = boottime.tv_usec;
-        time_t now = time(NULL);
-        return now - bsec;
+//        time_t now = time(NULL);
+        return bsec;
     } else {
         return 0;
     }

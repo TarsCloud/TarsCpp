@@ -53,7 +53,7 @@ TEST_F(UtilPortTest, testGetPidStartTime)
 TEST_F(UtilPortTest, testGetUPTime)
 {
     time_t t = TC_Port::getUPTime();
-    cout << "testGetUPTime:" << t/60/60/24 << "day" << endl;
+    cout << "testGetUPTime:" << (time(NULL)-t)/60/60/24 << "day" << endl;
     ASSERT_TRUE(t > 0);
 }
 

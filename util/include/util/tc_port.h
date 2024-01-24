@@ -187,14 +187,14 @@ public:
 	static int64_t getPidMemUsed(int64_t pid, const char unit = 'M');
 
 	/**
-	 * 获取进程启动时间
+	 * 获取进程启动时间(秒)
 	 * @param pid
 	 * @return
 	 */
 	static time_t getPidStartTime(int64_t pid);
 
 	/**
-	 * 服务器启动时间到现在的时间
+	 * 服务器启动的绝对时间(秒)
 	 * @return
 	 */
 	static time_t getUPTime();
