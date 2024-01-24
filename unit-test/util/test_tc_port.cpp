@@ -6,6 +6,14 @@
 #include <iostream>
 #include <vector>
 
+#pragma comment(lib, "ws2_32.lib")
+#include <windows.h>
+#include <time.h>
+#include <sys/timeb.h>
+#include <psapi.h>
+#include <tlhelp32.h>
+#include "util/tc_strptime.h"
+
 using namespace std;
 using namespace tars;
 
@@ -44,10 +52,11 @@ TEST_F(UtilPortTest, testGetPidMemUsed)
 
 TEST_F(UtilPortTest, testGetPidStartTime)
 {
-    int64_t t = TC_Port::getPidStartTime(TC_Port::getpid());
-    cout << "testGetPidStartTime:" << t << endl;
+    int64_t s = time(NULL);
 
-    ASSERT_TRUE(t >= time(NULL));
+    int64_t t = TC_Port::getPidStartTime(TC_Port::getpid());
+
+    ASSERT_TRUE(t >= s);
 }
 
 TEST_F(UtilPortTest, testGetUPTime)

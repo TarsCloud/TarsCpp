@@ -815,15 +815,25 @@ time_t TC_Port::getPidStartTime(int64_t pid)
 
     do {
         if(pe.th32ProcessID == pid) {
+            HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+            if (hProcess == NULL) {
+                CloseHandle(h);
+                return -1;
+            }
             FILETIME ftCreate, ftExit, ftKernel, ftUser;
-            if (GetProcessTimes(h, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
+            if (GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
                 ULARGE_INTEGER uli;
                 uli.LowPart = ftCreate.dwLowDateTime;
                 uli.HighPart = ftCreate.dwHighDateTime;
+
                 time_t startTime = (uli.QuadPart / 10000000ULL - 11644473600ULL);
+                CloseHandle(hProcess);
                 CloseHandle(h);
+                
                 return startTime;
             }
+
+            CloseHandle(hProcess);
         }
     } while(Process32Next(h, &pe));
 
