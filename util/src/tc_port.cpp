@@ -35,14 +35,18 @@
 #else
 
 #pragma comment(lib, "ws2_32.lib")
-// #include <winsock.h>
+#include <windows.h>
 #include <time.h>
 #include <sys/timeb.h>
+#include <psapi.h>
+#include <tlhelp32.h>
 #include "util/tc_strptime.h"
 #endif
 
 #if TARGET_PLATFORM_IOS
 #include <sys/sysctl.h>
+#include <libproc.h>
+#include <sys/proc_info.h>
 #endif
 
 namespace tars
@@ -657,7 +661,7 @@ static int64_t reSize(int64_t i, const char unit)
 }
 #endif
 
-// 获取指定进程占用物理内存大小, 单位（字节）
+// 获取指定进程占用物理内存大小
 int64_t TC_Port::getPidMemUsed(int64_t pid, const char unit)
 {
 #if TARGET_PLATFORM_LINUX
@@ -673,11 +677,66 @@ int64_t TC_Port::getPidMemUsed(int64_t pid, const char unit)
 		}
 	}
 	return -1;
-#else
-	return -1;
+#elif TARGET_PLATFORM_IOS
+    struct proc_taskinfo procInfo;
+    int ret = proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &procInfo, PROC_PIDTASKINFO_SIZE);
+    if (ret <= 0) {
+        return -1;
+    }
+
+    int64_t memUsed = procInfo.pti_resident_size;
+
+    // Apply unit conversion if necessary
+    switch (unit) {
+        case 'K': // KB
+            memUsed /= 1024;
+            break;
+        case 'G': // GB
+            memUsed /= (1024 * 1024 * 1024);
+            break;
+        case 'M': // MB
+            memUsed /= (1024 * 1024);
+            break;
+        default:
+            break;
+    }
+
+    return memUsed;
+#elif TARGET_PLATFORM_WINDOWS
+    HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+    if (processHandle == NULL) {
+        return -1;
+    }
+
+    PROCESS_MEMORY_COUNTERS pmc;
+    if (!GetProcessMemoryInfo(processHandle, &pmc, sizeof(pmc))) {
+        CloseHandle(processHandle);
+        return -1;
+    }
+
+    CloseHandle(processHandle);
+    int64_t memUsed = pmc.WorkingSetSize;
+
+    // Apply unit conversion if necessary
+    switch (unit) {
+        case 'K': // KB
+            memUsed /= 1024;
+            break;
+        case 'G': // GB
+            memUsed /= (1024 * 1024 * 1024);
+            break;
+        case 'M': // MB
+            memUsed /= (1024 * 1024);
+            break;
+        default:
+            break;
+    }
+
+    return memUsed;
 #endif
 }
 
+//服务器启动时间
 time_t TC_Port::getUPTime()
 {
 #if TARGET_PLATFORM_LINUX
@@ -692,8 +751,22 @@ time_t TC_Port::getUPTime()
 
 	return TNOW - (time_t)(TC_Common::strto<double>(vs[0]));
 
-#else
-	return 0;
+#elif TARGET_PLATFORM_IOS
+    struct timeval boottime;
+    size_t size = sizeof(boottime);
+    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+    if (sysctl(mib, 2, &boottime, &size, NULL, 0) != -1 && boottime.tv_sec != 0) {
+        time_t bsec = boottime.tv_sec, busec = boottime.tv_usec;
+        time_t now = time(NULL);
+        return now - bsec;
+    } else {
+        return 0;
+    }
+
+#elif TARGET_PLATFORM_WINDOWS
+    ULONGLONG tickCount = GetTickCount64();
+    time_t upTime = tickCount / 1000;
+    return upTime;
 #endif
 }
 
@@ -715,8 +788,45 @@ time_t TC_Port::getPidStartTime(int64_t pid)
 		return 0;
 	}
 	return bootTime + duration;
-#else
-	return -1;
+#elif TARGET_PLATFORM_IOS
+    struct proc_taskallinfo allinfo;
+    int ret = proc_pidinfo(pid, PROC_PIDTASKALLINFO, 0, &allinfo, sizeof(allinfo));
+    if (ret <= 0) {
+        return -1;
+    }
+
+    // Convert the process start time from absolute time to seconds since the Epoch
+    time_t startTime = allinfo.pbsd.pbi_start_tvsec + allinfo.pbsd.pbi_start_tvusec / 1e6;
+    return startTime;
+#elif TARGET_PLATFORM_WINDOWS
+    HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if(h == INVALID_HANDLE_VALUE) {
+        return -1;
+    }
+
+    PROCESSENTRY32 pe = { 0 };
+    pe.dwSize = sizeof(PROCESSENTRY32);
+    if(!Process32First(h, &pe)) {
+        CloseHandle(h);
+        return -1;
+    }
+
+    do {
+        if(pe.th32ProcessID == pid) {
+            FILETIME ftCreate, ftExit, ftKernel, ftUser;
+            if (GetProcessTimes(h, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
+                ULARGE_INTEGER uli;
+                uli.LowPart = ftCreate.dwLowDateTime;
+                uli.HighPart = ftCreate.dwHighDateTime;
+                time_t startTime = (uli.QuadPart / 10000000ULL - 11644473600ULL);
+                CloseHandle(h);
+                return startTime;
+            }
+        }
+    } while(Process32Next(h, &pe));
+
+    CloseHandle(h);
+    return -1;
 #endif
 }
 
@@ -777,42 +887,134 @@ bool TC_Port::getSystemMemInfo(int64_t &totalSize, int64_t &availableSize, float
 	totalSize = reSize(total, unit);
 	availableSize = reSize(available, unit);
 	return true;
-#else
-	return false;
+#elif TARGET_PLATFORM_IOS
+    int mib[2];
+    int64_t physical_memory;
+    size_t length;
+    mib[0] = CTL_HW;
+    mib[1] = HW_MEMSIZE;
+    length = sizeof(int64_t);
+    sysctl(mib, 2, &physical_memory, &length, NULL, 0);
+
+    vm_statistics64_data_t vmstat;
+    mach_msg_type_number_t count = sizeof(vmstat) / sizeof(natural_t);
+    if(KERN_SUCCESS != host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info64_t)&vmstat, &count)){
+        return false;
+    }
+
+    totalSize = physical_memory;
+    availableSize = vmstat.free_count * vm_page_size;
+
+    if (totalSize == 0) {
+        return false;
+    }
+
+    usedPercent = ((totalSize - availableSize) * 100.0) / totalSize;
+
+    // Apply unit conversion if necessary
+    switch (unit) {
+        case 'K': // KB
+            totalSize /= 1024;
+            availableSize /= 1024;
+            break;
+        case 'G': // GB
+            totalSize /= (1024 * 1024 * 1024);
+            availableSize /= (1024 * 1024 * 1024);
+            break;
+        case 'M': // MB
+            totalSize /= (1024 * 1024);
+            availableSize /= (1024 * 1024);
+            break;
+        default:
+            break;
+    }
+
+    return true;
+#elif TARGET_PLATFORM_WINDOWS
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    if (!GlobalMemoryStatusEx(&memInfo)) {
+        return false;
+    }
+
+    totalSize = memInfo.ullTotalPhys / (1024 * 1024); // Convert to MB
+    availableSize = memInfo.ullAvailPhys / (1024 * 1024); // Convert to MB
+
+    if (totalSize == 0) {
+        return false;
+    }
+
+    usedPercent = ((totalSize - availableSize) * 100.0) / totalSize;
+
+    // Apply unit conversion if necessary
+    switch (unit) {
+        case 'K': // KB
+            totalSize *= 1024;
+            availableSize *= 1024;
+            break;
+        case 'G': // GB
+            totalSize /= 1024;
+            availableSize /= 1024;
+            break;
+        // case 'M': // MB - no conversion necessary
+        default:
+            break;
+    }
+
+    return true;
 #endif
 }
 
 // 获取系统CPU核数
 int TC_Port::getCPUProcessor()
 {
-#if TARGET_PLATFORM_LINUX
-	return get_nprocs();
-#else
-	return -1;
+#if TARGET_PLATFORM_WINDOWS
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    return sysinfo.dwNumberOfProcessors;
 #endif
+	return get_nprocs();
 }
 
 bool TC_Port::getDiskInfo(float& usedPercent, int64_t& availableSize, const string& path)
 {
-#if TARGET_PLATFORM_LINUX
-	struct statfs64 buf;
+#if TARGET_PLATFORM_WINDOWS
+    ULARGE_INTEGER freeBytesAvailableToCaller;
+    ULARGE_INTEGER totalNumberOfBytes;
+    ULARGE_INTEGER totalNumberOfFreeBytes;
 
-	if(statfs64(path.c_str(),&buf)==-1)
-	{
-		return false;
-	}
+    if (!GetDiskFreeSpaceEx(path.c_str(), &freeBytesAvailableToCaller, &totalNumberOfBytes, &totalNumberOfFreeBytes)) {
+        return false;
+    }
 
-	size_t totalSize = (buf.f_blocks / 1024) * (buf.f_bsize / 1024);
-	if (totalSize == 0)
-	{
-		return false;
-	}
+    ULONGLONG totalSize = totalNumberOfBytes.QuadPart / (1024 * 1024); // Convert to MB
+    ULONGLONG freeSize = totalNumberOfFreeBytes.QuadPart / (1024 * 1024); // Convert to MB
 
-	availableSize = (buf.f_bavail / 1024) * (buf.f_bsize / 1024);
-	usedPercent = (totalSize - availableSize) * 1.0 / totalSize * 100;
-	return true;
+    if (totalSize == 0) {
+        return false;
+    }
+
+    availableSize = freeSize;
+    usedPercent = (totalSize - freeSize) * 100.0 / totalSize;
+
+    return true;
 #else
-	return false;
+    struct statfs64 buf;
+
+    if(statfs64(path.c_str(),&buf)==-1)
+    {
+        return false;
+    }
+
+    size_t totalSize = (buf.f_blocks / 1024) * (buf.f_bsize / 1024);
+    if (totalSize == 0)
+    {
+        return false;
+    }
+
+    availableSize = (buf.f_bavail / 1024) * (buf.f_bsize / 1024);
+    usedPercent = (totalSize - availableSize) * 1.0 / totalSize * 100;
+    return true;
 #endif
 }
 
