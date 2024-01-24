@@ -194,7 +194,7 @@ public:
 	static time_t getPidStartTime(int64_t pid);
 
 	/**
-	 * 服务器启动时间
+	 * 服务器启动时间到现在的时间
 	 * @return
 	 */
 	static time_t getUPTime();
