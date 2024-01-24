@@ -33,3 +33,67 @@ TEST_F(UtilPortTest, testExec)
    	string result = TC_Port::exec("ls '*.txt'", err);
    	cout << result << endl;
 }
+
+TEST_F(UtilPortTest, testGetPidMemUsed)
+{
+    int64_t used = TC_Port::getPidMemUsed(TC_Port::getpid());
+    cout << "used:" << used << endl;
+
+    ASSERT_TRUE(used > 0);
+}
+
+TEST_F(UtilPortTest, testGetPidStartTime)
+{
+int64_t t = TC_Port::getPidStartTime(TC_Port::getpid());
+cout << "time_t:" << t <<
+endl;
+
+ASSERT_TRUE(t
+>= TNOW);
+}
+
+TEST_F(UtilPortTest, testGetUPTime)
+{
+time_t t = TC_Port::getUPTime();
+cout << "time_t:" << t <<
+endl;
+ASSERT_TRUE(t >= TNOW);
+}
+
+TEST_F(UtilPortTest, testGetSystemMemInfo)
+{
+int64_t totalSize = 0;
+int64_t availableSize = 0;
+float usedPercent = 0;
+
+int flag = TC_Port::getSystemMemInfo(totalSize, availableSize, usedPercent);
+
+ASSERT_TRUE(flag == 0);
+ASSERT_TRUE(totalSize > 0);
+ASSERT_TRUE(availableSize > 0);
+ASSERT_TRUE(usedPercent > 0);
+
+}
+
+TEST_F(UtilPortTest, testGetCPUProcessor)
+{
+ASSERT_TRUE(TC_Port::getCPUProcessor() > 0);
+}
+
+TEST_F(UtilPortTest, testGetCPUProcessor)
+{
+float usedPercent = 0;
+int64_t availableSize = 0;
+
+#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
+TC_Port::getDiskInfo(usedPercent, availableSize, "/");
+#else
+TC_Port::getDiskInfo(usedPercent, availableSize, "c:\\");
+#endif
+
+ASSERT_TRUE(usedPercent > 0);
+ASSERT_TRUE(availableSize > 0);
+}
+
+
+
