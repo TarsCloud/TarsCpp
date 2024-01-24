@@ -63,6 +63,10 @@ void PropertyReport::distr::set(int o)
 
         ++_result[n];
     }
+    else
+    {
+        ++_max;
+    }
 }
 
 string PropertyReport::distr::get()
@@ -81,6 +85,12 @@ string PropertyReport::distr::get()
     {
         _result[i] = 0;
     }
+    if (!s.empty())
+    {
+        s += ",";
+    }
+    s += "max|" + TC_Common::tostr(_max);
+    _max = 0;
     return s;
 }
 
