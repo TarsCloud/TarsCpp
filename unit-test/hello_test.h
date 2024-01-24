@@ -7,6 +7,13 @@
 #include <mutex>
 #include <iostream>
 
+#if TARGET_PLATFORM_WINDOWS
+#include <windows.h>
+#include <pdh.h>
+#include <pdhmsg.h>
+#pragma comment(lib, "pdh.lib")
+
+#endif
 using namespace tars;
 using namespace Test;
 
@@ -268,6 +275,48 @@ public:
 		return prx;
 	}
 
+#if TARGET_PLATFORM_WINDOWS
+	int GetUsedFileDescriptorCount() {
+		PDH_HQUERY hQuery;
+		PDH_HCOUNTER hCounter;
+		PDH_STATUS pdhStatus;
+		PDH_FMT_COUNTERVALUE counterVal;
+
+		// 创建查询
+		pdhStatus = PdhOpenQuery(NULL, NULL, &hQuery);
+		if (pdhStatus != ERROR_SUCCESS) {
+			std::cerr << "PdhOpenQuery failed with status " << pdhStatus << std::endl;
+			return -1;
+		}
+
+		// 添加句柄计数器
+		std::string counterPath = string("\\Process(") + std::to_string(GetCurrentProcessId()) + ")\\Handle Count";
+		pdhStatus = PdhAddEnglishCounter(hQuery, counterPath.c_str(), NULL, &hCounter);
+		if (pdhStatus != ERROR_SUCCESS) {
+			std::cerr << "PdhAddEnglishCounter failed with status " << pdhStatus << std::endl;
+			return -1;
+		}
+
+		// 收集查询数据
+		pdhStatus = PdhCollectQueryData(hQuery);
+		if (pdhStatus != ERROR_SUCCESS) {
+			std::cerr << "PdhCollectQueryData failed with status " << pdhStatus << std::endl;
+			return -1;
+		}
+
+		// 获取句柄计数
+		pdhStatus = PdhGetFormattedCounterValue(hCounter, PDH_FMT_LONG, NULL, &counterVal);
+		if (pdhStatus != ERROR_SUCCESS) {
+			std::cerr << "PdhGetFormattedCounterValue failed with status " << pdhStatus << std::endl;
+			return -1;
+		}
+
+		// 关闭查询
+		PdhCloseQuery(hQuery);
+
+		return counterVal.longValue;
+	}
+#else
     int GetUsedFileDescriptorCount()
     {
         // 使用 shell 命令 "lsof" 获取已使用的文件句柄数量
@@ -288,14 +337,10 @@ public:
         int usedFileDescriptors = std::stoi(result);
         return usedFileDescriptors;
     }
-
+#endif
 	int getFdCounts()
 	{
-#if TARGET_PLATFORM_WINDOWS
-        return 0;
-#else
         return GetUsedFileDescriptorCount();
-#endif
 	}
 
 	int getSocketFd(int iSocketType = SOCK_DGRAM, int iDomain = AF_INET)
