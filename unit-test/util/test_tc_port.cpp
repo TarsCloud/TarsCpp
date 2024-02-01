@@ -101,5 +101,25 @@ TEST_F(UtilPortTest, testGetDiskInfo)
     ASSERT_TRUE(availableSize > 0);
 }
 
+TEST_F(UtilPortTest, testGetCpuLoad)
+{
+    cout << "cpu load:" << TC_Port::getCpuLoad(500) << endl;
+}
 
+#if TARGET_PLATFORM_WINDOWS
+#include <windows.h>
 
+TEST_F(UtilPortTest, testGetDisk)
+{
+    DWORD aDrive = GetLogicalDrives();
+
+    for (int i = 0; i < 26; i++) {
+        if (aDrive & (1 << i)) {
+            char drive[4];
+            sprintf(drive, "%c:\\", 'A' + i);
+            std::cout << drive << std::endl;
+        }
+    }
+}
+
+#endif
