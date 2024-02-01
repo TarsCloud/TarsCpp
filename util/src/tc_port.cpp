@@ -1053,7 +1053,7 @@ int TC_Port::getCPUProcessor()
 #endif
 }
 
-bool TC_Port::getDiskInfo(float& usedPercent, int64_t& availableSize, const string& path)
+bool TC_Port::getDiskInfo(int64_t &totalSize, int64_t& availableSize, float& usedPercent, const string& path)
 {
 #if TARGET_PLATFORM_WINDOWS
     ULARGE_INTEGER freeBytesAvailableToCaller;
@@ -1064,8 +1064,8 @@ bool TC_Port::getDiskInfo(float& usedPercent, int64_t& availableSize, const stri
         return false;
     }
 
-    ULONGLONG totalSize = totalNumberOfBytes.QuadPart / (1024 * 1024); // Convert to MB
-    ULONGLONG freeSize = totalNumberOfFreeBytes.QuadPart / (1024 * 1024); // Convert to MB
+    totalSize = totalNumberOfBytes.QuadPart;
+    ULONGLONG freeSize = totalNumberOfFreeBytes.QuadPart;
 
     if (totalSize == 0) {
         return false;
@@ -1083,13 +1083,13 @@ bool TC_Port::getDiskInfo(float& usedPercent, int64_t& availableSize, const stri
         return false;
     }
 
-    size_t totalSize = (buf.f_blocks / 1024) * (buf.f_bsize / 1024);
+    totalSize = buf.f_blocks * buf.f_bsize;
     if (totalSize == 0)
     {
         return false;
     }
 
-    availableSize = (buf.f_bavail / 1024) * (buf.f_bsize / 1024);
+    availableSize = buf.f_bavail * buf.f_bsize;
     usedPercent = (totalSize - availableSize) * 1.0 / totalSize * 100;
     return true;
 #endif

@@ -87,16 +87,19 @@ TEST_F(UtilPortTest, testGetDiskInfo)
 {
     float usedPercent = 0;
     int64_t availableSize = 0;
+    int64_t totalSize = 0;
 
 #if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
-    TC_Port::getDiskInfo(usedPercent, availableSize, "/");
+    TC_Port::getDiskInfo(totalSize, availableSize, usedPercent, "/");
 #else
-    TC_Port::getDiskInfo(usedPercent, availableSize, "c:\\");
+    TC_Port::getDiskInfo(totalSize, availableSize, usedPercent, "c:\\");
 #endif
 
+    cout << "totalSize: " << totalSize << endl;
     cout << "usedPercent: " << usedPercent << endl;
     cout << "availableSize: " << availableSize << endl;
 
+    ASSERT_TRUE(totalSize > 0);
     ASSERT_TRUE(usedPercent > 0);
     ASSERT_TRUE(availableSize > 0);
 }

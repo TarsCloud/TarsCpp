@@ -212,7 +212,7 @@ public:
 	 * @param totalSize, 总内存大小
 	 * @param availableSize , 剩余可用内存大小
 	 * @param usedPercent , 已使用内存百分比
-	 * @param unit, 内存单位
+	 * @param unit, 内存单位(B, K, G, M)
 	 * @return
 	 */
 	static bool getSystemMemInfo(int64_t &totalSize, int64_t &availableSize, float &usedPercent, const char unit = 'M');
@@ -226,11 +226,11 @@ public:
 	/**
 	 * 获取磁盘信息
 	 * @param usedPercent 磁盘使用百分比
-	 * @param availableSize 剩余磁盘空间（单位M）
+	 * @param availableSize 剩余磁盘空间（字节数）
 	 * @param path, 为该路径所在目标磁盘
 	 */
 
-	static bool getDiskInfo(float& usedPercent, int64_t& availableSize, const string& path);
+	static bool getDiskInfo(int64_t &totalSize, int64_t& availableSize, float& usedPercent, const string& path);
 
 protected:
 
