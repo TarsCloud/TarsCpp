@@ -82,7 +82,7 @@ public:
     protected:
         void clear()                { _sum = 0; _count = 0; }
     private:
-        long _sum;
+        int64_t _sum;
         int _count;
     };
 
