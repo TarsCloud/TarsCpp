@@ -35,11 +35,15 @@
 #else
 
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "pdh.lib")
+
 #include <windows.h>
 #include <time.h>
 #include <sys/timeb.h>
 #include <psapi.h>
 #include <tlhelp32.h>
+#include <pdh.h>
+#include <pdhmsg.h>
 #include "util/tc_strptime.h"
 #endif
 
@@ -662,6 +666,61 @@ static int64_t reSize(int64_t i, const char unit)
 	return i;    
 }
 #endif
+
+double TC_Port::getCpuLoad(uint32_t queryTime)
+{
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+    double loadAvg[3];
+    if ( getloadavg( loadAvg, 3 ) != -1 )
+    {
+        return static_cast<float>( loadAvg[0] );
+    }
+    return -1;
+#else
+    PDH_HQUERY cpuQuery;
+    PDH_HCOUNTER cpuTotal;
+
+    // Initialize the PDH query
+    if (PdhOpenQuery(NULL, NULL, &cpuQuery) != ERROR_SUCCESS) {
+        return -1;
+    }
+
+    // Add the CPU Time counter to the query
+    if (PdhAddCounter(cpuQuery, "\\Processor(_Total)\\% Processor Time", NULL, &cpuTotal) != ERROR_SUCCESS) {
+        return -1;
+    }
+
+    // Collect the query data
+    if (PdhCollectQueryData(cpuQuery) != ERROR_SUCCESS) {
+        return -1;
+    }
+
+    // Wait for some time
+    TC_Common::msleep(queryTime);
+
+    // Collect the updated query data
+    if (PdhCollectQueryData(cpuQuery) != ERROR_SUCCESS) {
+        return -1;
+    }
+
+    // Get the collected data
+    PDH_FMT_COUNTERVALUE counterVal;
+
+    if (PdhGetFormattedCounterValue(cpuTotal, PDH_FMT_DOUBLE, NULL, &counterVal) != ERROR_SUCCESS) {
+        return -1;
+    }
+
+    // Print the CPU usage
+//    std::cout << "CPU Usage: " << counterVal.doubleValue << " %\n";
+
+    // Close the query
+    if (PdhCloseQuery(cpuQuery) != ERROR_SUCCESS) {
+        return -1;
+    }
+
+    return counterVal.doubleValue;
+#endif
+}
 
 // 获取指定进程占用物理内存大小
 int64_t TC_Port::getPidMemUsed(int64_t pid, const char unit)

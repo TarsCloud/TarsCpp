@@ -268,8 +268,11 @@ public:
 		return prx;
 	}
 
-    int GetUsedFileDescriptorCount()
-    {
+	int getFdCounts()
+	{
+#if TARGET_PLATFORM_WINDOWS
+        return 0;
+#else
         // 使用 shell 命令 "lsof" 获取已使用的文件句柄数量
         FILE* file = popen("lsof -p $$ | wc -l", "r");
         if (!file) {
@@ -287,14 +290,6 @@ public:
         // 解析结果并提取文件句柄数量
         int usedFileDescriptors = std::stoi(result);
         return usedFileDescriptors;
-    }
-
-	int getFdCounts()
-	{
-#if TARGET_PLATFORM_WINDOWS
-        return 0;
-#else
-        return GetUsedFileDescriptorCount();
 #endif
 	}
 

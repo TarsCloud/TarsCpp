@@ -177,6 +177,14 @@ public:
 	 */
 	static void unregisterTerm(size_t id);
 
+    /**
+     * 获取cpu负载
+     * @param queryTime, windows下有效, 会阻塞的时间, 毫秒
+     *
+     * @return, 如果失败, 返回-1, 否在返回cpu负载的值
+     */
+    static double getCpuLoad(uint32_t queryTime = 500);
+
 	/**
 	 * 获取指定进程占用物理内存大小, 返回内存大小(K, M, G)
 	 * @param pid: 目标进程id
