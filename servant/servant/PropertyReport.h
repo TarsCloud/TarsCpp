@@ -82,7 +82,7 @@ public:
     protected:
         void clear()                { _sum = 0; _count = 0; }
     private:
-        int _sum;
+        int64_t _sum;
         int _count;
     };
 
@@ -98,10 +98,11 @@ public:
         void   set(int o);
         string get();
     protected:
-        void clear()                { _result.clear();}
+        void clear()                { _result.clear(); _max = 0;}
     private:
         vector<int>     _range;
         vector<size_t>  _result;
+        int             _max = 0;
     };
 
     /**

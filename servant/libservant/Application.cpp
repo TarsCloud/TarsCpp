@@ -1541,11 +1541,13 @@ vector<TC_EpollServer::BindAdapterPtr> Application::createAdapter()
                 bindAdapter->_pReportTimeoutNum = p.get();
 
                 p = _applicationCommunicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".queueWaitTime",
-                                                                                    PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
+                                                                                    PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count(),
+                                                                                    PropertyReport::distr({5, 10, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000}));
                 bindAdapter->_pReportQueueWaitTime = p.get();
 
                 p = _applicationCommunicator->getStatReport()->createPropertyReport(bindAdapter->getName() + ".servantHandleTime",
-                                                                                    PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count());
+                                                                                    PropertyReport::avg(), PropertyReport::min(), PropertyReport::max(), PropertyReport::count(),
+                                                                                    PropertyReport::distr({5, 10, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000}));
                 bindAdapter->_pReportServantHandleTime = p.get();
             }
 
