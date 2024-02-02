@@ -26,11 +26,11 @@
 
 .file "make_x86_64_sysv_elf_gas.S"
 .text
-.globl make_fcontext
-.type make_fcontext,@function
+.globl tars_make_fcontext
+.type tars_make_fcontext,@function
 .align 16
-make_fcontext:
-    /* first arg of make_fcontext() == top of context-stack */
+tars_make_fcontext:
+    /* first arg of tars_make_fcontext() == top of context-stack */
     movq  %rdi, %rax
 
     /* shift address in RAX to lower 16 byte boundary */
@@ -40,7 +40,7 @@ make_fcontext:
     /* on context-function entry: (RSP -0x8) % 16 == 0 */
     leaq  -0x40(%rax), %rax
 
-    /* third arg of make_fcontext() == address of context-function */
+    /* third arg of tars_make_fcontext() == address of context-function */
     /* stored in RBX */
     movq  %rdx, 0x28(%rax)
 
@@ -52,7 +52,7 @@ make_fcontext:
     /* compute abs address of label trampoline */
     leaq  trampoline(%rip), %rcx
     /* save address of trampoline as return-address for context-function */
-    /* will be entered after calling jump_fcontext() first time */
+    /* will be entered after calling tars_jump_fcontext() first time */
     movq  %rcx, 0x38(%rax)
 
     /* compute abs address of label finish */
@@ -76,7 +76,7 @@ finish:
     /* exit application */
     call  _exit@PLT
     hlt
-.size make_fcontext,.-make_fcontext
+.size tars_make_fcontext,.-tars_make_fcontext
 
 /* Mark that we don't need executable stack. */
 .section .note.GNU-stack,"",%progbits

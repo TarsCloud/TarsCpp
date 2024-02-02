@@ -68,9 +68,9 @@
 
 .text
 .align 2
-.globl _ontop_fcontext
+.globl _tars_ontop_fcontext
 
-_ontop_fcontext:
+_tars_ontop_fcontext:
     ; reserve space on stack
     subi  r1, r1, 184
 

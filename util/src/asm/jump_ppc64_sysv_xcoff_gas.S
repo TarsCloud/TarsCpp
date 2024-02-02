@@ -7,8 +7,8 @@
 */
 
 .align 2
-.globl .jump_fcontext
-.jump_fcontext:
+.globl .tars_jump_fcontext
+.tars_jump_fcontext:
     # reserve space on stack
     subi  1, 1, 184
 

@@ -52,9 +52,9 @@
  *******************************************************/
 
 .text
-.global _ontop_fcontext
+.global _tars_ontop_fcontext
 .balign 16
-_ontop_fcontext:
+_tars_ontop_fcontext:
     ; prepare stack for GP + FPU
     sub  sp, sp, #0xb0
 
