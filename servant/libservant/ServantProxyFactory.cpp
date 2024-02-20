@@ -56,5 +56,32 @@ ServantPrx::element_type* ServantProxyFactory::getServantProxy(const string& nam
 
 	return sp.get();
 }
+ServantProxy* ServantProxyFactory::setServantProxy(ServantProxy * proxy,const string& name,const string& setName, bool rootServant)
+{
+    TC_LockT<TC_ThreadRecMutex> lock(*this);
+    
+    string tmpObjName = name + ":" + setName;
+    
+    map<string, ServantPrx>::iterator it = _servantProxy.find(tmpObjName);
+    if(it != _servantProxy.end())
+        return it->second.get();
+    
+//    ServantPrx sp = proxy;
+    ServantPrx sp ( proxy);
+    //需要主动初始化一次
+    sp->tars_initialize(rootServant);
+    
+    int syncTimeout = TC_Common::strto<int>(_comm->getProperty("sync-invoke-timeout", "3000"));
+    int asyncTimeout = TC_Common::strto<int>(_comm->getProperty("async-invoke-timeout", "5000"));
+    int conTimeout = TC_Common::strto<int>(_comm->getProperty("connect-timeout", "1500"));
+    
+    sp->tars_timeout(syncTimeout);
+    sp->tars_async_timeout(asyncTimeout);
+    sp->tars_connect_timeout(conTimeout);
+    
+    _servantProxy[tmpObjName] = sp;
+    
+    return sp.get();
+}
 ///////////////////////////////////////////////////////////////////////////////
 }

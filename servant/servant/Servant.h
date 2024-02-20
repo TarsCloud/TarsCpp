@@ -30,6 +30,13 @@ namespace tars
 
 class Application;
 class ServantHandle;
+class BufferWrapper
+{
+public:
+    vector<char> buffer;
+};
+
+typedef std::shared_ptr<BufferWrapper> BufferWrapperPtr;
 
 ////////////////////////////////////////////////////////////////////
 /**
@@ -101,6 +108,8 @@ public:
      */
     virtual void destroy() = 0;
 
+    void setModePython( bool forPython);
+    bool isPython() ;
 public:
     /**
      * 分发收到的请求
@@ -119,6 +128,8 @@ public:
      * @return int
      */
     virtual int onDispatch(CurrentPtr current, vector<char> &buffer) { return -1; }
+    
+    virtual int onDispatch(CurrentPtr current, BufferWrapper * bufferWrapper) { return -1; }
 
 public:
     /**
@@ -217,6 +228,8 @@ protected:
      * 缺点就是Servant::onDispatch, 通知ServantImp时, 需要把所有线程都唤醒
      */
     TC_CasQueue<ReqMessagePtr> _asyncResponseQueue;
+    
+    bool _modePython = false;
 };
 
 typedef TC_AutoPtr<Servant> ServantPtr;

@@ -65,13 +65,28 @@ class RemoteNotify;
 
 typedef TC_AutoPtr<Communicator> CommunicatorPtr;
 typedef TC_AutoPtr<ServantProxy> ServantPrx;
+typedef TC_AutoPtr<StatFProxy> StatFPrx;
+
+#ifdef BUILD_STD_SHARED_PTR
+
+typedef std::shared_ptr<ServantProxyCallback> ServantProxyCallbackPtr;
+typedef std::shared_ptr<ObjectProxy> ObjectPrx;
+typedef std::shared_ptr<Current> CurrentPtr;
+typedef std::shared_ptr<StatReport> StatReportPtr;
+typedef std::shared_ptr<FDReactor> FDReactorPtr;
+typedef std::shared_ptr<AsyncProcThread> AsyncProcThreadPtr;
+
+#else
+
 typedef TC_AutoPtr<ServantProxyCallback> ServantProxyCallbackPtr;
 typedef TC_AutoPtr<ObjectProxy> ObjectPrx;
 typedef TC_AutoPtr<Current> CurrentPtr;
-typedef TC_AutoPtr<StatFProxy> StatFPrx;
 typedef TC_AutoPtr<StatReport> StatReportPtr;
 typedef TC_AutoPtr<FDReactor> FDReactorPtr;
 typedef TC_AutoPtr<AsyncProcThread> AsyncProcThreadPtr;
+
+#endif
+
 
 typedef CurrentPtr TarsCurrentPtr;
 typedef RemoteConfig TarsRemoteConfig;

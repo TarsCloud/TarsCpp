@@ -217,7 +217,7 @@ void ServantHandle::heartbeat()
 
 CurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    CurrentPtr current = new Current(shared_from_this());
+    CurrentPtr current (new Current(shared_from_this()));
 
     try
     {
@@ -262,7 +262,7 @@ CurrentPtr ServantHandle::createCurrent(const shared_ptr<TC_EpollServer::RecvCon
 
 CurrentPtr ServantHandle::createCloseCurrent(const shared_ptr<TC_EpollServer::RecvContext> &data)
 {
-    CurrentPtr current = new Current(shared_from_this());
+    CurrentPtr current ( new Current(shared_from_this()));
 
     current->initializeClose(data);
 //    current->setReportStat(false);

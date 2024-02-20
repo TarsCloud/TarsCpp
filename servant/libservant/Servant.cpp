@@ -72,6 +72,16 @@ shared_ptr<ServantHandle> Servant::getHandle()
     return _handle.lock();
 }
 
+void Servant::setModePython( bool forPython)
+{
+    _modePython = forPython;
+}
+
+bool Servant::isPython()
+{
+    return _modePython;
+}
+
 int Servant::dispatch(CurrentPtr current, vector<char> &buffer)
 {
     int ret = TARSSERVERUNKNOWNERR;
@@ -90,9 +100,19 @@ int Servant::dispatch(CurrentPtr current, vector<char> &buffer)
     }
     else
     {
-        TC_LockT<TC_ThreadRecMutex> lock(*this);
+        if (isPython())
+        {
+//            TC_LockT<TC_ThreadRecMutex> lock(*this);
+            BufferWrapper bufferWrapper;
+            ret = onDispatch(current, &bufferWrapper);
+            buffer.swap(bufferWrapper.buffer);
+        }
+        else
+        {
+	        TC_LockT<TC_ThreadRecMutex> lock(*this);
 
-        ret = onDispatch(current, buffer);
+	        ret = onDispatch(current, buffer);
+		}
     }
     return ret;
 }
