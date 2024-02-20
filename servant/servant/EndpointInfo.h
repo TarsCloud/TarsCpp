@@ -63,6 +63,17 @@ public:
     static EndpointF toEndpointF(const TC_Endpoint &ep, const string &nodeName);
 
     /**
+     * 转换数据结构
+     * 如果是0.0.0.0 则换成本机实际ipv4的所有地址(多网卡), 注意去掉了127.0.0.1
+     * 如果是::1, 则换成本机实际ipv6的所有地址(多网卡), 注意去掉了::1
+     * 如果是*, 则换成本机所有的ipv4/ipv6的所有地址(多网卡), 注意去掉了127.0.0.1 和 ::1
+     * @param ep
+     * @param nodeName
+     * @return
+     */
+    static vector<EndpointF> toEndpointFs(const TC_Endpoint &ep, const string &nodeName);
+
+    /**
      * get endpoint
      * @return
      */

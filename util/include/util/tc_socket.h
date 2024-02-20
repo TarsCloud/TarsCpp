@@ -107,7 +107,7 @@ public:
      *  
      * @param fd      socket句柄
      * @param bOwner  是否拥有socket
-     * @param iDomain sokect协议族，缺省为AF_INET，代表TCP/IP协议族 
+     * @param iDomain socket协议族，缺省为AF_INET，代表TCP/IP协议族
      */
     void init(int fd, bool bOwner, int iDomain = AF_INET);
 
