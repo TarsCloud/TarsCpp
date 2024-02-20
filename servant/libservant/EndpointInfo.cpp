@@ -40,22 +40,11 @@ EndpointInfo::EndpointInfo(const TC_Endpoint &ep, const string &setDivision)
 EndpointInfo::EndpointInfo(const EndpointF &ep)
 : _setDivision(ep.setId)
 {
-	_ep.setHost(ep.host);
-	_ep.setPort(ep.port);
-	_ep.setTimeout(ep.timeout);
-	_ep.setType((TC_Endpoint::EType)ep.istcp);
-	_ep.setGrid(ep.grid);
-	_ep.setQos(ep.qos);
-	_ep.setWeight(ep.weight);
-	_ep.setWeightType(ep.weightType);
-
-	_ep.setAuthType((TC_Endpoint::AUTH_TYPE)ep.authType);
+	_ep = toEndpointF(ep);
 
 	_cmpDesc = createCompareDesc();
 	_desc = createDesc();
-
 }
-
 
 string EndpointInfo::createCompareDesc()
 {
@@ -65,6 +54,22 @@ string EndpointInfo::createCompareDesc()
 	return ss.str();
 }
 
+TC_Endpoint EndpointInfo::toEndpointF(const EndpointF &ep)
+{
+    TC_Endpoint tEp;
+    tEp.setHost(ep.host);
+    tEp.setPort(ep.port);
+    tEp.setTimeout(ep.timeout);
+    tEp.setType((TC_Endpoint::EType)ep.istcp);
+    tEp.setGrid(ep.grid);
+    tEp.setQos(ep.qos);
+    tEp.setWeight(ep.weight);
+    tEp.setWeightType(ep.weightType);
+
+    tEp.setAuthType((TC_Endpoint::AUTH_TYPE)ep.authType);
+
+    return tEp;
+}
 
 EndpointF EndpointInfo::toEndpointF(const TC_Endpoint &tep, const string &nodeName)
 {
@@ -175,6 +180,64 @@ vector<EndpointF> EndpointInfo::toEndpointFs(const TC_Endpoint &ep, const string
     }
 }
 
+string EndpointInfo::vectorEndpointFToStr(const vector<EndpointF> &eps, bool complete)
+{
+    ostringstream os;
+    if(!complete)
+    {
+        for (size_t i = 0; i < eps.size(); i++)
+        {
+            os << eps[i].host << ":" << eps[i].port;
+            if (i != eps.size() - 1)
+            {
+                os << ",";
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < eps.size(); i++)
+        {
+            os << toEndpointF(eps[i]).toString();
+            if (i != eps.size() - 1)
+            {
+                os << ":";
+            }
+        }
+    }
+    return os.str();
+}
+
+vector<EndpointF> EndpointInfo::strToVectorEndpointF(const string &str, const string &nodeName)
+{
+    vector<string> eps = TC_Endpoint::sepEndpoint(str);
+
+    //遍历转换格式
+    vector<EndpointF> epsF;
+    for (size_t i = 0; i < eps.size(); i++)
+    {
+        TC_Endpoint ep(eps[i]);
+
+        epsF.push_back(EndpointInfo::toEndpointF(ep, nodeName));
+    }
+    return epsF;
+}
+
+map<string, vector<EndpointF>> EndpointInfo::toNodeEndpointF(const vector<tars::EndpointF> &eps)
+{
+    map<string, vector<EndpointF>> data;
+    for(auto ep : eps)
+    {
+        if(ep.nodeName.empty())
+        {
+            //兼容旧框架, 没有赋值nodeName
+            ep.nodeName = ep.host;
+        }
+
+        data[ep.nodeName].push_back(ep);
+    }
+    return data;
+}
 
 ///////////////////////////////////////////////////////////
 }
