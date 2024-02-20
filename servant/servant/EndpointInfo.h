@@ -60,6 +60,13 @@ public:
      * @param ep
      * @return
      */
+    static TC_Endpoint toEndpointF(const EndpointF &ep);
+
+    /**
+     * 转换
+     * @param ep
+     * @return
+     */
     static EndpointF toEndpointF(const TC_Endpoint &ep, const string &nodeName);
 
     /**
@@ -72,6 +79,28 @@ public:
      * @return
      */
     static vector<EndpointF> toEndpointFs(const TC_Endpoint &ep, const string &nodeName);
+
+    /**
+     * 转换成字符串, 方便输出
+     * @param eps
+     * @param complete: 是否完整转换
+     * @return complete: false->ip1:port,ip2:port2,...  complete: true -> tcp -h .. -p ..:tcp -h .. -p ..
+     */
+    static string vectorEndpointFToStr(const vector<EndpointF> &eps, bool complete = true);
+
+    /**
+     * 字符串转换成vector<EndpointF>
+     * @param str, tcp -h .. -p ..:tcp -h .. -p ..
+     * @param nodeName
+     * @return
+     */
+    static vector<EndpointF> strToVectorEndpointF(const string &str, const string &nodeName);
+
+    /**
+     * 按照节点名称归并
+     * @return <节点名称, [地址]>
+     */
+    static map<string, vector<EndpointF>> toNodeEndpointF(const vector<tars::EndpointF> &eps);
 
     /**
      * get endpoint
