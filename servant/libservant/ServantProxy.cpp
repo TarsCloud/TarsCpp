@@ -428,6 +428,41 @@ string ServantProxy::STATUS_SETNAME_VALUE = "STATUS_SETNAME_VALUE";
 
 string ServantProxy::STATUS_TRACE_KEY     = "STATUS_TRACE_KEY";
 
+ServantProxy::ServantProxy()
+{
+}
+
+void ServantProxy::setComm(Communicator* pCommunicator, const string& name, const string& setName)
+{
+    _communicator = pCommunicator;
+    _syncTimeout = DEFAULT_SYNCTIMEOUT;
+    _asyncTimeout = DEFAULT_ASYNCTIMEOUT;
+    _id = 0;
+    _masterFlag = false;
+    _minTimeout =100;
+    
+    _proxyProtocol.requestFunc  = ProxyProtocol::tarsRequest;
+    _proxyProtocol.responseFunc = ProxyProtocol::tarsResponse;
+    
+    //在每个公有网络线程对象中创建ObjectProxy
+    for (size_t i = 0; i < _communicator->getCommunicatorEpollNum(); ++i)
+    {
+        _communicator->getCommunicatorEpoll(i)->createObjectProxy(this, name, setName);
+    }
+    
+    //用第一个ObjectProxy返回数据
+    _objectProxy = this->getObjectProxy(0);
+    
+    _endpointInfo.reset(new EndpointManagerThread(_communicator, _objectProxy->name()));
+    
+    _minTimeout = pCommunicator->getMinTimeout();
+    if (_minTimeout < 1)
+    {
+        _minTimeout = 1;
+    }
+    
+}
+
 ////////////////////////////////////
 ServantProxy::ServantProxy(Communicator *pCommunicator, const string &name, const string &setName)
     : _communicator(pCommunicator), _syncTimeout(DEFAULT_SYNCTIMEOUT), _asyncTimeout(DEFAULT_ASYNCTIMEOUT), _id(0), _masterFlag(false), _minTimeout(100)
@@ -1530,7 +1565,7 @@ void ServantProxy::http_call_async(const string &funcName, const shared_ptr<TC_H
 
 	*(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data()) = request;
 
-	ServantProxyCallbackPtr callback = new HttpServantProxyCallback(cb);
+	ServantProxyCallbackPtr callback (new HttpServantProxyCallback(cb));
 
 	msg->callback = callback;
 

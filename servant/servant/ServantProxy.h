@@ -842,12 +842,20 @@ public:
         PROXY_HTTP,  //支持http代理
     };
 
+    ServantProxy() ;
+	
     /**
      * 构造函数
      * @param op
      */
     ServantProxy(Communicator * pCommunicator, const string& name,const string& setName);
 
+    /**
+     * 主动设置通信器参数
+     * @param op
+     */
+    void setComm(Communicator* pCommunicator, const string& name, const string& setName);
+	
     /**
      * 析构函数
      */

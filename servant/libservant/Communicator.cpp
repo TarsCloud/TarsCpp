@@ -751,6 +751,12 @@ ServantProxy* Communicator::getServantProxy(const string& objectName, const stri
     return _servantProxyFactory->getServantProxy(objectName, setName, rootServant);
 }
 
+ServantProxy * Communicator::setServantProxy(ServantProxy * proxy,const string& objectName,const string& setName, bool rootServant)
+{
+    Communicator::initialize();
+    proxy->setComm(this , objectName,setName);
+    return _servantProxyFactory->setServantProxy(proxy,objectName, setName, rootServant);
+}
 StatReport* Communicator::getStatReport()
 {
     Communicator::initialize();

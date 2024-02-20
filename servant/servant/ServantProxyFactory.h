@@ -48,6 +48,8 @@ public:
      * @return ServantPrx
      */
     ServantPrx::element_type* getServantProxy(const string& name,const string& setName, bool rootServant);
+    
+    ServantProxy* setServantProxy(ServantProxy * proxy, const string& name,const string& setName, bool rootServant);
 
 private:
     /**

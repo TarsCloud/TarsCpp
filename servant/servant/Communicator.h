@@ -216,7 +216,9 @@ public:
         ServantProxy *pServantProxy = getServantProxy(objectName, setName, true);
         proxy = (typename T::element_type *)(pServantProxy);
     }
-
+    
+    ServantProxy * setServantProxy( ServantProxy * proxy, const string& objectName,const string& setName, bool rootServant);
+    
     /**
      * 获取公有网络线程个数
      * @return
