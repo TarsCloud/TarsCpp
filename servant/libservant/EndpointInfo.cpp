@@ -86,6 +86,95 @@ EndpointF EndpointInfo::toEndpointF(const TC_Endpoint &tep, const string &nodeNa
     return ep;
 }
 
+vector<EndpointF> EndpointInfo::toEndpointFs(const TC_Endpoint &ep, const string &nodeName)
+{
+    //如果ep的host是0.0.0.0, 则使用本地ip地址
+    string host = ep.getHost();
+    if (host == "0.0.0.0")
+    {
+        vector<EndpointF> v;
+        vector<string> ips = TC_Socket::getLocalHosts(AF_INET);
+
+        for(const auto &ip : ips)
+        {
+            if(ip == "127.0.0.1")
+            {
+                continue;
+            }
+
+            TC_Endpoint theEp = ep;
+            theEp.setHost(ip);
+
+            v.push_back(EndpointInfo::toEndpointF(theEp, nodeName));
+        }
+
+        return v;
+    }
+    else if (host == "::1")
+    {
+        vector<EndpointF> v;
+        vector<string> ips = TC_Socket::getLocalHosts(AF_INET6);
+
+        for(const auto &ip : ips)
+        {
+            if(ip == "::1")
+            {
+                continue;
+            }
+
+            TC_Endpoint theEp = ep;
+            theEp.setHost(ip);
+
+            v.push_back(EndpointInfo::toEndpointF(theEp, nodeName));
+        }
+
+        return v;
+    }
+    else if (host == "*")
+    {
+        vector<EndpointF> v;
+        {
+            vector<string> ips = TC_Socket::getLocalHosts(AF_INET);
+
+            for (const auto &ip: ips)
+            {
+                if (ip == "127.0.0.1")
+                {
+                    continue;
+                }
+
+                TC_Endpoint theEp = ep;
+                theEp.setHost(ip);
+
+                v.push_back(EndpointInfo::toEndpointF(theEp, nodeName));
+            }
+        }
+
+        {
+            vector<string> ips = TC_Socket::getLocalHosts(AF_INET6);
+
+            for (const auto &ip: ips)
+            {
+                if (ip == "::1")
+                {
+                    continue;
+                }
+
+                TC_Endpoint theEp = ep;
+                theEp.setHost(ip);
+
+                v.push_back(EndpointInfo::toEndpointF(theEp, nodeName));
+            }
+        }
+
+        return v;
+    }
+    else
+    {
+        return {EndpointInfo::toEndpointF(ep, nodeName)};
+    }
+}
+
 
 ///////////////////////////////////////////////////////////
 }

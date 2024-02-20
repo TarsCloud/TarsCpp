@@ -895,147 +895,78 @@ clean:
     THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createPipe] error");
 }
 
-#if TARGET_PLATFORM_LINUX
-vector<string> TC_Socket::getLocalHosts(int domain)
-{
-    vector<string> result;
-    TC_Socket ts;
-    ts.createSocket(SOCK_STREAM, domain);
-
-    int cmd = SIOCGIFCONF;
-
-    struct ifconf ifc;
-
-    int numaddrs = 10;
-
-    int old_ifc_len = 0;
-
-    while(true)
-    {
-        int bufsize = numaddrs * static_cast<int>(sizeof(struct ifreq));
-        ifc.ifc_len = bufsize;
-        ifc.ifc_buf = (char*)malloc(bufsize);
-        int rs = ioctl(ts.getfd(), cmd, &ifc);
-
-        if(rs == -1)
-        {
-            free(ifc.ifc_buf);
-            throw TC_Socket_Exception("[TC_Socket::getLocalHosts] ioctl error", errno);
-        }
-        else if(ifc.ifc_len == old_ifc_len)
-        {
-            break;
-        }
-        else
-        {
-            old_ifc_len = ifc.ifc_len;
-        }
-
-        numaddrs += 10;
-        free(ifc.ifc_buf);
-    }
-
-    numaddrs = ifc.ifc_len / static_cast<int>(sizeof(struct ifreq));
-    struct ifreq* ifr = ifc.ifc_req;
-    for(int i = 0; i < numaddrs; ++i)
-    {
-        if(ifr[i].ifr_addr.sa_family == AF_INET)
-        {
-            struct sockaddr_in* addr = reinterpret_cast<struct sockaddr_in*>(&ifr[i].ifr_addr);
-            if(addr->sin_addr.s_addr != 0)
-            {
-                char sAddr[INET_ADDRSTRLEN] = "\0";
-                inet_ntop(AF_INET, &(*addr).sin_addr, sAddr, sizeof(sAddr));
-                result.push_back(sAddr);
-            }
-        }
-        else if (ifr[i].ifr_addr.sa_family == AF_INET6)
-        {
-            struct sockaddr_in6* addr = reinterpret_cast<struct sockaddr_in6*>(&ifr[i].ifr_addr);
-            if(!memcmp(&addr->sin6_addr, &in6addr_any, sizeof(addr->sin6_addr)))
-            {
-                char sAddr[INET6_ADDRSTRLEN] = "\0";
-                inet_ntop(AF_INET6, &(*addr).sin6_addr, sAddr, sizeof(sAddr));
-                result.push_back(sAddr);
-            }
-        }
-    }
-
-    free(ifc.ifc_buf);
-
-    return result;
-}
-#elif TARGET_PLATFORM_IOS
+//#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 vector<string> TC_Socket::getLocalHosts(int domain)
 {
     vector<string> hosts;
     char local[255] = { 0 };
     gethostname(local, sizeof(local));
-    hostent* ph = gethostbyname(local);
-    if (ph == NULL)
-    {
+
+    struct addrinfo hints, *res, *p;
+    int status;
+    char ipstr[INET6_ADDRSTRLEN];
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = domain; // AF_UNSPEC means any: AF_INET, AF_INET6, etc.
+    hints.ai_socktype = SOCK_STREAM;
+
+    if ((status = getaddrinfo(local, NULL, &hints, &res)) != 0) {
         return hosts;
     }
 
-    in_addr addr;
-    if (ph->h_addrtype == AF_INET) 
-    {
-        int i = 0;
-        while (ph->h_addr_list[i] != 0) 
-        {
-            addr.s_addr = *(u_long*)ph->h_addr_list[i++];
-            hosts.emplace_back(inet_ntoa(addr));
+    for(p = res;p != NULL; p = p->ai_next) {
+        void *addr;
+        if (p->ai_family == AF_INET) { // IPv4
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+            addr = &(ipv4->sin_addr);
+        } else if (p->ai_family == AF_INET6) { // IPv6
+            struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+            addr = &(ipv6->sin6_addr);
         }
+
+        // convert IP to a string and add it to the list
+        inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+        hosts.emplace_back(ipstr);
     }
-    else 
-    {
-        // unsupport AF_INET6  ...
-        return hosts;
-    }
+
+    freeaddrinfo(res); // free the linked list
+
     return hosts;
 }
-#endif
-
-#if TARGET_PLATFORM_WINDOWS
-vector<string> TC_Socket::getLocalHosts(int domain)
-{
-    vector<string> hosts;
-    WORD wVersionRequested = MAKEWORD(2, 2);
-
-    WSADATA wsaData;
-    if (WSAStartup(wVersionRequested, &wsaData) != 0)
-    {
-        return hosts;
-    }
-
-    char local[255] = { 0 };
-    gethostname(local, sizeof(local));
-    hostent* ph = gethostbyname(local);
-    if (ph == NULL)
-    {
-        return hosts;
-    }
-
-    in_addr addr;
-    if (ph->h_addrtype == AF_INET) 
-    {
-        int i = 0;
-        while (ph->h_addr_list[i] != 0) 
-        {
-            addr.s_addr = *(u_long*)ph->h_addr_list[i++];
-            hosts.emplace_back(inet_ntoa(addr));
-        }
-    }
-    else 
-    {
-        // unsupport AF_INET6  ...
-        return hosts;
-    }
-    WSACleanup();
-    return hosts;
-}
-
-#endif
+//#endif
+//
+//#if TARGET_PLATFORM_WINDOWS
+//vector<string> TC_Socket::getLocalHosts(int domain)
+//{
+//    vector<string> hosts;
+//
+//    char local[255] = { 0 };
+//    gethostname(local, sizeof(local));
+//    hostent* ph = gethostbyname(local);
+//    if (ph == NULL)
+//    {
+//        return hosts;
+//    }
+//
+//    in_addr addr;
+//    if (ph->h_addrtype == AF_INET)
+//    {
+//        int i = 0;
+//        while (ph->h_addr_list[i] != 0)
+//        {
+//            addr.s_addr = *(u_long*)ph->h_addr_list[i++];
+//            hosts.emplace_back(inet_ntoa(addr));
+//        }
+//    }
+//    else
+//    {
+//        // unsupport AF_INET6  ...
+//        return hosts;
+//    }
+//    return hosts;
+//}
+//
+//#endif
 
 bool TC_Socket::isPending()
 {
