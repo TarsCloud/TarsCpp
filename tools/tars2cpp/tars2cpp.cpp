@@ -2232,7 +2232,10 @@ string Tars2Cpp::generateHAsync(const OperationPtr& pPtr, const string& cn) cons
 	    s << TAB << "this->tars_setMasterFlag(true);" << endl;
     }
     s << TAB << "tars::Promise< " << cn <<"PrxCallbackPromise::Promise" << sStruct << "Ptr > promise;" << endl;
-    s << TAB << cn << "PrxCallbackPromisePtr callback = new " << cn << "PrxCallbackPromise(promise);" << endl;
+
+//    s << TAB << cn << "PrxCallbackPromisePtr callback = new " << cn << "PrxCallbackPromise(promise);" << endl;
+    s << TAB << cn << "PrxCallbackPromisePtr callback (new " << cn << "PrxCallbackPromise(promise));" << endl;
+
     s << endl;
     s << TAB << _namespace + "::TarsOutputStream<" + _namespace + "::BufferWriterVector> _os;" << endl;
     for(size_t i = 0; i < vParamDecl.size(); i++)
@@ -2782,7 +2785,12 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
     DEL_TAB;
     s << TAB << "};" << endl;
     s << TAB << endl;
+#ifdef BUILD_STD_SHARED_PTR
+    s << TAB << "typedef std::shared_ptr< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << " > Promise" << sStruct << "Ptr;" << endl;
+#else
     s << TAB << "typedef tars::TC_AutoPtr< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << " > Promise" << sStruct << "Ptr;" << endl;
+#endif
+
     s << endl;
     s << TAB << pInter->getId() << "PrxCallbackPromise(const tars::Promise< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << "Ptr > &promise)" << endl;
     s << TAB << ": _promise_" << sStruct << "(promise)" << endl;
@@ -2827,7 +2835,9 @@ string Tars2Cpp::generateDispatchPromiseAsync(const OperationPtr &pPtr, const st
     s << TAB << "_is.setBuffer(_msg_->response->sBuffer);" << endl;
     s << endl;
     string sStruct = pPtr->getId();
-    s << TAB << cn << "PrxCallbackPromise::Promise" << sStruct << "Ptr ptr = new "<< cn << "PrxCallbackPromise::Promise" << sStruct << "();" << endl;
+
+//    s << TAB << cn << "PrxCallbackPromise::Promise" << sStruct << "Ptr ptr = new "<< cn << "PrxCallbackPromise::Promise" << sStruct << "();" << endl;
+    s << TAB << cn << "PrxCallbackPromise::Promise" << sStruct << "Ptr ptr (new "<< cn << "PrxCallbackPromise::Promise" << sStruct << "());" << endl;
     s << endl;
     if(pPtr->getReturnPtr()->getTypePtr() || vParamDecl.size() >0)
     {
@@ -2986,7 +2996,12 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     DEL_TAB;
     s << TAB << "};" << endl;
 
+#ifdef BUILD_STD_SHARED_PTR
+    s << TAB << "typedef std::shared_ptr<" << pPtr->getId() << "PrxCallback> " << pPtr->getId() << "PrxCallbackPtr;" << endl;
+#else
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallback> " << pPtr->getId() << "PrxCallbackPtr;" << endl;
+#endif
+
     s << endl;
 	//生成promise异步回调Proxy
     s << TAB << "//callback of promise async proxy for client" << endl;
@@ -3044,7 +3059,12 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     s << endl;
     DEL_TAB;
     s << TAB << "};" << endl;
+
+#ifdef BUILD_STD_SHARED_PTR
+    s << TAB << "typedef std::shared_ptr<" << pPtr->getId() << "PrxCallbackPromise> " << pPtr->getId() << "PrxCallbackPromisePtr;" << endl;
+#else
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallbackPromise> " << pPtr->getId() << "PrxCallbackPromisePtr;" << endl;
+#endif
     s << endl;
     //生成协程异步回调类，用于并发请求
     s << TAB << "/* callback of coroutine async proxy for client */" << endl;
@@ -3131,8 +3151,11 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     DEL_TAB;
 
     s << TAB << "};" << endl;
-
+#ifdef BUILD_STD_SHARED_PTR
+    s << TAB << "typedef std::shared_ptr<" << pPtr->getId() << "CoroPrxCallback> " << pPtr->getId() << "CoroPrxCallbackPtr;" << endl;
+#else
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "CoroPrxCallback> " << pPtr->getId() << "CoroPrxCallbackPtr;" << endl;
+#endif
     s << endl;
 
     //生成客户端代理

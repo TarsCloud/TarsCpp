@@ -51,7 +51,7 @@ enum  EndpointWeightType
 /*
  * 路由请求与回调的实现类
  */
-class QueryEpBase : public QueryFPrxCallback
+class QueryEpBase : public QueryFPrxCallback ,public enable_shared_from_this<QueryEpBase>
 {
 public:
     /*

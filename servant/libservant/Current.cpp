@@ -376,6 +376,51 @@ void Current::sendResponse(int iRet, ResponsePacket &response,  const map<string
 
 }
 
+
+void Current::sendPushResponse(int iRet, const string &funcName , vector<char> &buff )
+{
+    ResponsePacket response;
+    buff.swap(response.sBuffer);
+    
+    _ret = iRet;
+    
+    shared_ptr<TC_EpollServer::SendContext> send = _data->createSendContext();
+    
+    Int32 iHeaderLen = 0;
+    
+    // JceOutputStream<BufferWriterVector> os;
+//    JceOutputStream<BufferWriter> os;
+    TarsOutputStream<BufferWriter> os;
+    
+    //先预留4个字节长度
+    os.writeBuf((const char *)&iHeaderLen, sizeof(iHeaderLen));
+    
+    response.iRequestId     = 0;
+    response.cPacketType    = TARSNORMAL;
+    response.iMessageType   = 0;
+    response.iVersion		= TARSVERSION;
+    response.context        = _responseContext;
+//    response.sServantName   = _request.sServantName;
+//    response.sFuncName      = funcName;
+    response.iRet           = iRet;
+    response.sResultDesc    = "";
+    
+    TLOGTARS("[TAF]Current::sendPushResponse :"<< response.iMessageType << "|"<< response.iRequestId << endl);
+    
+    response.writeTo(os);
+    
+    assert(os.getLength() >= 4);
+    
+    iHeaderLen = htonl((int)(os.getLength()));
+    
+    memcpy((void*)os.getBuffer(), (const char *)&iHeaderLen, sizeof(iHeaderLen));
+    
+    send->setBuffer(ProxyProtocol::toBuffer(os));
+    
+    _servantHandle->sendResponse(send);
+}
+
+
 void Current::sendPushResponse(int iRet, const string &funcName, TarsOutputStream<BufferWriterVector>& oss, const map<string, string> &context)
 {
 	ResponsePacket response;

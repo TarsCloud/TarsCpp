@@ -37,3 +37,6 @@ endif(UNIX)
 install(TARGETS tarsparse
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
+
+FILE(GLOB HEADERS "*.h")
+install(FILES  ${HEADERS} DESTINATION include/tarsparse)

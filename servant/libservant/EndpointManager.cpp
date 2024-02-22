@@ -429,17 +429,17 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-                            _queryFPrx->async_findObjectById4Any(this,_objName, _communicator->getClientConfig().Context);
+                            _queryFPrx->async_findObjectById4Any(shared_from_this(),_objName, _communicator->getClientConfig().Context);
                             break;
                         }
                     case E_STATION:
                         {
-                            _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName, _communicator->getClientConfig().Context);
+                            _queryFPrx->async_findObjectByIdInSameStation(shared_from_this(),_objName,sName, _communicator->getClientConfig().Context);
                             break;
                         }
                     case E_SET:
                         {
-                            _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName, _communicator->getClientConfig().Context);
+                            _queryFPrx->async_findObjectByIdInSameSet(shared_from_this(),_objName,sName, _communicator->getClientConfig().Context);
                             break;
                         }
                     case E_DEFAULT:
@@ -449,11 +449,11 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             {
                                 //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?_communicator->getClientConfig().SetDivision:_invokeSetId;
-                                _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId, _communicator->getClientConfig().Context);
+                                _queryFPrx->async_findObjectByIdInSameSet(shared_from_this(),_objName,setId, _communicator->getClientConfig().Context);
                             }
                             else
                             {
-                                _queryFPrx->async_findObjectByIdInSameGroup(this,_objName, _communicator->getClientConfig().Context);
+                                _queryFPrx->async_findObjectByIdInSameGroup(shared_from_this(),_objName, _communicator->getClientConfig().Context);
                             }
                             break;
                         }

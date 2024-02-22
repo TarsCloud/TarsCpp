@@ -64,6 +64,13 @@ struct ServantCreationWithParams : public ServantHelperCreation
 
 //////////////////////////////////////////////////////////////////////////////
 //
+using function_servant_create = std::function< Servant * (void) >;
+
+struct ServantCreateHelper
+{
+    function_servant_create creator;
+    Application *application = nullptr;
+};
 /**
  * Servant管理
  */
@@ -189,7 +196,9 @@ public:
      */
     bool isDyeing() const {return _isDyeing;}
 
-
+    void setServant(Servant * servant , const string &servantObj);
+    
+    void setCreateFunction(  const string &servantObj , Application *application ,const function_servant_create & funcPtr);
 protected:
 
     /**
@@ -207,6 +216,9 @@ protected:
      */
     map<string, string>                     _servant_adapter;
 
+    map<string,ServantPtr > _servant_ptr;
+    
+    map<string,ServantCreateHelper > _servant_creator_ptr;
 protected:
 
     /**
