@@ -265,6 +265,12 @@ public:
     CommunicatorPtr& getApplicationCommunicator();
 
     /**
+     * application自己的获取远程系统配置
+     * @return
+     */
+    shared_ptr<RemoteConfig> getRemoteConfig() { return _remoteConfig; }
+
+    /**
      * 获取服务Server对象
      *
      * @return TC_EpollServerPtr&
