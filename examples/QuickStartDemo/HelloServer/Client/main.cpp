@@ -172,9 +172,10 @@ void syncTupCall(int c)
 
             rsp.decode(package.sBuffer.data(), package.sBuffer.size());
 
-            int ret = rsp.get<int>("");            
+            int ret = rsp.get<int>("");
             string sRsp = rsp.get<string>("sRsp");
 
+            cout << "ret:" << ret << ", rsp:" << sRsp << endl;
 			// assert(ret == 0);
 			// assert(sRsp == buffer);
 		}
