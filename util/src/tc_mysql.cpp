@@ -114,6 +114,9 @@ void TC_Mysql::connect()
         }
     }
 
+    unsigned int i = 1;
+
+    mysql_options(_pstMql, MYSQL_OPT_SSL_MODE, &i);
 
     if (mysql_real_connect(_pstMql, _dbConf._host.c_str(), _dbConf._user.c_str(), _dbConf._password.c_str(), _dbConf._database.c_str(), _dbConf._port, NULL, _dbConf._flag) == NULL) 
     {
