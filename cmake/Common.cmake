@@ -11,10 +11,10 @@ IF (CMAKE_BUILD_TYPE STREQUAL "")
 ENDIF()
 
 
-# 设置一个选项，用于控制是否定义 BUILD_STD_SHARED_PTR 宏
-option(USE_STD_SHARED_PTR "Use std::shared_ptr instead of tars::AutoPtr" OFF)
-if(USE_STD_SHARED_PTR)
-    add_definitions(-DBUILD_STD_SHARED_PTR)
+# 设置一个选项，用于控制是否定义 TARS_STD_SHARED_PTR 宏
+option(TARS_STD_SHARED_PTR "Use std::shared_ptr instead of tars::AutoPtr" OFF)
+if(TARS_STD_SHARED_PTR)
+    add_definitions(-DTARS_STD_SHARED_PTR)
 endif()
 
 
@@ -126,6 +126,6 @@ message("BIN:                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message("TARS2CPP:                  ${TARS2CPP}") 
 #message("TARS_OPENTRACKING:         ${TARS_OPENTRACKING}")
 message("ONLY_LIB:                  ${ONLY_LIB}" )
-message("USE_STD_SHARED_PTR:        ${USE_STD_SHARED_PTR}" )
+message("TARS_STD_SHARED_PTR:       ${TARS_STD_SHARED_PTR}" )
 #-------------------------------------------------------------
 

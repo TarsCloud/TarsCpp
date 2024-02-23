@@ -429,7 +429,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                 {
                     case E_ALL:
                         {
-#if USE_STD_SHARED_PTR
+#if TARS_STD_SHARED_PTR
                             _queryFPrx->async_findObjectById4Any(shared_from_this(),_objName, _communicator->getClientConfig().Context);
 #else
                             _queryFPrx->async_findObjectById4Any(this,_objName, _communicator->getClientConfig().Context);
@@ -438,7 +438,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                         }
                     case E_STATION:
                         {
-#if USE_STD_SHARED_PTR
+#if TARS_STD_SHARED_PTR
                             _queryFPrx->async_findObjectByIdInSameStation(shared_from_this(),_objName,sName, _communicator->getClientConfig().Context);
 #else
                             _queryFPrx->async_findObjectByIdInSameStation(this,_objName,sName, _communicator->getClientConfig().Context);
@@ -447,7 +447,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                         }
                     case E_SET:
                         {
-#if USE_STD_SHARED_PTR
+#if TARS_STD_SHARED_PTR
                             _queryFPrx->async_findObjectByIdInSameSet(shared_from_this(),_objName,sName, _communicator->getClientConfig().Context);
 #else
                         _queryFPrx->async_findObjectByIdInSameSet(this,_objName,sName, _communicator->getClientConfig().Context);
@@ -461,7 +461,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             {
                                 //指定set调用时，指定set的优先级最高
                                 string setId = _invokeSetId.empty()?_communicator->getClientConfig().SetDivision:_invokeSetId;
-#if USE_STD_SHARED_PTR
+#if TARS_STD_SHARED_PTR
                                 _queryFPrx->async_findObjectByIdInSameSet(shared_from_this(),_objName,setId, _communicator->getClientConfig().Context);
 #else
                                 _queryFPrx->async_findObjectByIdInSameSet(this,_objName,setId, _communicator->getClientConfig().Context);
@@ -469,7 +469,7 @@ void QueryEpBase::refreshReg(GetEndpointType type, const string & sName)
                             }
                             else
                             {
-#if USE_STD_SHARED_PTR
+#if TARS_STD_SHARED_PTR
                                 _queryFPrx->async_findObjectByIdInSameGroup(shared_from_this(),_objName, _communicator->getClientConfig().Context);
 #else
                                 _queryFPrx->async_findObjectByIdInSameGroup(this,_objName, _communicator->getClientConfig().Context);
