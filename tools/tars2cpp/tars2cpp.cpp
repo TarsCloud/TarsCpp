@@ -2785,7 +2785,7 @@ string Tars2Cpp::generateHPromiseAsync(const InterfacePtr &pInter, const Operati
     DEL_TAB;
     s << TAB << "};" << endl;
     s << TAB << endl;
-#ifdef BUILD_STD_SHARED_PTR
+#ifdef TARS_STD_SHARED_PTR
     s << TAB << "typedef std::shared_ptr< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << " > Promise" << sStruct << "Ptr;" << endl;
 #else
     s << TAB << "typedef tars::TC_AutoPtr< " << pInter->getId() << "PrxCallbackPromise::Promise" << sStruct << " > Promise" << sStruct << "Ptr;" << endl;
@@ -2996,7 +2996,7 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     DEL_TAB;
     s << TAB << "};" << endl;
 
-#ifdef BUILD_STD_SHARED_PTR
+#ifdef TARS_STD_SHARED_PTR
     s << TAB << "typedef std::shared_ptr<" << pPtr->getId() << "PrxCallback> " << pPtr->getId() << "PrxCallbackPtr;" << endl;
 #else
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallback> " << pPtr->getId() << "PrxCallbackPtr;" << endl;
@@ -3060,7 +3060,7 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     DEL_TAB;
     s << TAB << "};" << endl;
 
-#ifdef BUILD_STD_SHARED_PTR
+#ifdef TARS_STD_SHARED_PTR
     s << TAB << "typedef std::shared_ptr<" << pPtr->getId() << "PrxCallbackPromise> " << pPtr->getId() << "PrxCallbackPromisePtr;" << endl;
 #else
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "PrxCallbackPromise> " << pPtr->getId() << "PrxCallbackPromisePtr;" << endl;
@@ -3151,7 +3151,7 @@ string Tars2Cpp::generateH(const InterfacePtr &pPtr, const NamespacePtr &nPtr) c
     DEL_TAB;
 
     s << TAB << "};" << endl;
-#ifdef BUILD_STD_SHARED_PTR
+#ifdef TARS_STD_SHARED_PTR
     s << TAB << "typedef std::shared_ptr<" << pPtr->getId() << "CoroPrxCallback> " << pPtr->getId() << "CoroPrxCallbackPtr;" << endl;
 #else
     s << TAB << "typedef tars::TC_AutoPtr<" << pPtr->getId() << "CoroPrxCallback> " << pPtr->getId() << "CoroPrxCallbackPtr;" << endl;

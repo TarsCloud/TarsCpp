@@ -47,7 +47,7 @@ ServantPtr ServantHelperManager::create(const string &sAdapter)
     //根据adapter查找servant名称
     string s = _adapter_servant[sAdapter];
 
-#ifdef BUILD_STD_SHARED_PTR
+#ifdef TARS_STD_SHARED_PTR
     if(_servant_ptr.find(s) != _servant_ptr.end())
     {
         ServantPtr ptr = _servant_ptr[s];

@@ -67,7 +67,7 @@ typedef TC_AutoPtr<Communicator> CommunicatorPtr;
 typedef TC_AutoPtr<ServantProxy> ServantPrx;
 typedef TC_AutoPtr<StatFProxy> StatFPrx;
 
-#ifdef BUILD_STD_SHARED_PTR
+#ifdef TARS_STD_SHARED_PTR
 
 typedef std::shared_ptr<ServantProxyCallback> ServantProxyCallbackPtr;
 typedef std::shared_ptr<ObjectProxy> ObjectPrx;
