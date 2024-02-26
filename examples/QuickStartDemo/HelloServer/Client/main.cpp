@@ -114,7 +114,7 @@ void asyncCall(int c)
 	//发起远程调用
 	for (int i = 0; i < c; ++i)
 	{
-		HelloPrxCallbackPtr p = new HelloCallback(t, i, c);
+		HelloPrxCallbackPtr p(new HelloCallback(t, i, c));
 
 		try
 		{
@@ -263,7 +263,7 @@ void asyncTupCall(int c)
 			vector<char> buff;
 			req.encode(buff);
 
-		    ServantProxyCallbackPtr p = new TupCallback(t, i, c);
+		    ServantProxyCallbackPtr p(new TupCallback(t, i, c));
 
 			param.pPrx->rpc_call_async(req.getRequestId(), "testHello", buff.data(), buff.size(), p);
 		}

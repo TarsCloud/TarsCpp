@@ -68,7 +68,7 @@ tars::Int32 ProxyImp::testProxy(const std::string& sIn, std::string &sOut, tars:
     {
         current->setResponse(false);
 
-        TestApp::HelloPrxCallbackPtr cb = new HelloCallback(current);
+        TestApp::HelloPrxCallbackPtr cb(new HelloCallback(current));
 
         _prx->tars_set_timeout(3000)->async_testHello(cb,sIn);
     }

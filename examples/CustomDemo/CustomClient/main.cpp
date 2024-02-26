@@ -158,7 +158,7 @@ void asyncCall(int c)
 	{
 		try
 		{
-			CustomCallBackPtr cb = new CustomCallBack();
+			ServantProxyCallbackPtr cb(new CustomCallBack());
 			param.servantPrx->rpc_call_async(param.servantPrx->tars_gen_requestid(), "doCustomFunc", buffer.c_str(), buffer.length(), cb);
 		}
 		catch(exception& e)
