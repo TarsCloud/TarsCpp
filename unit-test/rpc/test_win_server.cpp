@@ -109,8 +109,8 @@ TEST_F(HelloTest, winServerAsync)
 		//发起远程调用
 		for (int j = 0; j < _count; ++j)
 		{
-			HelloPrxCallbackPtr p = new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer,
-					callback_count);
+			HelloPrxCallbackPtr p(new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer,
+					callback_count));
 
 			prx->async_testHello(p, j, _buffer);
 		}

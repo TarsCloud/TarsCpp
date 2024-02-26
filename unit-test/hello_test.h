@@ -58,7 +58,7 @@ public:
 
 };
 
-typedef tars::TC_AutoPtr<PushCallBack> PushCallBackPtr;
+// typedef tars::TC_AutoPtr<PushCallBack> PushCallBackPtr;
 
 struct ClientHelloCallback : public HelloPrxCallback
 {
@@ -185,7 +185,7 @@ public:
 	std::atomic<int> &callback_count;
 };
 
-typedef tars::TC_AutoPtr<CustomCallBack> CustomCallBackPtr;
+// typedef tars::TC_AutoPtr<CustomCallBack> CustomCallBackPtr;
 
 class HelloTest : public testing::Test
 {

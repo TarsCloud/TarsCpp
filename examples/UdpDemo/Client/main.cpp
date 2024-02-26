@@ -111,7 +111,7 @@ void asyncCall(int c)
 		if(request_count - callback_count < 100) {
 			i++;
 			request_count++;
-			HelloPrxCallbackPtr p = new HelloCallback(t, i, c);
+			HelloPrxCallbackPtr p(new HelloCallback(t, i, c));
 			try {
 				param.pPrx->async_testHello(p, buffer);
 			}

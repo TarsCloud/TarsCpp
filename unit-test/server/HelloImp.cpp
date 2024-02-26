@@ -61,7 +61,7 @@ int HelloImp::testTrans(int index, const string &s, string &r, CurrentPtr curren
     {
         current->setResponse(false);
 
-        HelloPrxCallbackPtr p = new HelloCallback(current, index, s);
+        HelloPrxCallbackPtr p(new HelloCallback(current, index, s));
 
         _helloPrx->async_testHello(p, index, s);
     }

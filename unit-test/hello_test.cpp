@@ -278,7 +278,7 @@ void HelloTest::asyncCustom(Communicator *comm, const string &adapter)
 	//发起远程调用
 	for (int j = 0; j < _count; ++j)
 	{
-		CustomCallBackPtr cb = new CustomCallBack(callback_count);
+		ServantProxyCallbackPtr cb(new CustomCallBack(callback_count));
 		prx->rpc_call_async(prx->tars_gen_requestid(), "doCustomFunc", _buffer.c_str(), _buffer.length(), cb);
 	}
 
@@ -297,7 +297,8 @@ void HelloTest::testPush(Communicator *comm, const string &adapter)
 
 	prx->tars_set_protocol(prot);
 
-	PushCallBackPtr cbPush = new PushCallBack();
+	PushCallBack *c = new PushCallBack();
+	ServantProxyCallbackPtr cbPush(c);
 	prx->tars_set_push_callback(cbPush);
 
 	string buf("heartbeat");
@@ -305,20 +306,22 @@ void HelloTest::testPush(Communicator *comm, const string &adapter)
 	int count = 2;
 	while(count-- > 0)
 	{
-		cbPush->_onconnect = false;
-		cbPush->_onclose = false;
+		c->_onconnect = false;
+		c->_onclose = false;
 
-		PushCallBackPtr cb = new PushCallBack();
+		PushCallBack *cNew = new PushCallBack();
+
+		ServantProxyCallbackPtr cb(cNew);
 		prx->rpc_call_async(prx->tars_gen_requestid(), "printResult", buf.c_str(), buf.length(), cb);
 
 		wait(1000);
 
-		ASSERT_TRUE(cbPush->_onconnect);
-		ASSERT_TRUE(cb->_onprintresult);
+		ASSERT_TRUE(cNew->_onconnect);
+		ASSERT_TRUE(cNew->_onprintresult);
 
 		wait(10000);
 
-		ASSERT_TRUE(cbPush->_onclose);
+		ASSERT_TRUE(c->_onclose);
 	}
 }
 
@@ -333,24 +336,25 @@ void HelloTest::testReconnect(Communicator *comm, const string &adapter )
 	prx->tars_set_protocol(prot);
 	prx->tars_reconnect(1);
 
-	PushCallBackPtr cbPush = new PushCallBack();
+	PushCallBack *c = new PushCallBack();
+	ServantProxyCallbackPtr cbPush(c);
 	prx->tars_set_push_callback(cbPush);
 
 	string buf("heartbeat");
 
-	cbPush->_onconnect = false;
-	cbPush->_onclose = false;
+	c->_onconnect = false;
+	c->_onclose = false;
 
 	ResponsePacket rsp;
 	prx->rpc_call(prx->tars_gen_requestid(), "printResult", buf.c_str(), buf.length(), rsp);
 
 	TC_Common::msleep(10500);
 
-	ASSERT_TRUE(cbPush->_onclose);
+	ASSERT_TRUE(c->_onclose);
 
 	TC_Common::msleep(2000);
 
-	ASSERT_TRUE(cbPush->_onconnect);
+	ASSERT_TRUE(c->_onconnect);
 
 }
 
@@ -493,7 +497,7 @@ void HelloTest::checkASyncOnce(HelloPrx prx)
 
 	atomic<int> callback_count{0};
 
-	HelloPrxCallbackPtr p = new ClientHelloCallback(prx, callback_count);
+	HelloPrxCallbackPtr p(new ClientHelloCallback(prx, callback_count));
 
 	prx->async_testHello(p, 0, _buffer);
 
@@ -548,7 +552,7 @@ void HelloTest::checkASync(Communicator *comm, const string &adapter)
 	//发起远程调用
 	for (int j = 0; j < _count; ++j)
 	{
-		HelloPrxCallbackPtr p = new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer, callback_count);
+		HelloPrxCallbackPtr p(new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer, callback_count));
 
 		prx->async_testHello(p, j, _buffer);
 	}
@@ -647,7 +651,7 @@ void HelloTest::checkTransASyncASync(Communicator *comm)
 	//发起远程调用
 	for (int j = 0; j < _count; ++j)
 	{
-		HelloPrxCallbackPtr p = new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer, callback_count);
+		HelloPrxCallbackPtr p(new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer, callback_count));
 
 		prx->async_testTrans(p, j, _buffer);
 	}
@@ -689,7 +693,7 @@ void HelloTest::checkTransASyncSync(Communicator *comm)
 	//发起远程调用
 	for (int j = 0; j < _count; ++j)
 	{
-		HelloPrxCallbackPtr p = new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer, callback_count);
+		HelloPrxCallbackPtr p(new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer, callback_count));
 
 		prx->async_testSyncTrans(p, j, _buffer);
 	}
@@ -806,7 +810,7 @@ void HelloTest::checkASyncTimeout(Communicator *comm)
 
 	std::atomic<int> callback_count;
 	ClientHelloCallback *c = new ClientHelloCallback(TC_Common::now2us(), 0, _count, _buffer, callback_count);
-	HelloPrxCallbackPtr p = c;
+	HelloPrxCallbackPtr p(c);
 
 	prx->async_testTimeout(p, 1);
 

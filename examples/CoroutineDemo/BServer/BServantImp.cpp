@@ -66,7 +66,7 @@ public:
 	int		_iOut;
 	string	_sOut;
 };
-typedef tars::TC_AutoPtr<AServantCoroCallback> AServantCoroCallbackPtr;
+// typedef tars::TC_AutoPtr<AServantCoroCallback> AServantCoroCallbackPtr;
 
 int BServantImp::test(tars::TarsCurrentPtr current) { return 0;}
 
@@ -111,21 +111,21 @@ tars::Int32 BServantImp::testCoroParallel(const std::string& sIn, std::string &s
 
         int iIn  = 5;
 
-	    CoroParallelBasePtr sharedPtr = new CoroParallelBase(2);
+	    CoroParallelBasePtr sharedPtr(new CoroParallelBase(2));
 
-	    AServantCoroCallbackPtr cb1 = new AServantCoroCallback();
+	    AServantCoroPrxCallbackPtr cb1(new AServantCoroCallback());
 	    cb1->setCoroParallelBasePtr(sharedPtr);
 	    _pPrx->coro_testInt(cb1, iIn);
 
-	    AServantCoroCallbackPtr cb2 = new AServantCoroCallback();
+	    AServantCoroPrxCallbackPtr cb2(new AServantCoroCallback());
 	    cb2->setCoroParallelBasePtr(sharedPtr);
 	    _pPrx->coro_testStr(cb2, sIn);
 
 	    coroWhenAll(sharedPtr);
 
-	    if(cb1->_iRet == 0 && cb2->_iRet == 0)
+	    if(((AServantCoroCallback*)(cb1.get()))->_iRet == 0 && ((AServantCoroCallback*)(cb2.get()))->_iRet == 0)
 	    {
-		    sOut = cb2->_sOut;
+		    sOut = ((AServantCoroCallback*)(cb2.get()))->_sOut;
             iRet = 0;
 	    }
 
