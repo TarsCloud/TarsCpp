@@ -35,7 +35,7 @@ TEST_F(UtilEndpointTest, sep)
 
     vector<string> eps = TC_Endpoint::sepEndpoint(str);
 
-    EXPECT_EQ(eps.size(), 1);
+    EXPECT_EQ(eps.size(), (size_t)1);
 
     EXPECT_EQ(eps[0], str);
 
@@ -43,7 +43,7 @@ TEST_F(UtilEndpointTest, sep)
 
     eps = TC_Endpoint::sepEndpoint(str);
 
-    EXPECT_EQ(eps.size(), 1);
+    EXPECT_EQ(eps.size(), (size_t)1);
 
     EXPECT_EQ(eps[0], str);
 
@@ -51,7 +51,7 @@ TEST_F(UtilEndpointTest, sep)
 
     eps = TC_Endpoint::sepEndpoint(str);
 
-    EXPECT_EQ(eps.size(), 1);
+    EXPECT_EQ(eps.size(), (size_t)1);
 
     EXPECT_EQ(eps[0], str);
 
@@ -59,7 +59,7 @@ TEST_F(UtilEndpointTest, sep)
 
     eps = TC_Endpoint::sepEndpoint(str);
 
-    EXPECT_EQ(eps.size(), 1);
+    EXPECT_EQ(eps.size(), (size_t)1);
 
     EXPECT_EQ(eps[0], TC_Common::trim(str));
 
@@ -67,7 +67,7 @@ TEST_F(UtilEndpointTest, sep)
 
     eps = TC_Endpoint::sepEndpoint(str);
 
-    EXPECT_EQ(eps.size(), 1);
+    EXPECT_EQ(eps.size(), (size_t)1);
 
     EXPECT_EQ(eps[0], TC_Common::trim("tcp -h ::1 -p 25460 -t 60000"));
 }
@@ -79,7 +79,7 @@ TEST_F(UtilEndpointTest, seps)
 
     vector<string> eps = TC_Endpoint::sepEndpoint(str);
 
-    EXPECT_EQ(eps.size(), 3);
+    EXPECT_EQ(eps.size(), (size_t)3);
 
     EXPECT_EQ(eps[0], "udp -h ::1 -p 25460 -t 60000");
     EXPECT_EQ(eps[1], "tcp -h 127.0.0.1 -p 25460 -t 60000");

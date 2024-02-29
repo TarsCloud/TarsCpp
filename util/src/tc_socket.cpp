@@ -141,7 +141,7 @@ void TC_Socket::bind(const char *sPathName)
     struct sockaddr_un stBindAddr;
     memset(&stBindAddr, 0x00, sizeof(stBindAddr));
     stBindAddr.sun_family = _iDomain;
-    strncpy(stBindAddr.sun_path, sPathName, sizeof(stBindAddr.sun_path));
+    strncpy(stBindAddr.sun_path, sPathName, sizeof(stBindAddr.sun_path)-1);
 
     try
     {
@@ -171,7 +171,7 @@ int TC_Socket::connectNoThrow(const char *sPathName)
     struct sockaddr_un stServerAddr;
     memset(&stServerAddr, 0x00, sizeof(stServerAddr));
     stServerAddr.sun_family = _iDomain;
-    strncpy(stServerAddr.sun_path, sPathName, sizeof(stServerAddr.sun_path));
+    strncpy(stServerAddr.sun_path, sPathName, sizeof(stServerAddr.sun_path)-1);
 
     return connect((struct sockaddr *)&stServerAddr, sizeof(stServerAddr));
 }
@@ -417,7 +417,7 @@ void TC_Socket::parseUnixLocalAddr(const char* sPathName, struct sockaddr_un& ad
 {
 	memset(&addr, 0x00, sizeof(addr));
 	addr.sun_family = AF_LOCAL;
-	strncpy(addr.sun_path, sPathName, sizeof(addr.sun_path));
+	strncpy(addr.sun_path, sPathName, sizeof(addr.sun_path)-1);
 }
 
 #endif
@@ -919,6 +919,10 @@ vector<string> TC_Socket::getLocalHosts(int domain, bool withLoopIp)
         } else if (p->ai_family == AF_INET6) { // IPv6
             struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
             addr = &(ipv6->sin6_addr);
+        }
+        else
+        {
+            continue;
         }
 
         // convert IP to a string and add it to the list

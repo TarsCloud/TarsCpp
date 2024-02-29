@@ -370,7 +370,7 @@ void TC_Port::closeAllFileDescriptors()
 #endif
 
 #if TARGET_PLATFORM_LINUX
-std::vector<std::string> getCommandLine(int64_t pid) 
+std::vector<std::string> TC_Port::getCommandLine(int64_t pid)
 {
     std::vector<std::string> commandLineArgs;
 
@@ -643,7 +643,6 @@ vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMa
 
     return pids;
 #elif TARGET_PLATFORM_LINUX
-    std::vector<int> pids;
     DIR* dir = opendir("/proc");
     if (!dir) {
         return pids;
