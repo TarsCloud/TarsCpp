@@ -889,14 +889,11 @@ clean:
 	if (tcp1 != -1) {
 		TC_Port::closeSocket(tcp1);
 	}
-// #if TARGET_PLATFORM_LINUX||TARGET_PLATFORM_IOS
-// #undef closesocket
-// #endif
+
     THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createPipe] error");
 }
 
-//#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-vector<string> TC_Socket::getLocalHosts(int domain)
+vector<string> TC_Socket::getLocalHosts(int domain, bool withLoopIp)
 {
     vector<string> hosts;
     char local[255] = { 0 };
@@ -904,7 +901,7 @@ vector<string> TC_Socket::getLocalHosts(int domain)
 
     struct addrinfo hints, *res, *p;
     int status;
-    char ipstr[INET6_ADDRSTRLEN];
+    char ipstr[INET6_ADDRSTRLEN] = {0};
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = domain; // AF_UNSPEC means any: AF_INET, AF_INET6, etc.
@@ -925,48 +922,17 @@ vector<string> TC_Socket::getLocalHosts(int domain)
         }
 
         // convert IP to a string and add it to the list
-        inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
-        hosts.emplace_back(ipstr);
+        inet_ntop(p->ai_family, addr, ipstr, sizeof(ipstr));
+        if(withLoopIp || (TC_Port::strcasecmp(ipstr,"127.0.0.1") != 0 && TC_Port::strcasecmp(ipstr, "::1") != 0))
+        {
+            hosts.emplace_back(ipstr);
+        }
     }
 
-    freeaddrinfo(res); // free the linked list
+    freeaddrinfo(res);
 
     return hosts;
 }
-//#endif
-//
-//#if TARGET_PLATFORM_WINDOWS
-//vector<string> TC_Socket::getLocalHosts(int domain)
-//{
-//    vector<string> hosts;
-//
-//    char local[255] = { 0 };
-//    gethostname(local, sizeof(local));
-//    hostent* ph = gethostbyname(local);
-//    if (ph == NULL)
-//    {
-//        return hosts;
-//    }
-//
-//    in_addr addr;
-//    if (ph->h_addrtype == AF_INET)
-//    {
-//        int i = 0;
-//        while (ph->h_addr_list[i] != 0)
-//        {
-//            addr.s_addr = *(u_long*)ph->h_addr_list[i++];
-//            hosts.emplace_back(inet_ntoa(addr));
-//        }
-//    }
-//    else
-//    {
-//        // unsupport AF_INET6  ...
-//        return hosts;
-//    }
-//    return hosts;
-//}
-//
-//#endif
 
 bool TC_Socket::isPending()
 {

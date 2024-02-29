@@ -98,15 +98,10 @@ vector<EndpointF> EndpointInfo::toEndpointFs(const TC_Endpoint &ep, const string
     if (host == "0.0.0.0")
     {
         vector<EndpointF> v;
-        vector<string> ips = TC_Socket::getLocalHosts(AF_INET);
+        vector<string> ips = TC_Socket::getLocalHosts(AF_INET, false);
 
         for(const auto &ip : ips)
         {
-            if(ip == "127.0.0.1")
-            {
-                continue;
-            }
-
             TC_Endpoint theEp = ep;
             theEp.setHost(ip);
 
@@ -118,15 +113,10 @@ vector<EndpointF> EndpointInfo::toEndpointFs(const TC_Endpoint &ep, const string
     else if (host == "::1")
     {
         vector<EndpointF> v;
-        vector<string> ips = TC_Socket::getLocalHosts(AF_INET6);
+        vector<string> ips = TC_Socket::getLocalHosts(AF_INET6, false);
 
         for(const auto &ip : ips)
         {
-            if(ip == "::1")
-            {
-                continue;
-            }
-
             TC_Endpoint theEp = ep;
             theEp.setHost(ip);
 
@@ -139,15 +129,10 @@ vector<EndpointF> EndpointInfo::toEndpointFs(const TC_Endpoint &ep, const string
     {
         vector<EndpointF> v;
         {
-            vector<string> ips = TC_Socket::getLocalHosts(AF_INET);
+            vector<string> ips = TC_Socket::getLocalHosts(AF_INET, false);
 
             for (const auto &ip: ips)
             {
-                if (ip == "127.0.0.1")
-                {
-                    continue;
-                }
-
                 TC_Endpoint theEp = ep;
                 theEp.setHost(ip);
 
@@ -156,15 +141,10 @@ vector<EndpointF> EndpointInfo::toEndpointFs(const TC_Endpoint &ep, const string
         }
 
         {
-            vector<string> ips = TC_Socket::getLocalHosts(AF_INET6);
+            vector<string> ips = TC_Socket::getLocalHosts(AF_INET6, false);
 
             for (const auto &ip: ips)
             {
-                if (ip == "::1")
-                {
-                    continue;
-                }
-
                 TC_Endpoint theEp = ep;
                 theEp.setHost(ip);
 
