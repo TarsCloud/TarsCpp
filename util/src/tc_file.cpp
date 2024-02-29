@@ -155,21 +155,9 @@ string TC_File::getExePath()
 #elif TARGET_PLATFORM_IOS
 string TC_File::getExePath()
 {
-    int numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, NULL, 0);
-    pid_t pids[numberOfProcesses];
-    bzero(pids, sizeof(pids));
-    proc_listpids(PROC_ALL_PIDS, 0, pids, sizeof(pids));
     char pathBuffer[PROC_PIDPATHINFO_MAXSIZE];
     bzero(pathBuffer, PROC_PIDPATHINFO_MAXSIZE);
-    for (int i = 0; i < numberOfProcesses; ++i) {
-        if (pids[i] == 0) { continue; }
-
-        if(pids[i] == getpid())
-        {
-            proc_pidpath(pids[i], pathBuffer, sizeof(pathBuffer));
-            break;
-        }
-    }
+    proc_pidpath(getpid(), pathBuffer, sizeof(pathBuffer));
     return pathBuffer;
 }
 

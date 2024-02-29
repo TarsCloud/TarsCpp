@@ -366,6 +366,355 @@ void TC_Port::closeAllFileDescriptors()
 
 #endif
 
+#if TARGET_PLATFORM_LINUX
+std::vector<std::string> getCommandLine(int64_t pid) {
+    std::vector<std::string> commandLineArgs;
+
+    std::string procPath = "/proc/" + std::to_string(pid) + "/cmdline";
+    std::ifstream cmdlineFile(procPath);
+    if (!cmdlineFile.is_open()) {
+        return {};
+    }
+
+    std::stringstream buffer;
+    buffer << cmdlineFile.rdbuf();
+    std::string cmdline = buffer.str();
+
+    size_t pos = 0;
+    while (pos < cmdline.size()) {
+        std::string arg;
+        size_t nextPos = cmdline.find('\0', pos);
+        if (nextPos == std::string::npos) {
+            arg = cmdline.substr(pos);
+            pos = cmdline.size();
+        } else {
+            arg = cmdline.substr(pos, nextPos - pos);
+            pos = nextPos + 1;
+        }
+        commandLineArgs.push_back(arg);
+    }
+
+    return commandLineArgs;
+}
+#endif
+
+#if TARGET_PLATFORM_WINDOWS
+
+std::vector<std::string> TC_Port::getCommandLine(int64_t pid)
+{
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, static_cast<DWORD>(pid));
+    if (hProcess == NULL) {
+        return {};
+    }
+
+    std::vector<std::string> commandLineArgs;
+
+    LPWSTR cmdLine = GetCommandLineW();
+
+    int argc;
+    LPWSTR* argv = CommandLineToArgvW(cmdLine, &argc);
+
+    if (argv != NULL) {
+        for (int i = 0; i < argc; i++) {
+            wchar_t buffer[MAX_PATH];
+            WideCharToMultiByte(CP_ACP, 0, argv[i], -1, buffer, MAX_PATH, NULL, NULL);
+            commandLineArgs.push_back(buffer);
+        }
+
+        LocalFree(argv);
+    }
+
+    CloseHandle(hProcess);
+
+    return commandLineArgs;
+}
+#endif
+#if TARGET_PLATFORM_IOS
+
+std::vector<std::string> TC_Port::getCommandLine(int64_t pid)
+{
+    vector<string> args;
+
+    int    mib[3], argmax, nargs, c = 0;
+    size_t    size;
+    char    *procargs, *sp, *np, *cp;
+    int show_args = 1;
+
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_ARGMAX;
+
+    size = sizeof(argmax);
+    if (sysctl(mib, 2, &argmax, &size, NULL, 0) == -1) {
+        goto ERROR_A;
+    }
+
+    /* Allocate space for the arguments. */
+    procargs = (char *)malloc(argmax);
+    if (procargs == NULL) {
+        goto ERROR_A;
+    }
+
+    /*
+     * Make a sysctl() call to get the raw argument space of the process.
+     * The layout is documented in start.s, which is part of the Csu
+     * project.  In summary, it looks like:
+     *
+     * /---------------\ 0x00000000
+     * :               :
+     * :               :
+     * |---------------|
+     * | argc          |
+     * |---------------|
+     * | arg[0]        |
+     * |---------------|
+     * :               :
+     * :               :
+     * |---------------|
+     * | arg[argc - 1] |
+     * |---------------|
+     * | 0             |
+     * |---------------|
+     * | env[0]        |
+     * |---------------|
+     * :               :
+     * :               :
+     * |---------------|
+     * | env[n]        |
+     * |---------------|
+     * | 0             |
+     * |---------------| <-- Beginning of data returned by sysctl() is here.
+     * | argc          |
+     * |---------------|
+     * | exec_path     |
+     * |:::::::::::::::|
+     * |               |
+     * | String area.  |
+     * |               |
+     * |---------------| <-- Top of stack.
+     * :               :
+     * :               :
+     * \---------------/ 0xffffffff
+     */
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROCARGS2;
+    mib[2] = pid;
+
+    size = (size_t)argmax;
+    if (sysctl(mib, 3, procargs, &size, NULL, 0) == -1) {
+        goto ERROR_B;
+    }
+
+    memcpy(&nargs, procargs, sizeof(nargs));
+    cp = procargs + sizeof(nargs);
+
+    /* Skip the saved exec_path. */
+    for (; cp < &procargs[size]; cp++) {
+        if (*cp == '\0') {
+            /* End of exec_path reached. */
+            break;
+        }
+    }
+    if (cp == &procargs[size]) {
+        goto ERROR_B;
+    }
+
+    /* Skip trailing '\0' characters. */
+    for (; cp < &procargs[size]; cp++) {
+        if (*cp != '\0') {
+            /* Beginning of first argument reached. */
+            break;
+        }
+    }
+    if (cp == &procargs[size]) {
+        goto ERROR_B;
+    }
+    /* Save where the argv[0] string starts. */
+    sp = cp;
+
+    /*
+     * Iterate through the '\0'-terminated strings and convert '\0' to ' '
+     * until a string is found that has a '=' character in it (or there are
+     * no more strings in procargs).  There is no way to deterministically
+     * know where the command arguments end and the environment strings
+     * start, which is why the '=' character is searched for as a heuristic.
+     */
+    for (np = NULL; c < nargs && cp < &procargs[size]; cp++) {
+        if (*cp == '\0') {
+            c++;
+            if (np != NULL) {
+                /* Convert previous '\0'. */
+                *np = ' ';
+            } else {
+                /* *argv0len = cp - sp; */
+            }
+            /* Note location of current '\0'. */
+            np = cp;
+
+            if (!show_args) {
+                /*
+                 * Don't convert '\0' characters to ' '.
+                 * However, we needed to know that the
+                 * command name was terminated, which we
+                 * now know.
+                 */
+                break;
+            }
+        }
+    }
+
+    /*
+     * sp points to the beginning of the arguments/environment string, and
+     * np should point to the '\0' terminator for the string.
+     */
+    if (np == NULL || np == sp) {
+        /* Empty or unterminated string. */
+        goto ERROR_B;
+    }
+
+    /* Make a copy of the string. */
+//    printf("%s\n", sp);
+
+    args.push_back(sp);
+
+    /* Clean up. */
+    free(procargs);
+    return args;
+
+    ERROR_B:
+    free(procargs);
+    ERROR_A:
+
+    return args;
+}
+#endif
+vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMatch)
+{
+    vector<int64_t> pids;
+
+#if TARGET_PLATFORM_IOS
+    int mib[4];
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_ALL;
+    mib[3] = 0;
+
+    size_t size;
+    if (sysctl(mib, 4, NULL, &size, NULL, 0) == -1) {
+        return {};
+    }
+
+    struct kinfo_proc* proc_list = (struct kinfo_proc*)malloc(size);
+    if (proc_list == NULL) {
+        return {};
+    }
+
+    if (sysctl(mib, 4, proc_list, &size, NULL, 0) == -1) {
+        free(proc_list);
+        return {};
+    }
+
+    int num_procs = size / sizeof(struct kinfo_proc);
+    for (int i = 0; i < num_procs; i++)
+    {
+        vector<string> args = getCommandLine(proc_list[i].kp_proc.p_pid);
+        string path = TC_Common::tostr(args.begin(), args.end(), " ");
+
+        if(accurateMatch)
+        {
+            if(cmdLine == path)
+            {
+                pids.push_back(proc_list[i].kp_proc.p_pid);
+            }
+        }
+        else
+        {
+            if(std::string(path).find(cmdLine) != std::string::npos)
+            {
+                pids.push_back(proc_list[i].kp_proc.p_pid);
+            }
+        }
+    }
+
+    free(proc_list);
+
+    return pids;
+#elif TARGET_PLATFORM_LINUX
+    std::vector<int> pids;
+    DIR* dir = opendir("/proc");
+    if (!dir) {
+        return pids;
+    }
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr)
+    {
+        if(TC_Common::isdigit(entry->d_name))
+        {
+            int64_t pid = TC_Common::strto<int64_t>(entry->d_name);
+            vector<string> args = getCommandLine(pid);
+            string path = TC_Common::tostr(args.begin(), args.end(), " ");
+
+            if(accurateMatch)
+            {
+                if(cmdLine == path)
+                {
+                    pids.push_back(pid);
+                }
+            }
+            else
+            {
+                if(path.find(cmdLine) != std::string::npos)
+                {
+                    pids.push_back(pid);
+                }
+            }
+        }
+    }
+
+    closedir(dir);
+    return pids;
+#elif TTARGET_PLATFORM_WINDOWS
+
+    HANDLE hProcessSnap;
+    PROCESSENTRY32 pe32;
+
+    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hProcessSnap == INVALID_HANDLE_VALUE) {
+        return pids;
+    }
+
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+
+    if (!Process32First(hProcessSnap, &pe32)) {
+        CloseHandle(hProcessSnap);
+        return pids;
+    }
+
+    do {
+        if(accurateMatch)
+        {
+            if(cmdLine == pe32.szExeFile)
+            {
+                pids.push_back(pe32.th32ProcessID);
+            }
+        }
+        else
+        {
+            if(std::string(pe32.szExeFile).find(cmdLine) != std::string::npos)
+            {
+                pids.push_back( pe32.th32ProcessID);
+            }
+        }
+
+    } while (Process32Next(hProcessSnap, &pe32));
+
+    CloseHandle(hProcessSnap);
+
+    return pids;
+#else
+    return {};
+#endif
+}
 
 int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vOptions)
 {

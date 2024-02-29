@@ -46,6 +46,9 @@ struct TC_Port_Exception : public TC_Exception
 	~TC_Port_Exception() throw() {};
 };
 
+/**
+ * 跨平台相关函数封装
+ */
 class TC_Port
 {
 public:
@@ -149,6 +152,21 @@ public:
      */
     static void closeAllFileDescriptors();
 #endif
+
+    /**
+     * 返回完整命令行参数, 如果pid不存在, 则返回为空
+     * @param pid
+     * @return, 命令行参数, argv[0], argv[1] ....
+     */
+    static std::vector<std::string> getCommandLine(int pid);
+
+    /**
+     * 根据程序执行的命令行, 获取对应的进程pid
+     * @param cmdLine: 程序的启动完整命令行
+     * @param accurateMatch: 匹配方式, true: 精确匹配, false: 模糊匹配(启动命令行能find到cmdLine)
+     * @return
+     */
+    static vector<int64_t> getPidsByCmdline(const string &cmdLine, bool accurateMatch = false);
 
     /**
 	 * 注册ctrl+c回调事件(SIGINT/CTRL_C_EVENT)
