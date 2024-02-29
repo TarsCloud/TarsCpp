@@ -267,13 +267,13 @@ void Communicator::initialize()
 
     if (_clientConfig.SetLocalIp.empty())
     {
-        vector<string> v = TC_Socket::getLocalHosts();
+        vector<string> v = TC_Socket::getLocalHosts(AF_INET, false);
+        if (_clientConfig.LocalIp.empty() && !v.empty())
+        {
+            _clientConfig.LocalIp = v[0];
+        }
         for (size_t i = 0; i < v.size(); i++)
         {
-            if (v[i] != "127.0.0.1" && _clientConfig.LocalIp.empty())
-            {
-                _clientConfig.LocalIp = v[i];
-            }
             _clientConfig.SetLocalIp.insert(v[i]);
         }
     }

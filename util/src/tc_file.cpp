@@ -696,6 +696,7 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
         {
             THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sExistFile);
         }
+        //强制覆盖
         std::ofstream fout(sNewFile.c_str(), ios::binary);
         if(!fout )
         {

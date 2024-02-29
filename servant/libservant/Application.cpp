@@ -1297,17 +1297,12 @@ void Application::initializeServer()
     if (ServerConfig::LocalIp.empty())
     {
         // ServerConfig::LocalIp = "127.0.0.1";
-        vector<string> v = TC_Socket::getLocalHosts();
+        vector<string> v = TC_Socket::getLocalHosts(AF_INET, false);
 
         ServerConfig::LocalIp = "127.0.0.1";
-        //获取第一个非127.0.0.1的IP
-        for(const auto & i : v)
+        if(!v.empty())
         {
-            if(i != "127.0.0.1")
-            {
-                ServerConfig::LocalIp = i;
-                break;
-            }
+            ServerConfig::LocalIp = v[0];
         }
     }
 
