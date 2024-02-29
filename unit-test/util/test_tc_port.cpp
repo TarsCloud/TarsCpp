@@ -195,6 +195,17 @@ TEST_F(UtilPortTest, testGetDisk)
 //#endif
 //}
 
+TEST_F(UtilPortTest, testGetCommandline)
+{
+    vector<string> cmdLine = TC_Port::getCommandLine(TC_Port::getpid());
+
+    cout << cmdLine.size() << endl;
+
+    string cmdStr = TC_Common::tostr(cmdLine.begin(), cmdLine.end(), " ");
+    cout << cmdStr << endl;
+    ASSERT_TRUE(cmdStr.find("unit-test") != string::npos);
+}
+
 TEST_F(UtilPortTest, testGetPidsByCmdline)
 {
     vector<int64_t> pids = TC_Port::getPidsByCmdline("unit-test", false);

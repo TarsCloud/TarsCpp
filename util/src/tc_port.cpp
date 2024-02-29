@@ -42,8 +42,11 @@
 #include <sys/timeb.h>
 #include <psapi.h>
 #include <tlhelp32.h>
+#include <shellapi.h>
 #include <pdh.h>
 #include <pdhmsg.h>
+#include <tchar.h>
+
 #include "util/tc_strptime.h"
 #endif
 
@@ -367,7 +370,8 @@ void TC_Port::closeAllFileDescriptors()
 #endif
 
 #if TARGET_PLATFORM_LINUX
-std::vector<std::string> getCommandLine(int64_t pid) {
+std::vector<std::string> getCommandLine(int64_t pid) 
+{
     std::vector<std::string> commandLineArgs;
 
     std::string procPath = "/proc/" + std::to_string(pid) + "/cmdline";
@@ -416,7 +420,7 @@ std::vector<std::string> TC_Port::getCommandLine(int64_t pid)
 
     if (argv != NULL) {
         for (int i = 0; i < argc; i++) {
-            wchar_t buffer[MAX_PATH];
+            char buffer[MAX_PATH];
             WideCharToMultiByte(CP_ACP, 0, argv[i], -1, buffer, MAX_PATH, NULL, NULL);
             commandLineArgs.push_back(buffer);
         }
@@ -673,7 +677,7 @@ vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMa
 
     closedir(dir);
     return pids;
-#elif TTARGET_PLATFORM_WINDOWS
+#elif TARGET_PLATFORM_WINDOWS
 
     HANDLE hProcessSnap;
     PROCESSENTRY32 pe32;
@@ -689,6 +693,8 @@ vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMa
         CloseHandle(hProcessSnap);
         return pids;
     }
+
+    // std::wstring wcmdLine(cmdLine.begin(), cmdLine.end());
 
     do {
         if(accurateMatch)
@@ -749,11 +755,14 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 	}
 	
 	string command = sExePath + " " + path;
-	
+    // std::wstring wcommand(command.begin(), command.end());
+
 	TCHAR p[1024];
-	strncpy_s(p, sizeof(p) / sizeof(TCHAR), command.c_str(), command.length());
-	
-	STARTUPINFO si;
+    strncpy_s(p, sizeof(p)/sizeof(TCHAR), command.c_str(), command.size());
+
+    // std::wstring wsPwdPath(sPwdPath.begin(), sPwdPath.end());
+
+	STARTUPINFOA si;
 	memset(&si, 0, sizeof(si));
 	PROCESS_INFORMATION pi;
 	memset(&pi, 0, sizeof(pi));
@@ -768,7 +777,7 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 		false,  //    指示新进程是否从调用进程处继承了句柄。
 		CREATE_NEW_CONSOLE|CREATE_DEFAULT_ERROR_MODE | NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW,  //  指定附加的、用来控制优先类和进程的创建的标
 		NULL, //    指向一个新进程的环境块。如果此参数为空，新进程使用调用进程的环境
-		pwdCStr, //    指定子进程的工作路径
+		sPwdPath.c_str(), //    指定子进程的工作路径
 		&si, // 决定新进程的主窗体如何显示的STARTUPINFO结构体
 		&pi  // 接收新进程的识别信息的PROCESS_INFORMATION结构体
 	))
@@ -1408,6 +1417,8 @@ bool TC_Port::getDiskInfo(int64_t &totalSize, int64_t& availableSize, float& use
     ULARGE_INTEGER freeBytesAvailableToCaller;
     ULARGE_INTEGER totalNumberOfBytes;
     ULARGE_INTEGER totalNumberOfFreeBytes;
+
+    // std::wstring wpath(path.begin(), path.end());
 
     if (!GetDiskFreeSpaceEx(path.c_str(), &freeBytesAvailableToCaller, &totalNumberOfBytes, &totalNumberOfFreeBytes)) {
         return false;
