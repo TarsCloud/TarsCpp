@@ -158,7 +158,7 @@ public:
      * @param pid
      * @return, 命令行参数, argv[0], argv[1] ....
      */
-    static std::vector<std::string> getCommandLine(int pid);
+    static std::vector<std::string> getCommandLine(int64_t pid);
 
     /**
      * 根据程序执行的命令行, 获取对应的进程pid

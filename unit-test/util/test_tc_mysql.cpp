@@ -1,5 +1,7 @@
 ﻿#include "util/tc_common.h"
+#ifdef TARS_MYSQL
 #include "util/tc_mysql.h"
+#endif
 #include "gtest/gtest.h"
 
 #include <iostream>
