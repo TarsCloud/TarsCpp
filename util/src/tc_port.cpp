@@ -781,9 +781,7 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 		&pi  // 接收新进程的识别信息的PROCESS_INFORMATION结构体
 	))
 	{
-		string err = TC_Exception::parseError(TC_Exception::getSystemCode());
-	
-		throw TC_Port_Exception("[TC_Port::forkExec] CreateProcessA exception:" + err);
+		throw TC_Port_Exception("[TC_Port::forkExec] CreateProcessA exception:" + TC_Exception::getSystemError());
 	}
 	
 	CloseHandle(pi.hThread);
@@ -796,10 +794,7 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
     string bin = sExePath;
     if(!TC_File::isAbsolute(bin))
     {
-        char current_directory[FILENAME_MAX] = {0x00};
-        getcwd(current_directory, sizeof(current_directory));
-
-        bin = TC_File::simplifyDirectory(string(current_directory) + FILE_SEP + bin);
+        bin = TC_File::simplifyDirectory(TC_Port::getCwd() + FILE_SEP + bin);
     }
 
 	vector<string> vArgs;
@@ -820,7 +815,7 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 	pid_t pid = fork();
 	if (pid == -1)
 	{
-		throw TC_Port_Exception("[TC_Port::forkExec] fork exception");
+		throw TC_Port_Exception("[TC_Port::forkExec] fork error:" + TC_Exception::getSystemError());
 	}
 
 	if (pid == 0)
