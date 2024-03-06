@@ -6,6 +6,8 @@
 
 #include <string>
 #include <memory>
+#include "servant/Application.h"
+#include "mock/FrameworkServer.h"
 
 class FrameworkServer;
 
@@ -32,6 +34,12 @@ public:
      * @param count
      */
     void refreshRegistry(const std::string &obj, size_t count);
+
+    /**
+     *
+     * @return
+     */
+    std::shared_ptr<FrameworkServer> getFrameworkServer();
 
 protected:
     std::shared_ptr<FrameworkServer> _fs;

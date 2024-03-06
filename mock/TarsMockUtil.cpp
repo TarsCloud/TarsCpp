@@ -23,6 +23,11 @@ void TarsMockUtil::stopFramework()
     _fs->terminate();
 }
 
+std::shared_ptr<FrameworkServer> TarsMockUtil::getFrameworkServer()
+{
+    return _fs;
+}
+
 void TarsMockUtil::refreshRegistry(const string &obj, size_t count)
 {
     do
