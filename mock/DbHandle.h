@@ -166,17 +166,17 @@ public:
 
     static  void InsertSetRecord4Inactive(const string& objName, const string& setName, const string& setArea, const string& setGroup, EndpointF epf);
 
-    static void addActiveEndPoint(const string& objName, const Int32 port, const Int32 istcp, const string &nodeName = "");
+    static void addActiveEndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string &nodeName = "");
 
-	static void addInactiveEndPoint(const string& objName, const Int32 port, const Int32 istcp, const string &nodeName = "");
+	static void addInactiveEndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string &nodeName = "");
 
-    static void addEndPointbySet(const string& objName, const Int32 port, const Int32 istcp, const string& setName, const string& setArea, const string& setGroup);
+    static void addEndPointbySet(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName, const string& setArea, const string& setGroup);
 
-    static void addActiveWeight1EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName = "");
+    static void addActiveWeight1EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName = "");
 
-    static void addInActiveWeight1EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName = "");
+    static void addInActiveWeight1EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName = "");
     
-    static void addActiveWeight2EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName = "");
+    static void addActiveWeight2EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName = "");
     
     static void cleanEndPoint();
 

@@ -5,12 +5,9 @@
 
 
 //////////////////////////////////////////////////////
-//<servant, ObjectItem>
-//typedef map<string, ObjectItem> ObjectsCache;
 
 static ObjectsCache    _objectsCache;
 
-//ObjectsCache CDbHandle::_objectsCache;
 CDbHandle::SetDivisionCache CDbHandle::_setDivisionCache;
 std::map<int, CDbHandle::GroupPriorityEntry> CDbHandle::_mapGroupPriority;
 std::mutex CDbHandle::_mutex;
@@ -330,7 +327,6 @@ void CDbHandle::updateObjectsCache(const ObjectsCache& objCache, bool updateAll)
     else
     {
         //用查询数据覆盖一下
-//        _objectsCache.getWriterData() = _objectsCache.getReaderData();
         ObjectsCache& tmpObjCache = _objectsCache;
 
         ObjectsCache::const_iterator it = objCache.begin();
@@ -339,7 +335,6 @@ void CDbHandle::updateObjectsCache(const ObjectsCache& objCache, bool updateAll)
             //增量的时候加载的是服务的所有节点，因此这里直接替换
             tmpObjCache[it->first] = it->second;
         }
-//        _objectsCache.swap();
     }
 }
 
@@ -350,12 +345,10 @@ void CDbHandle::updateInactiveObjectsCache(const ObjectsCache& objCache, bool up
     if (updateAll)
     {
         _objectsCache = objCache;
-//        _objectsCache.swap();
     }
     else
     {
         //用查询数据覆盖一下
-//        _objectsCache.getWriterData() = _objectsCache.getReaderData();
         ObjectsCache& tmpObjCache = _objectsCache;
 
         ObjectsCache::const_iterator it = objCache.begin();
@@ -364,7 +357,6 @@ void CDbHandle::updateInactiveObjectsCache(const ObjectsCache& objCache, bool up
             //增量的时候加载的是服务的所有节点，因此这里直接替换
             tmpObjCache[it->first].vInactiveEndpoints.push_back((it->second).vInactiveEndpoints[0]);
         }
-//        _objectsCache.swap();
     }
 }
 
@@ -376,12 +368,10 @@ void CDbHandle::updateActiveObjectsCache(const ObjectsCache& objCache, bool upda
     if (updateAll)
     {
         _objectsCache = objCache;
-//        _objectsCache.swap();
     }
     else
     {
         //用查询数据覆盖一下
-//        _objectsCache.getWriterData() = _objectsCache.getReaderData();
         ObjectsCache& tmpObjCache = _objectsCache;
 
         ObjectsCache::const_iterator it = objCache.begin();
@@ -390,7 +380,6 @@ void CDbHandle::updateActiveObjectsCache(const ObjectsCache& objCache, bool upda
             //增量的时候加载的是服务的所有节点，因此这里直接替换
             tmpObjCache[it->first].vActiveEndpoints.push_back((it->second).vActiveEndpoints[0]);
         }
-//        _objectsCache.swap();
     }
 }
 
@@ -401,7 +390,7 @@ void CDbHandle::printActiveEndPoint(const string& objName)
 		LOG_CONSOLE_DEBUG << "reader data" << endl;
 		for (auto e : _objectsCache[objName].vActiveEndpoints)
 		{
-			LOG_CONSOLE_DEBUG << e.port << endl;
+			LOG_CONSOLE_DEBUG << e.writeToJsonString() << endl;
 		}
 	}
 
@@ -409,17 +398,17 @@ void CDbHandle::printActiveEndPoint(const string& objName)
 		LOG_CONSOLE_DEBUG << "write data" << endl;
 		for (auto e : _objectsCache[objName].vActiveEndpoints)
 		{
-			LOG_CONSOLE_DEBUG << e.port << endl;
+			LOG_CONSOLE_DEBUG << e.writeToJsonString() << endl;
 		}
 	}
 }
 
-void CDbHandle::addActiveEndPoint(const string& objName, const Int32 port, const Int32 istcp, const string &nodeName)
+void CDbHandle::addActiveEndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string &nodeName)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -429,12 +418,12 @@ void CDbHandle::addActiveEndPoint(const string& objName, const Int32 port, const
     updateActiveObjectsCache(objectsCache, false);
 }
 
-void CDbHandle::addEndPointbySet(const string& objName, const Int32 port, const Int32 istcp, const string& setName, const string& setArea, const string& setGroup)
+void CDbHandle::addEndPointbySet(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName, const string& setArea, const string& setGroup)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -448,12 +437,12 @@ void CDbHandle::addEndPointbySet(const string& objName, const Int32 port, const 
     }
 }
 
-void CDbHandle::addActiveWeight1EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName)
+void CDbHandle::addActiveWeight1EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -464,12 +453,12 @@ void CDbHandle::addActiveWeight1EndPoint(const string& objName, const Int32 port
     updateActiveObjectsCache(objectsCache, false);
 }
 
-void CDbHandle::addInActiveWeight1EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName)
+void CDbHandle::addInActiveWeight1EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -481,12 +470,12 @@ void CDbHandle::addInActiveWeight1EndPoint(const string& objName, const Int32 po
 }
 
 
-void CDbHandle::addActiveWeight2EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName)
+void CDbHandle::addActiveWeight2EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -498,12 +487,12 @@ void CDbHandle::addActiveWeight2EndPoint(const string& objName, const Int32 port
 }
 
 
-void CDbHandle::addInactiveEndPoint(const string& objName, const Int32 port, const Int32 istcp, const string &nodeName)
+void CDbHandle::addInactiveEndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string &nodeName)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -593,7 +582,7 @@ void CDbHandle::InsertSetRecord(const string& objName, const string& setName, co
     setDivisionCache[objName][setName].push_back(setServerInfo);
 
     setServerInfo.bActive = false;
-    setServerInfo.epf.port = 10204;
+//    setServerInfo.epf.port = 10204;
 
     setDivisionCache[objName][setName].push_back(setServerInfo);
     
@@ -641,16 +630,13 @@ void CDbHandle::updateDivisionCache(SetDivisionCache& setDivisionCache,bool upda
             }
         }
         _setDivisionCache = setDivisionCache;
-//        _setDivisionCache.swap();
     }
     else
     {
-//        _setDivisionCache.getWriterData() = _setDivisionCache.getReaderData();
         SetDivisionCache& tmpsetCache = _setDivisionCache;
         SetDivisionCache::const_iterator it = setDivisionCache.begin();
         for(;it != setDivisionCache.end();it++)
         {
-            //��set��Ϣ�Ÿ���
             if(it->second.size() > 0)
             {
                 tmpsetCache[it->first] = it->second;
@@ -661,7 +647,5 @@ void CDbHandle::updateDivisionCache(SetDivisionCache& setDivisionCache,bool upda
             }
 
         }
-        
-//        _setDivisionCache.swap();
     }
 }
