@@ -2,7 +2,7 @@
 #include "util/tc_common.h"
 #include <cmath>
 #include "gtest/gtest.h"
-
+#include "util/tc_file.h"
 #include <iostream>
 #include <vector>
 
@@ -32,6 +32,10 @@ TEST_F(UtilPortTest, testExec)
 	string err;
    	string result = TC_Port::exec("ls '*.txt'", err);
    	cout << result << endl;
+
+    string out = TC_Port::exec(("file " + TC_File::getExePath()).c_str());
+
+    cout << out << endl;
 }
 
 TEST_F(UtilPortTest, testGetPidMemUsed)
@@ -126,74 +130,6 @@ TEST_F(UtilPortTest, testGetDisk)
 }
 
 #endif
-//
-//#if TARGET_PLATFORM_IOS
-//#include <sys/types.h>
-//#include <sys/sysctl.h>
-//#include <mach/mach.h>
-//#include <libproc.h>
-//#include <sys/proc_info.h>
-//#endif
-//
-//
-//vector<int64_t> getPidsByCmdline(const string &cmdLine, bool accurateMatch)
-//{
-//    vector<int64_t> pids;
-//
-//#if TARGET_PLATFORM_IOS
-//    int mib[4];
-//    mib[0] = CTL_KERN;
-//    mib[1] = KERN_PROC;
-//    mib[2] = KERN_PROC_ALL;
-//    mib[3] = 0;
-//
-//    size_t size;
-//    if (sysctl(mib, 4, NULL, &size, NULL, 0) == -1) {
-//        return {};
-//    }
-//
-//    struct kinfo_proc* proc_list = (struct kinfo_proc*)malloc(size);
-//    if (proc_list == NULL) {
-//        return {};
-//    }
-//
-//    if (sysctl(mib, 4, proc_list, &size, NULL, 0) == -1) {
-//        free(proc_list);
-//        return {};
-//    }
-//
-//    int num_procs = size / sizeof(struct kinfo_proc);
-//    for (int i = 0; i < num_procs; i++)
-//    {
-//        vector<string> args = getArgs(proc_list[i].kp_proc.p_pid);
-//        string path = TC_Common::tostr(args.begin(), args.end(), " ");
-//
-//        if(accurateMatch)
-//        {
-//            if(cmdLine == path)
-//            {
-//                pids.push_back(proc_list[i].kp_proc.p_pid);
-//            }
-//        }
-//        else
-//        {
-//            if(std::string(path).find(cmdLine) != std::string::npos)
-//            {
-//                pids.push_back(proc_list[i].kp_proc.p_pid);
-//            }
-//        }
-//    }
-//
-//    free(proc_list);
-//    return pids;
-//#elif TARGET_PLATFORM_LINUX
-//    return {};
-//#elif TARGET_PLATFORM_WINDOWS
-//    return {};
-//#else
-//    return {};
-//#endif
-//}
 
 TEST_F(UtilPortTest, testGetCommandline)
 {
@@ -216,3 +152,4 @@ TEST_F(UtilPortTest, testGetPidsByCmdline)
 
     ASSERT_TRUE(std::find(pids.begin(), pids.end(), pid) != pids.end());
 }
+

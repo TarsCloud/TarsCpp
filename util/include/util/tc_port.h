@@ -217,7 +217,7 @@ public:
 	 * 运行一个脚本
 	 * @param cmd
 	 * @param err
-	 * @return 程序的标准输出(最大2k的输出长度)
+	 * @return 程序的标准输出
 	 */
     static std::string exec(const char* cmd);
 
@@ -225,7 +225,7 @@ public:
 	 * 运行一个脚本(程序+命令行)
 	 * @param cmd
 	 * @param err
-	 * @return: 程序的标准输出(最大2k的输出长度)
+	 * @return: 程序的标准输出
 	 */
 	static std::string exec(const char* cmd, std::string &err);
 

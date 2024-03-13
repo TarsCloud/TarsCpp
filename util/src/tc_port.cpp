@@ -300,29 +300,30 @@ string TC_Port::exec(const char *cmd)
 
 std::string TC_Port::exec(const char* cmd, std::string &err)
 {
-	string fileData;
+    std::string result;
 #if TARGET_PLATFORM_WINDOWS
     FILE* fp = _popen(cmd, "r");
 #else
     FILE* fp = popen(cmd, "r");
 #endif
-	if(fp == NULL) {
-		err = "open '" + string(cmd) + "' error";
-		return "";
-	}
-    static size_t buf_len = 2 * 1024 * 1024;
-    char *buf = new char[buf_len];
-    memset(buf, 0, buf_len);
-    fread(buf, sizeof(char), buf_len - 1, fp);
+    if(fp == NULL) {
+        err = "open '" + string(cmd) + "' error";
+        return "";
+    }
+
+    char buffer[1024];
+    while (!feof(fp)) {
+        if (fgets(buffer, 1024, fp) != NULL)
+            result.append(buffer);
+    }
+
 #if TARGET_PLATFORM_WINDOWS
     _pclose(fp);
 #else
     pclose(fp);
 #endif
-    fileData = string(buf);
-    delete []buf;
 
-	return fileData;
+    return result;
 }
 
 #if TARGET_PLATFORM_LINUX
@@ -724,9 +725,9 @@ vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMa
 FILE *TC_Port::freopen(const char * dst,  const char * mode, FILE * src)
 {
 #if TARGET_PLATFORM_IOS
-    return freopen(dst, mode, src);
+    return ::freopen(dst, mode, src);
 #else
-    return freopen64(dst, mode, src);
+    return ::freopen64(dst, mode, src);
 #endif
 }
 
