@@ -59,39 +59,132 @@ public:
      */ 
     static const char* strnstr(const char* s1, const char* s2, int pos1);
 
+    /**
+     * 字符串比较
+     * @param s1
+     * @param s2
+     * @return
+     */
 	static int strcmp(const char *s1, const char *s2);
 
+    /**
+     * 字符串比较
+     * @param s1
+     * @param s2
+     * @param n
+     * @return
+     */
 	static int strncmp(const char *s1, const char *s2, size_t n);
 
+    /**
+     * 忽略大小写比较
+     * @param s1
+     * @param s2
+     * @return
+     */
 	static int strcasecmp(const char *s1, const char *s2);
 
+    /**
+     * 忽略大小写比较
+     * @param s1
+     * @param s2
+     * @param n
+     * @return
+     */
     static int strncasecmp(const char *s1, const char *s2, size_t n);    
 
+    /**
+     * 从clock得到当前(到时区的)时间
+     * @param clock
+     * @param result
+     */
     static void localtime_r(const time_t *clock, struct tm *result);
 
+    /**
+     * 从clock得到当前时间GMT(不考虑时区, 夏令时等)
+     * @param clock
+     * @param result
+     */
     static void gmtime_r(const time_t *clock, struct tm *result);
 
+    /**
+     * 转换成时间戳(GMT时间)
+     * @param timeptr
+     * @return
+     */
     static time_t timegm(struct tm *timeptr);
 
+    /**
+     * 当前时间
+     * @param tv
+     * @return
+     */
     static int gettimeofday(struct timeval &tv);
 
+    /**
+     * 改变文件属性
+     * @param path
+     * @param mode
+     * @return
+     */
     static int chmod(const char *path, mode_t mode);
-
-    static FILE * fopen(const char * path, const char * mode);
 
 #if TARGET_PLATFORM_WINDOWS
     typedef struct _stat stat_t;
 #else
     typedef struct stat stat_t;
 #endif
+
+    /**
+     * 查看文件属性
+     * @param path
+     * @param buf
+     * @return
+     */
     static int lstat(const char * path, stat_t * buf);
 
+    /**
+     * 创建目录(可以使用TC_File下的函数makeDir/makeDirRecursive)
+     * @param path
+     * @return
+     */
     static int mkdir(const char *path);
 
+    /**
+     * 删除路径 可以使用TC_File::removeFile
+     * @param path
+     * @return
+     */
     static int rmdir(const char *path);
 
+    /**
+     * 打开一个文件
+     * @param path
+     * @param mode
+     * @return
+     */
+    static FILE * fopen(const char * path, const char * mode);
+
+    /**
+     * src重定向到file
+     * @param src
+     * @param mode
+     * @param dst
+     * @return
+     */
+    static FILE	*freopen(const char * dst,  const char * mode, FILE * src);
+
+    /**
+     * 关闭网络句柄
+     * @param fd
+     * @return
+     */
     static int closeSocket(int fd);
 
+    /**
+     * 获取进程pid
+     * @return
+     */
     static int64_t getpid();
 
 	/**
