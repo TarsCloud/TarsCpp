@@ -588,7 +588,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
     }
     catch (TarsDecodeException &ex)
     {
-        TLOGERROR("[ServantHandle::handleTarsProtocol decode error: " << _servant->getName() << ":" << current->getFuncName() << ":" << current->getFuncName() << ", " << ex.what() << "]" << endl);
+        TLOGERROR("[ServantHandle::handleTarsProtocol decode error: " << _servant->getName() << ":" << current->getFuncName() << ", " << ex.what() << "]" << endl);
 
         ret = TARSSERVERDECODEERR;
 
@@ -596,7 +596,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
     }
     catch (TarsEncodeException &ex)
     {
-        TLOGERROR("[ServantHandle::handleTarsProtocol encode error: " << _servant->getName()<< ":"  << current->getFuncName() << ":" << current->getFuncName()<< ", "  << ex.what() << "]" << endl);
+        TLOGERROR("[ServantHandle::handleTarsProtocol encode error: " << _servant->getName()<< ":"  << current->getFuncName() << ", "  << ex.what() << "]" << endl);
 
         ret = TARSSERVERENCODEERR;
 
@@ -604,7 +604,7 @@ void ServantHandle::handleTarsProtocol(const CurrentPtr &current)
     }
     catch (exception &ex)
     {
-        TLOGERROR("[ServantHandle::handleTarsProtocol error: " << _servant->getName() << ":" << current->getFuncName() << ":" << current->getFuncName()<< ", "  << ex.what() << "]" << endl);
+        TLOGERROR("[ServantHandle::handleTarsProtocol error: " << _servant->getName() << ":" << current->getFuncName() << ", "  << ex.what() << "]" << endl);
 
         ret = TARSSERVERUNKNOWNERR;
 
