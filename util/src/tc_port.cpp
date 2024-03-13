@@ -721,6 +721,15 @@ vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMa
 #endif
 }
 
+FILE *TC_Port::freopen(const char * dst,  const char * mode, FILE * src)
+{
+#if TARGET_PLATFORM_IOS
+    return freopen(dst, mode, src);
+#else
+    return freopen64(dst, mode, src);
+#endif
+}
+
 int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vOptions)
 {
 	vector<string> vEnvs;
@@ -826,13 +835,8 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 		if (!sRollLogPath.empty())
 		{
 			TC_File::makeDirRecursive(TC_File::extractFilePath(sRollLogPath));
-#if TARGET_PLATFORM_IOS
-			freopen(sRollLogPath.c_str(), "ab", stdout);
-            freopen(sRollLogPath.c_str(), "ab", stderr);
-#else
-			freopen64(sRollLogPath.c_str(), "ab", stdout);
-            freopen64(sRollLogPath.c_str(), "ab", stderr);
-#endif
+            TC_Port::freopen(sRollLogPath.c_str(), "ab", stdout);
+            TC_Port::freopen(sRollLogPath.c_str(), "ab", stderr);
 		}
 
 		if (strlen(pwdCStr) != 0)
