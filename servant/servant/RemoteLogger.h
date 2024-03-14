@@ -291,7 +291,7 @@ protected:
     /**
      * 同步到远程
      */
-    void sync2remote(const vector<string> &buffer);
+    void sync2remote(const LogInfo &stInfo, const vector<string> &buffer);
 
     /**
      * 染色日志同步到远程

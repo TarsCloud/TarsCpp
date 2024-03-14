@@ -300,62 +300,64 @@ void RemoteTimeWriteT::setTimeWriteT(TimeWriteT *pTimeWrite)
 
 void RemoteTimeWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &buffer)
 {
-    const static uint32_t len = 2000;
+    //此处传递set信息到远程logserver
+    LogInfo stInfo;
+    stInfo.appname           = _timeWrite->_app;
+    stInfo.servername        = _timeWrite->_server;
+    stInfo.sFilename         = _timeWrite->_file;
+    stInfo.sFormat           = _timeWrite->_format;
+    stInfo.setdivision       = _timeWrite->_setDivision;
+    stInfo.bHasSufix         = _timeWrite->_hasSufix;
+    stInfo.bHasAppNamePrefix = _timeWrite->_hasAppNamePrefix;
+    stInfo.sConcatStr        = _timeWrite->_concatStr;
+    stInfo.bHasSquareBracket = _timeWrite->_hasSquareBracket;
+    stInfo.sSepar            = _timeWrite->_separ;
+    stInfo.sLogType          = _timeWrite->_logType;
+
+//    const static uint32_t len = 2000;
 
     //写远程日志
     if(_timeWrite->_logPrx && !buffer.empty())
     {
-        //大于50w条, 直接抛弃掉,否则容易导致内存泄漏
-        if(buffer.size() > 500000)
-        {
-            _timeWrite->writeError(buffer);
-            return;
-        }
-
+//        //大于50w条, 直接抛弃掉,否则容易导致内存泄漏
+//        if(buffer.size() > 500000)
+//        {
+//            _timeWrite->writeError(buffer);
+//            return;
+//        }
         vector<string> v;
-        v.reserve(len);
 
-        deque<pair<size_t, string> >::const_iterator it = buffer.begin();
+        size_t len = 0;
+        deque<pair<size_t, string>>::const_iterator it = buffer.begin();
         while(it != buffer.end())
         {
+            len += it->second.size();
+
             v.push_back(it->second);
 
             ++it;
 
             //每次最多同步len条
-            if(v.size() >= len)
+//            if(v.size() >= len)
+            if(len > 5*1024*1024 || v.size() > 200)
             {
-                sync2remote(v);
+                //>5M 或超过200条 就要传输了!
+                sync2remote(stInfo, v);
                 v.clear();
-                v.reserve(len);
             }
         }
 
-        if(v.size() > 0)
+        if(!v.empty())
         {
-            sync2remote(v);
+            sync2remote(stInfo, v);
         }
     }
 }
 
-void RemoteTimeWriteT::sync2remote(const vector<string> &v)
+void RemoteTimeWriteT::sync2remote(const LogInfo &stInfo, const vector<string> &v)
 {
     try
     {
-        //此处传递set信息到远程logserver
-        LogInfo stInfo;
-        stInfo.appname           = _timeWrite->_app;
-        stInfo.servername        = _timeWrite->_server;
-        stInfo.sFilename         = _timeWrite->_file;
-        stInfo.sFormat           = _timeWrite->_format;
-        stInfo.setdivision       = _timeWrite->_setDivision;
-        stInfo.bHasSufix         = _timeWrite->_hasSufix;
-        stInfo.bHasAppNamePrefix = _timeWrite->_hasAppNamePrefix;
-        stInfo.sConcatStr        = _timeWrite->_concatStr;
-        stInfo.bHasSquareBracket = _timeWrite->_hasSquareBracket;
-        stInfo.sSepar            = _timeWrite->_separ;
-        stInfo.sLogType          = _timeWrite->_logType;
-
         _timeWrite->_logPrx->loggerbyInfo(stInfo,v, _timeWrite->_logPrx->tars_communicator()->getClientConfig().Context);
 
         if (_timeWrite->_reportSuccPtr)
