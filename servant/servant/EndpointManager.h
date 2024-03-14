@@ -132,7 +132,7 @@ public:
 	/*
 	 * 设置主控的代理
 	 */
-    int  setLocatorPrx(QueryFPrx prx);
+    int  setLocatorPrx(const QueryFPrx& prx);
 
     /*
      * 是否直连后端
