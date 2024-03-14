@@ -28,6 +28,9 @@ public:
 
 protected:
 	virtual void run();
+
+
+    bool loadLogFormat(const string& command, const string& params, string& result);
 };
 
 

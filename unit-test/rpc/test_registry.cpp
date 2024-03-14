@@ -2,9 +2,10 @@
 #include "hello_test.h"
 #include "servant/CommunicatorEpoll.h"
 #include "servant/ObjectProxy.h"
-#include "server/framework/DbHandle.h"
-#include "server/FrameworkServer.h"
+#include "mock/DbHandle.h"
+#include "mock/TarsMockUtil.h"
 #include "QueryF.h"
+#include "server/RpcServer.h"
 
 TEST_F(HelloTest, registryQuery)
 {
@@ -17,11 +18,13 @@ TEST_F(HelloTest, registryQuery)
 	TC_Config fconf = FRAMEWORK_CONFIG();
 
 	CDbHandle::cleanEndPoint();
-	CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", 9990, 1);
-	CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", 9991, 1);
+	CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9990, 1);
+	CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9991, 1);
 
-	FrameworkServer fs;
-	startServer(fs, FRAMEWORK_CONFIG());
+    TarsMockUtil tarsMockUtil;
+    tarsMockUtil.startFramework();
+//	FrameworkServer fs;
+//	startServer(fs, FRAMEWORK_CONFIG());
 
 	string obj = getObj(fconf, "RegistryAdapter");
 
@@ -36,7 +39,7 @@ TEST_F(HelloTest, registryQuery)
 	}
 
 	{
-		CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", 9992, 1);
+		CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9992, 1);
 
 		TC_Common::sleep(6);
 
@@ -55,7 +58,7 @@ TEST_F(HelloTest, registryQuery)
 	}
 
 	{
-		CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", 9993, 1);
+		CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9993, 1);
 
 		TC_Common::sleep(6);
 
@@ -74,16 +77,17 @@ TEST_F(HelloTest, registryQuery)
 		}
 	}
 
-	stopServer(fs);
+    tarsMockUtil.stopFramework();
+//	stopServer(fs);
 
 }
 
 #define START_FRAMEWORK_SERVER_1_2 \
 CDbHandle::cleanEndPoint(); \
-CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", 9990, 1); \
-CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", 9991, 1); \
-FrameworkServer fs; \
-startServer(fs, FRAMEWORK_CONFIG()); \
+CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9990, 1); \
+CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9991, 1); \
+TarsMockUtil tarsMockUtil; \
+tarsMockUtil.startFramework(); \
 RpcServer rpc1Server; \
 startServer(rpc1Server, RPC1_CONFIG()); \
 RpcServer rpc2Server; \
@@ -92,16 +96,16 @@ startServer(rpc2Server, RPC2_CONFIG());
 
 #define START_FRAMEWORK_HTTP_SERVER_1_2 \
 CDbHandle::cleanEndPoint(); \
-CDbHandle::addActiveEndPoint("TestApp.RpcServer.HttpObj", 8180, 1); \
-CDbHandle::addActiveEndPoint("TestApp.RpcServer.HttpObj", 8181, 1); \
-FrameworkServer fs; \
-startServer(fs, FRAMEWORK_CONFIG()); \
+CDbHandle::addActiveEndPoint("TestApp.RpcServer.HttpObj", "127.0.0.1", 8180, 1); \
+CDbHandle::addActiveEndPoint("TestApp.RpcServer.HttpObj", "127.0.0.1", 8181, 1); \
+TarsMockUtil tarsMockUtil; \
+tarsMockUtil.startFramework(); \
 RpcServer rpc1Server; \
 startServer(rpc1Server, RPC1_CONFIG()); \
 RpcServer rpc2Server; \
 startServer(rpc2Server, RPC2_CONFIG());
 
-#define STOP_FRAMEWORK_SERVER stopServer(fs);
+#define STOP_FRAMEWORK_SERVER tarsMockUtil.stopFramework();
 
 #define HELLO_CALL {\
 HelloPrx qPrx = comm->stringToProxy<HelloPrx>("TestApp.RpcServer.HelloObj"); \
@@ -114,7 +118,7 @@ ASSERT_TRUE(out == _buffer); }
 #define CHECK_REGISTRY_UPDATE {\
 stopServer(rpc1Server); \
 CDbHandle::cleanEndPoint(); \
-CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", 9992, 1); \
+CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9992, 1); \
 RpcServer rpc3Server; \
 startServer(rpc3Server, RPC3_CONFIG()); \
 wait(6000);                    \
@@ -188,7 +192,8 @@ TEST_F(HelloTest, registryRpc)
 	LOG_CONSOLE_DEBUG << endl;
 	stopServer(rpc1Server);
 	stopServer(rpc2Server);
-	stopServer(fs);
+    tarsMockUtil.stopFramework();
+//	stopServer(fs);
 }
 
 
@@ -196,8 +201,8 @@ TEST_F(HelloTest, registryRpc)
 TEST_F(HelloTest, registryRpcConHashInvoke)
 {
 	START_FRAMEWORK_SERVER_1_2
-        CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", 9989, 1);
-	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", 9992, 1);
+    CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9989, 1);
+	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj","127.0.0.1",  9992, 1);
 
 	shared_ptr<Communicator> c = getCommunicator();
 
@@ -330,7 +335,7 @@ TEST_F(HelloTest, registryRpcCheckUpdateList)
 
 	//更新主控ip list
 	CDbHandle::cleanEndPoint();
-	CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", 9992, 1);
+	CDbHandle::addActiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1",  9992, 1);
 
 	RpcServer rpc3Server;
 	startServer(rpc3Server, RPC3_CONFIG());
@@ -430,7 +435,7 @@ TEST_F(HelloTest, registryHttpRpcCheckUpdateList)
 
 	//更新主控ip list
 	CDbHandle::cleanEndPoint();
-	CDbHandle::addActiveEndPoint("TestApp.RpcServer.HttpObj", 8182, 1);
+	CDbHandle::addActiveEndPoint("TestApp.RpcServer.HttpObj", "127.0.0.1", 8182, 1);
 
 	RpcServer rpc3Server;
 	startServer(rpc3Server, RPC3_CONFIG());
@@ -471,8 +476,8 @@ TEST_F(HelloTest, registryHttpRpcCheckUpdateList)
 TEST_F(HelloTest, registryRpcHashTagInvoke)
 {
 	START_FRAMEWORK_SERVER_1_2
-	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", 9989, 1);
-	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", 9992, 1);
+	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9989, 1);
+	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9992, 1);
 
 	shared_ptr<Communicator> c = getCommunicator();
 
@@ -495,8 +500,8 @@ TEST_F(HelloTest, registryRpcHashTagInvoke)
 TEST_F(HelloTest, registryRpcMultiHashTagInvoke)
 {
 	START_FRAMEWORK_SERVER_1_2
-	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", 9989, 1);
-	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", 9992, 1);
+	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9989, 1);
+	CDbHandle::addInactiveEndPoint("TestApp.RpcServer.HelloObj", "127.0.0.1", 9992, 1);
 
 	shared_ptr<Communicator> c = getCommunicator();
 

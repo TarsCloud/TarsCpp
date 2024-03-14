@@ -13,7 +13,7 @@ TarsMockUtil::TarsMockUtil()
 
 void TarsMockUtil::startFramework()
 {
-    _fs->main(FRAMEWORK_CONFIG);
+    _fs->main(MOCK_FRAMEWORK_CONFIG);
     _fs->start();
     _fs->waitForReady();
 }

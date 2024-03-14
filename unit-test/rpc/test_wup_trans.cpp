@@ -1,7 +1,7 @@
 ﻿
 #include "hello_test.h"
 
-TEST_F(HelloTest, rpcWupTransGlobalCommunicator)
+TEST_F(HelloTest, wupTransGlobalCommunicator)
 {
 	shared_ptr<Communicator> c = getCommunicator();
 
@@ -10,7 +10,7 @@ TEST_F(HelloTest, rpcWupTransGlobalCommunicator)
 	}, c.get());
 }
 
-TEST_F(HelloTest, rpcWupTransGlobalCommunicatorInCoroutine)
+TEST_F(HelloTest, wupTransGlobalCommunicatorInCoroutine)
 {
 	shared_ptr<Communicator> c = getCommunicator();
 
@@ -20,7 +20,7 @@ TEST_F(HelloTest, rpcWupTransGlobalCommunicatorInCoroutine)
 
 }
 
-TEST_F(HelloTest, rpcWupTransServerCommunicator)
+TEST_F(HelloTest, wupTransServerCommunicator)
 {
 	transServerCommunicator([&](Communicator *comm){
 		checkWupTransSync(comm);

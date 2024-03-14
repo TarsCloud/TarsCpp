@@ -2,6 +2,7 @@
 #define PATH_HEAER
 
 #include "util/tc_config.h"
+#include "mock/framework.h"
 
 using namespace tars;
 
@@ -30,7 +31,7 @@ inline TC_Config CLIENT_CONFIG()
 inline TC_Config FRAMEWORK_CONFIG()
 {
 	TC_Config conf;
-	conf.parseFile(CONFIGPATH + "/server/framework.conf");
+	conf.parseString(MOCK_FRAMEWORK_CONFIG);
 
 	return conf;
 }

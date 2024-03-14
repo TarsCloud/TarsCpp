@@ -193,8 +193,11 @@ public:
 	//添加日志
 	static void SetUpTestCase()
 	{
+        LocalRollLogger::getInstance()->setLogInfo("tars", "test", ".", 1024*1024*10, 5, nullptr, "");
 
-	}
+        LocalRollLogger::getInstance()->logger()->setLogLevel("TARS");
+    }
+
 	static void TearDownTestCase()
 	{
 	}
@@ -259,7 +262,7 @@ public:
 //		comm->setProperty("asyncqueuecap", "1000000");
 
 		string obj = getObj(_conf, adapter);
-        LOG_CONSOLE_DEBUG << obj << endl;
+//        LOG_CONSOLE_DEBUG << obj << endl;
 		T prx =  comm->stringToProxy<T>(obj);
 
 		prx->tars_timeout(60000);
@@ -376,7 +379,6 @@ public:
 
 protected:
 	int    _count = 1000;
-	// int    _count = 10;
 
 	string _buffer;
 

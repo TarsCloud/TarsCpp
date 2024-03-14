@@ -866,7 +866,7 @@ void HelloTest::forEach(function<void(Communicator *comm)> func)
 		HelloServer server;
 		startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) i);
 
-		func(server.getCommunicator().get());
+		func(server.getApplicationCommunicator().get());
 
 		stopServer(server);
 	}
@@ -895,7 +895,7 @@ void HelloTest::forEachInCoroutine(function<void(Communicator *comm)> func)
 																					 s->terminate();
 																				 });
 
-											   func(server.getCommunicator().get());
+											   func(server.getApplicationCommunicator().get());
 											   
 										   });
 
