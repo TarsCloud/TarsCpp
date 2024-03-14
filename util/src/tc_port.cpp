@@ -724,7 +724,7 @@ vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMa
 
 FILE *TC_Port::freopen(const char * dst,  const char * mode, FILE * src)
 {
-#if TARGET_PLATFORM_IOS
+#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_WINDOWS
     return ::freopen(dst, mode, src);
 #else
     return ::freopen64(dst, mode, src);
