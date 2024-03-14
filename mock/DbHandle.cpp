@@ -505,7 +505,20 @@ void CDbHandle::addInactiveEndPoint(const string& objName, const string &host, c
 
 void CDbHandle::cleanEndPoint()
 {
-    ObjectsCache objectsCache;
+    ObjectsCache objectsCache = _objectsCache;
+
+    //从objectsCache删除不是tars的服务
+    for (auto it = objectsCache.begin(); it != objectsCache.end();)
+    {
+        if (it->first.find("tars.") == string::npos)
+        {
+            objectsCache.erase(it++);
+        }
+        else
+        {
+            ++it;
+        }
+    }
     updateObjectsCache(objectsCache, true);
 }
 

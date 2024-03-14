@@ -12,6 +12,7 @@ TEST_F(HelloTest, test)
 }
 
 
+
 TEST_F(HelloTest, rpcASyncGlobalCommunicator)
 {
     {

@@ -1,9 +1,9 @@
 ﻿
 #include "hello_test.h"
 #include "../server/WinServer.h"
-#include "server/FrameworkServer.h"
-#include "server/framework/DbHandle.h"
-#include "server/framework/ConfigImp.h"
+#include "mock/TarsMockUtil.h"
+#include "mock/DbHandle.h"
+#include "mock/ConfigImp.h"
 
 
 TEST_F(HelloTest, winServerInCoroutine)
@@ -370,10 +370,15 @@ TEST_F(HelloTest, winServerConfig)
     TC_File::removeFile("./test.conf.2.bak", true);
     TC_File::removeFile("./test.conf.3.bak", true);
     TC_File::removeFile("./test.conf.4.bak", true);
-    TC_File::removeFile("./FrameworkServer.tarsdat", true);
+    TC_File::removeFile("./tarsmock.tarsdat", true);
 
-    FrameworkServer fs;
-    startServer(fs, FRAMEWORK_CONFIG());
+    TarsMockUtil tarsMockUtil;
+    tarsMockUtil.startFramework();
+
+    ConfigImp::setConfigFile("test.conf", "test-content");
+
+//    FrameworkServer fs;
+//    startServer(fs, FRAMEWORK_CONFIG());
 
     {
         WinServer ws;
@@ -385,7 +390,7 @@ TEST_F(HelloTest, winServerConfig)
         stopServer(ws);
     }
 
-    CDbHandle::addActiveEndPoint("TestApp.FrameworkServer.ConfigObj", 11003, 1);
+//    CDbHandle::addActiveEndPoint("tars.tarsmock.ConfigObj", "127.0.0.1", 11003, 1);
     {
         WinServer ws;
 
@@ -420,6 +425,7 @@ TEST_F(HelloTest, winServerConfig)
 
         stopServer(ws);
     }
-    stopServer(fs);
+//    stopServer(fs);
+    tarsMockUtil.stopFramework();
 }
 

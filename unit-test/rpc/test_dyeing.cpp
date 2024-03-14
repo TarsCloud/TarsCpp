@@ -16,8 +16,10 @@
 
 #include "hello_test.h"
 #include "servant/AdminF.h"
-#include "server/FrameworkServer.h"
-#include "server/framework/DbHandle.h"
+//#include "server/FrameworkServer.h"
+//#include "server/framework/DbHandle.h"
+#include "mock/TarsMockUtil.h"
+#include "mock/DbHandle.h"
 
 #define DYEFILEPATH (string("tars_dyeing") + FILE_SEP)
 
@@ -52,11 +54,11 @@ TEST_F(HelloTest, DyeingNo)
 	HelloServer server;
 	startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) 0);
 
-	HelloPrx prx = getObj<HelloPrx>(server.getCommunicator().get(), "HelloAdapter");
+	HelloPrx prx = getObj<HelloPrx>(server.getApplicationCommunicator().get(), "HelloAdapter");
 
 //	int64_t tBegin = TC_TimeProvider::getInstance()->getNowMs();
 
-//	HelloPrx dyeingPrx= server.getCommunicator()->stringToProxy<HelloPrx>(DYEING_SERVANT_ENDPOINT);
+//	HelloPrx dyeingPrx= server.getApplicationCommunicator()->stringToProxy<HelloPrx>(DYEING_SERVANT_ENDPOINT);
 	string strIn="123456";
 	string strOut;
 	int ret=prx->testDyeing(strIn,strOut);
@@ -70,26 +72,28 @@ TEST_F(HelloTest, DyeingNo)
 //打开染色开关，但未使用染色key调用的场景
 TEST_F(HelloTest, DyeingNoKey)
 {
-	FrameworkServer fs;
-	startServer(fs, FRAMEWORK_CONFIG());
+    TarsMockUtil tarsMockUtil;
+    tarsMockUtil.startFramework();
+//	FrameworkServer fs;
+//	startServer(fs, FRAMEWORK_CONFIG());
 
-	CDbHandle::cleanEndPoint();
-	CDbHandle::addActiveEndPoint("TestApp.FrameworkServer.LogObj", 11005, 1);
+//	CDbHandle::cleanEndPoint();
+//	CDbHandle::addActiveEndPoint("tars.tarsmock.LogObj", "127.0.0.1", 11005, 1);
 
 	HelloServer server;
 	startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) 0);
 
 //    int64_t tBegin = TC_TimeProvider::getInstance()->getNowMs();
 
-	AdminFPrx adminFPrx = server.getCommunicator()->stringToProxy<AdminFPrx>("AdminObj@" + getLocalEndpoint(CONFIG()).toString());
+	AdminFPrx adminFPrx = server.getApplicationCommunicator()->stringToProxy<AdminFPrx>("AdminObj@" + getLocalEndpoint(CONFIG()).toString());
 
-//	AdminFPrx adminFPrx = server.getCommunicator()->stringToProxy<AdminFPrx>(UNIT_TEST_ADMIN_NAME_ENDPOINT);
+//	AdminFPrx adminFPrx = server.getApplicationCommunicator()->stringToProxy<AdminFPrx>(UNIT_TEST_ADMIN_NAME_ENDPOINT);
 	string setdyeing = adminFPrx->notify("tars.setdyeing 123456 TestApp.HelloServer.HelloObj testDyeing");
 	EXPECT_TRUE(setdyeing.find("DyeingKey=123456") != string::npos);
 
-	HelloPrx prx = getObj<HelloPrx>(server.getCommunicator().get(), "HelloAdapter");
+	HelloPrx prx = getObj<HelloPrx>(server.getApplicationCommunicator().get(), "HelloAdapter");
 
-//	DyeingTestPrx dyeingPrx= server.getCommunicator()->stringToProxy<DyeingTestPrx>(DYEING_SERVANT_ENDPOINT);
+//	DyeingTestPrx dyeingPrx= server.getApplicationCommunicator()->stringToProxy<DyeingTestPrx>(DYEING_SERVANT_ENDPOINT);
     string strIn="abc";
 	string strOut;
 	int ret=prx->testDyeing(strIn,strOut);
@@ -99,29 +103,31 @@ TEST_F(HelloTest, DyeingNoKey)
 //	TLOGDEBUG("dyeing without key request time cost: "<< " | " << TC_TimeProvider::getInstance()->getNowMs() - tBegin << "(ms)" << endl);
 
 	stopServer(server);
-	stopServer(fs);
+    tarsMockUtil.stopFramework();
+//	stopServer(fs);
 
 }
 //打开染色开关，使用染色key调用的场景
 TEST_F(HelloTest, DyeingKey)
 {
-	FrameworkServer fs;
-	startServer(fs, FRAMEWORK_CONFIG());
+    TarsMockUtil tarsMockUtil;
+//	FrameworkServer fs;
+//	startServer(fs, FRAMEWORK_CONFIG());
 
-	CDbHandle::cleanEndPoint();
-	CDbHandle::addActiveEndPoint("TestApp.FrameworkServer.LogObj", 11005, 1);
+//	CDbHandle::cleanEndPoint();
+//	CDbHandle::addActiveEndPoint("tars.tarsmock.LogObj", "127.0.0.1", 11005, 1);
 
 	HelloServer server;
 	startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) 0);
 
-	AdminFPrx adminFPrx = server.getCommunicator()->stringToProxy<AdminFPrx>("AdminObj@" + getLocalEndpoint(CONFIG()).toString());
+	AdminFPrx adminFPrx = server.getApplicationCommunicator()->stringToProxy<AdminFPrx>("AdminObj@" + getLocalEndpoint(CONFIG()).toString());
 
 	string setdyeing = adminFPrx->notify("tars.setdyeing 123456 TestApp.HelloServer.HelloObj testDyeing");
 	EXPECT_TRUE(setdyeing.find("DyeingKey=123456") != string::npos);
 
 	TC_File::removeFile("./tars_dyeing", true);
 
-	HelloPrx prx = getObj<HelloPrx>(server.getCommunicator().get(), "HelloAdapter");
+	HelloPrx prx = getObj<HelloPrx>(server.getApplicationCommunicator().get(), "HelloAdapter");
 
     string strIn="123456";
 	string strOut;
@@ -138,7 +144,8 @@ TEST_F(HelloTest, DyeingKey)
 	EXPECT_EQ(getFileLine(dyeDebugFile.c_str()), 4);
 
 	stopServer(server);
-	stopServer(fs);
+    tarsMockUtil.stopFramework();
+//	stopServer(fs);
 }
 
 

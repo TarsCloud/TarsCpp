@@ -17,25 +17,22 @@
 #include "hello_test.h"
 #include "../server/WinServer.h"
 #include "servant/AdminF.h"
-#include "server/FrameworkServer.h"
-#include "server/framework/DbHandle.h"
+#include "mock/TarsMockUtil.h"
+#include "mock/DbHandle.h"
+#include "mock/ConfigImp.h"
 
 TEST_F(HelloTest, testAdmin)
 {
-    LocalRollLogger::getInstance()->setLogInfo("tars", "test", ".", 1024*1024*10, 5, nullptr, "");
-
-    LocalRollLogger::getInstance()->logger()->setLogLevel("TARS");
-
-	FrameworkServer fs;
-	startServer(fs, FRAMEWORK_CONFIG());
+    TarsMockUtil tarsMockUtil;
+    tarsMockUtil.startFramework();
+    ConfigImp::setConfigFile("test.conf", "test-content");
 
 	CDbHandle::cleanEndPoint();
-	CDbHandle::addActiveEndPoint("TestApp.FrameworkServer.ConfigObj", 11003, 1);
 
 	WinServer ws;
 	startServer(ws, WIN_CONFIG());
 
-	CommunicatorPtr c = ws.getCommunicator();
+	CommunicatorPtr c = ws.getApplicationCommunicator();
 
 	string adminObj = "AdminObj@" + getLocalEndpoint(WIN_CONFIG()).toString();
 
@@ -81,11 +78,6 @@ TEST_F(HelloTest, testAdmin)
 	string reloadlocator = adminFPrx->notify("tars.reloadlocator reload");
 	EXPECT_TRUE(reloadlocator.find("[notify prefix object num:1]") != string::npos);
 
-// string closecore = adminFPrx->notify("tars.closecore no");
-// EXPECT_TRUE(closecore.find("after set cur:18446744073709551615;max: 18446744073709551615") != string::npos);
-// closecore = adminFPrx->notify("tars.closecore yes");
-// EXPECT_TRUE(closecore.find("after set cur:0;max: 18446744073709551615") != string::npos);
-
 	string errorcmd = adminFPrx->notify("tars.errorcmd");
 	EXPECT_STREQ(errorcmd.c_str(), "");
 
@@ -96,8 +88,6 @@ TEST_F(HelloTest, testAdmin)
 	EXPECT_STREQ(normaldeletecmd.c_str(), "[notify servant object num:1]\n[1]:Delete success!\n");
 
 	stopServer(ws);
-	stopServer(fs);
+    tarsMockUtil.stopFramework();
 }
-
-
 

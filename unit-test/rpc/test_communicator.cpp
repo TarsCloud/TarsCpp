@@ -277,7 +277,7 @@ TEST_F(HelloTest, testNotifyCtrlC)
 	HelloServer server;
 	startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) 0);
 
-	HelloPrx prx = getObj<HelloPrx>(server.getCommunicator(), "HelloAdapter");
+	HelloPrx prx = getObj<HelloPrx>(server.getApplicationCommunicator(), "HelloAdapter");
 
 	for(int i = 0; i < 10000; i++)
 	{

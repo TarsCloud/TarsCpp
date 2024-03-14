@@ -55,42 +55,42 @@ HelloServer::initialize()
 {
 //    this->_epollServer->setUdpRecvBufferSize(10 * 1024 * 1024);
 //    this->_epollServer->setUdpSendBufferSize(10 * 1024 * 1024);
-	g_HelloServerObj = ServerConfig::Application + "." + ServerConfig::ServerName +".HelloObj@" + getEpollServer()->getBindAdapter("HelloAdapter")->getEndpoint().toString();
-	g_TransDstServerObj = ServerConfig::Application + "." + ServerConfig::ServerName +".TransDstObj@" + getEpollServer()->getBindAdapter("TransDstAdapter")->getEndpoint().toString();
+	g_HelloServerObj =_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".HelloObj@" + getEpollServer()->getBindAdapter("HelloAdapter")->getEndpoint().toString();
+	g_TransDstServerObj =_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".TransDstObj@" + getEpollServer()->getBindAdapter("TransDstAdapter")->getEndpoint().toString();
 
-    addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName +".HelloObj");
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName +".TransObj");
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName +".HelloTimeoutObj");
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName +".HelloNoTimeoutObj");
+    addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".HelloObj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".TransObj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".HelloTimeoutObj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".HelloNoTimeoutObj");
 
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName +".Ipv6Obj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".Ipv6Obj");
 
-	addServant<HttpImp>(ServerConfig::Application + "." + ServerConfig::ServerName +".HttpObj");
-	addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpObj", &TC_NetWorkBuffer::parseHttp);
-	addServant<HttpImp>(ServerConfig::Application + "." + ServerConfig::ServerName +".HttpsObj");
-	addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".HttpsObj", &TC_NetWorkBuffer::parseHttp);
+	addServant<HttpImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".HttpObj");
+	addServantProtocol(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".HttpObj", &TC_NetWorkBuffer::parseHttp);
+	addServant<HttpImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".HttpsObj");
+	addServantProtocol(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".HttpsObj", &TC_NetWorkBuffer::parseHttp);
 
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName +".TransDstObj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".TransDstObj");
 
-	addServant<TranImp>(ServerConfig::Application + "." + ServerConfig::ServerName +".TransWupObj");
+	addServant<TranImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".TransWupObj");
 	//设置服务的协议解析器, 对服务器端而言, 解析器的目的就是识别包长度
 	//parseStream,表示第0个字节开始,类型是uint32_t, 字节序, 这个字段表示包的长度
 	TC_NetWorkBuffer::protocol_functor func = AppProtocol::parseStream<0, uint32_t, true>;
-	addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName +".TransWupObj", func);
+	addServantProtocol(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName +".TransWupObj", func);
 
-	addServant<CustomImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".CustomObj");
-	addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".CustomObj", parse);
+	addServant<CustomImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".CustomObj");
+	addServantProtocol(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".CustomObj", parse);
 
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".SSLObj");
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".SSL1Obj");
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".SSL2Obj");
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".SSL3Obj");
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".AuthObj");
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".UdpObj");
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".UdpIpv6Obj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".SSLObj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".SSL1Obj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".SSL2Obj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".SSL3Obj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".AuthObj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".UdpObj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".UdpIpv6Obj");
 
-	addServant<PushImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".PushObj");
-	addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".PushObj", parse);
+	addServant<PushImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".PushObj");
+	addServantProtocol(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".PushObj", parse);
 
 	pushThread = new PushInfoThread();
 	pushThread->start();
