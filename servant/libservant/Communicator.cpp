@@ -338,6 +338,8 @@ void Communicator::initialize()
         _asyncThreadNum = MAX_CLIENT_ASYNCTHREAD_NUM;
     }
 
+    _schedCommunicatorEpoll.resize(MAX_CLIENT_NOTIFYEVENT_NUM);
+
 	bool merge = TC_Common::strto<bool>(getProperty("mergenetasync", "0"));
 
     //异步队列的大小
@@ -371,8 +373,8 @@ void Communicator::initialize()
     }
 
     {
-        std::unique_lock<std::mutex> lock(_mutex);
-        _cond.wait(lock, [&]{ return _communicatorEpollStartNum == clientThreadNum; });
+        std::unique_lock<std::mutex> tlock(_mutex);
+        _cond.wait(tlock, [&]{ return _communicatorEpollStartNum == clientThreadNum; });
     }
 
     //异步队列数目上报
@@ -483,43 +485,59 @@ vector<shared_ptr<CommunicatorEpoll>> Communicator::getAllCommunicatorEpoll()
 	return communicatorEpolls;
 }
 
-void Communicator::forEachSchedCommunicatorEpoll(std::function<void(const shared_ptr<CommunicatorEpoll> &)> func)
+void Communicator::forEachSchedCommunicatorEpoll(const std::function<void(const shared_ptr<CommunicatorEpoll> &)>& func)
 {
-	TC_LockT<TC_SpinLock> lock(_schedMutex);
-	for(auto it : _schedCommunicatorEpoll)
+//	TC_LockT<TC_SpinLock> lock(_schedMutex);
+//	for(const auto& it : _schedCommunicatorEpoll)
+//	{
+//		func(it.second);
+//	}
+
+	for(const auto& it : _schedCommunicatorEpoll)
 	{
-		func(it.second);
+        if(it)
+        {
+            func(it);
+        }
 	}
 }
 
 shared_ptr<CommunicatorEpoll> Communicator::createSchedCommunicatorEpoll(size_t netThreadSeq,  const shared_ptr<ReqInfoQueue> &reqInfoQueue)
 {
+    assert(netThreadSeq < MAX_CLIENT_NOTIFYEVENT_NUM);
+
 	shared_ptr<CommunicatorEpoll> communicatorEpoll = std::make_shared<CommunicatorEpoll>(this, netThreadSeq);
 
 	communicatorEpoll->initializeEpoller();
 
 	communicatorEpoll->initNotify(netThreadSeq, reqInfoQueue);
 
-	{
-		TC_LockT<TC_SpinLock> lock(_schedMutex);
+    _schedCommunicatorEpoll[netThreadSeq] = communicatorEpoll;
 
-		_schedCommunicatorEpoll.insert(std::make_pair(netThreadSeq, communicatorEpoll));
-	}
+//	{
+//		TC_LockT<TC_SpinLock> lock(_schedMutex);
+//
+//		_schedCommunicatorEpoll.insert(std::make_pair(netThreadSeq, communicatorEpoll));
+//	}
 
 	return communicatorEpoll;
 }
 
 void Communicator::eraseSchedCommunicatorEpoll(size_t netThreadSeq)
 {
-	shared_ptr<CommunicatorEpoll> ce;
-	{
-		TC_LockT<TC_SpinLock> lock(_schedMutex);
+    assert(netThreadSeq < MAX_CLIENT_NOTIFYEVENT_NUM);
 
-		ce = _schedCommunicatorEpoll[netThreadSeq];
+    shared_ptr<CommunicatorEpoll> ce = _schedCommunicatorEpoll[netThreadSeq];
 
-		_schedCommunicatorEpoll.erase(netThreadSeq);
-	}
-
+    _schedCommunicatorEpoll[netThreadSeq].reset();
+//	{
+//		TC_LockT<TC_SpinLock> lock(_schedMutex);
+//
+//		ce = _schedCommunicatorEpoll[netThreadSeq];
+//
+//		_schedCommunicatorEpoll.erase(netThreadSeq);
+//	}
+//
 	if(ce)
 	{
 		ce->terminate();
@@ -531,13 +549,10 @@ void Communicator::reloadLocator()
     for (size_t i = 0; i < _communicatorEpoll.size(); ++i)
     {
 		_communicatorEpoll[i]->_epoller->syncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, _communicatorEpoll[i].get()));
-
-//        _communicatorEpoll[i]->loadObjectLocator();
     }
 
 	forEachSchedCommunicatorEpoll([](const shared_ptr<CommunicatorEpoll> &c){
 		c->_epoller->syncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, c.get()));
-//		c->loadObjectLocator();
 	});
 
 }
