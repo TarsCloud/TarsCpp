@@ -42,13 +42,13 @@ public:
 	void onConnect(const TC_Endpoint &ep)
 	{
 		_onconnect = true;
-//		LOG_CONSOLE_DEBUG << "onConnect:" << ep.toString() << ", " << _onconnect << ", " << this << endl;
+		LOG_CONSOLE_DEBUG << "onConnect:" << ep.toString() << ", " << _onconnect << ", " << this << endl;
 	}
 
 	void onClose()
 	{
 		_onclose = true;
-//		LOG_CONSOLE_DEBUG << "onClose:" << _onclose << endl;
+		LOG_CONSOLE_DEBUG << "onClose:" << _onclose << endl;
 	}
 
 	bool _onclose = false;

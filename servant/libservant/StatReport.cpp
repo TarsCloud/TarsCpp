@@ -682,7 +682,7 @@ void StatReport::run()
 
                 auto communicatorEpolls = _communicator->getAllCommunicatorEpoll();
 
-                for(auto ce : communicatorEpolls)
+                for(const auto& ce : communicatorEpolls)
                 {
                     MapStatMicMsg * pStatMsg;
                     while(ce->popStatMsg(pStatMsg))

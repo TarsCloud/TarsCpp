@@ -46,7 +46,7 @@ public:
     bool _close = false;
 };
 
-typedef TC_AutoPtr<RegisterPushCallBack> RegisterPushCallBackPtr;
+//typedef TC_AutoPtr<RegisterPushCallBack> RegisterPushCallBackPtr;
 
 TEST_F(HelloTest, push)
 {

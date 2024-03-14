@@ -316,7 +316,7 @@ void HelloTest::testPush(Communicator *comm, const string &adapter)
 
 		wait(1000);
 
-		ASSERT_TRUE(cNew->_onconnect);
+		ASSERT_TRUE(c->_onconnect);
 		ASSERT_TRUE(cNew->_onprintresult);
 
 		wait(10000);
