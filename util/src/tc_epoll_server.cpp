@@ -1398,9 +1398,6 @@ TC_EpollServer::BindAdapter::~BindAdapter()
 
 void TC_EpollServer::BindAdapter::bind()
 {
-    // try
-    // {
-
     assert(!_s.isValid());
 
 #if TARGET_PLATFORM_WINDOWS
@@ -1452,13 +1449,6 @@ void TC_EpollServer::BindAdapter::bind()
         }
     }
     _s.setblock(false);
-    // }
-    // catch(exception &ex)
-    // {
-    // 	_s.close();
-    // 	cerr << "bind:" << _ep.toString() << " error:" << ex.what() << endl;
-    // 	throw ex;
-    // }
 }
 
 void TC_EpollServer::BindAdapter::setNetThreads(const vector<NetThread*> &netThreads)
