@@ -123,7 +123,7 @@ void TC_Thread::threadEntry(TC_Thread *pThread)
     catch (exception &ex)
     {
         cerr << std::this_thread::get_id() << "|" << ex.what() << endl;
-        throw ex;
+        throw;
     }
     catch (...)
     {

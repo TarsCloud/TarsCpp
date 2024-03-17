@@ -150,9 +150,9 @@ std::shared_ptr<TC_OpenSSL> AdapterProxy::onOpensslCallback(TC_Transceiver* tran
 
 void AdapterProxy::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::CloseReason reason, const string &err)
 {
-    if(_objectProxy->getRootServantProxy()->tars_get_push_callback())
+    if(auto cb = _objectProxy->getRootServantProxy()->tars_get_push_callback())
     {
-		_objectProxy->getRootServantProxy()->tars_get_push_callback()->onClose(trans->getConnectEndpoint());
+		cb->onClose(trans->getConnectEndpoint());
     }
 
     int millisecond =_objectProxy->reconnect();
@@ -831,8 +831,9 @@ void AdapterProxy::finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp)
 
 	if (rsp->iRequestId == 0)
 	{
+        auto cb = _objectProxy->getRootServantProxy()->tars_get_push_callback();
 		//requestid 为0 是push消息, push callback is null
-		if (!_objectProxy->getRootServantProxy()->tars_get_push_callback())
+		if (!cb)
 		{
 			TLOGERROR("[AdapterProxy::finishInvoke(BasePacket)， request id is 0, pushcallback is null, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
             throw TarsDecodeException("request id is 0, pushcallback is null, obj: " + _objectProxy->name() + ", desc: " + _trans->getConnectionString());
@@ -845,7 +846,7 @@ void AdapterProxy::finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp)
 		msg->proxy = _objectProxy->getServantProxy();
 		msg->pObjectProxy = _objectProxy;
 		msg->adapter = this;
-		msg->callback = _objectProxy->getRootServantProxy()->tars_get_push_callback();
+		msg->callback = cb;
 	}
 	else
 	{
