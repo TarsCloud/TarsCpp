@@ -17,11 +17,9 @@
 #ifndef __TARS_ENDPOINT_INFO_H_
 #define __TARS_ENDPOINT_INFO_H_
 
-//#include "servant/Global.h"
 #include "util/tc_socket.h"
 #include "util/tc_clientsocket.h"
 #include "servant/EndpointF.h"
-//#include "AuthF.h"
 
 #if TARGET_PLATFORM_WINDOWS
 #include <WS2tcpip.h>
@@ -56,6 +54,53 @@ public:
      * @param type
      */
 	EndpointInfo(const EndpointF &ep);
+
+    /**
+     * 转换
+     * @param ep
+     * @return
+     */
+    static TC_Endpoint toEndpointF(const EndpointF &ep);
+
+    /**
+     * 转换
+     * @param ep
+     * @return
+     */
+    static EndpointF toEndpointF(const TC_Endpoint &ep, const string &nodeName);
+
+    /**
+     * 转换数据结构
+     * 如果是0.0.0.0 则换成本机实际ipv4的所有地址(多网卡), 注意去掉了127.0.0.1
+     * 如果是::1, 则换成本机实际ipv6的所有地址(多网卡), 注意去掉了::1
+     * 如果是*, 则换成本机所有的ipv4/ipv6的所有地址(多网卡), 注意去掉了127.0.0.1 和 ::1
+     * @param ep
+     * @param nodeName
+     * @return
+     */
+    static vector<EndpointF> toEndpointFs(const TC_Endpoint &ep, const string &nodeName);
+
+    /**
+     * 转换成字符串, 方便输出
+     * @param eps
+     * @param complete: 是否完整转换
+     * @return complete: false->ip1:port,ip2:port2,...  complete: true -> tcp -h .. -p ..:tcp -h .. -p ..
+     */
+    static string vectorEndpointFToStr(const vector<EndpointF> &eps, bool complete = true);
+
+    /**
+     * 字符串转换成vector<EndpointF>
+     * @param str, tcp -h .. -p ..:tcp -h .. -p ..
+     * @param nodeName
+     * @return
+     */
+    static vector<EndpointF> strToVectorEndpointF(const string &str, const string &nodeName);
+
+    /**
+     * 按照节点名称归并
+     * @return <节点名称, [地址]>
+     */
+    static map<string, vector<EndpointF>> toNodeEndpointF(const vector<tars::EndpointF> &eps);
 
     /**
      * get endpoint

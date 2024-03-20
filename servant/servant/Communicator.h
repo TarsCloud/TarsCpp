@@ -23,12 +23,10 @@
 #include "servant/Global.h"
 #include "servant/ServantProxy.h"
 #include "servant/ServantProxyFactory.h"
-//#include "servant/ObjectProxyFactory.h"
 #include "servant/AsyncProcThread.h"
-// #include "servant/CommunicatorEpoll.h"
 #include "servant/StatReport.h"
 #include "servant/RemoteLogger.h"
-
+#include "servant/QueryF.h"
 #include "util/tc_openssl.h"
 
 // #ifdef TARS_OPENTRACKING
@@ -117,38 +115,6 @@ class CommunicatorEpoll;
 class TC_OpenSSL;
 
 ////////////////////////////////////////////////////////////////////////
-/**
- * 客户端配置
- */
-struct ClientConfig
-{
-    /**
-     * 客户端IP地址
-     */
-    static string          LocalIp;
-    /**
-     * 客户端模块名称
-     */
-    static string          ModuleName;
-    /**
-     * 客户端所有的IP地址
-     */
-    static set<string>     SetLocalIp;
-   /**
-   *客户端是否打开set分组
-   */
-   static bool             SetOpen;
-   /**
-   *客户端set分组
-   */
-   static string           SetDivision;
-
-   /**
-    * 客户端的版本号
-    */
-   static string           TarsVersion;
-};
-
 ////////////////////////////////////////////////////////////////////////
 /**
  * 通信器,用于创建和维护客户端proxy
@@ -156,8 +122,52 @@ struct ClientConfig
 class SVT_DLL_API Communicator : public TC_HandleBase, public TC_ThreadRecMutex
 {
 public:
+    /**
+     * 客户端配置
+     */
+    struct ClientConfig
+    {
+        /**
+         * 客户端IP地址
+         */
+        string          LocalIp  = "127.0.0.1";
 
-	typedef std::function<void(ReqMessagePtr)> custom_callback;
+        /**
+         * 部署的节点名称, 如果独立客户端则为LocalIp;
+         */
+        string          NodeName;
+
+        /**
+         * 访问框架服务时, 传入的context, 目前: ["node_name"] = NodeName
+         */
+        map<string, string> Context;
+
+        /**
+         * 客户端模块名称
+         */
+        string          ModuleName;
+
+        /**
+         * 客户端所有的IP地址
+         */
+        set<string>     SetLocalIp;
+
+        /**
+        *客户端是否打开set分组
+        */
+        bool            SetOpen = false;
+        /**
+        *客户端set分组
+        */
+        string          SetDivision;
+
+        /**
+         * 客户端的版本号
+         */
+        string          TarsVersion;
+    };
+
+    typedef std::function<void(ReqMessagePtr)> custom_callback;
 
    /**
     * 构造函数
@@ -206,7 +216,9 @@ public:
         ServantProxy *pServantProxy = getServantProxy(objectName, setName, true);
         proxy = (typename T::element_type *)(pServantProxy);
     }
-
+    
+    ServantProxy * setServantProxy( ServantProxy * proxy, const string& objectName,const string& setName, bool rootServant);
+    
     /**
      * 获取公有网络线程个数
      * @return
@@ -342,6 +354,18 @@ public:
 	 */
 	bool isTerminating();
 
+    /**
+     * 如果没有配置locator, 则返回null
+     * @return
+     */
+    const QueryFPrx &getLocatorPrx() { return _queryFPrx; }
+
+    /**
+     * 获取set等信息
+     * @return
+     */
+    const ClientConfig &getClientConfig() const { return _clientConfig; }
+
 protected:
     /**
      * 初始化
@@ -425,7 +449,7 @@ protected:
 	 *
 	 * @param func
 	 */
-	void forEachSchedCommunicatorEpoll(std::function<void(const shared_ptr<CommunicatorEpoll> &)> func);
+	void forEachSchedCommunicatorEpoll(const std::function<void(const shared_ptr<CommunicatorEpoll> &)>& func);
 
 	/**
 	 * 创建一个协程内的网络通信器
@@ -442,6 +466,8 @@ protected:
 	/**
      * 框架内部需要直接访问通信器的类
      */
+    friend class Application;
+
     friend class AdapterProxy;
 
     friend class ServantProxy;
@@ -479,7 +505,12 @@ protected:
      */
     map<string, map<string, string>>   _objInfo;
 
-	/**
+    /*
+     * 主控的路由代理
+     */
+    QueryFPrx                 _queryFPrx;
+
+    /**
      * ServantProxy代码的工厂类
      */
     ServantProxyFactory* _servantProxyFactory;
@@ -487,17 +518,18 @@ protected:
     /*
      * 公有网络线程
      */
-    vector<shared_ptr<CommunicatorEpoll>>    _communicatorEpoll;//[MAX_CLIENT_THREAD_NUM];
+    vector<shared_ptr<CommunicatorEpoll>>    _communicatorEpoll;             //[MAX_CLIENT_THREAD_NUM];
 
     /**
      * 私有网络线程, 会动态变化
      */
-    unordered_map<size_t, shared_ptr<CommunicatorEpoll>>	_schedCommunicatorEpoll;
+//    unordered_map<size_t, shared_ptr<CommunicatorEpoll>>	_schedCommunicatorEpoll;
+    vector<shared_ptr<CommunicatorEpoll>>	_schedCommunicatorEpoll;        //MAX_CLIENT_NOTIFYEVENT_NUM
 
-    /**
-     * 操作通信器的锁
-     */
-    TC_SpinLock			_schedMutex;
+//    /**
+//     * 操作通信器的锁
+//     */
+//    TC_SpinLock			_schedMutex;
 
     /**
      * 锁
@@ -568,7 +600,11 @@ protected:
      * 注册事件
      */
     size_t 					_sigId = -1;
-	
+
+    /**
+     * 客户端配置
+     */
+    ClientConfig            _clientConfig;
 // #ifdef TARS_OPENTRACKING
 // public:
 //     struct TraceManager:public TC_HandleBase{

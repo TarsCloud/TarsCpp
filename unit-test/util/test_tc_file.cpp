@@ -150,3 +150,20 @@ TEST_F(UtilFileTest, config)
 
 	ASSERT_TRUE(volumes.size() == 2);
 }
+
+TEST_F(UtilFileTest, join)
+{
+    string v1 = TC_File::joinPaths("abc", string("def"), string("ddd"));
+
+    ASSERT_TRUE(v1 == string("abc") + FILE_SEP + "def" + FILE_SEP + "ddd");
+
+    string v2 = TC_File::joinPaths("abc/", string("def"), string("ddd"));
+
+    ASSERT_TRUE(v2 == string("abc") + FILE_SEP + "def" + FILE_SEP + "ddd");
+
+    string v3 = TC_File::joinPaths("abc/", string("def/"), string("ddd"));
+
+    ASSERT_TRUE(v3 == string("abc") + FILE_SEP + "def" + FILE_SEP + "ddd");
+
+
+}

@@ -297,9 +297,9 @@ namespace tars
 		 * @brief 启动线程.
 		 * @brief Start Thread
 		 *
-		 * @param iThreadNum线程数
+		 * @param iThreadNum线程数, 无效, 永远为1
 		 */
-		void start(size_t iThreadNum);
+		void start(int iThreadNum = 1);
 
 		/**
 		 * @brief 注册logger对象.
@@ -325,8 +325,16 @@ namespace tars
 		 */
 		void flush();
 
+        /**
+         * 结束
+         */
         void terminate();
 
+        /**
+         * 是否已经启动了
+         * @return
+         */
+        bool isStart();
 	protected:
 		/**
 		 * @brief 写日志

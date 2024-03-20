@@ -32,7 +32,7 @@ void TranImp::async_call(tars::CurrentPtr current, vector<char> &response)
 
     TLOGDEBUG("async_call: begin remote call, req len:" << req.sBuffer.size() << endl);
     /*a-sync-call*/
-    ServantProxyCallbackPtr cb = new ServantCallback("ServantCallback", this, current);
+    ServantProxyCallbackPtr cb(new ServantCallback("ServantCallback", this, current));
 	_servantPrx->rpc_call_async(req.iRequestId, req.sFuncName, request.data(), request.size(), cb);
     current->setResponse(false);
 }

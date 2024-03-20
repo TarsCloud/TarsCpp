@@ -15,9 +15,11 @@
  */
 #include "util/tc_platform.h"
 #include "servant/AdminServant.h"
-#include "servant/Application.h"
 #include "servant/NotifyObserver.h"
 #include "servant/ServantHelper.h"
+#include "servant/RemoteNotify.h"
+#include "servant/RemoteLogger.h"
+#include "servant/Application.h"
 
 namespace tars
 {
@@ -42,6 +44,8 @@ void AdminServant::shutdown(CurrentPtr current)
 {
 	TLOGERROR("[TARS][AdminServant::shutdown] from node" << endl);
 
+    _application->getApplicationCommunicator()->terminate();
+    _application->terminate();
 #if TARGET_PLATFORM_WINDOWS
 	HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 	if (hProcess == NULL)
@@ -61,6 +65,11 @@ string AdminServant::notify(const string &command, CurrentPtr current)
     RemoteNotify::getInstance()->report("AdminServant::notify:" + command);
 
     return this->getApplication()->getNotifyObserver()->notify(command, current);
+}
+
+tars::Int64 AdminServant::getPid(CurrentPtr current)
+{
+    return getpid();
 }
 
 ///////////////////////////////////////////////////////////////////////

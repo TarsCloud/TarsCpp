@@ -42,13 +42,13 @@ public:
 	void onConnect(const TC_Endpoint &ep)
 	{
 		_onconnect = true;
-//		LOG_CONSOLE_DEBUG << "onConnect:" << ep.toString() << ", " << _onconnect << ", " << this << endl;
+		LOG_CONSOLE_DEBUG << "onConnect:" << ep.toString() << ", " << _onconnect << ", " << this << endl;
 	}
 
 	void onClose()
 	{
 		_onclose = true;
-//		LOG_CONSOLE_DEBUG << "onClose:" << _onclose << endl;
+		LOG_CONSOLE_DEBUG << "onClose:" << _onclose << endl;
 	}
 
 	bool _onclose = false;
@@ -58,7 +58,7 @@ public:
 
 };
 
-typedef tars::TC_AutoPtr<PushCallBack> PushCallBackPtr;
+// typedef tars::TC_AutoPtr<PushCallBack> PushCallBackPtr;
 
 struct ClientHelloCallback : public HelloPrxCallback
 {
@@ -185,7 +185,7 @@ public:
 	std::atomic<int> &callback_count;
 };
 
-typedef tars::TC_AutoPtr<CustomCallBack> CustomCallBackPtr;
+// typedef tars::TC_AutoPtr<CustomCallBack> CustomCallBackPtr;
 
 class HelloTest : public testing::Test
 {
@@ -193,8 +193,11 @@ public:
 	//添加日志
 	static void SetUpTestCase()
 	{
+        LocalRollLogger::getInstance()->setLogInfo("tars", "test", ".", 1024*1024*10, 5, nullptr, "");
 
-	}
+        LocalRollLogger::getInstance()->logger()->setLogLevel("TARS");
+    }
+
 	static void TearDownTestCase()
 	{
 	}
@@ -259,7 +262,7 @@ public:
 //		comm->setProperty("asyncqueuecap", "1000000");
 
 		string obj = getObj(_conf, adapter);
-        LOG_CONSOLE_DEBUG << obj << endl;
+//        LOG_CONSOLE_DEBUG << obj << endl;
 		T prx =  comm->stringToProxy<T>(obj);
 
 		prx->tars_timeout(60000);
@@ -268,8 +271,11 @@ public:
 		return prx;
 	}
 
-    int GetUsedFileDescriptorCount()
-    {
+	int getFdCounts()
+	{
+#if TARGET_PLATFORM_WINDOWS
+        return 0;
+#else
         // 使用 shell 命令 "lsof" 获取已使用的文件句柄数量
         FILE* file = popen("lsof -p $$ | wc -l", "r");
         if (!file) {
@@ -287,14 +293,6 @@ public:
         // 解析结果并提取文件句柄数量
         int usedFileDescriptors = std::stoi(result);
         return usedFileDescriptors;
-    }
-
-	int getFdCounts()
-	{
-#if TARGET_PLATFORM_WINDOWS
-        return 0;
-#else
-        return GetUsedFileDescriptorCount();
 #endif
 	}
 
@@ -381,7 +379,6 @@ public:
 
 protected:
 	int    _count = 1000;
-	// int    _count = 10;
 
 	string _buffer;
 

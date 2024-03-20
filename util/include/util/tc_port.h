@@ -46,6 +46,9 @@ struct TC_Port_Exception : public TC_Exception
 	~TC_Port_Exception() throw() {};
 };
 
+/**
+ * 跨平台相关函数封装
+ */
 class TC_Port
 {
 public:
@@ -56,39 +59,132 @@ public:
      */ 
     static const char* strnstr(const char* s1, const char* s2, int pos1);
 
+    /**
+     * 字符串比较
+     * @param s1
+     * @param s2
+     * @return
+     */
 	static int strcmp(const char *s1, const char *s2);
 
+    /**
+     * 字符串比较
+     * @param s1
+     * @param s2
+     * @param n
+     * @return
+     */
 	static int strncmp(const char *s1, const char *s2, size_t n);
 
+    /**
+     * 忽略大小写比较
+     * @param s1
+     * @param s2
+     * @return
+     */
 	static int strcasecmp(const char *s1, const char *s2);
 
+    /**
+     * 忽略大小写比较
+     * @param s1
+     * @param s2
+     * @param n
+     * @return
+     */
     static int strncasecmp(const char *s1, const char *s2, size_t n);    
 
+    /**
+     * 从clock得到当前(到时区的)时间
+     * @param clock
+     * @param result
+     */
     static void localtime_r(const time_t *clock, struct tm *result);
 
+    /**
+     * 从clock得到当前时间GMT(不考虑时区, 夏令时等)
+     * @param clock
+     * @param result
+     */
     static void gmtime_r(const time_t *clock, struct tm *result);
 
+    /**
+     * 转换成时间戳(GMT时间)
+     * @param timeptr
+     * @return
+     */
     static time_t timegm(struct tm *timeptr);
 
+    /**
+     * 当前时间
+     * @param tv
+     * @return
+     */
     static int gettimeofday(struct timeval &tv);
 
+    /**
+     * 改变文件属性
+     * @param path
+     * @param mode
+     * @return
+     */
     static int chmod(const char *path, mode_t mode);
-
-    static FILE * fopen(const char * path, const char * mode);
 
 #if TARGET_PLATFORM_WINDOWS
     typedef struct _stat stat_t;
 #else
     typedef struct stat stat_t;
 #endif
+
+    /**
+     * 查看文件属性
+     * @param path
+     * @param buf
+     * @return
+     */
     static int lstat(const char * path, stat_t * buf);
 
+    /**
+     * 创建目录(可以使用TC_File下的函数makeDir/makeDirRecursive)
+     * @param path
+     * @return
+     */
     static int mkdir(const char *path);
 
+    /**
+     * 删除路径 可以使用TC_File::removeFile
+     * @param path
+     * @return
+     */
     static int rmdir(const char *path);
 
+    /**
+     * 打开一个文件
+     * @param path
+     * @param mode
+     * @return
+     */
+    static FILE * fopen(const char * path, const char * mode);
+
+    /**
+     * src重定向到file
+     * @param src
+     * @param mode
+     * @param dst
+     * @return
+     */
+    static FILE	*freopen(const char * dst,  const char * mode, FILE * src);
+
+    /**
+     * 关闭网络句柄
+     * @param fd
+     * @return
+     */
     static int closeSocket(int fd);
 
+    /**
+     * 获取进程pid
+     * @return
+     */
     static int64_t getpid();
 
 	/**
@@ -105,11 +201,23 @@ public:
 	 */
     static void setEnv(const std::string &name, const std::string &value);
 
+    /**
+     * 获取当前进程的目录
+     * @return
+     */
+    static string getCwd();
+
+    /**
+     * kill某个pid的进程
+     * @param pid
+     */
+    static void kill(int64_t pid);
+
 	/**
 	 * 运行一个脚本
 	 * @param cmd
 	 * @param err
-	 * @return 程序的标准输出(最大2k的输出长度)
+	 * @return 程序的标准输出
 	 */
     static std::string exec(const char* cmd);
 
@@ -117,21 +225,43 @@ public:
 	 * 运行一个脚本(程序+命令行)
 	 * @param cmd
 	 * @param err
-	 * @return: 程序的标准输出(最大2k的输出长度)
+	 * @return: 程序的标准输出
 	 */
 	static std::string exec(const char* cmd, std::string &err);
 
 	/**
 	 * fork子进程并运行程序
 	 * @param sExe: 可执行程序路径
-	 * @param sPwdPath: 程序运行的当前路径
-	 * @param sRollLogPath: 滚动日志路径(stdout会重定向到滚动日志), 为空则不重定向
-	 * @param vOptions: 参数
+	 * @param sPwdPath:  设置程序运行的当前路径(chdir)
+	 * @param sRollLogPath: 重定向输出路径(stdout/stderr会重定向到该日志文件), 为空则不重定向
+	 * @param vArgs: 参数
 	 * @return 子进程id: ==0: 子进程中, >0: 父进程中(子进程pid), 其他抛出异常 TC_Port_Exception
 	 */
-	static int64_t forkExec(const string& sExe, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vOptions);
+	static int64_t forkExec(const string& sExe, const string& sPwdPath, const string& sRollLogPath, const vector<string>& vArgs);
 
-		/**
+#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
+    /**
+     * 关闭所有当前进程的文件句柄(除了stdin/stdout/stderr)
+     */
+    static void closeAllFileDescriptors();
+#endif
+
+    /**
+     * 返回完整命令行参数, 如果pid不存在, 则返回为空
+     * @param pid
+     * @return, 命令行参数, argv[0], argv[1] ....
+     */
+    static std::vector<std::string> getCommandLine(int64_t pid);
+
+    /**
+     * 根据程序执行的命令行, 获取对应的进程pid
+     * @param cmdLine: 程序的启动完整命令行
+     * @param accurateMatch: 匹配方式, true: 精确匹配, false: 模糊匹配(启动命令行能find到cmdLine)
+     * @return
+     */
+    static vector<int64_t> getPidsByCmdline(const string &cmdLine, bool accurateMatch = false);
+
+    /**
 	 * 注册ctrl+c回调事件(SIGINT/CTRL_C_EVENT)
 	 * @param callback
 	 * @return size_t, 注册事件的id, 取消注册时需要
@@ -158,39 +288,48 @@ public:
 	 */
 	static void unregisterTerm(size_t id);
 
+    /**
+     * 获取cpu负载
+     * @param queryTime, windows下有效, 会阻塞的时间, 毫秒
+     *
+     * @return, 如果失败, 返回-1, 否在返回cpu负载的值
+     */
+    static double getCpuLoad(uint32_t queryTime = 500);
+
 	/**
-	 * 获取指定进程占用物理内存大小, 返回内存大小，默认单位(字节， 还支持K, M, G) (目前linux下才有效)
+	 * 获取指定进程占用物理内存大小, 返回内存大小(K, M, G)
 	 * @param pid: 目标进程id
+	 * @param unit: 指定单位
 	 * return -1 表示获取失败
 	 *
 	 */
 	static int64_t getPidMemUsed(int64_t pid, const char unit = 'M');
 
 	/**
-	 * 获取进程启动时间(目前linux下才有效)
+	 * 获取进程启动时间(秒)
 	 * @param pid
 	 * @return
 	 */
 	static time_t getPidStartTime(int64_t pid);
 
 	/**
-	 * 服务器启动时间(目前linux下才有效)
+	 * 服务器启动的绝对时间(秒)
 	 * @return
 	 */
 	static time_t getUPTime();
 
 	/**
-	 * 获取系统内存信息(目前linux下才有效)
+	 * 获取系统内存信息
 	 * @param totalSize, 总内存大小
 	 * @param availableSize , 剩余可用内存大小
 	 * @param usedPercent , 已使用内存百分比
-	 * @param unit, 内存单位
+	 * @param unit, 内存单位(B, K, G, M)
 	 * @return
 	 */
 	static bool getSystemMemInfo(int64_t &totalSize, int64_t &availableSize, float &usedPercent, const char unit = 'M');
 
 	/**
-	 * 获取系统逻辑CPU核数(目前linux下才有效)
+	 * 获取系统逻辑CPU核数
 	 * @return -1 表示获取失败
 	 */
 	static int  getCPUProcessor();
@@ -198,11 +337,11 @@ public:
 	/**
 	 * 获取磁盘信息
 	 * @param usedPercent 磁盘使用百分比
-	 * @param availableSize 剩余磁盘空间（单位M）
+	 * @param availableSize 剩余磁盘空间（字节数）
 	 * @param path, 为该路径所在目标磁盘
 	 */
 
-	static bool getDiskInfo(float& usedPercent, int64_t& availableSize, const string& path = "/");
+	static bool getDiskInfo(int64_t &totalSize, int64_t& availableSize, float& usedPercent, const string& path);
 
 protected:
 

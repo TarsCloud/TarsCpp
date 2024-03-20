@@ -1,7 +1,7 @@
 ﻿
 #include "hello_test.h"
 
-TEST_F(HelloTest, rpcTransGlobalCommunicator)
+TEST_F(HelloTest, transGlobalCommunicator)
 {
 	shared_ptr<Communicator> c = getCommunicator();
 
@@ -22,7 +22,7 @@ TEST_F(HelloTest, rpcTransGlobalCommunicator)
 	}, c.get());
 }
 
-TEST_F(HelloTest, rpcTransGlobalCommunicatorInCoroutine)
+TEST_F(HelloTest, transGlobalCommunicatorInCoroutine)
 {
 	shared_ptr<Communicator> c = getCommunicator();
 
@@ -43,7 +43,7 @@ TEST_F(HelloTest, rpcTransGlobalCommunicatorInCoroutine)
 	}, c.get());
 }
 
-TEST_F(HelloTest, rpcTransServerCommunicator)
+TEST_F(HelloTest, transServerCommunicator)
 {
 	transServerCommunicator([&](Communicator *comm){
 		checkTransSyncASync(comm);
@@ -62,7 +62,7 @@ TEST_F(HelloTest, rpcTransServerCommunicator)
 	});
 }
 
-TEST_F(HelloTest, rpcTransServerCommunicatorInCoroutine)
+TEST_F(HelloTest, transServerCommunicatorInCoroutine)
 {
 	transInCoroutineServerCommunicator([&](Communicator *comm){
 		checkTransSyncASync(comm);
@@ -81,7 +81,7 @@ TEST_F(HelloTest, rpcTransServerCommunicatorInCoroutine)
 	});
 }
 
-TEST_F(HelloTest, rpcTransAllocCommunicator)
+TEST_F(HelloTest, transAllocCommunicator)
 {
 	transAllocCommunicator([&](Communicator *comm){
 		checkTransSyncASync(comm);
@@ -100,7 +100,7 @@ TEST_F(HelloTest, rpcTransAllocCommunicator)
 	});
 }
 
-TEST_F(HelloTest, rpcTransAllocCommunicatorInCoroutine)
+TEST_F(HelloTest, transAllocCommunicatorInCoroutine)
 {
 	transInCoroutineAllocCommunicator([&](Communicator *comm){
 		checkTransSyncASync(comm);
@@ -120,7 +120,7 @@ TEST_F(HelloTest, rpcTransAllocCommunicatorInCoroutine)
 }
 
 
-TEST_F(HelloTest, rpcTransComplexCommunicator)
+TEST_F(HelloTest, transComplexCommunicator)
 {
 	shared_ptr<Communicator> c = getCommunicator();
 
@@ -142,7 +142,7 @@ TEST_F(HelloTest, rpcTransComplexCommunicator)
 }
 
 
-TEST_F(HelloTest, rpcTransComplexCommunicatorInCoroutine)
+TEST_F(HelloTest, transComplexCommunicatorInCoroutine)
 {
 	shared_ptr<Communicator> c = getCommunicator();
 

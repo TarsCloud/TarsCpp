@@ -15,14 +15,13 @@
  */
 
 #include "servant/RemoteNotify.h"
-#include "servant/Communicator.h"
 #include "servant/RemoteLogger.h"
 #include "servant/Application.h"
 
 namespace tars
 {
 
-int RemoteNotify::setNotifyInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string &sSetName, const string &nodeName)
+int RemoteNotify::setNotifyInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string &sSetName)
 {
     _comm           = comm;
     if(!obj.empty())
@@ -35,7 +34,6 @@ int RemoteNotify::setNotifyInfo(const CommunicatorPtr &comm, const string &obj, 
     _setName        = sSetName;
     _app            = app;
     _serverName     = serverName;
-    _nodeName      =  nodeName;
     return 0;
 }
 
@@ -52,14 +50,14 @@ void RemoteNotify::report(const string &sResult, bool bSync)
             info.sSet      = _setName;
             info.sThreadId = TC_Common::tostr(std::this_thread::get_id());
             info.sMessage  = sResult;
-            info.sNodeName = _nodeName;
+            info.sNodeName = _comm->getClientConfig().NodeName;
             if(!bSync)
             {
-                _notifyPrx->async_reportNotifyInfo(NULL, info, ServerConfig::Context);
+                _notifyPrx->async_reportNotifyInfo(NULL, info, _comm->getClientConfig().Context);
             }
             else
             {
-                _notifyPrx->reportNotifyInfo(info, ServerConfig::Context);
+                _notifyPrx->reportNotifyInfo(info, _comm->getClientConfig().Context);
             }
         }
     }
@@ -87,8 +85,8 @@ void RemoteNotify::notify(NOTIFYLEVEL level, const string &sMessage)
             info.sThreadId = TC_Common::tostr(std::this_thread::get_id());
             info.sMessage  = sMessage;
             info.eLevel    = level;
-            info.sNodeName = _nodeName;
-            _notifyPrx->async_reportNotifyInfo(NULL, info, ServerConfig::Context);
+            info.sNodeName = _comm->getClientConfig().NodeName;
+            _notifyPrx->async_reportNotifyInfo(NULL, info, _comm->getClientConfig().Context);
         }
     }
     catch(exception &ex)
@@ -114,7 +112,7 @@ void RemoteNotify::report(const string &sMessage, const string & app, const stri
             info.sSet      = "";
             info.sMessage  = sMessage;
             info.sNodeName = sNodeName;
-            _notifyPrx->async_reportNotifyInfo(NULL, info, ServerConfig::Context);
+            _notifyPrx->async_reportNotifyInfo(NULL, info, _comm->getClientConfig().Context);
         }
     }
     catch(exception &ex)

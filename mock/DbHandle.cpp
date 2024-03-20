@@ -1,16 +1,21 @@
-﻿
+
 #include <iterator>
 #include <algorithm>
-#include "DbHandle.h"
+#include "mock/DbHandle.h"
 
-TC_ReadersWriterData<ObjectsCache> CDbHandle::_objectsCache;
-TC_ReadersWriterData<CDbHandle::SetDivisionCache> CDbHandle::_setDivisionCache;
-TC_ReadersWriterData<std::map<int, CDbHandle::GroupPriorityEntry> > CDbHandle::_mapGroupPriority;
+
+//////////////////////////////////////////////////////
+
+static ObjectsCache    _objectsCache;
+
+CDbHandle::SetDivisionCache CDbHandle::_setDivisionCache;
+std::map<int, CDbHandle::GroupPriorityEntry> CDbHandle::_mapGroupPriority;
+std::mutex CDbHandle::_mutex;
 
 //key-ip, value-组编号
-TC_ReadersWriterData<map<string, int> > CDbHandle::_groupIdMap;
+map<string, int> CDbHandle::_groupIdMap;
 //key-group_name, value-组编号
-TC_ReadersWriterData<map<string, int> > CDbHandle::_groupNameMap;
+//map<string, int> CDbHandle::_groupNameMap;
 
 int CDbHandle::init(TC_Config *pconf)
 {
@@ -19,8 +24,10 @@ int CDbHandle::init(TC_Config *pconf)
 
 vector<EndpointF> CDbHandle::findObjectById(const string& id)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
+
     ObjectsCache::iterator it;
-    ObjectsCache& usingCache = _objectsCache.getReaderData();
+    ObjectsCache& usingCache = _objectsCache;
 
     if ((it = usingCache.find(id)) != usingCache.end())
     {
@@ -37,10 +44,11 @@ vector<EndpointF> CDbHandle::findObjectById(const string& id)
 int CDbHandle::findObjectById4All(const string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp)
 {
 
+	std::lock_guard<std::mutex> lock(_mutex);
     TLOGDEBUG(__FUNCTION__ << " id: " << id << endl);
 
     ObjectsCache::iterator it;
-    ObjectsCache& usingCache = _objectsCache.getReaderData();
+    ObjectsCache& usingCache = _objectsCache;
 
     if ((it = usingCache.find(id)) != usingCache.end())
     {
@@ -112,8 +120,9 @@ int CDbHandle::findObjectByIdInSameGroup(const string& id, const string& ip, vec
         return findObjectById4All(id, activeEp, inactiveEp);
     }
 
+	std::lock_guard<std::mutex> lock(_mutex);
     ObjectsCache::iterator it;
-    ObjectsCache& usingCache = _objectsCache.getReaderData();
+    ObjectsCache& usingCache = _objectsCache;
 
     if ((it = usingCache.find(id)) != usingCache.end())
     {
@@ -147,7 +156,8 @@ int CDbHandle::findObjectByIdInGroupPriority(const std::string& sID, const std::
         return findObjectById4All(sID, vecActive, vecInactive);
     }
 
-    ObjectsCache& usingCache = _objectsCache.getReaderData();
+	std::lock_guard<std::mutex> lock(_mutex);
+    ObjectsCache& usingCache = _objectsCache;
     ObjectsCache::iterator itObject = usingCache.find(sID);
     if (itObject == usingCache.end()) return 0;
 
@@ -159,7 +169,7 @@ int CDbHandle::findObjectByIdInGroupPriority(const std::string& sID, const std::
     }
 
     //启用分组，但同组中没有找到，在优先级序列中查找
-    std::map<int, GroupPriorityEntry> & mapPriority = _mapGroupPriority.getReaderData();
+    std::map<int, GroupPriorityEntry> & mapPriority = _mapGroupPriority;
     for (std::map<int, GroupPriorityEntry>::iterator it = mapPriority.begin(); it != mapPriority.end() && vecActive.empty(); it++)
     {
         if (it->second.setGroupID.count(iClientGroupID) == 0)
@@ -196,8 +206,9 @@ int CDbHandle::findObjectByIdInSameStation(const std::string& sID, const std::st
     vecActive.clear();
     vecInactive.clear();
 
+	std::lock_guard<std::mutex> lock(_mutex);
     //获得station所有组
-    std::map<int, GroupPriorityEntry> & mapPriority         = _mapGroupPriority.getReaderData();
+    std::map<int, GroupPriorityEntry> & mapPriority         = _mapGroupPriority;
     std::map<int, GroupPriorityEntry>::iterator itGroup     = mapPriority.end();
     for (itGroup = mapPriority.begin(); itGroup != mapPriority.end(); itGroup++)
     {
@@ -212,7 +223,7 @@ int CDbHandle::findObjectByIdInSameStation(const std::string& sID, const std::st
         return -1;
     }
 
-    ObjectsCache& usingCache = _objectsCache.getReaderData();
+    ObjectsCache& usingCache = _objectsCache;
     ObjectsCache::iterator itObject = usingCache.find(sID);
     if (itObject == usingCache.end()) return 0;
 
@@ -229,7 +240,8 @@ int CDbHandle::findObjectByIdInSameSet(const string& sID, const vector<string>& 
     string sSetArea   = vtSetInfo[0] + "." + vtSetInfo[1];
     string sSetId     = vtSetInfo[0] + "." + vtSetInfo[1] + "." + vtSetInfo[2];
 
-    SetDivisionCache& usingSetDivisionCache = _setDivisionCache.getReaderData();
+	std::lock_guard<std::mutex> lock(_mutex);
+    SetDivisionCache& usingSetDivisionCache = _setDivisionCache;
     SetDivisionCache::iterator it = usingSetDivisionCache.find(sID);
     if (it == usingSetDivisionCache.end())
     {
@@ -306,17 +318,16 @@ int CDbHandle::findObjectByIdInSameSet(const string& sSetId, const vector<SetSer
 
 void CDbHandle::updateObjectsCache(const ObjectsCache& objCache, bool updateAll)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
     //全量更新
     if (updateAll)
     {
-        _objectsCache.getWriterData() = objCache;
-        _objectsCache.swap();
+        _objectsCache = objCache;
     }
     else
     {
         //用查询数据覆盖一下
-        _objectsCache.getWriterData() = _objectsCache.getReaderData();
-        ObjectsCache& tmpObjCache = _objectsCache.getWriterData();
+        ObjectsCache& tmpObjCache = _objectsCache;
 
         ObjectsCache::const_iterator it = objCache.begin();
         for (; it != objCache.end(); it++)
@@ -324,23 +335,21 @@ void CDbHandle::updateObjectsCache(const ObjectsCache& objCache, bool updateAll)
             //增量的时候加载的是服务的所有节点，因此这里直接替换
             tmpObjCache[it->first] = it->second;
         }
-        _objectsCache.swap();
     }
 }
 
 void CDbHandle::updateInactiveObjectsCache(const ObjectsCache& objCache, bool updateAll)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
     //全量更新
     if (updateAll)
     {
-        _objectsCache.getWriterData() = objCache;
-        _objectsCache.swap();
+        _objectsCache = objCache;
     }
     else
     {
         //用查询数据覆盖一下
-        _objectsCache.getWriterData() = _objectsCache.getReaderData();
-        ObjectsCache& tmpObjCache = _objectsCache.getWriterData();
+        ObjectsCache& tmpObjCache = _objectsCache;
 
         ObjectsCache::const_iterator it = objCache.begin();
         for (; it != objCache.end(); it++)
@@ -348,24 +357,22 @@ void CDbHandle::updateInactiveObjectsCache(const ObjectsCache& objCache, bool up
             //增量的时候加载的是服务的所有节点，因此这里直接替换
             tmpObjCache[it->first].vInactiveEndpoints.push_back((it->second).vInactiveEndpoints[0]);
         }
-        _objectsCache.swap();
     }
 }
 
 
 void CDbHandle::updateActiveObjectsCache(const ObjectsCache& objCache, bool updateAll)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
     //全量更新
     if (updateAll)
     {
-        _objectsCache.getWriterData() = objCache;
-        _objectsCache.swap();
+        _objectsCache = objCache;
     }
     else
     {
         //用查询数据覆盖一下
-        _objectsCache.getWriterData() = _objectsCache.getReaderData();
-        ObjectsCache& tmpObjCache = _objectsCache.getWriterData();
+        ObjectsCache& tmpObjCache = _objectsCache;
 
         ObjectsCache::const_iterator it = objCache.begin();
         for (; it != objCache.end(); it++)
@@ -373,31 +380,50 @@ void CDbHandle::updateActiveObjectsCache(const ObjectsCache& objCache, bool upda
             //增量的时候加载的是服务的所有节点，因此这里直接替换
             tmpObjCache[it->first].vActiveEndpoints.push_back((it->second).vActiveEndpoints[0]);
         }
-        _objectsCache.swap();
     }
 }
 
-
-void CDbHandle::addActiveEndPoint(const string& objName, const Int32 port, const Int32 istcp)
+void CDbHandle::printActiveEndPoint(const string& objName)
 {
-#define LOCAL_HOST "127.0.0.1"
+	std::lock_guard<std::mutex> lock(_mutex);
+	{
+		LOG_CONSOLE_DEBUG << "reader data" << endl;
+		for (auto e : _objectsCache[objName].vActiveEndpoints)
+		{
+			LOG_CONSOLE_DEBUG << e.writeToJsonString() << endl;
+		}
+	}
+
+	{
+		LOG_CONSOLE_DEBUG << "write data" << endl;
+		for (auto e : _objectsCache[objName].vActiveEndpoints)
+		{
+			LOG_CONSOLE_DEBUG << e.writeToJsonString() << endl;
+		}
+	}
+}
+
+void CDbHandle::addActiveEndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string &nodeName)
+{
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
+    endPoint.nodeName = nodeName;
     //endPoint.setId = setName + "." + setArea + "." + setGroup;
     objectsCache[objName].vActiveEndpoints.push_back(endPoint);
     updateActiveObjectsCache(objectsCache, false);
 }
 
-void CDbHandle::addEndPointbySet(const string& objName, const Int32 port, const Int32 istcp, const string& setName, const string& setArea, const string& setGroup)
+void CDbHandle::addEndPointbySet(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName, const string& setArea, const string& setGroup)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -411,12 +437,12 @@ void CDbHandle::addEndPointbySet(const string& objName, const Int32 port, const 
     }
 }
 
-void CDbHandle::addActiveWeight1EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName)
+void CDbHandle::addActiveWeight1EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -427,12 +453,12 @@ void CDbHandle::addActiveWeight1EndPoint(const string& objName, const Int32 port
     updateActiveObjectsCache(objectsCache, false);
 }
 
-void CDbHandle::addInActiveWeight1EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName)
+void CDbHandle::addInActiveWeight1EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -444,12 +470,12 @@ void CDbHandle::addInActiveWeight1EndPoint(const string& objName, const Int32 po
 }
 
 
-void CDbHandle::addActiveWeight2EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName)
+void CDbHandle::addActiveWeight2EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
@@ -461,15 +487,16 @@ void CDbHandle::addActiveWeight2EndPoint(const string& objName, const Int32 port
 }
 
 
-void CDbHandle::addInactiveEndPoint(const string& objName, const Int32 port, const Int32 istcp)
+void CDbHandle::addInactiveEndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string &nodeName)
 {
-#define LOCAL_HOST "127.0.0.1"
+//#define LOCAL_HOST "127.0.0.1"
     ObjectsCache objectsCache;
     EndpointF endPoint;
-    endPoint.host        = LOCAL_HOST;
+    endPoint.host        = host;
     endPoint.port        = port;
     endPoint.timeout     = 30000;
     endPoint.istcp = istcp;
+    endPoint.nodeName = nodeName;
     //endPoint.setId = setName;
     objectsCache[objName].vInactiveEndpoints.push_back(endPoint);
     updateInactiveObjectsCache(objectsCache, false);
@@ -478,14 +505,28 @@ void CDbHandle::addInactiveEndPoint(const string& objName, const Int32 port, con
 
 void CDbHandle::cleanEndPoint()
 {
-    ObjectsCache objectsCache;
+    ObjectsCache objectsCache = _objectsCache;
+
+    //从objectsCache删除不是tars的服务
+    for (auto it = objectsCache.begin(); it != objectsCache.end();)
+    {
+        if (it->first.find("tars.") == string::npos)
+        {
+            objectsCache.erase(it++);
+        }
+        else
+        {
+            ++it;
+        }
+    }
     updateObjectsCache(objectsCache, true);
 }
 
 int CDbHandle::getGroupId(const string& ip)
 {
 
-    map<string, int>& groupIdMap = _groupIdMap.getReaderData();
+	std::lock_guard<std::mutex> lock(_mutex);
+    map<string, int>& groupIdMap = _groupIdMap;
     map<string, int>::iterator it = groupIdMap.find(ip);
     if (it != groupIdMap.end())
     {
@@ -554,7 +595,7 @@ void CDbHandle::InsertSetRecord(const string& objName, const string& setName, co
     setDivisionCache[objName][setName].push_back(setServerInfo);
 
     setServerInfo.bActive = false;
-    setServerInfo.epf.port = 10204;
+//    setServerInfo.epf.port = 10204;
 
     setDivisionCache[objName][setName].push_back(setServerInfo);
     
@@ -582,7 +623,7 @@ void CDbHandle::InsertSetRecord4Inactive(const string& objName, const string& se
 
 void CDbHandle::updateDivisionCache(SetDivisionCache& setDivisionCache,bool updateAll)
 {
-    //ȫ������
+	std::lock_guard<std::mutex> lock(_mutex);
     if(updateAll)
     {
         if (setDivisionCache.size() == 0)
@@ -601,89 +642,23 @@ void CDbHandle::updateDivisionCache(SetDivisionCache& setDivisionCache,bool upda
                 }
             }
         }
-        _setDivisionCache.getWriterData() = setDivisionCache;
-        _setDivisionCache.swap();
+        _setDivisionCache = setDivisionCache;
     }
     else
     {
-        _setDivisionCache.getWriterData() = _setDivisionCache.getReaderData();
-        SetDivisionCache& tmpsetCache = _setDivisionCache.getWriterData();
+        SetDivisionCache& tmpsetCache = _setDivisionCache;
         SetDivisionCache::const_iterator it = setDivisionCache.begin();
         for(;it != setDivisionCache.end();it++)
         {
-            //��set��Ϣ�Ÿ���
             if(it->second.size() > 0)
             {
                 tmpsetCache[it->first] = it->second;
             }
             else if(tmpsetCache.count(it->first))
             {
-                //�����������нڵ㶼û������set��ɾ�������е�set��Ϣ
                 tmpsetCache.erase(it->first);
             }
 
         }
-        
-        _setDivisionCache.swap();
     }
 }
-#if 0
-
-void CDbHandle::updateCpuLoadInfo(vector<EndpointF> &vEndpointF)
-{
-    CpuLoadCache &cpuLoadCacheMap = _cpuLoadCacheMap.getReaderData();
-    for(size_t i = 0; i < vEndpointF.size(); ++i)
-    {
-        map<string,CpuLoadInfo>::const_iterator const_it_cpu = cpuLoadCacheMap.find(vEndpointF[i].host);
-        if(const_it_cpu != cpuLoadCacheMap.end())
-        {
-            struct tm tb;
-            int ret = TC_Common::str2tm(const_it_cpu->second.sHeartTime, "%Y-%m-%d %H:%M:%S", tb);
-            if(ret == 0)
-            {
-                vEndpointF[i].cpuload = const_it_cpu->second.iCpuLoad;
-                vEndpointF[i].sampletime = mktime(&tb);
-            }
-            else
-            {
-                vEndpointF[i].cpuload = -1;
-                vEndpointF[i].sampletime = 0;
-            }
-        }
-        else
-        {
-            vEndpointF[i].cpuload = -1;
-            vEndpointF[i].sampletime = 0;
-        }
-    }
-}
-
-void CDbHandle::updateCpuLoadInfo(vector<CDbHandle::SetServerInfo> &vSetServerInfo)
-{
-    CpuLoadCache &cpuLoadCacheMap = _cpuLoadCacheMap.getReaderData();
-    for(size_t i = 0; i < vSetServerInfo.size(); ++i)
-    {
-        map<string,CpuLoadInfo>::const_iterator const_it_cpu = cpuLoadCacheMap.find(vSetServerInfo[i].epf.host);
-        if(const_it_cpu != cpuLoadCacheMap.end())
-        {
-            struct tm tb;
-            int ret = TC_Common::str2tm(const_it_cpu->second.sHeartTime, "%Y-%m-%d %H:%M:%S", tb);
-            if(ret == 0)
-            {
-                vSetServerInfo[i].epf.cpuload = const_it_cpu->second.iCpuLoad;
-                vSetServerInfo[i].epf.sampletime = mktime(&tb);
-            }
-            else
-            {
-                vSetServerInfo[i].epf.cpuload = -1;
-                vSetServerInfo[i].epf.sampletime = 0;
-            }
-        }
-        else
-        {
-            vSetServerInfo[i].epf.cpuload = -1;
-            vSetServerInfo[i].epf.sampletime = 0;
-        }
-    }
-}
-#endif

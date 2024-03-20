@@ -107,7 +107,7 @@ public:
      *  
      * @param fd      socket句柄
      * @param bOwner  是否拥有socket
-     * @param iDomain sokect协议族，缺省为AF_INET，代表TCP/IP协议族 
+     * @param iDomain socket协议族，缺省为AF_INET，代表TCP/IP协议族
      */
     void init(int fd, bool bOwner, int iDomain = AF_INET);
 
@@ -498,11 +498,12 @@ public:
 
     /**
      * @brief  获取本地所有ip.
-     *
+     * @param domain, AF_INET: ipv4, AF_INET6: ipv6
+     * @param withLoopIp: 是否获取127.0.0.1 or ::1 地址
      * @throws TC_Socket_Exception
      * @return 本地所有ip
      */
-    static vector<string> getLocalHosts(int domain = AF_INET);
+    static vector<string> getLocalHosts(int domain = AF_INET, bool withLoopIp = true);
 
     /**
      * @brief 生成管道,抛出异常时会关闭fd. 
@@ -586,12 +587,12 @@ public:
     */
     static bool isInProgress();
 
-    /**
-    * @brief 关闭句柄
-    *
-    * @return
-    */
-    static void closeSocketNoThrow(int);
+//    /**
+//    * @brief 关闭句柄
+//    *
+//    * @return
+//    */
+//    static void closeSocketNoThrow(int);
 
     #if 0
     /**

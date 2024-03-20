@@ -114,7 +114,7 @@ void asyncCall(int c)
 	//发起远程调用
 	for (int i = 0; i < c; ++i)
 	{
-		HelloPrxCallbackPtr p = new HelloCallback(t, i, c);
+		HelloPrxCallbackPtr p(new HelloCallback(t, i, c));
 
 		try
 		{
@@ -172,9 +172,10 @@ void syncTupCall(int c)
 
             rsp.decode(package.sBuffer.data(), package.sBuffer.size());
 
-            int ret = rsp.get<int>("");            
+            int ret = rsp.get<int>("");
             string sRsp = rsp.get<string>("sRsp");
 
+            cout << "ret:" << ret << ", rsp:" << sRsp << endl;
 			// assert(ret == 0);
 			// assert(sRsp == buffer);
 		}
@@ -262,7 +263,7 @@ void asyncTupCall(int c)
 			vector<char> buff;
 			req.encode(buff);
 
-		    ServantProxyCallbackPtr p = new TupCallback(t, i, c);
+		    ServantProxyCallbackPtr p(new TupCallback(t, i, c));
 
 			param.pPrx->rpc_call_async(req.getRequestId(), "testHello", buff.data(), buff.size(), p);
 		}

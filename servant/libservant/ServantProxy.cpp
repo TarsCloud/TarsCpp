@@ -330,6 +330,24 @@ const map<std::string, std::string> & ServantProxyCallback::getResponseContext()
 	return pCbtd->getResponseContext();
 }
 
+void ServantProxyCallback::setServantPrx(const ServantPrx &prx)
+{
+    _servantPrx = prx;
+
+    _moduleName = std::make_shared<string>(_servantPrx->_communicator->getProperty("modulename"));
+}
+
+string ServantProxyCallback::getModuleName()
+{
+    auto moduleName = _moduleName;
+
+    if(!moduleName)
+    {
+        return ServerConfig::Application + "." + ServerConfig::ServerName;
+    }
+    return *moduleName.get();
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 int HttpServantProxyCallback::onDispatch(ReqMessagePtr msg)
@@ -410,12 +428,49 @@ string ServantProxy::STATUS_SETNAME_VALUE = "STATUS_SETNAME_VALUE";
 
 string ServantProxy::STATUS_TRACE_KEY     = "STATUS_TRACE_KEY";
 
+ServantProxy::ServantProxy()
+{
+}
+
+void ServantProxy::setComm(Communicator* pCommunicator, const string& name, const string& setName)
+{
+    _communicator = pCommunicator;
+    _syncTimeout = DEFAULT_SYNCTIMEOUT;
+    _asyncTimeout = DEFAULT_ASYNCTIMEOUT;
+    _id = 0;
+    _masterFlag = false;
+    _minTimeout =100;
+    
+    _proxyProtocol.requestFunc  = ProxyProtocol::tarsRequest;
+    _proxyProtocol.responseFunc = ProxyProtocol::tarsResponse;
+    
+    //在每个公有网络线程对象中创建ObjectProxy
+    for (size_t i = 0; i < _communicator->getCommunicatorEpollNum(); ++i)
+    {
+        _communicator->getCommunicatorEpoll(i)->createObjectProxy(this, name, setName);
+    }
+    
+    //用第一个ObjectProxy返回数据
+    _objectProxy = this->getObjectProxy(0);
+    
+    _endpointInfo.reset(new EndpointManagerThread(_communicator, _objectProxy->name()));
+    
+    _minTimeout = pCommunicator->getMinTimeout();
+    if (_minTimeout < 1)
+    {
+        _minTimeout = 1;
+    }
+    
+}
+
 ////////////////////////////////////
 ServantProxy::ServantProxy(Communicator *pCommunicator, const string &name, const string &setName)
     : _communicator(pCommunicator), _syncTimeout(DEFAULT_SYNCTIMEOUT), _asyncTimeout(DEFAULT_ASYNCTIMEOUT), _id(0), _masterFlag(false), _minTimeout(100)
 {
 	_proxyProtocol.requestFunc  = ProxyProtocol::tarsRequest;
 	_proxyProtocol.responseFunc = ProxyProtocol::tarsResponse;
+
+    _moduleName = _communicator->getProperty("modulename", TC_File::extractFileName(TC_File::getExePath()));
 
     //在每个公有网络线程对象中创建ObjectProxy
     for (size_t i = 0; i < _communicator->getCommunicatorEpollNum(); ++i)
@@ -452,6 +507,11 @@ ServantProxy::~ServantProxy()
 const string &ServantProxy::tars_name() const
 {
     return _objectProxy->name();
+}
+
+const string &ServantProxy::tars_moduleName() const
+{
+    return _moduleName;
 }
 
 string ServantProxy::tars_full_name() const
@@ -789,11 +849,17 @@ uint32_t ServantProxy::tars_gen_requestid()
 
 void ServantProxy::tars_set_push_callback(const ServantProxyCallbackPtr & cb)
 {
+    std::lock_guard<std::mutex> lock(_mutex);
 	_pushCallback = cb;
+    if(_pushCallback)
+    {
+        _pushCallback->setServantPrx(this);
+    }
 }
 
 ServantProxyCallbackPtr ServantProxy::tars_get_push_callback()
 {
+    std::lock_guard<std::mutex> lock(_mutex);
 	return _pushCallback;
 }
 
@@ -1502,7 +1568,7 @@ void ServantProxy::http_call_async(const string &funcName, const shared_ptr<TC_H
 
 	*(shared_ptr<TC_HttpRequest> *)(msg->request.sBuffer.data()) = request;
 
-	ServantProxyCallbackPtr callback = new HttpServantProxyCallback(cb);
+	ServantProxyCallbackPtr callback (new HttpServantProxyCallback(cb));
 
 	msg->callback = callback;
 
@@ -1785,6 +1851,9 @@ vector<TC_Endpoint> ServantProxy::getEndpoint4All()
     return activeEndPoint;
 }
 
-
+void TARS_TRACE(const string &traceKey, const char *annotation, const string &client, const string &server, const char* func, int ret, const string &data, const string &ex)
+{
+    FDLOG(TRACE_LOG_FILENAME) << traceKey << "|" << annotation << "|" << client << "|" << server << "|" << func << "|" << TNOWMS << "|" << ret << "|" << TC_Base64::encode(data) << "|" << ex << endl;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////
 }

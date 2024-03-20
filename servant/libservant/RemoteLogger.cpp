@@ -17,11 +17,11 @@
 #include "servant/RemoteLogger.h"
 #include "servant/Communicator.h"
 #include "servant/Application.h"
+#include "servant/LogF.h"
 
 namespace tars
 {
 
-//int RollWriteT::_dyeingThread = 0;
 int TimeWriteT::_dyeing = 0;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,8 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
     {
         try
         {
-            _logPrx->logger(DYEING_DIR, DYEING_FILE, "roll", "%Y%m%d", vRemoteDyeing, ServerConfig::Context);
+
+            _logPrx->logger(DYEING_DIR, DYEING_FILE, "roll", "%Y%m%d", vRemoteDyeing, _context);
         }
         catch(exception &ex)
         {
@@ -93,14 +94,19 @@ void RollWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &ds)
     }
 }
 
-void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx, const string &sLogObj)
+void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx)
 {
     _app     = sApp;
     _server  = sServer;
     _logPath = sLogPath;
     _maxSize = iMaxSize;
     _maxNum  = iMaxNum;
+    _logPrx  = logPrx;
 
+    if(_logPrx)
+    {
+        _context["node_name"] = _logPrx->tars_communicator()->getClientConfig().NodeName;
+    }
 }
 
 
@@ -108,7 +114,9 @@ void RollWriteT::setDyeingLogInfo(const string &sApp, const string &sServer, con
 
 LocalRollLogger::~LocalRollLogger()
 {
-	for(auto e : _logger_ex)
+    terminate();
+
+	for(const auto& e : _logger_ex)
 	{
 		delete e.second;
 	}
@@ -126,6 +134,11 @@ void LocalRollLogger::terminate()
 
 void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, const string &sLogpath, int iMaxSize, int iMaxNum, const CommunicatorPtr &comm, const string &sLogObj)
 {
+    if (_local.isStart())
+    {
+        return;
+    }
+
     _app       = sApp;
     _server    = sServer;
     _logpath   = sLogpath;
@@ -141,7 +154,7 @@ void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, cons
     //生成目录
     TC_File::makeDirRecursive(_logpath + FILE_SEP + _app + FILE_SEP + _server);
 
-    _local.start(1);
+    _local.start();
 
     //初始化本地循环日志
     _logger.init(_logpath + FILE_SEP + _app + FILE_SEP + _server + FILE_SEP + _app + "." + _server, iMaxSize, iMaxNum);
@@ -152,7 +165,7 @@ void LocalRollLogger::setLogInfo(const string &sApp, const string &sServer, cons
     sync(false);
 
     //设置染色日志信息
-    _logger.getWriteT().setDyeingLogInfo(sApp, sServer, sLogpath, iMaxSize, iMaxNum, _logPrx, sLogObj);
+    _logger.getWriteT().setDyeingLogInfo(sApp, sServer, sLogpath, iMaxSize, iMaxNum, _logPrx);
 
 }
 
@@ -223,7 +236,7 @@ LocalRollLogger::RollLogger *LocalRollLogger::logger(const string &suffix)
 	logger->modFlag(TC_DayLogger::HAS_TIME|TC_DayLogger::HAS_LEVEL|TC_DayLogger::HAS_PID, true);
 
 	//设置染色日志信息
-	logger->getWriteT().setDyeingLogInfo(_app, _server, _logpath, _logger.getMaxSize(), _logger.getMaxSize(), _logPrx, _logObj);
+	logger->getWriteT().setDyeingLogInfo(_app, _server, _logpath, _logger.getMaxSize(), _logger.getMaxSize(), _logPrx);
 
 	_logger_ex[suffix] = logger;
 
@@ -234,8 +247,8 @@ LocalRollLogger::RollLogger *LocalRollLogger::logger(const string &suffix)
 
 TarsLoggerThread::TarsLoggerThread()
 {
-    _local.start(1);
-    _remote.start(1);
+    _local.start();
+    _remote.start();
 }
 
 TarsLoggerThread::~TarsLoggerThread()
@@ -287,63 +300,65 @@ void RemoteTimeWriteT::setTimeWriteT(TimeWriteT *pTimeWrite)
 
 void RemoteTimeWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &buffer)
 {
-    const static uint32_t len = 2000;
+    //此处传递set信息到远程logserver
+    LogInfo stInfo;
+    stInfo.appname           = _timeWrite->_app;
+    stInfo.servername        = _timeWrite->_server;
+    stInfo.sFilename         = _timeWrite->_file;
+    stInfo.sFormat           = _timeWrite->_format;
+    stInfo.setdivision       = _timeWrite->_setDivision;
+    stInfo.bHasSufix         = _timeWrite->_hasSufix;
+    stInfo.bHasAppNamePrefix = _timeWrite->_hasAppNamePrefix;
+    stInfo.sConcatStr        = _timeWrite->_concatStr;
+    stInfo.bHasSquareBracket = _timeWrite->_hasSquareBracket;
+    stInfo.sSepar            = _timeWrite->_separ;
+    stInfo.sLogType          = _timeWrite->_logType;
+
+//    const static uint32_t len = 2000;
 
     //写远程日志
     if(_timeWrite->_logPrx && !buffer.empty())
     {
-        //大于50w条, 直接抛弃掉,否则容易导致内存泄漏
-        if(buffer.size() > 500000)
-        {
-            _timeWrite->writeError(buffer);
-            return;
-        }
-
+//        //大于50w条, 直接抛弃掉,否则容易导致内存泄漏
+//        if(buffer.size() > 500000)
+//        {
+//            _timeWrite->writeError(buffer);
+//            return;
+//        }
         vector<string> v;
-        v.reserve(len);
 
-        deque<pair<size_t, string> >::const_iterator it = buffer.begin();
+        size_t len = 0;
+        deque<pair<size_t, string>>::const_iterator it = buffer.begin();
         while(it != buffer.end())
         {
+            len += it->second.size();
+
             v.push_back(it->second);
 
             ++it;
 
             //每次最多同步len条
-            if(v.size() >= len)
+//            if(v.size() >= len)
+            if(len > 5*1024*1024 || v.size() > 200)
             {
-                sync2remote(v);
+                //>5M 或超过200条 就要传输了!
+                sync2remote(stInfo, v);
                 v.clear();
-                v.reserve(len);
             }
         }
 
-        if(v.size() > 0)
+        if(!v.empty())
         {
-            sync2remote(v);
+            sync2remote(stInfo, v);
         }
     }
 }
 
-void RemoteTimeWriteT::sync2remote(const vector<string> &v)
+void RemoteTimeWriteT::sync2remote(const LogInfo &stInfo, const vector<string> &v)
 {
     try
     {
-        //此处传递set信息到远程logserver
-        LogInfo stInfo;
-        stInfo.appname           = _timeWrite->_app;
-        stInfo.servername        = _timeWrite->_server;
-        stInfo.sFilename         = _timeWrite->_file;
-        stInfo.sFormat           = _timeWrite->_format;
-        stInfo.setdivision       = _timeWrite->_setDivision;
-        stInfo.bHasSufix         = _timeWrite->_hasSufix;
-        stInfo.bHasAppNamePrefix = _timeWrite->_hasAppNamePrefix;
-        stInfo.sConcatStr        = _timeWrite->_concatStr;
-        stInfo.bHasSquareBracket = _timeWrite->_hasSquareBracket;
-        stInfo.sSepar            = _timeWrite->_separ;
-        stInfo.sLogType          = _timeWrite->_logType;
-
-        _timeWrite->_logPrx->loggerbyInfo(stInfo,v, ServerConfig::Context);
+        _timeWrite->_logPrx->loggerbyInfo(stInfo,v, _timeWrite->_logPrx->tars_communicator()->getClientConfig().Context);
 
         if (_timeWrite->_reportSuccPtr)
         {
@@ -365,7 +380,7 @@ void RemoteTimeWriteT::sync2remoteDyeing(const vector<string> &v)
 {
     try
     {
-        _timeWrite->_logPrx->logger(DYEING_DIR, DYEING_FILE, "", _timeWrite->_format, v, ServerConfig::Context);
+        _timeWrite->_logPrx->logger(DYEING_DIR, DYEING_FILE, "", _timeWrite->_format, v, _timeWrite->_logPrx->tars_communicator()->getClientConfig().Context);
     }
     catch(exception &ex)
     {
@@ -507,7 +522,7 @@ void TimeWriteT::operator()(ostream &of, const deque<pair<size_t, string> > &buf
     {
         try
         {
-            _logPrx->logger(DYEING_DIR, DYEING_FILE, "day", "%Y%m%d", vDyeingLog, ServerConfig::Context);
+            _logPrx->logger(DYEING_DIR, DYEING_FILE, "day", "%Y%m%d", vDyeingLog, _logPrx->tars_communicator()->getClientConfig().Context);
         }
         catch(exception &ex)
         {
@@ -645,7 +660,7 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger, const string &sFi
     PropertyReportPtr reportFailPtr = NULL;
     if (_remote && _logStatReport && _comm)
     {
-        string sKey   = _app + "." + _server + "." + sFile;
+        string sKey   = sFile;
         reportSuccPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_succ", PropertyReport::sum());
         reportFailPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_fail", PropertyReport::sum());
     }
@@ -715,7 +730,7 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp
     PropertyReportPtr reportFailPtr = NULL;
     if (_remote && _logStatReport && _comm)
     {
-        string sKey   = _app + "." + _server + "." + sFile;
+        string sKey   = sFile;
         reportSuccPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_succ", PropertyReport::sum());
         reportFailPtr = _comm->getStatReport()->createPropertyReport(sKey + "_log_send_fail", PropertyReport::sum());
     }

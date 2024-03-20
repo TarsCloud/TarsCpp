@@ -39,7 +39,7 @@ class Application;
 /**
  * 处理网络请求线程
  */
-class ServantHandle : public TC_EpollServer::Handle
+class ServantHandle : public TC_EpollServer::Handle, public enable_shared_from_this<ServantHandle>
 {
 public:
     /**
@@ -65,6 +65,12 @@ public:
      * @return
      */
 	Application *getApplication() { return _application; }
+
+    /**
+     * 获取服务端的名称: app.server
+     * @return
+     */
+    string getModuleName();
 
     /**
      * 获取实际的servant

@@ -29,6 +29,14 @@ namespace tars
 {
 
 class Application;
+class ServantHandle;
+class BufferWrapper
+{
+public:
+    vector<char> buffer;
+};
+
+typedef std::shared_ptr<BufferWrapper> BufferWrapperPtr;
 
 ////////////////////////////////////////////////////////////////////
 /**
@@ -63,7 +71,7 @@ public:
      * 设置所属的Handle
      * @param handle 
      */
-    void setHandle(TC_EpollServer::Handle* handle);
+    void setHandle(const shared_ptr<ServantHandle> &handle);
 
     /**
      * 设置全局的应用
@@ -78,10 +86,16 @@ public:
     Application* getApplication() const;
 
     /**
+     * 获取服务端的名称: app.server
+     * @return
+     */
+    string getModuleName();
+
+    /**
      * 获取所属的Handle
      * @return HandlePtr& 
      */
-    TC_EpollServer::Handle* getHandle();
+    shared_ptr<ServantHandle> getHandle();
 
     /**
      * 初始化
@@ -94,6 +108,8 @@ public:
      */
     virtual void destroy() = 0;
 
+    void setModePython( bool forPython);
+    bool isPython() ;
 public:
     /**
      * 分发收到的请求
@@ -112,6 +128,8 @@ public:
      * @return int
      */
     virtual int onDispatch(CurrentPtr current, vector<char> &buffer) { return -1; }
+    
+    virtual int onDispatch(CurrentPtr current, BufferWrapper * bufferWrapper) { return -1; }
 
 public:
     /**
@@ -167,11 +185,20 @@ public:
 	virtual int doClose(CurrentPtr current){ return -1; }
 
 	/**
+	 * tars协议, 没有servant时候会调用
+	 * @param current
+	 * @param buffer: 输出的buffer数据
+	 * @return 成功请返回0, 异常可以返回: [TARSSERVERSUCCESS~TARSSERVERUNKNOWNERR]
+	 */
+	virtual int doNoServant(CurrentPtr current, vector<char> &buffer) {return  tars::TARSSERVERNOSERVANTERR;}
+
+	/**
 	 * tars协议, 没有对应函数时会调用
 	 * @param current
-	 * @return
+	 * @param buffer: 输出的buffer数据
+	 * @return  成功请返回0, 异常可以返回: [TARSSERVERSUCCESS~TARSSERVERUNKNOWNERR]
 	 */
-	virtual int doNoFunc(CurrentPtr current) {return  tars::TARSSERVERNOFUNCERR;}
+	virtual int doNoFunc(CurrentPtr current, vector<char> &buffer) {return  tars::TARSSERVERNOFUNCERR;}
 
     /**
      * 获得响应的数据队列
@@ -193,7 +220,7 @@ protected:
     /**
      * 所属的Handle
      */
-    TC_EpollServer::Handle* _handle;
+    std::weak_ptr<ServantHandle> _handle;
 
     /**
      * 异步响应队列, 每个Servant一个队列, 这个用于在ServantImp中, 再异步发请求给其他服务
@@ -201,6 +228,8 @@ protected:
      * 缺点就是Servant::onDispatch, 通知ServantImp时, 需要把所有线程都唤醒
      */
     TC_CasQueue<ReqMessagePtr> _asyncResponseQueue;
+    
+    bool _modePython = false;
 };
 
 typedef TC_AutoPtr<Servant> ServantPtr;
@@ -216,36 +245,36 @@ class ServantCallback : public ServantProxyCallback
 public:
     /**
      * 构造函数，type用来区分同一链路上的多种cb对象类型
-     * @param type 
-     * @param servant 
-     * @param current 
+     * @param type
+     * @param servant
+     * @param current
      */
     ServantCallback(const string& type, const ServantPtr& servant, const CurrentPtr& current);
 
     /**
-     * callback的响应接口 
-     * @param msg 
-     * @return int 
+     * callback的响应接口
+     * @param msg
+     * @return int
      */
     virtual int onDispatch(ReqMessagePtr msg);
 
     /**
      * 连接关闭
-     * @param msg 
-     * @return int 
-     */    
+     * @param msg
+     * @return int
+     */
     virtual void onClose()
     {
     }
     /**
      * 获得生成时所属的servant
-     * @return const ServantPtr& 
+     * @return const ServantPtr&
      */
     const ServantPtr& getServant();
 
     /**
      * 获得网络上下文
-     * @return const CurrentPtr& 
+     * @return const CurrentPtr&
      */
     const CurrentPtr& getCurrent();
 
@@ -261,7 +290,7 @@ protected:
 //////////////////////////////////////////////////////////////////////
 
 //线程私有数据
-class CallbackThreadData //: public TC_ThreadPool::ThreadData
+class CallbackThreadData
 {
 public:
     static thread_local shared_ptr<CallbackThreadData> g_sp;

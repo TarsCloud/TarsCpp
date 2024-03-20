@@ -1609,18 +1609,6 @@ public:
          * 是否手工监听
          */
         bool					_manualListen = false;
-//        /**
-//         * 创建一个udp句柄, 用来通知事后listen
-//         */
-//        TC_Socket               _udpNotify;
-//
-//        /**
-//         * 通知
-//         */
-//        TC_Epoller::EpollInfo   *_notifyInfo = NULL;
-
-        //连接关闭的回调函数
-//        close_functor           _closeFunc;
 
         /**
         * ssl ctx
@@ -2203,10 +2191,16 @@ public:
     }
 
     /**
-     * 绑定监听socket
+     * 绑定并设置adapter
      * @param ls
      */
     int bind(BindAdapterPtr &lsPtr);
+
+    /**
+     * 设置adapter
+     * @param adapters
+     */
+    void setAdapter(const vector <TC_EpollServer::BindAdapterPtr> &adapters);
 
     /**
      * 初始化handle对象

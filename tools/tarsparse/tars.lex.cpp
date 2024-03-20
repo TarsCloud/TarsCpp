@@ -1,6 +1,6 @@
-#line 2 "tars.lex.cpp"
+#line 1 "tars.lex.cpp"
 
-#line 4 "tars.lex.cpp"
+#line 3 "tars.lex.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -47,6 +47,7 @@ typedef int16_t flex_int16_t;
 typedef uint16_t flex_uint16_t;
 typedef int32_t flex_int32_t;
 typedef uint32_t flex_uint32_t;
+typedef uint64_t flex_uint64_t;
 #else
 typedef signed char flex_int8_t;
 typedef short int flex_int16_t;
@@ -155,7 +156,7 @@ typedef struct yy_buffer_state *YY_BUFFER_STATE;
 typedef size_t yy_size_t;
 #endif
 
-extern int yyleng;
+extern yy_size_t yyleng;
 
 extern FILE *yyin, *yyout;
 
@@ -172,7 +173,7 @@ extern FILE *yyin, *yyout;
      */
     #define  YY_LESS_LINENO(n) \
             do { \
-                int yyl;\
+                yy_size_t yyl;\
                 for ( yyl = n; yyl < yyleng; ++yyl )\
                     if ( yytext[yyl] == '\n' )\
                         --yylineno;\
@@ -217,7 +218,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	int yy_n_chars;
+	yy_size_t yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -286,8 +287,8 @@ static YY_BUFFER_STATE * yy_buffer_stack = NULL; /**< Stack as an array. */
 
 /* yy_hold_char holds the character lost when yytext is formed. */
 static char yy_hold_char;
-static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int yyleng;
+static yy_size_t yy_n_chars;		/* number of characters read into yy_ch_buf */
+yy_size_t yyleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = NULL;
@@ -314,7 +315,7 @@ static void yy_init_buffer ( YY_BUFFER_STATE b, FILE *file  );
 
 YY_BUFFER_STATE yy_scan_buffer ( char *base, yy_size_t size  );
 YY_BUFFER_STATE yy_scan_string ( const char *yy_str  );
-YY_BUFFER_STATE yy_scan_bytes ( const char *bytes, int len  );
+YY_BUFFER_STATE yy_scan_bytes ( const char *bytes, yy_size_t len  );
 
 void *yyalloc ( yy_size_t  );
 void *yyrealloc ( void *, yy_size_t  );
@@ -367,7 +368,7 @@ static void yynoreturn yy_fatal_error ( const char* msg  );
  */
 #define YY_DO_BEFORE_ACTION \
 	(yytext_ptr) = yy_bp; \
-	yyleng = (int) (yy_cp - yy_bp); \
+	yyleng = (yy_size_t) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
@@ -510,7 +511,7 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 1 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 /**
  * Tencent is pleased to support the open source community by making Tars available.
  *
@@ -526,7 +527,7 @@ char *yytext;
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-#line 20 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 20 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 #include <map>
 #include <string>
 #include <sstream>
@@ -597,7 +598,7 @@ FILE *yyget_out ( void );
 
 void yyset_out  ( FILE * _out_str  );
 
-			int yyget_leng ( void );
+			yy_size_t yyget_leng ( void );
 
 char *yyget_text ( void );
 
@@ -666,7 +667,7 @@ static int input ( void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		int n; \
+		yy_size_t n; \
 		for ( n = 0; n < max_size && \
 			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -775,7 +776,7 @@ YY_DECL
 		}
 
 	{
-#line 67 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 67 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 
 
 #line 782 "tars.lex.cpp"
@@ -826,7 +827,7 @@ yy_find_action:
 
 		if ( yy_act != YY_END_OF_BUFFER && yy_rule_can_match_eol[yy_act] )
 			{
-			int yyl;
+			yy_size_t yyl;
 			for ( yyl = 0; yyl < yyleng; ++yyl )
 				if ( yytext[yyl] == '\n' )
 					
@@ -847,12 +848,12 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 69 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 69 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 { BEGIN(INCL); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 71 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 71 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     if ( include_file_stack_ptr >= MAX_INCLUDE_DEPTH )
     {
@@ -885,7 +886,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(INCL):
-#line 101 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 101 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     --include_file_stack_ptr;
     if ( include_file_stack_ptr < 0 )
@@ -904,14 +905,14 @@ case YY_STATE_EOF(INCL):
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 117 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 117 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     return TARS_SCOPE_DELIMITER;
 }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 121 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 121 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     // C++ comment
     bool e = false;
@@ -932,7 +933,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 139 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 139 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     // C comment
     bool e = false;
@@ -983,7 +984,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 187 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 187 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     StringGrammarPtr ident  = new StringGrammar;
     ident->v            = yytext;
@@ -994,7 +995,7 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 194 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 194 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     StringGrammarPtr ident  = new StringGrammar;
     ident->v            = yytext;
@@ -1007,7 +1008,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 204 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 204 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     StringGrammarPtr str = new StringGrammar;
     bool e = false;
@@ -1122,7 +1123,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 316 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 316 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     errno = 0;
     IntergerGrammarPtr ptr = new IntergerGrammar;
@@ -1147,7 +1148,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 338 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 338 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     errno = 0;
     FloatGrammarPtr ptr = new FloatGrammar;
@@ -1182,7 +1183,7 @@ YY_RULE_SETUP
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 369 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 369 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     if(yytext[0] == '\n')
     {
@@ -1192,7 +1193,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 376 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 376 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 {
     if(yytext[0] < 32 || yytext[0] > 126)
     {
@@ -1211,7 +1212,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 392 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 392 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 ECHO;
 	YY_BREAK
 #line 1218 "tars.lex.cpp"
@@ -1399,7 +1400,7 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			int num_to_read =
+			yy_size_t num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1413,7 +1414,7 @@ static int yy_get_next_buffer (void)
 
 			if ( b->yy_is_our_buffer )
 				{
-				int new_size = b->yy_buf_size * 2;
+				yy_size_t new_size = b->yy_buf_size * 2;
 
 				if ( new_size <= 0 )
 					b->yy_buf_size += b->yy_buf_size / 8;
@@ -1471,7 +1472,7 @@ static int yy_get_next_buffer (void)
 
 	if (((yy_n_chars) + number_to_move) > YY_CURRENT_BUFFER_LVALUE->yy_buf_size) {
 		/* Extend the array by 50%, plus the number we really need. */
-		int new_size = (yy_n_chars) + number_to_move + ((yy_n_chars) >> 1);
+		yy_size_t new_size = (yy_n_chars) + number_to_move + ((yy_n_chars) >> 1);
 		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) yyrealloc(
 			(void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf, (yy_size_t) new_size  );
 		if ( ! YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
@@ -1560,7 +1561,7 @@ static int yy_get_next_buffer (void)
 	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
 		{ /* need to shift things up to make room */
 		/* +2 for EOB chars. */
-		int number_to_move = (yy_n_chars) + 2;
+		yy_size_t number_to_move = (yy_n_chars) + 2;
 		char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
 					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
 		char *source =
@@ -1615,7 +1616,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (int) ((yy_c_buf_p) - (yytext_ptr));
+			yy_size_t offset = (yy_c_buf_p) - (yytext_ptr);
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -1989,12 +1990,12 @@ YY_BUFFER_STATE yy_scan_string (const char * yystr )
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, yy_size_t  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
 	yy_size_t n;
-	int i;
+	yy_size_t i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = (yy_size_t) (_yybytes_len + 2);
@@ -2036,7 +2037,7 @@ static void yynoreturn yy_fatal_error (const char* msg )
 	do \
 		{ \
 		/* Undo effects of setting up yytext. */ \
-        int yyless_macro_arg = (n); \
+        yy_size_t yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
 		yytext[yyleng] = (yy_hold_char); \
 		(yy_c_buf_p) = yytext + yyless_macro_arg; \
@@ -2076,7 +2077,7 @@ FILE *yyget_out  (void)
 /** Get the length of the current token.
  * 
  */
-int yyget_leng  (void)
+yy_size_t yyget_leng  (void)
 {
         return yyleng;
 }
@@ -2229,7 +2230,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 392 "/root/boat/TarsCpp/tools/tarsgrammar/tars.l"
+#line 392 "/Volumes/MyData/centos/boat/boat-code/tarscpp/tools/tarsgrammar/tars.l"
 
 
 

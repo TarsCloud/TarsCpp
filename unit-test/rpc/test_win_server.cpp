@@ -1,7 +1,9 @@
 ﻿
 #include "hello_test.h"
 #include "../server/WinServer.h"
-
+#include "mock/TarsMockUtil.h"
+#include "mock/DbHandle.h"
+#include "mock/ConfigImp.h"
 
 
 TEST_F(HelloTest, winServerInCoroutine)
@@ -107,8 +109,8 @@ TEST_F(HelloTest, winServerAsync)
 		//发起远程调用
 		for (int j = 0; j < _count; ++j)
 		{
-			HelloPrxCallbackPtr p = new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer,
-					callback_count);
+			HelloPrxCallbackPtr p(new ClientHelloCallback(TC_Common::now2us(), j, _count, _buffer,
+					callback_count));
 
 			prx->async_testHello(p, j, _buffer);
 		}
@@ -360,3 +362,70 @@ TEST_F(HelloTest, winServerHashTag)
 
 	stopServer(ws);
 }
+
+TEST_F(HelloTest, winServerConfig)
+{
+    TC_File::removeFile("./test.conf", true);
+    TC_File::removeFile("./test.conf.1.bak", true);
+    TC_File::removeFile("./test.conf.2.bak", true);
+    TC_File::removeFile("./test.conf.3.bak", true);
+    TC_File::removeFile("./test.conf.4.bak", true);
+    TC_File::removeFile("./tarsmock.tarsdat", true);
+
+    TarsMockUtil tarsMockUtil;
+    tarsMockUtil.startFramework();
+
+    ConfigImp::setConfigFile("test.conf", "test-content");
+
+//    FrameworkServer fs;
+//    startServer(fs, FRAMEWORK_CONFIG());
+
+    {
+        WinServer ws;
+
+        startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+        ASSERT_TRUE(!TC_File::isFileExist("./test.conf"));
+
+        stopServer(ws);
+    }
+
+//    CDbHandle::addActiveEndPoint("tars.tarsmock.ConfigObj", "127.0.0.1", 11003, 1);
+    {
+        WinServer ws;
+
+        startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+        ASSERT_TRUE(TC_File::isFileExist("./test.conf"));
+
+        stopServer(ws);
+    }
+
+    CDbHandle::cleanEndPoint();
+
+    {
+        WinServer ws;
+
+        startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+        ASSERT_TRUE(TC_File::isFileExist("./test.conf"));
+
+        stopServer(ws);
+    }
+
+    ConfigImp::setConfigFile("test.conf", "content");
+    {
+        WinServer ws;
+
+        startServer(ws, WIN_CONFIG(), TC_EpollServer::NET_THREAD_MERGE_HANDLES_THREAD);
+
+        ASSERT_TRUE(TC_File::isFileExist("./test.conf"));
+        ASSERT_TRUE(TC_File::isFileExist("./test.conf.1.bak"));
+        EXPECT_EQ(TC_File::load2str("./test.conf"), "content");
+
+        stopServer(ws);
+    }
+//    stopServer(fs);
+    tarsMockUtil.stopFramework();
+}
+

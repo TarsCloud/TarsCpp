@@ -2,8 +2,8 @@
 #include "hello_test.h"
 #include "servant/CommunicatorEpoll.h"
 #include "servant/ObjectProxy.h"
-#include "server/framework/DbHandle.h"
-#include "server/FrameworkServer.h"
+//#include "server/framework/DbHandle.h"
+#include "server/RpcServer.h"
 #include "QueryF.h"
 
 TEST_F(HelloTest, prxUpdate)

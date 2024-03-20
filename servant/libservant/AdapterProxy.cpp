@@ -150,9 +150,9 @@ std::shared_ptr<TC_OpenSSL> AdapterProxy::onOpensslCallback(TC_Transceiver* tran
 
 void AdapterProxy::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::CloseReason reason, const string &err)
 {
-    if(_objectProxy->getRootServantProxy()->tars_get_push_callback())
+    if(auto cb = _objectProxy->getRootServantProxy()->tars_get_push_callback())
     {
-		_objectProxy->getRootServantProxy()->tars_get_push_callback()->onClose(trans->getConnectEndpoint());
+		cb->onClose(trans->getConnectEndpoint());
     }
 
     int millisecond =_objectProxy->reconnect();
@@ -287,14 +287,17 @@ TC_NetWorkBuffer::PACKET_TYPE AdapterProxy::onVerifyAuthCallback(TC_NetWorkBuffe
 void AdapterProxy::initStatHead()
 {
 	vector <string> vtSetInfo;
-	if(!ClientConfig::SetDivision.empty() && StatReport::divison2SetInfo(ClientConfig::SetDivision, vtSetInfo)) 	{
+
+	if(!_communicator->getClientConfig().SetDivision.empty() && StatReport::divison2SetInfo(_communicator->getClientConfig().SetDivision, vtSetInfo)) 	{
 		//主调(client)启用set
-		_statHead.masterName = StatReport::trimAndLimitStr(ClientConfig::ModuleName + "." + vtSetInfo[0] + vtSetInfo[1] + vtSetInfo[2] + "@" + ClientConfig::TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
+		_statHead.masterName = StatReport::trimAndLimitStr(_communicator->getClientConfig().ModuleName + "." + vtSetInfo[0] + vtSetInfo[1] + vtSetInfo[2] + "@" + _communicator->getClientConfig().TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
 	}
 	else
 	{
-		_statHead.masterName = StatReport::trimAndLimitStr(ClientConfig::ModuleName + "@" + ClientConfig::TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
+		_statHead.masterName = StatReport::trimAndLimitStr(_communicator->getClientConfig().ModuleName + "@" + _communicator->getClientConfig().TarsVersion, StatReport::MAX_MASTER_NAME_LEN);
 	}
+
+    _statHead.masterIp = _communicator->getClientConfig().NodeName;
 
     string sSlaveSet = _ep.setDivision();
     const string sSlaveName = getSlaveName(_objectProxy->name());
@@ -374,6 +377,7 @@ int AdapterProxy::invoke_connection_serial(ReqMessage * msg)
 			_requestMsg  = NULL;
 
 			msg->eStatus = ReqMessage::REQ_EXC;
+            msg->response->iRet = TARSSENDREQUESTERR;
 
 			finishInvoke(msg);
 
@@ -441,6 +445,7 @@ int AdapterProxy::invoke_connection_parallel(ReqMessage * msg)
 
 			//发送出错了
 			msg->eStatus = ReqMessage::REQ_EXC;
+            msg->response->iRet = TARSSENDREQUESTERR;
 
 			finishInvoke(msg);
 
@@ -826,8 +831,9 @@ void AdapterProxy::finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp)
 
 	if (rsp->iRequestId == 0)
 	{
+        auto cb = _objectProxy->getRootServantProxy()->tars_get_push_callback();
 		//requestid 为0 是push消息, push callback is null
-		if (!_objectProxy->getRootServantProxy()->tars_get_push_callback())
+		if (!cb)
 		{
 			TLOGERROR("[AdapterProxy::finishInvoke(BasePacket)， request id is 0, pushcallback is null, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
             throw TarsDecodeException("request id is 0, pushcallback is null, obj: " + _objectProxy->name() + ", desc: " + _trans->getConnectionString());
@@ -840,7 +846,7 @@ void AdapterProxy::finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp)
 		msg->proxy = _objectProxy->getServantProxy();
 		msg->pObjectProxy = _objectProxy;
 		msg->adapter = this;
-		msg->callback = _objectProxy->getRootServantProxy()->tars_get_push_callback();
+		msg->callback = cb;
 	}
 	else
 	{
@@ -1049,7 +1055,9 @@ void AdapterProxy::doKeepAlive()
     TLOGTARS("[AdapterProxy::doKeepAlive, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
 
     ReqMessage *msg = new ReqMessage();
-    ServantProxyCallbackPtr callback = new PingCallback();
+//    ServantProxyCallbackPtr callback = new PingCallback();
+    ServantProxyCallbackPtr callback (new PingCallback());
+    callback->setServantPrx(_objectProxy->getServantProxy());
 
     msg->init(ReqMessage::ASYNC_CALL, _objectProxy->getServantProxy());
     msg->callback = callback;

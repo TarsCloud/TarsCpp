@@ -84,7 +84,7 @@
 
 .code
 
-ontop_fcontext PROC EXPORT FRAME
+tars_ontop_fcontext PROC EXPORT FRAME
     .endprolog
 
     ; prepare stack
@@ -203,5 +203,5 @@ ENDIF
 
     ; indirect jump to context
     jmp  r9
-ontop_fcontext ENDP
+tars_ontop_fcontext ENDP
 END

@@ -664,7 +664,7 @@ bool TC_EpollServer::Connection::handleInputImp(const shared_ptr<TC_Epoller::Epo
     catch(const std::exception& ex)
     {
         // LOG_CONSOLE_DEBUG << ex.what() << endl;
-        _logger->error(ex.what());
+//        _logger->error(ex.what());
         netThread->delConnection(this, true, EM_CLIENT_CLOSE);
         return false;
     }
@@ -1398,9 +1398,6 @@ TC_EpollServer::BindAdapter::~BindAdapter()
 
 void TC_EpollServer::BindAdapter::bind()
 {
-    // try
-    // {
-
     assert(!_s.isValid());
 
 #if TARGET_PLATFORM_WINDOWS
@@ -1452,13 +1449,6 @@ void TC_EpollServer::BindAdapter::bind()
         }
     }
     _s.setblock(false);
-    // }
-    // catch(exception &ex)
-    // {
-    // 	_s.close();
-    // 	cerr << "bind:" << _ep.toString() << " error:" << ex.what() << endl;
-    // 	throw ex;
-    // }
 }
 
 void TC_EpollServer::BindAdapter::setNetThreads(const vector<NetThread*> &netThreads)
@@ -1908,16 +1898,22 @@ TC_EpollServer::TC_EpollServer(unsigned int iNetThreadNum)
 {
 #if TARGET_PLATFORM_WINDOWS
     WSADATA wsadata;
-WSAStartup(MAKEWORD(2, 2), &wsadata);
+    WSAStartup(MAKEWORD(2, 2), &wsadata);
 #endif
-//
-//	_epoller.create(10240);
-//	_epoller.setName("epollserver-epoller");
+
+    _epoller = new TC_Epoller();
+    _epoller->create(10240);
+    _epoller->setName("epollserver-epoller");
+
 }
 
 TC_EpollServer::~TC_EpollServer()
 {
     terminate();
+
+    delete _epoller;
+
+    _epoller = NULL;
 
 #if TARGET_PLATFORM_WINDOWS
     WSACleanup();
@@ -2011,15 +2007,7 @@ bool TC_EpollServer::accept(int fd, int domain)
 
         return true;
     }
-    // else
-    // {
-    // 	//直到发生EAGAIN才不继续accept
-    // 	if (TC_Socket::isPending())
-    // 	{
-    // 		return false;
-    // 	}
-    // }
-    // return true;
+
     return false;
 }
 
@@ -2105,9 +2093,7 @@ void TC_EpollServer::listenCallback(weak_ptr<BindAdapter> adapterPtr)
 
 void TC_EpollServer::waitForShutdown()
 {
-    _epoller = new TC_Epoller();
-    _epoller->create(10240);
-    _epoller->setName("epollserver-epoller");
+    _epoller->reset();
 
     _readyThreadNum = 0;
 
@@ -2122,7 +2108,7 @@ void TC_EpollServer::waitForShutdown()
         _epoller->postRepeated(5000, false, [&](){ _hf(this);});
     }
 
-    for(auto it : _bindAdapters)
+    for(const auto& it : _bindAdapters)
     {
         if(it->getEndpoint().isTcp())
         {
@@ -2192,9 +2178,9 @@ void TC_EpollServer::waitForShutdown()
         bindAdapter->getHandles().clear();
     }
 
-    delete _epoller;
-
-    _epoller = NULL;
+//    delete _epoller;
+//
+//    _epoller = NULL;
 
     std::unique_lock<std::mutex> lock(_readyMutex);
 
@@ -2205,11 +2191,15 @@ void TC_EpollServer::waitForShutdown()
 
 void TC_EpollServer::terminate()
 {
-    if(_epoller == NULL || _epoller->isTerminate())
+    if(_epoller->isTerminate())
     {
         return;
     }
-
+//    if(_epoller == NULL || _epoller->isTerminate())
+//    {
+//        return;
+//    }
+//
     //先停止网络线程
     _epoller->terminate();
 
@@ -2227,6 +2217,11 @@ void TC_EpollServer::setEmptyConnTimeout(int timeout)
     }
 }
 
+void TC_EpollServer::setAdapter(const vector <TC_EpollServer::BindAdapterPtr> &adapters)
+{
+    _bindAdapters = adapters;
+}
+
 int TC_EpollServer::bind(BindAdapterPtr & lsPtr)
 {
     auto it = _listeners.begin();
@@ -2237,6 +2232,7 @@ int TC_EpollServer::bind(BindAdapterPtr & lsPtr)
         {
             throw TC_Exception("bind name '" + lsPtr->getName() + "' conflicts.");
         }
+
         ++it;
     }
 
@@ -2247,7 +2243,11 @@ int TC_EpollServer::bind(BindAdapterPtr & lsPtr)
         _listeners[lsPtr->getSocket().getfd()] = lsPtr;
     }
 
-    _bindAdapters.push_back(lsPtr);
+    //如果adapter没有添加过, 则添加
+    if(!getBindAdapter(lsPtr->getName()))
+    {
+        _bindAdapters.push_back(lsPtr);
+    }
 
     return lsPtr->getSocket().getfd();
 }

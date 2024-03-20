@@ -17,29 +17,32 @@
 #include "hello_test.h"
 #include "../server/WinServer.h"
 #include "servant/AdminF.h"
-#include "server/FrameworkServer.h"
-#include "server/framework/DbHandle.h"
+#include "mock/TarsMockUtil.h"
+#include "mock/DbHandle.h"
+#include "mock/ConfigImp.h"
 
 TEST_F(HelloTest, testAdmin)
 {
-	FrameworkServer fs;
-	startServer(fs, FRAMEWORK_CONFIG());
+    TarsMockUtil tarsMockUtil;
+    tarsMockUtil.startFramework();
+    ConfigImp::setConfigFile("test.conf", "test-content");
 
 	CDbHandle::cleanEndPoint();
-	CDbHandle::addActiveEndPoint("TestApp.FrameworkServer.ConfigObj", 11003, 1);
 
 	WinServer ws;
 	startServer(ws, WIN_CONFIG());
 
-//	auto c = getCommunicator();
-
-	CommunicatorPtr c = ws.getCommunicator();
+	CommunicatorPtr c = ws.getApplicationCommunicator();
 
 	string adminObj = "AdminObj@" + getLocalEndpoint(WIN_CONFIG()).toString();
 
 	AdminFPrx adminFPrx = c->stringToProxy<AdminFPrx>(adminObj);
 
+    adminFPrx->tars_ping();
+
+    LOG_CONSOLE_DEBUG << endl;
 	string loadconfig = adminFPrx->notify("tars.loadconfig test.conf");
+    LOG_CONSOLE_DEBUG << loadconfig << endl;
 
 	EXPECT_TRUE(loadconfig.find("[succ] get remote config:") != string::npos);
 	loadconfig = adminFPrx->notify("tars.loadconfig no-test.conf");
@@ -75,11 +78,6 @@ TEST_F(HelloTest, testAdmin)
 	string reloadlocator = adminFPrx->notify("tars.reloadlocator reload");
 	EXPECT_TRUE(reloadlocator.find("[notify prefix object num:1]") != string::npos);
 
-// string closecore = adminFPrx->notify("tars.closecore no");
-// EXPECT_TRUE(closecore.find("after set cur:18446744073709551615;max: 18446744073709551615") != string::npos);
-// closecore = adminFPrx->notify("tars.closecore yes");
-// EXPECT_TRUE(closecore.find("after set cur:0;max: 18446744073709551615") != string::npos);
-
 	string errorcmd = adminFPrx->notify("tars.errorcmd");
 	EXPECT_STREQ(errorcmd.c_str(), "");
 
@@ -90,8 +88,6 @@ TEST_F(HelloTest, testAdmin)
 	EXPECT_STREQ(normaldeletecmd.c_str(), "[notify servant object num:1]\n[1]:Delete success!\n");
 
 	stopServer(ws);
-	stopServer(fs);
+    tarsMockUtil.stopFramework();
 }
-
-
 

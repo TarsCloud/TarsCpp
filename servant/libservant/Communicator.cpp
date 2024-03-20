@@ -27,17 +27,7 @@ namespace tars
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-string ClientConfig::LocalIp = "127.0.0.1";
 
-string ClientConfig::ModuleName = "unknown";
-
-set<string> ClientConfig::SetLocalIp;
-
-bool ClientConfig::SetOpen = false;
-
-string ClientConfig::SetDivision = "";
-
-string ClientConfig::TarsVersion = string(TARS_VERSION);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -250,15 +240,15 @@ void Communicator::initialize()
 	});
 
 
-	ClientConfig::TarsVersion   = TARS_VERSION;
+    _clientConfig.TarsVersion   = TARS_VERSION;
 
-    ClientConfig::SetOpen = TC_Common::lower(getProperty("enableset", "n")) == "y" ? true : false;
+    _clientConfig.SetOpen = TC_Common::lower(getProperty("enableset", "n")) == "y" ? true : false;
 
-    if (ClientConfig::SetOpen)
+    if (_clientConfig.SetOpen)
     {
-        ClientConfig::SetDivision = getProperty("setdivision");
+        _clientConfig.SetDivision = getProperty("setdivision");
 
-        vector<string> vtSetDivisions = TC_Common::sepstr<string>(ClientConfig::SetDivision, ".");
+        vector<string> vtSetDivisions = TC_Common::sepstr<string>(_clientConfig.SetDivision, ".");
 
         string sWildCard = "*";
 
@@ -267,24 +257,24 @@ void Communicator::initialize()
             || vtSetDivisions[1] == sWildCard)
         {
             //set分组名不对时默认没有打开set分组
-            ClientConfig::SetOpen = false;
+            _clientConfig.SetOpen = false;
             setProperty("enableset", "n");
-            TLOGERROR("[set division name error:" << ClientConfig::SetDivision << ", client failed to open set]" << endl);
+            TLOGERROR("[set division name error:" << _clientConfig.SetDivision << ", client failed to open set]" << endl);
         }
     }
 
-    ClientConfig::LocalIp = getProperty("localip", "");
+    _clientConfig.LocalIp = getProperty("localip", "");
 
-    if (ClientConfig::SetLocalIp.empty())
+    if (_clientConfig.SetLocalIp.empty())
     {
-        vector<string> v = TC_Socket::getLocalHosts();
+        vector<string> v = TC_Socket::getLocalHosts(AF_INET, false);
+        if (_clientConfig.LocalIp.empty() && !v.empty())
+        {
+            _clientConfig.LocalIp = v[0];
+        }
         for (size_t i = 0; i < v.size(); i++)
         {
-            if (v[i] != "127.0.0.1" && ClientConfig::LocalIp.empty())
-            {
-                ClientConfig::LocalIp = v[i];
-            }
-            ClientConfig::SetLocalIp.insert(v[i]);
+            _clientConfig.SetLocalIp.insert(v[i]);
         }
     }
 
@@ -295,13 +285,13 @@ void Communicator::initialize()
     {
         exe = TC_File::extractFileName(TC_File::getExePath());
     }
-    catch (TC_File_Exception& ex)
+    catch (exception& ex)
     {
         //取失败则使用ip代替进程名
-        exe = ClientConfig::LocalIp;
+        exe = _clientConfig.LocalIp;
     }
 
-    ClientConfig::ModuleName = getProperty("modulename", exe);
+    _clientConfig.ModuleName = getProperty("modulename", exe);
 
 #if TARS_SSL
 
@@ -348,6 +338,8 @@ void Communicator::initialize()
         _asyncThreadNum = MAX_CLIENT_ASYNCTHREAD_NUM;
     }
 
+    _schedCommunicatorEpoll.resize(MAX_CLIENT_NOTIFYEVENT_NUM);
+
 	bool merge = TC_Common::strto<bool>(getProperty("mergenetasync", "0"));
 
     //异步队列的大小
@@ -381,12 +373,12 @@ void Communicator::initialize()
     }
 
     {
-        std::unique_lock<std::mutex> lock(_mutex);
-        _cond.wait(lock, [&]{ return _communicatorEpollStartNum == clientThreadNum; });
+        std::unique_lock<std::mutex> tlock(_mutex);
+        _cond.wait(tlock, [&]{ return _communicatorEpollStartNum == clientThreadNum; });
     }
 
     //异步队列数目上报
-    _reportAsyncQueue= getStatReport()->createPropertyReport(ClientConfig::ModuleName  + ".asyncqueue", PropertyReport::avg());
+    _reportAsyncQueue= getStatReport()->createPropertyReport("asyncqueue", PropertyReport::avg());
     
     //初始化统计上报接口
     string statObj = getProperty("stat", "");
@@ -420,8 +412,15 @@ void Communicator::initialize()
         propertyPrx->tars_open_keepalive(false);
     }
 
-    string sSetDivision = ClientConfig::SetOpen ? ClientConfig::SetDivision : "";
-    _statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
+    string locator = getProperty("locator", "");
+    if(!locator.empty())
+    {
+        _queryFPrx = stringToProxy<QueryFPrx>(locator);
+        _queryFPrx->tars_open_keepalive(false);
+    }
+
+    string sSetDivision = _clientConfig.SetOpen ? _clientConfig.SetDivision : "";
+    _statReport->setReportInfo(statPrx, propertyPrx, _clientConfig.ModuleName, _clientConfig.LocalIp, sSetDivision, iReportInterval, iMaxReportSize, iReportTimeout);
 
 #if TARS_OPENTRACKING
 	string collector_host = getProperty("collector_host", "");
@@ -486,43 +485,59 @@ vector<shared_ptr<CommunicatorEpoll>> Communicator::getAllCommunicatorEpoll()
 	return communicatorEpolls;
 }
 
-void Communicator::forEachSchedCommunicatorEpoll(std::function<void(const shared_ptr<CommunicatorEpoll> &)> func)
+void Communicator::forEachSchedCommunicatorEpoll(const std::function<void(const shared_ptr<CommunicatorEpoll> &)>& func)
 {
-	TC_LockT<TC_SpinLock> lock(_schedMutex);
-	for(auto it : _schedCommunicatorEpoll)
+//	TC_LockT<TC_SpinLock> lock(_schedMutex);
+//	for(const auto& it : _schedCommunicatorEpoll)
+//	{
+//		func(it.second);
+//	}
+
+	for(const auto& it : _schedCommunicatorEpoll)
 	{
-		func(it.second);
+        if(it)
+        {
+            func(it);
+        }
 	}
 }
 
 shared_ptr<CommunicatorEpoll> Communicator::createSchedCommunicatorEpoll(size_t netThreadSeq,  const shared_ptr<ReqInfoQueue> &reqInfoQueue)
 {
+    assert(netThreadSeq < MAX_CLIENT_NOTIFYEVENT_NUM);
+
 	shared_ptr<CommunicatorEpoll> communicatorEpoll = std::make_shared<CommunicatorEpoll>(this, netThreadSeq);
 
 	communicatorEpoll->initializeEpoller();
 
 	communicatorEpoll->initNotify(netThreadSeq, reqInfoQueue);
 
-	{
-		TC_LockT<TC_SpinLock> lock(_schedMutex);
+    _schedCommunicatorEpoll[netThreadSeq] = communicatorEpoll;
 
-		_schedCommunicatorEpoll.insert(std::make_pair(netThreadSeq, communicatorEpoll));
-	}
+//	{
+//		TC_LockT<TC_SpinLock> lock(_schedMutex);
+//
+//		_schedCommunicatorEpoll.insert(std::make_pair(netThreadSeq, communicatorEpoll));
+//	}
 
 	return communicatorEpoll;
 }
 
 void Communicator::eraseSchedCommunicatorEpoll(size_t netThreadSeq)
 {
-	shared_ptr<CommunicatorEpoll> ce;
-	{
-		TC_LockT<TC_SpinLock> lock(_schedMutex);
+    assert(netThreadSeq < MAX_CLIENT_NOTIFYEVENT_NUM);
 
-		ce = _schedCommunicatorEpoll[netThreadSeq];
+    shared_ptr<CommunicatorEpoll> ce = _schedCommunicatorEpoll[netThreadSeq];
 
-		_schedCommunicatorEpoll.erase(netThreadSeq);
-	}
-
+    _schedCommunicatorEpoll[netThreadSeq].reset();
+//	{
+//		TC_LockT<TC_SpinLock> lock(_schedMutex);
+//
+//		ce = _schedCommunicatorEpoll[netThreadSeq];
+//
+//		_schedCommunicatorEpoll.erase(netThreadSeq);
+//	}
+//
 	if(ce)
 	{
 		ce->terminate();
@@ -534,13 +549,10 @@ void Communicator::reloadLocator()
     for (size_t i = 0; i < _communicatorEpoll.size(); ++i)
     {
 		_communicatorEpoll[i]->_epoller->syncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, _communicatorEpoll[i].get()));
-
-//        _communicatorEpoll[i]->loadObjectLocator();
     }
 
 	forEachSchedCommunicatorEpoll([](const shared_ptr<CommunicatorEpoll> &c){
 		c->_epoller->syncCallback(std::bind(&CommunicatorEpoll::loadObjectLocator, c.get()));
-//		c->loadObjectLocator();
 	});
 
 }
@@ -576,8 +588,8 @@ int Communicator::reloadProperty(string & sResult)
         propertyPrx = stringToProxy<PropertyFPrx>(propertyObj);
     }
 
-    string sSetDivision = ClientConfig::SetOpen ? ClientConfig::SetDivision : "";
-    _statReport->setReportInfo(statPrx, propertyPrx, ClientConfig::ModuleName, ClientConfig::LocalIp, sSetDivision, iReportInterval, 0, 0, iMaxReportSize, iReportTimeout);
+    string sSetDivision = _clientConfig.SetOpen ? _clientConfig.SetDivision : "";
+    _statReport->setReportInfo(statPrx, propertyPrx, _clientConfig.ModuleName, _clientConfig.LocalIp, sSetDivision, iReportInterval, iMaxReportSize, iReportTimeout);
 
     sResult = "locator=" + getProperty("locator", "") + "\r\n" +
         "stat=" + statObj + "\r\n" + "property=" + propertyObj + "\r\n" +
@@ -754,6 +766,12 @@ ServantProxy* Communicator::getServantProxy(const string& objectName, const stri
     return _servantProxyFactory->getServantProxy(objectName, setName, rootServant);
 }
 
+ServantProxy * Communicator::setServantProxy(ServantProxy * proxy,const string& objectName,const string& setName, bool rootServant)
+{
+    Communicator::initialize();
+    proxy->setComm(this , objectName,setName);
+    return _servantProxyFactory->setServantProxy(proxy,objectName, setName, rootServant);
+}
 StatReport* Communicator::getStatReport()
 {
     Communicator::initialize();

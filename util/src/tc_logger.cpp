@@ -121,12 +121,17 @@ TC_LoggerThreadGroup::~TC_LoggerThreadGroup()
 	terminate();
 }
 
-void TC_LoggerThreadGroup::start(size_t iThreadNum)
+void TC_LoggerThreadGroup::start(int iThreadNum)
 {
 	if(!_thread)
 	{
 		_thread.reset(new std::thread(&TC_LoggerThreadGroup::run, this));
 	}
+}
+
+bool TC_LoggerThreadGroup::isStart()
+{
+    return _thread.get() != nullptr;
 }
 
 void TC_LoggerThreadGroup::registerLogger(TC_LoggerRollPtr &l)
@@ -159,6 +164,7 @@ void TC_LoggerThreadGroup::terminate()
     if (_thread)
     {
         _thread->join();
+        _thread.reset();
     }
 }
 

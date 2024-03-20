@@ -46,7 +46,7 @@ public:
     bool _close = false;
 };
 
-typedef TC_AutoPtr<RegisterPushCallBack> RegisterPushCallBackPtr;
+//typedef TC_AutoPtr<RegisterPushCallBack> RegisterPushCallBackPtr;
 
 TEST_F(HelloTest, push)
 {
@@ -59,7 +59,7 @@ TEST_F(HelloTest, push)
 
 	HelloPrx prx = comm->stringToProxy<HelloPrx>(obj);
 
-	RegisterPushCallBackPtr callback = new RegisterPushCallBack();
+	ServantProxyCallbackPtr callback(new RegisterPushCallBack());
 
 	prx->tars_set_push_callback(callback);
 
@@ -69,7 +69,7 @@ TEST_F(HelloTest, push)
 
 	TC_Common::msleep(50);
 
-	ASSERT_TRUE(callback->_msg == msg);
+	ASSERT_TRUE(((RegisterPushCallBack*)callback.get())->_msg == msg);
 
 	stopServer(ws);
 }
@@ -86,7 +86,7 @@ TEST_F(HelloTest, pushClose)
 
     HelloPrx prx = comm->stringToProxy<HelloPrx>(obj);
 
-    RegisterPushCallBackPtr callback = new RegisterPushCallBack();
+    ServantProxyCallbackPtr callback(new RegisterPushCallBack);
 
     prx->tars_set_push_callback(callback);
 
@@ -96,13 +96,13 @@ TEST_F(HelloTest, pushClose)
 
     TC_Common::msleep(50);
 
-    ASSERT_TRUE(callback->_msg == msg);
+    ASSERT_TRUE(((RegisterPushCallBack*)callback.get())->_msg == msg);
 
     prx->tars_close();
 
     TC_Common::msleep(50);
 
-    ASSERT_TRUE(callback->_close);
+    ASSERT_TRUE(((RegisterPushCallBack*)callback.get())->_close);
 
     stopServer(ws);
 }

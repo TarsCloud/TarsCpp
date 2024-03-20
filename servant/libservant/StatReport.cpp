@@ -37,9 +37,6 @@ StatReport::StatReport(Communicator* communicator)
 , _reportTimeout(5000)
 , _maxReportSize(MAX_REPORT_SIZE)
 , _terminate(false)
-, _sampleRate(1)
-, _maxSampleCount(500)
-, _retValueNumLimit(10)
 {
 	srand(time(NULL));
 }
@@ -69,8 +66,6 @@ void StatReport::setReportInfo(const StatFPrx& statPrx,
                        const string& strModuleIp,
                        const string& strSetDivision,
                        int iReportInterval,
-                       int iSampleRate,
-                       unsigned int iMaxSampleCount,
                        int iMaxReportSize,
                        int iReportTimeout)
 {
@@ -90,10 +85,6 @@ void StatReport::setReportInfo(const StatFPrx& statPrx,
     _reportInterval    = iReportInterval < 10000 ? 10000 : iReportInterval;
 
     _reportTimeout = iReportTimeout < 5000 ? 5000 : iReportTimeout;
-
-    _sampleRate        = (iSampleRate < 1)?1: iSampleRate;
-
-    _maxSampleCount    = iMaxSampleCount>500?500:iMaxSampleCount;
 
     if ( iMaxReportSize < MIN_REPORT_SIZE || iMaxReportSize > MAX_REPORT_SIZE )
     {
@@ -209,19 +200,19 @@ bool StatReport::divison2SetInfo(const string& str, vector<string>& vtSetInfo)
     return true;
 }
 
-/*
-tars.tarsstat to tarsstat
-*/
-string StatReport::getServerName(string sModuleName)
-{
-    string::size_type pos =  sModuleName.find(".");
-    if (pos != string::npos)
-    {
-        return sModuleName.substr(pos + 1); //+1:过滤.
-    }
-    return  sModuleName;
-}
-
+///*
+//tars.tarsstat to tarsstat
+//*/
+//string StatReport::getServerName(string sModuleName)
+//{
+//    string::size_type pos =  sModuleName.find(".");
+//    if (pos != string::npos)
+//    {
+//        return sModuleName.substr(pos + 1); //+1:过滤.
+//    }
+//    return  sModuleName;
+//}
+//
 
 void StatReport::report(const string& strModuleName,
                         const string& setdivision,
@@ -246,11 +237,11 @@ void StatReport::report(const string& strModuleName,
     {
         if (!_setName.empty())
         {
-            head.masterName = _moduleName + "." + _setName + _setArea + _setID + "@" + ClientConfig::TarsVersion;
+            head.masterName = _moduleName + "." + _setName + _setArea + _setID + "@" + _communicator->getClientConfig().TarsVersion;
         }
         else
         {
-            head.masterName = _moduleName + "@" + ClientConfig::TarsVersion;
+            head.masterName = _moduleName + "@" + _communicator->getClientConfig().TarsVersion;
         }
 
         if (!setdivision.empty()) //被调没有启用set分组,slavename保持原样
@@ -338,7 +329,7 @@ void StatReport::report(const string& strMasterName,
     StatMicMsgHead head;
     StatMicMsgBody body;
 
-    head.masterName     = trimAndLimitStr(strMasterName + "@" + ClientConfig::TarsVersion, MAX_MASTER_NAME_LEN);
+    head.masterName     = trimAndLimitStr(strMasterName + "@" + _communicator->getClientConfig().TarsVersion, MAX_MASTER_NAME_LEN);
     head.masterIp       = trimAndLimitStr(strMasterIp,      MAX_MASTER_IP_LEN);
     head.slaveName      = trimAndLimitStr(strSlaveName,     MAX_MASTER_NAME_LEN);
     head.slaveIp        = trimAndLimitStr(strSlaveIp,       MAX_MASTER_IP_LEN);
@@ -413,6 +404,7 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg, bool bFromClient)
             msg.swap(mStatMsg);
         }
 
+
        TLOGTARS("[StatReport::reportMicMsg get size:" << mStatMsg.size()<<"]"<< endl);
        for(MapStatMicMsg::iterator it = mStatMsg.begin(); it != mStatMsg.end(); it++)
        {
@@ -425,7 +417,7 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg, bool bFromClient)
                if(_statPrx)
                {
                    TLOGTARS("[StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
-                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient, ServerConfig::Context);
+                   _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient, _communicator->getClientConfig().Context);
                }
                iLen = iTemLen;
                mTemp.clear();
@@ -447,7 +439,7 @@ int StatReport::reportMicMsg(MapStatMicMsg& msg, bool bFromClient)
            if(_statPrx)
            {
                TLOGTARS("[StatReport::reportMicMsg send size:" << mTemp.size()<<"]"<< endl);
-               _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient, ServerConfig::Context);
+               _statPrx->tars_set_timeout(_reportTimeout)->async_reportMicMsg(NULL,mTemp,bFromClient, _communicator->getClientConfig().Context);
            }
        }
        return 0;
@@ -592,7 +584,7 @@ int StatReport::reportPropMsg()
                 if (_propertyPrx)
                 {
                     TLOGTARS("[StatReport::reportPropMsg send size:" << mTemp.size() << "]" << endl);
-                    _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL, mTemp, ServerConfig::Context);
+                    _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL, mTemp, _communicator->getClientConfig().Context);
                 }
                 iLen = iTemLen;
                 mTemp.clear();
@@ -604,7 +596,7 @@ int StatReport::reportPropMsg()
             if (_propertyPrx)
             {
                 TLOGTARS("[StatReport::reportPropMsg send size:" << mTemp.size() << "]" << endl);
-                _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL, mTemp, ServerConfig::Context);
+                _propertyPrx->tars_set_timeout(_reportTimeout)->async_reportPropMsg(NULL, mTemp, _communicator->getClientConfig().Context);
             }
         }
         return 0;
@@ -690,7 +682,7 @@ void StatReport::run()
 
                 auto communicatorEpolls = _communicator->getAllCommunicatorEpoll();
 
-                for(auto ce : communicatorEpolls)
+                for(const auto& ce : communicatorEpolls)
                 {
                     MapStatMicMsg * pStatMsg;
                     while(ce->popStatMsg(pStatMsg))

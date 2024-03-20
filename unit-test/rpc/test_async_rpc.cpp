@@ -12,6 +12,7 @@ TEST_F(HelloTest, test)
 }
 
 
+
 TEST_F(HelloTest, rpcASyncGlobalCommunicator)
 {
     {
@@ -126,7 +127,7 @@ TEST_F(HelloTest, rpcASyncThreadFinish)
 			//发起远程调用
 			for (int j = 0; j < count; ++j)
 			{
-				HelloPrxCallbackPtr p = new ClientHelloCallback(TC_Common::now2us(), j, count, _buffer, callback_count);
+				HelloPrxCallbackPtr p(new ClientHelloCallback(TC_Common::now2us(), j, count, _buffer, callback_count));
 
 				prx->async_testHello(p, j, _buffer);
 			}

@@ -1,3 +1,41 @@
+# v3.0.19 20240202
+
+## en
+- fix: tars-tools.cmake in windows
+- fix: tc_port fix forkExec bug
+- fix: remote logger remove ServerConfig::Context
+- fix: current not report one_way stat(useless)
+- fix: StatReport interface, remove parameters not used
+- fix: tc_option support parameter with ", like this: --test="abc"
+- fix: When the server actively closes the connection, RPC may cause memory leak issues
+- fix: push callback may crash
+- fix: KeepAliveNodeFHelper no singleton
+- fix: gzip compress coredump
+- fix: PingCallback set servantPrx
+- fix: remote config, when tarsconfig timeout not use local config file bug
+- fix: tars-tools.cmake.in add: list(APPEND TARS_TOOL_FLAG "")
+- fix: trace, no not depend ServerConfig
+- fix: tars-tools.cmake set TARS_SSL/TARS_MYSQL/TARS_HTTP2 depends tarscpp compiler
+- feat: modify xxx_fcontext name to avoid conflict with other co lib
+- feat: rpc add time distr report
+- feat: tc_port add getDiskInfo/getCpuLoad/getUPTime/getPidStartTime/getPidMemUsed/getCwd/kill and support mac/windows/linux
+- feat: tc_port add closeAllFileDescriptors in linux/mac
+- feat: tc_file add joinPaths/toAbsolute
+- feat: Application first bind adminObj, then initialize, then bind other objs
+- feat: EndpointInfo add toEndpointF
+- feat: AdminF.tars add getPid
+- feat: ServantHandle in servant  use shared ptr
+- feat: ClientConfig change to Communicator subclass, no global static object
+- feat: ClientConfig add context, when call other core tars server with this context, node_name in context
+- feat: add ApplicationCommunicator to support multi Appliations in one process
+- feat: support master-slave mode in frameworkPro
+- feat: Application add ServerBaseInfo in Application
+- optimize: bind after initialize when Applicaion start
+- optimize: RemoteConfig remove singleton
+- optimize: loading local ip list cache 
+- optimize: AppCache only initialize once
+- optimize: global rolllog only init once
+
 # v3.0.18 20231106
 ### en
 - fix: udp ipv6 bug

@@ -18,6 +18,22 @@
 
 namespace tars
 {
+void ServantHelperManager::setServant(Servant * servant , const string &servantObj)
+{
+    ServantPtr ptr = servant;
+    _servant_ptr[servantObj] = ptr;
+//    LOG_CONSOLE_DEBUG << "setServant:" << servant << "|" << ptr->getName() << "|" << ptr.get() <<endl;
+}
+
+void ServantHelperManager::setCreateFunction(const string &servantObj , Application *application ,const function_servant_create & funcPtr)
+{
+    ServantCreateHelper helper ;
+    
+    helper.creator = funcPtr;
+    helper.application = application;
+    
+    _servant_creator_ptr[servantObj] = helper;
+}
 
 ServantPtr ServantHelperManager::create(const string &sAdapter)
 {
@@ -31,6 +47,14 @@ ServantPtr ServantHelperManager::create(const string &sAdapter)
     //根据adapter查找servant名称
     string s = _adapter_servant[sAdapter];
 
+#ifdef TARS_STD_SHARED_PTR
+    if(_servant_ptr.find(s) != _servant_ptr.end())
+    {
+        ServantPtr ptr = _servant_ptr[s];
+        return ptr;
+    }
+#endif
+    
     if(_servant_creator.find(s) != _servant_creator.end())
     {
         servant = _servant_creator[s]->create(s);

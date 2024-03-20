@@ -51,7 +51,7 @@ enum  EndpointWeightType
 /*
  * 路由请求与回调的实现类
  */
-class QueryEpBase : public QueryFPrxCallback
+class QueryEpBase : public QueryFPrxCallback ,public enable_shared_from_this<QueryEpBase>
 {
 public:
     /*
@@ -132,7 +132,7 @@ public:
 	/*
 	 * 设置主控的代理
 	 */
-    int  setLocatorPrx(QueryFPrx prx);
+    int  setLocatorPrx(const QueryFPrx& prx);
 
     /*
      * 是否直连后端
@@ -146,6 +146,10 @@ protected:
      */
     void refreshReg(GetEndpointType type,const string & sName);
 
+    /**
+     * 从cache中加载ip list
+     */
+    void loadFromCache();
 private:
     
     /*
@@ -154,11 +158,6 @@ private:
      * 如果是间接连接，则设置主控代理，并从缓存中加载相应的列表
      */
     void setObjName(const string & sObjName);
-
-//    /*
-//     * 解析endpoint
-//     */
-//    vector<string> sepEndpoint(const string& sEndpoints);
 
     /*
      * 从sEndpoints提取ip列表信息

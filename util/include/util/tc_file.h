@@ -82,6 +82,13 @@ public:
 	 */
 	static bool isAbsolute(const string &sFullFileName);
 
+    /**
+     * 如果是相对路径则转换为绝对路径
+     * @param sFullFileName
+     * @return
+     */
+    static string toAbsolute(const string &sFullFileName);
+
 	/**
 	* @brief 判断给定路径的文件是否存在.
 	* 如果文件是符号连接,则以符号连接判断而不是以符号连接指向的文件判断
@@ -303,8 +310,35 @@ public:
 	*/		
 	static bool startWindowsPanfu(const string & sPath);
 
+    /**
+     * 连接参数, 变成路径
+     * @tparam T
+     * @tparam Args
+     * @param t
+     * @param args
+     * @return
+     */
+    template<typename T, typename... Args>
+    static std::string joinPaths(T t, Args... args) {
+        std::string str_t = string(t);
+        if (!str_t.empty() && str_t.back() != FILE_SEP[0])
+            str_t += FILE_SEP;
+        return str_t + joinPaths(args...);
+//        return string(t) + FILE_SEP + joinPaths(args...);
+    }
 private:
-	static bool isPanfu(const string & sPath);
+    // Base case: single argument
+    template<typename T>
+    static std::string joinPaths(T t) {
+        return t;
+    }
+
+    /**
+     * 是否是windows的盘符
+     * @param sPath
+     * @return
+     */
+    static bool isPanfu(const string & sPath);
 };
 }
 #endif // TC_FILE_H

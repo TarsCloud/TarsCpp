@@ -41,8 +41,8 @@ macro(complice_tars OUT_DEPENDS_LIST HEADER INCLUDE)
                 OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                 DEPENDS tars2cpp ${FILE}
-                COMMAND ${TARS2CPP} --with-tars --without-trace ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}
-                COMMENT "${TARS2CPP} --with-tars --without-trace ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}")
+                COMMAND ${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}
+                COMMENT "${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}")
 
         list(APPEND DEPENDS_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H})
 
@@ -61,6 +61,8 @@ macro(complice_tars OUT_DEPENDS_LIST HEADER INCLUDE)
 
 endmacro()
 
+configure_file(${PROJECT_SOURCE_DIR}/makefile/tars-tools.cmake.in ${PROJECT_SOURCE_DIR}/makefile/tars-tools.cmake @ONLY)
+
 add_subdirectory(protocol/servant)
 add_subdirectory(protocol/framework)
 add_subdirectory(tup)
@@ -73,5 +75,6 @@ install(DIRECTORY jmem DESTINATION include)
 install(DIRECTORY script DESTINATION .
         PATTERN "*.sh"
         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_EXECUTE)
-install(DIRECTORY makefile DESTINATION .)
+#install(DIRECTORY makefile DESTINATION . EXCLUDE tars-tools.cmake.in )
+install(DIRECTORY makefile DESTINATION . PATTERN tars-tools.cmake.in EXCLUDE)
 

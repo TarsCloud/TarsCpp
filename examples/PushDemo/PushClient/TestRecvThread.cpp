@@ -127,7 +127,7 @@ RecvThread::RecvThread(int second):_second(second), _bTerminate(false)
 
 void RecvThread::run(void)
 {
-	TestPushCallBackPtr cbPush = new TestPushCallBack();
+	ServantProxyCallbackPtr cbPush(new TestPushCallBack());
 	_prx->tars_set_push_callback(cbPush);	
 
 	string buf("heartbeat");
@@ -139,7 +139,7 @@ void RecvThread::run(void)
 		{
 			try
 			{
-				TestPushCallBackPtr cb = new TestPushCallBack();
+				ServantProxyCallbackPtr cb(new TestPushCallBack());
 				_prx->rpc_call_async(_prx->tars_gen_requestid(), "printResult", buf.c_str(), buf.length(), cb);
 			}
 			catch(TarsException& e)

@@ -61,7 +61,7 @@ int HelloImp::testTrans(int index, const string &s, string &r, CurrentPtr curren
     {
         current->setResponse(false);
 
-        HelloPrxCallbackPtr p = new HelloCallback(current, index, s);
+        HelloPrxCallbackPtr p(new HelloCallback(current, index, s));
 
         _helloPrx->async_testHello(p, index, s);
     }
@@ -150,7 +150,7 @@ bool HelloImp::testCoro(const std::string& sIn, std::string &sOut, CurrentPtr cu
 
 int HelloImp::testConHash(std::string &sOut, CurrentPtr current)
 {
-	sOut = _handle->getBindAdapter()->getEndpoint().toString();
+	sOut = getHandle()->getBindAdapter()->getEndpoint().toString();
 	return 0;
 }
 

@@ -55,7 +55,7 @@ public:
 	int		_iOut;
 	string	_sOut;
 };
-typedef tars::TC_AutoPtr<BServantCoroCallback> BServantCoroCallbackPtr;
+// typedef tars::TC_AutoPtr<BServantCoroCallback> BServantCoroCallbackPtr;
 
 ////////////////////////////////////////////
 //继承框架的协程类
@@ -93,11 +93,11 @@ void TestCoroutine::handle()
 		{
             CoroParallelBasePtr sharedPtr = new CoroParallelBase(2);
 
-			BServantCoroCallbackPtr cb1 = new BServantCoroCallback();
+			BServantCoroPrxCallbackPtr cb1(new BServantCoroCallback());
 			cb1->setCoroParallelBasePtr(sharedPtr);
 			_prx->coro_testCoroSerial(cb1, sIn);
 
-			BServantCoroCallbackPtr cb2 = new BServantCoroCallback();
+			BServantCoroPrxCallbackPtr cb2(new BServantCoroCallback());
 			cb2->setCoroParallelBasePtr(sharedPtr);
 			_prx->coro_testCoroParallel(cb2, sIn);
 
@@ -105,7 +105,7 @@ void TestCoroutine::handle()
 
 			// cout << "ret1:" << cb1->_sOut << "|ret2:" << cb2->_sOut << endl;
 
-			if(cb1->_iRet == 0 && cb2->_iRet == 0 && cb1->_iException == 0 && cb2->_iException == 0)
+			if(((BServantCoroCallback*)(cb1.get()))->_iRet == 0 && ((BServantCoroCallback*)(cb2.get()))->_iRet == 0 && ((BServantCoroCallback*)(cb1.get()))->_iException == 0 && ((BServantCoroCallback*)(cb2.get()))->_iException == 0)
 			{
 				++sum;
 			}

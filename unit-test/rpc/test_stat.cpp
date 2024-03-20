@@ -1,6 +1,6 @@
 ﻿
 #include "hello_test.h"
-#include "server/FrameworkServer.h"
+#include "mock/TarsMockUtil.h"
 
 int getStatCount(const vector<map<tars::StatMicMsgHead, tars::StatMicMsgBody>> &data)
 {
@@ -21,8 +21,10 @@ int getStatCount(const vector<map<tars::StatMicMsgHead, tars::StatMicMsgBody>> &
 
 TEST_F(HelloTest, statReport)
 {
-	FrameworkServer fs;
-	startServer(fs, FRAMEWORK_CONFIG());
+    TarsMockUtil tarsMockUtil;
+    tarsMockUtil.startFramework();
+//	FrameworkServer fs;
+//	startServer(fs, FRAMEWORK_CONFIG());
 
 	HelloServer hs;
 	startServer(hs, CONFIG());
@@ -62,14 +64,15 @@ TEST_F(HelloTest, statReport)
 //	LOG_CONSOLE_DEBUG << "server stat:" << _serverStatData.size() << endl;
 
 	stopServer(hs);
-	stopServer(fs);
+    tarsMockUtil.stopFramework();
+//	stopServer(fs);
 }
 
 
 TEST_F(HelloTest, statReportInCoroutine)
 {
-	FrameworkServer fs;
-	startServer(fs, FRAMEWORK_CONFIG());
+    TarsMockUtil tarsMockUtil;
+    tarsMockUtil.startFramework();
 
 	HelloServer hs;
 	startServer(hs, CONFIG());
@@ -110,5 +113,5 @@ TEST_F(HelloTest, statReportInCoroutine)
 	}, true);
 
 	stopServer(hs);
-	stopServer(fs);
+    tarsMockUtil.stopFramework();
 }

@@ -13,8 +13,9 @@ WinServer::~WinServer()
 void
 WinServer::initialize()
 {
-	addServant<HelloImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".WinObj");
+	addServant<HelloImp>(_serverBaseInfo.Application + "." + _serverBaseInfo.ServerName + ".WinObj");
 
+    addConfig("test.conf");
 	TARS_ADD_ADMIN_CMD_NORMAL("AdminCmdNormalTest", WinServer::cmdAdd);
 
 	TARS_ADD_ADMIN_CMD_NORMAL("CmdToDelete", WinServer::cmdAdd);

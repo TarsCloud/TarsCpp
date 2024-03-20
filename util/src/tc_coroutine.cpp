@@ -245,9 +245,9 @@ void TC_CoroutineInfo::registerFunc(const std::function<void ()>& callback)
 
     _init_func.args     = this;
 
-	fcontext_t ctx      = make_fcontext(_stack_ctx.sp, _stack_ctx.size, TC_CoroutineInfo::corotineEntry);
+	fcontext_t ctx      = tars_make_fcontext(_stack_ctx.sp, _stack_ctx.size, TC_CoroutineInfo::corotineEntry);
 
-	transfer_t tf       = jump_fcontext(ctx, this);
+	transfer_t tf       = tars_jump_fcontext(ctx, this);
 
 	//实际的ctx
 	this->setCtx(tf.fctx);
@@ -260,7 +260,7 @@ void TC_CoroutineInfo::corotineEntry(transfer_t tf)
     auto    func  = coro->_init_func.coroFunc;
     void*    args = coro->_init_func.args;
 
-	transfer_t t = jump_fcontext(tf.fctx, NULL);
+	transfer_t t = tars_jump_fcontext(tf.fctx, NULL);
 
 	//拿到自己的协程堆栈, 当前协程结束以后, 好跳转到main
 	coro->_scheduler->setMainCtx(t.fctx);
@@ -688,7 +688,7 @@ void TC_CoroutineScheduler::switchCoro(TC_CoroutineInfo *to)
     //跳转到to协程
     _currentCoro = to;
 
-	transfer_t t = jump_fcontext(to->getCtx(), NULL);
+	transfer_t t = tars_jump_fcontext(to->getCtx(), NULL);
 
 	//并保存协程堆栈
 	to->setCtx(t.fctx);

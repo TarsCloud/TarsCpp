@@ -43,7 +43,10 @@ namespace tars
  *
  */
 
-class SVT_DLL_API RemoteConfig : public TC_Singleton<RemoteConfig>
+class ConfigProxy;
+typedef tars::TC_AutoPtr<ConfigProxy> ConfigPrx;
+
+class SVT_DLL_API RemoteConfig //: public TC_Singleton<RemoteConfig>
 {
 public:
     /**
@@ -57,7 +60,7 @@ public:
      *
      * @return int
      */
-    int setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath,const string& setdivision="",int maxBakNum = 5);
+    int setConfigInfo(const CommunicatorPtr &comm, const string &obj, const string & app, const string &serverName, const string& basePath, const string& setdivision="",int maxBakNum = 5);
 
     /**
      * 读取ConfigServer上配置文件到本地，并备份原文件
@@ -104,11 +107,6 @@ private:
      * @param newFile   新文件逻辑和名称
      */
     inline void localRename(const string& oldFile, const string& newFile);
-
-	/**
-	*   获取hostname， 给k8s版本使用
-	*/
-	string getHostName();
 
 protected:
 

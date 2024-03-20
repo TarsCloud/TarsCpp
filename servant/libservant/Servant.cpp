@@ -27,7 +27,7 @@ namespace tars
 
 thread_local shared_ptr<CallbackThreadData> CallbackThreadData::g_sp;
 
-Servant::Servant():_handle(NULL)
+Servant::Servant() //:_handle(NULL)
 {
 }
 
@@ -57,14 +57,29 @@ Application* Servant::getApplication() const
     return _application;
 }
 
-void Servant::setHandle(TC_EpollServer::Handle* handle)
+string Servant::getModuleName()
+{
+    return _application->getServerBaseInfo().Application + "." + _application->getServerBaseInfo().ServerName;
+}
+
+void Servant::setHandle(const shared_ptr<ServantHandle> &handle)
 {
     _handle = handle;
 }
 
-TC_EpollServer::Handle* Servant::getHandle()
+shared_ptr<ServantHandle> Servant::getHandle()
 {
-    return _handle;
+    return _handle.lock();
+}
+
+void Servant::setModePython( bool forPython)
+{
+    _modePython = forPython;
+}
+
+bool Servant::isPython()
+{
+    return _modePython;
 }
 
 int Servant::dispatch(CurrentPtr current, vector<char> &buffer)
@@ -85,9 +100,19 @@ int Servant::dispatch(CurrentPtr current, vector<char> &buffer)
     }
     else
     {
-        TC_LockT<TC_ThreadRecMutex> lock(*this);
+        if (isPython())
+        {
+//            TC_LockT<TC_ThreadRecMutex> lock(*this);
+            BufferWrapper bufferWrapper;
+            ret = onDispatch(current, &bufferWrapper);
+            buffer.swap(bufferWrapper.buffer);
+        }
+        else
+        {
+	        TC_LockT<TC_ThreadRecMutex> lock(*this);
 
-        ret = onDispatch(current, buffer);
+	        ret = onDispatch(current, buffer);
+		}
     }
     return ret;
 }

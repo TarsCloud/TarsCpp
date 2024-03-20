@@ -61,7 +61,10 @@ int main(int argc, char *argv[])
 	    _comm->setProperty(conf);
 
 	    HelloPrx pPrx = _comm->stringToProxy<HelloPrx>(helloObj);
-		pPrx->tars_set_push_callback(new PushCallbackImp());
+
+        ServantProxyCallbackPtr cbPush(new PushCallbackImp());
+
+		pPrx->tars_set_push_callback(cbPush);
 		pPrx->registerPush();
 
 		while(g_count < 10)

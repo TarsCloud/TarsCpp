@@ -28,6 +28,10 @@ void AppCache::setCacheInfo(const string &sFile,int32_t iSynInterval)
     {
         TC_LockT<TC_ThreadMutex> lock(*this);
 
+        if(!_file.empty())
+        {
+            return;
+        }
         string sPath = TC_File::extractFilePath(sFile);
 
         TC_File::makeDirRecursive(sPath);
@@ -115,7 +119,7 @@ int AppCache::set(const string &sName,const string &sValue,const string sDomain)
         if(_lastSynTime == 0)   //第一次写数据 打印tarsversion
         {
             m.clear();
-            m["tarsversion"] = ClientConfig::TarsVersion;
+            m["tarsversion"] = TARS_VERSION;
             tConf.insertDomainParam(string(APPCACHE_ROOT_PATH),m,true);
         }
 

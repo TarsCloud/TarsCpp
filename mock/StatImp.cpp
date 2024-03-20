@@ -1,7 +1,7 @@
 ﻿
 
 #include "StatImp.h"
-#include "../FrameworkServer.h"
+#include "FrameworkServer.h"
 
 ///////////////////////////////////////////////////////////
 //

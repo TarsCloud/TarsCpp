@@ -1,13 +1,11 @@
-﻿
 
-#include "QueryImp.h"
-#include "util/tc_logger.h"
+
+#include "mock/QueryImp.h"
 #include "util/tc_clientsocket.h"
 
 void QueryImp::initialize()
 {
     TLOGDEBUG("begin QueryImp init"<<endl);
-
 }
 
 vector<EndpointF> QueryImp::findObjectById(const string & id, tars::CurrentPtr current)
@@ -34,10 +32,12 @@ tars::Int32 QueryImp::findObjectById4Any(const std::string & id,vector<tars::End
 
 int QueryImp::findObjectById4All(const std::string & id, vector<tars::EndpointF> &activeEp,vector<tars::EndpointF> &inactiveEp,tars::CurrentPtr current)
 {
-	LOG_CONSOLE_DEBUG << endl;
+//	LOG_CONSOLE_DEBUG << endl;
     ostringstream os;
 
     int iRet = _db.findObjectByIdInGroupPriority(id,current->getIp(),activeEp, inactiveEp,os);
+
+//    LOG_CONSOLE_DEBUG << id << ", " << activeEp.size() << endl;
 
     doDaylog(FUNID_findObjectById4All,id,activeEp,inactiveEp,current,os);
 
@@ -46,7 +46,7 @@ int QueryImp::findObjectById4All(const std::string & id, vector<tars::EndpointF>
 
 int QueryImp::findObjectByIdInSameGroup(const std::string & id, vector<tars::EndpointF> &activeEp,vector<tars::EndpointF> &inactiveEp, tars::CurrentPtr current)
 {
-	LOG_CONSOLE_DEBUG << endl;
+//	LOG_CONSOLE_DEBUG << endl;
     ostringstream os;
     TLOGINFO(__FUNCTION__ << ":" << __LINE__ << "|" << id << "|" << current->getIp() << endl);
 

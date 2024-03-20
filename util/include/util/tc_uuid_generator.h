@@ -109,11 +109,11 @@ protected:
 
     string getLocalIP()
     {
-        vector<string> vs = TC_Socket::getLocalHosts();
+        vector<string> vs = TC_Socket::getLocalHosts(AF_INET, false);
 
         for (size_t i = 0; i < vs.size(); i++)
         {
-            if (vs[i] != "127.0.0.1" && (!TC_Socket::addressIsIPv6(vs[i])))
+            if (!TC_Socket::addressIsIPv6(vs[i]))
             {
                 return vs[i];
             }

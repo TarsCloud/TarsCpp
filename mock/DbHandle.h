@@ -1,7 +1,6 @@
-﻿
 
-#ifndef __DB_HANDLE_H__
-#define __DB_HANDLE_H__
+
+#pragma once
 
 #include "util/tc_common.h"
 #include "util/tc_config.h"
@@ -12,12 +11,15 @@
 #include <set>
 #include "servant/RemoteLogger.h"
 #include "servant/EndpointF.h"
-#include "RegistryDescriptor.h"
 
 using namespace tars;
-//////////////////////////////////////////////////////
-//<servant, ObjectItem>
+
+namespace tars
+{
+	struct ObjectItem;
+}
 typedef map<string, ObjectItem> ObjectsCache;
+
 //////////////////////////////////////////////////////
 /**
  *  数据库操作类
@@ -160,37 +162,35 @@ public:
      */
     static string Ip2StarStr(uint32_t ip);
 
-    static  void updateObjectsCache(const ObjectsCache& objCache, bool updateAll);
-    
-    static  void updateActiveObjectsCache(const ObjectsCache& objCache, bool updateAll);
-
-    static  void updateInactiveObjectsCache(const ObjectsCache& objCache, bool updateAll);
-    
-    static  void updateDivisionCache(SetDivisionCache& setDivisionCache,bool updateAll);
-
-    static  void updateCpuLoadInfo(vector<EndpointF> &vEndpointF);
-
-    static  void updateCpuLoadInfo(vector<CDbHandle::SetServerInfo> &vSetServerInfo);
-    
     static  void InsertSetRecord(const string& objName, const string& setName, const string& setArea, const string& setGroup, EndpointF epf);
 
-    
     static  void InsertSetRecord4Inactive(const string& objName, const string& setName, const string& setArea, const string& setGroup, EndpointF epf);
 
-    static void addActiveEndPoint(const string& objName, const Int32 port, const Int32 istcp);
-        
-    static void addInactiveEndPoint(const string& objName, const Int32 port, const Int32 istcp);
+    static void addActiveEndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string &nodeName = "");
 
-    static void addEndPointbySet(const string& objName, const Int32 port, const Int32 istcp, const string& setName, const string& setArea, const string& setGroup);
+	static void addInactiveEndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string &nodeName = "");
 
-    static void addActiveWeight1EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName = "");
+    static void addEndPointbySet(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName, const string& setArea, const string& setGroup);
 
-    static void addInActiveWeight1EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName = "");
+    static void addActiveWeight1EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName = "");
+
+    static void addInActiveWeight1EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName = "");
     
-    static void addActiveWeight2EndPoint(const string& objName, const Int32 port, const Int32 istcp, const string& setName = "");
+    static void addActiveWeight2EndPoint(const string& objName, const string &host, const Int32 port, const Int32 istcp, const string& setName = "");
     
-    static void cleanEndPoint();;
+    static void cleanEndPoint();
+
+	static void printActiveEndPoint(const string& objName);
+
 protected:
+
+	static  void updateObjectsCache(const ObjectsCache& objCache, bool updateAll);
+
+	static  void updateActiveObjectsCache(const ObjectsCache& objCache, bool updateAll);
+
+	static  void updateInactiveObjectsCache(const ObjectsCache& objCache, bool updateAll);
+
+	static  void updateDivisionCache(SetDivisionCache& setDivisionCache,bool updateAll);
 
     /**
      * 根据group id获取Endpoint
@@ -201,14 +201,12 @@ protected:
 
 protected:
 
-    static TC_ReadersWriterData<ObjectsCache>    _objectsCache;
+	static std::mutex _mutex;
     //set划分缓存
-    static TC_ReadersWriterData<SetDivisionCache> _setDivisionCache;
+    static SetDivisionCache _setDivisionCache;
     //优先级的序列
-    static TC_ReadersWriterData<std::map<int, GroupPriorityEntry> > _mapGroupPriority;
+    static std::map<int, GroupPriorityEntry> _mapGroupPriority;
     //分组信息
-    static TC_ReadersWriterData<map<string,int> > _groupIdMap;
-    static TC_ReadersWriterData<map<string,int> > _groupNameMap;
+    static map<string,int> _groupIdMap;
 };
 
-#endif

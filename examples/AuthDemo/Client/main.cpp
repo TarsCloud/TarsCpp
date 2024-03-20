@@ -106,7 +106,7 @@ void asyncCall(int c)
 	//发起远程调用
 	for (int i = 0; i < c; ++i)
 	{
-		HelloPrxCallbackPtr p = new HelloCallback(t, i, c);
+		HelloPrxCallbackPtr p(new HelloCallback(t, i, c));
 
 		try
 		{

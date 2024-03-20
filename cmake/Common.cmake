@@ -1,6 +1,6 @@
 
 
-set(TARS_VERSION "3.0.18")
+set(TARS_VERSION "3.0.19")
 add_definitions(-DTARS_VERSION="${TARS_VERSION}")
 
 set(CMAKE_VERBOSE_MAKEFILE off)
@@ -9,6 +9,13 @@ set(CMAKE_BUILD_TYPE "Release" CACHE STRING "set build type to release default")
 IF (CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release")
 ENDIF()
+
+
+# 设置一个选项，用于控制是否定义 TARS_STD_SHARED_PTR 宏
+option(TARS_STD_SHARED_PTR "Use std::shared_ptr instead of tars::AutoPtr" OFF)
+if(TARS_STD_SHARED_PTR)
+    add_definitions(-DTARS_STD_SHARED_PTR)
+endif()
 
 
 #编译的可执行程序输出目录
@@ -83,8 +90,7 @@ IF (UNIX)
 
 ELSEIF (WIN32)
     set(PLATFORM "window")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4101 /wd4244 /wd4996 /wd4091 /wd4503 /wd4819 /wd4200 /wd4800 /wd4267 /wd4251 /wd4275")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj" )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4101 /wd4244 /wd4996 /wd4091 /wd4503 /wd4819 /wd4200 /wd4800 /wd4267 /wd4251 /wd4275 /bigobj")
 
     SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
     SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
@@ -94,6 +100,10 @@ ELSEIF (WIN32)
     SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /OPT:ICF /OPT:REF /DEBUG")
     SET(CMAKE_STATIC_LINKER_FLAGS_RELEASE "${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /DEBUG")
     SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /OPT:ICF /OPT:REF /DEBUG")
+
+    add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /ZI")
 
 ELSE ()
     MESSAGE(STATUS "================ ERROR: This platform is unsupported!!! ================")
@@ -119,5 +129,6 @@ message("BIN:                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message("TARS2CPP:                  ${TARS2CPP}") 
 #message("TARS_OPENTRACKING:         ${TARS_OPENTRACKING}")
 message("ONLY_LIB:                  ${ONLY_LIB}" )
+message("TARS_STD_SHARED_PTR:       ${TARS_STD_SHARED_PTR}" )
 #-------------------------------------------------------------
 

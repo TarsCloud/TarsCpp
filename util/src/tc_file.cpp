@@ -60,6 +60,15 @@ bool TC_File::isAbsolute(const string &sFullFileName)
 #endif
 }
 
+string TC_File::toAbsolute(const string &sFullFileName)
+{
+    if(!isAbsolute(sFullFileName))
+    {
+        return simplifyDirectory(TC_Port::getCwd() + FILE_SEP + sFullFileName);
+    }
+    return sFullFileName;
+}
+
 bool TC_File::isFileExist(const string &sFullFileName, mode_t iFileType)
 {	
 	TC_Port::stat_t f_stat;
@@ -146,21 +155,9 @@ string TC_File::getExePath()
 #elif TARGET_PLATFORM_IOS
 string TC_File::getExePath()
 {
-    int numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, NULL, 0);
-    pid_t pids[numberOfProcesses];
-    bzero(pids, sizeof(pids));
-    proc_listpids(PROC_ALL_PIDS, 0, pids, sizeof(pids));
     char pathBuffer[PROC_PIDPATHINFO_MAXSIZE];
     bzero(pathBuffer, PROC_PIDPATHINFO_MAXSIZE);
-    for (int i = 0; i < numberOfProcesses; ++i) {
-        if (pids[i] == 0) { continue; }
-
-        if(pids[i] == getpid())
-        {
-            proc_pidpath(pids[i], pathBuffer, sizeof(pathBuffer));
-            break;
-        }
-    }
+    proc_pidpath(getpid(), pathBuffer, sizeof(pathBuffer));
     return pathBuffer;
 }
 
@@ -687,6 +684,7 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
         {
             THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sExistFile);
         }
+        //强制覆盖
         std::ofstream fout(sNewFile.c_str(), ios::binary);
         if(!fout )
         {

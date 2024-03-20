@@ -56,6 +56,8 @@ namespace tars
     8 RemoteTimeLogger会在RemoteTimeWriteT对象中, 异步写入到远程
     9 从而本地文件写和远程写不在一个线程中.
 *****************************************************************************/
+//class LogProxy;
+//typedef tars::TC_AutoPtr<LogProxy> LogPrx;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -67,13 +69,11 @@ public:
 
     void operator()(ostream &of, const deque<pair<size_t, string> > &ds);
 
-    void setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx, const string & sLogObj);
+    void setDyeingLogInfo(const string &sApp, const string &sServer, const string & sLogPath, int iMaxSize, int iMaxNum, const LogPrx &logPrx);
 
 protected:
 
     TC_RollLogger *_dyeingRollLogger;
-
-//    static int  _dyeingThread;
 
     string _app;
     string _server;
@@ -86,6 +86,7 @@ protected:
      */
     LogPrx                _logPrx;
 
+    map<string, string>   _context;
 };
 
 
@@ -290,7 +291,7 @@ protected:
     /**
      * 同步到远程
      */
-    void sync2remote(const vector<string> &buffer);
+    void sync2remote(const LogInfo &stInfo, const vector<string> &buffer);
 
     /**
      * 染色日志同步到远程
@@ -999,23 +1000,6 @@ protected:
 #define FDLOG_DEBUG(x) FDLOG(x) << FILE_FUNC_LINE << "|"
 #endif
 
-///////////////////////////////////////////
-/**
- *  调用链追踪
- */
-#define TRACE_ANNOTATION_TS "ts"
-#define TRACE_ANNOTATION_TE "te"
-#define TRACE_ANNOTATION_CS "cs"
-#define TRACE_ANNOTATION_CR "cr"
-#define TRACE_ANNOTATION_SR "sr"
-#define TRACE_ANNOTATION_SS "ss"
-
-#define TRACE_LOG_FILENAME "_t_trace_"
-// traceKey: traceType-TraceID|SpanID|ParentSpanID
-#define TARS_TRACE(traceKey, annotation, client, server, func, ret, data, ex) \
-    {   \
-        FDLOG(TRACE_LOG_FILENAME) << traceKey << "|" << annotation << "|" << client << "|" << server << "|" << func << "|" << TNOWMS << "|" << ret << "|" << TC_Base64::encode(data) << "|" << ex << endl; \
-    }
 //////////////////////////////////////////////
 
 /**

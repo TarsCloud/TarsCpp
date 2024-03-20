@@ -26,7 +26,6 @@
 
 namespace tars
 {
-///////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////
 ObjectProxy::ObjectProxy(CommunicatorEpoll *pCommunicatorEpoll, ServantProxy *servantProxy, const string & sObjectProxyName,const string& setName)
@@ -47,10 +46,10 @@ ObjectProxy::ObjectProxy(CommunicatorEpoll *pCommunicatorEpoll, ServantProxy *se
     {
         _name = sObjectProxyName;
         //启用set或者指定set调用
-        if(ClientConfig::SetOpen || !_invokeSetId.empty())
+        if(pCommunicatorEpoll->getCommunicator()->getClientConfig().SetOpen || !_invokeSetId.empty())
         {
             //指定set调用时，指定set的优先级最高
-            _invokeSetId  = _invokeSetId.empty()?ClientConfig::SetDivision:_invokeSetId;
+            _invokeSetId  = _invokeSetId.empty()?pCommunicatorEpoll->getCommunicator()->getClientConfig().SetDivision:_invokeSetId;
             _isInvokeBySet = true;
         }
     }
@@ -274,27 +273,17 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 				}
 				catch(exception & e)
 				{
-					TLOGERROR("[ObjectProxy::doInvokeException exp:"<<e.what()<<" ,line:"<<__LINE__<<endl);
+					TLOGERROR("[ObjectProxy::doInvokeException:" << msg->request.sServantName << ":" << msg->request.sFuncName << " error: " << e.what() <<endl);
 				}
 				catch(...)
 				{
-					TLOGERROR("[ObjectProxy::doInvokeException exp:unknown line:|"<<__LINE__<<endl);
+					TLOGERROR("[ObjectProxy::doInvokeException:" << msg->request.sServantName << ":" << msg->request.sFuncName << ", error" << endl);
 				}
 			}
 			else
 			{
-                //先确保adapter 非null
-                if (msg->adapter)
-                {
-                    //异步回调，放入回调处理线程中
-                    _communicatorEpoll->pushAsyncThreadQueue(msg);
-                }
-                else
-                {
-                    TLOGERROR("[ObjectProxy::doInvokeException push adapter is null|" << __LINE__ << endl);
-                    delete msg;
-                    msg = NULL;
-                }
+                _communicatorEpoll->pushAsyncThreadQueue(msg);
+                TLOGERROR("[ObjectProxy::doInvokeException " << msg->request.sServantName << ":" << msg->request.sFuncName << ", ret: " << msg->response->iRet << endl);
 			}
 		}
 		else

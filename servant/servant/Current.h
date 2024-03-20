@@ -37,13 +37,13 @@ class Current : public TC_HandleBase
 public:
     typedef std::map<string, string>    TARS_STATUS;
 
-    typedef std::vector<char>           TARS_BUFFER;
+//    typedef std::vector<char>           TARS_BUFFER;
 
     /**
      * 构造函数
      * @param pServantHandle
      */
-    Current(ServantHandle *pServantHandle);
+    Current(const shared_ptr<ServantHandle> &pServantHandle);
 
     /**
      * 析构
@@ -122,6 +122,12 @@ public:
     ServantHandle* getServantHandle();
 
     /**
+     * 当前此服务端的名称: app.server, 给调用链使用
+     * @return
+     */
+    string getModuleName();
+
+    /**
      * 获取来源的Adapter
      * @return TC_EpollServer::BindAdapter*
      */
@@ -187,10 +193,16 @@ public:
 	 */
 	struct timeval getRecvTime() const;
 
-	/**
-	 * 设置是否上报状态报告
-	 */
-	void setReportStat(bool bReport);
+    /**
+     * 数据接收到时间(微秒)
+     * @return
+     */
+    int64_t recvTimeStampUs() const;
+
+//	/**
+//	 * 设置是否上报状态报告
+//	 */
+//	void setReportStat(bool bReport);
 
 	/**
 	 * 获取RequestPacket
@@ -223,28 +235,28 @@ public:
 	void sendResponse(int iRet, tup::UniAttribute<tars::BufferWriterVector, tars::BufferReader>& attr);
 
 	/**
-	 * tars协议的发送响应数据(仅TARS协议有效)
+	 * tars协议的发送响应数据(仅TARS协议有效), 给底层包iRet和sBuffer复制, 序列化后发送, 生成的代码中调用
 	 * @param iRet
 	 * @param buff
 	 */
 	void sendResponse(int iRet, const vector<char> &buff);
 
     /**
-     * tars协议的发送响应数据(仅TARS协议有效)
+     * tars协议的发送响应数据(仅TARS协议有效), 给底层包iRet和sBuffer复制, 序列化后发送, 生成的代码中调用
      * @param iRet
      * @param buff
      */
     void sendResponse(int iRet, const string &buff);
     
 	/**
-     * 普通协议的发送响应数据(非TARS协议有效)
+     * 普通协议的发送响应数据(非TARS协议有效), 直接发送buff裸数据
      * @param buff
      * @param len
      */
     void sendResponse(const char* buff, uint32_t len);
 
     /**
-     *
+     * tars协议使用
      * @param iRet
      * @param response
      * @param status
@@ -254,11 +266,13 @@ public:
 	void sendResponse(int iRet, ResponsePacket &response, const map<string, string>& status, const string& sResultDesc);
     
     /**
-     * 针对Push消息的应答数据
+     * push callback机制中, 针对Push消息的应答数据(自动生成的代码中使用, 一般业务不主动使用该函数)
      * @param buff
      * @param len
      */
     void sendPushResponse(int iRet, const string &funcName, TarsOutputStream<BufferWriterVector>& oss, const map<string, string> &context = tars::Current::TARS_STATUS());
+    void sendPushResponse(int iRet, const string &funcName , vector<char> &buff );
+
     /**
      * 设置调用链追踪信息，服务端主动回包时用
      * @param traceCall
@@ -270,10 +284,11 @@ public:
      * 是否需要追踪调用链
      */
 	bool isTraced() const;
+
     /**
      * 调用链追踪Key
      */
-	string getTraceKey() const;
+	const string &getTraceKey() const;
 
 	/**
 	 * 服务器端连接是否还存在
@@ -304,10 +319,10 @@ protected:
      */
     void initialize(const vector<char> &sRecvBuffer);
 
-    /**
-     * 服务端上报状态，针对单向调用及WUP调用(仅对TARS协议有效)
-     */
-    void reportToStat(const string & sObj);
+//    /**
+//     * 服务端上报状态，针对单向调用及TUP调用
+//     */
+//    void reportToStat(const string & sObj);
 
     /**
      * 设置cookie
@@ -334,7 +349,7 @@ protected:
     /**
      * 操作类指针
      */
-    ServantHandle*            _servantHandle;
+    shared_ptr<ServantHandle>            _servantHandle;
 
     /**
      * 接收到的数据
@@ -356,10 +371,10 @@ protected:
      */
     int                     _ret;
 
-    /**
-     * 是否上报stat
-     */
-    bool                    _reportStat;
+//    /**
+//     * 是否上报stat
+//     */
+//    bool                    _reportStat;
 
     /**
      * 设置额外返回的内容
