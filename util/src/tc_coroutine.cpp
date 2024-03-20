@@ -495,7 +495,14 @@ void TC_CoroutineScheduler::run()
 
 	while(!_epoller->isTerminate())
 	{
-		if(_activeCoroQueue.empty() && TC_CoroutineInfo::CoroutineHeadEmpty(&_avail) && TC_CoroutineInfo::CoroutineHeadEmpty(&_active))
+		bool activeCoroQueue_empty;
+
+		{
+			std::lock_guard<std::mutex> lock(_mutex);
+			activeCoroQueue_empty = _activeCoroQueue.empty();
+		}
+
+		if(activeCoroQueue_empty && TC_CoroutineInfo::CoroutineHeadEmpty(&_avail) && TC_CoroutineInfo::CoroutineHeadEmpty(&_active))
 		{
 			_epoller->done(1000);
 		}
@@ -533,11 +540,11 @@ void TC_CoroutineScheduler::run()
 			switchCoro(coro);
 		}
 
-        //没有任何可执行的写成了, 直接退出!
-        if(_usedSize == 0 && _noCoroutineCallback)
-        {
-            _noCoroutineCallback(this);
-        }
+		//没有任何可执行的写成了, 直接退出!
+		if(_usedSize == 0 && _noCoroutineCallback)
+		{
+			_noCoroutineCallback(this);
+		}
 	}
 
 	destroy();
@@ -547,115 +554,119 @@ void TC_CoroutineScheduler::run()
 
 void TC_CoroutineScheduler::yield(bool bFlag)
 {
-    //主协程不允许yield
-    if(_currentCoro->getUid() == 0)
-    {
-        return;
-    }
+	//主协程不允许yield
+	if(_currentCoro->getUid() == 0)
+	{
+		return;
+	}
 
-    if(bFlag)
-    {
-	    _needActiveCoroId.push_back(_currentCoro->getUid());
-    }
+	if(bFlag)
+	{
+		_needActiveCoroId.push_back(_currentCoro->getUid());
+	}
 
-    moveToInactive(_currentCoro);
-    switchCoro(&_mainCoro);
+	moveToInactive(_currentCoro);
+	switchCoro(&_mainCoro);
 }
 
 void TC_CoroutineScheduler::sleep(int iSleepTime)
 {
-    //主协程不允许sleep
-    if(_currentCoro->getUid() == 0)
-        return;
+	//主协程不允许sleep
+	if(_currentCoro->getUid() == 0)
+		return;
 
-    int64_t iNow = TNOWMS;
-    int64_t iTimeout = iNow + (iSleepTime >= 0 ? iSleepTime : -iSleepTime);
+	int64_t iNow = TNOWMS;
+	int64_t iTimeout = iNow + (iSleepTime >= 0 ? iSleepTime : -iSleepTime);
 
-    _timeoutCoroId.insert(make_pair(iTimeout, _currentCoro->getUid()));
+	_timeoutCoroId.insert(make_pair(iTimeout, _currentCoro->getUid()));
 
-    moveToTimeout(_currentCoro);
+	moveToTimeout(_currentCoro);
 
-    _epoller->postAtTime(iTimeout, [](){});
+	_epoller->postAtTime(iTimeout, [](){});
 
-    switchCoro(&_mainCoro);
+	switchCoro(&_mainCoro);
 }
 
 void TC_CoroutineScheduler::wakeupbyself()
 {
-    if(!_needActiveCoroId.empty() && !_epoller->isTerminate())
-    {
-        list<uint32_t>::iterator it = _needActiveCoroId.begin();
-        while(it != _needActiveCoroId.end())
-        {
-            TC_CoroutineInfo *coro = _all_coro[*it];
+	if(!_needActiveCoroId.empty() && !_epoller->isTerminate())
+	{
+		list<uint32_t>::iterator it = _needActiveCoroId.begin();
+		while(it != _needActiveCoroId.end())
+		{
+			TC_CoroutineInfo *coro = _all_coro[*it];
 
-            assert(coro != NULL);
+			assert(coro != NULL);
 
-            moveToAvail(coro);
+			moveToAvail(coro);
 
-            ++it;
-        }
-        _needActiveCoroId.clear();
-    }
+			++it;
+		}
+		_needActiveCoroId.clear();
+	}
 }
 
 void TC_CoroutineScheduler::put(uint32_t iCoroId)
 {
-    if(!_epoller->isTerminate())
-    {
-        _activeCoroQueue.push_back(iCoroId);
+	if(!_epoller->isTerminate())
+	{
+		{
+			std::lock_guard<std::mutex> lock(_mutex);
+			_activeCoroQueue.push_back(iCoroId);
+		}
 
-	    _epoller->notify();
-    }
+		_epoller->notify();
+	}
 }
 
 void TC_CoroutineScheduler::wakeup()
 {
-    if(!_activeCoroQueue.empty() && !_epoller->isTerminate())
-    {
-        deque<uint32_t> coroIds;
+	if(_epoller->isTerminate()) return ;
 
-        _activeCoroQueue.swap(coroIds);
+	deque<uint32_t> coroIds;
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		_activeCoroQueue.swap(coroIds);
+	}
 
-        auto it = coroIds.begin();
+	auto it = coroIds.begin();
 
-        auto itEnd = coroIds.end();
+	auto itEnd = coroIds.end();
 
-        while(it != itEnd)
-        {
-            TC_CoroutineInfo *coro = _all_coro[*it];
+	while(it != itEnd)
+	{
+		TC_CoroutineInfo *coro = _all_coro[*it];
 
-            assert(coro != NULL);
+		assert(coro != NULL);
 
-            moveToActive(coro);
+		moveToActive(coro);
 
-            ++it;
-        }
-    }
+		++it;
+	}
 }
 
 void TC_CoroutineScheduler::wakeupbytimeout()
 {
-    if(!_timeoutCoroId.empty() && !_epoller->isTerminate())
-    {
-        int64_t iNow = TNOWMS;
-        while(true)
-        {
-            multimap<int64_t, uint32_t>::iterator it = _timeoutCoroId.begin();
+	if(!_timeoutCoroId.empty() && !_epoller->isTerminate())
+	{
+		int64_t iNow = TNOWMS;
+		while(true)
+		{
+			multimap<int64_t, uint32_t>::iterator it = _timeoutCoroId.begin();
 
-            if(it == _timeoutCoroId.end() || it->first > iNow)
-                break;
+			if(it == _timeoutCoroId.end() || it->first > iNow)
+				break;
 
-            TC_CoroutineInfo *coro = _all_coro[it->second];
+			TC_CoroutineInfo *coro = _all_coro[it->second];
 
-            assert(coro != NULL);
+			assert(coro != NULL);
 
-            moveToActive(coro);
+			moveToActive(coro);
 
-            _timeoutCoroId.erase(it);
-        }
+			_timeoutCoroId.erase(it);
+		}
 
-    }
+	}
 }
 
 void TC_CoroutineScheduler::terminate()
@@ -663,30 +674,30 @@ void TC_CoroutineScheduler::terminate()
 	assert(_epoller);
 
 	_epoller->terminate();
-//
-//    if(_epoller)
-//    {
-//        delete _epoller;
-//        _epoller = NULL;
-//    }
+	//
+	//    if(_epoller)
+	//    {
+	//        delete _epoller;
+	//        _epoller = NULL;
+	//    }
 }
 
 uint32_t TC_CoroutineScheduler::generateId()
 {
-    uint32_t i = ++_uniqId;
-    if(i == 0) {
-        i = ++_uniqId;
-    }
+	uint32_t i = ++_uniqId;
+	if(i == 0) {
+		i = ++_uniqId;
+	}
 
-    assert(i <= _poolSize);
+	assert(i <= _poolSize);
 
-    return i;
+	return i;
 }
 
 void TC_CoroutineScheduler::switchCoro(TC_CoroutineInfo *to)
 {
-    //跳转到to协程
-    _currentCoro = to;
+	//跳转到to协程
+	_currentCoro = to;
 
 	transfer_t t = tars_jump_fcontext(to->getCtx(), NULL);
 
@@ -696,175 +707,175 @@ void TC_CoroutineScheduler::switchCoro(TC_CoroutineInfo *to)
 
 void TC_CoroutineScheduler::moveToActive(TC_CoroutineInfo *coro)
 {
-    if(coro->getStatus() == TC_CoroutineInfo::CORO_INACTIVE || coro->getStatus() == TC_CoroutineInfo::CORO_TIMEOUT)
-    {
-        TC_CoroutineInfo::CoroutineDel(coro);
-        coro->setStatus(TC_CoroutineInfo::CORO_ACTIVE);
-        TC_CoroutineInfo::CoroutineAddTail(coro, &_active);
-    }
-    else
-    {
-    	assert(false);
-    }
+	if(coro->getStatus() == TC_CoroutineInfo::CORO_INACTIVE || coro->getStatus() == TC_CoroutineInfo::CORO_TIMEOUT)
+	{
+		TC_CoroutineInfo::CoroutineDel(coro);
+		coro->setStatus(TC_CoroutineInfo::CORO_ACTIVE);
+		TC_CoroutineInfo::CoroutineAddTail(coro, &_active);
+	}
+	else
+	{
+		assert(false);
+	}
 }
 
 void TC_CoroutineScheduler::moveToAvail(TC_CoroutineInfo *coro)
 {
-    if(coro->getStatus() == TC_CoroutineInfo::CORO_INACTIVE)
-    {
-        TC_CoroutineInfo::CoroutineDel(coro);
-        coro->setStatus(TC_CoroutineInfo::CORO_AVAIL);
-        TC_CoroutineInfo::CoroutineAddTail(coro, &_avail);
-    }
-    else
-    {
-    	assert(false);
-    }
+	if(coro->getStatus() == TC_CoroutineInfo::CORO_INACTIVE)
+	{
+		TC_CoroutineInfo::CoroutineDel(coro);
+		coro->setStatus(TC_CoroutineInfo::CORO_AVAIL);
+		TC_CoroutineInfo::CoroutineAddTail(coro, &_avail);
+	}
+	else
+	{
+		assert(false);
+	}
 }
 
 void TC_CoroutineScheduler::moveToInactive(TC_CoroutineInfo *coro)
 {
-    if(coro->getStatus() == TC_CoroutineInfo::CORO_ACTIVE || coro->getStatus() == TC_CoroutineInfo::CORO_AVAIL)
-    {
-        TC_CoroutineInfo::CoroutineDel(coro);
-        coro->setStatus(TC_CoroutineInfo::CORO_INACTIVE);
-        TC_CoroutineInfo::CoroutineAddTail(coro, &_inactive);
-    }
-    else
-    {
-    	assert(false);
-    }
+	if(coro->getStatus() == TC_CoroutineInfo::CORO_ACTIVE || coro->getStatus() == TC_CoroutineInfo::CORO_AVAIL)
+	{
+		TC_CoroutineInfo::CoroutineDel(coro);
+		coro->setStatus(TC_CoroutineInfo::CORO_INACTIVE);
+		TC_CoroutineInfo::CoroutineAddTail(coro, &_inactive);
+	}
+	else
+	{
+		assert(false);
+	}
 }
 
 void TC_CoroutineScheduler::moveToTimeout(TC_CoroutineInfo *coro)
 {
-    if(coro->getStatus() == TC_CoroutineInfo::CORO_ACTIVE || coro->getStatus() == TC_CoroutineInfo::CORO_AVAIL)
-    {
-        TC_CoroutineInfo::CoroutineDel(coro);
-        coro->setStatus(TC_CoroutineInfo::CORO_TIMEOUT);
-        TC_CoroutineInfo::CoroutineAddTail(coro, &_timeout);
-    }
-    else
-    {
-    	assert(false);
-    }
+	if(coro->getStatus() == TC_CoroutineInfo::CORO_ACTIVE || coro->getStatus() == TC_CoroutineInfo::CORO_AVAIL)
+	{
+		TC_CoroutineInfo::CoroutineDel(coro);
+		coro->setStatus(TC_CoroutineInfo::CORO_TIMEOUT);
+		TC_CoroutineInfo::CoroutineAddTail(coro, &_timeout);
+	}
+	else
+	{
+		assert(false);
+	}
 }
 
 void TC_CoroutineScheduler::moveToFreeList(TC_CoroutineInfo *coro)
 {
-    if(coro->getStatus() != TC_CoroutineInfo::CORO_FREE)
-    {
-        TC_CoroutineInfo::CoroutineDel(coro);
-        coro->setStatus(TC_CoroutineInfo::CORO_FREE);
-        TC_CoroutineInfo::CoroutineAddTail(coro, &_free);
-    }
-    else
-    {
-    	assert(false);
-    }
+	if(coro->getStatus() != TC_CoroutineInfo::CORO_FREE)
+	{
+		TC_CoroutineInfo::CoroutineDel(coro);
+		coro->setStatus(TC_CoroutineInfo::CORO_FREE);
+		TC_CoroutineInfo::CoroutineAddTail(coro, &_free);
+	}
+	else
+	{
+		assert(false);
+	}
 }
 
 void TC_CoroutineScheduler::destroy()
 {
-    if(_all_coro)
-    {
-        //id=0是保留不用的, 给mainCoro作为id用
-        assert(_all_coro[0] == NULL);
+	if(_all_coro)
+	{
+		//id=0是保留不用的, 给mainCoro作为id用
+		assert(_all_coro[0] == NULL);
 
-        for (size_t i = 1; i <= _poolSize; i++)
-        {
-            if(_all_coro[i])
-            {
-                stack_traits::deallocate(_all_coro[i]->getStackContext());
-                delete _all_coro[i];
-                _all_coro[i] = NULL;
-            }
-        }
-        delete [] _all_coro;
+		for (size_t i = 1; i <= _poolSize; i++)
+		{
+			if(_all_coro[i])
+			{
+				stack_traits::deallocate(_all_coro[i]->getStackContext());
+				delete _all_coro[i];
+				_all_coro[i] = NULL;
+			}
+		}
+		delete [] _all_coro;
 		_all_coro = NULL;
-    }
+	}
 }
 /////////////////////////////////////////////////////////
 TC_Coroutine::TC_Coroutine()
-: _coroSched(NULL)
-, _num(1)
-, _maxNum(128)
-, _stackSize(128*1024)
+	: _coroSched(NULL)
+	, _num(1)
+	, _maxNum(128)
+	  , _stackSize(128*1024)
 {
 }
 
 TC_Coroutine::~TC_Coroutine()
 {
-    if(isAlive())
-    {
-        terminate();
+	if(isAlive())
+	{
+		terminate();
 
-        getThreadControl().join();
-    }
+		getThreadControl().join();
+	}
 }
 
 void TC_Coroutine::setCoroInfo(uint32_t iNum, uint32_t iMaxNum, size_t iStackSize)
 {
-    _maxNum     = (iMaxNum > 0 ? iMaxNum : 1);
-    _num        = (iNum > 0 ? (iNum <= _maxNum ? iNum : _maxNum) : 1);
-    _stackSize  = (iStackSize >= pagesize() ? iStackSize : pagesize());
+	_maxNum     = (iMaxNum > 0 ? iMaxNum : 1);
+	_num        = (iNum > 0 ? (iNum <= _maxNum ? iNum : _maxNum) : 1);
+	_stackSize  = (iStackSize >= pagesize() ? iStackSize : pagesize());
 }
 
 void TC_Coroutine::run()
 {
-    _coroSched = TC_CoroutineScheduler::create();
+	_coroSched = TC_CoroutineScheduler::create();
 
-    initialize();
+	initialize();
 
-    handleCoro();
+	handleCoro();
 
-    destroy();
+	destroy();
 
-//    TC_CoroutineScheduler::reset();
+	//    TC_CoroutineScheduler::reset();
 }
 
 void TC_Coroutine::terminate()
 {
-    if(_coroSched)
-    {
-        _coroSched->terminate();
-    }
+	if(_coroSched)
+	{
+		_coroSched->terminate();
+	}
 }
 
 void TC_Coroutine::handleCoro()
 {
-    _coroSched->setPoolStackSize(_maxNum, _stackSize);
+	_coroSched->setPoolStackSize(_maxNum, _stackSize);
 
-    _coroSched->setNoCoroutineCallback([&](TC_CoroutineScheduler *scheduler){scheduler->terminate();});
+	_coroSched->setNoCoroutineCallback([&](TC_CoroutineScheduler *scheduler){scheduler->terminate();});
 
 	//把协程创建出来
-    for(uint32_t i = 0; i < _num; ++i)
-    {
+	for(uint32_t i = 0; i < _num; ++i)
+	{
 		_coroSched->go(std::bind(&TC_Coroutine::coroEntry, this));
-    }
+	}
 
 
-    _coroSched->run();
+	_coroSched->run();
 }
 
 void TC_Coroutine::coroEntry(TC_Coroutine *pCoro)
 {
-    pCoro->handle();
+	pCoro->handle();
 }
 
 uint32_t TC_Coroutine::go(const std::function<void ()> &coroFunc)
 {
-    return _coroSched->go(coroFunc);
+	return _coroSched->go(coroFunc);
 }
 
 void TC_Coroutine::yield()
 {
-    _coroSched->yield();
+	_coroSched->yield();
 }
 
 void TC_Coroutine::sleep(int millseconds)
 {
-    _coroSched->sleep(millseconds);
+	_coroSched->sleep(millseconds);
 }
 
 }

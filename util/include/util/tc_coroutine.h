@@ -671,6 +671,11 @@ private:
      * 是否正在运行中
      */
     bool                    _ready = false;
+
+    /**
+     * 解决在使用协程锁时tc_coroutine_mutex.h(TC_CoMutex)，可能多线程使用TC_CoroutineScheduler->put造成的_activeCoroQueue队列写冲突
+     */
+	std::mutex				_mutex;
 };
 
 /**
