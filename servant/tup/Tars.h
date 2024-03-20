@@ -2221,9 +2221,6 @@ public:
 			{
 				write(i->first, 0);
 				write(i->second, 1);
-
-				std::cout << "write:" << i->first << ", " << i->second << std::endl;
-
 			}
 		}
 	}
