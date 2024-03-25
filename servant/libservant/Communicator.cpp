@@ -143,7 +143,7 @@ void Communicator::setTraceParam(const string& name)
 shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string & objName)
 {
 #if TARS_SSL
-	TC_LockT<TC_ThreadRecMutex> lock(*this);
+	TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
 	auto it = _objCtx.find(objName);
 	if(it != _objCtx.end())
