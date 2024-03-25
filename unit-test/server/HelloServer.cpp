@@ -109,7 +109,6 @@ void HelloServer::destroyApp()
 		delete pushThread;
 	}
 
-//	LOG_CONSOLE_DEBUG << endl;
 //    ProfilerStop();
 }
 

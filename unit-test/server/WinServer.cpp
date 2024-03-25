@@ -28,6 +28,8 @@ WinServer::initialize()
 
 void WinServer::destroyApp()
 {
+    LOG_CONSOLE_DEBUG << endl;
+
 }
 
 void WinServer::run()

@@ -161,11 +161,11 @@ Application::Application()
 
 Application::~Application()
 {
-	if(_epollServer)
-	{
-		_epollServer->terminate();
-		_epollServer = nullptr;
-	}
+//	if(_epollServer)
+//	{
+//		_epollServer->terminate();
+//		_epollServer = nullptr;
+//	}
 #if TARGET_PLATFORM_WINDOWS
     WSACleanup();
 #endif
@@ -283,8 +283,6 @@ void Application::terminate()
         {
             _applicationCommunicator->terminate();
         }
-
-        _epollServer = nullptr;
     }
 }
 
