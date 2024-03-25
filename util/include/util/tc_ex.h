@@ -20,10 +20,11 @@
 #include <stdexcept>
 #include <string>
 
+using namespace std;
+
 namespace tars
 {
 
-using namespace std;
 /////////////////////////////////////////////////
 /** 
 * @file  tc_ex.h 
