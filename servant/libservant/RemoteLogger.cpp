@@ -314,17 +314,9 @@ void RemoteTimeWriteT::operator()(ostream &of, const deque<pair<size_t, string> 
     stInfo.sSepar            = _timeWrite->_separ;
     stInfo.sLogType          = _timeWrite->_logType;
 
-//    const static uint32_t len = 2000;
-
     //写远程日志
     if(_timeWrite->_logPrx && !buffer.empty())
     {
-//        //大于50w条, 直接抛弃掉,否则容易导致内存泄漏
-//        if(buffer.size() > 500000)
-//        {
-//            _timeWrite->writeError(buffer);
-//            return;
-//        }
         vector<string> v;
 
         size_t len = 0;
@@ -338,7 +330,6 @@ void RemoteTimeWriteT::operator()(ostream &of, const deque<pair<size_t, string> 
             ++it;
 
             //每次最多同步len条
-//            if(v.size() >= len)
             if(len > 5*1024*1024 || v.size() > 200)
             {
                 //>5M 或超过200条 就要传输了!
@@ -740,6 +731,11 @@ void RemoteTimeLogger::initTimeLogger(TimeLogger *pTimeLogger,const string &sApp
 
 void RemoteTimeLogger::setLogInfo(const CommunicatorPtr &comm, const string &obj, const string &sApp, const string &sServer, const string &sLogpath, const string& setdivision, const bool &bLogStatReport)
 {
+    if(_comm)
+    {
+        //已经初始化了
+        return;
+    }
     _app         = sApp;
     _server      = sServer;
     _logpath     = sLogpath;

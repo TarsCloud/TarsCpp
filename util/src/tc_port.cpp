@@ -861,23 +861,23 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 #endif
 }
 
-shared_ptr<TC_Port::SigInfo> TC_Port::_sigInfo = std::make_shared<TC_Port::SigInfo>();
+//shared_ptr<TC_Port::SigInfo> TC_Port::SigInfo::getInstance() = std::make_shared<TC_Port::SigInfo>();
 
 size_t TC_Port::registerSig(int sig, std::function<void()> callback)
 {
-	std::lock_guard<std::mutex> lock(_sigInfo->_mutex);
+	std::lock_guard<std::mutex> lock(SigInfo::getInstance()->_mutex);
 
-	auto it = _sigInfo->_callbacks.find(sig);
+	auto it = SigInfo::getInstance()->_callbacks.find(sig);
 
-	if(it == _sigInfo->_callbacks.end())
+	if(it == SigInfo::getInstance()->_callbacks.end())
 	{
 		//没有注册过, 才注册
 		registerSig(sig);
 	}
 
-	size_t id = ++_sigInfo->_callbackId;
+	size_t id = ++SigInfo::getInstance()->_callbackId;
 
-	_sigInfo->_callbacks[sig][id] = callback;
+    SigInfo::getInstance()->_callbacks[sig][id] = callback;
 
 	return id;
 }
@@ -885,12 +885,12 @@ size_t TC_Port::registerSig(int sig, std::function<void()> callback)
 void TC_Port::unregisterSig(int sig, size_t id)
 {
 	//注意_sigInfo是全局静态的, 有可能已经析构了, 需要特殊判断一下!
-	if(_sigInfo && _sigInfo.use_count() > 0)
+//	if(SigInfo::getInstance() && SigInfo::getInstance().use_count() > 0)
 	{
-		std::lock_guard<std::mutex> lock(_sigInfo->_mutex);
-		auto it = _sigInfo->_callbacks.find(sig);
+		std::lock_guard<std::mutex> lock(SigInfo::getInstance()->_mutex);
+		auto it = SigInfo::getInstance()->_callbacks.find(sig);
 
-		if(it != _sigInfo->_callbacks.end())
+		if(it != SigInfo::getInstance()->_callbacks.end())
 		{
 			it->second.erase(id);
 		}
@@ -950,10 +950,10 @@ void TC_Port::sighandler( int sig_no )
 					   unordered_map<size_t, std::function<void()>> data;
 
 					   {
-					   	std::lock_guard<std::mutex> lock(_sigInfo->_mutex);
+					   	std::lock_guard<std::mutex> lock(SigInfo::getInstance()->_mutex);
 
-					   	auto it = TC_Port::_sigInfo->_callbacks.find(sig_no);
-					   	if (it != TC_Port::_sigInfo->_callbacks.end())
+					   	auto it = SigInfo::getInstance()->_callbacks.find(sig_no);
+					   	if (it != SigInfo::getInstance()->_callbacks.end())
 						   {
 							   data = it->second;
 						   }
@@ -980,10 +980,10 @@ BOOL WINAPI TC_Port::HandlerRoutine(DWORD dwCtrlType)
 					   unordered_map<size_t, std::function<void()>> data;
 
 					   {
-					   	std::lock_guard<std::mutex> lock(_sigInfo->_mutex);
+					   	std::lock_guard<std::mutex> lock(SigInfo::getInstance()->_mutex);
 
-						   auto it = _sigInfo->_callbacks.find(dwCtrlType);
-						   if (it != _sigInfo->_callbacks.end())
+						   auto it = SigInfo::getInstance()->_callbacks.find(dwCtrlType);
+						   if (it != SigInfo::getInstance()->_callbacks.end())
 						   {
 							   data = it->second;
 						   }

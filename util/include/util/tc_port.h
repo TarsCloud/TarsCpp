@@ -3,7 +3,7 @@
 
 #include "util/tc_platform.h"
 #include "util/tc_ex.h"
-
+#include "util/tc_singleton.h"
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 
 #include <unistd.h>
@@ -355,7 +355,7 @@ protected:
 	static BOOL WINAPI HandlerRoutine(DWORD dwCtrlType);
 #endif
 
-	struct SigInfo
+	struct SigInfo : public TC_Singleton<SigInfo, CreateUsingNew, NoDestroyLifetime>
 	{
 		std::mutex   _mutex;
 
@@ -364,7 +364,7 @@ protected:
 		std::atomic<size_t> _callbackId{0};
 	};
 
-	static shared_ptr<SigInfo>	_sigInfo;
+//	static SigInfo *_sigInfo;
 };
 
 }
