@@ -119,7 +119,7 @@ class TC_OpenSSL;
 /**
  * 通信器,用于创建和维护客户端proxy
  */
-class SVT_DLL_API Communicator : public TC_HandleBase, public TC_ThreadRecMutex
+class SVT_DLL_API Communicator : public TC_HandleBase
 {
 public:
     /**
@@ -496,6 +496,11 @@ protected:
     bool  _terminating;
 
     /**
+     * 通信器用到的rec锁
+     */
+    TC_ThreadRecMutex _recMutex;
+
+    /**
      * 客户端的属性配置
      */
     map<string, string>    _properties;
@@ -523,13 +528,7 @@ protected:
     /**
      * 私有网络线程, 会动态变化
      */
-//    unordered_map<size_t, shared_ptr<CommunicatorEpoll>>	_schedCommunicatorEpoll;
     vector<shared_ptr<CommunicatorEpoll>>	_schedCommunicatorEpoll;        //MAX_CLIENT_NOTIFYEVENT_NUM
-
-//    /**
-//     * 操作通信器的锁
-//     */
-//    TC_SpinLock			_schedMutex;
 
     /**
      * 锁

@@ -81,6 +81,10 @@ public:
             return it->second;
         }
 
+        if(it->second->isTerminating())
+        {
+            it->second = new Communicator(conf);
+        }
         string s = "";
 
         it->second->setProperty(conf);

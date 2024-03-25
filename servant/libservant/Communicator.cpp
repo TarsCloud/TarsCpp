@@ -89,7 +89,7 @@ bool Communicator::isTerminating()
 
 map<string, string> Communicator::getServantProperty(const string &sObj)
 {
-	TC_LockT<TC_ThreadRecMutex> lock(*this);
+	TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
 	auto it = _objInfo.find(sObj);
 	if(it != _objInfo.end())
@@ -102,14 +102,14 @@ map<string, string> Communicator::getServantProperty(const string &sObj)
 
 void Communicator::setServantProperty(const string &sObj, const string& name, const string& value)
 {
-	TC_LockT<TC_ThreadRecMutex> lock(*this);
+	TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
 	_objInfo[sObj][name] = value;
 }
 
 string Communicator::getServantProperty(const string &sObj, const string& name)
 {
-	TC_LockT<TC_ThreadRecMutex> lock(*this);
+	TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
 	auto it = _objInfo.find(sObj);
 	if(it != _objInfo.end())
@@ -165,7 +165,7 @@ shared_ptr<TC_OpenSSL> Communicator::newClientSSL(const string & objName)
 
 void Communicator::setProperty(TC_Config& conf, const string& domain/* = CONFIG_ROOT_PATH*/)
 {
-    TC_LockT<TC_ThreadRecMutex> lock(*this);
+    TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
     conf.getDomainMap(domain, _properties);
     setTraceParam();
@@ -220,7 +220,7 @@ void Communicator::notifyCommunicatorEpollStart()
 
 void Communicator::initialize()
 {
-    TC_LockT<TC_ThreadRecMutex> lock(*this);
+    TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
     //两次保护
     if (_initialized)
@@ -445,7 +445,7 @@ void Communicator::initialize()
 
 void Communicator::setProperty(const map<string, string>& properties)
 {
-    TC_LockT<TC_ThreadRecMutex> lock(*this);
+    TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
     _properties = properties;
 
@@ -454,7 +454,7 @@ void Communicator::setProperty(const map<string, string>& properties)
 
 void Communicator::setProperty(const string& name, const string& value)
 {
-    TC_LockT<TC_ThreadRecMutex> lock(*this);
+    TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
     _properties[name] = value;
 
@@ -463,7 +463,7 @@ void Communicator::setProperty(const string& name, const string& value)
 
 string Communicator::getProperty(const string& name, const string& dft/* = ""*/)
 {
-    TC_LockT<TC_ThreadRecMutex> lock(*this);
+    TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
     map<string, string>::iterator it = _properties.find(name);
 
@@ -487,12 +487,6 @@ vector<shared_ptr<CommunicatorEpoll>> Communicator::getAllCommunicatorEpoll()
 
 void Communicator::forEachSchedCommunicatorEpoll(const std::function<void(const shared_ptr<CommunicatorEpoll> &)>& func)
 {
-//	TC_LockT<TC_SpinLock> lock(_schedMutex);
-//	for(const auto& it : _schedCommunicatorEpoll)
-//	{
-//		func(it.second);
-//	}
-
 	for(const auto& it : _schedCommunicatorEpoll)
 	{
         if(it)
@@ -514,12 +508,6 @@ shared_ptr<CommunicatorEpoll> Communicator::createSchedCommunicatorEpoll(size_t 
 
     _schedCommunicatorEpoll[netThreadSeq] = communicatorEpoll;
 
-//	{
-//		TC_LockT<TC_SpinLock> lock(_schedMutex);
-//
-//		_schedCommunicatorEpoll.insert(std::make_pair(netThreadSeq, communicatorEpoll));
-//	}
-
 	return communicatorEpoll;
 }
 
@@ -530,14 +518,7 @@ void Communicator::eraseSchedCommunicatorEpoll(size_t netThreadSeq)
     shared_ptr<CommunicatorEpoll> ce = _schedCommunicatorEpoll[netThreadSeq];
 
     _schedCommunicatorEpoll[netThreadSeq].reset();
-//	{
-//		TC_LockT<TC_SpinLock> lock(_schedMutex);
-//
-//		ce = _schedCommunicatorEpoll[netThreadSeq];
-//
-//		_schedCommunicatorEpoll.erase(netThreadSeq);
-//	}
-//
+
 	if(ce)
 	{
 		ce->terminate();
@@ -637,7 +618,7 @@ void Communicator::terminate()
         if (_terminating)
             return;
 
-        TC_LockT<TC_ThreadRecMutex> lock(*this);
+        TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
         _terminating = true;
         
@@ -650,7 +631,10 @@ void Communicator::terminate()
 			{
 				_statReport->terminate();
 
-				_statReport->getThreadControl().join();
+                if(_statReport->joinable())
+                {
+                    _statReport->join();
+                }
 			}
 
             for (size_t i = 0; i < _communicatorEpoll.size(); ++i)
@@ -720,7 +704,10 @@ void Communicator::terminate()
         }
 
 		_communicatorEpoll.clear();
-		_schedCommunicatorEpoll.clear();
+        for(auto it : _schedCommunicatorEpoll)
+        {
+            it.reset();
+        }
 
     }
 
