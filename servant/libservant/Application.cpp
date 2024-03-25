@@ -211,11 +211,6 @@ void reportRspQueue(TC_EpollServer *epollServer)
     }
 }
 
-//void heartBeatFunc(const string& adapterName)
-//{
-//    TARS_KEEPALIVE(adapterName);
-//}
-//
 void Application::manualListen()
 {
     vector<TC_EpollServer::BindAdapterPtr> v = getEpollServer()->getBindAdapters();

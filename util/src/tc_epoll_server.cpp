@@ -2162,6 +2162,7 @@ void TC_EpollServer::waitForShutdown()
         }
         catch (exception& ex)
         {
+            error(string("destroyApp error:") + ex.what());
         }
     }
 
