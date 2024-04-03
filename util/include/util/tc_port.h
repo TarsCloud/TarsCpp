@@ -210,8 +210,9 @@ public:
     /**
      * kill某个pid的进程
      * @param pid
+     * @return int, 0: 成功, -1: pid不存在
      */
-    static void kill(int64_t pid);
+    static int kill(int64_t pid);
 
 	/**
 	 * 运行一个脚本
