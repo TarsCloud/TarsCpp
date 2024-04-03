@@ -275,20 +275,26 @@ string TC_Port::getCwd()
     return currentDirectory;
 }
 
-void TC_Port::kill(int64_t pid)
+int TC_Port::kill(int64_t pid)
 {
 #if TARGET_PLATFORM_WINDOWS
     HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-        if (hProcess == NULL)
-        {
-            return;
-        }
+    if (hProcess == NULL)
+    {
+        return -1;
+    }
 
-        ::TerminateProcess(hProcess, 0);
+    ::TerminateProcess(hProcess, 0);
 
-        CloseHandle(hProcess);
+    CloseHandle(hProcess);
+    return 0;
 #else
-    ::kill(static_cast<pid_t>(pid), SIGKILL);
+    int ret = ::kill(static_cast<pid_t>(pid), SIGKILL);
+    if(ret != 0)
+    {
+        return -1;
+    }
+    return 0;
 #endif
 }
 

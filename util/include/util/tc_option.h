@@ -131,6 +131,14 @@ public:
      */
     vector<string>& getSingle();
 
+
+    /**
+     * @brief 将命令行分割成参数数组, 使用" \t"分割, 如果碰到"则不分割
+     * @param input
+     * @return
+     */
+    static std::vector<std::string> parseString(const std::string& input);
+
 protected:
 
     /**
@@ -143,12 +151,6 @@ protected:
      */
     void parse(const string &s);
 
-    /**
-     * @brief 使用" \t"分割, 如果碰到"则不分割
-     * @param input
-     * @return
-     */
-    std::vector<std::string> parseString(const std::string& input);
 protected:
     /**
      *存放标识和其对应参数的对应关系，例如：对于--name=value，存放name和value
