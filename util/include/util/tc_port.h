@@ -207,13 +207,6 @@ public:
      */
     static string getCwd();
 
-    /**
-     * kill某个pid的进程
-     * @param pid
-     * @return int, 0: 成功, -1: pid不存在
-     */
-    static int kill(int64_t pid);
-
 	/**
 	 * 运行一个脚本
 	 * @param cmd
@@ -246,6 +239,20 @@ public:
      */
     static void closeAllFileDescriptors();
 #endif
+
+    /**
+     * kill某个pid的进程
+     * @param pid
+     * @return int, 0: 成功, -1: pid不存在
+     */
+    static int kill(int64_t pid);
+
+    /**
+     * pid是否存在
+     * @param pid
+     * @return int, 0: pid存在, -1: pid不存在
+     */
+    static int alive(int64_t pid);
 
     /**
      * 返回完整命令行参数, 如果pid不存在, 则返回为空
