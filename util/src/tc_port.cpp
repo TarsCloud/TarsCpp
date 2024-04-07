@@ -32,6 +32,7 @@
 #include <signal.h>
 #include <limits.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #else
 
 #pragma comment(lib, "ws2_32.lib")
