@@ -1,3 +1,31 @@
+# v3.0.20 20240408
+## en
+- fix: tc_ex using namespace std outside tars
+- fix: tc_port SigInfo use NoDestroyLifetime TC_Singleton
+- fix: RemoteTimeLogger not init twice
+- fix: free applicationCommunicator when application terminate
+- fix: servantprx/adapterprx tars_set_push_callback nullptr protected
+- fix: unit-test use tarsmock
+- fix: fix remote log sync bug when log size too big
+- fix: communicator _schedCommunicatorEpoll create use array
+- fix: tc_port exec out buff size limit
+- feat: tc_port add check pid alive
+- feat: tc_option parseString use static
+- feat: tc_port kill add return value
+- feat: tc_port add freopen
+- feat: epoll server destroyApp not call bug and destroyApp log
+- feat: add tarsmock to simulate tars framework
+- feat: tc_port add getCommandLine/getPidsByCmdline
+- feat: tc_socket: getLocalHosts support withLoopIp
+- feat: tars-tools.cmake add CMAKE_CXX_FLAGS_RELEASE&CMAKE_CXX_FLAGS_DEBUG
+- feat: unit-test support TARS_SHARED_PTR
+- feat: support build_with_std_shared_ptr for python
+- feat: Application add getRemoteConfig
+- feat: tc_mysql support mysql 8.0
+- feat: EndpointInfo add vectorEndpointFToStr/strToVectorEndpointF/toNodeEndpointF to support multi network interfaces
+- feat: fix tc_socket getLocalHosts support ipv4
+- feat: EndpointInfo add toEndpointFs
+
 # v3.0.19 20240202
 
 ## en
