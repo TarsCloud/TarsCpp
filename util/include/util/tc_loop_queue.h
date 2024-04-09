@@ -219,8 +219,10 @@ private:
     T * _p;
     size_t _iCapacity;
 	size_t _iCapacitySub;
-	size_t _iBegin;
-	size_t _iEnd;
+    std::atomic<size_t> _iBegin;
+    std::atomic<size_t> _iEnd;
+//	size_t _iBegin;
+//	size_t _iEnd;
 };
 
 }
