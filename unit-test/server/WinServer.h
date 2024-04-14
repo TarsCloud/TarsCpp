@@ -31,6 +31,9 @@ public:
 protected:
 	virtual void run();
 
+public:
+    bool _destroyApp = false;
+
 };
 
 ////////////////////////////////////////////

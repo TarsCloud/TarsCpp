@@ -44,20 +44,10 @@ void AdminServant::shutdown(CurrentPtr current)
 {
 	TLOGERROR("[TARS][AdminServant::shutdown] from node" << endl);
 
-    _application->getApplicationCommunicator()->terminate();
-    _application->terminate();
-#if TARGET_PLATFORM_WINDOWS
-	HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
-	if (hProcess == NULL)
-	{
-		return;
-	}
-
-	::TerminateProcess(hProcess, 0);
-#else
-    kill(getpid(), SIGINT); //通过给自己发信号的方式结束, 避免处理线程结束时自己join自己
-    // Application::terminate();
-#endif
+    std::thread th([=]{
+        _application->terminate();
+    });
+    th.detach();
 }
 
 string AdminServant::notify(const string &command, CurrentPtr current)

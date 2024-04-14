@@ -82,7 +82,7 @@ TEST_F(HelloTest, testAdmin)
 	EXPECT_STREQ(errorcmd.c_str(), "");
 
 	string normalcmd = adminFPrx->notify("AdminCmdNormalTest returnMark");
-	EXPECT_STREQ(normalcmd.c_str(), "[notify servant object num:1]\n[1]:returnMark AdminCmdNormalTest success!\n");
+	EXPECT_STREQ(normalcmd.c_str(), "[notify servant object num:1]\n[1]:return Mark AdminCmdNormalTest success!\n");
 
 	string normaldeletecmd = adminFPrx->notify("DeletePrefixCmd");
 	EXPECT_STREQ(normaldeletecmd.c_str(), "[notify servant object num:1]\n[1]:Delete success!\n");
@@ -91,3 +91,36 @@ TEST_F(HelloTest, testAdmin)
     tarsMockUtil.stopFramework();
 }
 
+TEST_F(HelloTest, testAdminShutdown)
+{
+    TarsMockUtil tarsMockUtil;
+    tarsMockUtil.startFramework();
+    ConfigImp::setConfigFile("test.conf", "test-content");
+
+    WinServer ws;
+    startServer(ws, WIN_CONFIG());
+
+    CommunicatorPtr c = ws.getApplicationCommunicator();
+
+    string adminObj = "AdminObj@" + getLocalEndpoint(WIN_CONFIG()).toString();
+
+    AdminFPrx adminFPrx = c->stringToProxy<AdminFPrx>(adminObj);
+
+    adminFPrx->tars_ping();
+
+    try
+    {
+        adminFPrx->tars_set_timeout(2000)->shutdown();
+        TC_Common::msleep(500);
+    }
+    catch(exception &ex)
+    {
+        LOG_CONSOLE_DEBUG << ex.what() << endl;
+    }
+
+    EXPECT_EQ(ws._destroyApp, true);
+
+    stopServer(ws);
+    tarsMockUtil.stopFramework();
+
+}
