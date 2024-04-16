@@ -282,8 +282,8 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 			}
 			else
 			{
-                _communicatorEpoll->pushAsyncThreadQueue(msg);
                 TLOGERROR("[ObjectProxy::doInvokeException " << msg->request.sServantName << ":" << msg->request.sFuncName << ", ret: " << msg->response->iRet << endl);
+                _communicatorEpoll->pushAsyncThreadQueue(msg);
 			}
 		}
 		else
