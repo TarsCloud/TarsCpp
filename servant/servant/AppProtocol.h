@@ -25,6 +25,7 @@
 #include "tup/tup.h"
 #include "servant/BaseF.h"
 #include "util/tc_network_buffer.h"
+#include "servant/Global.h"
 
 using namespace std;
 using namespace tup;
@@ -319,6 +320,12 @@ public:
     request_protocol requestFunc;
 
     response_protocol responseFunc;
+
+    /**
+     * 开启openalive, 如果keepAliveCallback未设置则直接发包, 如果keepAliveCallback设置, 则回调(不再发tars_ping)
+     * 如果是非tars协议如果开启openalive, 则需要设置keepAliveCallback, 自己发包
+     */
+    std::function<void(ServantPrx)>  keepAliveCallback;
 };
 
 //////////////////////////////////////////////////////////////////////

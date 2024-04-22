@@ -1055,28 +1055,35 @@ void AdapterProxy::doKeepAlive()
     TLOGTARS("[AdapterProxy::doKeepAlive, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
 
     ReqMessage *msg = new ReqMessage();
-//    ServantProxyCallbackPtr callback = new PingCallback();
-    ServantProxyCallbackPtr callback (new PingCallback());
-    callback->setServantPrx(_objectProxy->getServantProxy());
 
-    msg->init(ReqMessage::ASYNC_CALL, _objectProxy->getServantProxy());
-    msg->callback = callback;
+    if(_objectProxy->getRootServantProxy()->tars_get_protocol().keepAliveCallback)
+    {
+        _objectProxy->getRootServantProxy()->tars_get_protocol().keepAliveCallback(_objectProxy->getServantProxy());
+    }
+    else
+    {
+        msg->init(ReqMessage::ASYNC_CALL, _objectProxy->getServantProxy());
 
-    msg->request.iVersion = TARSVERSION;
-    msg->request.cPacketType = TARSNORMAL;
-    msg->request.sFuncName = "tars_ping";
-    msg->request.sServantName = _objectProxy->name();
+        ServantProxyCallbackPtr callback(new PingCallback());
+        callback->setServantPrx(_objectProxy->getServantProxy());
 
-    msg->request.iTimeout     = ServantProxy::DEFAULT_ASYNCTIMEOUT;
+        msg->callback = callback;
 
-    msg->proxy         = _objectProxy->getServantProxy();
-    msg->response->iRet = TARSSERVERUNKNOWNERR;
+        msg->request.iVersion = TARSVERSION;
+        msg->request.cPacketType = TARSNORMAL;
+        msg->request.sFuncName = "tars_ping";
+        msg->request.sServantName = _objectProxy->name();
+        msg->request.iTimeout = ServantProxy::DEFAULT_ASYNCTIMEOUT;
 
-    //调用发起时间
-    msg->iBeginTime   = TNOWMS;
-    msg->pObjectProxy = _objectProxy;
+        msg->proxy = _objectProxy->getServantProxy();
+        msg->response->iRet = TARSSERVERUNKNOWNERR;
 
-    invoke(msg);
+        //调用发起时间
+        msg->iBeginTime = TNOWMS;
+        msg->pObjectProxy = _objectProxy;
+
+        invoke(msg);
+    }
 }
 
 

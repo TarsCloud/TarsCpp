@@ -1476,6 +1476,8 @@ private:
      * 对应通信内部的moduleName
      */
     string                                _moduleName;
+
+
 };
 }
 #endif
