@@ -453,7 +453,7 @@ void CommunicatorEpoll::doKeepAlive()
 
     for(size_t i = 0; i < getObjNum(); ++i)
     {
-        if(getObjectProxy(i)->getServantProxy()->tars_open_keepalive())
+        if(getObjectProxy(i)->getRootServantProxy()->tars_open_keepalive())
         {
             getObjectProxy(i)->doKeepAlive();
         }
