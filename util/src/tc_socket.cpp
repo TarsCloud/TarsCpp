@@ -893,6 +893,86 @@ clean:
     THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createPipe] error");
 }
 
+#if TARGET_PLATFORM_LINUX||TARGET_PLATFORM_IOS
+
+vector<string> TC_Socket::getLocalHosts(int domain, bool withLoopIp)
+{
+    vector<string> result;
+    TC_Socket ts;
+    ts.createSocket(SOCK_STREAM, domain);
+
+    int cmd = SIOCGIFCONF;
+
+    struct ifconf ifc;
+
+    int numaddrs = 10;
+
+    int old_ifc_len = 0;
+
+    while(true)
+    {
+        int bufsize = numaddrs * static_cast<int>(sizeof(struct ifreq));
+        ifc.ifc_len = bufsize;
+        ifc.ifc_buf = (char*)malloc(bufsize);
+        int rs = ioctl(ts.getfd(), cmd, &ifc);
+
+        if(rs == -1)
+        {
+            free(ifc.ifc_buf);
+            throw TC_Socket_Exception("[TC_Socket::getLocalHosts] ioctl error", errno);
+        }
+        else if(ifc.ifc_len == old_ifc_len)
+        {
+            break;
+        }
+        else
+        {
+            old_ifc_len = ifc.ifc_len;
+        }
+
+        numaddrs += 10;
+        free(ifc.ifc_buf);
+    }
+
+    numaddrs = ifc.ifc_len / static_cast<int>(sizeof(struct ifreq));
+    struct ifreq* ifr = ifc.ifc_req;
+    for(int i = 0; i < numaddrs; ++i)
+    {
+        char sAddr[INET_ADDRSTRLEN] = "\0";
+
+        if(ifr[i].ifr_addr.sa_family == AF_INET)
+        {
+            struct sockaddr_in* addr = reinterpret_cast<struct sockaddr_in*>(&ifr[i].ifr_addr);
+            if(addr->sin_addr.s_addr != 0)
+            {
+                inet_ntop(AF_INET, &(*addr).sin_addr, sAddr, sizeof(sAddr));
+            }
+        }
+        else if (ifr[i].ifr_addr.sa_family == AF_INET6)
+        {
+            struct sockaddr_in6* addr = reinterpret_cast<struct sockaddr_in6*>(&ifr[i].ifr_addr);
+            if(!memcmp(&addr->sin6_addr, &in6addr_any, sizeof(addr->sin6_addr)))
+            {
+                inet_ntop(AF_INET6, &(*addr).sin6_addr, sAddr, sizeof(sAddr));
+            }
+        }
+        else
+        {
+            continue;
+        }
+
+        if(withLoopIp || (TC_Port::strcasecmp(sAddr,"127.0.0.1") != 0 && TC_Port::strcasecmp(sAddr, "::1") != 0))
+        {
+            result.push_back(sAddr);
+        }
+    }
+
+    free(ifc.ifc_buf);
+
+    return result;
+}
+#else
+
 vector<string> TC_Socket::getLocalHosts(int domain, bool withLoopIp)
 {
     vector<string> hosts;
@@ -937,6 +1017,7 @@ vector<string> TC_Socket::getLocalHosts(int domain, bool withLoopIp)
 
     return hosts;
 }
+#endif
 
 bool TC_Socket::isPending()
 {
