@@ -893,7 +893,7 @@ clean:
     THROW_EXCEPTION_SYSCODE(TC_Socket_Exception, "[TC_Socket::createPipe] error");
 }
 
-#if TARGET_PLATFORM_LINUX||TARGET_PLATFORM_IOS
+#if TARGET_PLATFORM_LINUX
 
 vector<string> TC_Socket::getLocalHosts(int domain, bool withLoopIp)
 {
