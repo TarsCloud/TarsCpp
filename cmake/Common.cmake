@@ -59,12 +59,13 @@ endif()
 
 #-------------------------------------------------------------
 IF (APPLE)
-link_libraries(iconv)
+#link_libraries(iconv)
 ENDIF(APPLE)
 
 IF (WIN32)
 
 ELSE()
+    link_libraries(iconv)
     link_libraries(pthread dl)
 ENDIF()
 
