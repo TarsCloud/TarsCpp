@@ -362,14 +362,25 @@ string Tars2Cpp::writeTo(const TypeIdPtr& pPtr) const
 
             if (mPtr || vPtr)
             {
-                s << TAB << "if (" << pPtr->getId() << ".size() > 0)" << endl;
+                s << TAB << "if (!" << pPtr->getId() << ".empty())" << endl;
             }
             else
             {
                 //bool类型, 都传输, 为了避免之前调整bool缺省值的bug
                 if(!(bPtr && bPtr->kind() == Builtin::KindBool))
                 {
-                    s << TAB << "if (" << pPtr->getId() << " != " << sDefault << ")" << endl;
+                    if(bPtr->kind() == Builtin::KindFloat)
+                    {
+                        s << TAB << "if (!tars::TC_Common::equal(" << pPtr->getId() << ", (float)" << sDefault << "))" << endl;
+                    }
+                    else if(bPtr->kind() == Builtin::KindDouble)
+                    {
+                        s << TAB << "if (!tars::TC_Common::equal(" << pPtr->getId() << ", (double)" << sDefault << "))" << endl;
+                    }
+                    else
+                    {
+                        s << TAB << "if (" << pPtr->getId() << " != " << sDefault << ")" << endl;
+                    }
                 }
                 else
                 {
