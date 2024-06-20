@@ -434,7 +434,7 @@ bool CodeGenerator::generateTSProxy(const ContextPtr &cPtr)
     sstr << "/// <reference types=\"node\" />" << endl;
     if (bNeedAssert)
     {
-        sstr << TAB << "import assert = require(\"assert\");" << endl;
+        sstr << TAB << "import assert from \"assert\";" << endl;
     }
     if (bNeedStream)
     {

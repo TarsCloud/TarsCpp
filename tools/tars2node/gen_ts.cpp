@@ -407,7 +407,7 @@ void CodeGenerator::generateTS(const ContextPtr &pPtr)
     ostringstream ostr;
     if (bNeedAssert)
     {
-        ostr << "import assert = require(\"assert\");" << endl;
+        ostr << "import assert from \"assert\";" << endl;
     }
     if (bNeedStream)
     {

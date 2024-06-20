@@ -464,7 +464,7 @@ bool CodeGenerator::generateTSServer(const ContextPtr &pPtr)
     str << "/// <reference types=\"node\" />" << endl;
     if (bNeedAssert)
     {
-        str << TAB << "import assert = require(\"assert\");" << endl;
+        str << TAB << "import assert from \"assert\";" << endl;
     }
     if (bNeedStream)
     {
