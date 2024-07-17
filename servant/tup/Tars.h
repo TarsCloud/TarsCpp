@@ -360,7 +360,7 @@ namespace tars
 //////////////////////////////////////////////////////////////////
 struct TarsStructBase
 {
-protected:
+public:
 	TarsStructBase() {}
 
 	virtual ~TarsStructBase() {}
