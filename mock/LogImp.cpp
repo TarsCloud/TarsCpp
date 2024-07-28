@@ -418,8 +418,6 @@ void LogImp::logger(const string &app, const string &server, const string &file,
 
 void LogImp::loggerbyInfo(const LogInfo & info,const vector<std::string> & buffer,tars::TarsCurrentPtr current)
 {
-	LOG_CONSOLE_DEBUG << info.writeToJsonString() << endl;
-
     TC_DayLogger &dl = g_globe.getLogger(info,current->getIp());
 
     //记录日志
