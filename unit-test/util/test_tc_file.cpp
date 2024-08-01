@@ -167,3 +167,8 @@ TEST_F(UtilFileTest, join)
 
 
 }
+
+TEST_F(UtilFileTest, copy)
+{
+    TC_File::copyFile("WsiServer/libvips-cpp.so", "WsiServer/libvips-cpp.so.tmp", true);
+}

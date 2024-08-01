@@ -667,9 +667,9 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
         TC_File::listDirectory(sExistFile,tf, false);
         for(size_t i = 0; i <tf.size(); i++)
         {
-			string fileName = TC_File::extractFileName(tf[i]);
+            string fileName = TC_File::extractFileName(tf[i]);
             if(fileName == "." || fileName == "..")
-				continue;
+                continue;
             string s = sExistFile + FILE_SEP + fileName;
             string d = sNewFile + FILE_SEP + fileName;
             copyFile(s, d,bRemove);
@@ -679,29 +679,53 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
     {
         if(bRemove) std::remove(sNewFile.c_str());
 
-		std::ifstream fin(sExistFile.c_str(), ios::binary);
-        if(!fin)
+        TC_Port::stat_t statbuf;
+        if (TC_Port::lstat(sExistFile.c_str(), &statbuf) != 0)
         {
-            THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sExistFile);
-        }
-        //强制覆盖
-        std::ofstream fout(sNewFile.c_str(), ios::binary);
-        if(!fout )
-        {
-            THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sNewFile);
+            THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] lstat error: "+sExistFile);
         }
 
-        fout << fin.rdbuf();
-        fin.close();
-        fout.close();  
-            
-		TC_Port::stat_t f_stat;
-        if (TC_Port::lstat(sExistFile.c_str(), &f_stat) == -1)
+        if (S_ISLNK(statbuf.st_mode))
         {
-            THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] error: "+sExistFile);
+            char buffer[PATH_MAX + 1] = {0x00};
+            ssize_t len = readlink(sExistFile.c_str(), buffer, sizeof(buffer) - 1);
+            if (len != -1)
+            {
+                if (symlink(buffer, sNewFile.c_str()) != 0)
+                {
+                    THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] symlink error: " + sExistFile);
+                }
+            } else
+            {
+                THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] readlink error: " + sExistFile);
+            }
         }
+        else
+        {
+            std::ifstream fin(sExistFile.c_str(), ios::binary);
+            if (!fin)
+            {
+                THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] open file error: " + sExistFile);
+            }
+            //强制覆盖
+            std::ofstream fout(sNewFile.c_str(), ios::binary);
+            if (!fout)
+            {
+                THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] write error: " + sNewFile);
+            }
 
-        TC_Port::chmod(sNewFile.c_str(),f_stat.st_mode);
+            fout << fin.rdbuf();
+            fin.close();
+            fout.close();
+
+            TC_Port::stat_t f_stat;
+            if (TC_Port::lstat(sExistFile.c_str(), &f_stat) == -1)
+            {
+                THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] lstat error: " + sExistFile);
+            }
+
+            TC_Port::chmod(sNewFile.c_str(), f_stat.st_mode);
+        }
     }
 }
 

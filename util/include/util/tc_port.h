@@ -136,7 +136,15 @@ public:
 #endif
 
     /**
-     * 查看文件属性
+     * 查看文件属性(如果不是link, 则看到的是文件本身的属性)
+     * @param path
+     * @param buf
+     * @return
+     */
+    static int stat(const char * path, stat_t * buf);
+
+    /**
+     * 查看文件属性(如果是link, 这看到指向的文件)
      * @param path
      * @param buf
      * @return
