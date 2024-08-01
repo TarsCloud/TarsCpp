@@ -678,7 +678,7 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
     else
     {
         if(bRemove) std::remove(sNewFile.c_str());
-
+#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
         TC_Port::stat_t statbuf;
         if (TC_Port::lstat(sExistFile.c_str(), &statbuf) != 0)
         {
@@ -701,6 +701,7 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
             }
         }
         else
+#endif
         {
             std::ifstream fin(sExistFile.c_str(), ios::binary);
             if (!fin)
