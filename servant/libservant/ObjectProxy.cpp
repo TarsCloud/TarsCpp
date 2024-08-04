@@ -110,7 +110,7 @@ int ObjectProxy::loadLocator()
 
 void ObjectProxy::invoke(ReqMessage * msg)
 {
-    TLOGTARS("[ObjectProxy::invoke, objname:" << _name << ", begin...]" << endl);
+    TLOGTARS("[ObjectProxy::invoke, servant:" << _servantProxy->tars_full_name() << ", func:"<< msg->request.sFuncName << ", begin...]" << endl);
 
     //选择一个远程服务的Adapter来调用
     AdapterProxy * pAdapterProxy = NULL;
@@ -124,14 +124,14 @@ void ObjectProxy::invoke(ReqMessage * msg)
         assert(bRet);
 
         //把数据缓存在obj里面
-        TLOGTARS("[ObjectProxy::invoke, objname:" << _name << ", select adapter proxy not valid (have not invoke reg)]" << endl);
+        TLOGTARS("[ObjectProxy::invoke, objname:" << _name << ", func:" << msg->request.sFuncName << ", select adapter proxy not valid (have not invoke reg)]" << endl);
 
         return;
     }
 
     if(!pAdapterProxy)
     {
-        TLOGERROR("[ObjectProxy::invoke, objname:"<< _name << ", selectAdapterProxy is null]"<<endl);
+        TLOGERROR("[ObjectProxy::invoke, objname:"<< _name << ", func:"<< msg->request.sFuncName << ", selectAdapterProxy is null]"<<endl);
 
         msg->response->iRet = TARSADAPTERNULL;
 
@@ -150,7 +150,7 @@ void ObjectProxy::invoke(ReqMessage * msg)
 		assert(bRet);
 
         //把数据缓存在obj里面
-        TLOGTARS("[ObjectProxy::invoke, " << _name << ", select adapter proxy not connected (have not invoke reg)]" << endl);
+        TLOGTARS("[ObjectProxy::invoke, " << _name << ", func:"<< msg->request.sFuncName << ", select adapter proxy not connected (have not invoke reg)]" << endl);
         return;
     }
 
