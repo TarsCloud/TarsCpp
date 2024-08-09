@@ -309,7 +309,7 @@ template<typename T> void TC_TimeoutQueueNew<T>::timeout(data_functor &df)
         if(_time.end() == it || it->first>iNow)
             break;
 
-        ptr=it->second->second.ptr;
+        ptr=it->second.dataIter->second.ptr;
         if(!it->second.dataIter->second.hasSend)
         {
             _send.erase(it->second.dataIter->second.sendIter);
