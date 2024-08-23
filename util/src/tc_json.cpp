@@ -694,7 +694,18 @@ void TC_Json::writeNum(const JsonValueNumPtr & p, string& ostr)
 	}
 	else if (!p->isInt)
 	{
-		ss << TC_Common::tostr(p->value) ;
+        if(std::isinf(p->value))
+        {
+            ss << "null";
+        }
+        else if(std::isnan(p->value))
+        {
+            ss << "null";
+        }
+        else
+        {
+            ss << TC_Common::tostr(p->value);
+        }
 	}
 	else
 	{
