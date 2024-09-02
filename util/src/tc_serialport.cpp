@@ -4,6 +4,8 @@
 
 #include "util/tc_serialport.h"
 
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+
 namespace tars
 {
 
@@ -423,3 +425,5 @@ int TC_SerialPort::recv(void *buf, uint32_t len)
 }
 
 }
+
+#endif

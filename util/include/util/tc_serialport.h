@@ -10,9 +10,12 @@
 #include <unistd.h>
 #include <termios.h>
 #include <cstring>
+#include "util/tc_platform.h"
 #include "util/tc_ex.h"
 #include "util/tc_epoller.h"
 #include "util/tc_network_buffer.h"
+
+#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 
 namespace tars
 {
@@ -315,3 +318,4 @@ protected:
 
 }
 
+#endif
