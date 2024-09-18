@@ -32,10 +32,10 @@ TC_Mysql::TC_Mysql()
     _pstMql = mysql_init(NULL);
 }
 
-TC_Mysql::TC_Mysql(const string& sHost, const string& sUser, const string& sPasswd, const string& sDatabase, const string &sCharSet, int port, int iFlag)
+TC_Mysql::TC_Mysql(const string& sHost, const string& sUser, const string& sPasswd, const string& sDatabase, const string &sCharSet, int port, int iFlag, int connectTimeout, int writeReadTimeout)
 :_bConnected(false)
 {
-    init(sHost, sUser, sPasswd, sDatabase, sCharSet, port, iFlag);
+    init(sHost, sUser, sPasswd, sDatabase, sCharSet, port, iFlag, connectTimeout, writeReadTimeout);
     
     _pstMql = mysql_init(NULL);
 }
@@ -57,7 +57,7 @@ TC_Mysql::~TC_Mysql()
     }
 }
 
-void TC_Mysql::init(const string& sHost, const string& sUser, const string& sPasswd, const string& sDatabase, const string &sCharSet, int port, int iFlag)
+void TC_Mysql::init(const string& sHost, const string& sUser, const string& sPasswd, const string& sDatabase, const string &sCharSet, int port, int iFlag, int connectTimeout, int writeReadTimeout)
 {
     _dbConf._host = sHost;
     _dbConf._user = sUser;
@@ -66,6 +66,8 @@ void TC_Mysql::init(const string& sHost, const string& sUser, const string& sPas
     _dbConf._charset  = sCharSet;
     _dbConf._port = port;
     _dbConf._flag = iFlag;
+    _dbConf._writeReadTimeout = writeReadTimeout;
+    _dbConf._connectTimeout = connectTimeout;
 }
 
 void TC_Mysql::init(const TC_DBConf& tcDBConf)
@@ -526,7 +528,7 @@ void TC_Mysql::execute(const string& sSql)
 
     if (iRet != 0)
     {
-        throw TC_Mysql_Exception("[TC_Mysql::execute]: mysql_query: [ " + sSql+" ] :" + string(mysql_error(_pstMql)));  
+        throw TC_Mysql_Exception("[TC_Mysql::execute]: mysql_query: [ " + sSql+" ] :" + string(mysql_error(_pstMql)) + ", errno:" + TC_Common::tostr(iRet));
     }
 }
 
