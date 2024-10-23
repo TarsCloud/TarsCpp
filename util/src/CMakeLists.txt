@@ -28,7 +28,7 @@ add_library(tarsutil STATIC ${DIR_SRCS})
 add_library(tarsutil_shared SHARED ${DIR_SRCS})
 add_dependencies(tarsutil thirdparty)
 
-target_link_libraries(tarsutil_shared mysqlclient)
+#target_link_libraries(tarsutil_shared mysqlclient)
 target_compile_definitions(tarsutil_shared PRIVATE UTIL_DLL_EXPORT)
 
 if (TARS_SSL)
