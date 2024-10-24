@@ -1,6 +1,4 @@
-﻿
-#ifndef __TC_UUID_GENERATOR_H
-#define __TC_UUID_GENERATOR_H
+﻿#pragma once
 
 #include "util/tc_platform.h"
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
@@ -130,4 +128,3 @@ private:
 
 }
 
-#endif //__TC_UUID_GENERATOR_H

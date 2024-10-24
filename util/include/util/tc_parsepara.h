@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TC_PARSEPARA_H
-#define __TC_PARSEPARA_H
+#pragma once
 
 #include <map>
 #include <string>
@@ -254,4 +252,3 @@ protected:
 };
 
 }
-#endif /*_TC_PARSEPARA_H*/

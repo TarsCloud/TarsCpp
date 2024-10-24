@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef TC_CPP_TC_NETWORKBUFFER_H
-#define TC_CPP_TC_NETWORKBUFFER_H
+#pragma once
 
 #include <list>
 #include <vector>
@@ -1059,4 +1057,3 @@ protected:
 
 }
 
-#endif //TARS_CPP_TC_NETWORKBUFFER_H

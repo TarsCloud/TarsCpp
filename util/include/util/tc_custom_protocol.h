@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_CUSTOM_PROTOCOL_H_
-#define __TC_CUSTOM_PROTOCOL_H_
+#pragma once
 
 #include "util/tc_ex.h"
 #include "util/tc_port.h"
@@ -141,5 +140,4 @@ protected:
 
 
 }
-#endif
 

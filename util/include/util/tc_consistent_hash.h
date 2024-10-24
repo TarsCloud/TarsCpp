@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __CONSISTENT_HASH__
-#define __CONSISTENT_HASH__
+#pragma once
 
 #include "util/tc_md5.h"
 
@@ -194,4 +193,3 @@ class  TC_ConsistentHash
 };
 
 }
-#endif

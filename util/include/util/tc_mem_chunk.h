@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TC_MEM_CHUNK_H__
-#define __TC_MEM_CHUNK_H__
+#pragma once
 
 #include <string>
 #include <vector>
@@ -798,4 +796,3 @@ private:
 
 }
 
-#endif

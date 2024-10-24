@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_GZIP_H
-#define __TC_GZIP_H
+#pragma once
 
 #include  "util/tc_platform.h"
 
@@ -161,5 +160,3 @@ public:
 };
 
 }
-//#endif
-#endif

@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_MMAP_H
-#define __TC_MMAP_H
+#pragma once
 
 #include "util/tc_platform.h"
 
@@ -193,5 +192,3 @@ protected:
 };
 
 }
-#endif
-

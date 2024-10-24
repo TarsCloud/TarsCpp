@@ -13,8 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-#ifndef __TC_THREAD_QUEUE_H_
-#define __TC_THREAD_QUEUE_H_
+#pragma once
 
 #include <deque>
 #include <vector>
@@ -438,5 +437,4 @@ template<typename T, typename D> bool TC_ThreadQueue<T, D>::wait(size_t millseco
 }
 
 }
-#endif
 

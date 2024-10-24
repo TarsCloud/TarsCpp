@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef _TC_MONITOR_H
-#define _TC_MONITOR_H
+#pragma once
 
 #include "util/tc_thread_mutex.h"
 #include "util/tc_thread_cond.h"
@@ -253,5 +251,4 @@ typedef TC_Monitor<TC_ThreadMutex, TC_ThreadCond> TC_ThreadLock;
 typedef TC_Monitor<TC_ThreadRecMutex, TC_ThreadCond> TC_ThreadRecLock;
 
 }
-#endif
 

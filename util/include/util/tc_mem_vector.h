@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_MEM_VECTOR_H__
-#define __TC_MEM_VECTOR_H__
+#pragma once
 
 #include "util/tc_ex.h"
 #include <sstream>
@@ -376,4 +375,3 @@ string TC_MemVector<T>::desc() const
 
 }
 
-#endif

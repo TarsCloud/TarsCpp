@@ -1,6 +1,4 @@
-﻿#ifndef __TC_CAS_QUEUE_H_
-#define __TC_CAS_QUEUE_H_
-
+﻿#pragma once
 #include <deque>
 #include <vector>
 #include <cassert>
@@ -269,5 +267,4 @@ template<typename T, typename D> bool TC_CasQueue<T, D>::empty() const
 }
 
 }
-#endif
 

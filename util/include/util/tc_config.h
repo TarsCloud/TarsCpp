@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TC_CONFIG_H_
-#define __TC_CONFIG_H_
+#pragma once
 
 #include <map>
 #include <list>
@@ -701,4 +699,3 @@ protected:
 };
 
 }
-#endif //_TC_CONFIG_H_

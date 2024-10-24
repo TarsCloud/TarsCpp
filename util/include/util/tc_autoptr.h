@@ -14,9 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_AUTOPTR_H
-#define __TC_AUTOPTR_H
-
+#pragma once
 #include "util/tc_ex.h"
 #include "util/tc_platform.h"
 #include <atomic>
@@ -534,4 +532,3 @@ inline bool operator<(const TC_AutoPtr<T>& lhs, const TC_AutoPtr<U>& rhs)
 
 }
 
-#endif

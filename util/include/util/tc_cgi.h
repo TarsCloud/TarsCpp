@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_CGI_H
-#define __TC_CGI_H
+#pragma once
 
 #include <sstream>
 #include <istream>
@@ -691,4 +690,3 @@ protected:
 
 }
 
-#endif

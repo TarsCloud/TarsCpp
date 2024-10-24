@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_HASHMAP_COMPACT_H__
-#define __TC_HASHMAP_COMPACT_H__
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -2039,6 +2038,4 @@ protected:
 };
 
 }
-
-#endif
 

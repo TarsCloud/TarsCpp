@@ -13,8 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-#ifndef __TC_MALLOC_CHUNK_H
-#define __TC_MALLOC_CHUNK_H
+#pragma once
 
 #include <iostream>
 #include <cassert>
@@ -880,4 +879,3 @@ namespace tars
     };
     
 }
-#endif

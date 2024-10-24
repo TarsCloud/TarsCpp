@@ -14,13 +14,13 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_BIT_MAP_H__
-#define __TC_BIT_MAP_H__
+#pragma once
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include "util/tc_ex.h"
+#include "util/tc_platform.h"
 
 using namespace std;
 
@@ -58,7 +58,7 @@ struct TC_BitMap_Exception : public TC_Exception
  * and then lock the blocks group by the tail number.
  * 注意群锁策略应该/8，然后按照尾号分群锁
  */
-class TC_BitMap
+class UTIL_DLL_API TC_BitMap
 {
 public:
     /**
@@ -354,5 +354,4 @@ protected:
 
 }
 
-#endif
 

@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_FILE_H_
-#define __TC_FILE_H_
+#pragma once
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -341,4 +340,3 @@ private:
     static bool isPanfu(const string & sPath);
 };
 }
-#endif // TC_FILE_H

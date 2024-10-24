@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_SINGLETON_H__
-#define __TC_SINGLETON_H__
+#pragma once
 
 #include "util/tc_monitor.h"
 #include <cassert>
@@ -325,4 +324,3 @@ template <class T, template<class> class CreatePolicy, template<class> class Lif
 atomic<T*> TC_Singleton<T, CreatePolicy, LifetimePolicy>::__pInstance = {nullptr};
 }
 
-#endif

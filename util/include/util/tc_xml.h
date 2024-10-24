@@ -1,5 +1,4 @@
-﻿#ifndef __TC_XML_H_
-#define __TC_XML_H_
+﻿#pragma once
 
 #include <string>
 #include <map>
@@ -222,5 +221,4 @@ private:
 
 }
 
-#endif
 

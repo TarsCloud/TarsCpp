@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TC_THREAD_MUTEX_H
-#define __TC_THREAD_MUTEX_H
+#pragma once
 
 #include "util/tc_lock.h"
 #include "util/tc_platform.h"
@@ -131,5 +129,4 @@ private:
 };
 
 }
-#endif
 

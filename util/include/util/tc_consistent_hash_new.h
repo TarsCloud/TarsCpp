@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_CONSISTENT_HASH_NEW_H_
-#define __TC_CONSISTENT_HASH_NEW_H_
+#pragma once
 
 #include "util/tc_md5.h"
 #include "util/tc_autoptr.h"
@@ -223,4 +222,3 @@ protected:
 };
 
 }
-#endif

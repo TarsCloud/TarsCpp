@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef _TC_TIMEOUT_QUEUE_NOID_H_
-#define _TC_TIMEOUT_QUEUE_NOID_H_
+#pragma once
 
 #include <map>
 #include <list>
@@ -222,4 +220,3 @@ template<typename T> bool TC_TimeoutQueueNoID<T>::timeout(T & t)
 }
 /////////////////////////////////////////////////////////////////
 }
-#endif

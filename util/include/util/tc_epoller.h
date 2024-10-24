@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef	__TC_EPOLLER_H_
-#define __TC_EPOLLER_H_
+#pragma once
 
 #include "util/tc_platform.h"
 #include "util/tc_socket.h"
@@ -509,5 +508,4 @@ protected:
 };
 
 }
-#endif
 

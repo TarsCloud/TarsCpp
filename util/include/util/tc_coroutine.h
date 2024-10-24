@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef _TC_COROUTINES_H_
-#define _TC_COROUTINES_H_
+#pragma once
 
 #include <cstddef>
 #include <list>
@@ -786,4 +785,3 @@ protected:
 
 }
 
-#endif

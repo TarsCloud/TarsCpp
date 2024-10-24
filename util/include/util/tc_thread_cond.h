@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef _TC_THREAD_COND_H
-#define _TC_THREAD_COND_H
+#pragma once
 
 #include <cerrno>
 #include <iostream>
@@ -108,6 +107,4 @@ private:
 };
 
 }
-
-#endif
 

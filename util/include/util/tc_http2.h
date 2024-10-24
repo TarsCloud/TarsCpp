@@ -1,5 +1,4 @@
-﻿#ifndef __TC_HTTP2_H__
-#define __TC_HTTP2_H__
+﻿#pragma once
 
 #include "util/tc_http.h"
 #include "util/tc_spin_lock.h"
@@ -227,7 +226,3 @@ private:
 };
 
 }
-
-//#endif
-
-#endif

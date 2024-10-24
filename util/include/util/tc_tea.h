@@ -1,5 +1,4 @@
-﻿#ifndef _TC_TEA_H_
-#define _TC_TEA_H_
+﻿#pragma once
 
 #include "util/tc_platform.h"
 #include <vector>
@@ -61,6 +60,4 @@ public:
 };
 
 }
-
-#endif
 

@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TC_THREAD_RWLOCK_H
-#define __TC_THREAD_RWLOCK_H
+#pragma once
 
 #include <mutex>
 #include <condition_variable>
@@ -141,4 +139,3 @@ typedef TC_RW_RLockT<TC_ThreadRWLocker> TC_ThreadRLock;
 typedef TC_RW_WLockT<TC_ThreadRWLocker> TC_ThreadWLock;
 
 }
-#endif

@@ -1,5 +1,4 @@
-﻿#ifndef __TC_SOCKET_ASYNC_H_
-#define __TC_SOCKET_ASYNC_H_
+﻿#pragma once
 
 #include "util/tc_platform.h"
 #include "util/tc_autoptr.h"
@@ -727,4 +726,3 @@ protected:
 
 }
 
-#endif

@@ -15,8 +15,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_JSON_H
-#define __TC_JSON_H
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -433,4 +432,3 @@ private:
 };
 }
 
-#endif

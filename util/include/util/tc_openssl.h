@@ -16,7 +16,6 @@
 
 #pragma once
 
-
 #include <string>
 #include <vector>
 #include "util/tc_network_buffer.h"

@@ -13,10 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TC_READERS_WRITER_DATA_H__
-#define __TC_READERS_WRITER_DATA_H__
-
+#pragma once
 
 namespace tars
 {
@@ -80,4 +77,3 @@ private:
 };
 
 }
-#endif

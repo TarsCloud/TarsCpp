@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TC_TIMEOUT_QUEUE_NEW_H
-#define __TC_TIMEOUT_QUEUE_NEW_H
+#pragma once
 
 #include <map>
 #include <list>
@@ -340,4 +338,3 @@ template<typename T> bool TC_TimeoutQueueNew<T>::erase(uint32_t uniqId, T & t)
 }
 /////////////////////////////////////////////////////////////////
 }
-#endif

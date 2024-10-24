@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_LOGGER_H
-#define __TC_LOGGER_H
+#pragma once
 
 #include "util/tc_autoptr.h"
 #include "util/tc_common.h"
@@ -2037,5 +2036,4 @@ __global_logger_debug__.any() << TC_Common::now2msstr() <<"|" << std::this_threa
 
 }
 
-#endif
 

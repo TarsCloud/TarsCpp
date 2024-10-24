@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef _TC_LOCK_H
-#define _TC_LOCK_H
+#pragma once
 
 #include <string>
 #include <stdexcept>
@@ -312,5 +311,4 @@ private:
 };
 
 };
-#endif
 

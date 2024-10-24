@@ -1,5 +1,4 @@
-﻿#ifndef __TC_GRPC_PROTOCOL_H__
-#define __TC_GRPC_PROTOCOL_H__
+﻿#pragma once
 
 #include <unordered_map>
 #include "util/tc_network_buffer.h"
@@ -108,6 +107,3 @@ private:
 
   
 }
-
-
-#endif  //__TC_GRPC_PROTOCOL_H__

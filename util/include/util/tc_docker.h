@@ -1,5 +1,4 @@
-﻿#ifndef __TC_DOCKER_H_
-#define __TC_DOCKER_H_
+﻿#pragma once
 
 #include <string>
 #include <map>
@@ -213,5 +212,4 @@ protected:
 };
 }
 
-#endif
 

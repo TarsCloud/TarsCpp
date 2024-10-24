@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_FIFO_H
-#define __TC_FIFO_H
+#pragma once
 
 #include "util/tc_platform.h"
 
@@ -157,5 +156,4 @@ private:
 
 #endif
 
-#endif
 

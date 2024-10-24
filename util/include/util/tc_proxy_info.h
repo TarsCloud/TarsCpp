@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef TC_CPP_PROXYINFO_H
-#define TC_CPP_PROXYINFO_H
+#pragma once
 
 #include "util/tc_clientsocket.h"
 
@@ -283,4 +281,3 @@ public:
 
 }
 
-#endif //TARS_CPP_PROXYINFO_H

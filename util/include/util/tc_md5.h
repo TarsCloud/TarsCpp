@@ -13,8 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-#ifndef __TC_MD5_H
-#define __TC_MD5_H
+#pragma once
 
 #include <string>
 #include "util/tc_ex.h"
@@ -239,4 +238,3 @@ protected:
 };
 
 }
-#endif

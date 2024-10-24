@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef _TC_HASH_FUN_H_
-#define _TC_HASH_FUN_H_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -200,6 +199,4 @@ struct magic_string_hash
 
 ////////////////////////////////////////////////////////////////////
 }
-
-#endif
 

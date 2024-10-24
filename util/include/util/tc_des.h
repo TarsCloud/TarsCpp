@@ -1,5 +1,4 @@
-﻿#ifndef __TC_DES_H
-#define __TC_DES_H
+﻿#pragma once
 
 #include <string>
 #include <stdint.h>
@@ -190,5 +189,4 @@ private:
 };
 
 }
-#endif
 

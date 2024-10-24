@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_FILE_MUTEX_H
-#define __TC_FILE_MUTEX_H
+#pragma once
 
 #include "util/tc_platform.h"
 
@@ -197,6 +196,5 @@ private:
 
 }
 
-#endif
 #endif
 

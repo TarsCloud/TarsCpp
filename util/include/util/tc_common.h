@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_COMMON_H
-#define __TC_COMMON_H
+#pragma once
 
 #include "util/tc_platform.h"
 
@@ -1447,4 +1446,3 @@ bool TC_Common::equal(const unordered_map<K, V, D, A>& mx , const unordered_map<
 
 }
 
-#endif

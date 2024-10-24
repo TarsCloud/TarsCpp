@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_DYN_OBJECT_H
-#define __TC_DYN_OBJECT_H
+#pragma once
 
 #include <iostream>
 
@@ -105,5 +104,4 @@ public: \
     
 }
 
-#endif
 

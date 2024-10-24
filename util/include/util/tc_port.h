@@ -1,5 +1,4 @@
-﻿#ifndef __TC_PORT_H
-#define __TC_PORT_H
+﻿#pragma once
 
 #include "util/tc_platform.h"
 #include "util/tc_ex.h"
@@ -385,4 +384,3 @@ protected:
 
 }
 
-#endif

@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_HTTP_ASYNC_H_
-#define __TC_HTTP_ASYNC_H_
+#pragma once
 
 #include <functional>
 #include "util/tc_platform.h"
@@ -497,5 +496,4 @@ protected:
 };
 
 }
-#endif
 

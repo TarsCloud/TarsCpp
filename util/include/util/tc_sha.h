@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_TC_SHA_H
-#define __TARS_TC_SHA_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -173,5 +171,4 @@ public:
 };
 
 }
-#endif
 

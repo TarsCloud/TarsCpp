@@ -13,12 +13,9 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TC_SQueue_H__
-#define __TC_SQueue_H__
+#pragma once
 
 #include <fcntl.h>
-// #include <unistd.h>
 #include <errno.h>
 #include <stdexcept>
 #include <iostream>
@@ -247,4 +244,3 @@ private:
 };
 
 }
-#endif

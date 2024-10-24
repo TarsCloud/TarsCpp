@@ -1,6 +1,5 @@
 ﻿
-#ifndef __TC_SPIN_LOCK_H
-#define __TC_SPIN_LOCK_H
+#pragma once
 
 #include "util/tc_platform.h"
 #include <atomic>
@@ -40,4 +39,3 @@ private:
 };
 
 }
-#endif

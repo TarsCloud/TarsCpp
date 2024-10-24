@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TC_EX_H
-#define __TC_EX_H
+#pragma once
 
 #include <stdexcept>
 #include <string>
@@ -145,5 +144,4 @@ private:
     }
 
 }
-#endif
 

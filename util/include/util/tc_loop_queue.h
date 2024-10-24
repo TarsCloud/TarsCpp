@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef  _TC_LOOP_QUEUE_H_
-#define  _TC_LOOP_QUEUE_H_
+#pragma once
 
 #include <vector>
 #include <stdlib.h>
@@ -227,5 +226,4 @@ private:
 
 }
 
-#endif   /* ----- #ifndef _TC_LOOP_QUEUE_H_ ----- */
 

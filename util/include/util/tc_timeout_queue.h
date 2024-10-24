@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TC_TIMEOUT_QUEUE_H
-#define __TC_TIMEOUT_QUEUE_H
+#pragma once
 
 #include <deque>
 #include <iostream>
@@ -488,4 +486,3 @@ template<typename T> bool TC_TimeoutQueue<T>::swap(deque<T> &q)
 }
 /////////////////////////////////////////////////////////////////
 }
-#endif
