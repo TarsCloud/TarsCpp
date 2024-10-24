@@ -25,32 +25,36 @@ list(APPEND DIR_SRCS ${JUMP_SRC})
 list(APPEND DIR_SRCS ${MAKE_SRC})
 
 add_library(tarsutil STATIC ${DIR_SRCS})
-add_library(tarsutil_shared SHARED ${DIR_SRCS})
+
 add_dependencies(tarsutil thirdparty)
-
-#target_link_libraries(tarsutil_shared mysqlclient)
-target_compile_definitions(tarsutil_shared PRIVATE UTIL_DLL_EXPORT)
-
-if (TARS_SSL)
-    if (WIN32)
-	    #windows动态编译需添加依赖库
-    	target_link_libraries(tarsutil_shared ${LIB_SSL}.lib ${LIB_CRYPTO}.lib Crypt32)
-    #else ()
-	    #linux动态编译未验证，暂时屏蔽
-    	#target_link_libraries(${LIB_TAF_UTIL} ${LIB_SSL}.a ${LIB_CRYPTO}.a)
-    endif ()
-endif()
-add_dependencies(tarsutil_shared thirdparty)
 
 install(TARGETS tarsutil
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 
-install(TARGETS tarsutil_shared
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
-if (WIN32)
-   install(FILES $<TARGET_PDB_FILE:tarsutil_shared> DESTINATION bin)
+if(ENABLE_SHARED)
+        add_library(tarsutil_shared SHARED ${DIR_SRCS})
+
+        target_link_libraries(tarsutil_shared libmysql)
+        target_compile_definitions(tarsutil_shared PRIVATE UTIL_DLL_EXPORT)
+
+        if (TARS_SSL)
+                if (WIN32)
+                        #windows动态编译需添加依赖库
+                        target_link_libraries(tarsutil_shared ${LIB_SSL}.lib ${LIB_CRYPTO}.lib Crypt32)
+                #else ()
+                        #linux动态编译未验证，暂时屏蔽
+                        #target_link_libraries(${LIB_TAF_UTIL} ${LIB_SSL}.a ${LIB_CRYPTO}.a)
+                endif ()
+        endif()
+        add_dependencies(tarsutil_shared tarsutil)
+
+        install(TARGETS tarsutil_shared
+                LIBRARY DESTINATION lib
+                ARCHIVE DESTINATION lib)
+        if (WIN32)
+                install(FILES $<TARGET_PDB_FILE:tarsutil_shared> DESTINATION bin)
+        endif()
 endif()
 
 IF(WIN32)

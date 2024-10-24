@@ -30,6 +30,7 @@ foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
 endforeach()   
 
 option(ONLY_LIB "option for only lib" ON)
+option(ENABLE_SHARED "option for enable shared library" OFF)
 
 # option(TARS_OPENTRACKING "option for open tracking" OFF)
 
@@ -130,5 +131,6 @@ message("TARS2CPP:                  ${TARS2CPP}")
 #message("TARS_OPENTRACKING:         ${TARS_OPENTRACKING}")
 message("ONLY_LIB:                  ${ONLY_LIB}" )
 message("TARS_STD_SHARED_PTR:       ${TARS_STD_SHARED_PTR}" )
+message("ENABLE_SHARED:             ${ENABLE_SHARED}" )
 #-------------------------------------------------------------
 
