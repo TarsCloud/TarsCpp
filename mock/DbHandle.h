@@ -24,7 +24,7 @@ typedef map<string, ObjectItem> ObjectsCache;
 /**
  *  数据库操作类
  */
-class CDbHandle
+class UTIL_DLL_API CDbHandle
 {
 private:
     struct GroupPriorityEntry

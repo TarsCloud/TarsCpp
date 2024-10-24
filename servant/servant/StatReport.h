@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_STAT_REPORT_H_
-#define __TARS_STAT_REPORT_H_
+#pragma once
 
 #include "util/tc_thread.h"
 #include "util/tc_readers_writer_data.h"
@@ -39,7 +37,7 @@ namespace tars
  * 1 模块间调用的信息
  * 2 业务自定义的属性统计
  */
-class StatReport : public TC_HandleBase, public TC_Thread, public TC_ThreadLock
+class SVT_DLL_API StatReport : public TC_HandleBase, public TC_Thread, public TC_ThreadLock
 {
 public:
 
@@ -307,4 +305,3 @@ private:
 ///////////////////////////////////////////////////////////
 }
 
-#endif

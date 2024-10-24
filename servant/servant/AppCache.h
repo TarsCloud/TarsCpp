@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __APP_CACHE_H_
-#define __APP_CACHE_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -108,4 +107,3 @@ private:
 };
 //////////////////////////////////////////////////////////////////////
 }
-#endif

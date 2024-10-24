@@ -8,7 +8,7 @@ using namespace tars;
 extern vector<map<tars::StatMicMsgHead, tars::StatMicMsgBody>> _clientStatData;
 extern vector<map<tars::StatMicMsgHead, tars::StatMicMsgBody>> _serverStatData;
 
-class FrameworkServer : public Application, public TC_Thread
+class UTIL_DLL_API FrameworkServer : public Application, public TC_Thread
 {
 public:
 	/**

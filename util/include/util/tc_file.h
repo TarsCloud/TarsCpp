@@ -61,7 +61,7 @@ struct TC_File_Exception : public TC_Exception
 * @brief 常用文件名处理函数.
 *  
 */
-class TC_File
+class UTIL_DLL_API TC_File
 {
 public:
 

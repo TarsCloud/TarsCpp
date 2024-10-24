@@ -2,6 +2,7 @@
 
 #include <string>
 #include <stdint.h>
+#include "util/tc_platform.h"
 #include "util/tc_ex.h"
 using namespace std;
 
@@ -62,7 +63,7 @@ struct TC_DES_Exception : public TC_Exception
  * The key must be a null-terminated string.
  *
  */
-class TC_Des
+class UTIL_DLL_API TC_Des
 {
 public:
     /**

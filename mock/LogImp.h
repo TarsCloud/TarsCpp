@@ -29,7 +29,7 @@ using namespace tars;
 /**
  * 全局信息
  */
-struct GlobeInfo : public TC_ThreadLock
+struct UTIL_DLL_API GlobeInfo : public TC_ThreadLock
 {
 public:
     /**
@@ -170,7 +170,7 @@ extern GlobeInfo   g_globe;
 /**
  * log实现
  */
-class LogImp : public Log
+class UTIL_DLL_API LogImp : public Log
 {
 public:
     /**

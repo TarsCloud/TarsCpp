@@ -48,7 +48,7 @@ struct TC_Port_Exception : public TC_Exception
 /**
  * 跨平台相关函数封装
  */
-class TC_Port
+class UTIL_DLL_API TC_Port
 {
 public:
 

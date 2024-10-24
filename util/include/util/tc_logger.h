@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "util/tc_platform.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_common.h"
 #include "util/tc_ex.h"
@@ -277,7 +278,7 @@ namespace tars
 	 * 关键点:注册日志后,会保存职能指针,保证日志对象一直存在
 	 * Key point: After registering the log, the function pointer is saved to ensure that the log object always exists
 	 */
-	class TC_LoggerThreadGroup
+	class UTIL_DLL_API TC_LoggerThreadGroup
 	{
 	public:
 		/**
@@ -385,7 +386,7 @@ namespace tars
 	 * @brief 自定义logger buffer
 	 * @brief Custom logger buffer
 	 */
-	class LoggerBuffer : public std::basic_streambuf<char>
+	class UTIL_DLL_API LoggerBuffer : public std::basic_streambuf<char>
 	{
 	public:
 		/**
@@ -493,7 +494,7 @@ namespace tars
 	 * @brief 临时类, 析够的时候写日志
 	 * @brief Temporary class, log when enough analysis
 	 */
-	class LoggerStream
+	class UTIL_DLL_API LoggerStream
 	{
 	public:
 		/**
@@ -1555,7 +1556,7 @@ namespace tars
 	 * @brief 根据时间滚动日志分隔类型
 	 * @brief Separation type based on scrolling log
 	 */
-	class LogType : public TC_HandleBase
+	UTIL_DLL_API class LogType : public TC_HandleBase
 	{
 	public:
 		LogType() : _next_time_t(0), _format("%Y%m%d"), _frequency(1), _des("day")
@@ -1624,7 +1625,7 @@ namespace tars
 	};
 	typedef TC_AutoPtr<LogType> LogTypePtr;
 
-	class LogByDay : public LogType
+	UTIL_DLL_API class LogByDay : public LogType
 	{
 	public:
 		static const string FORMAT;
@@ -1642,7 +1643,7 @@ namespace tars
 		}
 	};
 
-	class LogByHour : public LogType
+	UTIL_DLL_API class LogByHour : public LogType
 	{
 	public:
 		static const string FORMAT;
@@ -1661,7 +1662,7 @@ namespace tars
 		}
 	};
 
-	class LogByMinute : public LogType
+	UTIL_DLL_API class LogByMinute : public LogType
 	{
 	public:
 		static const string FORMAT;

@@ -25,7 +25,7 @@
 namespace tars
 {
 
-thread_local shared_ptr<CallbackThreadData> CallbackThreadData::g_sp;
+static thread_local shared_ptr<CallbackThreadData> g_sp;
 
 Servant::Servant() //:_handle(NULL)
 {
@@ -170,6 +170,13 @@ CallbackThreadData * CallbackThreadData::getData()
     return g_sp.get();
 }
 
+void CallbackThreadData::reset()
+{
+    if(g_sp)
+    {
+        g_sp.reset();
+    }
+}
 
 void CallbackThreadData::setResponseContext(const map<std::string, std::string> & context)
 {

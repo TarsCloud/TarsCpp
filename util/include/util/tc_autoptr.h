@@ -41,7 +41,7 @@ struct TC_AutoPtrNull_Exception : public TC_Exception
  * 所有需要智能指针支持的类都需要从该对象继承，
  *  
  */
-class UTIL_DLL_API TC_HandleBase
+class TC_HandleBase
 {
 public:
 

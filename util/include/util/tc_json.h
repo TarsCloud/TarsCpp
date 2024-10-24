@@ -22,6 +22,7 @@
 #include <vector>
 #include <assert.h>
 #include <stdio.h>
+#include "util/tc_platform.h"
 
 #include "util/tc_autoptr.h"
 
@@ -54,7 +55,7 @@ enum eJsonType
  * json类型的基类。没有任何意义
  * Base class of type json.No meaning.
  */
-class JsonValue : public TC_HandleBase
+class UTIL_DLL_API JsonValue : public TC_HandleBase
 {
 public:
 	virtual eJsonType getType()=0;
@@ -68,7 +69,7 @@ typedef TC_AutoPtr<JsonValue> JsonValuePtr;
  * json类型 null
  * json type   null type   
  */
-class JsonValueNull : public JsonValue
+class UTIL_DLL_API JsonValueNull : public JsonValue
 {
 public:
 	JsonValueNull()
@@ -89,7 +90,7 @@ typedef TC_AutoPtr<JsonValueNull> JsonValueNullPtr;
  * json类型 string类型 例如"dd\ndfd"
  * json type   string type   for example: "dd\ndfd"
  */
-class JsonValueString : public JsonValue
+class UTIL_DLL_API JsonValueString : public JsonValue
 {
 public:
 	JsonValueString(const string & s):value(s)
@@ -115,7 +116,7 @@ typedef TC_AutoPtr<JsonValueString> JsonValueStringPtr;
  * json类型 number类型 例如 1.5e8
  * json type   number type   for example: 1.5e8
  */
-class JsonValueNum : public JsonValue
+class UTIL_DLL_API JsonValueNum : public JsonValue
 {
 public:
 	JsonValueNum(double d,bool isInt=false):value(d),lvalue(d),isInt(isInt)
@@ -146,7 +147,7 @@ typedef TC_AutoPtr<JsonValueNum> JsonValueNumPtr;
  * json类型 object类型 例如 {"aa","bb"} 
  * json type   object type  for example: {"aa","bb"} 
  */
-class JsonValueObj: public JsonValue
+class UTIL_DLL_API JsonValueObj: public JsonValue
 {
 public:
 	eJsonType getType()
@@ -177,7 +178,7 @@ typedef TC_AutoPtr<JsonValueObj> JsonValueObjPtr;
  * json类型 array类型 例如 ["aa","bb"] 
  * json type  array type  for example: ["aa","bb"] 
  */
-class JsonValueArray: public JsonValue
+class UTIL_DLL_API JsonValueArray: public JsonValue
 {
 public:
 	eJsonType getType()
@@ -223,7 +224,7 @@ typedef TC_AutoPtr<JsonValueArray> JsonValueArrayPtr;
  * json类型 boolean类型 例如 true
  * json type  boolean type  for example: true 
  */
-class JsonValueBoolean : public JsonValue
+class UTIL_DLL_API JsonValueBoolean : public JsonValue
 {
 public:
 	JsonValueBoolean() {}
@@ -247,7 +248,7 @@ typedef TC_AutoPtr<JsonValueBoolean> JsonValueBooleanPtr;
  * 分析json字符串用到的 读字符的类
  * Classes for parsing read characters used in JSON strings
  */
-class BufferJsonReader
+class UTIL_DLL_API BufferJsonReader
 {
 	/*buffer*/
 	const char *        _buf;		///< 缓冲区
@@ -331,7 +332,7 @@ public:
  * 分析json的类。都是static
  * Analyze json's classes.All static.
  */
-class TC_Json
+class UTIL_DLL_API TC_Json
 {
 public:
 	//json类型到字符串的转换
@@ -404,7 +405,7 @@ private:
 };
 
 
-class TC_JsonWriteOstream
+class UTIL_DLL_API TC_JsonWriteOstream
 {
 public:
     static void writeValue(const JsonValuePtr & p, ostream& ostr, bool withSpace = false);

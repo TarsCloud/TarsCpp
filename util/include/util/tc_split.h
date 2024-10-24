@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <string>
+#include "util/tc_platform.h"
 
 using namespace std;
 
@@ -17,7 +18,7 @@ namespace tars
     double dvalue1 = sp.getNextAsDouble();
     double dvalue2 = sp.getNextAsDouble();
 */
-class TC_Split
+class UTIL_DLL_API TC_Split
 {
 
 public:

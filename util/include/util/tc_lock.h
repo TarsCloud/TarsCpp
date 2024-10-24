@@ -19,6 +19,7 @@
 #include <string>
 #include <stdexcept>
 #include <cerrno>
+#include "util/tc_platform.h"
 #include "util/tc_ex.h"
 
 using namespace std;

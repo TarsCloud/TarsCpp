@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_ASYNC_PROC_THREAD_H_
-#define __TARS_ASYNC_PROC_THREAD_H_
+#pragma once
 
 #include "servant/Message.h"
 #include "servant/Global.h"
@@ -29,7 +27,7 @@ namespace tars
 /**
  * 异步回调后的处理线程
  */
-class AsyncProcThread : public TC_Thread, public TC_ThreadLock
+class SVT_DLL_API AsyncProcThread : public TC_Thread, public TC_ThreadLock
 {
 public:
     /**
@@ -91,4 +89,3 @@ private:
 };
 ///////////////////////////////////////////////////////
 }
-#endif

@@ -61,7 +61,7 @@ struct TC_PackOut_Exception : public TC_Exception
 /**
 * @brief  组包类, 用户组成一个二进制包
 */
-class TC_PackIn
+class UTIL_DLL_API TC_PackIn
 {
 public:
 

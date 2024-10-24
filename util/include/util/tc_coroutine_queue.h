@@ -21,6 +21,7 @@
 #include <cassert>
 #include <mutex>
 #include <unordered_set>
+#include "util/tc_platform.h"
 #include "util/tc_coroutine.h"
 
 using namespace std;

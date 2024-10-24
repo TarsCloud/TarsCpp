@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_MESSAGE_H_
-#define __TARS_MESSAGE_H_
+#pragma once
 
 #include <util/tc_network_buffer.h>
 #include "util/tc_autoptr.h"
@@ -133,7 +131,7 @@ struct ThreadPrivateData
 
 struct ReqMonitor;
 
-struct ReqMessage : public TC_HandleBase
+struct SVT_DLL_API ReqMessage : public TC_HandleBase
 {
     //调用类型
     enum CallType
@@ -236,4 +234,3 @@ typedef TC_LoopQueue<ReqMessage *>  ReqInfoQueue;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-#endif

@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
+#include "util/tc_platform.h"
 
 using namespace std;
 
@@ -49,7 +50,7 @@ namespace tars
     * 内存大小所属的大小类别与该内存大小类别需要的内存页的映射
     * The mapping of the size category to which the memory size belongs to and the memory pages required by the memory size category
     */
-    class SizeMap
+    class UTIL_DLL_API SizeMap
     {
     public:
         SizeMap() { Init(); }    
@@ -125,7 +126,7 @@ namespace tars
 
     };
     ////////////////////////////////////////////////////////////////////////////////////////////////////
-    class Static
+    class UTIL_DLL_API Static
     {
     public:
         static SizeMap* sizemap()
@@ -144,7 +145,7 @@ namespace tars
     * 用于分配sizeof(TC_Span)大小的内存块
     * Used to allocate sizeof (TC_Span) size memory block
     */
-    class TC_SpanAllocator
+    class UTIL_DLL_API TC_SpanAllocator
     {
     public:
         TC_SpanAllocator() : _pHead(NULL), _pData(NULL) {}
@@ -253,7 +254,7 @@ namespace tars
     * 并通过TC_Span和PageMap进行管理
     * And through TC_Span and PageMap are managed
     */
-    class TC_Page
+    class UTIL_DLL_API TC_Page
     {
     public:
 #pragma pack(1) 
@@ -673,7 +674,7 @@ namespace tars
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
-    class TC_MallocChunkAllocator
+    class UTIL_DLL_API TC_MallocChunkAllocator
     {
     public:
         TC_MallocChunkAllocator():_pHead(NULL),_pChunk(NULL),_nallocator(NULL) {}

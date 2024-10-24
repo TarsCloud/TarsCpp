@@ -19,6 +19,8 @@
 #include <string>
 #include <cassert>
 #include <functional>
+#include "util/tc_platform.h"
+
 #include "util/tc_ex.h"
 #include "util/tc_pack.h"
 #include "util/tc_mem_chunk.h"
@@ -60,7 +62,7 @@ struct TC_RBTree_Exception : public TC_Exception
  *  
  *  支持dump到文件，或从文件load；
  */
-class TC_RBTree
+class UTIL_DLL_API TC_RBTree
 {
 public:
     struct RBTreeLockIterator;

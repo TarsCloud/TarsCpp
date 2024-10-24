@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_SERVANT_H_
-#define __TARS_SERVANT_H_
+#pragma once
 
 #include "util/tc_autoptr.h"
 #include "util/tc_epoll_server.h"
@@ -42,7 +40,7 @@ typedef std::shared_ptr<BufferWrapper> BufferWrapperPtr;
 /**
  * 每个对象的基类
  */
-class Servant : public BaseNotify
+class SVT_DLL_API Servant : public BaseNotify
 {
 public:
     /**
@@ -240,7 +238,7 @@ typedef TC_AutoPtr<Servant> ServantPtr;
  * ServantCallback会把接收到的数据再放到对应servant的responsequeue中, 保证后续在对应的Servant::doResponse中处理
  * 从而请求和响应在一个线程Servant中完成
  */
-class ServantCallback : public ServantProxyCallback
+class SVT_DLL_API ServantCallback : public ServantProxyCallback
 {
 public:
     /**
@@ -290,10 +288,10 @@ protected:
 //////////////////////////////////////////////////////////////////////
 
 //线程私有数据
-class CallbackThreadData
+class SVT_DLL_API CallbackThreadData
 {
 public:
-    static thread_local shared_ptr<CallbackThreadData> g_sp;
+    // static thread_local shared_ptr<CallbackThreadData> g_sp;
 
     /**
      * 构造函数
@@ -312,6 +310,10 @@ public:
      */
     static CallbackThreadData* getData();
 
+    /**
+     * 释放线程数据
+     */
+    static void reset();
 public:
     /**
      * 设置返回的额外内容
@@ -351,5 +353,3 @@ private:
 
 //////////////////////////////////////////////////////////////////////
 }
-//////////////////////////////////////////////////////////////////////
-#endif

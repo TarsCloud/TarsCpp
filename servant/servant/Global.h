@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_GLOBAL_H_
-#define __TARS_GLOBAL_H_
+#pragma once
 
 #include <inttypes.h>
 #include <iostream>
@@ -231,4 +229,3 @@ struct TarsCommunicatorException : public TarsException
 };
 ///////////////////////////////////////////////////////////////////
 }
-#endif

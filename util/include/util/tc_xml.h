@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include <stdio.h>
+#include "util/tc_platform.h"
 
 #include "util/tc_autoptr.h"
 using namespace std;
@@ -38,7 +39,7 @@ enum eXmlType
 /*
  * Xml类型的基类。没有任何意义
  */
-class XmlValue : public tars::TC_HandleBase
+class UTIL_DLL_API XmlValue : public tars::TC_HandleBase
 {
 public:
     virtual eXmlType getType()=0;
@@ -52,7 +53,7 @@ typedef tars::TC_AutoPtr<XmlValue> XmlValuePtr;
 /*
  * Xml类型 string类型
  */
-class XmlValueString : public XmlValue
+class UTIL_DLL_API XmlValueString : public XmlValue
 {
 public:
     XmlValueString(const string & s, bool _cdata = false):value(s), cdata(_cdata)
@@ -76,7 +77,7 @@ typedef tars::TC_AutoPtr<XmlValueString> XmlValueStringPtr;
 /*
  * Xml类型 object类型 例如
  */
-class XmlValueObj: public XmlValue
+class UTIL_DLL_API XmlValueObj: public XmlValue
 {
 public:
     eXmlType getType()
@@ -92,7 +93,7 @@ typedef tars::TC_AutoPtr<XmlValueObj> XmlValueObjPtr;
 /*
  * Xml类型 array类型 例如
  */
-class XmlValueArray: public XmlValue
+class UTIL_DLL_API XmlValueArray: public XmlValue
 {
 public:
     eXmlType getType()
@@ -112,7 +113,7 @@ typedef tars::TC_AutoPtr<XmlValueArray> XmlValueArrayPtr;
 /*
  * 分析Xml字符串用到的 读字符的类
  */
-class BufferXmlReader
+class UTIL_DLL_API BufferXmlReader
 {
 public:
     const char *        _buf;		///< 缓冲区
@@ -190,7 +191,7 @@ public:
 /*
  * 分析Xml的类。都是static
  */
-class TC_Xml
+class UTIL_DLL_API TC_Xml
 {
 public:
     //Xml类型到字符串的转换

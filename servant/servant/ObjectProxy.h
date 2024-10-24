@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_OBJECT_PROXY_H_
-#define __TARS_OBJECT_PROXY_H_
+#pragma once
 
 #include "servant/Communicator.h"
 #include "servant/Message.h"
@@ -39,7 +37,7 @@ class EndpointManager;
  * 每个objectname在每个客户端网络线程中有唯一一个objectproxy
  * 
  */
-class ObjectProxy : public TC_HandleBase, public TC_ThreadMutex
+class SVT_DLL_API ObjectProxy : public TC_HandleBase, public TC_ThreadMutex
 {
 public:
     /**
@@ -289,4 +287,3 @@ private:
 };
 ///////////////////////////////////////////////////////////////////////////////////
 }
-#endif

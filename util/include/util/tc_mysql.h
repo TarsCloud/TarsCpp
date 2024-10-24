@@ -50,7 +50,7 @@ struct TC_Mysql_Exception : public TC_Exception
 * @brief 数据库配置接口
 * @brief Database configuration interface
 */
-struct TC_DBConf
+struct UTIL_DLL_API TC_DBConf
 {
     /**
     * 主机地址
@@ -180,7 +180,7 @@ struct TC_DBConf
 * TC_Mysql::DB_STR表示组装sql语句时，加””并转义；
 * TC_Mysql:: DB_STR means to add "" and escape when assembling SQL statements;
 */
-class TC_Mysql 
+class UTIL_DLL_API TC_Mysql 
 {
 public:
     /**
@@ -327,7 +327,7 @@ public:
      *  @brief mysql的一条记录
      *  @brief A record of MySQL
      */
-    class MysqlRecord
+    class UTIL_DLL_API MysqlRecord
     {
     public:
         /**
@@ -355,7 +355,7 @@ public:
      * @brief 查询出来的mysql数据
      * @brief MySQL data queried
      */
-    class MysqlData
+    class UTIL_DLL_API MysqlData
     {
     public:
         /**

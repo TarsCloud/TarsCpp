@@ -19,6 +19,7 @@
 #include <list>
 #include <stack>
 #include <vector>
+#include "util/tc_platform.h"
 #include "util/tc_ex.h"
 
 namespace tars
@@ -75,7 +76,7 @@ struct TC_ConfigNoParam_Exception : public TC_Exception
 * @brief 定义配置文件中的域的类. 
 * @brief Class that defines the domain in the configuration file
 */
-class TC_ConfigDomain
+class UTIL_DLL_API TC_ConfigDomain
 {
 public:
     friend class TC_Config;
@@ -419,7 +420,7 @@ protected:
  * Get Domain Vector: getDomainVector ('/Main', v); 'v' can get a list of Domains to increase the number of the value pairs under the domain or domain
  
  */
-class TC_Config
+class UTIL_DLL_API TC_Config
 {
 public:
 

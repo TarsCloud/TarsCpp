@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
+#include "util/tc_platform.h"
+
 #include "util/tc_ex.h"
 using namespace std;
 
@@ -58,7 +60,7 @@ struct TC_SHA_Exception : public TC_Exception
  * @brief sha各种hash算法, 
  *
  */
-class TC_SHA
+class UTIL_DLL_API TC_SHA
 {
 public:
     /**

@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef _TARS_SERVANT_PROXY_H_
-#define _TARS_SERVANT_PROXY_H_
+#pragma once
 
 #include "util/tc_common.h"
 #include "util/tc_uuid_generator.h"
@@ -52,12 +50,12 @@ class EndpointInfo;
 
 #define TRACE_LOG_FILENAME "_t_trace_"
 // traceKey: traceType-TraceID|SpanID|ParentSpanID
-void TARS_TRACE(const string &traceKey, const char *annotation, const string &client, const string &server, const char* func, int ret, const string &data, const string &ex);
+SVT_DLL_API void TARS_TRACE(const string &traceKey, const char *annotation, const string &client, const string &server, const char* func, int ret, const string &data, const string &ex);
 
 /////////////////////////////////////////////////////////////////////////
 
 //seq 管理的类
-class SeqManager
+class SVT_DLL_API SeqManager
 {
 public:
     const static uint16_t MAX_UNSIGN_SHORT = 0xffff;
@@ -105,7 +103,7 @@ private:
 /*
  * 线程私有数据
  */
-class ServantProxyThreadData : public std::enable_shared_from_this<ServantProxyThreadData>
+class SVT_DLL_API ServantProxyThreadData : public std::enable_shared_from_this<ServantProxyThreadData>
 {
 public:
 	/**
@@ -137,7 +135,7 @@ public:
 
 public:
 
-	static thread_local shared_ptr<ServantProxyThreadData> g_sp;
+	// static thread_local shared_ptr<ServantProxyThreadData> g_sp;
 	
 
     /**
@@ -166,6 +164,11 @@ public:
      * @param communicator
      */
     static void deconstructor(Communicator *communicator);
+
+    /**
+     * 是否放当前线程的对象
+     */
+    static void reset();
 
     /**
      * move掉
@@ -510,7 +513,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 // 协程并行请求的基类
-class CoroParallelBase : virtual public TC_HandleBase
+class SVT_DLL_API CoroParallelBase : virtual public TC_HandleBase
 {
   public:
     /**
@@ -600,7 +603,7 @@ void coroWhenAll(const CoroParallelBasePtr &ptr);
 
 //////////////////////////////////////////////////////////////////////////
 // 异步回调对象的基类
-class ServantProxyCallback : virtual public TC_HandleBase
+class SVT_DLL_API ServantProxyCallback : virtual public TC_HandleBase
 {
 public:
     /**
@@ -736,7 +739,7 @@ public:
 
 typedef TC_AutoPtr<HttpCallback> HttpCallbackPtr;
 
-class HttpServantProxyCallback : virtual public ServantProxyCallback
+class SVT_DLL_API HttpServantProxyCallback : virtual public ServantProxyCallback
 {
 public:
     explicit HttpServantProxyCallback(const HttpCallbackPtr& cb);
@@ -775,7 +778,7 @@ private:
  */
 class EndpointManagerThread;
 
-class ServantProxy : public TC_HandleBase, public TC_ThreadMutex
+class SVT_DLL_API ServantProxy : public TC_HandleBase, public TC_ThreadMutex
 {
 public:
     /**
@@ -1480,4 +1483,3 @@ private:
 
 };
 }
-#endif

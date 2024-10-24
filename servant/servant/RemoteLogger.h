@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_LOGGER_H__
-#define __TARS_LOGGER_H__
+#pragma once
 
 #include "servant/Global.h"
 #include "servant/LogF.h"
@@ -61,7 +59,7 @@ namespace tars
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class RollWriteT
+class SVT_DLL_API RollWriteT
 {
 public:
     RollWriteT();
@@ -269,7 +267,7 @@ class TimeWriteT;
 /**
  * 远程的Log写操作类
  */
-class RemoteTimeWriteT
+class SVT_DLL_API RemoteTimeWriteT
 {
 public:
     RemoteTimeWriteT();
@@ -310,7 +308,7 @@ protected:
 /**
  * 写Logger
  */
-class TimeWriteT
+class SVT_DLL_API TimeWriteT
 {
 public:
     typedef TC_Logger<RemoteTimeWriteT, TC_RollByTime> RemoteTimeLogger;
@@ -811,7 +809,7 @@ protected:
 /**
  * 染色开关类，析构时关闭
  */
-class TarsDyeingSwitch
+class SVT_DLL_API TarsDyeingSwitch
 {
 public:
     /**
@@ -1014,6 +1012,4 @@ protected:
 #define TENREMOTE(swith) (RemoteTimeLogger::getInstance()->enableRemoteLog(swith))
 #define TENLOCAL(swith) (RemoteTimeLogger::getInstance()->enableLocalLog(swith))
 } 
-
-#endif
 

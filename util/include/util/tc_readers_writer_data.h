@@ -14,6 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 #pragma once
+#include "util/tc_platform.h"
 
 namespace tars
 {

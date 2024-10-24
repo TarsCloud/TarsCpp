@@ -8,6 +8,7 @@
 #include <chrono>
 #include <mutex>
 #include <functional>
+#include "util/tc_platform.h"
 
 namespace tars
 {

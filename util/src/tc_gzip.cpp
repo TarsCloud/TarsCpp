@@ -197,4 +197,27 @@ bool TC_GZip::uncompress(const char *src, size_t length, TC_GZip::Output* o)
 
 }
 
+#else
+
+
+namespace tars
+{
+
+bool TC_GZip::compress(const char *src, size_t length, string& buffer)
+{
+    throw TC_GZip_Exception("[TC_GZip::compress] zlib not support");
+
+}
+
+bool TC_GZip::compress(const char *src, size_t length, vector<char>& buffer)
+{
+    throw TC_GZip_Exception("[TC_GZip::compress] zlib not support");
+}
+
+bool TC_GZip::uncompress(const char *src, size_t length, TC_GZip::Output* o)
+{
+    throw TC_GZip_Exception("[TC_GZip::uncompress] zlib not support");
+}
+
+}
 #endif

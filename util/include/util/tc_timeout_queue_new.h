@@ -18,13 +18,12 @@
 #include <map>
 #include <list>
 #include <functional>
-// #include <ext/hash_map>
 #include <unordered_map>
 #include <iostream>
 #include <cassert>
+#include "util/tc_platform.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_monitor.h"
-// #include "util/tc_functor.h"
 #include "util/tc_timeprovider.h"
 
 using namespace std;

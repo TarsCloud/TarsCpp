@@ -68,7 +68,7 @@ struct TC_Transceiver_Exception : public TC_Exception
  * 10 具体客户端使用方式可以参考: CommunicatorEpoll类, 服务端参考: tc_epoll_server
  * 
  */
-class TC_Transceiver
+class UTIL_DLL_API TC_Transceiver
 {
 public:
     /**
@@ -653,7 +653,7 @@ protected:
 /**
  * TCP 传输实现
  */
-class TC_TCPTransceiver : public TC_Transceiver
+class UTIL_DLL_API TC_TCPTransceiver : public TC_Transceiver
 {
 public:
     /**
@@ -694,7 +694,7 @@ public:
 /**
  * SSL 传输实现
  */
-class TC_SSLTransceiver : public TC_TCPTransceiver
+class UTIL_DLL_API TC_SSLTransceiver : public TC_TCPTransceiver
 {
 public:
     /**
@@ -715,7 +715,7 @@ public:
 /**
  * UDP 传输实现
  */
-class TC_UDPTransceiver : public TC_Transceiver
+class UTIL_DLL_API TC_UDPTransceiver : public TC_Transceiver
 {
 public:
 

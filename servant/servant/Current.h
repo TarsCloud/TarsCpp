@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_CURRENT_H_
-#define __TARS_CURRENT_H_
+#pragma once
 
 #include "util/tc_epoll_server.h"
 #include "tup/RequestF.h"
@@ -32,7 +30,7 @@ class ServantHandle;
 /**
  * 当前请求的上下文
  */
-class Current : public TC_HandleBase
+class SVT_DLL_API Current : public TC_HandleBase
 {
 public:
     typedef std::map<string, string>    TARS_STATUS;
@@ -396,4 +394,3 @@ protected:
 };
 //////////////////////////////////////////////////////////////
 }
-#endif

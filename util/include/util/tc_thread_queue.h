@@ -20,6 +20,7 @@
 #include <cassert>
 #include <mutex>
 #include <condition_variable>
+#include "util/tc_platform.h"
 
 using namespace std;
 

@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_ADAPTER_PROXY_H_
-#define __TARS_ADAPTER_PROXY_H_
+#pragma once
 
 #include "util/tc_timeout_queue_new.h"
 #include "util/tc_timeout_queue_map.h"
@@ -39,7 +37,7 @@ namespace tars
 /**
  * 每个Adapter对应一个Endpoint，也就是一个服务端口
  */
-class AdapterProxy
+class SVT_DLL_API AdapterProxy
 {
 public:
     /**
@@ -450,4 +448,3 @@ private:
 };
 ////////////////////////////////////////////////////////////////////
 }
-#endif

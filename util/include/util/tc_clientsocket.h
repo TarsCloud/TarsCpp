@@ -14,7 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 #pragma once
-
+#include "util/tc_platform.h"
 #include "util/tc_socket.h"
 #include <sstream>
 #include "util/tc_http.h"
@@ -58,7 +58,7 @@ struct TC_EndpointParse_Exception : public TC_Exception
  * 此时-h表示的文件路径
  * At this time, the file path is represented by '-h'
  */
-class TC_Endpoint
+class UTIL_DLL_API TC_Endpoint
 {
 public:
     //监听类型
@@ -442,7 +442,7 @@ protected:
 * @brief 客户端socket相关操作基类
 * @brief Client Socket Related Operation Base Class
 */
-class TC_ClientSocket
+class UTIL_DLL_API TC_ClientSocket
 {
 public:
 
@@ -585,7 +585,7 @@ protected:
  * 多线程使用的时候，不用多线程同时send/recv，小心串包；
  * When using multithreading, do not send/recv at the same time, and be careful of mixing packets;
  */
-class TC_TCPClient : public TC_ClientSocket
+class UTIL_DLL_API TC_TCPClient : public TC_ClientSocket
 {
 public:
     /**
@@ -758,7 +758,7 @@ protected:
   * @brief  When using multithreading, do not send/recv with multithreading at the same time. Be careful about mixing packets.
 
   */
-class TC_UDPClient : public TC_ClientSocket
+class UTIL_DLL_API TC_UDPClient : public TC_ClientSocket
 {
 public:
     /**

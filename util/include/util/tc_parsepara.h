@@ -17,6 +17,7 @@
 
 #include <map>
 #include <string>
+#include "util/tc_platform.h"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ namespace tars
 * @param 型如name=value&name=value字符串
 * @param : Types such as name=value&name=value string
 */
-class TC_Parsepara
+class UTIL_DLL_API TC_Parsepara
 {
 public:
 

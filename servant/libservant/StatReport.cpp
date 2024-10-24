@@ -712,7 +712,7 @@ void StatReport::run()
         }
     }
 
-    ServantProxyThreadData::g_sp.reset();
+    ServantProxyThreadData::reset();
 }
 
 ////////////////////////////////////////////////////////////////

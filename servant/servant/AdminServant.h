@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_ADMIN_SERVANT_H
-#define __TARS_ADMIN_SERVANT_H
+#pragma once
 
 #include "servant/AdminF.h"
 
@@ -28,7 +26,7 @@ class Application;
 /**
  * 管理Servant
  */
-class AdminServant : public AdminF
+class SVT_DLL_API AdminServant : public AdminF
 {
 public:
     /**
@@ -72,7 +70,4 @@ public:
 };
 ////////////////////////////////////////////////////////////////
 }
-
-#endif
-
 

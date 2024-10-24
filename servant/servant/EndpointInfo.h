@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_ENDPOINT_INFO_H_
-#define __TARS_ENDPOINT_INFO_H_
+#pragma once
 
 #include "util/tc_socket.h"
 #include "util/tc_clientsocket.h"
@@ -32,7 +30,7 @@ namespace tars
 /**
  * 地址信息IP:Port
  */
-class EndpointInfo
+class SVT_DLL_API EndpointInfo
 {
 public:
 
@@ -268,4 +266,3 @@ private:
 };
 /////////////////////////////////////////////////////////////////////////////
 }
-#endif

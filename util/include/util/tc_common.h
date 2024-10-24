@@ -87,7 +87,7 @@ class UTIL_DLL_API TC_Common
 {
 public:
 	//用于计算时区差异!
-	class TimezoneHelper
+	class UTIL_DLL_API TimezoneHelper
 	{
 	public:
 		TimezoneHelper();
@@ -1188,47 +1188,238 @@ vector<T> TC_Common::sepstr(const string &sStr, const string &sSep, bool withEmp
     return vt;
 }
 
-template<>
-string TC_Common::tostr<bool>(const bool &t);
+// template<>
+// string TC_Common::tostr<bool>(const bool &t);
+
+// template<>
+// string TC_Common::tostr<char>(const char &t);
+
+// template<>
+// string TC_Common::tostr<unsigned char>(const unsigned char &t);
+
+// template<>
+// string TC_Common::tostr<short>(const short &t);
+
+// template<>
+// string TC_Common::tostr<unsigned short>(const unsigned short &t);
+
+// template<>
+// string TC_Common::tostr<int>(const int &t);
+
+// template<>
+// string TC_Common::tostr<unsigned int>(const unsigned int &t);
+
+// template<>
+// string TC_Common::tostr<long>(const long &t);
+
+// template<>
+// string TC_Common::tostr<long long>(const long long &t);
+
+// template<>
+// string TC_Common::tostr<unsigned long>(const unsigned long &t);
+
+// template<>
+// string TC_Common::tostr<float>(const float &t);
+
+// template<>
+// string TC_Common::tostr<double>(const double &t);
+
+// template<>
+// string TC_Common::tostr<long double>(const long double &t);
+
+// template<>
+// string TC_Common::tostr<std::string>(const std::string &t);
+
 
 template<>
-string TC_Common::tostr<char>(const char &t);
+inline string TC_Common::tostr<bool>(const bool &t)
+{
+    char buf[2];
+    buf[0] = t ? '1' : '0';
+    buf[1] = '\0';
+    return string(buf);
+}
+
 
 template<>
-string TC_Common::tostr<unsigned char>(const unsigned char &t);
+inline string TC_Common::tostr<char>(const char &t)
+{
+    char buf[2];
+    snprintf(buf, 2, "%c", t);
+    return string(buf);
+}
 
 template<>
-string TC_Common::tostr<short>(const short &t);
+inline string TC_Common::tostr<unsigned char>(const unsigned char &t)
+{
+    char buf[2];
+    snprintf(buf, 2, "%c", t);
+    return string(buf);
+}
 
 template<>
-string TC_Common::tostr<unsigned short>(const unsigned short &t);
+inline string TC_Common::tostr<short>(const short &t)
+{
+    char buf[16];
+    snprintf(buf, 16, "%d", t);
+    return string(buf);
+}
 
 template<>
-string TC_Common::tostr<int>(const int &t);
+inline string TC_Common::tostr<unsigned short>(const unsigned short &t)
+{
+    char buf[16];
+    snprintf(buf, 16, "%u", t);
+    return string(buf);
+}
 
 template<>
-string TC_Common::tostr<unsigned int>(const unsigned int &t);
+inline string TC_Common::tostr<int>(const int &t)
+{
+    char buf[16];
+    snprintf(buf, 16, "%d", t);
+    return string(buf);
+}
 
 template<>
-string TC_Common::tostr<long>(const long &t);
+inline string TC_Common::tostr<unsigned int>(const unsigned int &t)
+{
+    char buf[16];
+    snprintf(buf, 16, "%u", t);
+    return string(buf);
+}
 
 template<>
-string TC_Common::tostr<long long>(const long long &t);
+inline string TC_Common::tostr<long>(const long &t)
+{
+    char buf[32];
+    snprintf(buf, 32, "%ld", t);
+    return string(buf);
+}
 
 template<>
-string TC_Common::tostr<unsigned long>(const unsigned long &t);
+inline string TC_Common::tostr<long long>(const long long &t)
+{
+    char buf[32];
+    snprintf(buf, 32, "%lld", t);
+    return string(buf);
+}
+
 
 template<>
-string TC_Common::tostr<float>(const float &t);
+inline string TC_Common::tostr<unsigned long>(const unsigned long &t)
+{
+    char buf[32];
+    snprintf(buf, 32, "%lu", t);
+    return string(buf);
+}
 
 template<>
-string TC_Common::tostr<double>(const double &t);
+inline string TC_Common::tostr<float>(const float &t)
+{
+    //C++11 to_string，默认保留后面6位小数
+    string s = std::to_string(t);
+
+    //去掉无效0, eg. 1.0300 -> 1.03;1.00 -> 1
+    bool bFlag = false;
+    int pos = int(s.size() - 1);
+    for (; pos > 0; --pos)
+    {
+        if (s[pos] == '0')
+        {
+            bFlag = true;
+            if (s[pos - 1] == '.')
+            {
+                //-2为了去掉"."号
+                pos -= 2;
+                break;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (bFlag)
+        s = s.substr(0, pos + 1);
+
+    return s;
+}
 
 template<>
-string TC_Common::tostr<long double>(const long double &t);
+inline string TC_Common::tostr<double>(const double &t)
+{
+    //C++11 to_string，默认保留后面6位小数
+    string s = std::to_string(t);
+    //去掉无效0, eg. 1.0300 -> 1.03;1.00 -> 1
+    bool bFlag = false;
+    int pos = int(s.size() - 1);
+    for (; pos > 0; --pos)
+    {
+        if (s[pos] == '0')
+        {
+            bFlag = true;
+            if (s[pos - 1] == '.')
+            {
+                //-2为了去掉"."号
+                pos -= 2;
+                break;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (bFlag)
+        s = s.substr(0, pos + 1);
+
+    return s;
+
+}
 
 template<>
-string TC_Common::tostr<std::string>(const std::string &t);
+inline string TC_Common::tostr<long double>(const long double &t)
+{
+    char buf[32];
+    snprintf(buf, 32, "%Lf", t);
+    string s(buf);
+
+    //去掉无效0, eg. 1.0300 -> 1.03;1.00 -> 1
+    bool bFlag = false;
+    int pos = int(s.size() - 1);
+    for (; pos > 0; --pos)
+    {
+        if (s[pos] == '0')
+        {
+            bFlag = true;
+            if (s[pos - 1] == '.')
+            {
+                //-2为了去掉"."号
+                pos -= 2;
+                break;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (bFlag)
+        s = s.substr(0, pos + 1);
+
+    return s;
+
+}
+
+template<>
+inline string TC_Common::tostr<std::string>(const std::string &t)
+{
+    return t;
+}
 
 template<typename T>
 string TC_Common::tostr(const vector<T> &t)

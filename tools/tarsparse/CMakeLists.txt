@@ -41,6 +41,9 @@ install(TARGETS ${TARGETNAME}
 if(ENABLE_SHARED)
         add_library(${TARGETNAME}_shared SHARED ${DIR_SRCS} ${DEPENDS_SRC_LIST})
         add_dependencies(${TARGETNAME}_shared ${TARGETNAME})
+        target_compile_definitions(${TARGETNAME}_shared PRIVATE UTIL_DLL_EXPORT)
+
+        target_link_libraries(${TARGETNAME}_shared tarsutil_shared)
 
         install(TARGETS ${TARGETNAME}_shared
                 LIBRARY DESTINATION lib

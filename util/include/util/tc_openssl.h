@@ -18,6 +18,8 @@
 
 #include <string>
 #include <vector>
+#include "util/tc_platform.h"
+
 #include "util/tc_network_buffer.h"
 
 struct ssl_st;
@@ -43,7 +45,7 @@ namespace tars
 /** 
  *@brief  OpenSsl wrapper
  */
-class TC_OpenSSL
+class UTIL_DLL_API TC_OpenSSL
 {
 public:
 

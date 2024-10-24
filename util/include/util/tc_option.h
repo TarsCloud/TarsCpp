@@ -19,6 +19,8 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include "util/tc_platform.h"
+
 using namespace std;
 
 namespace tars
@@ -38,7 +40,7 @@ namespace tars
  * 支持以下形式的参数:  ./main.exe --name=value --with abc def 
  * The following form of parameters are supported: ./main.exe --name=value --with abc def 
  */
-class TC_Option
+class UTIL_DLL_API TC_Option
 {
 public:
     /**

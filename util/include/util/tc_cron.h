@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <map>
 #include <bitset>
+#include "util/tc_platform.h"
 #include "util/tc_common.h"
 #include "util/tc_ex.h"
 #include <ctime>
@@ -23,7 +24,7 @@ public:
 
 typedef uint8_t cron_int;
 
-class TC_Cron
+class UTIL_DLL_API TC_Cron
 {
 public:
     enum class CronField

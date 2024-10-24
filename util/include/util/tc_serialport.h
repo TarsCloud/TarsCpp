@@ -78,7 +78,7 @@ class TC_SerialPortGroup;
 /**
 * 异步串口通信类
 */
-class TC_SerialPort
+class UTIL_DLL_API TC_SerialPort
 {
 public:
 	//协议解析器
@@ -264,7 +264,7 @@ protected:
 };
 
 
-class TC_SerialPortGroup
+class UTIL_DLL_API TC_SerialPortGroup
 {
 public:
     /**

@@ -21,6 +21,7 @@
 #include <cassert>
 #include <unordered_map>
 #include <chrono>
+#include "util/tc_platform.h"
 #include "util/tc_autoptr.h"
 #include <mutex>
 #include <functional>

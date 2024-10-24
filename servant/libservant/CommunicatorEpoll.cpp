@@ -181,7 +181,7 @@ void CommunicatorEpoll::handleTerminate()
 
             _pSptd->_sched.reset();
 
-            ServantProxyThreadData::g_sp.reset();
+            ServantProxyThreadData::reset();
         }
 
         _scheduler.reset();

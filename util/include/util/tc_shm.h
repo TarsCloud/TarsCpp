@@ -57,7 +57,7 @@ typedef int SHMID;
 * 2 _bOwner=false: 析够时不detach共享内存 
 * 3 _bOwner=true: 析够时detach共享内存
 */
-class TC_Shm
+class UTIL_DLL_API TC_Shm
 {
 public:
 

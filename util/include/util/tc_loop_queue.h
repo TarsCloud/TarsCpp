@@ -19,6 +19,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <string.h>
+#include "util/tc_platform.h"
 
 using namespace std;
 

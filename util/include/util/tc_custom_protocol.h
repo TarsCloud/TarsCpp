@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "util/tc_platform.h"
 #include "util/tc_ex.h"
 #include "util/tc_port.h"
 #include "util/tc_common.h"
@@ -76,7 +77,7 @@ struct TC_CustomProtoRsp_Exception : public TC_CustomProto_Exception
     ~TC_CustomProtoRsp_Exception() {};
 };
 
-class TC_CustomProtoReq
+class UTIL_DLL_API TC_CustomProtoReq
 {
 public:
     void encode(shared_ptr<TC_NetWorkBuffer::Buffer>& buff)
@@ -94,7 +95,7 @@ private:
 	string _buffer;
 };
 
-class TC_CustomProtoRsp
+class UTIL_DLL_API TC_CustomProtoRsp
 {
 public:
 	typedef std::function<bool(TC_NetWorkBuffer::Buffer&)> IncrementDecodeFunc;

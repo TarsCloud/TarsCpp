@@ -24,6 +24,7 @@
 #include <list>
 #include <algorithm>
 #include <functional>
+#include "util/tc_platform.h"
 #include "util/tc_epoller.h"
 #include "util/tc_thread.h"
 #include "util/tc_clientsocket.h"
@@ -126,7 +127,7 @@ struct TC_EpollServer_Exception : public TC_Exception
    ~TC_EpollServer_Exception() {};
 };
 
-class TC_EpollServer : public TC_HandleBase, public detail::LogInterface
+class UTIL_DLL_API TC_EpollServer : public TC_HandleBase, public detail::LogInterface
 {
 public:
 
@@ -172,7 +173,7 @@ public:
     /**
     * 接收包的上下文
     */
-    class RecvContext : public std::enable_shared_from_this<RecvContext>
+    class UTIL_DLL_API RecvContext : public std::enable_shared_from_this<RecvContext>
     {
     public:
         RecvContext(int threadIndex, uint32_t uid,
@@ -241,7 +242,7 @@ public:
     * 发送包的上下文
     * 由RecvContext创建出来
     */
-    class SendContext
+    class UTIL_DLL_API SendContext
     {
     public:
         SendContext(const shared_ptr<RecvContext> & context, char cmd)
@@ -279,7 +280,7 @@ public:
     /**
      * 数据队列包装
      */
-    class DataBuffer
+    class UTIL_DLL_API DataBuffer
     {
     public:
         /**
@@ -470,7 +471,7 @@ public:
     /**
     *  建立连接的socket信息
     */
-    class Connection
+    class UTIL_DLL_API Connection
     {
     public:
         /**
@@ -803,7 +804,7 @@ public:
     /**
     * 带有时间链表的map
     */
-    class ConnectionList
+    class UTIL_DLL_API ConnectionList
     {
     public:
         /**
@@ -973,7 +974,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     // 服务端口管理,监听socket信息
-    class BindAdapter : public enable_shared_from_this<BindAdapter> // : public TC_HandleBase
+    class UTIL_DLL_API BindAdapter : public enable_shared_from_this<BindAdapter> // : public TC_HandleBase
     {
     public:
         /**
@@ -1855,7 +1856,7 @@ public:
     /**
     * 具体处理基类
     */
-    class Handle// :  public TC_HandleBase
+    class UTIL_DLL_API Handle// :  public TC_HandleBase
     {
     public:
         /**

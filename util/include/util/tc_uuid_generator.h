@@ -3,10 +3,8 @@
 #include "util/tc_platform.h"
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 #include <unistd.h>
-//#include <arpa/inet.h>
 #else
 #include <process.h>
-//#include <winsock2.h>
 #endif
 
 #include <atomic>

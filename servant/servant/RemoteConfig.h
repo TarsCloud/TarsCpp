@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TARS_CONFIG_H_
-#define __TARS_CONFIG_H_
+#pragma once
 
 #include "util/tc_autoptr.h"
 #include "util/tc_singleton.h"
@@ -154,4 +153,3 @@ protected:
 
 }
 
-#endif

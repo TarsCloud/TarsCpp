@@ -15,10 +15,9 @@
  */
 
 #pragma once
-
+#include "util/tc_platform.h"
 #include <stdexcept>
 #include <string>
-
 using namespace std;
 
 namespace tars
@@ -36,7 +35,7 @@ namespace tars
 * @brief 异常类.
 * @brief Exception Class
 */
-class TC_Exception : public exception
+class UTIL_DLL_API TC_Exception : public exception
 {
 public:
     /**

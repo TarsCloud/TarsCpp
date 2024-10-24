@@ -15,9 +15,9 @@
  */
 
 #pragma once
+#include "util/tc_platform.h"
 
 #include <functional>
-#include "util/tc_platform.h"
 #include "util/tc_thread_pool.h"
 #include "util/tc_network_buffer.h"
 #include "util/tc_http.h"
@@ -65,7 +65,7 @@ struct TC_HttpAsync_Exception : public TC_Exception
  * @brief 异步线程处理类.
  * @brief Asynchronous Thread Processing Class
  */
-class TC_HttpAsync : public TC_Thread, public TC_ThreadLock
+class UTIL_DLL_API TC_HttpAsync : public TC_Thread, public TC_ThreadLock
 {
 public:
     /**

@@ -21,6 +21,7 @@
 #include <cassert>
 #include <iostream>
 #include <functional>
+#include "util/tc_platform.h"
 #include "util/tc_ex.h"
 #include "util/tc_mem_vector.h"
 #include "util/tc_pack.h"
@@ -70,7 +71,7 @@ struct TC_HashMap_Exception : public TC_Exception
  *支持dump到文件，或从文件load； 
  *Support dump to file or load from file;
  */
-class TC_HashMap
+class UTIL_DLL_API TC_HashMap
 {
 public:
     struct HashMapIterator;

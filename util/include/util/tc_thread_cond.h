@@ -41,7 +41,7 @@ class TC_ThreadMutex;
  *  
  *  通常不直接使用，而是使用TC_ThreadLock/TC_ThreadRecLock;
  */
-class TC_ThreadCond
+class UTIL_DLL_API TC_ThreadCond
 {
 public:
 

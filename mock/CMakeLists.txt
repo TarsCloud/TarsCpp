@@ -11,8 +11,9 @@ install(TARGETS tarsmock RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE
 
 if(ENABLE_SHARED)
    add_library(tarsmock_shared SHARED ${SRC_FILES})
+   target_compile_definitions(tarsmock_shared PRIVATE SVT_USE_DLL UTIL_USE_DLL)
    target_link_libraries(tarsmock_shared tarsservant_shared tarsutil_shared)
-   add_dependencies(tarsmock_shared tarsmock)
+   add_dependencies(tarsmock_shared tarsservant_shared)
 
    install(TARGETS tarsmock_shared RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 

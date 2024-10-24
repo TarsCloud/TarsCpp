@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_SERVANT_PROXY_FACTORY_H_
-#define __TARS_SERVANT_PROXY_FACTORY_H_
+#pragma once
 
 #include "servant/Global.h"
 #include "servant/Communicator.h"
@@ -27,7 +25,7 @@ namespace tars
 /**
  * 创建ServantProxy对象，每个object在进程空间只有一个ServantProxy实例
  */
-class ServantProxyFactory : public TC_ThreadRecMutex
+class SVT_DLL_API ServantProxyFactory : public TC_ThreadRecMutex
 {
 public:
     /**
@@ -64,4 +62,3 @@ private:
 };
 //////////////////////////////////////////////////////
 }
-#endif

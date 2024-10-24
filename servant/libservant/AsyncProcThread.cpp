@@ -102,8 +102,8 @@ void AsyncProcThread::run()
     	delete msg;
 	}
 
-	ServantProxyThreadData::g_sp.reset();
-	CallbackThreadData::g_sp.reset();
+	ServantProxyThreadData::reset();
+	CallbackThreadData::reset();
 }
 
 void AsyncProcThread::callback(ReqMessage * msg)

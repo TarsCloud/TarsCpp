@@ -11,7 +11,7 @@
 
 class FrameworkServer;
 
-class TarsMockUtil
+class UTIL_DLL_API TarsMockUtil
 {
 public:
     TarsMockUtil();

@@ -16,6 +16,7 @@
 #pragma once
 
 #include <string>
+#include "util/tc_platform.h"
 #include "util/tc_ex.h"
 #include "util/tc_common.h"
 
@@ -69,7 +70,7 @@ struct TC_MD5_Exception : public TC_Exception
     ~TC_MD5_Exception() throw(){};
 };
 
-class TC_MD5
+class UTIL_DLL_API TC_MD5
 {
     typedef unsigned char *POINTER;
     typedef unsigned short int UINT2;

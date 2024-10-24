@@ -11,7 +11,7 @@
 
 using namespace tars;
 
-class StatImp : public StatF
+class UTIL_DLL_API StatImp : public StatF
 {
 public:
     /**

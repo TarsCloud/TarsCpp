@@ -17,6 +17,7 @@
 #pragma once
 
 #include  "util/tc_platform.h"
+#include  "util/tc_ex.h"
 
 #include <string>
 #include <vector>
@@ -35,13 +36,23 @@ namespace tars
 * @brief  Gzip Class, Encapsulated zlib Library
 */
 
+/**
+ * @brief  gzip异常类
+ * @brief  gzip exception class
+ */
+struct TC_GZip_Exception : public TC_Exception
+{
+    TC_GZip_Exception(const string &sBuffer) : TC_Exception(sBuffer){};
+    ~TC_GZip_Exception() {};
+};
+
 /////////////////////////////////////////////////
 
 /**
 * @brief 该类提供标准GZIP压缩和解压算法
 * @brief This class provides standard GZIP compression and decompression algorithms
 */
-class TC_GZip
+class UTIL_DLL_API TC_GZip
 {
 protected:
 	struct Output

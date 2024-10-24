@@ -64,7 +64,7 @@ struct TC_Mmap_Exception : public TC_Exception
  *   实现了类似的封装, 推荐直接使用
  *   Similar encapsulation implemented, recommended for direct use
  */
-class TC_Mmap
+class UTIL_DLL_API TC_Mmap
 {
 public:
 

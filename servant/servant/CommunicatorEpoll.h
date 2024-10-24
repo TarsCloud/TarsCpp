@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS__COMMUNICATOR_EPOLL_H_
-#define __TARS__COMMUNICATOR_EPOLL_H_
+#pragma once
 
 #include "util/tc_thread.h"
 #include "util/tc_thread_mutex.h"
@@ -72,7 +70,7 @@ struct FDInfo
 /**
  * 客户端网络处理的线程类
  */
-class CommunicatorEpoll : public TC_Thread, public enable_shared_from_this<CommunicatorEpoll>
+class SVT_DLL_API CommunicatorEpoll : public TC_Thread, public enable_shared_from_this<CommunicatorEpoll>
 {
 public:
 
@@ -466,4 +464,3 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////
 }
 
-#endif

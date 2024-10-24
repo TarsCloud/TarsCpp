@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "util/tc_platform.h"
 #include "util/tc_md5.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_hash_fun.h"
@@ -79,7 +80,7 @@ public:
  *  @brief 一致性hash算法类
  *  @brief Consistency Hash Algorithm Class
  */
-class  TC_ConsistentHashNew
+class UTIL_DLL_API TC_ConsistentHashNew
 {
 public:
 

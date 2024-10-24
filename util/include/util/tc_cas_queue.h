@@ -2,6 +2,7 @@
 #include <deque>
 #include <vector>
 #include <cassert>
+#include "util/tc_platform.h"
 #include "util/tc_lock.h"
 #include "util/tc_spin_lock.h"
 

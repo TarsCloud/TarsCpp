@@ -22,7 +22,7 @@
 #include <deque>
 #include <map>
 #include <functional>
-
+#include "util/tc_platform.h"
 #include "util/tc_fcontext.h"
 #include "util/tc_thread_queue.h"
 #include "util/tc_monitor.h"
@@ -120,7 +120,7 @@ class TC_CoroutineScheduler;
  * 协程信息类
  * 保存了协程的基本信息, 并将协程用链表的形式组织在一起
  */
-class TC_CoroutineInfo
+class UTIL_DLL_API TC_CoroutineInfo
 {
 public:
 	/**
@@ -343,10 +343,8 @@ private:
 /**
  * 协程调度类
  */
-class TC_CoroutineScheduler
+class UTIL_DLL_API TC_CoroutineScheduler
 {    
-protected:
-    static thread_local shared_ptr<TC_CoroutineScheduler> g_scheduler;
 
 public:
 
@@ -685,7 +683,7 @@ private:
  * 3 调用start函数, 启动线程, 同时会创建iNum个协程, 调度器中最多存在iPoolSize个协程同时运行
  * 4 terminate结束
  */
-class TC_Coroutine : public TC_Thread
+class UTIL_DLL_API TC_Coroutine : public TC_Thread
 {
 public:
     /**

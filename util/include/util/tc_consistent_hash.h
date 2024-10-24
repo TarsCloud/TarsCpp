@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "util/tc_platform.h"
 #include "util/tc_md5.h"
 
 using namespace std;
@@ -46,13 +47,11 @@ struct node_T
     unsigned int iIndex;
 };
 
-
-
 /**
  *  @brief 一致性hash算法类
  *  @brief Consistency hash algorithm class.
  */
-class  TC_ConsistentHash
+class UTIL_DLL_API TC_ConsistentHash
 {
     public:
 

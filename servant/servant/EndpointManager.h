@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_ENDPOINT_MANAGER_H_
-#define __TARS_ENDPOINT_MANAGER_H_
+#pragma once
 
 #include "servant/EndpointInfo.h"
 #include "servant/EndpointF.h"
@@ -51,7 +49,7 @@ enum  EndpointWeightType
 /*
  * 路由请求与回调的实现类
  */
-class QueryEpBase : public QueryFPrxCallback ,public enable_shared_from_this<QueryEpBase>
+class SVT_DLL_API QueryEpBase : public QueryFPrxCallback ,public enable_shared_from_this<QueryEpBase>
 {
 public:
     /*
@@ -321,7 +319,7 @@ protected:
 /*
  * 框架内部的路由管理的实现类
  */
-class EndpointManager : public QueryEpBase
+class SVT_DLL_API EndpointManager : public QueryEpBase
 {
 public:
     static const size_t iMinWeightLimit = 10;
@@ -582,7 +580,7 @@ private:
 /*
  * 对外按类型获取路由的实现类
  */
-class EndpointThread : public QueryEpBase
+class SVT_DLL_API EndpointThread : public QueryEpBase
 {
 public:
     /*
@@ -659,7 +657,7 @@ private:
 /*
  * 对外获取路由请求的封装类
  */
-class EndpointManagerThread
+class SVT_DLL_API EndpointManagerThread
 {
 public:
     /*
@@ -744,4 +742,3 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 }
-#endif

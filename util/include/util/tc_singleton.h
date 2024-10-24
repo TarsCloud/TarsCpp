@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#include "util/tc_platform.h"
 
 #include "util/tc_monitor.h"
 #include <cassert>

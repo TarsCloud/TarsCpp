@@ -297,7 +297,7 @@ void TC_CoroutineInfo::corotineProc(void * args, transfer_t t)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-thread_local shared_ptr<TC_CoroutineScheduler> TC_CoroutineScheduler::g_scheduler;
+thread_local shared_ptr<TC_CoroutineScheduler> g_scheduler;
 
 const shared_ptr<TC_CoroutineScheduler> &TC_CoroutineScheduler::create()
 {

@@ -30,7 +30,7 @@ namespace tars
 
 shared_ptr<ServantProxyThreadData::Immortal> ServantProxyThreadData::g_immortal;
 
-thread_local shared_ptr<ServantProxyThreadData> ServantProxyThreadData::g_sp;
+thread_local shared_ptr<ServantProxyThreadData> g_sp;
 unsigned int _traceParamMaxLen = 1;     // 默认1K
 
 ///////////////////////////////////////////////////////////////
@@ -229,6 +229,14 @@ void ServantProxyThreadData::deconstructor(Communicator *communicator)
     if(g_immortal.use_count() > 0)
     {
         g_immortal->erase(communicator);
+    }
+}
+
+void ServantProxyThreadData::reset()
+{
+    if (g_sp)
+    {
+        g_sp.reset();
     }
 }
 

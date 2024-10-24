@@ -22,6 +22,8 @@
 #include <assert.h>
 #include <iostream>
 #include <string>
+#include "util/tc_platform.h"
+
 #include "util/tc_ex.h"
 /**
  * 结构化的queue，在一边读一边写的情况下可以不用加锁，是线程(进程)安全的
@@ -41,7 +43,7 @@ struct TC_SQueue_Exception : public TC_Exception
 	~TC_SQueue_Exception() throw(){};
 };
 
-class TC_SQueue
+class UTIL_DLL_API TC_SQueue
 {
 public:
 	TC_SQueue() {_header = NULL;_data = NULL;}

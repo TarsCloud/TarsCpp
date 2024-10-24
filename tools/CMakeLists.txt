@@ -3,8 +3,6 @@ project(tools)
 
 include_directories(${util_SOURCE_DIR}/include)
 
-link_libraries(tarsutil)
-
 function(tars2language TARGET)
     set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -17,9 +15,9 @@ function(tars2language TARGET)
 
     aux_source_directory(. DIR_SRCS)
 
-    link_libraries(tarsparse)
-
     add_executable(${TARGET} ${DIR_SRCS})
+
+    target_link_libraries(${TARGET} tarsutil tarsparse)
 
     install(TARGETS ${TARGET}
             RUNTIME DESTINATION tools)

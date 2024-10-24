@@ -16,7 +16,7 @@
 #pragma once
 
 #include <vector>
-
+#include "util/tc_platform.h"
 #include "util/tc_ex.h"
 
 namespace tars
@@ -55,7 +55,7 @@ struct TC_Encoder_Exception : public TC_Exception
 *         2：UTF8 ==> GBK的转换
 *         2: The transformation from UTF8 to GBK
 */
-class TC_Encoder
+class UTIL_DLL_API TC_Encoder
 {
 public:
 

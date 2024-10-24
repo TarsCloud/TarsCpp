@@ -13,11 +13,9 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
+#pragma once
 
-#ifndef __TARS_PROPERTY_REPORT_H_
-#define __TARS_PROPERTY_REPORT_H_
-
- #include "util/tc_lock.h"
+#include "util/tc_lock.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_thread_mutex.h"
 #include "util/tc_spin_lock.h"
@@ -38,7 +36,7 @@ namespace tars
 /**
  * 用户自定义属性统计基类
  */
-class PropertyReport : public TC_HandleBase
+class SVT_DLL_API PropertyReport : public TC_HandleBase
 {
 public:
     /**
@@ -263,4 +261,3 @@ private:
 
 }
 
-#endif

@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_BASE_NOTIFY_H_
-#define __TARS_BASE_NOTIFY_H_
+#pragma once
 
 #include "servant/Global.h"
 #include "util/tc_thread_queue.h"
@@ -30,7 +28,7 @@ class NotifyObserver;
 /**
  * 需要接收到管理命令的对象从该类派生
  */
-class BaseNotify : public TC_ThreadRecMutex, public TC_HandleBase
+class SVT_DLL_API BaseNotify : public TC_ThreadRecMutex, public TC_HandleBase
 {
 public:
     /**
@@ -92,4 +90,3 @@ protected:
 };
 /////////////////////////////////////////////////////////////////////
 }
-#endif

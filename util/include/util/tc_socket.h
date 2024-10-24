@@ -84,7 +84,7 @@ struct TC_SocketConnect_Exception : public TC_Socket_Exception
 /**
 * @brief  Socket类, 封装了socket的基本方法
 */
-class TC_Socket
+class UTIL_DLL_API TC_Socket
 {
 public:
     /**

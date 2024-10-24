@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_PROTOCOL_H_
-#define __TARS_PROTOCOL_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -57,7 +55,7 @@ class TC_Transceiver;
 /**
  * 协议解析
  */
-class AppProtocol
+class SVT_DLL_API AppProtocol
 {
 public:
     /**
@@ -330,4 +328,3 @@ public:
 
 //////////////////////////////////////////////////////////////////////
 }
-#endif

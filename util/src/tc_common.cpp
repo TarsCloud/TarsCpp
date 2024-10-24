@@ -144,195 +144,195 @@ bool TC_Common::equal(const unordered_set<float>& vx, const unordered_set<float>
 	MATCH_DOUBLE
 }
 
-template<>
-string TC_Common::tostr<bool>(const bool &t)
-{
-    char buf[2];
-    buf[0] = t ? '1' : '0';
-    buf[1] = '\0';
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<bool>(const bool &t)
+// {
+//     char buf[2];
+//     buf[0] = t ? '1' : '0';
+//     buf[1] = '\0';
+//     return string(buf);
+// }
 
 
-template<>
-string TC_Common::tostr<char>(const char &t)
-{
-    char buf[2];
-    snprintf(buf, 2, "%c", t);
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<char>(const char &t)
+// {
+//     char buf[2];
+//     snprintf(buf, 2, "%c", t);
+//     return string(buf);
+// }
 
-template<>
-string TC_Common::tostr<unsigned char>(const unsigned char &t)
-{
-    char buf[2];
-    snprintf(buf, 2, "%c", t);
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<unsigned char>(const unsigned char &t)
+// {
+//     char buf[2];
+//     snprintf(buf, 2, "%c", t);
+//     return string(buf);
+// }
 
-template<>
-string TC_Common::tostr<short>(const short &t)
-{
-    char buf[16];
-    snprintf(buf, 16, "%d", t);
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<short>(const short &t)
+// {
+//     char buf[16];
+//     snprintf(buf, 16, "%d", t);
+//     return string(buf);
+// }
 
-template<>
-string TC_Common::tostr<unsigned short>(const unsigned short &t)
-{
-    char buf[16];
-    snprintf(buf, 16, "%u", t);
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<unsigned short>(const unsigned short &t)
+// {
+//     char buf[16];
+//     snprintf(buf, 16, "%u", t);
+//     return string(buf);
+// }
 
-template<>
-string TC_Common::tostr<int>(const int &t)
-{
-    char buf[16];
-    snprintf(buf, 16, "%d", t);
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<int>(const int &t)
+// {
+//     char buf[16];
+//     snprintf(buf, 16, "%d", t);
+//     return string(buf);
+// }
 
-template<>
-string TC_Common::tostr<unsigned int>(const unsigned int &t)
-{
-    char buf[16];
-    snprintf(buf, 16, "%u", t);
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<unsigned int>(const unsigned int &t)
+// {
+//     char buf[16];
+//     snprintf(buf, 16, "%u", t);
+//     return string(buf);
+// }
 
-template<>
-string TC_Common::tostr<long>(const long &t)
-{
-    char buf[32];
-    snprintf(buf, 32, "%ld", t);
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<long>(const long &t)
+// {
+//     char buf[32];
+//     snprintf(buf, 32, "%ld", t);
+//     return string(buf);
+// }
 
-template<>
-string TC_Common::tostr<long long>(const long long &t)
-{
-    char buf[32];
-    snprintf(buf, 32, "%lld", t);
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<long long>(const long long &t)
+// {
+//     char buf[32];
+//     snprintf(buf, 32, "%lld", t);
+//     return string(buf);
+// }
 
 
-template<>
-string TC_Common::tostr<unsigned long>(const unsigned long &t)
-{
-    char buf[32];
-    snprintf(buf, 32, "%lu", t);
-    return string(buf);
-}
+// template<>
+// string TC_Common::tostr<unsigned long>(const unsigned long &t)
+// {
+//     char buf[32];
+//     snprintf(buf, 32, "%lu", t);
+//     return string(buf);
+// }
 
-template<>
-string TC_Common::tostr<float>(const float &t)
-{
-    //C++11 to_string，默认保留后面6位小数
-    string s = std::to_string(t);
+// template<>
+// string TC_Common::tostr<float>(const float &t)
+// {
+//     //C++11 to_string，默认保留后面6位小数
+//     string s = std::to_string(t);
 
-    //去掉无效0, eg. 1.0300 -> 1.03;1.00 -> 1
-    bool bFlag = false;
-    int pos = int(s.size() - 1);
-    for (; pos > 0; --pos)
-    {
-        if (s[pos] == '0')
-        {
-            bFlag = true;
-            if (s[pos - 1] == '.')
-            {
-                //-2为了去掉"."号
-                pos -= 2;
-                break;
-            }
-        }
-        else
-        {
-            break;
-        }
-    }
+//     //去掉无效0, eg. 1.0300 -> 1.03;1.00 -> 1
+//     bool bFlag = false;
+//     int pos = int(s.size() - 1);
+//     for (; pos > 0; --pos)
+//     {
+//         if (s[pos] == '0')
+//         {
+//             bFlag = true;
+//             if (s[pos - 1] == '.')
+//             {
+//                 //-2为了去掉"."号
+//                 pos -= 2;
+//                 break;
+//             }
+//         }
+//         else
+//         {
+//             break;
+//         }
+//     }
 
-    if (bFlag)
-        s = s.substr(0, pos + 1);
+//     if (bFlag)
+//         s = s.substr(0, pos + 1);
 
-    return s;
-}
+//     return s;
+// }
 
-template<>
-string TC_Common::tostr<double>(const double &t)
-{
-    //C++11 to_string，默认保留后面6位小数
-    string s = std::to_string(t);
-    //去掉无效0, eg. 1.0300 -> 1.03;1.00 -> 1
-    bool bFlag = false;
-    int pos = int(s.size() - 1);
-    for (; pos > 0; --pos)
-    {
-        if (s[pos] == '0')
-        {
-            bFlag = true;
-            if (s[pos - 1] == '.')
-            {
-                //-2为了去掉"."号
-                pos -= 2;
-                break;
-            }
-        }
-        else
-        {
-            break;
-        }
-    }
+// template<>
+// string TC_Common::tostr<double>(const double &t)
+// {
+//     //C++11 to_string，默认保留后面6位小数
+//     string s = std::to_string(t);
+//     //去掉无效0, eg. 1.0300 -> 1.03;1.00 -> 1
+//     bool bFlag = false;
+//     int pos = int(s.size() - 1);
+//     for (; pos > 0; --pos)
+//     {
+//         if (s[pos] == '0')
+//         {
+//             bFlag = true;
+//             if (s[pos - 1] == '.')
+//             {
+//                 //-2为了去掉"."号
+//                 pos -= 2;
+//                 break;
+//             }
+//         }
+//         else
+//         {
+//             break;
+//         }
+//     }
 
-    if (bFlag)
-        s = s.substr(0, pos + 1);
+//     if (bFlag)
+//         s = s.substr(0, pos + 1);
 
-    return s;
+//     return s;
 
-}
+// }
 
-template<>
-string TC_Common::tostr<long double>(const long double &t)
-{
-    char buf[32];
-    snprintf(buf, 32, "%Lf", t);
-    string s(buf);
+// template<>
+// string TC_Common::tostr<long double>(const long double &t)
+// {
+//     char buf[32];
+//     snprintf(buf, 32, "%Lf", t);
+//     string s(buf);
 
-    //去掉无效0, eg. 1.0300 -> 1.03;1.00 -> 1
-    bool bFlag = false;
-    int pos = int(s.size() - 1);
-    for (; pos > 0; --pos)
-    {
-        if (s[pos] == '0')
-        {
-            bFlag = true;
-            if (s[pos - 1] == '.')
-            {
-                //-2为了去掉"."号
-                pos -= 2;
-                break;
-            }
-        }
-        else
-        {
-            break;
-        }
-    }
+//     //去掉无效0, eg. 1.0300 -> 1.03;1.00 -> 1
+//     bool bFlag = false;
+//     int pos = int(s.size() - 1);
+//     for (; pos > 0; --pos)
+//     {
+//         if (s[pos] == '0')
+//         {
+//             bFlag = true;
+//             if (s[pos - 1] == '.')
+//             {
+//                 //-2为了去掉"."号
+//                 pos -= 2;
+//                 break;
+//             }
+//         }
+//         else
+//         {
+//             break;
+//         }
+//     }
 
-    if (bFlag)
-        s = s.substr(0, pos + 1);
+//     if (bFlag)
+//         s = s.substr(0, pos + 1);
 
-    return s;
+//     return s;
 
-}
+// }
 
-template<>
-string TC_Common::tostr<std::string>(const std::string &t)
-{
-    return t;
-}
+// template<>
+// string TC_Common::tostr<std::string>(const std::string &t)
+// {
+//     return t;
+// }
 
 string TC_Common::trim(const string &sStr, const string &s, bool bChar)
 {

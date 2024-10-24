@@ -984,7 +984,7 @@ bool TC_TCPTransceiver::doResponse()
 	do
 	{
 //		auto data = _recvBuffer.getOrCreateBuffer(BUFFER_SIZE / 8, BUFFER_SIZE);
-		size_t expansion = std::max(std::min(_recvBuffer.getBufferLength(), (size_t)MAX_BUFFER_SIZE), (size_t)BUFFER_SIZE);
+		size_t expansion = (std::max)((std::min)(_recvBuffer.getBufferLength(), (size_t)MAX_BUFFER_SIZE), (size_t)BUFFER_SIZE);
 		auto data = _recvBuffer.getOrCreateBuffer(BUFFER_SIZE / 8, expansion);
 
 		uint32_t left = (uint32_t)data->left();
@@ -1086,29 +1086,31 @@ int TC_TCPTransceiver::recv(void* buf, uint32_t len, uint32_t flag)
 	return iRet;
 }
 /////////////////////////////////////////////////////////////////
-#if TARS_SSL
 
 TC_SSLTransceiver::TC_SSLTransceiver(TC_Epoller* epoller, const TC_Endpoint &ep)
 : TC_TCPTransceiver(epoller, ep)
 {
 }
 
-#if 0
-
 bool TC_SSLTransceiver::doResponse()
 {
-	checkConnect();
+#if TARS_SSL
+    checkConnect();
 
 	int iRet = 0;
+
 	int64_t now = TNOWMS;
 
-//		int packetCount = 0;
 	do
 	{
-		char buff[BUFFER_SIZE] = {0x00};
-		if ((iRet = this->recv(buff, BUFFER_SIZE, 0)) > 0)
+	    auto data = _recvBuffer.getOrCreateBuffer(BUFFER_SIZE/8, BUFFER_SIZE);
+
+	    uint32_t left = (uint32_t)data->left();
+
+		if ((iRet = this->recv((void*)data->free(), left, 0)) > 0)
 		{
-			int check = doCheckProxy(buff, iRet);
+			int check = doCheckProxy(data->free(), iRet);
+
 			if(check != 0)
 			{
 				return true;
@@ -1116,7 +1118,8 @@ bool TC_SSLTransceiver::doResponse()
 
 			const bool preHandshake = _openssl->isHandshaked();
 
-			int ret = _openssl->read(buff, iRet, _sendBuffer);
+			int ret = _openssl->read(data->free(), iRet, _sendBuffer);
+
 			if (ret != 0)
 			{
 //            	LOG_CONSOLE_DEBUG << "ret:" << ret << ", " << _openssl->getErrMsg() << endl;
@@ -1124,24 +1127,8 @@ bool TC_SSLTransceiver::doResponse()
 			}
 			else if(!_sendBuffer.empty())
 			{
-//				LOG_CONSOLE_DEBUG << "[Transceiver::doResponse SSL_read prehandshake:" << preHandshake << ", handshake:" << _openssl->isHandshaked() << ", send handshake len:" << _sendBuffer.getBufferLength() << endl;
-				int ret = doRequest();
-
-				if(ret < 0)
-				{
-					// doRequest失败 close fd
-					if (!isValid())
-					{
-						THROW_ERROR(TC_Transceiver_Exception, CR_SSL, "[TC_SSLTransceiver::doResponse, ssl doRequest failed: " + _desc + ", info: " + _openssl->getErrMsg() + "]");
-					}
-					else
-					{
-						return true;
-					}
-				}
+				doRequest();
 			}
-
-//			LOG_CONSOLE_DEBUG << "recv length:" << iRet << ", preHandshake:" << preHandshake << endl;
 
 			if (!_openssl->isHandshaked())
 			{
@@ -1186,7 +1173,7 @@ bool TC_SSLTransceiver::doResponse()
 			}
 
 			//接收的数据小于buffer大小, 内核会再次通知你
-			if(iRet < BUFFER_SIZE)
+			if(iRet < left)
 			{
 				break;
 			}
@@ -1200,108 +1187,11 @@ bool TC_SSLTransceiver::doResponse()
 	}
 
 	return iRet != 0;
-}
-
 #else
-
-bool TC_SSLTransceiver::doResponse()
-{
-    checkConnect();
-
-	int iRet = 0;
-
-	int64_t now = TNOWMS;
-
-	do
-	{
-	    auto data = _recvBuffer.getOrCreateBuffer(BUFFER_SIZE/8, BUFFER_SIZE);
-
-	    uint32_t left = (uint32_t)data->left();
-
-		if ((iRet = this->recv((void*)data->free(), left, 0)) > 0)
-		{
-			int check = doCheckProxy(data->free(), iRet);
-
-				if(check != 0)
-				{
-					return true;
-				}
-
-			const bool preHandshake = _openssl->isHandshaked();
-
-			int ret = _openssl->read(data->free(), iRet, _sendBuffer);
-
-			if (ret != 0)
-			{
-//            	LOG_CONSOLE_DEBUG << "ret:" << ret << ", " << _openssl->getErrMsg() << endl;
-				THROW_ERROR(TC_Transceiver_Exception, CR_SSL, "[TC_SSLTransceiver::doResponse, SSL_read handshake failed: " + _desc + ", info: " + _openssl->getErrMsg() + "]");
-			}
-			else if(!_sendBuffer.empty())
-			{
-				doRequest();
-			}
-
-				if (!_openssl->isHandshaked())
-				{
-//				LOG_CONSOLE_DEBUG << "[Transceiver::doResponse not handshake, prehandshake:" << preHandshake << ", handshake:" << _openssl->isHandshaked() << endl;
-					return true;
-				}
-
-			if (!preHandshake)
-			{
-				if(_isServer)
-				{
-					_onRequestCallback(this);
-				}
-				else
-				{
-					//握手完毕, 客户端直接发送鉴权请求
-					doAuthReq();
-					// doAuthReq失败，会close fd, 这里判断下是否还有效
-					if (!isValid())
-					{
-						THROW_ERROR(TC_Transceiver_Exception, CR_SSL,
-								"[TC_SSLTransceiver::doResponse, doAuthReq failed: " + _desc + ", info: " +
-								_openssl->getErrMsg() + "]");
-					}
-					else
-					{
-//						LOG_CONSOLE_DEBUG << "[Transceiver::doResponse prehandshake:" << preHandshake << ", handshake:" << _openssl->isHandshaked() << endl;
-					}
-				}
-			}
-
-			TC_NetWorkBuffer *rbuf = _openssl->recvBuffer();
-
-			//解析协议
-			doProtocolAnalysis(rbuf);
-
-			//收包太多了, 中断一下, 释放线程给send等
-			if (TNOWMS - now >= LONG_NETWORK_TRANS_TIME && isValid())
-			{
-				_epollInfo->mod(EPOLLIN | EPOLLOUT);
-				break;
-			}
-
-				//接收的数据小于buffer大小, 内核会再次通知你
-				if(iRet < left)
-				{
-					break;
-				}
-			}
-		}
-		while (iRet>0);
-
-		if(iRet == 0)
-		{
-			tcpClose(false, CR_PEER_CLOSE, "peer close connection");
-		}
-
-		return iRet != 0;
-	}
-
+	THROW_ERROR(TC_Transceiver_Exception, CR_SSL, "[TC_SSLTransceiver::doResponse, ssl not support!]");
+	return false;
 #endif
-#endif
+}
 
 /////////////////////////////////////////////////////////////////
 TC_UDPTransceiver::TC_UDPTransceiver(TC_Epoller* epoller, const TC_Endpoint& ep)

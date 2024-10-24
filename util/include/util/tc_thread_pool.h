@@ -78,7 +78,7 @@ struct TC_ThreadPool_Exception : public TC_Exception
 * 使用方式说明:
 * 具体示例代码请参见:examples/util/example_tc_thread_pool.cpp
 */
-class TC_ThreadPool
+class UTIL_DLL_API TC_ThreadPool
 {
 protected:
     struct TaskFunc
@@ -234,7 +234,7 @@ protected:
 
 
 //根据keyhash的线程池
-class TC_ThreadPoolHash
+class UTIL_DLL_API TC_ThreadPoolHash
 {
 public:
     TC_ThreadPoolHash();

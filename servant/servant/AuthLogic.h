@@ -1,4 +1,6 @@
-﻿#include "servant/AuthF.h"
+﻿#pragma once
+
+#include "servant/AuthF.h"
 #include "util/tc_epoll_server.h"
 
 namespace tars

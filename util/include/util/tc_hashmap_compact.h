@@ -21,6 +21,7 @@
 #include <cassert>
 #include <iostream>
 #include <functional>
+#include "util/tc_platform.h"
 #include "util/tc_ex.h"
 #include "util/tc_mem_vector.h"
 #include "util/tc_pack.h"
@@ -51,7 +52,7 @@ struct TC_HashMapCompact_Exception : public TC_Exception
  * @brief 紧凑性hashmap.
  * 基于内存的hashmap,所有操作需要自己加锁 , 使用方式同TC_Hashmap，但是64位系统下更节约额外的管理空间
  */
-class TC_HashMapCompact
+class UTIL_DLL_API TC_HashMapCompact
 {
 public:
     struct HashMapIterator;

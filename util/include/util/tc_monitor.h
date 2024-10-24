@@ -15,6 +15,8 @@
  */
 #pragma once
 
+#include "util/tc_platform.h"
+
 #include "util/tc_thread_mutex.h"
 #include "util/tc_thread_cond.h"
 

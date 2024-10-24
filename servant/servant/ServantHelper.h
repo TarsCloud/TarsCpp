@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_SERVANT_HELPER_H
-#define __TARS_SERVANT_HELPER_H
+#pragma once
 
 #include <iostream>
 #include <map>
@@ -250,5 +248,4 @@ protected:
 
 }
 
-#endif
 

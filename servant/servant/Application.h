@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_APPLICATION_H
-#define __TARS_APPLICATION_H
+#pragma once
 
 #include <iostream>
 #include <set>
@@ -201,7 +199,7 @@ class KeepAliveNodeFHelper;
 /**
  * 服务的基类
  */
-class Application: public BaseNotify
+class SVT_DLL_API Application: public BaseNotify
 {
 public:
     /**
@@ -724,6 +722,4 @@ protected:
 };
 ////////////////////////////////////////////////////////////////////
 }
-
-#endif
 

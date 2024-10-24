@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <string>
+#include "util/tc_platform.h"
 
 using namespace std;
 

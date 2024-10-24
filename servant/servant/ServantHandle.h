@@ -13,9 +13,7 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the 
  * specific language governing permissions and limitations under the License.
  */
-
-#ifndef __TARS_SERVANT_HANDLE_H
-#define __TARS_SERVANT_HANDLE_H
+#pragma once
 
 #include <map>
 #include <string>
@@ -39,7 +37,7 @@ class Application;
 /**
  * 处理网络请求线程
  */
-class ServantHandle : public TC_EpollServer::Handle, public enable_shared_from_this<ServantHandle>
+class SVT_DLL_API ServantHandle : public TC_EpollServer::Handle, public enable_shared_from_this<ServantHandle>
 {
 public:
     /**
@@ -222,5 +220,4 @@ protected:
 typedef TC_AutoPtr<ServantHandle> ServantHandlePtr;
 ///////////////////////////////////////////////////////////
 }
-#endif
 

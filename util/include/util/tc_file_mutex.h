@@ -47,7 +47,7 @@ struct TC_FileMutex_Exception : public TC_Lock_Exception
  * @brief  文件锁, 注意:只能在进程间加锁.
  * @brief  file lock , attion : You can only lock between processes
  */
-class TC_FileMutex
+class UTIL_DLL_API TC_FileMutex
 {
 public:
 

@@ -65,11 +65,11 @@ namespace tars
  * @brief epoller操作类，已经默认采用了EPOLLET方式做触发
  * @brief epoller operation class, EPOLLET has been used by default for triggering 
  */
-class TC_Epoller : public TC_TimerBase
+class UTIL_DLL_API TC_Epoller : public TC_TimerBase
 {
 
 public:
-    class EpollInfo : public enable_shared_from_this<EpollInfo>
+    class UTIL_DLL_API EpollInfo : public enable_shared_from_this<EpollInfo>
 	{
 	public:
 		/**
@@ -198,7 +198,7 @@ public:
     /**
      * @brief 通知epoll从wait中醒过来
      */
-    class NotifyInfo
+    class UTIL_DLL_API NotifyInfo
     {
     public:
 

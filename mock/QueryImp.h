@@ -23,7 +23,7 @@ enum FUNID
 /**
  * 对象查询接口类
  */
-class QueryImp: public QueryF
+class UTIL_DLL_API QueryImp: public QueryF
 {
 public:
     /**

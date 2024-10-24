@@ -20,6 +20,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include "util/tc_platform.h"
 #include "util/tc_socket.h"
 
 /////////////////////////////////////////////////
@@ -59,7 +60,7 @@ struct TC_NetWorkBuffer_Exception : public TC_Exception
 	~TC_NetWorkBuffer_Exception() {};
 };
 
-class TC_NetWorkBuffer
+class UTIL_DLL_API TC_NetWorkBuffer
 {
 public:
 	////////////////////////////////////////////////////////////////////////////
@@ -84,7 +85,7 @@ public:
 	/**
 	   * buffer
 	   */
-	class Buffer
+	class UTIL_DLL_API Buffer
 	{
 	public:
 

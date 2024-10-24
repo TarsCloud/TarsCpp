@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <map>
+#include "util/tc_platform.h"
 
 #include "util/tc_thread_pool.h"
 #include "util/tc_timeprovider.h"
@@ -44,7 +45,7 @@ namespace tars
 /**
  * @brief  定时器类
  */
-class TC_TimerBase
+class UTIL_DLL_API TC_TimerBase
 {
 protected:
 
@@ -301,7 +302,7 @@ protected:
 /**
  * @brief  定时器类
  */
-class TC_Timer : public TC_TimerBase
+class UTIL_DLL_API TC_Timer : public TC_TimerBase
 {
 public:
 

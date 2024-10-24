@@ -14,8 +14,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-#ifndef __TARS_OBJECT_PROXY_FACTORY_H_
-#define __TARS_OBJECT_PROXY_FACTORY_H_
+#pragma once
 
 #include "servant/Communicator.h"
 #include "servant/ObjectProxy.h"
@@ -29,7 +28,7 @@ namespace tars
  * 每个objectname在每个客户端网络线程中有唯一一个objectproxy
  *
  */
-class ObjectProxyFactory : public TC_HandleBase, public TC_ThreadRecMutex
+class SVT_DLL_API ObjectProxyFactory : public TC_HandleBase, public TC_ThreadRecMutex
 {
 public:
     /**
@@ -99,4 +98,3 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////
 
 }
-#endif
