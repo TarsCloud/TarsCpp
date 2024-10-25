@@ -57,7 +57,7 @@ if(WIN32)
         CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/curl
         SOURCE_DIR ${CMAKE_BINARY_DIR}/src/curl-lib
         BUILD_IN_SOURCE 1
-        BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+        BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
         INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
         URL_MD5 b9bb5e11d579425154a9f97ed44be9b8
     )
@@ -97,7 +97,7 @@ else()
             CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest -DBUILD_GMOCK=OFF -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
-            BUILD_COMMAND make
+            BUILD_COMMAND make  -j4
             URL_MD5 6f26d634fa9cac718263c2df20df21a4
             )
 endif()
@@ -142,7 +142,7 @@ if (TARS_PROTOBUF)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND make
+                BUILD_COMMAND make  -j4
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
 
@@ -191,7 +191,7 @@ if (TARS_SSL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
-                INSTALL_COMMAND make install_sw
+                INSTALL_COMMAND make install_sw  -j4
                 URL_MD5 ac0d4387f3ba0ad741b0580dd45f6ff3
                 )
 
@@ -235,7 +235,7 @@ if (TARS_MYSQL)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DDEFAULT_CHARSET=utf8mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci -DSTACK_DIRECTION=1 -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND make mysqlclient
+                BUILD_COMMAND make mysqlclient  -j4
                 URL_MD5 3578d736b9d493eae076a67e3ed473eb
                 )
 
@@ -281,7 +281,7 @@ if (TARS_GZIP)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/zlib -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE} 
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/zlib-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND make
+                BUILD_COMMAND make -j4
                 URL_MD5 1c9f62f0778697a09d36121ead88e08e
                 )
 
@@ -327,7 +327,7 @@ if (TARS_HTTP2)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND make
+                BUILD_COMMAND make  -j4
                 URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
                 )
 

@@ -19,7 +19,7 @@ IF (TARS_WEB_HOST STREQUAL "")
 ENDIF ()
 
 include_directories(/usr/local/tars/cpp/thirdparty/include)
-link_directories(/usr/local/tars/cpp/thirdparty/lib)
+# link_directories(/usr/local/tars/cpp/thirdparty/lib)
 
 #include_directories(/home/tarsprotol/App/OtherServer)
 
