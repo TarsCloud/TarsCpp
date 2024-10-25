@@ -10,6 +10,7 @@ aux_source_directory(. DIR_SRCS)
         
 add_executable(pb2tarscpp  ${DIR_SRCS})
 
+add_dependencies(pb2tarscpp thirdparty)
 
 target_link_libraries(pb2tarscpp ${LIB_PROTOBUF} ${LIB_PROTOC})
 

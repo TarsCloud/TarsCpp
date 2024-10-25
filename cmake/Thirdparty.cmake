@@ -8,19 +8,6 @@ endif(UNIX)
 option(TARS_SSL "option for ssl" OFF)
 option(TARS_HTTP2 "option for http2" OFF)
 option(TARS_PROTOBUF "option for protocol" OFF)
-#option(TARS_GPERF    "option for gperf" OFF)
-
-#IF(UNIX)
-#    FIND_PACKAGE(ZLIB)
-#    IF(NOT ZLIB_FOUND)
-#        SET(ERRORMSG "zlib library not found. Please install appropriate package, remove CMakeCache.txt and rerun cmake.")
-#        IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
-#            SET(ERRORMSG ${ERRORMSG} "On Debian/Ubuntu, package name is zlib1g-dev(apt-get install  zlib1g-dev), on Redhat/Centos and derivates it is zlib-devel (yum install zlib-devel).")
-#        ENDIF()
-#        MESSAGE(FATAL_ERROR ${ERRORMSG})
-#    ENDIF()
-#
-#ENDIF(UNIX)
 
 if (TARS_MYSQL)
     add_definitions(-DTARS_MYSQL=1)
@@ -29,10 +16,6 @@ endif ()
 if (TARS_GZIP)
     add_definitions(-DTARS_GZIP=1)
 endif ()
-
-#if (TARS_GPERF)
-#    add_definitions(-DTARS_GPERF=1)
-#endif ()
 
 if (TARS_SSL)
     add_definitions(-DTARS_SSL=1)
@@ -57,51 +40,12 @@ set(LIB_SSL)
 set(LIB_CRYPTO)
 set(LIB_PROTOBUF)
 set(LIB_GTEST)
-#set(LIB_GPERF)
-#set(LIB_TCMALLOC_PROFILER)
-#set(LIB_TCMALLOC_MINIMAL)
+
 #-------------------------------------------------------------
 
 add_custom_target(thirdparty)
 
 include(ExternalProject)
-#
-#if (TARS_GPERF)
-#
-#    set(GPERF_DIR_INC "${THIRDPARTY_PATH}/gperf/include")
-#    set(GRPEF_DIR_LIB "${THIRDPARTY_PATH}/gperf/lib")
-#    include_directories(${GPERF_DIR_INC})
-#    link_directories(${GRPEF_DIR_LIB})
-#
-#    if (UNIX)
-#        set(LIB_GPERF "profiler")
-#        set(LIB_TCMALLOC_PROFILER "tcmalloc_and_profiler")
-#        set(LIB_TCMALLOC_MINIMAL "tcmalloc_and_minimal")
-#
-#        ExternalProject_Add(ADD_${LIB_GPERF}
-#                URL https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com//src/gperftools-2.7.tar.gz
-#                DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
-#                PREFIX ${CMAKE_BINARY_DIR}
-#                INSTALL_DIR ${CMAKE_SOURCE_DIR}
-#                CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/src/gperf --disable-shared --disable-debugalloc
-#                SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gperf-lib
-#                BUILD_IN_SOURCE 1
-#                BUILD_COMMAND make
-#                URL_MD5 c6a852a817e9160c79bdb2d3101b4601
-#                )
-#
-#        add_dependencies(thirdparty ADD_${LIB_GPERF})
-#
-#        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/gperf/bin/pprof
-#                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
-#                DESTINATION thirdparty/bin/)
-#        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gperf/lib DESTINATION thirdparty)
-#        INSTALL(DIRECTORY ${CMAKE_BINARY_DIR}/src/gperf/include/gperftools DESTINATION thirdparty/include)
-#
-#    endif (UNIX)
-#
-#endif (TARS_GPERF)
-
 
 if(WIN32)
 
@@ -138,7 +82,7 @@ if (WIN32)
             CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest -A x64 -Dgtest_force_shared_crt=on -DBUILD_GMOCK=OFF
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
-            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE}
+            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} -- j4
             INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config  ${CMAKE_BUILD_TYPE}  --target install
             URL_MD5 82358affdd7ab94854c8ee73a180fc53
             )
@@ -182,7 +126,7 @@ if (TARS_PROTOBUF)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
@@ -195,7 +139,7 @@ if (TARS_PROTOBUF)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DBUILD_SHARED_LIBS=OFF -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
@@ -243,7 +187,7 @@ if (TARS_SSL)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND ./config --prefix=${CMAKE_BINARY_DIR}/src/openssl --openssldir=ssl no-shared
+                CONFIGURE_COMMAND ./config --prefix=${CMAKE_BINARY_DIR}/src/openssl --openssldir=ssl 
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/openssl-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make
@@ -275,7 +219,7 @@ if (TARS_MYSQL)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release -DDEFAULT_CHARSET=utf8mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 bad636fe9bcc9bb62e3f5b784495a9b5
                 )
@@ -288,7 +232,7 @@ if (TARS_MYSQL)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DDEFAULT_CHARSET=utf8mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci -DDISABLE_SHARED=1  -DSTACK_DIRECTION=1 -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DDEFAULT_CHARSET=utf8mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci -DSTACK_DIRECTION=1 -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make mysqlclient
@@ -321,7 +265,7 @@ if (TARS_GZIP)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/zlib
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/zlib-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 1c9f62f0778697a09d36121ead88e08e
                 )
@@ -366,10 +310,10 @@ if (TARS_HTTP2)
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
-                CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
                 )

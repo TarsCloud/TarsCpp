@@ -42,7 +42,13 @@ if(ENABLE_SHARED)
                 if (WIN32)
                         #windows动态编译需添加依赖库
                         target_link_libraries(tarsutil_shared ${LIB_SSL}.lib ${LIB_CRYPTO}.lib Crypt32)
+                else()
+                        target_link_libraries(tarsutil_shared ${LIB_SSL} ${LIB_CRYPTO})
                 endif ()
+        endif()
+
+        if(TARS_HTTP2)
+                        target_link_libraries(tarsutil_shared nghttp2)
         endif()
         add_dependencies(tarsutil_shared thirdparty)
 
