@@ -36,8 +36,7 @@ if(ENABLE_SHARED)
         ADD_DEFINITIONS( -DUTIL_DLL_EXPORT )
         add_library(tarsutil_shared SHARED ${DIR_SRCS})
 
-        target_link_libraries(tarsutil_shared libmysql)
-        # target_compile_definitions(tarsutil_shared PRIVATE UTIL_DLL_EXPORT)
+        target_link_libraries(tarsutil_shared ${LIB_MYSQL})
 
         if (TARS_SSL)
                 if (WIN32)
