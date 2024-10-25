@@ -57,7 +57,7 @@ if(WIN32)
         CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/curl
         SOURCE_DIR ${CMAKE_BINARY_DIR}/src/curl-lib
         BUILD_IN_SOURCE 1
-        BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
+        BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- /maxcpucount:4
         INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
         URL_MD5 b9bb5e11d579425154a9f97ed44be9b8
     )
@@ -82,7 +82,7 @@ if (WIN32)
             CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/gtest -A x64 -Dgtest_force_shared_crt=on -DBUILD_GMOCK=OFF
             SOURCE_DIR ${CMAKE_BINARY_DIR}/src/gtest-lib
             BUILD_IN_SOURCE 1
-            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} -- j4
+            BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} -- /maxcpucount:4
             INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config  ${CMAKE_BUILD_TYPE}  --target install
             URL_MD5 82358affdd7ab94854c8ee73a180fc53
             )
@@ -126,7 +126,7 @@ if (TARS_PROTOBUF)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/protobuf -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/protobuf-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- /maxcpucount:4
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 fb59398329002c98d4d92238324c4187
                 )
@@ -219,7 +219,7 @@ if (TARS_MYSQL)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/mysql -DBUILD_CONFIG=mysql_release -DDEFAULT_CHARSET=utf8mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- /maxcpucount:4
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 bad636fe9bcc9bb62e3f5b784495a9b5
                 )
@@ -265,7 +265,7 @@ if (TARS_GZIP)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} . -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/zlib
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/zlib-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- /maxcpucount:4
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 1c9f62f0778697a09d36121ead88e08e
                 )
@@ -313,7 +313,7 @@ if (TARS_HTTP2)
                 CONFIGURE_COMMAND ${CMAKE_COMMAND} .  -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/src/nghttp2 -DENABLE_LIB_ONLY=ON
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/nghttp2-lib
                 BUILD_IN_SOURCE 1
-                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- j4
+                BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- /maxcpucount:4
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
                 URL_MD5 5df375bbd532fcaa7cd4044b54b1188d
                 )
