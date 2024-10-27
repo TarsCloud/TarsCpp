@@ -37,13 +37,22 @@ macro(complice_tars OUT_DEPENDS_LIST HEADER INCLUDE)
         set(TARS_IN ${FILE})
         set(TARS_H ${NAME_WE}.h)
 
+        if(ENABLE_SHARED AND TARS_SSL)
+        add_custom_command(
+                OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                DEPENDS tars2cpp ${FILE}
+                COMMAND ${CMAKE_COMMAND} -E env PATH=${CMAKE_BINARY_DIR}/src/openssl/bin/ ${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}
+                COMMENT "${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}")
+        else()
         add_custom_command(
                 OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                 DEPENDS tars2cpp ${FILE}
                 COMMAND ${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}
                 COMMENT "${TARS2CPP} --with-tars ${HEADER_STRING} ${INCLUDE_STRING} ${TARS_IN}")
-
+        endif()
+                
         list(APPEND DEPENDS_LIST ${CMAKE_CURRENT_SOURCE_DIR}/${TARS_H})
 
         #设置需要清除的文件

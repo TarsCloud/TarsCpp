@@ -8,12 +8,12 @@
 
 static ObjectsCache    _objectsCache;
 
-CDbHandle::SetDivisionCache CDbHandle::_setDivisionCache;
-std::map<int, CDbHandle::GroupPriorityEntry> CDbHandle::_mapGroupPriority;
-std::mutex CDbHandle::_mutex;
+static CDbHandle::SetDivisionCache _setDivisionCache;
+static std::map<int, CDbHandle::GroupPriorityEntry> _mapGroupPriority;
+static std::mutex _mutex;
 
 //key-ip, value-组编号
-map<string, int> CDbHandle::_groupIdMap;
+map<string, int> _groupIdMap;
 //key-group_name, value-组编号
 //map<string, int> CDbHandle::_groupNameMap;
 

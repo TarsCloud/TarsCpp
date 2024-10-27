@@ -255,7 +255,7 @@ if (TARS_GZIP)
     link_directories(${GZIP_DIR_LIB})
 
     if (WIN32)
-        set(LIB_GZIP "libz")
+        set(LIB_GZIP "zlib")
 
         ExternalProject_Add(ADD_${LIB_GZIP}
                 URL http://cdn.tarsyun.com/src/zlib-1.2.11.tar.gz
@@ -302,7 +302,11 @@ if (TARS_HTTP2)
     link_directories(${NGHTTP2_DIR_LIB})
     link_directories(${NGHTTP2_DIR_LIB64})
 
-    set(LIB_HTTP2 "nghttp2_static")
+    if(ENABLE_SHARED)
+        set(LIB_HTTP2 "nghttp2")
+    else()
+        set(LIB_HTTP2 "nghttp2_static")
+    endif()
 
     if (WIN32)
         ExternalProject_Add(ADD_${LIB_HTTP2}

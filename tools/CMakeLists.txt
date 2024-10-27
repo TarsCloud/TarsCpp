@@ -19,6 +19,9 @@ function(tars2language TARGET)
 
     target_link_libraries(${TARGET} tarsutil tarsparse)
 
+    if(TARS_SSL AND ENABLE_SHARED)
+        target_link_libraries(${TARGET} ${LIB_SSL} ${LIB_CRYPTO})
+    endif()
     install(TARGETS ${TARGET}
             RUNTIME DESTINATION tools)
 endfunction()

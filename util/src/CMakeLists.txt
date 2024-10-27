@@ -48,8 +48,11 @@ if(ENABLE_SHARED)
         endif()
 
         if(TARS_HTTP2)
-                        target_link_libraries(tarsutil_shared nghttp2)
+                target_link_libraries(tarsutil_shared nghttp2)
         endif()
+        if(TARS_GZIP)
+                target_link_libraries(tarsutil_shared ${LIB_GZIP})
+        endif()        
         add_dependencies(tarsutil_shared thirdparty)
 
         install(TARGETS tarsutil_shared

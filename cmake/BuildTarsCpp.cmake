@@ -98,10 +98,6 @@ macro(build_tars_server MODULE DEPS)
         target_link_libraries(${MODULE} ${LIB_HTTP2} ${LIB_PROTOBUF})
     endif()
 
-#    if(TARS_GPERF)
-#        target_link_libraries(${MODULE} ${LIB_GPERF})
-#    endif(TARS_GPERF)
-
     SET(MODULE-TGZ "${CMAKE_BINARY_DIR}/${MODULE}.tgz")
     SET(RUN_DEPLOY_COMMAND_FILE "${PROJECT_BINARY_DIR}/run-deploy-${MODULE}.cmake")
     FILE(WRITE ${RUN_DEPLOY_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/deploy/${MODULE})\n")

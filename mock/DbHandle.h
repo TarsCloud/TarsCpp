@@ -26,7 +26,7 @@ typedef map<string, ObjectItem> ObjectsCache;
  */
 class UTIL_DLL_API CDbHandle
 {
-private:
+public:
     struct GroupPriorityEntry
     {
         std::string        sGroupID;
@@ -199,14 +199,14 @@ protected:
 
     vector<EndpointF> getEpsByGroupId(const vector<EndpointF> & vecEps, const GroupUseSelect GroupSelect, const set<int> & setGroupID, ostringstream & os);
 
-protected:
+// protected:
 
-	static std::mutex _mutex;
-    //set划分缓存
-    static SetDivisionCache _setDivisionCache;
-    //优先级的序列
-    static std::map<int, GroupPriorityEntry> _mapGroupPriority;
-    //分组信息
-    static map<string,int> _groupIdMap;
+// 	UTIL_DLL_API static std::mutex _mutex;
+//     //set划分缓存
+//     UTIL_DLL_API static SetDivisionCache _setDivisionCache;
+//     //优先级的序列
+//     UTIL_DLL_API static std::map<int, GroupPriorityEntry> _mapGroupPriority;
+//     //分组信息
+//     UTIL_DLL_API static map<string,int> _groupIdMap;
 };
 
