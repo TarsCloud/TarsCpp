@@ -307,7 +307,7 @@ public:
      * @param fd    句柄
      * @return EpollInfo
 	 */
-	shared_ptr<EpollInfo> createEpollInfo(SOCKET_TYPE fd);
+	shared_ptr<EpollInfo> createEpollInfo(int fd);
 
 	/**
 	 * 释放EpollInfo

@@ -6,12 +6,9 @@
 
 #include "util/tc_platform.h"
 
-#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
-
 #include <string>
 #include <iostream>
 #include <fcntl.h>
-#include <termios.h>
 #include <cstring>
 #include "util/tc_ex.h"
 #include "util/tc_epoller.h"
@@ -86,10 +83,12 @@ public:
 
     struct Options
     {
-        string portName;           //串口地址
-        speed_t baudIn;            //输入比特率
-        speed_t baudOut;           //输出比特率
-        tcflag_t cflags = 0;           //串口通信表示位
+        string portName;           	//串口地址
+        int baudIn;            		//输入比特率
+        int baudOut;           		//输出比特率
+    	uint8_t byteSize = 8;        	/* Number of bits/byte, 5-8        */
+    	uint8_t parity = 0;          	/* 0-4=None,Odd,Even,Mark,Space    */
+    	uint8_t stopBits = 0;        	/* 0,1,2 = 1, 1.5, 2               */		
     };
 
     friend class TC_SerialPortGroup;
@@ -203,7 +202,7 @@ protected:
 	 */
 	bool isValid()
 	{
-		return _serialFd != -1;
+		return _serialFd != INVALID_HANDLE_VALUE;
 	}
 
 	/**
@@ -231,10 +230,14 @@ protected:
 	std::mutex _mutex;
 	std::condition_variable _cond;
 
+#if TARGET_PLATFORM_WINDOWS
+	HANDLE _serialFd = INVALID_HANDLE_VALUE;
+#else
 	/**
 	 * 串口句柄
 	 */
 	int _serialFd = -1;
+#endif
 
 	/**
 	 * 数据队列, 注意, 不要用deque, 因为后面要删除迭代器, 可能失效
@@ -318,4 +321,3 @@ protected:
 
 }
 
-#endif

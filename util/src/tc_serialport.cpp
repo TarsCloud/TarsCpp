@@ -5,6 +5,8 @@
 #include "util/tc_serialport.h"
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+#include <termios.h>
+#endif
 
 namespace tars
 {
@@ -34,10 +36,10 @@ shared_ptr<TC_SerialPort> TC_SerialPortGroup::create(const TC_SerialPort::Option
 	}
 
 	shared_ptr<TC_SerialPort> sp = std::make_shared<TC_SerialPort>(options, this);
+	
+	sp->initialize(onparser);
 
     _serialPorts[options.portName] = sp;
-
-	sp->initialize(onparser);
 
 	return sp;
 }
@@ -96,8 +98,13 @@ void TC_SerialPort::close()
 {
 	if (_serialFd >= 0)
 	{
+#if TARGET_PLATFORM_WINDOWS
+		CloseHandle(_serialFd); 
+		_serialFd = INVALID_HANDLE_VALUE;
+#else
 		::close(_serialFd);
 		_serialFd = -1;
+#endif
 	}
 }
 
@@ -108,11 +115,42 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
         throw TC_SerialPortException("open serial port: " + _options.portName + " has initialized.");
     }
 
+#if TARGET_PLATFORM_WINDOWS
+
+	_serialFd = CreateFileA(_options.portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL );
+	if( _serialFd == NULL ) 
+	{
+		 throw TC_SerialPortException("open serial port: " + _options.portName + " has initialized.");
+	}
+	DCB dcb;
+
+	COMMTIMEOUTS CommTimeOuts;
+	CommTimeOuts.ReadIntervalTimeout = 0xFFFFFFFF;
+	CommTimeOuts.ReadTotalTimeoutMultiplier = 100;
+	CommTimeOuts.ReadTotalTimeoutConstant = 1000;
+	CommTimeOuts.WriteTotalTimeoutMultiplier = 0;
+	CommTimeOuts.WriteTotalTimeoutConstant = 5000;
+	SetCommTimeouts( _serialFd, &CommTimeOuts );
+
+	dcb.DCBlength = sizeof( DCB );
+	GetCommState( _serialFd, &dcb );
+	dcb.BaudRate = _options.baudIn;
+	dcb.ByteSize = _options.byteSize;
+	dcb.Parity = _options.parity;
+	dcb.StopBits = _options.stopBits;
+	if( !SetCommState( _serialFd, &dcb ) || !SetupComm( _serialFd, 10000, 10000 ) )
+	{
+		CloseHandle( _serialFd );
+		throw TC_SerialPortException("Failed to set serial port: " + _options.portName + ", error:" + TC_Exception::getSystemError());
+	}
+#else
+
 	_serialFd = open(_options.portName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if (_serialFd == -1)
 	{
 		throw TC_SerialPortException("Failed to open serial port: " + _options.portName);
 	}
+
 
 	struct termios serialSettings;
     bzero(&serialSettings, sizeof(serialSettings));
@@ -121,6 +159,67 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
 
 	cfsetispeed(&serialSettings, _options.baudIn);
 	cfsetospeed(&serialSettings, _options.baudOut);
+	switch(_options.byteSize)
+	{
+		case 5:
+			serialSettings.c_cflag |= CS5;
+			break;
+		case 6:
+			serialSettings.c_cflag |= CS6;
+			break;
+		case 7:
+			serialSettings.c_cflag |= CS7;
+			break;
+		case 8:
+			serialSettings.c_cflag |= CS8;
+			break;
+		default:
+			serialSettings.c_cflag |= CS8;
+			break;
+	}
+
+	switch(_options.parity)
+	{
+		case 0:
+			serialSettings.c_cflag &= ~PARENB;
+			break;
+		case 1:
+			serialSettings.c_cflag |= PARENB;
+			serialSettings.c_cflag |= PARODD;
+			break;
+		case 2:
+			serialSettings.c_cflag |= PARENB;
+			serialSettings.c_cflag &= ~PARODD;
+			break;
+		case 3:
+			serialSettings.c_cflag |= PARENB;
+			serialSettings.c_cflag |= PARODD;
+			break;
+		case 4:
+			serialSettings.c_cflag |= PARENB;
+			serialSettings.c_cflag &= ~PARODD;
+			break;
+		default:
+			serialSettings.c_cflag &= ~PARENB;
+			break;
+	}
+
+	switch(_options.stopBits)
+	{
+		case 0:
+			serialSettings.c_cflag &= ~CSTOPB;
+			break;
+		case 1:
+			serialSettings.c_cflag &= ~CSTOPB;
+			break;
+		case 2:
+			serialSettings.c_cflag |= CSTOPB;
+			break;
+		default:
+			serialSettings.c_cflag &= ~CSTOPB;
+			break;
+	}
+
 	serialSettings.c_cflag = _options.cflags;
 
 	int ret = tcsetattr(_serialFd, TCSANOW, &serialSettings);
@@ -129,10 +228,11 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
 		throw TC_SerialPortException("Failed to set serial port: " + _options.portName);
 	}
 	tcflush(_serialFd, TCIOFLUSH);
+#endif
 
     _onParserCallback = onparser;
 
-	_epollInfo = _serialPortGroup->getEpoller().createEpollInfo(_serialFd);
+	_epollInfo = _serialPortGroup->getEpoller().createEpollInfo((int)_serialFd);
 
 	map<uint32_t, TC_Epoller::EpollInfo::EVENT_CALLBACK> callbacks;
 
@@ -245,7 +345,7 @@ bool TC_SerialPort::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> & epo
 
 	do
 	{
-		size_t expansion = std::max(std::min(_recvBuffer.getBufferLength(), (size_t) MAX_BUFFER_SIZE), (size_t) BUFFER_SIZE);
+		size_t expansion = (std::max)((std::min)(_recvBuffer.getBufferLength(), (size_t) MAX_BUFFER_SIZE), (size_t) BUFFER_SIZE);
 		auto data = _recvBuffer.getOrCreateBuffer(BUFFER_SIZE / 2, expansion);
 
 		uint32_t left = (uint32_t) data->left();
@@ -393,8 +493,21 @@ void TC_SerialPort::doRequest()
 
 int TC_SerialPort::send(const void *buf, uint32_t len)
 {
+#if TARGET_PLATFORM_WINDOWS
+	unsigned long dwBytesWritten = 0;
+	bool bWriteStat = WriteFile(_serialFd, buf, len, &dwBytesWritten, NULL);
+
+	if (!bWriteStat && !TC_Socket::isPending())
+	{
+		int nerr = TC_Exception::getSystemCode();
+		string err = "send error, errno:" + TC_Common::tostr(nerr) + "," + TC_Exception::parseError(nerr);
+		close();
+		throw TC_SerialPortException("TC_SerialPort::send, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
+	}
+
+	return dwBytesWritten;
+#else
 	int iRet = ::write(_serialFd, (const char *) buf, len);
-//    LOG_CONSOLE_DEBUG << this << ", send, fd:" << _serialFd << ", iRet:" << iRet << ", len:" << len << endl;
 
 	if (iRet < 0 && !TC_Socket::isPending())
 	{
@@ -403,15 +516,28 @@ int TC_SerialPort::send(const void *buf, uint32_t len)
 		close();
 		throw TC_SerialPortException("TC_SerialPort::send, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
 	}
-
 	return iRet;
+
+#endif
 }
 
 int TC_SerialPort::recv(void *buf, uint32_t len)
 {
-	int iRet = ::read(_serialFd, (char *) buf, len);
+#if TARGET_PLATFORM_WINDOWS
+	unsigned long dwBytesRead = 0;
+	bool bReadStatus = ReadFile( _serialFd, buf, len, &dwBytesRead, NULL );
 
-//	 LOG_CONSOLE_DEBUG << this << ", recv, fd:" << _serialFd << ", iRet:" << iRet << ", " << string((const char *)buf, iRet) << endl;
+	if (!bReadStatus && !TC_Socket::isPending())
+	{
+		int nerr = TC_Exception::getSystemCode();
+		string err = "recv error, errno:" + TC_Common::tostr(nerr) + "," + TC_Exception::parseError(nerr);
+		close();
+		throw TC_SerialPortException("TC_SerialPort::recv, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
+	}
+
+	return dwBytesRead;
+#else
+	int iRet = ::read(_serialFd, (char *) buf, len);
 
 	if ((iRet < 0 && !TC_Socket::isPending()))
 	{
@@ -420,10 +546,9 @@ int TC_SerialPort::recv(void *buf, uint32_t len)
 		close();
 		throw TC_SerialPortException("TC_SerialPort::recv, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
 	}
-
 	return iRet;
-}
-
-}
 
 #endif
+}
+
+}

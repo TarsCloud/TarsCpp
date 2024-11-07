@@ -319,7 +319,7 @@ void TC_Epoller::close()
 #endif
 }
 
-shared_ptr<TC_Epoller::EpollInfo> TC_Epoller::createEpollInfo(SOCKET_TYPE fd)
+shared_ptr<TC_Epoller::EpollInfo> TC_Epoller::createEpollInfo(int fd)
 {
 	return std::make_shared<TC_Epoller::EpollInfo>(this, fd);
 }
