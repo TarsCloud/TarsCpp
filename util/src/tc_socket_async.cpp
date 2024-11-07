@@ -7,39 +7,32 @@ namespace tars
 
 #define H64(x) (((uint64_t)x) << 32)
 
-void TC_SocketAsync::start()
-{
-    TC_SocketAsyncCore::getInstance()->start();
-}
+// void TC_SocketAsync::start()
+// {
+//     TC_SocketAsyncCore::getInstance()->start();
+// }
 
-void TC_SocketAsync::terminate()
-{
-    TC_SocketAsyncCore::getInstance()->terminate();
-}
+// void TC_SocketAsync::terminate()
+// {
+//     TC_SocketAsyncCore::getInstance()->terminate();
+// }
 
-void TC_SocketAsync::setRetryInterval(int64_t millsecond)
-{
-    TC_SocketAsyncCore::getInstance()->setRetryInterval(millsecond);
-}
+// void TC_SocketAsync::setRetryInterval(int64_t millsecond)
+// {
+//     TC_SocketAsyncCore::getInstance()->setRetryInterval(millsecond);
+// }
 
-void TC_SocketAsync::release(TC_SocketAsyncPtr &ptr)
-{
-    TC_SocketAsyncCore::getInstance()->release(ptr);
-}
+// void TC_SocketAsync::release(TC_SocketAsyncPtr &ptr)
+// {
+//     TC_SocketAsyncCore::getInstance()->release(ptr);
+// }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-TC_SocketAsyncPtr TC_SocketAsync::createSocketAsync(const TC_Endpoint &ep, const RequestCallbackPtr &callbackPtr, const TC_NetWorkBuffer::protocol_functor &pf)
-{
-    TC_SocketAsyncPtr ptr = new TC_SocketAsync(ep, callbackPtr, pf);
 
-    TC_SocketAsyncCore::getInstance()->addNotify(ptr);
-
-    return ptr;
-}
-
-TC_SocketAsync::TC_SocketAsync(const TC_Endpoint &ep, const RequestCallbackPtr &callbackPtr, const TC_NetWorkBuffer::protocol_functor &pf) 
-: _ep(ep)
+TC_SocketAsync::TC_SocketAsync(const shared_ptr<TC_SocketAsyncCore> &core, const TC_Endpoint &ep, const RequestCallbackPtr &callbackPtr, const TC_NetWorkBuffer::protocol_functor &pf) 
+: _core(core)
+, _ep(ep)
 , _callbackPtr(callbackPtr)
 , _pf(pf)
 , _bClear(true)
@@ -47,9 +40,9 @@ TC_SocketAsync::TC_SocketAsync(const TC_Endpoint &ep, const RequestCallbackPtr &
 , _uniqId(0)
 , _status(EM_NORMAL)
 {
-    TC_SocketAsyncCore::getInstance()->start();
+    // TC_SocketAsyncCore::getInstance()->start();
 
-    _core = TC_SocketAsyncCore::getInstance();
+    // _core = TC_SocketAsyncCore::getInstance();
 
     resetTrans(ep);
 }
@@ -142,9 +135,9 @@ void TC_SocketAsync::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::Clos
     }
     else
     {
-        TC_SocketAsyncPtr ptr(this);
+        // TC_SocketAsyncPtr ptr(this);
 
-        _core->addRetry(ptr);
+        _core->addRetry(shared_from_this());
         //连接关闭, 清除掉buffer
         if (_bClear)
         {
@@ -162,9 +155,9 @@ void TC_SocketAsync::onCloseCallback(TC_Transceiver* trans, TC_Transceiver::Clos
 void TC_SocketAsync::onConnectCallback(TC_Transceiver* trans)
 {
 //	LOG_CONSOLE_DEBUG << endl;
-    TC_SocketAsyncPtr ptr(this);
+    // TC_SocketAsyncPtr ptr(this);
 
-    _core->addConnection(ptr);
+    _core->addConnection(shared_from_this());
 
     if (_callbackPtr)
     {
@@ -387,7 +380,7 @@ void TC_SocketAsync::sendRequest(const string &sBuffer, bool header)
         return;
     }
 
-    TC_SocketAsyncPtr ptr(this);
+    // TC_SocketAsyncPtr ptr(this);
 
     shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
 
@@ -408,7 +401,7 @@ void TC_SocketAsync::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &buf
         return;
     }
 
-    TC_SocketAsyncPtr ptr(this);
+    // TC_SocketAsyncPtr ptr(this);
 
     addSendReqBuffer(buff, header);
 
@@ -452,7 +445,7 @@ void TC_SocketAsync::resume()
 TC_SocketAsyncCore::TC_SocketAsyncCore()
 : _thread(NULL), _terminate(false), _retryInterval(1000)
 {
-    _conn = new Connection();
+    _conn = std::make_shared<Connection>();
 
     _epoller.create(10240);
 }
@@ -509,7 +502,7 @@ void TC_SocketAsyncCore::terminate()
     }
 }
 
-void TC_SocketAsyncCore::release(TC_SocketAsyncPtr &ptr)
+void TC_SocketAsyncCore::release(const TC_SocketAsyncPtr &ptr)
 {
     std::lock_guard<std::recursive_mutex> lock(_release_mutex);
 
@@ -521,7 +514,17 @@ void TC_SocketAsyncCore::release(TC_SocketAsyncPtr &ptr)
 	}
 }
 
-void TC_SocketAsyncCore::addRetry(TC_SocketAsyncPtr & ptr)
+
+TC_SocketAsyncPtr TC_SocketAsyncCore::createSocketAsync(const TC_Endpoint &ep, const TC_SocketAsync::RequestCallbackPtr &callbackPtr, const TC_NetWorkBuffer::protocol_functor &pf)
+{
+    TC_SocketAsyncPtr ptr = std::make_shared<TC_SocketAsync>(shared_from_this(), ep, callbackPtr, pf);
+
+    addNotify(ptr);
+
+    return ptr;
+}
+
+void TC_SocketAsyncCore::addRetry(const TC_SocketAsyncPtr & ptr)
 {
     _conn->addRetry(ptr);
 }
@@ -531,12 +534,12 @@ void TC_SocketAsyncCore::delRetry(uint32_t uniqId)
     _conn->delRetry(uniqId);
 }
 
-void TC_SocketAsyncCore::addConnection(TC_SocketAsyncPtr & ptr)
+void TC_SocketAsyncCore::addConnection(const TC_SocketAsyncPtr & ptr)
 {
     _conn->add(ptr);
 }
 
-void TC_SocketAsyncCore::addNotify(TC_SocketAsyncPtr & ptr)
+void TC_SocketAsyncCore::addNotify(const TC_SocketAsyncPtr & ptr)
 {
     uint32_t uniqId = _conn->getUniqId();
 

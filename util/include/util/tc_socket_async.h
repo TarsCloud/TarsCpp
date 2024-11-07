@@ -23,13 +23,12 @@ namespace tars
 * @file tc_socket_async.h
 * @brief  socket异步长连接封装类.
 * 说明:
-*         1 网络线程统一在背后运行(唯一的一个), 使用者不需要和TC_SocketAsyncCore打交道
+*         1 TC_SocketAsyncCore控制网络线程, 使用它来创建和释放TC_SocketAsync对象
 *         2 默认情况下, 和后台服务连接断了, 队列中没有发送的数据就扔掉, 可以用TC_SocketAsync::setClearBuffer来控制
 *         3 和后台服务的重连时间可以通过TC_SocketAsync::setRetryInterval来设置(全局, 不能做到每个后台服务都有单独的)
 *         4 RequestCallback的回调都在唯一的网络线程处理, 需要自己考虑线程安全问题, 同时回调函数里面不要阻塞, 会影响性能
 *         5 可以用TC_SocketAsync::pause/resume来暂停和恢复链接
-*         6 调用TC_SocketAsyncPtr使用完以后, 最好通过TC_SocketAsync::release()释放掉
-*         demo可以参见UtilDemp/echo-client
+*         6 调用TC_SocketAsyncPtr使用完以后, 最好通过TC_SocketAsyncCore::release()释放掉
 *
 * @author ruanshudong@qq.com
 */
@@ -42,41 +41,18 @@ namespace tars
 class TC_SocketAsync;
 class TC_SocketAsyncCore;
 
-typedef TC_AutoPtr<TC_SocketAsync> TC_SocketAsyncPtr;
+typedef shared_ptr<TC_SocketAsync> TC_SocketAsyncPtr;
 
-class UTIL_DLL_API TC_SocketAsync : public std::mutex, public TC_HandleBase
+class UTIL_DLL_API TC_SocketAsync : public std::mutex , public enable_shared_from_this<TC_SocketAsync>
 {
 public:
-
-    /**
-     * 启动组件
-     */
-    static void start();
-
-    /**
-     * 结束组件
-     */
-    static void terminate();
-
-    /**
-     * 设置全局重连时间间隔
-     * @param millsecond [description]
-     */
-    static void setRetryInterval(int64_t millsecond);
-
-    /**
-     * @brief 释放对象
-     * @return [description]
-     */
-    static void release(TC_SocketAsyncPtr &ptr);
-    
     /**
     * @brief 异步请求回调对象
     * onSucc: 成功回调
     * onFailed: 失败回调, 无论什么失败都会被调用掉, 比如onSendTimeout, 也会在onFailed被调用的
     * 注意, 一个请求
     */
-    class RequestCallback : public TC_HandleBase
+    class RequestCallback 
     {
     public:
         /**
@@ -127,17 +103,20 @@ public:
         virtual void onBeforeRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> &reqBuffer) {};
     };
 
-    typedef TC_AutoPtr<RequestCallback> RequestCallbackPtr;
+    typedef shared_ptr<RequestCallback> RequestCallbackPtr;
 
     /**
-     * @brief 创建异步Socket, 必须用智能指针来管理
-     *
-     * @param  ep          [description]
-     * @param  callbackPtr [description]
-     * @param  pf          [description]
-     * @return             [description]
-     */
-    static TC_SocketAsyncPtr createSocketAsync(const TC_Endpoint &ep, const RequestCallbackPtr &callbackPtr, const TC_NetWorkBuffer::protocol_functor &pf);
+    * @构造函数
+    * @TC_SocketAsync
+    *
+    * @return
+    */
+    TC_SocketAsync(const shared_ptr<TC_SocketAsyncCore> &core, const TC_Endpoint &ep, const RequestCallbackPtr &callbackPtr, const TC_NetWorkBuffer::protocol_functor &pf);
+
+    /**
+    * @brief 析构函数
+    */
+    ~TC_SocketAsync();
 
     /**
     * @brief 异步发送buffer
@@ -313,19 +292,6 @@ public:
 protected:
 
     /**
-    * @构造函数
-    * @TC_SocketAsync
-    *
-    * @return
-    */
-    TC_SocketAsync(const TC_Endpoint &ep, const RequestCallbackPtr &callbackPtr, const TC_NetWorkBuffer::protocol_functor &pf);
-
-    /**
-    * @brief 析构函数
-    */
-    ~TC_SocketAsync();
-
-    /**
      * get trans
      * @return
      */
@@ -403,7 +369,7 @@ protected:
     friend class TC_SocketAsyncCore;
 
 protected:
-    TC_SocketAsyncCore          *_core;
+    shared_ptr<TC_SocketAsyncCore> _core;
 
     mutable std::mutex			_mutex;
 
@@ -433,9 +399,9 @@ protected:
 
 /**
  * 长连接网络类
- * 不要直接使用这个类!!!
+ * 使用智能指针!
  */
-class UTIL_DLL_API TC_SocketAsyncCore : public TC_Singleton<TC_SocketAsyncCore>
+class UTIL_DLL_API TC_SocketAsyncCore : public enable_shared_from_this<TC_SocketAsyncCore>
 {
 public:
     /**
@@ -491,13 +457,23 @@ public:
      * @brief 释放连接, 如果TC_SocketAsyncPtr对象不使用了, 必须要释放, 否则会导致内存泄露
      * @return
      */
-    void release(TC_SocketAsyncPtr &ptr);
+    void release(const TC_SocketAsyncPtr &ptr);
 
     /**
      * epoller
      * @return
      */
     TC_Epoller* getEpoller() { return &_epoller; }
+
+    /**
+     * @brief 创建异步Socket, 必须用智能指针来管理
+     *
+     * @param  ep          [description]
+     * @param  callbackPtr [description]
+     * @param  pf          [description]
+     * @return             [description]
+     */
+    TC_SocketAsyncPtr createSocketAsync(const TC_Endpoint &ep, const TC_SocketAsync::RequestCallbackPtr &callbackPtr, const TC_NetWorkBuffer::protocol_functor &pf);
 
 protected:
     enum NotifyEvent
@@ -524,7 +500,7 @@ protected:
      * 添加需要重建的链接
      * @param ptr [description]
      */
-    void addRetry(TC_SocketAsyncPtr &ptr);
+    void addRetry(const TC_SocketAsyncPtr &ptr);
 
     /**
      * 删除重连
@@ -543,18 +519,18 @@ protected:
      * @brief 添加链接
      * @param fd          连接句柄
      */
-    void addConnection(TC_SocketAsyncPtr &ptr);
+    void addConnection(const TC_SocketAsyncPtr &ptr);
 
     /**
      * 添加通知句柄
      * @param ptr [description]
      */
-    void addNotify(TC_SocketAsyncPtr &ptr);
+    void addNotify(const TC_SocketAsyncPtr &ptr);
 
     /**
      * 连接管理
      */
-    class Connection : public TC_HandleBase
+    class Connection 
     {
     public:
         /**
@@ -584,7 +560,7 @@ protected:
          * 添加到重试连接队列中, 定时检测重连
          * @param ptr [description]
          */
-        void addRetry(TC_SocketAsyncPtr &ptr)
+        void addRetry(const TC_SocketAsyncPtr &ptr)
         {
         	std::lock_guard<std::mutex> lock(_mutex);
 
@@ -631,7 +607,7 @@ protected:
          * @param  ptr [description]
          * @return     [description]
          */
-        uint32_t add(TC_SocketAsyncPtr &ptr)
+        uint32_t add(const TC_SocketAsyncPtr &ptr)
         {
         	std::lock_guard<std::mutex> lock(_mutex);
 
@@ -679,7 +655,7 @@ protected:
             return ptr;
         }
 
-        void release(TC_SocketAsyncPtr &ptr)
+        void release(const TC_SocketAsyncPtr &ptr)
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if(ptr)
@@ -699,7 +675,7 @@ protected:
         unordered_map<uint32_t, TC_SocketAsyncPtr> _list;
     };
 
-    typedef TC_AutoPtr<Connection> ConnectionPtr;
+    typedef shared_ptr<Connection> ConnectionPtr;
 
     friend class TC_SocketAsync;
 
