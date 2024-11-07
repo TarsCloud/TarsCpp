@@ -202,7 +202,11 @@ protected:
 	 */
 	bool isValid()
 	{
+	#if TARGET_PLATFORM_WINDOWS
 		return _serialFd != INVALID_HANDLE_VALUE;
+	#else
+		return _serialFd != -1;
+	#endif
 	}
 
 	/**

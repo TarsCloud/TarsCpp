@@ -220,8 +220,6 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
 			break;
 	}
 
-	serialSettings.c_cflag = _options.cflags;
-
 	int ret = tcsetattr(_serialFd, TCSANOW, &serialSettings);
 	if (ret != 0)
 	{
