@@ -83,9 +83,8 @@ public:
 
     struct Options
     {
-        string portName;           	//串口地址
-        int baudIn;            		//输入比特率
-        int baudOut;           		//输出比特率
+        string portName;           		//串口地址
+        int baudRate;            		//输入输出比特率
     	uint8_t byteSize = 8;        	/* Number of bits/byte, 5-8        */
     	uint8_t parity = 0;          	/* 0-4=None,Odd,Even,Mark,Space    */
     	uint8_t stopBits = 0;        	/* 0,1,2 = 1, 1.5, 2               */		
@@ -127,6 +126,24 @@ public:
 	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
 	*/
 	void sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> & buff, bool header = false);
+
+	/**
+	 * 设置数据cookie
+	 * @param cookie
+	 */
+	void setCookie(void *cookie)
+	{
+		_cookie = cookie;
+	}
+
+	/**
+	 * 获取数据cookie
+	 * @return
+	 */
+	void * getCookie()
+	{
+		return _cookie;
+	}
 
 protected:
 	/**
@@ -268,6 +285,10 @@ protected:
 	 */
 	onparser_callback _onParserCallback;
 
+	/**
+	 * 数据cookie
+	 */
+	void *_cookie;
 };
 
 

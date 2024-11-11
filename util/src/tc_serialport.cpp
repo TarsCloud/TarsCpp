@@ -55,9 +55,8 @@ void TC_SerialPortGroup::run()
 {
 	_epoller.idle([&]
 	              {
-
 		              std::lock_guard<std::mutex> lock(_mutex);
-		              for (auto e: _serialPorts)
+		              for (const auto &e: _serialPorts)
 		              {
 			              e.second->doRequest();
 		              }
@@ -134,7 +133,7 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
 
 	dcb.DCBlength = sizeof( DCB );
 	GetCommState( _serialFd, &dcb );
-	dcb.BaudRate = _options.baudIn;
+	dcb.BaudRate = _options.baudRate;
 	dcb.ByteSize = _options.byteSize;
 	dcb.Parity = _options.parity;
 	dcb.StopBits = _options.stopBits;
@@ -155,10 +154,14 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
 	struct termios serialSettings;
     bzero(&serialSettings, sizeof(serialSettings));
 
-	tcgetattr(_serialFd, &serialSettings);
+	int ret = tcgetattr(_serialFd, &serialSettings);
 
-	cfsetispeed(&serialSettings, _options.baudIn);
-	cfsetospeed(&serialSettings, _options.baudOut);
+	cfsetispeed(&serialSettings, _options.baudRate);
+	cfsetospeed(&serialSettings, _options.baudRate);
+
+	serialSettings.c_cflag &= ~CSIZE;
+	serialSettings.c_cflag |= CLOCAL | CREAD;
+
 	switch(_options.byteSize)
 	{
 		case 5:
@@ -186,8 +189,10 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
 		case 1:
 			serialSettings.c_cflag |= PARENB;
 			serialSettings.c_cflag |= PARODD;
+			serialSettings.c_cflag |= (INPCK | ISTRIP);
 			break;
 		case 2:
+			serialSettings.c_cflag |= (INPCK | ISTRIP);
 			serialSettings.c_cflag |= PARENB;
 			serialSettings.c_cflag &= ~PARODD;
 			break;
@@ -206,24 +211,22 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
 
 	switch(_options.stopBits)
 	{
-		case 0:
-			serialSettings.c_cflag &= ~CSTOPB;
-			break;
 		case 1:
 			serialSettings.c_cflag &= ~CSTOPB;
 			break;
 		case 2:
 			serialSettings.c_cflag |= CSTOPB;
 			break;
-		default:
-			serialSettings.c_cflag &= ~CSTOPB;
-			break;
 	}
 
-	int ret = tcsetattr(_serialFd, TCSANOW, &serialSettings);
+	serialSettings.c_cc[VTIME] = 0;	
+	serialSettings.c_cc[VMIN] = 0;	
+
+	ret = tcsetattr(_serialFd, TCSANOW, &serialSettings);
 	if (ret != 0)
 	{
-		throw TC_SerialPortException("Failed to set serial port: " + _options.portName);
+		close();	
+		throw TC_SerialPortException("Failed to set serial port: " + _options.portName + ", error:" + TC_Exception::getSystemError());
 	}
 	tcflush(_serialFd, TCIOFLUSH);
 #endif
@@ -337,9 +340,7 @@ bool TC_SerialPort::handleCloseImp(const shared_ptr<TC_Epoller::EpollInfo> & epo
 bool TC_SerialPort::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> & epollInfo)
 {
 	//串口读取数据
-
 	int iRet = 0;
-//	int64_t now = TNOWMS;
 
 	do
 	{
@@ -444,6 +445,7 @@ TC_SerialPort::ReturnStatus TC_SerialPort::writeBuffer(const shared_ptr<TC_NetWo
 		auto data = _sendBuffer.getBufferPointer();
 
 		int iRet = this->send(data.first, (uint32_t) data.second);
+
 		if (iRet < 0)
 		{
 			if (!isValid())
