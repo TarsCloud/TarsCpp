@@ -1455,12 +1455,6 @@ void ServantProxy::onSetInactive(const EndpointInfo &ep)
                                                      ce->notifySetInactive(this, ep);
                                                  });
 
-//    for (size_t i = 0; i < _rootPrx->_servantList.size(); i++)
-//    {
-//        ServantPrx &prx = _rootPrx->_servantList[i];
-//
-//        prx->forEachObject([&](ObjectProxy *o) { o->onSetInactive(ep); });
-//    }
 }
 
 //在网络线程中回调
