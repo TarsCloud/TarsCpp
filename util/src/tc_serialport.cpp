@@ -131,9 +131,9 @@ void TC_SerialPortGroup::run()
 				}
 				e.second->handleInputImp();
 			}
-			catch(const std::exception& e)
+			catch(const std::exception& ex)
 			{
-				e.second->getCallbackPtr()->onFailed(e.what());
+				e.second->getCallbackPtr()->onFailed(ex.what());
 				e.second->close();
 			}
 		}
@@ -260,6 +260,8 @@ void TC_SerialPort::initialize()
 		throw TC_SerialPortException("Failed to bind io port: " + _options.portName + ", error:" + TC_Exception::getSystemError());		
 	}
 
+	_buffRecv.clear();
+
 #else
 	if (_serialFd >= 0)
     {
@@ -362,7 +364,9 @@ void TC_SerialPort::initialize()
 
 	_epollInfo->registerCallback(callbacks, EPOLLIN | EPOLLOUT);
 #endif
-
+	_sendBuffer.clearBuffers();
+	_recvBuffer.clearBuffers();
+	
 	_callbackPtr->onOpen();
 }
 
@@ -380,6 +384,10 @@ void TC_SerialPort::sendRequest(const string & sBuffer, bool header)
 
 	buff->addBuffer(sBuffer);
 
+	if(!isValid())
+	{
+		initialize();
+	}
 	addSendReqBuffer(buff, header);
 }
 
@@ -388,6 +396,10 @@ void TC_SerialPort::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> & buf
 	if (buff && buff->empty())
 		return;
 
+	if(!isValid())
+	{
+		initialize();
+	}
 	addSendReqBuffer(buff, header);
 }
 

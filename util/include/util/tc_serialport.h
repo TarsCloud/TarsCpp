@@ -34,33 +34,53 @@ namespace tars
  *
  * TC_SerialPortGroup::Options options;
  * options.portName = ....
- *
- * shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options);
- *
- * //定义一个协议解析器
-TC_NetWorkBuffer::PACKET_TYPE parser(TC_NetWorkBuffer&buff, TC_SerialPort*)
+ - 定义回调
+
+class SerialPortCallback : public TC_SerialPort::RequestCallback
 {
-    const char *p = buff.mergeBuffers();
+public:
+	void onSucc(const vector<char> &data)
+	{
+        cout << "data: " << TC_Common::bin2str(data.data(), data.size()) << endl;
+	}
 
-    const char *pos = TC_Port::strnstr(p, "\r\n", buff.getBufferLength());
+    void onOpen()
+    {
+        cout << "onOpen" << endl;
+    }
 
-    if(pos == NULL)
+	void onFailed(const string &info)
+	{
+		cout << "info: " << info << endl;
+	}
+
+	void onClose()
+	{
+		cout << "onClose" << endl;
+	}
+};
+
+auto callbackPtr = std::make_shared<SerialPortCallback>();
+- 定义一个协议解析器
+TC_NetWorkBuffer::PACKET_TYPE parser(TC_NetWorkBuffer&buff, vector<char> &out)
+{
+    if(buffer.empty())
     {
         return TC_NetWorkBuffer::PACKET_LESS;
     }
 
-    string out(p, pos);
-
-    //得到一个完整的串口输出类
-
-    return TC_NetWorkBuffer::PACKET_FULL;
+    data = buffer.getBuffers();
+    if(data[data.size() - 1] != 0x0d)
+    {
+        return TC_NetWorkBuffer::PACKET_LESS;
+    }
+	buffer.moveHeader(data.size());
+	return TC_NetWorkBuffer::PACKET_FULL;
 }
 
- * //设置读取串口后, 数据的解析器
- * serialPort->setParserCallback(std::bind(parser, std::placeholders::_1, std::placeholders::_2));
- * //发送数据
+ * shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onparser, callbackPtr);
+- 发送数据
  * serialPort->sendRequest(...);
- * //在协议解析器中获取读取到的数据
  */
 
 /**
@@ -85,10 +105,9 @@ class UTIL_DLL_API TC_SerialPort
 {
 public:
    /**
-    * @brief 异步请求回调对象
+    * @brief 异步请求回调对象, 除了onOpen可能在业务线程中回调外, 其他都在串口通信线程中回调
     * onSucc: 成功回调
-    * onFailed: 失败回调, 无论什么失败都会被调用掉, 比如onSendTimeout, 也会在onFailed被调用的
-    * 注意, 一个请求
+    * onFailed: 失败回调, 无论什么失败都会被调用掉
     */
     class RequestCallback 
     {
@@ -156,15 +175,14 @@ public:
 	}
 
 	/**
-	* @brief 异步发送buffer
-	* @sendRequest
+	* @brief 异步发送buffer, 如果无法打开串口, 则抛出异常TC_SerialPortException
 	* @param    string & sBuffer
 	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
 	*/
 	void sendRequest(const std::string & sBuffer, bool header = false);
 
 	/**
-	* @brief 异步发送buffer(尽量使用这个函数, 减少一次内存copy)
+	* @brief 异步发送buffer(尽量使用这个函数, 减少一次内存copy), 如果无法打开串口, 则抛出异常TC_SerialPortException
 	* @sendRequest
 	* @param    string & sBu}	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
 	*/
@@ -188,14 +206,15 @@ public:
 		return _cookie;
 	}
 
-	/**
-	 * 初始化串口
-	 */
-	void initialize();
 
 protected:
 
     friend class TC_SerialPortGroup;
+
+	/**
+	 * 初始化串口
+	 */
+	void initialize();
 
 	/**
 	 * sendRequest返回值

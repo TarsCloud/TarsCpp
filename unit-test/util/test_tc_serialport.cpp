@@ -43,6 +43,11 @@ public:
         cnd.notify_one();
 	}
 
+    void onOpen()
+    {
+        cout << "onOpen" << endl;
+    }
+
 	void onFailed(const string &info)
 	{
 		cout << "info: " << info << endl;
@@ -96,13 +101,18 @@ TEST_F(UtilSerialPortTest, test)
     // 7e000801000201abcd
         while(true)
         {
+            try
             {
-            std::unique_lock<std::mutex> lock(mtx);
-            serialPort->sendRequest(msg_send);
-            cnd.wait(lock);
+                std::unique_lock<std::mutex> lock(mtx);
+                serialPort->sendRequest(msg_send);
+                cnd.wait_for(lock, std::chrono::seconds(1));
+            }
+            catch(const std::exception& ex)
+            {
+                cout << "ex: " << ex.what() << endl;
             }
 
-            TC_Common::sleep(2);
+            TC_Common::sleep(1);
         }
 	}
 	catch(const std::exception& e)
