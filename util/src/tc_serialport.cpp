@@ -1,20 +1,35 @@
-//
+﻿//
 // Created by jarod on 2023/8/22.
 //
 
 #include "util/tc_serialport.h"
+#include "util/tc_logger.h"
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 #include <termios.h>
 #endif
 
+#if defined(_MSC_VER)
+#pragma comment(lib, "setupapi.lib")
+#endif
+
 namespace tars
 {
 
-static const int BUFFER_SIZE = 8 * 1024;
+static const int BUFFER_SIZE = 1 * 1024;
 
-static const int MAX_BUFFER_SIZE = 64 * 1024;
+static const int MAX_BUFFER_SIZE = 10 * 1024;
 
+TC_SerialPortGroup::~TC_SerialPortGroup()
+{
+#if TARGET_PLATFORM_WINDOWS
+	if(_ioPort != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(_ioPort); 
+		_ioPort = INVALID_HANDLE_VALUE;
+	}
+#endif
+}
 void TC_SerialPortGroup::initialize()
 {
 	if (_th)
@@ -22,12 +37,15 @@ void TC_SerialPortGroup::initialize()
 		throw TC_SerialPortException("serial port group has initialize.");
 	}
 
-	_th = new std::thread(std::bind(&TC_SerialPortGroup::run, this));
-
+#if !TARGET_PLATFORM_WINDOWS
 	_epoller.create(1024);
+#else
+	_ioPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+#endif
+	_th = new std::thread(std::bind(&TC_SerialPortGroup::run, this));
 }
 
-shared_ptr<TC_SerialPort> TC_SerialPortGroup::create(const TC_SerialPort::Options & options, const TC_SerialPort::onparser_callback & onparser)
+shared_ptr<TC_SerialPort> TC_SerialPortGroup::create(const TC_SerialPort::Options & options, const TC_SerialPort::onparser_callback & onparser, const TC_SerialPort::RequestCallbackPtr & callbackPtr)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	if (_serialPorts.find(options.portName) != _serialPorts.end())
@@ -35,9 +53,9 @@ shared_ptr<TC_SerialPort> TC_SerialPortGroup::create(const TC_SerialPort::Option
 		throw TC_SerialPortException("serial port: `" + options.portName + "` has initialize.");
 	}
 
-	shared_ptr<TC_SerialPort> sp = std::make_shared<TC_SerialPort>(options, this);
+	shared_ptr<TC_SerialPort> sp = std::make_shared<TC_SerialPort>(options, this, onparser, callbackPtr);
 	
-	sp->initialize(onparser);
+	sp->initialize();
 
     _serialPorts[options.portName] = sp;
 
@@ -53,6 +71,7 @@ void TC_SerialPortGroup::erase(const shared_ptr<TC_SerialPort> & sp)
 
 void TC_SerialPortGroup::run()
 {
+#if !TARGET_PLATFORM_WINDOWS
 	_epoller.idle([&]
 	              {
 		              std::lock_guard<std::mutex> lock(_mutex);
@@ -63,7 +82,66 @@ void TC_SerialPortGroup::run()
 	              });
 
 	_epoller.loop();
+
+#else
+
+	BOOL bRet;
+	DWORD dwNumberOfBytesTransferred = 0;
+	DWORD dwCompletionKey = 0;
+	OVERLAPPED *opOverlapped = nullptr;
+
+	while(true)
+	{
+		bool bFlag = GetQueuedCompletionStatus(_ioPort, &dwNumberOfBytesTransferred, (PULONG_PTR)(void*)&dwCompletionKey, &opOverlapped, 100);
+
+		if(bFlag && dwCompletionKey == -1)
+		{
+			return;
+		}
+
+		std::map<std::string, std::shared_ptr<TC_SerialPort>> serialPorts;
+
+		{	
+			std::lock_guard<std::mutex> lock(_mutex);
+			serialPorts = _serialPorts;	
+		}
+
+		for (const auto &e: serialPorts)
+		{
+			try
+			{
+				if(bFlag)
+				{			
+					if(opOverlapped == e.second->getOsRead())
+					{
+						e.second->recvSucc(dwNumberOfBytesTransferred);
+					}
+					else if(opOverlapped == e.second->getOsWrite())
+					{
+						if(dwNumberOfBytesTransferred == 0)
+						{
+							e.second->doRequest();
+						}
+						else
+						{
+							e.second->sendSucc(dwNumberOfBytesTransferred);
+						}
+
+					}
+				}
+				e.second->handleInputImp();
+			}
+			catch(const std::exception& e)
+			{
+				e.second->getCallbackPtr()->onFailed(e.what());
+				e.second->close();
+			}
+		}
+	}
+
+#endif
 }
+
 
 void TC_SerialPortGroup::terminate()
 {
@@ -71,7 +149,12 @@ void TC_SerialPortGroup::terminate()
 	{
 		return;
 	}
+#if !TARGET_PLATFORM_WINDOWS	
 	_epoller.terminate();
+#else
+	PostQueuedCompletionStatus(_ioPort, 0, -1, NULL);
+
+#endif
 	_th->join();
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
@@ -83,8 +166,8 @@ void TC_SerialPortGroup::terminate()
 }
 
 //////////////////////////////////////////////////////////////
-TC_SerialPort::TC_SerialPort(const Options & options, TC_SerialPortGroup *serialPortGroup)
-	: _serialPortGroup(serialPortGroup), _options(options), _sendBuffer(NULL), _recvBuffer(NULL)
+TC_SerialPort::TC_SerialPort(const Options & options, TC_SerialPortGroup *serialPortGroup, const TC_SerialPort::onparser_callback & onparser, const RequestCallbackPtr & callbackPtr)
+	: _serialPortGroup(serialPortGroup), _options(options), _sendBuffer(NULL), _recvBuffer(NULL), _onParserCallback(onparser), _callbackPtr(callbackPtr)
 {
 }
 
@@ -95,54 +178,93 @@ TC_SerialPort::~TC_SerialPort()
 
 void TC_SerialPort::close()
 {
-	if (_serialFd >= 0)
-	{
 #if TARGET_PLATFORM_WINDOWS
+
+	if( _osRead.hEvent != NULL ) 
+	{
+		CloseHandle( _osRead.hEvent);
+		_osRead.hEvent = NULL;
+		
+	}
+
+	if( _osWrite.hEvent != NULL ) 
+	{
+		CloseHandle( _osWrite.hEvent );	
+		_osWrite.hEvent = NULL;
+	}
+
+	if(_serialFd != INVALID_HANDLE_VALUE)
+	{
+
 		CloseHandle(_serialFd); 
 		_serialFd = INVALID_HANDLE_VALUE;
+	}
 #else
+	if (_serialFd >= 0)
+	{
+
 		::close(_serialFd);
 		_serialFd = -1;
-#endif
 	}
+#endif
+
+	_callbackPtr->onClose();	
 }
 
-void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser)
+void TC_SerialPort::initialize()
 {
-	if (_serialFd >= 0)
+#if TARGET_PLATFORM_WINDOWS
+	if (_serialFd != INVALID_HANDLE_VALUE)
     {
         throw TC_SerialPortException("open serial port: " + _options.portName + " has initialized.");
     }
 
-#if TARGET_PLATFORM_WINDOWS
+	_serialFd = CreateFileA(_options.portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,  FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED, NULL );
 
-	_serialFd = CreateFileA(_options.portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL );
 	if( _serialFd == NULL ) 
 	{
-		 throw TC_SerialPortException("open serial port: " + _options.portName + " has initialized.");
+		 throw TC_SerialPortException("open serial port: " + _options.portName + " create failed:" + TC_Exception::getSystemError());
 	}
-	DCB dcb;
+
+	memset(&_osRead, 0, sizeof(OVERLAPPED));
+	memset(&_osWrite, 0, sizeof(OVERLAPPED));
+	_osRead.hEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+	_osWrite.hEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
 
 	COMMTIMEOUTS CommTimeOuts;
 	CommTimeOuts.ReadIntervalTimeout = 0xFFFFFFFF;
 	CommTimeOuts.ReadTotalTimeoutMultiplier = 100;
-	CommTimeOuts.ReadTotalTimeoutConstant = 1000;
+	CommTimeOuts.ReadTotalTimeoutConstant = 2000;
 	CommTimeOuts.WriteTotalTimeoutMultiplier = 0;
 	CommTimeOuts.WriteTotalTimeoutConstant = 5000;
 	SetCommTimeouts( _serialFd, &CommTimeOuts );
 
+	DCB dcb;
 	dcb.DCBlength = sizeof( DCB );
 	GetCommState( _serialFd, &dcb );
+
 	dcb.BaudRate = _options.baudRate;
 	dcb.ByteSize = _options.byteSize;
 	dcb.Parity = _options.parity;
 	dcb.StopBits = _options.stopBits;
-	if( !SetCommState( _serialFd, &dcb ) || !SetupComm( _serialFd, 10000, 10000 ) )
+
+	if( !SetCommState( _serialFd, &dcb ) || !SetupComm( _serialFd, 10000, 10000 ) || !PurgeComm(_serialFd,PURGE_TXCLEAR |PURGE_RXCLEAR))
 	{
 		CloseHandle( _serialFd );
 		throw TC_SerialPortException("Failed to set serial port: " + _options.portName + ", error:" + TC_Exception::getSystemError());
 	}
+
+	if(!CreateIoCompletionPort(_serialFd, _serialPortGroup->getIoPort(), 0, 0))
+	{
+		CloseHandle( _serialFd );
+		throw TC_SerialPortException("Failed to bind io port: " + _options.portName + ", error:" + TC_Exception::getSystemError());		
+	}
+
 #else
+	if (_serialFd >= 0)
+    {
+        throw TC_SerialPortException("open serial port: " + _options.portName + " has initialized.");
+    }
 
 	_serialFd = open(_options.portName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if (_serialFd == -1)
@@ -229,9 +351,6 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
 		throw TC_SerialPortException("Failed to set serial port: " + _options.portName + ", error:" + TC_Exception::getSystemError());
 	}
 	tcflush(_serialFd, TCIOFLUSH);
-#endif
-
-    _onParserCallback = onparser;
 
 	_epollInfo = _serialPortGroup->getEpoller().createEpollInfo((int)_serialFd);
 
@@ -242,6 +361,14 @@ void TC_SerialPort::initialize(const TC_SerialPort::onparser_callback & onparser
 	callbacks[EPOLLERR] = std::bind(&TC_SerialPort::handleCloseImp, this, std::placeholders::_1);
 
 	_epollInfo->registerCallback(callbacks, EPOLLIN | EPOLLOUT);
+#endif
+
+	_callbackPtr->onOpen();
+}
+
+TC_SerialPort::RequestCallbackPtr TC_SerialPort::getCallbackPtr()
+{
+	return _callbackPtr;
 }
 
 void TC_SerialPort::sendRequest(const string & sBuffer, bool header)
@@ -278,7 +405,12 @@ void TC_SerialPort::addSendReqBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> 
 	}
 
 	//发送消息, 唤醒网络线程
+#if TARGET_PLATFORM_WINDOWS
+	PostQueuedCompletionStatus(_serialPortGroup->getIoPort(), 0, 0, &_osWrite);
+#else
 	_serialPortGroup->getEpoller().notify();
+#endif
+
 }
 
 int TC_SerialPort::doProtocolAnalysis(TC_NetWorkBuffer *buff)
@@ -293,13 +425,20 @@ int TC_SerialPort::doProtocolAnalysis(TC_NetWorkBuffer *buff)
 	{
 		do
 		{
+			vector<char> out;
 			ioriginal = buff->getBufferLength();
-			ret = _onParserCallback(*buff, this);
+			ret = _onParserCallback(*buff, out);
 			isurplus = buff->getBufferLength();
 
 			if (ret == TC_NetWorkBuffer::PACKET_FULL || ret == TC_NetWorkBuffer::PACKET_FULL_CLOSE)
 			{
 				++packetCount;
+
+				if (_callbackPtr)
+				{
+					try { _callbackPtr->onSucc(out); } catch (...) { }
+				}
+
 			}
 
 			// 当收到完整包时，解析完包后，buffer没movehead，则报错
@@ -330,52 +469,88 @@ int TC_SerialPort::doProtocolAnalysis(TC_NetWorkBuffer *buff)
 
 	return packetCount;
 }
-
+#if !TARGET_PLATFORM_WINDOWS
 bool TC_SerialPort::handleCloseImp(const shared_ptr<TC_Epoller::EpollInfo> & epollInfo)
+#else
+bool TC_SerialPort::handleCloseImp()
+
+#endif
 {
 	close();
 	return false;
 }
+#if !TARGET_PLATFORM_WINDOWS
 
 bool TC_SerialPort::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> & epollInfo)
 {
-	//串口读取数据
-	int iRet = 0;
-
-	do
+	try
 	{
-		size_t expansion = (std::max)((std::min)(_recvBuffer.getBufferLength(), (size_t) MAX_BUFFER_SIZE), (size_t) BUFFER_SIZE);
-		auto data = _recvBuffer.getOrCreateBuffer(BUFFER_SIZE / 2, expansion);
+		//串口读取数据
+		int iRet = 0;
 
-		uint32_t left = (uint32_t) data->left();
-
-		if ((iRet = this->recv((void *) data->free(), left)) > 0)
+		do
 		{
-			data->addWriteIdx(iRet);
+			size_t expansion = (std::max)((std::min)(_recvBuffer.getBufferLength(), (size_t) MAX_BUFFER_SIZE), (size_t) BUFFER_SIZE);
+			auto data = _recvBuffer.getOrCreateBuffer(BUFFER_SIZE / 2, expansion);
 
-			_recvBuffer.addLength(iRet);
+			uint32_t left = (uint32_t) data->left();
 
-			//解析协议
-			_onParserCallback(_recvBuffer, this);
-
-			//接收的数据小于buffer大小, 内核会再次通知你
-			if (iRet < (int) left)
+			if ((iRet = this->recv((void *) data->free(), left)) > 0)
 			{
-				break;
+				data->addWriteIdx(iRet);
+
+				_recvBuffer.addLength(iRet);
+
+				//解析协议
+				doProtocolAnalysis(&_recvBuffer);
+
+				//接收的数据小于buffer大小, 内核会再次通知你
+				if (iRet < (int) left)
+				{
+					break;
+				}
 			}
+
+			break;
+		}
+		while (iRet > 0);
+
+		if (iRet == 0)
+		{
+			close();
+			throw TC_SerialPortException("peer close connection");
 		}
 	}
-	while (iRet > 0);
-
-	if (iRet == 0)
+	catch (exception & ex)
 	{
-		close();
-		throw TC_SerialPortException("peer close connection");
+		if (_callbackPtr)
+		{
+			_callbackPtr->onFailed(ex.what());
+			_callbackPtr->onClose();
+		}
 	}
 
 	return true;
 }
 
+#else
+bool TC_SerialPort::handleInputImp()
+{
+	try
+	{
+		this->recv();
+	}
+	catch (exception & ex)
+	{
+		if (_callbackPtr)
+		{
+			_callbackPtr->onFailed(ex.what());
+			_callbackPtr->onClose();
+		}
+	}
+	return true;
+}
+#endif
 void TC_SerialPort::onRequestCallback()
 {
 	//串口发送数据
@@ -416,11 +591,68 @@ void TC_SerialPort::onRequestCallback()
 	}
 }
 
+#if !TARGET_PLATFORM_WINDOWS
 bool TC_SerialPort::handleOutputImp(const shared_ptr<TC_Epoller::EpollInfo> & data)
+#else
+bool TC_SerialPort::handleOutputImp()
+#endif
 {
-	doRequest();
+	try
+	{
+		doRequest();
+	}
+	catch (exception & ex)
+	{
+		if (_callbackPtr)
+		{
+			_callbackPtr->onFailed(ex.what());
+			_callbackPtr->onClose();
+		}
+	}
 	return true;
 }
+
+#if TARGET_PLATFORM_WINDOWS
+void TC_SerialPort::sendSucc(uint32_t len)
+{
+	_sendBuffer.moveHeader(len);
+}
+
+void TC_SerialPort::recvSucc(uint32_t len)
+{
+	try
+	{
+		assert(!_buffRecv.empty());
+
+		auto it = _buffRecv.begin();
+
+		if((*it)->length() > 0)
+		{
+			assert((*it)->length() == length);
+			_recvBuffer.addBuffer(*it);
+
+		}
+		else
+		{
+			(*it)->addWriteIdx(len);
+		}
+
+		_buffRecv.erase(it);
+
+		doProtocolAnalysis(&_recvBuffer);
+	}
+	catch (exception & ex)
+	{
+		if (_callbackPtr)
+		{
+			_callbackPtr->onFailed(ex.what());
+			_callbackPtr->onClose();
+		}
+	}	
+
+}
+
+#endif
 
 TC_SerialPort::ReturnStatus TC_SerialPort::writeBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> & buff)
 {
@@ -458,6 +690,10 @@ TC_SerialPort::ReturnStatus TC_SerialPort::writeBuffer(const shared_ptr<TC_NetWo
 				return eRetFull;
 			}
 		}
+		else if(iRet == 0)
+		{
+			return eRetOk;
+		}
 
 		_sendBuffer.moveHeader(iRet);
 //		assert(iRet != 0);
@@ -494,10 +730,14 @@ void TC_SerialPort::doRequest()
 int TC_SerialPort::send(const void *buf, uint32_t len)
 {
 #if TARGET_PLATFORM_WINDOWS
+	if(len == 0)
+	{
+		return 0;
+	}
 	unsigned long dwBytesWritten = 0;
-	bool bWriteStat = WriteFile(_serialFd, buf, len, &dwBytesWritten, NULL);
-
-	if (!bWriteStat && !TC_Socket::isPending())
+	bool bWriteStat = WriteFile(_serialFd, buf, len, &dwBytesWritten, &_osWrite);
+	bool isPending = TC_Socket::isPending() ; 
+	if (!bWriteStat && !isPending)
 	{
 		int nerr = TC_Exception::getSystemCode();
 		string err = "send error, errno:" + TC_Common::tostr(nerr) + "," + TC_Exception::parseError(nerr);
@@ -521,13 +761,31 @@ int TC_SerialPort::send(const void *buf, uint32_t len)
 #endif
 }
 
-int TC_SerialPort::recv(void *buf, uint32_t len)
-{
 #if TARGET_PLATFORM_WINDOWS
-	unsigned long dwBytesRead = 0;
-	bool bReadStatus = ReadFile( _serialFd, buf, len, &dwBytesRead, NULL );
 
-	if (!bReadStatus && !TC_Socket::isPending())
+int TC_SerialPort::recv()
+{
+	DWORD  dwErrorFlags;
+	COMSTAT ComStat;
+	DWORD dwBytesRead;
+
+	ClearCommError( _serialFd, &dwErrorFlags, &ComStat );
+
+	if(ComStat.cbInQue <= 0)
+	{
+		return 0;
+	}
+
+	dwBytesRead = (DWORD) ComStat.cbInQue;
+
+	std::shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
+	buff->alloc(dwBytesRead);
+	_buffRecv.push_back(buff);
+
+	bool bReadStatus = ReadFile( _serialFd, buff->buffer(), dwBytesRead, &dwBytesRead, &_osRead);
+	bool isPending = TC_Socket::isPending();
+	 
+	if (!bReadStatus && !isPending)
 	{
 		int nerr = TC_Exception::getSystemCode();
 		string err = "recv error, errno:" + TC_Common::tostr(nerr) + "," + TC_Exception::parseError(nerr);
@@ -535,8 +793,17 @@ int TC_SerialPort::recv(void *buf, uint32_t len)
 		throw TC_SerialPortException("TC_SerialPort::recv, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
 	}
 
-	return dwBytesRead;
+	if(dwBytesRead > 0){
+		buff->addWriteIdx(dwBytesRead);
+	}
+
+	return 0;
+}
+
 #else
+
+int TC_SerialPort::recv(void *buf, uint32_t len)
+{
 	int iRet = ::read(_serialFd, (char *) buf, len);
 
 	if ((iRet < 0 && !TC_Socket::isPending()))
@@ -547,8 +814,7 @@ int TC_SerialPort::recv(void *buf, uint32_t len)
 		throw TC_SerialPortException("TC_SerialPort::recv, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
 	}
 	return iRet;
-
-#endif
 }
+#endif
 
 }

@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by jarod on 2023/8/22.
 //
 
@@ -8,11 +8,17 @@
 
 #include <string>
 #include <iostream>
+#include <memory>
 #include <fcntl.h>
-#include <cstring>
 #include "util/tc_ex.h"
 #include "util/tc_epoller.h"
 #include "util/tc_network_buffer.h"
+#include <mutex>
+
+
+#if TARGET_PLATFORM_WINDOWS
+#include <Windows.h>
+#endif
 
 namespace tars
 {
@@ -78,24 +84,62 @@ class TC_SerialPortGroup;
 class UTIL_DLL_API TC_SerialPort
 {
 public:
+   /**
+    * @brief 异步请求回调对象
+    * onSucc: 成功回调
+    * onFailed: 失败回调, 无论什么失败都会被调用掉, 比如onSendTimeout, 也会在onFailed被调用的
+    * 注意, 一个请求
+    */
+    class RequestCallback 
+    {
+    public:
+		virtual ~RequestCallback() = default;
+        /**
+         * @brief 完整的响应回来了.
+         * 增加一个回调, 建议使用这个回调, 减少一次内存copy, 默认回调onSucc(string), 建立历史版本
+         * @param buff
+         */
+        virtual void onSucc(const vector<char> &buff) {  }
+
+        /**
+        * @brief 异常, 发生异常时, onClose也会被响应, 从而关闭网络连接.
+        *
+        * @param ex 异常原因
+        */
+        virtual void onFailed(const string &info){};
+
+        /**
+         * @brief 连接建立后的回调
+         * 可以在这个回调里面发送第一个数据
+         */
+        virtual void onOpen() {};
+
+        /**
+        * @brief 连接被关闭
+        */
+        virtual void onClose() = 0;
+    };
+
+    typedef shared_ptr<RequestCallback> RequestCallbackPtr;
+
+
 	//协议解析器
-	using onparser_callback = std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer &, TC_SerialPort *)>;
+	using onparser_callback = std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer &, vector<char> &)>;
+
 
     struct Options
     {
-        string portName;           		//串口地址
+        std::string portName;           //串口地址
         int baudRate;            		//输入输出比特率
     	uint8_t byteSize = 8;        	/* Number of bits/byte, 5-8        */
     	uint8_t parity = 0;          	/* 0-4=None,Odd,Even,Mark,Space    */
-    	uint8_t stopBits = 0;        	/* 0,1,2 = 1, 1.5, 2               */		
+    	uint8_t stopBits = 1;        	/* 1,2              */		
     };
-
-    friend class TC_SerialPortGroup;
 
 	/**
 	 * 构造
 	 */
-	TC_SerialPort(const Options & options, TC_SerialPortGroup *serialPortGroup);
+	TC_SerialPort(const Options & options, TC_SerialPortGroup *serialPortGroup, const TC_SerialPort::onparser_callback & onparser, const RequestCallbackPtr & callbackPtr);
 
 	/**
 	 * 析构
@@ -117,15 +161,14 @@ public:
 	* @param    string & sBuffer
 	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
 	*/
-	void sendRequest(const string & sBuffer, bool header = false);
+	void sendRequest(const std::string & sBuffer, bool header = false);
 
 	/**
 	* @brief 异步发送buffer(尽量使用这个函数, 减少一次内存copy)
 	* @sendRequest
-	* @param    string & sBuffer
-	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
+	* @param    string & sBu}	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
 	*/
-	void sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> & buff, bool header = false);
+	void sendRequest(const std::shared_ptr<TC_NetWorkBuffer::Buffer> & buff, bool header = false);
 
 	/**
 	 * 设置数据cookie
@@ -145,7 +188,15 @@ public:
 		return _cookie;
 	}
 
+	/**
+	 * 初始化串口
+	 */
+	void initialize();
+
 protected:
+
+    friend class TC_SerialPortGroup;
+
 	/**
 	 * sendRequest返回值
 	 */
@@ -165,18 +216,25 @@ protected:
 	 */
 	void addSendReqBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> & reqBuffer, bool header = false);
 
+#if !TARGET_PLATFORM_WINDOWS
 	bool handleCloseImp(const shared_ptr<TC_Epoller::EpollInfo> & data);
 
 	bool handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> & data);
 
 	bool handleOutputImp(const shared_ptr<TC_Epoller::EpollInfo> & data);
+#else
+	bool handleCloseImp();
 
+	bool handleInputImp();
+
+	bool handleOutputImp();
+#endif
 	/**
 	 * 实际写串口数据
 	 * @param buff
 	 * @return
 	 */
-	ReturnStatus writeBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> & buff);
+	ReturnStatus writeBuffer(const std::shared_ptr<TC_NetWorkBuffer::Buffer> & buff);
 
 	/**
 	 * 发送请求
@@ -191,7 +249,7 @@ protected:
 	 * @return
 	 */
 	int send(const void *buf, uint32_t len);
-
+#if !TARGET_PLATFORM_WINDOWS
 	/**
 	 * 读取数据
 	 * @param buf
@@ -200,6 +258,9 @@ protected:
 	 * @return
 	 */
 	int recv(void *buf, uint32_t len);
+#else
+	int recv();
+#endif
 
 	/**
 	 * 协议解析器
@@ -225,17 +286,38 @@ protected:
 		return _serialFd != -1;
 	#endif
 	}
-
-	/**
-	 * 初始化串口
-	 */
-	void initialize(const TC_SerialPort::onparser_callback & onparser);
+#if TARGET_PLATFORM_WINDOWS
+	HANDLE getfd()
+	{
+		return _serialFd;
+	}
+#else
+	int getfd()
+	{
+		return _serialFd;
+	}
+#endif
 
 	/**
 	 * 关闭串口句柄
 	 */
 	void close();
 
+	/**
+	 * 获取请求回调
+	 * @return
+	 */
+	RequestCallbackPtr getCallbackPtr();
+#if TARGET_PLATFORM_WINDOWS
+	OVERLAPPED *getOsRead() { return &_osRead; }
+
+	OVERLAPPED *getOsWrite() { return &_osWrite; }
+
+	void sendSucc(uint32_t len);
+
+	void recvSucc(uint32_t len);
+
+#endif
 protected:
 
 	/**
@@ -253,22 +335,30 @@ protected:
 
 #if TARGET_PLATFORM_WINDOWS
 	HANDLE _serialFd = INVALID_HANDLE_VALUE;
+
+	OVERLAPPED _osRead;
+	
+	OVERLAPPED _osWrite;
+
+	list<std::shared_ptr<TC_NetWorkBuffer::Buffer>> _buffRecv;
+
 #else
 	/**
 	 * 串口句柄
 	 */
 	int _serialFd = -1;
-#endif
-
-	/**
-	 * 数据队列, 注意, 不要用deque, 因为后面要删除迭代器, 可能失效
-	 */
-	list<pair<shared_ptr<TC_NetWorkBuffer::Buffer>, bool>> _messages;
 
 	/**
 	 * epollInfo
 	 */
 	shared_ptr<TC_Epoller::EpollInfo> _epollInfo;
+
+#endif
+
+	/**
+	 * 数据队列, 注意, 不要用deque, 因为后面要删除迭代器, 可能失效
+	 */
+	std::list<std::pair<std::shared_ptr<TC_NetWorkBuffer::Buffer>, bool>> _messages;
 
 	/*
 	 * 发送buffer
@@ -289,12 +379,24 @@ protected:
 	 * 数据cookie
 	 */
 	void *_cookie;
+
+	/**
+	 * 请求回调
+	 */
+    RequestCallbackPtr          _callbackPtr;
+
 };
 
 
 class UTIL_DLL_API TC_SerialPortGroup
 {
 public:
+
+	/**
+	 * 
+	 */
+	~TC_SerialPortGroup();
+
     /**
      * 初始化
      */
@@ -305,13 +407,14 @@ public:
      * @param options
      * @return
      */
-    shared_ptr<TC_SerialPort> create(const TC_SerialPort::Options & options, const TC_SerialPort::onparser_callback & onparser);
+    shared_ptr<TC_SerialPort> create(const TC_SerialPort::Options & options, const TC_SerialPort::onparser_callback & onparser, const TC_SerialPort::RequestCallbackPtr & callbackPtr);
 
     /**
      * 删除串口
      * @param sp
      */
-    void erase(const shared_ptr<TC_SerialPort> & sp);
+    void erase(const std::shared_ptr<TC_SerialPort> & sp);
+#if !TARGET_PLATFORM_WINDOWS
 
     /**
      * 获取epoller
@@ -321,7 +424,13 @@ public:
     {
         return _epoller;
     }
+#else
+	HANDLE getIoPort() 
+	{
+		return _ioPort;
+	}
 
+#endif
     /**
      * 结束
      */
@@ -331,15 +440,21 @@ public:
 protected:
     void run();
 
+
 protected:
+#if !TARGET_PLATFORM_WINDOWS
+
     /**
      * epoller对象
      */
     TC_Epoller _epoller;
+#else
+	HANDLE _ioPort = INVALID_HANDLE_VALUE;
 
+#endif
     std::mutex _mutex;
 
-    map<string, shared_ptr<TC_SerialPort>> _serialPorts;
+    std::map<std::string, std::shared_ptr<TC_SerialPort>> _serialPorts;
 
     std::thread *_th = NULL;
 };
