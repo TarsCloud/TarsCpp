@@ -414,11 +414,28 @@ void TC_SerialPort::initialize()
 	_sendBuffer.clearBuffers();
 	_recvBuffer.clearBuffers();
 	
-	_callbackPtr->onOpen();
+	auto callback = getCallbackPtr();
+	if(callback)	
+	{
+		callback->onOpen();
+	}
+}
+
+void TC_SerialPort::setParserCallback(const onparser_callback & onparser)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	_onParserCallback = onparser;
+}
+
+void TC_SerialPort::setRequestCallback(const RequestCallbackPtr & callbackPtr)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	_callbackPtr = callbackPtr;
 }
 
 TC_SerialPort::RequestCallbackPtr TC_SerialPort::getCallbackPtr()
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	return _callbackPtr;
 }
 
@@ -486,16 +503,22 @@ int TC_SerialPort::doProtocolAnalysis(TC_NetWorkBuffer *buff)
 		{
 			vector<char> out;
 			ioriginal = buff->getBufferLength();
-			ret = _onParserCallback(*buff, out);
+
+			{
+				std::lock_guard<std::mutex> lock(_mutex);
+				ret = _onParserCallback(*buff, out);
+			}
 			isurplus = buff->getBufferLength();
 
 			if (ret == TC_NetWorkBuffer::PACKET_FULL || ret == TC_NetWorkBuffer::PACKET_FULL_CLOSE)
 			{
 				++packetCount;
 
-				if (_callbackPtr)
+				auto callback = getCallbackPtr();
+
+				if (callback)
 				{
-					try { _callbackPtr->onSucc(out); } catch (...) { }
+					try { callback->onSucc(out); } catch (...) { }
 				}
 
 			}
@@ -582,10 +605,12 @@ bool TC_SerialPort::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> & epo
 	}
 	catch (exception & ex)
 	{
-		if (_callbackPtr)
+		auto callback = getCallbackPtr();
+
+		if (callback)
 		{
-			_callbackPtr->onFailed(ex.what());
-			_callbackPtr->onClose();
+			callback->onFailed(ex.what());
+			callback->onClose();
 		}
 	}
 
@@ -601,10 +626,12 @@ bool TC_SerialPort::handleInputImp()
 	}
 	catch (exception & ex)
 	{
-		if (_callbackPtr)
+		auto callback = getCallbackPtr();
+
+		if (callback)
 		{
-			_callbackPtr->onFailed(ex.what());
-			_callbackPtr->onClose();
+			callback->onFailed(ex.what());
+			callback->onClose();
 		}
 	}
 	return true;
@@ -662,10 +689,11 @@ bool TC_SerialPort::handleOutputImp()
 	}
 	catch (exception & ex)
 	{
-		if (_callbackPtr)
+		auto callback = getCallbackPtr();
+		if (callback)
 		{
-			_callbackPtr->onFailed(ex.what());
-			_callbackPtr->onClose();
+			callback->onFailed(ex.what());
+			callback->onClose();
 		}
 	}
 	return true;
@@ -702,10 +730,11 @@ void TC_SerialPort::recvSucc(uint32_t len)
 	}
 	catch (exception & ex)
 	{
-		if (_callbackPtr)
+		auto callback = getCallbackPtr();
+		if (callback)
 		{
-			_callbackPtr->onFailed(ex.what());
-			_callbackPtr->onClose();
+			callback->onFailed(ex.what());
+			callback->onClose();
 		}
 	}	
 

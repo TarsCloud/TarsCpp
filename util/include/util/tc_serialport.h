@@ -189,29 +189,22 @@ public:
 	/**
 	* @brief 异步发送buffer(尽量使用这个函数, 减少一次内存copy), 如果无法打开串口, 则抛出异常TC_SerialPortException
 	* @sendRequest
-	* @param    string & sBu}	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
+	* @param    string & sBuffer
+	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
 	*/
 	void sendRequest(const std::shared_ptr<TC_NetWorkBuffer::Buffer> & buff, bool header = false);
 
 	/**
-	 * 设置数据cookie
-	 * @param cookie
+	 * 设置协议解析器
+	 * @param onparser
 	 */
-	void setCookie(void *cookie)
-	{
-		_cookie = cookie;
-	}
+	void setParserCallback(const onparser_callback & onparser);
 
 	/**
-	 * 获取数据cookie
-	 * @return
+	 * 设置请求回调
+	 * @param callbackPtr
 	 */
-	void * getCookie()
-	{
-		return _cookie;
-	}
-
-
+	void setRequestCallback(const RequestCallbackPtr & callbackPtr);
 protected:
 
     friend class TC_SerialPortGroup;
@@ -400,14 +393,9 @@ protected:
 	onparser_callback _onParserCallback;
 
 	/**
-	 * 数据cookie
-	 */
-	void *_cookie;
-
-	/**
 	 * 请求回调
 	 */
-    RequestCallbackPtr          _callbackPtr;
+    RequestCallbackPtr _callbackPtr;
 
 };
 
