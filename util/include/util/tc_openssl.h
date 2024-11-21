@@ -65,7 +65,8 @@ public:
     struct CTX
     {
 	    CTX(SSL_CTX *x) : ctx(x) {}
-	    SSL_CTX *ctx;
+	    SSL_CTX *ctx = nullptr;
+		virtual ~CTX();
     };
 
 	/**
