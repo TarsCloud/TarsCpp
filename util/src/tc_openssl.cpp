@@ -333,6 +333,15 @@ shared_ptr<TC_OpenSSL> TC_OpenSSL::newSSL(const std::shared_ptr<TC_OpenSSL::CTX>
 	return std::make_shared<TC_OpenSSL>(ssl);
 }
 
+TC_OpenSSL::CTX::~CTX()
+{
+	if(ctx)
+	{
+		SSL_CTX_free(ctx);
+		ctx = nullptr;
+	}
+}
+
 
 } // end namespace tars
 
