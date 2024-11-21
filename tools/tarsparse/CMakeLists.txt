@@ -46,6 +46,7 @@ if(ENABLE_SHARED)
         target_link_libraries(${TARGETNAME}_shared tarsutil_shared)
 
         install(TARGETS ${TARGETNAME}_shared
+                RUNTIME DESTINATION lib
                 LIBRARY DESTINATION lib
                 ARCHIVE DESTINATION lib)
 

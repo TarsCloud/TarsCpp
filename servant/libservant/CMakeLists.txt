@@ -26,6 +26,7 @@ if(ENABLE_SHARED)
     add_dependencies(tarsservant_shared tarsservant tarsutil_shared tarsparse_shared)
     
     install(TARGETS tarsservant_shared
+            RUNTIME DESTINATION lib
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib)
     if (WIN32)
