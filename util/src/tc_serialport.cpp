@@ -10,6 +10,8 @@
 #endif
 
 #if defined(_MSC_VER)
+#include <setupapi.h>
+#include <devguid.h>
 #pragma comment(lib, "setupapi.lib")
 #endif
 
@@ -67,6 +69,51 @@ void TC_SerialPortGroup::erase(const shared_ptr<TC_SerialPort> & sp)
 	std::lock_guard<std::mutex> lock(_mutex);
 
 	_serialPorts.erase(sp->options().portName);
+}
+
+vector<string> TC_SerialPortGroup::getComPorts(const string &prefix)
+{
+	vector<string> comPorts;
+#if TARGET_PLATFORM_WINDOWS
+	HDEVINFO deviceInfoSet = SetupDiGetClassDevs(
+        &GUID_DEVCLASS_PORTS, // 串口设备的 GUID
+        NULL,               // 枚举所有设备
+        NULL,               // 无上下文
+        DIGCF_PRESENT);     // 仅包括当前存在的设备
+
+    if (deviceInfoSet == INVALID_HANDLE_VALUE) {
+		return comPorts;
+    }
+
+    SP_DEVINFO_DATA deviceInfoData;
+    deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+
+    for (DWORD i = 0; SetupDiEnumDeviceInfo(deviceInfoSet, i, &deviceInfoData); i++) {
+		HKEY hDevKey = SetupDiOpenDevRegKey(deviceInfoSet, &deviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+		if (INVALID_HANDLE_VALUE != hDevKey)
+		{
+			char portName[256] = {0x00};
+			DWORD dwCount = 255; 
+			RegQueryValueExA(hDevKey, "PortName", NULL, NULL, (BYTE*)portName, &dwCount);
+			RegCloseKey(hDevKey);
+			comPorts.push_back(portName);
+		}
+    }
+
+    SetupDiDestroyDeviceInfoList(deviceInfoSet);
+#else
+	vector<string> files;
+	TC_File::listDirectory("/dev/", files, false, true);
+
+	for(const auto &file : files)
+	{
+		if(file.find(prefix) != string::npos)
+		{
+			comPorts.push_back(file);
+		}
+	}
+#endif
+	return comPorts;
 }
 
 void TC_SerialPortGroup::run()

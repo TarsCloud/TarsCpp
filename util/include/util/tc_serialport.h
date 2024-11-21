@@ -25,9 +25,12 @@ namespace tars
 
 /**
  * 类说明
- * - 异步串口读写类, 方便的异步读写串口
+ * - 全异步串口读写类(linux/mac使用epoll实现, windows使用完成端口实现)
  * - TC_SerialPortGroup: 管理一组串口, 背后有一个线程来完成串口的读写
  * - TC_SerialPort: 异步串口读写, 由TC_SerialPortGroup负责管理它的生命周期
+ * - 读写过程都是全异步的, 不会阻塞调用线程, 收到串口数据的回调在TC_SerialPortGroup中执行
+ * - 当串口读写出错, 会关闭串口, 并自动重新打开!即你端口串口线, 重新接上, 会自动恢复串口的连接!
+ 
  * 使用说明
  * TC_SerialPortGroup serialPortGroup;
  * serialPortGroup.initialize();
@@ -81,6 +84,8 @@ TC_NetWorkBuffer::PACKET_TYPE parser(TC_NetWorkBuffer&buff, vector<char> &out)
  * shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onparser, callbackPtr);
 - 发送数据
  * serialPort->sendRequest(...);
+- 使用完毕后, 可以删除串口
+  serialPortGroup.erase(serialPort);	
  */
 
 /**
@@ -406,7 +411,9 @@ protected:
 
 };
 
-
+/**
+ * 串口管理类, 背后一个串口通信线程
+ */
 class UTIL_DLL_API TC_SerialPortGroup
 {
 public:
@@ -433,6 +440,13 @@ public:
      * @param sp
      */
     void erase(const std::shared_ptr<TC_SerialPort> & sp);
+
+	/**
+	 * 获取系统中的串口名称
+	 * @param prefix, 名称前缀(对windows无效), linux/mac下有效
+	 */
+	vector<string> getComPorts(const string &prefix = "/dev/tty.");
+
 #if !TARGET_PLATFORM_WINDOWS
 
     /**
@@ -468,8 +482,10 @@ protected:
      */
     TC_Epoller _epoller;
 #else
+	/**
+	 * 完成端口
+	 */
 	HANDLE _ioPort = INVALID_HANDLE_VALUE;
-
 #endif
     std::mutex _mutex;
 
