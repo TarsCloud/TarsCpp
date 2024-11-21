@@ -27,10 +27,6 @@ namespace tars
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-
 Communicator::Communicator()
 : _initialized(false)
 , _terminating(false)
@@ -72,7 +68,6 @@ Communicator::Communicator(TC_Config& conf, const string& domain/* = CONFIG_ROOT
 
 Communicator::~Communicator()
 {
-    // LOG_CONSOLE_DEBUG << endl;
     ServantProxyThreadData::deconstructor(this);
 
     terminate();
@@ -422,23 +417,23 @@ void Communicator::initialize()
     string sSetDivision = _clientConfig.SetOpen ? _clientConfig.SetDivision : "";
     _statReport->setReportInfo(statPrx, propertyPrx, _clientConfig.ModuleName, _clientConfig.LocalIp, sSetDivision, iReportInterval, iMaxReportSize, iReportTimeout);
 
-#if TARS_OPENTRACKING
-	string collector_host = getProperty("collector_host", "");
-    string collector_port = getProperty("collector_port", "");
-    if(!collector_host.empty() && !collector_port.empty())
-    {
-        //init zipkin config
-        zipkin::ZipkinOtTracerOptions options;
-        options.service_name = ClientConfig::ModuleName;
-        options.service_address = {zipkin::IpVersion::v4, ClientConfig::LocalIp};
+// #if TARS_OPENTRACKING
+// 	string collector_host = getProperty("collector_host", "");
+//     string collector_port = getProperty("collector_port", "");
+//     if(!collector_host.empty() && !collector_port.empty())
+//     {
+//         //init zipkin config
+//         zipkin::ZipkinOtTracerOptions options;
+//         options.service_name = ClientConfig::ModuleName;
+//         options.service_address = {zipkin::IpVersion::v4, ClientConfig::LocalIp};
 
-        options.sample_rate = strtod(getProperty("sample_rate", "1.0").c_str(), NULL);
-        options.collector_host = collector_host;
-        options.collector_port = atoi(collector_port.c_str());
-        _traceManager = new TraceManager(options);
-        assert(_traceManager != NULL);
-    }
-#endif
+//         options.sample_rate = strtod(getProperty("sample_rate", "1.0").c_str(), NULL);
+//         options.collector_host = collector_host;
+//         options.collector_port = atoi(collector_port.c_str());
+//         _traceManager = new TraceManager(options);
+//         assert(_traceManager != NULL);
+//     }
+// #endif
 
 }
 
@@ -759,8 +754,13 @@ ServantProxy * Communicator::setServantProxy(ServantProxy * proxy,const string& 
     proxy->setComm(this , objectName,setName);
     return _servantProxyFactory->setServantProxy(proxy,objectName, setName, rootServant);
 }
+
 StatReport* Communicator::getStatReport()
 {
+    if(_statReport)
+    {
+        return _statReport;
+    }
     Communicator::initialize();
 
     return _statReport;

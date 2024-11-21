@@ -125,12 +125,6 @@ void CommunicatorEpoll::notifyTerminate()
             {
                 //通知网络线程去释放资源!
                 _epoller->syncCallback(std::bind(&CommunicatorEpoll::handleTerminate, this), 1000);
-
-                // if (_scheduler)
-                // {
-                //     _epoller->syncCallback(std::bind(&CommunicatorEpoll::handleTerminate, this), 1000);
-                //     LOG_CONSOLE_DEBUG << _scheduler.get() << endl;
-                // }
             }
         }
     }
