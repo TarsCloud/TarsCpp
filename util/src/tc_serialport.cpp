@@ -715,7 +715,7 @@ void TC_SerialPort::recvSucc(uint32_t len)
 
 		if((*it)->length() > 0)
 		{
-			assert((*it)->length() == length);
+			assert((*it)->length() == len);
 			_recvBuffer.addBuffer(*it);
 
 		}

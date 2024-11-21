@@ -56,6 +56,7 @@ if(ENABLE_SHARED)
         add_dependencies(tarsutil_shared thirdparty)
 
         install(TARGETS tarsutil_shared
+                RUNTIME DESTINATION lib
                 LIBRARY DESTINATION lib
                 ARCHIVE DESTINATION lib)
         if (WIN32)
