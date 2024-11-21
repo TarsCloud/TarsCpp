@@ -34,10 +34,13 @@ const int EPOLLERR = 0x0008;
 
 typedef kevent64_s epoll_event;
 
-#else
-#include "sys/epoll.h"
+// #else
+// #include "sys/epoll.h"
 #endif
 
+#if TARGET_PLATFORM_WINDOWS
+#include "util/sys/epoll.h"
+#endif
 
 namespace tars
 {

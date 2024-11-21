@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #if TARGET_PLATFORM_WINDOWS
-#include "sys/epoll.h"
+#include "util/sys/epoll.h"
 #else
 #include <unistd.h>
 #endif

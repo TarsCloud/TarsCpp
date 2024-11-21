@@ -64,7 +64,7 @@ if(ENABLE_SHARED)
         endif()
 endif()
 
-IF(WIN32)
-install(DIRECTORY epoll_windows/sys
-        DESTINATION include)
-ENDIF()        
+# IF(WIN32)
+# install(DIRECTORY epoll_windows/sys
+#         DESTINATION include)
+# ENDIF()        
