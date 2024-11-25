@@ -1735,7 +1735,7 @@ bool TC_Common::equal(const unordered_map<K, V, D, A>& mx , const unordered_map<
 }
 
 #if TARGET_PLATFORM_WINDOWS
-#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 #define FILE_FUNC_LINE "[" << __FILENAME__ << "::" << __FUNCTION__ << "::" << __LINE__ << "]"
 #else
 #define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
