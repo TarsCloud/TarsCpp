@@ -1022,7 +1022,7 @@ vector<string> TC_Socket::getLocalHosts(int domain, bool withLoopIp)
 bool TC_Socket::isPending()
 {
 #if TARGET_PLATFORM_WINDOWS
-    return TC_Exception::getSystemCode() == WSAEWOULDBLOCK;
+    return TC_Exception::getSystemCode() == WSAEWOULDBLOCK || TC_Exception::getSystemCode() == ERROR_IO_PENDING;
 #else
     return TC_Exception::getSystemCode() == EAGAIN;
 #endif
@@ -1031,7 +1031,7 @@ bool TC_Socket::isPending()
 bool TC_Socket::isInProgress()
 {
 #if TARGET_PLATFORM_WINDOWS
-    return TC_Exception::getSystemCode() == WSAEWOULDBLOCK;
+    return TC_Exception::getSystemCode() == WSAEWOULDBLOCK || TC_Exception::getSystemCode() == ERROR_IO_PENDING;
 #else
     return TC_Exception::getSystemCode() == EINPROGRESS;
 #endif

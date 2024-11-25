@@ -419,6 +419,7 @@ void TC_SerialPort::initialize()
 	{
 		callback->onOpen();
 	}
+
 }
 
 void TC_SerialPort::setParserCallback(const onparser_callback & onparser)
@@ -829,8 +830,9 @@ int TC_SerialPort::send(const void *buf, uint32_t len)
 	{
 		int nerr = TC_Exception::getSystemCode();
 		string err = "send error, errno:" + TC_Common::tostr(nerr) + "," + TC_Exception::parseError(nerr);
+		HANDLE fd = _serialFd;
 		close();
-		throw TC_SerialPortException("TC_SerialPort::send, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
+		throw TC_SerialPortException("TC_SerialPort::send, fd:" + TC_Common::tostr(fd) + ", error:" + err);
 	}
 
 	return dwBytesWritten;
@@ -841,8 +843,9 @@ int TC_SerialPort::send(const void *buf, uint32_t len)
 	{
 		int nerr = TC_Exception::getSystemCode();
 		string err = "send error, errno:" + TC_Common::tostr(nerr) + "," + TC_Exception::parseError(nerr);
+		int fd = _serialFd;
 		close();
-		throw TC_SerialPortException("TC_SerialPort::send, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
+		throw TC_SerialPortException("TC_SerialPort::send, fd:" + TC_Common::tostr(fd) + ", error:" + err);
 	}
 	return iRet;
 
@@ -877,8 +880,9 @@ int TC_SerialPort::recv()
 	{
 		int nerr = TC_Exception::getSystemCode();
 		string err = "recv error, errno:" + TC_Common::tostr(nerr) + "," + TC_Exception::parseError(nerr);
+		HANDLE fd = _serialFd;
 		close();
-		throw TC_SerialPortException("TC_SerialPort::recv, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
+		throw TC_SerialPortException("TC_SerialPort::recv, fd:" + TC_Common::tostr(fd) + ", error:" + err);
 	}
 
 	if(dwBytesRead > 0){
@@ -898,8 +902,9 @@ int TC_SerialPort::recv(void *buf, uint32_t len)
 	{
 		int nerr = TC_Exception::getSystemCode();
 		string err = "recv error, errno:" + TC_Common::tostr(nerr) + "," + TC_Exception::parseError(nerr);
+		int fd = _serialFd;
 		close();
-		throw TC_SerialPortException("TC_SerialPort::recv, fd:" + TC_Common::tostr(_serialFd) + ", error:" + err);
+		throw TC_SerialPortException("TC_SerialPort::recv, fd:" + TC_Common::tostr(fd) + ", error:" + err);
 	}
 	return iRet;
 }
