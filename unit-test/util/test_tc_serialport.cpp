@@ -1,8 +1,9 @@
-#include "util/tc_common.h"
+﻿#include "util/tc_common.h"
 #include "util/tc_serialport.h"
 #include "util/tc_network_buffer.h"
 #include "util/tc_common.h"
 #include "util/tc_serialport.h"
+// #include "Serial.h"
 #include "gtest/gtest.h"
 #include <iostream>
 #include <vector>
@@ -74,6 +75,16 @@ TC_NetWorkBuffer::PACKET_TYPE onParser(TC_NetWorkBuffer &buffer, vector<char> &d
 	return TC_NetWorkBuffer::PACKET_FULL;
 }
 
+TEST_F(UtilSerialPortTest, list)
+{
+	TC_SerialPortGroup serialPortGroup;
+	serialPortGroup.initialize();
+
+	auto comPorts = serialPortGroup.getComPorts();
+
+	cout << TC_Common::tostr(comPorts.begin(), comPorts.end(), ", ") << endl;
+}
+
 TEST_F(UtilSerialPortTest, test)
 {
 #if TARGET_PLATFORM_WINDOWS    
@@ -87,8 +98,8 @@ TEST_F(UtilSerialPortTest, test)
 
         TC_SerialPort::Options options;
         
-        options.portName = "/dev/tty.usbmodem00000000050C1";
-        // options.portName = "COM3";
+        // options.portName = "/dev/tty.usbmodem00000000050C1";
+        options.portName = "COM3";
 
         options.baudRate = 9600;
         options.stopBits = 0;
