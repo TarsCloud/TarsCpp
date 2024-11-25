@@ -59,7 +59,7 @@ public:
 	}
 };
 
-TC_NetWorkBuffer::PACKET_TYPE onParser(TC_NetWorkBuffer &buffer, vector<char> &data)
+TC_NetWorkBuffer::PACKET_TYPE onParser1(TC_NetWorkBuffer &buffer, vector<char> &data)
 {
     if(buffer.empty())
     {
@@ -85,7 +85,7 @@ TEST_F(UtilSerialPortTest, list)
 	cout << TC_Common::tostr(comPorts.begin(), comPorts.end(), ", ") << endl;
 }
 
-TEST_F(UtilSerialPortTest, test)
+TEST_F(UtilSerialPortTest, test1)
 {
 #if TARGET_PLATFORM_WINDOWS    
     WSADATA wsadata;
@@ -105,8 +105,69 @@ TEST_F(UtilSerialPortTest, test)
         options.stopBits = 0;
         options.parity = 0;
 
-        shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser, make_shared<SerialPortCallback>());
+        shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser1, make_shared<SerialPortCallback>());
         string msg_send = { 0x7e, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, (char)0xab, (char)0xcd };
+
+    // 7e000801000201abcd
+        while(true)
+        {
+            try
+            {
+                std::unique_lock<std::mutex> lock(mtx);
+                serialPort->sendRequest(msg_send);
+                cnd.wait_for(lock, std::chrono::seconds(1));
+            }
+            catch(const std::exception& ex)
+            {
+                cout << "ex: " << ex.what() << endl;
+            }
+
+            TC_Common::sleep(1);
+        }
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+}
+
+TC_NetWorkBuffer::PACKET_TYPE onParser2(TC_NetWorkBuffer &buffer, vector<char> &data)
+{
+    LOG_CONSOLE_DEBUG << "onParser2:" << buffer.getBufferLength() << endl;
+    if(buffer.empty())
+    {
+        return TC_NetWorkBuffer::PACKET_LESS;
+    }
+
+    data = buffer.getBuffers();
+	buffer.moveHeader(data.size());
+	return TC_NetWorkBuffer::PACKET_FULL;
+}
+
+TEST_F(UtilSerialPortTest, test2)
+{
+#if TARGET_PLATFORM_WINDOWS    
+    WSADATA wsadata;
+    WSAStartup(MAKEWORD(2, 1), &wsadata);
+#endif	
+	try
+	{
+        TC_SerialPortGroup serialPortGroup;
+        serialPortGroup.initialize();
+
+        TC_SerialPort::Options options;
+        
+        // options.portName = "/dev/tty.usbmodem00000000050C1";
+        options.portName = "//./COM11";
+
+        options.baudRate = 115200;
+        options.stopBits = 0;
+        options.parity = 0;
+
+        shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser2, make_shared<SerialPortCallback>());
+        string msg_send = {0x2f,0x44,0x1f,0x1f,0x1f,0x23};		
+
+        // string msg_send = { 0x7e, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, (char)0xab, (char)0xcd };
 
     // 7e000801000201abcd
         while(true)
