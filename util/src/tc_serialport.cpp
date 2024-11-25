@@ -717,14 +717,13 @@ void TC_SerialPort::recvSucc(uint32_t len)
 		if((*it)->length() > 0)
 		{
 			assert((*it)->length() == len);
-			_recvBuffer.addBuffer(*it);
-
 		}
 		else
 		{
 			(*it)->addWriteIdx(len);
 		}
 
+		_recvBuffer.addBuffer(*it);
 		_buffRecv.erase(it);
 
 		doProtocolAnalysis(&_recvBuffer);
