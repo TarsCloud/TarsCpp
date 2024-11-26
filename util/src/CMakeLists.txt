@@ -33,8 +33,10 @@ install(TARGETS tarsutil
         ARCHIVE DESTINATION lib)
 
 if(ENABLE_SHARED)
-        ADD_DEFINITIONS( -DUTIL_DLL_EXPORT )
+        # add_target_definitions(tarsutil_shared UTIL_DLL_EXPORT)
+        # ADD_DEFINITIONS( -DUTIL_DLL_EXPORT )
         add_library(tarsutil_shared SHARED ${DIR_SRCS})
+        target_compile_definitions(tarsutil_shared PRIVATE UTIL_DLL_EXPORT)
 
         target_link_libraries(tarsutil_shared ${LIB_MYSQL})
 

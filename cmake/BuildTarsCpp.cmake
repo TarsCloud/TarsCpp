@@ -87,7 +87,7 @@ macro(build_tars_server MODULE DEPS)
     target_link_libraries(${MODULE} tarsservant tarsutil)
 
     if(TARS_SSL)
-        target_link_libraries(${MODULE} tarsservant tarsutil ${LIB_SSL} ${LIB_CRYPTO})
+        target_link_libraries(${MODULE} ${LIB_SSL} ${LIB_CRYPTO})
 
         if(WIN32)
             target_link_libraries(${MODULE} Crypt32)
