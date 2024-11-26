@@ -413,6 +413,7 @@ void TC_SerialPort::initialize()
 #endif
 	_sendBuffer.clearBuffers();
 	_recvBuffer.clearBuffers();
+	_buffRecv.clear();
 	
 	auto callback = getCallbackPtr();
 	if(callback)	
