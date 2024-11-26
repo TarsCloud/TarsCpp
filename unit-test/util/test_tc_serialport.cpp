@@ -3,7 +3,7 @@
 #include "util/tc_network_buffer.h"
 #include "util/tc_common.h"
 #include "util/tc_serialport.h"
-// #include "Serial.h"
+#include "util/tc_logger.h"
 #include "gtest/gtest.h"
 #include <iostream>
 #include <vector>
@@ -33,12 +33,14 @@ public:
 std::mutex mtx;
 std::condition_variable cnd;
 
+// 8cce966b8fc89763
 class SerialPortCallback : public TC_SerialPort::RequestCallback
 {
 public:
 	void onSucc(const vector<char> &data)
 	{
         std::unique_lock<std::mutex> lock(mtx);
+        cout << "data: " << string(data.data(), data.size()) << endl;
         cout << "data: " << TC_Common::bin2str(data.data(), data.size()) << endl;
         cnd.notify_one();
 	}
@@ -59,19 +61,44 @@ public:
 	}
 };
 
-TC_NetWorkBuffer::PACKET_TYPE onParser1(TC_NetWorkBuffer &buffer, vector<char> &data)
+vector<uint8_t> cmd_send = { 0x7e, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, 0xab, 0xcd };
+vector<uint8_t> cmd_recv = { 0x02, 0x00, 0x00, 0x01, 0x00, 0x33, 0x31 };
+
+TC_NetWorkBuffer::PACKET_TYPE onParser1(TC_NetWorkBuffer &buffer, vector<char> &out)
 {
     if(buffer.empty())
     {
         return TC_NetWorkBuffer::PACKET_LESS;
     }
 
-    data = buffer.getBuffers();
-    if(data[data.size() - 1] != 0x0d)
+    out = buffer.getBuffers();
+    cout << "onSerialParser:" << TC_Common::bin2str(out.data(), out.size()) << endl;
+    // 如果out的前面部分和cmd_recv相等, 丢弃前面的部分
+    while(out.size() >= cmd_recv.size())
+    {
+        if(std::equal(cmd_recv.begin(), cmd_recv.end(), out.begin()))
+        {
+            buffer.moveHeader(cmd_recv.size());
+            out = buffer.getBuffers();
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if(out.empty())
     {
         return TC_NetWorkBuffer::PACKET_LESS;
     }
-	buffer.moveHeader(data.size());
+
+    if(out[out.size() - 1] != 0x0d)
+    {
+        cout << "onSerialParser:" << TC_Common::bin2str(out.data(), out.size()) << ", not end with 0x0d, rebuild comm!" << endl;
+        return TC_NetWorkBuffer::PACKET_ERR;
+    }
+	buffer.moveHeader(out.size());
+
 	return TC_NetWorkBuffer::PACKET_FULL;
 }
 

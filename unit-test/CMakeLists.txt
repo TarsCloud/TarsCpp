@@ -10,6 +10,7 @@ link_directories(${CMAKE_BINARY_DIR}/src/gtest/lib64)
 include_directories(./)
 include_directories(../)
 
+# set(ENABLE_SHARED OFF)
 build_tars_server("unit-test" "")
 
 add_definitions(-DCMAKE_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
