@@ -158,17 +158,37 @@ TEST_F(UtilSerialPortTest, test1)
 	}
 }
 
-TC_NetWorkBuffer::PACKET_TYPE onParser2(TC_NetWorkBuffer &buffer, vector<char> &data)
+TC_NetWorkBuffer::PACKET_TYPE onParser2(TC_NetWorkBuffer &buffer, vector<char> &out)
 {
-    LOG_CONSOLE_DEBUG << "onParser2:" << buffer.getBufferLength() << endl;
-    if(buffer.empty())
-    {
-        return TC_NetWorkBuffer::PACKET_LESS;
-    }
+	// LOG_DEBUG << "onSerialParser:" << buffer.getBufferLength() << endl;
+	if(buffer.empty() || buffer.getBufferLength() < 4)
+	{
+		return TC_NetWorkBuffer::PACKET_LESS;
+	}
 
-    data = buffer.getBuffers();
-	buffer.moveHeader(data.size());
-	return TC_NetWorkBuffer::PACKET_FULL;
+	out = buffer.getBuffers();
+
+	if(out[0] == (char)0x64 || out[0] == 'v' || out[0] == 'p')
+	{
+		out = vector<char>(out.begin(), out.begin() + 4);
+	}
+	else if(out[0] == (char)0x2f || out[0] == (char)0x47)
+	{
+		if(out.size() < 6)
+		{
+			return TC_NetWorkBuffer::PACKET_LESS;
+		}
+		out = vector<char>(out.begin(), out.begin() + 6);
+	}
+	else
+	{
+		LOG_CONSOLE_DEBUG << "onSerialParser unknown packet size:" << out.size() << ", data:" << TC_Common::bin2str(out.data(), out.size()) << endl;
+		return TC_NetWorkBuffer::PACKET_ERR;
+	}
+
+	buffer.moveHeader(out.size());
+	LOG_CONSOLE_DEBUG << "onSerialParser size:" << out.size() << ", data:" << TC_Common::bin2str(out.data(), out.size()) << endl;
+    return TC_NetWorkBuffer::PACKET_FULL;
 }
 
 TEST_F(UtilSerialPortTest, test2)
@@ -192,7 +212,8 @@ TEST_F(UtilSerialPortTest, test2)
         options.parity = 0;
 
         shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser2, make_shared<SerialPortCallback>());
-        string msg_send = {0x2f,0x44,0x1f,0x1f,0x1f,0x23};		
+        // string msg_send = {0x2f,0x44,0x1f,0x1f,0x1f,0x23};		
+        string msg_send = {0x2f,0x47,0x57,0x00,0x01,0x23};
 
         // string msg_send = { 0x7e, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, (char)0xab, (char)0xcd };
 

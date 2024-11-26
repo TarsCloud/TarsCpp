@@ -225,6 +225,10 @@ TC_SerialPort::~TC_SerialPort()
 
 void TC_SerialPort::close()
 {
+	_sendBuffer.clearBuffers();
+	_recvBuffer.clearBuffers();
+	_buffRecv.clear();
+
 #if TARGET_PLATFORM_WINDOWS
 
 	if( _osRead.hEvent != NULL ) 
@@ -249,7 +253,6 @@ void TC_SerialPort::close()
 #else
 	if (_serialFd >= 0)
 	{
-
 		::close(_serialFd);
 		_serialFd = -1;
 	}
@@ -306,8 +309,6 @@ void TC_SerialPort::initialize()
 		CloseHandle( _serialFd );
 		throw TC_SerialPortException("Failed to bind io port: " + _options.portName + ", error:" + TC_Exception::getSystemError());		
 	}
-
-	_buffRecv.clear();
 
 #else
 	if (_serialFd >= 0)
@@ -731,6 +732,7 @@ void TC_SerialPort::recvSucc(uint32_t len)
 	}
 	catch (exception & ex)
 	{
+		close();
 		auto callback = getCallbackPtr();
 		if (callback)
 		{
@@ -819,6 +821,11 @@ void TC_SerialPort::doRequest()
 int TC_SerialPort::send(const void *buf, uint32_t len)
 {
 #if TARGET_PLATFORM_WINDOWS
+	if(!isValid())
+	{
+		return 0;
+	}
+	
 	if(len == 0)
 	{
 		return 0;
@@ -856,6 +863,10 @@ int TC_SerialPort::send(const void *buf, uint32_t len)
 
 int TC_SerialPort::recv()
 {
+	if(!isValid())
+	{
+		return 0;
+	}
 	DWORD  dwErrorFlags;
 	COMSTAT ComStat;
 	DWORD dwBytesRead;
