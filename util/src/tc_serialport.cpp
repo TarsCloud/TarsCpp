@@ -236,10 +236,10 @@ void TC_SerialPort::close()
 	}
 	_sendBuffer.clearBuffers();
 	_recvBuffer.clearBuffers();
-	_buffRecv.clear();
 
 #if TARGET_PLATFORM_WINDOWS
 
+	_buffRecv.clear();
 	if( _osRead.hEvent != NULL ) 
 	{
 		CloseHandle( _osRead.hEvent);
@@ -443,7 +443,10 @@ void TC_SerialPort::initialize()
 #endif
 	_sendBuffer.clearBuffers();
 	_recvBuffer.clearBuffers();
+	
+#if TARGET_PLATFORM_WINDOWS
 	_buffRecv.clear();
+#endif
 	
 	auto callback = getRequestCallbackPtr();
 	if(callback)	
