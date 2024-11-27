@@ -118,12 +118,12 @@ public:
     {
     public:
 		virtual ~RequestCallback() = default;
+
         /**
          * @brief 完整的响应回来了.
-         * 增加一个回调, 建议使用这个回调, 减少一次内存copy, 默认回调onSucc(string), 建立历史版本
          * @param buff
          */
-        virtual void onSucc(const vector<char> &buff) {  }
+        virtual void onSucc(vector<char> &&buff) {  }
 
         /**
         * @brief 异常, 发生异常时, onClose也会被响应, 从而关闭网络连接.
@@ -195,6 +195,35 @@ public:
 	void sendRequest(const std::shared_ptr<TC_NetWorkBuffer::Buffer> & buff, bool header = false);
 
 	/**
+	* @brief 发送buffer, 并等待响应, 如果无法打开串口, 则抛出异常TC_SerialPortException, 需要在RequestCallback::onSucc中， 调用notify来唤醒 
+	* @param string & sBuffer
+	* @param vector<char> & response, 响应数据
+	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
+	* @return 返回cv_status, 如果超时返回cv_status::timeout, 否则返回cv_status::no_timeout
+	*/
+	std::cv_status sendRequestAndResponse(const std::string & sBuffer, vector<char> & response, bool header = false, uint32_t timeout = 3000);
+
+	/**
+	* @brief 发送buffer(尽量使用这个函数, 减少一次内存copy), 并等待响应, 如果无法打开串口, 则抛出异常TC_SerialPortException, 
+	* 需要在RequestCallback::onSucc中， 调用notify来唤醒
+	* @param    string & sBuffer
+	* @param vector<char> & response, 响应数据
+	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
+	* @return 返回cv_status, 如果超时返回cv_status::timeout, 否则返回cv_status::no_timeout
+	*/
+	std::cv_status sendRequestAndResponse(const std::shared_ptr<TC_NetWorkBuffer::Buffer> & buff, vector<char> & response, bool header = false, uint32_t timeout = 3000);
+
+	/**
+	* @brief 唤醒等待的线程
+	*/
+	void notify(const vector<char> & response);
+
+	/**
+	* @brief 唤醒等待的线程
+	*/
+	void notify(vector<char> && response);
+
+	/**
 	 * 设置协议解析器
 	 * @param onparser
 	 */
@@ -205,6 +234,13 @@ public:
 	 * @param callbackPtr
 	 */
 	void setRequestCallback(const RequestCallbackPtr & callbackPtr);
+
+	/**
+	 * 获取请求回调
+	 * @return
+	 */
+	RequestCallbackPtr getRequestCallbackPtr();
+
 protected:
 
     friend class TC_SerialPortGroup;
@@ -320,11 +356,6 @@ protected:
 	 */
 	void close();
 
-	/**
-	 * 获取请求回调
-	 * @return
-	 */
-	RequestCallbackPtr getCallbackPtr();
 #if TARGET_PLATFORM_WINDOWS
 	OVERLAPPED *getOsRead() { return &_osRead; }
 
@@ -347,8 +378,25 @@ protected:
 	 */
 	Options _options;
 
+	/**
+	 * 互斥量
+	 */
 	std::mutex _mutex;
-	std::condition_variable _cond;
+
+	/**
+	 * 等待互斥量
+	 */
+	std::mutex _waitMutex;
+
+	/**
+	 * 通知条件变量
+	 */
+	std::condition_variable _waitCond;
+
+	/**
+	 * 等待响应
+	 */
+	vector<char> _response;
 
 #if TARGET_PLATFORM_WINDOWS
 	HANDLE _serialFd = INVALID_HANDLE_VALUE;

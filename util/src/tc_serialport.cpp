@@ -68,7 +68,12 @@ void TC_SerialPortGroup::erase(const shared_ptr<TC_SerialPort> & sp)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 
-	_serialPorts.erase(sp->options().portName);
+	if(sp)
+	{
+		sp->close();
+
+		_serialPorts.erase(sp->options().portName);
+	}
 }
 
 vector<string> TC_SerialPortGroup::getComPorts(const string &prefix)
@@ -180,7 +185,7 @@ void TC_SerialPortGroup::run()
 			}
 			catch(const std::exception& ex)
 			{
-				e.second->getCallbackPtr()->onFailed(ex.what());
+				e.second->getRequestCallbackPtr()->onFailed(ex.what());
 				e.second->close();
 			}
 		}
@@ -225,6 +230,10 @@ TC_SerialPort::~TC_SerialPort()
 
 void TC_SerialPort::close()
 {
+	if(!isValid())
+	{
+		return;
+	}
 	_sendBuffer.clearBuffers();
 	_recvBuffer.clearBuffers();
 	_buffRecv.clear();
@@ -271,11 +280,11 @@ void TC_SerialPort::initialize()
 
 	_serialFd = CreateFileA(_options.portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,  FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED, NULL );
 
-	if( _serialFd == NULL ) 
+	if(!isValid()) 
 	{
 		 throw TC_SerialPortException("open serial port: " + _options.portName + " create failed:" + TC_Exception::getSystemError());
 	}
-
+	
 	memset(&_osRead, 0, sizeof(OVERLAPPED));
 	memset(&_osWrite, 0, sizeof(OVERLAPPED));
 	_osRead.hEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
@@ -298,16 +307,36 @@ void TC_SerialPort::initialize()
 	dcb.Parity = _options.parity;
 	dcb.StopBits = _options.stopBits;
 
-	if( !SetCommState( _serialFd, &dcb ) || !SetupComm( _serialFd, 10000, 10000 ) || !PurgeComm(_serialFd,PURGE_TXCLEAR |PURGE_RXCLEAR))
+	if( !SetCommState( _serialFd, &dcb ))
 	{
-		CloseHandle( _serialFd );
-		throw TC_SerialPortException("Failed to set serial port: " + _options.portName + ", error:" + TC_Exception::getSystemError());
+		string err = TC_Exception::getSystemError();
+		auto fd = _serialFd;
+		close( );
+		throw TC_SerialPortException("Failed to set serial port: " + _options.portName + ", fd:" + TC_Common::tostr(fd) + ", error:" + err);
+	}
+
+	if(!SetupComm( _serialFd, 10000, 10000 ))
+	{
+		string err = TC_Exception::getSystemError();
+		auto fd = _serialFd;
+		close( );
+		throw TC_SerialPortException("Failed to setup serial port: " + _options.portName + ", fd:" + TC_Common::tostr(fd) + ", error:" + err);
+	}
+
+	if(!PurgeComm(_serialFd,PURGE_TXCLEAR |PURGE_RXCLEAR))
+	{
+		string err = TC_Exception::getSystemError();
+		auto fd = _serialFd;
+		close( );
+		throw TC_SerialPortException("Failed to purge serial port: " + _options.portName + ", fd:" + TC_Common::tostr(fd) + ", error:" + err);
 	}
 
 	if(!CreateIoCompletionPort(_serialFd, _serialPortGroup->getIoPort(), 0, 0))
 	{
-		CloseHandle( _serialFd );
-		throw TC_SerialPortException("Failed to bind io port: " + _options.portName + ", error:" + TC_Exception::getSystemError());		
+		string err = TC_Exception::getSystemError();
+		auto fd = _serialFd;
+		close( );
+		throw TC_SerialPortException("Failed to bind io port: " + _options.portName + ", fd:" + TC_Common::tostr(fd) + ", error:" + err);		
 	}
 
 #else
@@ -416,7 +445,7 @@ void TC_SerialPort::initialize()
 	_recvBuffer.clearBuffers();
 	_buffRecv.clear();
 	
-	auto callback = getCallbackPtr();
+	auto callback = getRequestCallbackPtr();
 	if(callback)	
 	{
 		callback->onOpen();
@@ -436,7 +465,7 @@ void TC_SerialPort::setRequestCallback(const RequestCallbackPtr & callbackPtr)
 	_callbackPtr = callbackPtr;
 }
 
-TC_SerialPort::RequestCallbackPtr TC_SerialPort::getCallbackPtr()
+TC_SerialPort::RequestCallbackPtr TC_SerialPort::getRequestCallbackPtr()
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	return _callbackPtr;
@@ -468,6 +497,46 @@ void TC_SerialPort::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> & buf
 		initialize();
 	}
 	addSendReqBuffer(buff, header);
+}
+
+std::cv_status TC_SerialPort::sendRequestAndResponse(const std::string & buff, vector<char> & response, bool header, uint32_t timeout)
+{
+	std::unique_lock<std::mutex> lock(_waitMutex);
+	_response.clear();
+	sendRequest(buff, header);
+	auto status = _waitCond.wait_for(lock, std::chrono::milliseconds(timeout));
+	if(status == std::cv_status::no_timeout)
+	{
+		response.swap(_response);
+	}
+	return status;
+}
+
+std::cv_status TC_SerialPort::sendRequestAndResponse(const std::shared_ptr<TC_NetWorkBuffer::Buffer> & buff, vector<char> & response, bool header, uint32_t timeout)
+{
+	std::unique_lock<std::mutex> lock(_waitMutex);
+	_response.clear();
+	sendRequest(buff, header);
+	auto status = _waitCond.wait_for(lock, std::chrono::milliseconds(timeout));
+	if(status == std::cv_status::no_timeout)
+	{
+		response.swap(_response);
+	}
+	return status;
+}
+
+void TC_SerialPort::notify(const vector<char> & response)
+{
+	std::lock_guard<std::mutex> lock(_waitMutex);
+	_response = response;
+	_waitCond.notify_one();
+}
+
+void TC_SerialPort::notify(vector<char> && response)
+{
+	std::lock_guard<std::mutex> lock(_waitMutex);
+	_response.swap(response);
+	_waitCond.notify_one();
 }
 
 void TC_SerialPort::addSendReqBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> & reqBuffer, bool header)
@@ -517,11 +586,11 @@ int TC_SerialPort::doProtocolAnalysis(TC_NetWorkBuffer *buff)
 			{
 				++packetCount;
 
-				auto callback = getCallbackPtr();
+				auto callback = getRequestCallbackPtr();
 
 				if (callback)
 				{
-					try { callback->onSucc(out); } catch (...) { }
+					try { callback->onSucc(std::move(out)); } catch (...) { }
 				}
 
 			}
@@ -608,7 +677,7 @@ bool TC_SerialPort::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> & epo
 	}
 	catch (exception & ex)
 	{
-		auto callback = getCallbackPtr();
+		auto callback = getRequestCallbackPtr();
 
 		if (callback)
 		{
@@ -629,7 +698,7 @@ bool TC_SerialPort::handleInputImp()
 	}
 	catch (exception & ex)
 	{
-		auto callback = getCallbackPtr();
+		auto callback = getRequestCallbackPtr();
 
 		if (callback)
 		{
@@ -692,7 +761,7 @@ bool TC_SerialPort::handleOutputImp()
 	}
 	catch (exception & ex)
 	{
-		auto callback = getCallbackPtr();
+		auto callback = getRequestCallbackPtr();
 		if (callback)
 		{
 			callback->onFailed(ex.what());
@@ -733,7 +802,7 @@ void TC_SerialPort::recvSucc(uint32_t len)
 	catch (exception & ex)
 	{
 		close();
-		auto callback = getCallbackPtr();
+		auto callback = getRequestCallbackPtr();
 		if (callback)
 		{
 			callback->onFailed(ex.what());

@@ -37,11 +37,41 @@ std::condition_variable cnd;
 class SerialPortCallback : public TC_SerialPort::RequestCallback
 {
 public:
+	void onSucc(vector<char> &&data)
+	{
+        cout << "data: " << string(data.data(), data.size()) << endl;
+        cout << "data hex: " << TC_Common::bin2str(data.data(), data.size()) << endl;
+        _serialPort->notify(std::move(data));
+	}
+
+    void onOpen()
+    {
+        cout << "onOpen" << endl;
+    }
+
+	void onFailed(const string &info)
+	{
+		cout << "info: " << info << endl;
+	}
+
+	void onClose()
+	{
+		cout << "onClose" << endl;
+	}
+
+    std::shared_ptr<TC_SerialPort> _serialPort;
+};
+
+
+// 8cce966b8fc89763
+class AsyncSerialPortCallback : public TC_SerialPort::RequestCallback
+{
+public:
 	void onSucc(const vector<char> &data)
 	{
         std::unique_lock<std::mutex> lock(mtx);
         cout << "data: " << string(data.data(), data.size()) << endl;
-        cout << "data: " << TC_Common::bin2str(data.data(), data.size()) << endl;
+        cout << "data hex: " << TC_Common::bin2str(data.data(), data.size()) << endl;
         cnd.notify_one();
 	}
 
@@ -60,6 +90,7 @@ public:
 		cout << "onClose" << endl;
 	}
 };
+
 
 vector<uint8_t> cmd_send = { 0x7e, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, 0xab, 0xcd };
 vector<uint8_t> cmd_recv = { 0x02, 0x00, 0x00, 0x01, 0x00, 0x33, 0x31 };
@@ -132,22 +163,25 @@ TEST_F(UtilSerialPortTest, test1)
         options.stopBits = 0;
         options.parity = 0;
 
-        shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser1, make_shared<SerialPortCallback>());
+        auto callback = make_shared<SerialPortCallback>();
+        shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser1, callback);
+        callback->_serialPort = serialPort;
         string msg_send = { 0x7e, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, (char)0xab, (char)0xcd };
 
     // 7e000801000201abcd
         while(true)
         {
-            try
+            vector<char> response;
+            auto status = serialPort->sendRequestAndResponse(msg_send, response, true, 1000);
+            if(status == std::cv_status::timeout)
             {
-                std::unique_lock<std::mutex> lock(mtx);
-                serialPort->sendRequest(msg_send);
-                cnd.wait_for(lock, std::chrono::seconds(1));
+                cout << "timeout" << endl;
             }
-            catch(const std::exception& ex)
+            else
             {
-                cout << "ex: " << ex.what() << endl;
+                cout << "response: " << TC_Common::bin2str(response.data(), response.size()) << endl;
             }
+            
 
             TC_Common::sleep(1);
         }
@@ -211,11 +245,9 @@ TEST_F(UtilSerialPortTest, test2)
         options.stopBits = 0;
         options.parity = 0;
 
-        shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser2, make_shared<SerialPortCallback>());
+        shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser2, make_shared<AsyncSerialPortCallback>());
         // string msg_send = {0x2f,0x44,0x1f,0x1f,0x1f,0x23};		
         string msg_send = {0x2f,0x47,0x57,0x00,0x01,0x23};
-
-        // string msg_send = { 0x7e, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, (char)0xab, (char)0xcd };
 
     // 7e000801000201abcd
         while(true)
