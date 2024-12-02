@@ -26,7 +26,7 @@
 #include <functional>
 
 #if TARGET_PLATFORM_IOS
-#include "sys/event.h"
+#include <sys/event.h>
 
 const int EPOLLIN = 0x0001;
 const int EPOLLOUT = 0x0004;
@@ -34,8 +34,10 @@ const int EPOLLERR = 0x0008;
 
 typedef kevent64_s epoll_event;
 
-// #else
-// #include "sys/epoll.h"
+#endif
+
+#if TARGET_PLATFORM_LINUX
+#include <sys/epoll.h>
 #endif
 
 #if TARGET_PLATFORM_WINDOWS
