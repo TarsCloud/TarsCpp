@@ -474,14 +474,14 @@ TC_SerialPort::RequestCallbackPtr TC_SerialPort::getRequestCallbackPtr()
 	return _callbackPtr;
 }
 
-void TC_SerialPort::sendRequest(const string & sBuffer, bool header)
+void TC_SerialPort::sendRequest(const char* sBuffer, size_t length, bool header)
 {
-	if (sBuffer.empty())
+	if (sBuffer == nullptr || length == 0)
 		return;
 
 	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
 
-	buff->addBuffer(sBuffer);
+	buff->addBuffer(sBuffer, length);
 
 	if(!isValid())
 	{
@@ -502,11 +502,11 @@ void TC_SerialPort::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> & buf
 	addSendReqBuffer(buff, header);
 }
 
-std::cv_status TC_SerialPort::sendRequestAndResponse(const std::string & buff, vector<char> & response, bool header, uint32_t timeout)
+std::cv_status TC_SerialPort::sendRequestAndResponse(const char* sBuffer, size_t length, vector<char> & response, bool header, uint32_t timeout)
 {
 	std::unique_lock<std::mutex> lock(_waitMutex);
 	_response.clear();
-	sendRequest(buff, header);
+	sendRequest(sBuffer, length, header);
 	auto status = _waitCond.wait_for(lock, std::chrono::milliseconds(timeout));
 	if(status == std::cv_status::no_timeout)
 	{
