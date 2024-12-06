@@ -181,27 +181,29 @@ public:
 
 	/**
 	* @brief 异步发送buffer, 如果无法打开串口, 则抛出异常TC_SerialPortException
-	* @param    string & sBuffer
+	* @param  char* sBuffer
+	* @param size_t length
 	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
 	*/
-	void sendRequest(const std::string & sBuffer, bool header = false);
+	void sendRequest(const char* sBuffer, size_t length, bool header = false);
 
 	/**
 	* @brief 异步发送buffer(尽量使用这个函数, 减少一次内存copy), 如果无法打开串口, 则抛出异常TC_SerialPortException
 	* @sendRequest
-	* @param    string & sBuffer
+	* @param char* sBuffer
 	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
 	*/
 	void sendRequest(const std::shared_ptr<TC_NetWorkBuffer::Buffer> & buff, bool header = false);
 
 	/**
 	* @brief 发送buffer, 并等待响应, 如果无法打开串口, 则抛出异常TC_SerialPortException, 需要在RequestCallback::onSucc中， 调用notify来唤醒 
-	* @param string & sBuffer
+	* @param char* sBuffer
+	* @param size_t length
 	* @param vector<char> & response, 响应数据
 	* @param bool header, 是否把数据插入到队列头部, 默认数据都在尾部的!
 	* @return 返回cv_status, 如果超时返回cv_status::timeout, 否则返回cv_status::no_timeout
 	*/
-	std::cv_status sendRequestAndResponse(const std::string & sBuffer, vector<char> & response, bool header = false, uint32_t timeout = 3000);
+	std::cv_status sendRequestAndResponse(const char* sBuffer, size_t length, vector<char> & response, bool header = false, uint32_t timeout = 3000);
 
 	/**
 	* @brief 发送buffer(尽量使用这个函数, 减少一次内存copy), 并等待响应, 如果无法打开串口, 则抛出异常TC_SerialPortException, 
