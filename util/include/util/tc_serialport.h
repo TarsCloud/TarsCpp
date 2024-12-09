@@ -142,6 +142,11 @@ public:
         * @brief 连接被关闭
         */
         virtual void onClose() = 0;
+
+		/**
+		 * @brief 心跳回调, 在串口通信线程中调用, 每当有收发数据时, 都会回调, 最长不超过
+		 */
+		virtual void onHeartbeat() {};
     };
 
     typedef shared_ptr<RequestCallback> RequestCallbackPtr;
@@ -149,7 +154,6 @@ public:
 
 	//协议解析器
 	using onparser_callback = std::function<TC_NetWorkBuffer::PACKET_TYPE(TC_NetWorkBuffer &, vector<char> &)>;
-
 
     struct Options
     {
@@ -466,6 +470,12 @@ public:
      */
     void initialize();
 
+	/**
+	 * 设置心跳最大间隔(毫秒), 最小不低于10毫秒
+	 * @param heartbeatMaxInterval
+	 */
+	void setHeartbeatMaxInterval(int heartbeatMaxInterval);
+
     /**
      * 创建某个串口
      * @param options
@@ -513,6 +523,12 @@ protected:
 
 
 protected:
+
+	/**
+	 * 心跳最大间隔(毫秒)
+	 */
+	int _heartbeatMaxInterval = 100;
+
 #if !TARGET_PLATFORM_WINDOWS
 
     /**

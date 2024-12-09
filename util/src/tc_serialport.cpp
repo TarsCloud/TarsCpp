@@ -76,6 +76,15 @@ void TC_SerialPortGroup::erase(const shared_ptr<TC_SerialPort> & sp)
 	}
 }
 
+void TC_SerialPortGroup::setHeartbeatMaxInterval(int heartbeatMaxInterval)
+{
+	_heartbeatMaxInterval = heartbeatMaxInterval;
+	if(_heartbeatMaxInterval < 10)
+	{
+		_heartbeatMaxInterval = 10;
+	}
+}
+
 vector<string> TC_SerialPortGroup::getComPorts(const string &prefix)
 {
 	vector<string> comPorts;
@@ -125,15 +134,22 @@ void TC_SerialPortGroup::run()
 {
 #if !TARGET_PLATFORM_WINDOWS
 	_epoller.idle([&]
-	              {
-		              std::lock_guard<std::mutex> lock(_mutex);
-		              for (const auto &e: _serialPorts)
-		              {
-			              e.second->doRequest();
-		              }
-	              });
+	     			{
+		              	std::lock_guard<std::mutex> lock(_mutex);
+		              	for (const auto &e: _serialPorts)
+		              	{
+							e.second->doRequest();
 
-	_epoller.loop();
+							auto callback = e.second->getRequestCallbackPtr();
+
+							if(callback)
+							{
+								try { callback->onHeartbeat(); } catch(const std::exception& ex) { }
+							}
+						}
+	              	});
+
+	_epoller.loop(_heartbeatMaxInterval);
 
 #else
 
@@ -144,7 +160,7 @@ void TC_SerialPortGroup::run()
 
 	while(true)
 	{
-		bool bFlag = GetQueuedCompletionStatus(_ioPort, &dwNumberOfBytesTransferred, (PULONG_PTR)(void*)&dwCompletionKey, &opOverlapped, 100);
+		bool bFlag = GetQueuedCompletionStatus(_ioPort, &dwNumberOfBytesTransferred, (PULONG_PTR)(void*)&dwCompletionKey, &opOverlapped, _heartbeatMaxInterval);
 
 		if(bFlag && dwCompletionKey == -1)
 		{
@@ -160,8 +176,15 @@ void TC_SerialPortGroup::run()
 
 		for (const auto &e: serialPorts)
 		{
+			auto callback = e.second->getRequestCallbackPtr();
+
+			if(callback)
+			{
+				try { callback->onHeartbeat(); } catch(const std::exception& ex) { }
+			}
 			try
 			{
+
 				if(bFlag)
 				{			
 					if(opOverlapped == e.second->getOsRead())
