@@ -58,7 +58,10 @@ public:
 	{
 		cout << "onClose" << endl;
 	}
-
+    void onHeartbeat()
+    {
+        cout << "onHeartbeat" << endl;
+    }
     std::shared_ptr<TC_SerialPort> _serialPort;
 };
 
@@ -89,6 +92,11 @@ public:
 	{
 		cout << "onClose" << endl;
 	}
+
+    void onHeartbeat()
+    {
+        cout << "onHeartbeat" << endl;
+    }
 };
 
 
@@ -172,7 +180,7 @@ TEST_F(UtilSerialPortTest, test1)
         while(true)
         {
             vector<char> response;
-            auto status = serialPort->sendRequestAndResponse(msg_send, response, true, 1000);
+            auto status = serialPort->sendRequestAndResponse(msg_send.c_str(), msg_send.size(), response, true, 1000);
             if(status == std::cv_status::timeout)
             {
                 cout << "timeout" << endl;
@@ -255,7 +263,7 @@ TEST_F(UtilSerialPortTest, test2)
             try
             {
                 std::unique_lock<std::mutex> lock(mtx);
-                serialPort->sendRequest(msg_send);
+                serialPort->sendRequest(msg_send.c_str(), msg_send.size());
                 cnd.wait_for(lock, std::chrono::seconds(1));
             }
             catch(const std::exception& ex)
