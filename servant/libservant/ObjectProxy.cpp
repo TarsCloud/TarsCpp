@@ -110,7 +110,7 @@ int ObjectProxy::loadLocator()
 
 void ObjectProxy::invoke(ReqMessage * msg)
 {
-    TLOGTARS("[ObjectProxy::invoke, servant:" << _servantProxy->tars_full_name() << ", func:"<< msg->request.sFuncName << ", begin...]" << endl);
+    TLOGTARS("[ObjectProxy::invoke, servant:" << _servantProxy->tars_full_name() << ", func:"<< msg->request.sFuncName << ", set:" << _invokeSetId << ", begin...]" << endl);
 
     //选择一个远程服务的Adapter来调用
     AdapterProxy * pAdapterProxy = NULL;
@@ -124,14 +124,14 @@ void ObjectProxy::invoke(ReqMessage * msg)
         assert(bRet);
 
         //把数据缓存在obj里面
-        TLOGTARS("[ObjectProxy::invoke, objname:" << _name << ", func:" << msg->request.sFuncName << ", select adapter proxy not valid (have not invoke reg)]" << endl);
+        TLOGTARS("[ObjectProxy::invoke, objname:" << _servantProxy->tars_full_name() << ", func:" << msg->request.sFuncName << ", set:" << _invokeSetId << ", select adapter proxy not valid (have not invoke reg)]" << endl);
 
         return;
     }
 
     if(!pAdapterProxy)
     {
-        TLOGERROR("[ObjectProxy::invoke, objname:"<< _name << ", func:"<< msg->request.sFuncName << ", selectAdapterProxy is null]"<<endl);
+        TLOGERROR("[ObjectProxy::invoke, objname:"<< _servantProxy->tars_full_name() << ", func:"<< msg->request.sFuncName << ", set:" << _invokeSetId << ", selectAdapterProxy is null]"<<endl);
 
         msg->response->iRet = TARSADAPTERNULL;
 
@@ -150,7 +150,7 @@ void ObjectProxy::invoke(ReqMessage * msg)
 		assert(bRet);
 
         //把数据缓存在obj里面
-        TLOGTARS("[ObjectProxy::invoke, " << _name << ", func:"<< msg->request.sFuncName << ", select adapter proxy not connected (have not invoke reg)]" << endl);
+        TLOGTARS("[ObjectProxy::invoke, " << _servantProxy->tars_full_name() << ", func:"<< msg->request.sFuncName << ", set:" << _invokeSetId << ", select adapter proxy not connected (have not invoke reg)]" << endl);
         return;
     }
 
@@ -161,7 +161,7 @@ void ObjectProxy::prepareConnection(AdapterProxy *adapterProxy)
 {
     while(!_reqTimeoutQueue.empty())
     {
-        TLOGTARS("[ObjectProxy::doInvoke, " << _name << ", conection queue pop size:" << _reqTimeoutQueue.size() << "]" << endl);
+        TLOGTARS("[ObjectProxy::doInvoke, " << _sObjectProxyName << ", set:" << _invokeSetId << ", conection queue pop size:" << _reqTimeoutQueue.size() << "]" << endl);
 
         ReqMessage * msg = NULL;
         _reqTimeoutQueue.pop(msg);
@@ -177,7 +177,7 @@ void ObjectProxy::prepareConnection(AdapterProxy *adapterProxy)
             if (!adapterProxy)
             {
                 //这里肯定是请求过主控
-                TLOGERROR("[ObjectProxy::doInvoke, " << _name << ", selectAdapterProxy is null]" << endl);
+                TLOGERROR("[ObjectProxy::doInvoke, " << _sObjectProxyName << ", func:"<< msg->request.sFuncName << ", set:" << _invokeSetId << ", selectAdapterProxy is null]" << endl);
                 msg->response->iRet = TARSADAPTERNULL;
                 doInvokeException(msg);
                 return;
@@ -273,16 +273,16 @@ void ObjectProxy::doInvokeException(ReqMessage * msg)
 				}
 				catch(exception & e)
 				{
-					TLOGERROR("[ObjectProxy::doInvokeException:" << msg->request.sServantName << ":" << msg->request.sFuncName << " error: " << e.what() <<endl);
+					TLOGERROR("[ObjectProxy::doInvokeException:" << _sObjectProxyName << ":" << msg->request.sFuncName << ":" << _invokeSetId << " error: " << e.what() <<endl);
 				}
 				catch(...)
 				{
-					TLOGERROR("[ObjectProxy::doInvokeException:" << msg->request.sServantName << ":" << msg->request.sFuncName << ", error" << endl);
+					TLOGERROR("[ObjectProxy::doInvokeException:" << _sObjectProxyName << ":" << msg->request.sFuncName << ":" << _invokeSetId << ", error" << endl);
 				}
 			}
 			else
 			{
-                TLOGERROR("[ObjectProxy::doInvokeException " << msg->request.sServantName << ":" << msg->request.sFuncName << ", ret: " << msg->response->iRet << endl);
+                TLOGERROR("[ObjectProxy::doInvokeException " << _sObjectProxyName << ":" << msg->request.sFuncName << ":" << _invokeSetId << ", ret: " << msg->response->iRet << endl);
                 _communicatorEpoll->pushAsyncThreadQueue(msg);
 			}
 		}
