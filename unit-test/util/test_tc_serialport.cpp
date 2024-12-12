@@ -39,8 +39,8 @@ class SerialPortCallback : public TC_SerialPort::RequestCallback
 public:
 	void onSucc(vector<char> &&data)
 	{
-        cout << "data: " << string(data.data(), data.size()) << endl;
-        cout << "data hex: " << TC_Common::bin2str(data.data(), data.size()) << endl;
+        LOG_CONSOLE_DEBUG << "data: " << string(data.data(), data.size()) << endl;
+        LOG_CONSOLE_DEBUG << "data hex: " << TC_Common::bin2str(data.data(), data.size()) << endl;
         _serialPort->notify(std::move(data));
 	}
 
@@ -60,7 +60,7 @@ public:
 	}
     void onHeartbeat()
     {
-        cout << "onHeartbeat" << endl;
+        LOG_CONSOLE_DEBUG << "onHeartbeat" << endl;
     }
     std::shared_ptr<TC_SerialPort> _serialPort;
 };
@@ -161,6 +161,7 @@ TEST_F(UtilSerialPortTest, test1)
 	{
         TC_SerialPortGroup serialPortGroup;
         serialPortGroup.initialize();
+        serialPortGroup.setHeartbeatMaxInterval(3000);
 
         TC_SerialPort::Options options;
         
@@ -180,7 +181,7 @@ TEST_F(UtilSerialPortTest, test1)
         while(true)
         {
             vector<char> response;
-            auto status = serialPort->sendRequestAndResponse(msg_send.c_str(), msg_send.size(), response, true, 1000);
+            auto status = serialPort->sendRequestAndResponse(msg_send.c_str(), msg_send.size(), response, true, 5000);
             if(status == std::cv_status::timeout)
             {
                 cout << "timeout" << endl;
@@ -203,35 +204,30 @@ TEST_F(UtilSerialPortTest, test1)
 TC_NetWorkBuffer::PACKET_TYPE onParser2(TC_NetWorkBuffer &buffer, vector<char> &out)
 {
 	// LOG_DEBUG << "onSerialParser:" << buffer.getBufferLength() << endl;
-	if(buffer.empty() || buffer.getBufferLength() < 4)
+	if(buffer.getBufferLength() < 4)
 	{
 		return TC_NetWorkBuffer::PACKET_LESS;
 	}
 
 	out = buffer.getBuffers();
 
-	if(out[0] == (char)0x64 || out[0] == 'v' || out[0] == 'p')
+	if(out[0] != (char)0x2f)
 	{
-		out = vector<char>(out.begin(), out.begin() + 4);
-	}
-	else if(out[0] == (char)0x2f || out[0] == (char)0x47)
-	{
-		if(out.size() < 6)
-		{
-			return TC_NetWorkBuffer::PACKET_LESS;
-		}
-		out = vector<char>(out.begin(), out.begin() + 6);
-	}
-	else
-	{
-		LOG_CONSOLE_DEBUG << "onSerialParser unknown packet size:" << out.size() << ", data:" << TC_Common::bin2str(out.data(), out.size()) << endl;
 		return TC_NetWorkBuffer::PACKET_ERR;
 	}
 
-	buffer.moveHeader(out.size());
-	LOG_CONSOLE_DEBUG << "onSerialParser size:" << out.size() << ", data:" << TC_Common::bin2str(out.data(), out.size()) << endl;
+    uint8_t len = out[1];
+    if(out.size() < len)
+    {
+        return TC_NetWorkBuffer::PACKET_LESS;
+    }
+
+    out = vector<char>(out.begin(), out.begin() + len);
+
+    buffer.moveHeader(out.size());
     return TC_NetWorkBuffer::PACKET_FULL;
 }
+		
 
 TEST_F(UtilSerialPortTest, test2)
 {
@@ -255,16 +251,21 @@ TEST_F(UtilSerialPortTest, test2)
 
         shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser2, make_shared<AsyncSerialPortCallback>());
         // string msg_send = {0x2f,0x44,0x1f,0x1f,0x1f,0x23};		
-        string msg_send = {0x2f,0x47,0x57,0x00,0x01,0x23};
+        const vector<uint8_t> query_version = {0x2f,0x0b, 0x00, 0x00, 0x00, 0x01, 0x63, 0x1f,0x1f,0x01,0x23};		
+
+        // string msg_send = {0x2f,0x47,0x57,0x00,0x01,0x23};
 
     // 7e000801000201abcd
         while(true)
         {
             try
             {
+                int64_t start = TC_Common::now2ms();
                 std::unique_lock<std::mutex> lock(mtx);
-                serialPort->sendRequest(msg_send.c_str(), msg_send.size());
-                cnd.wait_for(lock, std::chrono::seconds(1));
+                serialPort->sendRequest((const char *)query_version.data(), query_version.size());
+                cnd.wait_for(lock, std::chrono::seconds(3));
+
+                LOG_CONSOLE_DEBUG << "cost: " << TC_Common::now2ms() - start << endl;
             }
             catch(const std::exception& ex)
             {

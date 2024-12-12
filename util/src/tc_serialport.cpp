@@ -157,10 +157,11 @@ void TC_SerialPortGroup::run()
 	DWORD dwNumberOfBytesTransferred = 0;
 	DWORD dwCompletionKey = 0;
 	OVERLAPPED *opOverlapped = nullptr;
+	int64_t lastHeartbeat = 0;
 
 	while(true)
 	{
-		bool bFlag = GetQueuedCompletionStatus(_ioPort, &dwNumberOfBytesTransferred, (PULONG_PTR)(void*)&dwCompletionKey, &opOverlapped, _heartbeatMaxInterval);
+		bool bFlag = GetQueuedCompletionStatus(_ioPort, &dwNumberOfBytesTransferred, (PULONG_PTR)(void*)&dwCompletionKey, &opOverlapped, 10);
 
 		if(bFlag && dwCompletionKey == -1)
 		{
@@ -176,12 +177,17 @@ void TC_SerialPortGroup::run()
 
 		for (const auto &e: serialPorts)
 		{
-			auto callback = e.second->getRequestCallbackPtr();
-
-			if(callback)
+			if(TC_Common::now2ms() - lastHeartbeat > _heartbeatMaxInterval)
 			{
-				try { callback->onHeartbeat(); } catch(const std::exception& ex) { }
+				lastHeartbeat = TC_Common::now2ms();
+				auto callback = e.second->getRequestCallbackPtr();
+
+				if(callback)
+				{
+					try { callback->onHeartbeat(); } catch(const std::exception& ex) { }
+				}
 			}
+
 			try
 			{
 
