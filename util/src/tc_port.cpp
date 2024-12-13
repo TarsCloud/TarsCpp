@@ -204,7 +204,7 @@ FILE * TC_Port::fopen(const char * path, const char *  mode)
 int TC_Port::stat(const char * path, stat_t * buf)
 {
 #if TARGET_PLATFORM_WINDOWS
-    return ::_stat(path, buf);
+    return ::_stat64(path, buf);
 #else
     return ::stat(path, buf);
 #endif
@@ -213,7 +213,7 @@ int TC_Port::stat(const char * path, stat_t * buf)
 int TC_Port::lstat(const char * path, TC_Port::stat_t * buf)
 {
 #if TARGET_PLATFORM_WINDOWS
-	return ::_stat(path, buf);
+	return ::_stat64(path, buf);
 #else
 	return ::lstat(path, buf);
 #endif

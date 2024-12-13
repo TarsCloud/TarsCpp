@@ -129,7 +129,7 @@ public:
     static int chmod(const char *path, mode_t mode);
 
 #if TARGET_PLATFORM_WINDOWS
-    typedef struct _stat stat_t;
+    typedef struct _stat64 stat_t;
 #else
     typedef struct stat stat_t;
 #endif
