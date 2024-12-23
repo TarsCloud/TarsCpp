@@ -19,8 +19,8 @@
 #include <string>
 #include <cassert>
 #include <functional>
+#include <cstdint>
 #include "util/tc_platform.h"
-
 #include "util/tc_ex.h"
 #include "util/tc_pack.h"
 #include "util/tc_mem_chunk.h"
