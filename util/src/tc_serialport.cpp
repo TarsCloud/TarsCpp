@@ -132,24 +132,30 @@ vector<string> TC_SerialPortGroup::getComPorts(const string &prefix)
 
 void TC_SerialPortGroup::run()
 {
+	int64_t lastHeartbeat = 0;
+
 #if !TARGET_PLATFORM_WINDOWS
 	_epoller.idle([&]
 	     			{
 		              	std::lock_guard<std::mutex> lock(_mutex);
 		              	for (const auto &e: _serialPorts)
 		              	{
-							e.second->doRequest();
-
-							auto callback = e.second->getRequestCallbackPtr();
-
-							if(callback)
+							if(TC_Common::now2ms() - lastHeartbeat > _heartbeatMaxInterval)
 							{
-								try { callback->onHeartbeat(); } catch(const std::exception& ex) { }
+								lastHeartbeat = TC_Common::now2ms();
+								auto callback = e.second->getRequestCallbackPtr();
+
+								if(callback)
+								{
+									try { callback->onHeartbeat(); } catch(const std::exception& ex) { }
+								}
 							}
+
+							e.second->doRequest();
 						}
 	              	});
 
-	_epoller.loop(_heartbeatMaxInterval);
+	_epoller.loop(10);
 
 #else
 
@@ -157,11 +163,10 @@ void TC_SerialPortGroup::run()
 	DWORD dwNumberOfBytesTransferred = 0;
 	DWORD dwCompletionKey = 0;
 	OVERLAPPED *opOverlapped = nullptr;
-	int64_t lastHeartbeat = 0;
 
 	while(true)
 	{
-		bool bFlag = GetQueuedCompletionStatus(_ioPort, &dwNumberOfBytesTransferred, (PULONG_PTR)(void*)&dwCompletionKey, &opOverlapped, 10);
+		bool bFlag = GetQueuedCompletionStatus(_ioPort, &dwNumberOfBytesTransferred, (PULONG_PTR)(void*)&dwCompletionKey, &opOverlapped, 1);
 
 		if(bFlag && dwCompletionKey == -1)
 		{
@@ -199,15 +204,14 @@ void TC_SerialPortGroup::run()
 					}
 					else if(opOverlapped == e.second->getOsWrite())
 					{
-						if(dwNumberOfBytesTransferred == 0)
-						{
-							e.second->doRequest();
-						}
-						else
+						if(dwNumberOfBytesTransferred > 0)
 						{
 							e.second->sendSucc(dwNumberOfBytesTransferred);
 						}
-
+					}
+					else if(opOverlapped == e.second->getOsNotifyWrite())
+					{
+						e.second->doRequest();
 					}
 				}
 				e.second->handleInputImp();
@@ -282,6 +286,12 @@ void TC_SerialPort::close()
 		_osWrite.hEvent = NULL;
 	}
 
+	if(_osNotifyWrite.hEvent != NULL)
+	{
+		CloseHandle(_osNotifyWrite.hEvent);
+		_osNotifyWrite.hEvent = NULL;
+	}
+
 	if(_serialFd != INVALID_HANDLE_VALUE)
 	{
 
@@ -316,8 +326,10 @@ void TC_SerialPort::initialize()
 	
 	memset(&_osRead, 0, sizeof(OVERLAPPED));
 	memset(&_osWrite, 0, sizeof(OVERLAPPED));
+	memset(&_osNotifyWrite, 0, sizeof(OVERLAPPED));
 	_osRead.hEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
 	_osWrite.hEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+	_osNotifyWrite.hEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
 
 	COMMTIMEOUTS CommTimeOuts;
 	CommTimeOuts.ReadIntervalTimeout = 0xFFFFFFFF;
@@ -586,7 +598,7 @@ void TC_SerialPort::addSendReqBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> 
 
 	//发送消息, 唤醒网络线程
 #if TARGET_PLATFORM_WINDOWS
-	PostQueuedCompletionStatus(_serialPortGroup->getIoPort(), 0, 0, &_osWrite);
+	PostQueuedCompletionStatus(_serialPortGroup->getIoPort(), 0, 0, &_osNotifyWrite);
 #else
 	_serialPortGroup->getEpoller().notify();
 #endif
@@ -926,11 +938,12 @@ int TC_SerialPort::send(const void *buf, uint32_t len)
 	{
 		return 0;
 	}
-	
+
 	if(len == 0)
 	{
 		return 0;
 	}
+
 	unsigned long dwBytesWritten = 0;
 	bool bWriteStat = WriteFile(_serialFd, buf, len, &dwBytesWritten, &_osWrite);
 	bool isPending = TC_Socket::isPending() ; 
@@ -941,6 +954,12 @@ int TC_SerialPort::send(const void *buf, uint32_t len)
 		HANDLE fd = _serialFd;
 		close();
 		throw TC_SerialPortException("TC_SerialPort::send, fd:" + TC_Common::tostr(fd) + ", error:" + err);
+	}
+
+	if(isPending)
+	{
+		// 认为发送了，发送多少数据等ioport的通知
+		return len;
 	}
 
 	return dwBytesWritten;
