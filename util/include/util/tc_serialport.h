@@ -367,6 +367,8 @@ protected:
 
 	OVERLAPPED *getOsWrite() { return &_osWrite; }
 
+	OVERLAPPED *getOsNotifyWrite() { return &_osNotifyWrite; }
+
 	void sendSucc(uint32_t len);
 
 	void recvSucc(uint32_t len);
@@ -410,6 +412,8 @@ protected:
 	OVERLAPPED _osRead;
 	
 	OVERLAPPED _osWrite;
+
+	OVERLAPPED _osNotifyWrite;
 
 	list<std::shared_ptr<TC_NetWorkBuffer::Buffer>> _buffRecv;
 
