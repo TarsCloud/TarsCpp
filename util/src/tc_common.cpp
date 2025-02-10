@@ -18,6 +18,7 @@
 #include "util/tc_port.h"
 #include <chrono>
 #include <thread>
+#include <iomanip>
 
 #if TARGET_PLATFORM_WINDOWS
 #include <sys/timeb.h>
@@ -142,6 +143,87 @@ bool TC_Common::equal(const unordered_set<float>& vx, const unordered_set<float>
 bool TC_Common::equal(const unordered_set<float>& vx, const unordered_set<float>& vy, double epsilon )
 {
 	MATCH_DOUBLE
+}
+
+bool TC_Common::greaterThan(double x, double y, double epsilon)
+{
+    return x - y > epsilon;
+}
+
+bool TC_Common::greaterThan(double x, double y)
+{
+    return greaterThan(x, y, _EPSILON_DOUBLE);
+}
+
+bool TC_Common::lessThan(double x, double y, double epsilon)
+{
+    return y - x > epsilon;
+}
+
+bool TC_Common::lessThan(double x, double y)
+{
+    return lessThan(x, y, _EPSILON_DOUBLE);
+}
+
+bool TC_Common::equalGreaterThan(double x, double y)
+{
+    return equal(x, y) || greaterThan(x, y);
+}
+
+bool TC_Common::equalLessThan(double x, double y)
+{
+    return equal(x, y) || lessThan(x, y);
+}
+
+int TC_Common::compare(double x, double y)
+{
+    if (equal(x, y))
+    {
+        return 0;
+    }
+
+    if (greaterThan(x, y))
+    {
+        return 1;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+bool TC_Common::validPrice(double price)
+{
+    return greaterThan(price, 0);
+}
+
+bool TC_Common::isZero(double x)
+{
+    return TC_Common::equal(x, 0);
+}
+
+bool TC_Common::sameSide(double x, double y)
+{
+    return (equalGreaterThan(x, 0) && equalGreaterThan(y, 0)) || (equalLessThan(x, 0) && equalLessThan(y, 0));
+}
+
+double TC_Common::division(double x, double y)
+{
+    //assert(y != 0);
+    if (TC_Common::isZero(y))
+    {
+        throw TC_Exception("can not division zero!" + std::to_string(x) + "/0");
+    }
+    return (x) / (y);
+}
+
+double TC_Common::round(double number, unsigned int bits)
+{
+    double roundValue;
+    stringstream ss;
+    ss << std::fixed << std::setprecision(bits) << number;
+    ss >> roundValue;
+    return roundValue;
 }
 
 // template<>
