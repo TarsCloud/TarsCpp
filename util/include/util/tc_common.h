@@ -156,6 +156,113 @@ public:
 	static bool equal(const unordered_map<K, V, D, A>& mx , const unordered_map<K, V, D, A>& my, E epsilon = _EPSILON_DOUBLE);
 
     /**
+     * @brief  double 比较函数
+     * @brief  double comparison functions
+     * @param x 
+     * @param y 
+     * @param epsilon 
+     * @return 
+     */
+    static bool greaterThan(double x, double y, double epsilon);
+
+    /**
+     * @brief  double 比较函数
+     * @brief  double comparison functions
+     * @param x 
+     * @param y 
+     * @return 
+     */
+    static bool greaterThan(double x, double y);
+
+    /**
+     * @brief  double 比较函数
+     * @brief  double comparison functions
+     * @param x 
+     * @param y 
+     * @return 
+     */
+    static bool lessThan(double x, double y, double epsilon);
+
+    /**
+     * @brief  double 比较函数
+     * @brief  double comparison functions
+     * @param x 
+     * @param y 
+     * @return 
+     */
+    static bool lessThan(double x, double y);
+
+    /**
+     * @brief  double 比较函数
+     * @brief  double comparison functions
+     * @param x 
+     * @param y 
+     * @return 
+     */
+    static bool equalGreaterThan(double x, double y);
+
+    /**
+     * @brief  double 比较函数
+     * @brief  double comparison functions
+     * @param x 
+     * @param y 
+     * @return 
+     */
+    static bool equalLessThan(double x, double y);
+
+    /**
+     * @brief  double 比较函数
+     * @brief  double comparison functions
+     * @param x 
+     * @param y 
+     * @return =:0, <:-1, >:1
+     */
+    static int compare(double x, double y);
+
+    /**
+     * @brief  double 比较函数
+     * @brief  double comparison functions
+     * @param x 
+     * @param y 
+     * @return 
+     */
+    static double division(double x, double y);
+
+    /**
+     * @brief  转换精度
+     * @brief  double comparison functions
+     * @param x 
+     * @param y 
+     * @return 
+     */
+    static double round(double number, unsigned int bits);
+
+    /**
+     * @brief  是否同号
+     * @brief  whether same side
+     * @param x 
+     * @param y 
+     * @return 
+     */
+    static bool sameSide(double x, double y);
+
+    /**
+     * @brief  验证值>0
+     * @brief  validate price
+     * @param price 
+     * @return 
+     */ 
+    static bool validPrice(double price);
+
+    /**
+     * @brief  是否为0
+     * @brief  whether zero
+     * @param x 
+     * @return 
+     */
+    static bool isZero(double x);
+
+    /**
      * 固定宽度填充字符串, 用于输出对齐格式用(默认右填充)
      * Fixed width filled string for output alignment format (default right-padding)
      * @param s
