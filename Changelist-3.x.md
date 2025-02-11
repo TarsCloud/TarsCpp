@@ -1,4 +1,49 @@
-# v3.0.20 20240408
+# v3.0.21 20250210
+## en
+- feat: tc_serialport support windows/linux/mac
+- feat: support compiler dll in windows
+- feat: tars-tools.cmake support dynamic of ssl https mysql in mac
+- feat: tc_mysql init add connecttimeout/readwritetimeout
+- feat: add coroutine_mutex
+- fix: tc_port stat support big file
+- fix tc_common __FILENAME__ bug
+- fix communicator terminate maybe cause deadlock 
+- fix windows enableshard and ssl compiler error
+- fix cmake build dynamic lib in mac bug
+- fix tc_base64 header bug
+- fix tc_json writeValue, when p is null
+- fix tc_json when double/float isinf or isnan
+- fix TC_File::copyFile in windows not support symlink
+- fix tc_gzip memory leak
+- fix tars2cpp compiler warning when field in struct is float or double
+- fix mac TC_Socket::getLocalHosts bug
+- fix objectproxy crash when msg process finish before log
+- fix tc_loop_queue crash in arm64
+- fix windows dll install
+
+## cn
+- feat: tc_serialport支持windows/linux/mac
+- feat: 支持在windows/mac/linux下动态库
+- feat: tars-tools.cmake支持mac下动态编译ssl/https/mysql
+- feat: tc_mysql 初始化添加 connecttimeout/readwritetimeout
+- feat: 添加协程互斥锁
+- fix: tc_port stat支持大文件
+- fix: tc_common __FILENAME__ bug
+- fix: 通信器terminate可能造成死锁的问题
+- fix: windows下enableShared/ssl编译错误
+- fix: mac下编译动态库的bug
+- fix: tc_base64头文件bug
+- fix: tc_json writeValue, 当p为null时的问题
+- fix: tc_json when double/float isinf or isnan的问题
+- fix: TC_File::copyFile在windows下不支持符号链接的问题
+- fix: tc_gzip内存泄漏
+- fix: tars2cpp编译警告, 当结构体中的字段为float或double时
+- fix: mac下TC_Socket::getLocalHosts的bug
+- fix: objectproxy在msg处理完成前可能崩溃的问题
+- fix: tc_loop_queue在arm64下崩溃的问题
+- fix: windows下dll安装的问题
+
+ # v3.0.20 20240408
 ## en
 - fix: tc_ex using namespace std outside tars
 - fix: tc_port SigInfo use NoDestroyLifetime TC_Singleton
