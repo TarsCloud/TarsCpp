@@ -437,7 +437,7 @@ void CodeGenerator::generateTS(const ContextPtr &pPtr)
         ostr << "import * as " << it->second.sModule << " from \"" << TC_File::excludeFileExt(it->second.sFile) << "\";" << endl;
     }
 
-    if (bQuickFunc && _bWeb)
+    if (bQuickFunc && !_bWeb)
     {
         ostr << endl;
         ostr << "const _hasOwnProperty = Object.prototype.hasOwnProperty;" << endl;
