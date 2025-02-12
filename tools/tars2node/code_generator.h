@@ -79,6 +79,7 @@ public:
           _sToPath("./"),
           _bClient(false),
           _bServer(false),
+          _bWeb(false),
           _bRecursive(false),
           _bUseSpecialPath(false),
           _iLongType(Number),
@@ -98,6 +99,8 @@ public:
     void setEnableClient(bool bEnable) { _bClient = bEnable; }
 
     void setEnableServer(bool bEnable) { _bServer = bEnable; }
+
+    void setEnableWeb(bool bEnable) { _bWeb = bEnable; }
 
     void setTargetPath(const string & sPath) { _sToPath = sPath + "/"; }
 
@@ -301,6 +304,8 @@ private:
     bool   _bClient;
 
     bool   _bServer;
+
+    bool   _bWeb;
 
     bool   _bRecursive;
 

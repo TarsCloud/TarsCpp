@@ -102,7 +102,7 @@ void CodeGenerator::createFile(const string &file, const bool bEntry)
                 node.setDependent(_depMembers);
                 node.setEnableTS(_bTS);
                 node.setEnableDTS(_bDTS);
-
+                node.setEnableWeb(_bWeb);
                 node.createFile(files[ii], false);
             }
         }

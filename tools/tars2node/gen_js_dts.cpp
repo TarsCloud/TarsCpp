@@ -97,35 +97,41 @@ string CodeGenerator::generateDTS(const StructPtr &pPtr, const string &sNamespac
         s << endl;
     }
 
-    /*
-     *  Size Optimize:
-     *    Remove <mutil_map> support.
-     *    Remove toBinBuffer, readFromObject, toObject, new, create members.
-     */
-    if (_iOptimizeLevel != Os)
+    if(!_bWeb)
     {
-        s << TAB << "toObject(): " << pPtr->getId() << ".Object;" << endl;
-        s << TAB << "readFromObject(json: " << pPtr->getId() << ".Object): " << pPtr->getId() << ";" << endl;
-        s << TAB << "toBinBuffer(): " << IDL_NAMESPACE_STR << "Stream.BinBuffer;" << endl;
-        s << TAB << "static new(): " << pPtr->getId() << ";" << endl;
-        s << TAB << "static create(is: " << IDL_NAMESPACE_STR << "Stream." << IDL_TYPE << "InputStream): " << pPtr->getId() << ";" << endl;
+        /*
+        *  Size Optimize:
+        *    Remove <mutil_map> support.
+        *    Remove toBinBuffer, readFromObject, toObject, new, create members.
+        */
+        if (_iOptimizeLevel != Os)
+        {
+            s << TAB << "toObject(): " << pPtr->getId() << ".Object;" << endl;
+            s << TAB << "readFromObject(json: " << pPtr->getId() << ".Object): " << pPtr->getId() << ";" << endl;
+            s << TAB << "toBinBuffer(): " << IDL_NAMESPACE_STR << "Stream.BinBuffer;" << endl;
+            s << TAB << "static new(): " << pPtr->getId() << ";" << endl;
+            s << TAB << "static create(is: " << IDL_NAMESPACE_STR << "Stream." << IDL_TYPE << "InputStream): " << pPtr->getId() << ";" << endl;
+        }
     }
     DEL_TAB;
     s << TAB << "}" << endl << endl;
 
-    s << TAB << "namespace " << pPtr->getId() << " {" << endl;
-    INC_TAB;
-    s << TAB << "interface Object {" << endl;
-    INC_TAB;
-    for (size_t i = 0; i < member.size(); i++)
+    if(!_bWeb)
     {
-        const string &sType = getTsType(member[i]->getTypePtr(), false);
-        s << TAB << (member[i]->getId()) << (member[i]->isRequire() ? ": " : "?: ") << (!sType.empty() ? sType : "never") << ";" << endl;
+        s << TAB << "namespace " << pPtr->getId() << " {" << endl;
+        INC_TAB;
+        s << TAB << "interface Object {" << endl;
+        INC_TAB;
+        for (size_t i = 0; i < member.size(); i++)
+        {
+            const string &sType = getTsType(member[i]->getTypePtr(), false);
+            s << TAB << (member[i]->getId()) << (member[i]->isRequire() ? ": " : "?: ") << (!sType.empty() ? sType : "never") << ";" << endl;
+        }
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
     }
-    DEL_TAB;
-    s << TAB << "}" << endl;
-    DEL_TAB;
-    s << TAB << "}" << endl;
 
     DEL_TAB;
 
@@ -213,9 +219,12 @@ void CodeGenerator::generateDTS(const ContextPtr &pPtr)
 
     // generate module imports
     ostringstream ostr;
-    if (bNeedStream)
+    if(!_bWeb)
     {
-        ostr << "import * as " << IDL_NAMESPACE_STR << "Stream from \"" << _sStreamPath << "\";" << endl;
+        if (bNeedStream)
+        {
+            ostr << "import * as " << IDL_NAMESPACE_STR << "Stream from \"" << _sStreamPath << "\";" << endl;
+        }
     }
 
     for (map<string, ImportFile>::iterator it = _mapFiles.begin(); it != _mapFiles.end(); it++)

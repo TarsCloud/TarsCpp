@@ -38,6 +38,7 @@ void usage()
     cout << "  --r-reserved                                list of names(split by \",\") that should be keeped." << endl;
     cout << "  --client                                    just for client side source file." << endl;
     cout << "  --server                                    just for server side source file." << endl;
+    cout << "  --web                                       only support struct & enum, just for web side source file, no serialize interface." << endl;
     cout << "  --ts                                        generate typescript file." << endl;
     cout << "  --dts                                       generate d.ts file." << endl;
     cout << "  --long-type=[number|string|bigint]          use <Number|String|BigInt> represent <long> type, default is <Number>." << endl;
@@ -129,6 +130,7 @@ int main(int argc, char* argv[])
         generator.setStreamPath(option.hasParam("stream-path")?option.getValue("stream-path"):STREAM_MODULE_PATH);
         generator.setEnableClient(option.hasParam("client"));
         generator.setEnableServer(option.hasParam("server"));
+        generator.setEnableWeb(option.hasParam("web"));
         generator.setTargetPath(option.hasParam("dir")?option.getValue("dir"):"./");
         generator.setUseSpecialPath(option.hasParam("relative"));
         generator.setStringBinaryEncoding(option.hasParam("string-binary-encoding"));
