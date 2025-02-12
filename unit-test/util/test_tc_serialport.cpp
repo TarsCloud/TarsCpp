@@ -70,7 +70,7 @@ public:
 class AsyncSerialPortCallback : public TC_SerialPort::RequestCallback
 {
 public:
-	void onSucc(const vector<char> &&data)
+	void onSucc(vector<char> &&data)
 	{
         std::unique_lock<std::mutex> lock(mtx);
         cout << "data: " << string(data.data(), data.size()) << endl;
