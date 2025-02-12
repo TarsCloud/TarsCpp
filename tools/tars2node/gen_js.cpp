@@ -73,10 +73,12 @@ string CodeGenerator::generateJS(const EnumPtr &pPtr, const string &sNamespace)
         s << TAB << "};" << endl;
     }
 
-    s << TAB << sNamespace << "." << pPtr->getId() << "._classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl;
-    s << TAB << sNamespace << "." << pPtr->getId() << "._write = function(os, tag, val) { return os.writeInt32(tag, val); };" << endl;
-    s << TAB << sNamespace << "." << pPtr->getId() << "._read  = function(is, tag, def) { return is.readInt32(tag, true, def); };" << endl;
-
+    if(!_bWeb)
+    {
+        s << TAB << sNamespace << "." << pPtr->getId() << "._classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl;
+        s << TAB << sNamespace << "." << pPtr->getId() << "._write = function(os, tag, val) { return os.writeInt32(tag, val); };" << endl;
+        s << TAB << sNamespace << "." << pPtr->getId() << "._read  = function(is, tag, def) { return is.readInt32(tag, true, def); };" << endl;
+    }
     if (!_bMinimalMembers || _bEntry || bDependent || isDependent(sNamespace, pPtr->getId())) {
         return s.str();
     } else {
@@ -105,7 +107,7 @@ string CodeGenerator::generateJS(const ConstPtr &pPtr, const string &sNamespace,
 
 string CodeGenerator::generateJS(const StructPtr &pPtr, const string &sNamespace, bool &bNeedAssert, bool &bQuickFunc)
 {
-    if (_bMinimalMembers && !_bEntry && !isDependent(sNamespace, pPtr->getId()))
+    if (_bMinimalMembers  && !_bEntry && !isDependent(sNamespace, pPtr->getId()))
     {
         return "";
     }
@@ -122,6 +124,7 @@ string CodeGenerator::generateJS(const StructPtr &pPtr, const string &sNamespace
         s << TAB << "this." << member[i]->getId() << " = " << getDefault(member[i], member[i]->def(), sNamespace) << ";" << endl;
     }
 
+    if(!_bWeb)
     {
         s << TAB << "this._classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl; 
     }
@@ -129,51 +132,55 @@ string CodeGenerator::generateJS(const StructPtr &pPtr, const string &sNamespace
     DEL_TAB;
 
     s << TAB << "};" << endl;
-    s << TAB << sNamespace << "." << pPtr->getId() << "._classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl; 
 
-	string sProto = TC_Common::replace(pPtr->getSid(), "::", ".");
-	s << TAB << sProto << "._write = function (os, tag, value) { os.writeStruct(tag, value); };" << endl;
-	s << TAB << sProto << "._read  = function (is, tag, def) { return is.readStruct(tag, true, def); };" << endl;
-
-    //_readFrom
-    s << TAB << sNamespace << "." << pPtr->getId() << "._readFrom = function (is) {" << endl;
-    INC_TAB;
-    s << TAB << "var tmp = new " << sNamespace << "." << pPtr->getId() << ";" << endl;
-    for (size_t i = 0; i < member.size(); i++)
+    if(!_bWeb)
     {
-        string sFuncName = toFunctionName(member[i], "read");
-		s << TAB << "tmp." << member[i]->getId() << " = is." << sFuncName << "(" << member[i]->getTag()
-            << ", " << (member[i]->isRequire()?"true":"false") << ", ";
+        s << TAB << sNamespace << "." << pPtr->getId() << "._classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl; 
 
-        if (isSimple(member[i]->getTypePtr()))
+        string sProto = TC_Common::replace(pPtr->getSid(), "::", ".");
+        s << TAB << sProto << "._write = function (os, tag, value) { os.writeStruct(tag, value); };" << endl;
+        s << TAB << sProto << "._read  = function (is, tag, def) { return is.readStruct(tag, true, def); };" << endl;
+
+        //_readFrom
+        s << TAB << sNamespace << "." << pPtr->getId() << "._readFrom = function (is) {" << endl;
+        INC_TAB;
+        s << TAB << "var tmp = new " << sNamespace << "." << pPtr->getId() << ";" << endl;
+        for (size_t i = 0; i < member.size(); i++)
         {
-            s << getDefault(member[i], member[i]->def(), sNamespace)
-                << representArgument(member[i]->getTypePtr());
+            string sFuncName = toFunctionName(member[i], "read");
+            s << TAB << "tmp." << member[i]->getId() << " = is." << sFuncName << "(" << member[i]->getTag()
+                << ", " << (member[i]->isRequire()?"true":"false") << ", ";
+
+            if (isSimple(member[i]->getTypePtr()))
+            {
+                s << getDefault(member[i], member[i]->def(), sNamespace)
+                    << representArgument(member[i]->getTypePtr());
+            }
+            else
+            {
+                s << getDataType(member[i]->getTypePtr());
+            }
+
+            s << ");" << endl;
         }
-        else
+        s << TAB << "return tmp;" << endl;
+        DEL_TAB;
+        s << TAB << "};" << endl;
+
+        //_writeTo
+        s << TAB << sNamespace << "." << pPtr->getId() << ".prototype._writeTo = function (os) {" << endl;
+
+        INC_TAB;
+        for (size_t i = 0; i < member.size(); i++)
         {
-            s << getDataType(member[i]->getTypePtr());
+            string sFuncName = toFunctionName(member[i], "write");
+
+            s << TAB << "os." << sFuncName << "(" << member[i]->getTag() << ", this." << member[i]->getId()
+                << representArgument(member[i]->getTypePtr()) << ");" << endl;
         }
-
-        s << ");" << endl;
+        DEL_TAB;
+        s << TAB << "};" << endl;
     }
-    s << TAB << "return tmp;" << endl;
-    DEL_TAB;
-    s << TAB << "};" << endl;
-
-    //_writeTo
-    s << TAB << sNamespace << "." << pPtr->getId() << ".prototype._writeTo = function (os) {" << endl;
-
-    INC_TAB;
-    for (size_t i = 0; i < member.size(); i++)
-    {
-        string sFuncName = toFunctionName(member[i], "write");
-
-       	s << TAB << "os." << sFuncName << "(" << member[i]->getTag() << ", this." << member[i]->getId()
-            << representArgument(member[i]->getTypePtr()) << ");" << endl;
-    }
-    DEL_TAB;
-    s << TAB << "};" << endl;
 
     /*
      *  Size Optimize:
@@ -185,65 +192,68 @@ string CodeGenerator::generateJS(const StructPtr &pPtr, const string &sNamespace
         return s.str();
     }
 
-    //_equal
-    vector<string> key = pPtr->getKey();
-    
-    s << TAB << sNamespace << "." << pPtr->getId() << ".prototype._equal = function (" << (key.size() > 0 ? "anItem" : "") << ") {" << endl;
-    
-    INC_TAB;
-
-    if (key.size() > 0)
+    if(!_bWeb)
     {
-        s << TAB << "return ";
+        //_equal
+        vector<string> key = pPtr->getKey();
+        
+        s << TAB << sNamespace << "." << pPtr->getId() << ".prototype._equal = function (" << (key.size() > 0 ? "anItem" : "") << ") {" << endl;
+        
+        INC_TAB;
 
-        for (size_t i = 0; i < key.size(); i++)
+        if (key.size() > 0)
         {
-            for (size_t ii =0; ii < member.size(); ii++)
+            s << TAB << "return ";
+
+            for (size_t i = 0; i < key.size(); i++)
             {
-                if (key[i] != member[ii]->getId())
+                for (size_t ii =0; ii < member.size(); ii++)
                 {
-                    continue;
+                    if (key[i] != member[ii]->getId())
+                    {
+                        continue;
+                    }
+
+                    if (isSimple(member[i]->getTypePtr()))
+                    {
+                        s << (i==0?"":TAB + TAB) << "this." << key[i] << " === " << "anItem." << key[i];
+                    }
+                    else 
+                    {
+                        s << (i==0?"":TAB + TAB) << "this._equal(" << "anItem)";
+                    }
                 }
 
-                if (isSimple(member[i]->getTypePtr()))
+                if (i != key.size() - 1) 
                 {
-                    s << (i==0?"":TAB + TAB) << "this." << key[i] << " === " << "anItem." << key[i];
-                }
-                else 
-                {
-                    s << (i==0?"":TAB + TAB) << "this._equal(" << "anItem)";
+                    s << " && " << endl;
                 }
             }
 
-            if (i != key.size() - 1) 
-            {
-                s << " && " << endl;
-            }
+            s << ";" << endl;
+
+        }
+        else 
+        {
+            bNeedAssert = true;
+            s << TAB << "assert.fail(\"this structure not define key operation\");" << endl;
         }
 
-        s << ";" << endl;
+        DEL_TAB;
+        s << TAB << "};" << endl;
 
+        //_genKey
+        s << TAB << sNamespace << "." << pPtr->getId() << ".prototype._genKey = function () {" << endl;
+        INC_TAB;
+        s << TAB << "if (!this._proto_struct_name_) {" << endl;
+        INC_TAB;
+        s << TAB << "this._proto_struct_name_ = \"STRUCT\" + Math.random();" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        s << TAB << "return this._proto_struct_name_;" << endl;
+        DEL_TAB;
+        s << TAB << "};" << endl;
     }
-    else 
-    {
-        bNeedAssert = true;
-        s << TAB << "assert.fail(\"this structure not define key operation\");" << endl;
-    }
-
-    DEL_TAB;
-    s << TAB << "};" << endl;
-
-    //_genKey
-    s << TAB << sNamespace << "." << pPtr->getId() << ".prototype._genKey = function () {" << endl;
-    INC_TAB;
-    s << TAB << "if (!this._proto_struct_name_) {" << endl;
-    INC_TAB;
-    s << TAB << "this._proto_struct_name_ = \"STRUCT\" + Math.random();" << endl;
-    DEL_TAB;
-    s << TAB << "}" << endl;
-    s << TAB << "return this._proto_struct_name_;" << endl;
-    DEL_TAB;
-    s << TAB << "};" << endl;
 
     //toObject
     s << TAB << sNamespace << "." << pPtr->getId() << ".prototype.toObject = function() { "<< endl;
@@ -257,10 +267,11 @@ string CodeGenerator::generateJS(const StructPtr &pPtr, const string &sNamespace
             s << "," << endl;
         }
 
-        if (isSimple(member[i]->getTypePtr())) {
+        if (isSimple(member[i]->getTypePtr()) || _bWeb) {
             s << TAB << "\"" << member[i]->getId() << "\" : this." << member[i]->getId();
         }
-        else {
+        else 
+        {
             s << TAB << "\"" << member[i]->getId() << "\" : this." << member[i]->getId() << ".toObject()";
         }
         DEL_TAB;
@@ -271,47 +282,53 @@ string CodeGenerator::generateJS(const StructPtr &pPtr, const string &sNamespace
     DEL_TAB;
     s << TAB << "};" << endl;
 
-    //readFromObject
-    s << TAB << sNamespace << "." << pPtr->getId() << ".prototype.readFromObject = function(json) { "<< endl;
-    INC_TAB;
-
-    for (size_t i = 0; i < member.size(); i++)
+    if(!_bWeb)
     {
-        if (isSimple(member[i]->getTypePtr())) {
-            s << TAB << "_hasOwnProperty.call(json, \"" << member[i]->getId() << "\") && (this." << member[i]->getId() << " = json." << member[i]->getId() << ");" << endl;
-        } else {
-            s << TAB << "_hasOwnProperty.call(json, \"" << member[i]->getId() << "\") && (this." << member[i]->getId() << ".readFromObject(json." << member[i]->getId() << "));" << endl;
+        //readFromObject
+        s << TAB << sNamespace << "." << pPtr->getId() << ".prototype.readFromObject = function(json) { "<< endl;
+        INC_TAB;
+
+        for (size_t i = 0; i < member.size(); i++)
+        {
+            if (isSimple(member[i]->getTypePtr())) {
+                s << TAB << "_hasOwnProperty.call(json, \"" << member[i]->getId() << "\") && (this." << member[i]->getId() << " = json." << member[i]->getId() << ");" << endl;
+            } else {
+                s << TAB << "_hasOwnProperty.call(json, \"" << member[i]->getId() << "\") && (this." << member[i]->getId() << ".readFromObject(json." << member[i]->getId() << "));" << endl;
+            }
+            bQuickFunc = true;
         }
-        bQuickFunc = true;
+
+        s << TAB << "return this;" << endl;
+
+        DEL_TAB;
+        s << TAB << "};" << endl;
     }
 
-    s << TAB << "return this;" << endl;
+    if(!_bWeb)
+    {
+        //toBinBuffer
+        s << TAB << sNamespace << "." << pPtr->getId() << ".prototype.toBinBuffer = function () {" << endl;
+        INC_TAB;
+        s << TAB << "var os = new " << IDL_NAMESPACE_STR << "Stream." << IDL_TYPE << "OutputStream();" << endl;
+        s << TAB << "this._writeTo(os);" << endl;
+        s << TAB << "return os.getBinBuffer();" << endl;
+        DEL_TAB;
+        s << TAB << "};" << endl;
 
-    DEL_TAB;
-    s << TAB << "};" << endl;
+        //new
+        s << TAB << sNamespace << "." << pPtr->getId() << ".new = function () {" << endl;
+        INC_TAB;
+        s << TAB << "return new " << sNamespace << "." << pPtr->getId() << "();" << endl;
+        DEL_TAB;
+        s << TAB << "};" << endl;
 
-    //toBinBuffer
-    s << TAB << sNamespace << "." << pPtr->getId() << ".prototype.toBinBuffer = function () {" << endl;
-    INC_TAB;
-    s << TAB << "var os = new " << IDL_NAMESPACE_STR << "Stream." << IDL_TYPE << "OutputStream();" << endl;
-    s << TAB << "this._writeTo(os);" << endl;
-    s << TAB << "return os.getBinBuffer();" << endl;
-    DEL_TAB;
-    s << TAB << "};" << endl;
-
-    //new
-    s << TAB << sNamespace << "." << pPtr->getId() << ".new = function () {" << endl;
-    INC_TAB;
-    s << TAB << "return new " << sNamespace << "." << pPtr->getId() << "();" << endl;
-    DEL_TAB;
-    s << TAB << "};" << endl;
-
-    //create
-    s << TAB << sNamespace << "." << pPtr->getId() << ".create = function (is) {" << endl;
-    INC_TAB;
-    s << TAB << "return " << sNamespace << "." << pPtr->getId() << "._readFrom(is);" << endl;
-    DEL_TAB;
-    s << TAB << "};" << endl;
+        //create
+        s << TAB << sNamespace << "." << pPtr->getId() << ".create = function (is) {" << endl;
+        INC_TAB;
+        s << TAB << "return " << sNamespace << "." << pPtr->getId() << "._readFrom(is);" << endl;
+        DEL_TAB;
+        s << TAB << "};" << endl;
+    }
 
     return s.str();
 }
@@ -419,19 +436,22 @@ bool CodeGenerator::generateJS(const ContextPtr &pPtr)
     sstr << printHeaderRemark("Structure");
     sstr << DISABLE_ESLINT << endl;
     sstr << endl;
-    sstr << "\"use strict\";" << endl << endl;
-    if (bNeedAssert)
+    if(!_bWeb)
     {
-        sstr << "var assert    = require(\"assert\");" << endl;
-    }
-    if (bNeedStream)
-    {
-        sstr << "var " << IDL_NAMESPACE_STR << "Stream = require(\"" << _sStreamPath << "\");" << endl;
-    }
-    if (bQuickFunc)
-    {
-        sstr << endl;
-        sstr << "var _hasOwnProperty = Object.prototype.hasOwnProperty;" << endl;
+        sstr << "\"use strict\";" << endl << endl;
+        if (bNeedAssert)
+        {
+            sstr << "var assert    = require(\"assert\");" << endl;
+        }
+        if (bNeedStream)
+        {
+            sstr << "var " << IDL_NAMESPACE_STR << "Stream = require(\"" << _sStreamPath << "\");" << endl;
+        }
+        if (bQuickFunc)
+        {
+            sstr << endl;
+            sstr << "var _hasOwnProperty = Object.prototype.hasOwnProperty;" << endl;
+        }
     }
     sstr << ostr.str() << endl;
     sstr << istr.str();

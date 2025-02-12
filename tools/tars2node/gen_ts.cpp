@@ -44,13 +44,16 @@ string CodeGenerator::generateTS(const EnumPtr &pPtr, const string &sNamespace)
     DEL_TAB;
     s << TAB << "}" << endl << endl;
 
-    s << TAB << "export namespace " << pPtr->getId() << " {" << endl;
-    INC_TAB;
-    s << TAB << "export const _classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl;
-    s << TAB << "export function _write(os: " << IDL_NAMESPACE_STR << "Stream." << IDL_TYPE << "OutputStream, tag: number, val: number) { return os.writeInt32(tag, val); }" << endl;
-    s << TAB << "export function _read(is: " << IDL_NAMESPACE_STR << "Stream." << IDL_TYPE << "InputStream, tag: number, def?: number) { return is.readInt32(tag, true, def); }" << endl;
-    DEL_TAB;
-    s << TAB << "}" << endl << endl;
+    if(!_bWeb)
+    {
+        s << TAB << "export namespace " << pPtr->getId() << " {" << endl;
+        INC_TAB;
+        s << TAB << "export const _classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl;
+        s << TAB << "export function _write(os: " << IDL_NAMESPACE_STR << "Stream." << IDL_TYPE << "OutputStream, tag: number, val: number) { return os.writeInt32(tag, val); }" << endl;
+        s << TAB << "export function _read(is: " << IDL_NAMESPACE_STR << "Stream." << IDL_TYPE << "InputStream, tag: number, def?: number) { return is.readInt32(tag, true, def); }" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl << endl;
+    }
 
     DEL_TAB;
 
@@ -111,61 +114,65 @@ string CodeGenerator::generateTS(const StructPtr &pPtr, const string &sNamespace
         s << endl;
     }
 
-    // _classname, _proto_struct_name_
-    s << TAB << "protected _proto_struct_name_ = \"\";" << endl;
-    s << TAB << "protected _classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl;
-    s << TAB << "protected static _classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl;
-
-    // _write, _read
-    s << TAB << "protected static _write(os: " << IDL_NAMESPACE_STR << "Stream.TarsOutputStream, tag: number, val: any) { os.writeStruct(tag, val); }" << endl;
-	s << TAB << "protected static _read(is: " << IDL_NAMESPACE_STR << "Stream.TarsInputStream, tag: number, def?: any) { return is.readStruct(tag, true, def); }" << endl;
-
-    // _readFrom
-    s << TAB << "protected static _readFrom(is: " << IDL_NAMESPACE_STR << "Stream.TarsInputStream) {" << endl;
-    INC_TAB;
-
-    s << TAB << "const tmp = new " << pPtr->getId() << ";" << endl;
-    for (size_t i = 0; i < member.size(); i++)
+    if(!_bWeb)
     {
-        string sFuncName = toFunctionName(member[i], "read");
-		s << TAB << "tmp." << member[i]->getId() << " = is." << sFuncName << "(" << member[i]->getTag()
-            << ", " << (member[i]->isRequire() ? "true" : "false") << ", ";
+        // _classname, _proto_struct_name_
+        s << TAB << "protected _proto_struct_name_ = \"\";" << endl;
+        s << TAB << "protected _classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl;
+        s << TAB << "protected static _classname = \"" << sNamespace << "." << pPtr->getId() << "\";" << endl;
 
-        if (isSimple(member[i]->getTypePtr()))
+        // _write, _read
+        s << TAB << "protected static _write(os: " << IDL_NAMESPACE_STR << "Stream.TarsOutputStream, tag: number, val: any) { os.writeStruct(tag, val); }" << endl;
+        s << TAB << "protected static _read(is: " << IDL_NAMESPACE_STR << "Stream.TarsInputStream, tag: number, def?: any) { return is.readStruct(tag, true, def); }" << endl;
+
+        // _readFrom
+        s << TAB << "protected static _readFrom(is: " << IDL_NAMESPACE_STR << "Stream.TarsInputStream) {" << endl;
+        INC_TAB;
+
+        s << TAB << "const tmp = new " << pPtr->getId() << ";" << endl;
+        for (size_t i = 0; i < member.size(); i++)
         {
-            s << getDefault(member[i], member[i]->def(), sNamespace, true, true)
-                << representArgument(member[i]->getTypePtr());
+            string sFuncName = toFunctionName(member[i], "read");
+            s << TAB << "tmp." << member[i]->getId() << " = is." << sFuncName << "(" << member[i]->getTag()
+                << ", " << (member[i]->isRequire() ? "true" : "false") << ", ";
+
+            if (isSimple(member[i]->getTypePtr()))
+            {
+                s << getDefault(member[i], member[i]->def(), sNamespace, true, true)
+                    << representArgument(member[i]->getTypePtr());
+            }
+            else
+            {
+                s << getDataType(member[i]->getTypePtr(), true);
+            }
+
+            s << ");" << endl;
         }
-        else
+        s << TAB << "return tmp;" << endl;
+        DEL_TAB;        // end of _readFrom
+        s << TAB << "}" << endl << endl;
+
+        // _writeTo
+        s << TAB << "protected _writeTo(os: " << IDL_NAMESPACE_STR << "Stream.TarsOutputStream) {" << endl;
+        INC_TAB;
+        for (size_t i = 0; i < member.size(); i++)
         {
-            s << getDataType(member[i]->getTypePtr(), true);
+            string sFuncName = toFunctionName(member[i], "write");
+
+            s << TAB << "os." << sFuncName << "(" << member[i]->getTag() << ", this." << member[i]->getId()
+                << representArgument(member[i]->getTypePtr()) << ");" << endl;
         }
+        DEL_TAB;        // end of _writeTo
+        s << TAB << "}" << endl;
 
-        s << ");" << endl;
     }
-    s << TAB << "return tmp;" << endl;
-    DEL_TAB;        // end of _readFrom
-    s << TAB << "}" << endl << endl;
-
-    // _writeTo
-    s << TAB << "protected _writeTo(os: " << IDL_NAMESPACE_STR << "Stream.TarsOutputStream) {" << endl;
-    INC_TAB;
-    for (size_t i = 0; i < member.size(); i++)
-    {
-        string sFuncName = toFunctionName(member[i], "write");
-
-       	s << TAB << "os." << sFuncName << "(" << member[i]->getTag() << ", this." << member[i]->getId()
-            << representArgument(member[i]->getTypePtr()) << ");" << endl;
-    }
-    DEL_TAB;        // end of _writeTo
-    s << TAB << "}" << endl;
 
     /*
      *  Size Optimize:
      *    Remove <mutil_map> support.
      *    Remove toBinBuffer, readFromObject, toObject, new, create members.
      */
-    if (_iOptimizeLevel != Os)
+    if (_iOptimizeLevel != Os && !_bWeb)
     {
         s << endl;
 
@@ -299,20 +306,23 @@ string CodeGenerator::generateTS(const StructPtr &pPtr, const string &sNamespace
     DEL_TAB;        // end of Struct
     s << TAB << "}" << endl << endl;
 
-    // Additional namespace
-    s << TAB << "export namespace " << pPtr->getId() << " {" << endl;
-    INC_TAB;
-    s << TAB << "export interface Object {" << endl;
-    INC_TAB;
-    for (size_t i = 0; i < member.size(); i++)
+    if(!_bWeb)
     {
-        const string &sType = getTsType(member[i]->getTypePtr(), false);
-        s << TAB << (member[i]->getId()) << (member[i]->isRequire() ? ": " : "?: ") << (!sType.empty() ? sType : "never") << ";" << endl;
+        // Additional namespace
+        s << TAB << "export namespace " << pPtr->getId() << " {" << endl;
+        INC_TAB;
+        s << TAB << "export interface Object {" << endl;
+        INC_TAB;
+        for (size_t i = 0; i < member.size(); i++)
+        {
+            const string &sType = getTsType(member[i]->getTypePtr(), false);
+            s << TAB << (member[i]->getId()) << (member[i]->isRequire() ? ": " : "?: ") << (!sType.empty() ? sType : "never") << ";" << endl;
+        }
+        DEL_TAB;
+        s << TAB << "}" << endl;
+        DEL_TAB;
+        s << TAB << "}" << endl;
     }
-    DEL_TAB;
-    s << TAB << "}" << endl;
-    DEL_TAB;
-    s << TAB << "}" << endl;
 
     DEL_TAB;
     return s.str();
@@ -403,15 +413,19 @@ void CodeGenerator::generateTS(const ContextPtr &pPtr)
         return;
     }
 
-    // generate module imports
     ostringstream ostr;
-    if (bNeedAssert)
+
+    if(!_bWeb)
     {
-        ostr << "import assert from \"assert\";" << endl;
-    }
-    if (bNeedStream)
-    {
-        ostr << "import * as " << IDL_NAMESPACE_STR << "Stream from \"" << _sStreamPath << "\";" << endl;
+        // generate module imports
+        if (bNeedAssert)
+        {
+            ostr << "import assert from \"assert\";" << endl;
+        }
+        if (bNeedStream)
+        {
+            ostr << "import * as " << IDL_NAMESPACE_STR << "Stream from \"" << _sStreamPath << "\";" << endl;
+        }
     }
 
     for (map<string, ImportFile>::iterator it = _mapFiles.begin(); it != _mapFiles.end(); it++)
@@ -423,7 +437,7 @@ void CodeGenerator::generateTS(const ContextPtr &pPtr)
         ostr << "import * as " << it->second.sModule << " from \"" << TC_File::excludeFileExt(it->second.sFile) << "\";" << endl;
     }
 
-    if (bQuickFunc)
+    if (bQuickFunc && _bWeb)
     {
         ostr << endl;
         ostr << "const _hasOwnProperty = Object.prototype.hasOwnProperty;" << endl;
