@@ -60,7 +60,7 @@ public:
 	}
     void onHeartbeat()
     {
-        LOG_CONSOLE_DEBUG << "onHeartbeat" << endl;
+        // LOG_CONSOLE_DEBUG << "onHeartbeat" << endl;
     }
     std::shared_ptr<TC_SerialPort> _serialPort;
 };
@@ -95,7 +95,7 @@ public:
 
     void onHeartbeat()
     {
-        cout << "onHeartbeat" << endl;
+        // cout << "onHeartbeat" << endl;
     }
 };
 
@@ -251,29 +251,35 @@ TEST_F(UtilSerialPortTest, test2)
 
         shared_ptr<TC_SerialPort> serialPort = serialPortGroup.create(options, onParser2, make_shared<AsyncSerialPortCallback>());
         // string msg_send = {0x2f,0x44,0x1f,0x1f,0x1f,0x23};		
-        const vector<uint8_t> query_version = {0x2f,0x0b, 0x00, 0x00, 0x00, 0x01, 0x63, 0x1f,0x1f,0x01,0x23};		
+        vector<uint8_t> set_speed = {0x2f,0x0b, 0x00, 0x00, 0x00, 0x01, 0x45, 0x59,0x18,0x01,0x23};		
 
-        // string msg_send = {0x2f,0x47,0x57,0x00,0x01,0x23};
-
-    // 7e000801000201abcd
-        while(true)
+        uint8_t id = 0;
+        int count = 20;
+        while(--count > 0)
         {
             try
             {
                 int64_t start = TC_Common::now2ms();
                 std::unique_lock<std::mutex> lock(mtx);
-                serialPort->sendRequest((const char *)query_version.data(), query_version.size());
-                cnd.wait_for(lock, std::chrono::seconds(3));
+                set_speed[5] = ++id;
+                serialPort->sendRequest((const char *)set_speed.data(), set_speed.size());
+                // cnd.wait_for(lock, std::chrono::seconds(3));
 
-                LOG_CONSOLE_DEBUG << "cost: " << TC_Common::now2ms() - start << endl;
+                // LOG_CONSOLE_DEBUG << "cost: " << TC_Common::now2ms() - start << endl;
             }
             catch(const std::exception& ex)
             {
                 cout << "ex: " << ex.what() << endl;
             }
 
-            TC_Common::sleep(1);
+            // TC_Common::sleep(1);
         }
+
+        TC_Common::sleep(5);
+
+        serialPortGroup.erase(serialPort);
+        serialPortGroup.terminate();
+
 	}
 	catch(const std::exception& e)
 	{

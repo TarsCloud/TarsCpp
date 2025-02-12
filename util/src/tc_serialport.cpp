@@ -944,6 +944,18 @@ int TC_SerialPort::send(const void *buf, uint32_t len)
 		return 0;
 	}
 
+	DWORD  dwErrorFlags;
+	COMSTAT comStat;
+	DWORD dwBytesRead;
+
+	ClearCommError( _serialFd, &dwErrorFlags, &comStat );
+
+	if(comStat.cbOutQue >= 5)
+	{
+		//发送太快，等待1ms
+		TC_Common::msleep(1);
+	}
+
 	unsigned long dwBytesWritten = 0;
 	bool bWriteStat = WriteFile(_serialFd, buf, len, &dwBytesWritten, &_osWrite);
 	bool isPending = TC_Socket::isPending() ; 
