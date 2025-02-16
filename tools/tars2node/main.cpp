@@ -32,7 +32,8 @@ void usage()
     cout << "  --allow-reserved-namespace                  allow you to use reserved word as a namespace." << endl;
     cout << "  --dir=DIRECTORY                             generate source file to DIRECTORY." << endl;
     cout << "  --relative                                  use current path." << endl;
-    cout << "  --base=DIRECTORY                            where to search " << IDL_TYPE << " files." << endl;
+    cout << "  --base=DIRECTORY                            chroot to base direction, and where to search " << IDL_TYPE << " files, ." << endl;
+    cout << "  --include=DIRECTORY                         where to search " << IDL_TYPE << " files." << endl;
     cout << "  --r                                         generate source all " << IDL_TYPE << " files." << endl;
     cout << "  --r-minimal                                 minimize the dependent members." << endl;
     cout << "  --r-reserved                                list of names(split by \",\") that should be keeped." << endl;
@@ -67,7 +68,7 @@ void check(vector<string> &vFiles)
         }
         else
         {
-            cerr << "only support "<< TC_Common::lower(IDL_TYPE) << " file." << endl;
+            cerr << "only support "<< TC_Common::lower(IDL_TYPE) << " file, file: "  << vFiles[i] << endl;
             usage();
             exit(0);
         }
@@ -124,6 +125,7 @@ int main(int argc, char* argv[])
 
 	    g_parse->setTars(option.hasParam("with-tars"));
         g_parse->setUseCurrentPath(option.hasParam("relative"));
+        g_parse->addIncludePath(option.getValue("include"));
 
         CodeGenerator generator;
         generator.setRpcPath(option.hasParam("rpc-path")?option.getValue("rpc-path"):RPC_MODULE_PATH);
@@ -149,7 +151,6 @@ int main(int argc, char* argv[])
             {
                 generator.setLongType(CodeGenerator::BigInt);
             }
-            
         }
 
         if (option.hasParam("optimize"))
@@ -188,17 +189,16 @@ int main(int argc, char* argv[])
                 }
             }
 
-            if (vMembers.size() > 0)
+            if (!vMembers.empty())
             {
                 _bMinimalMembers = true;
                 generator.setDependent(vMembers);
             }
         }
 
-        if (!_bRecursive && _bMinimalMembers)
+        if (_bMinimalMembers)
         {
-            cerr << "Missing --r flag" << endl;
-            return 0;
+            _bRecursive = true;
         }
 
         generator.setRecursive(_bRecursive);
