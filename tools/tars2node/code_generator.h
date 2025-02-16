@@ -81,7 +81,7 @@ public:
           _bServer(false),
           _bWeb(false),
           _bRecursive(false),
-          _bUseSpecialPath(false),
+//          _bUseSpecialPath(false),
           _iLongType(Number),
           _bStringBinaryEncoding(false),
           _bEnumReverseMappings(false),
@@ -106,7 +106,7 @@ public:
 
     void setRecursive(bool bEnable) { _bRecursive = bEnable; }
 
-    void setUseSpecialPath(bool bEnable) { _bUseSpecialPath = bEnable; }
+//    void setUseSpecialPath(bool bEnable) { _bUseSpecialPath = bEnable; }
 
     void setLongType(int iLongType) { _iLongType = iLongType; }
 
@@ -309,7 +309,7 @@ private:
 
     bool   _bRecursive;
 
-    bool   _bUseSpecialPath;
+//    bool   _bUseSpecialPath;
 
     int    _iLongType;
 

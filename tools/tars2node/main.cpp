@@ -88,6 +88,14 @@ int main(int argc, char* argv[])
     {
         TC_Option option;
         option.decode(argc, argv);
+
+        if(option.hasParam("base"))
+        {
+            if (::chdir(option.getValue("base").c_str()) != 0) {
+                return -1;
+            }
+        }
+
         vector<string> vFiles = option.getSingle();
         check(vFiles);
 
@@ -101,13 +109,6 @@ int main(int argc, char* argv[])
         {
             usage();
             return 0;
-        }
-
-        if(option.hasParam("base"))
-        {
-            if (::chdir(option.getValue("base").c_str()) != 0) {
-                return -1;
-            }
         }
 
     #define ALLOW_USE_RESERVED_NAMESPACE_V(name, keeped) \
@@ -134,7 +135,7 @@ int main(int argc, char* argv[])
         generator.setEnableServer(option.hasParam("server"));
         generator.setEnableWeb(option.hasParam("web"));
         generator.setTargetPath(option.hasParam("dir")?option.getValue("dir"):"./");
-        generator.setUseSpecialPath(option.hasParam("relative"));
+//        generator.setUseSpecialPath(option.hasParam("relative"));
         generator.setStringBinaryEncoding(option.hasParam("string-binary-encoding"));
         generator.setEnumReverseMappings(option.hasParam("enum-reverse-mappings"));
         generator.setEnableTS(option.hasParam("ts"));
