@@ -220,9 +220,9 @@ bool TarsParse::getFilePath(const string &s, string &file)
     {
         for (size_t i = 0; i < _vIncludePath.size(); i++) 
         {
-            if (tars::TC_File::isFileExist(_vIncludePath[i] + "/" + file))
+            if (tars::TC_File::isFileExist(_vIncludePath[i] + FILE_SEP + file))
             {
-                file = _vIncludePath[i] + "/" + file;
+                file = _vIncludePath[i] + FILE_SEP + file;
                 break;
             }
         }
@@ -256,7 +256,14 @@ ContextPtr TarsParse::currentContextPtr()
 
 void TarsParse::error(const string &msg)
 {
-    cerr <<  _contexts.top()->getFileName() << ": " << _contexts.top()->getCurrLine() << ": error: " << msg << endl;
+    if(!_contexts.empty())
+    {
+        cerr << _contexts.top()->getFileName() << ": " << _contexts.top()->getCurrLine() << ": error: " << msg << endl;
+    }
+    else
+    {
+        cerr << "error: " << msg << endl;
+    }
     exit(-1);
 }
 
