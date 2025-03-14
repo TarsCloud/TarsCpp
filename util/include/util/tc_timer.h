@@ -73,10 +73,22 @@ public:
     virtual ~TC_TimerBase();
 
     /**
-     * 事件总个数
+     * 当前事件总个数(等待执行+正在执行的)
      * @return
      */
     size_t count();
+
+    /**
+     * 当前等待执行的事件个数
+     * @return
+     */
+    size_t waitCount();
+
+    /**
+     * 正在执行的个数(进入线程池, 但是不一定正在执行)
+     * @return
+     */
+    size_t runningCount();
 
     /**
      * 重复事件个数

@@ -247,4 +247,30 @@ TEST_F(UtilTimerTest, testRepeatUseCount)
 	timer.stopTimer();
 }
 
+TEST_F(UtilTimerTest, testDelayCount)
+{
+    TC_Timer timer;
+    timer.startTimer(1);
 
+	timer.postDelayed(0, [] {
+		TC_Common::msleep(100);
+	});
+	TC_Common::msleep(10);
+	EXPECT_EQ(timer.waitCount(), 0);
+	EXPECT_EQ(timer.runningCount(), 1);
+	EXPECT_EQ(timer.count(), 1);
+
+	timer.postDelayed(0, [] {
+		TC_Common::msleep(100);
+	});
+
+	TC_Common::msleep(10);
+	EXPECT_EQ(timer.waitCount(), 0);
+	EXPECT_EQ(timer.runningCount(), 2);
+	EXPECT_EQ(timer.count(), 2);
+
+	TC_Common::msleep(50);
+	cout << timer.count() << endl;
+
+	timer.stopTimer();
+}

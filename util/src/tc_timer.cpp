@@ -38,7 +38,21 @@ size_t TC_TimerBase::count()
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 
+	return _mapEvent.size() + _tmpEvent.size();
+}
+
+size_t TC_TimerBase::waitCount()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
 	return _mapEvent.size();
+}
+
+size_t TC_TimerBase::runningCount()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	return _tmpEvent.size();
 }
 
 size_t TC_TimerBase::repeatCount()
@@ -145,10 +159,11 @@ int64_t TC_TimerBase::fireEvents(int64_t ms)
 	{
 		shared_ptr<Func> func ;
 
+		MAP_EVENT::iterator it; 
 		{
 			std::lock_guard<std::mutex> lock(_mutex);
 
-			auto it = _mapEvent.find(*itList);
+			it = _mapEvent.find(*itList);
 
 			if (it != _mapEvent.end()) {
 

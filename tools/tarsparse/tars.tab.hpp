@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.5.1.  */
+/* A Bison parser, made by GNU Bison 3.7.6.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
    Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -31,8 +31,9 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* Undocumented macros, especially those whose name start with YY_,
-   are private implementation details.  Do not rely on them.  */
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_TARS_TAB_HPP_INCLUDED
 # define YY_YY_TARS_TAB_HPP_INCLUDED
@@ -44,43 +45,48 @@
 extern int yydebug;
 #endif
 
-/* Token type.  */
+/* Token kinds.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    TARS_VOID = 258,
-    TARS_STRUCT = 259,
-    TARS_BOOL = 260,
-    TARS_BYTE = 261,
-    TARS_SHORT = 262,
-    TARS_INT = 263,
-    TARS_DOUBLE = 264,
-    TARS_FLOAT = 265,
-    TARS_LONG = 266,
-    TARS_STRING = 267,
-    TARS_VECTOR = 268,
-    TARS_MAP = 269,
-    TARS_NAMESPACE = 270,
-    TARS_INTERFACE = 271,
-    TARS_IDENTIFIER = 272,
-    TARS_OUT = 273,
-    TARS_OP = 274,
-    TARS_KEY = 275,
-    TARS_ROUTE_KEY = 276,
-    TARS_REQUIRE = 277,
-    TARS_OPTIONAL = 278,
-    TARS_CONST_INTEGER = 279,
-    TARS_CONST_FLOAT = 280,
-    TARS_FALSE = 281,
-    TARS_TRUE = 282,
-    TARS_STRING_LITERAL = 283,
-    TARS_SCOPE_DELIMITER = 284,
-    TARS_CONST = 285,
-    TARS_ENUM = 286,
-    TARS_UNSIGNED = 287,
-    BAD_CHAR = 288
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    TARS_VOID = 258,               /* TARS_VOID  */
+    TARS_STRUCT = 259,             /* TARS_STRUCT  */
+    TARS_BOOL = 260,               /* TARS_BOOL  */
+    TARS_BYTE = 261,               /* TARS_BYTE  */
+    TARS_SHORT = 262,              /* TARS_SHORT  */
+    TARS_INT = 263,                /* TARS_INT  */
+    TARS_DOUBLE = 264,             /* TARS_DOUBLE  */
+    TARS_FLOAT = 265,              /* TARS_FLOAT  */
+    TARS_LONG = 266,               /* TARS_LONG  */
+    TARS_STRING = 267,             /* TARS_STRING  */
+    TARS_VECTOR = 268,             /* TARS_VECTOR  */
+    TARS_MAP = 269,                /* TARS_MAP  */
+    TARS_NAMESPACE = 270,          /* TARS_NAMESPACE  */
+    TARS_INTERFACE = 271,          /* TARS_INTERFACE  */
+    TARS_IDENTIFIER = 272,         /* TARS_IDENTIFIER  */
+    TARS_OUT = 273,                /* TARS_OUT  */
+    TARS_OP = 274,                 /* TARS_OP  */
+    TARS_KEY = 275,                /* TARS_KEY  */
+    TARS_ROUTE_KEY = 276,          /* TARS_ROUTE_KEY  */
+    TARS_REQUIRE = 277,            /* TARS_REQUIRE  */
+    TARS_OPTIONAL = 278,           /* TARS_OPTIONAL  */
+    TARS_CONST_INTEGER = 279,      /* TARS_CONST_INTEGER  */
+    TARS_CONST_FLOAT = 280,        /* TARS_CONST_FLOAT  */
+    TARS_FALSE = 281,              /* TARS_FALSE  */
+    TARS_TRUE = 282,               /* TARS_TRUE  */
+    TARS_STRING_LITERAL = 283,     /* TARS_STRING_LITERAL  */
+    TARS_SCOPE_DELIMITER = 284,    /* TARS_SCOPE_DELIMITER  */
+    TARS_CONST = 285,              /* TARS_CONST  */
+    TARS_ENUM = 286,               /* TARS_ENUM  */
+    TARS_UNSIGNED = 287,           /* TARS_UNSIGNED  */
+    BAD_CHAR = 288                 /* BAD_CHAR  */
   };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
