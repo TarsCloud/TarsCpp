@@ -56,6 +56,11 @@ public:
     {
     public:
         /**
+         * 析构函数
+         */
+        virtual ~RequestCallback() {}
+
+        /**
         * @brief 完整的响应回来了.
         *
         * @param sBuffer 回包

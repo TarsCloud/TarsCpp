@@ -84,6 +84,11 @@ public:
     {
     public:
         /**
+         * 析构函数
+         */
+        virtual ~RequestCallback() {}
+
+        /**
         * 错误码
         * Error Code
         */
