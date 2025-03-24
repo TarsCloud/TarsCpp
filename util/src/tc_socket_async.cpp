@@ -40,10 +40,6 @@ TC_SocketAsync::TC_SocketAsync(const shared_ptr<TC_SocketAsyncCore> &core, const
 , _uniqId(0)
 , _status(EM_NORMAL)
 {
-    // TC_SocketAsyncCore::getInstance()->start();
-
-    // _core = TC_SocketAsyncCore::getInstance();
-
     resetTrans(ep);
 }
 
@@ -412,6 +408,10 @@ void TC_SocketAsync::processNotify()
 {
     if(!_trans->hasConnected() && !_trans->isConnecting())
     {
+        if (_callbackPtr)
+        {
+            try {_callbackPtr->onBeforeConnect(); } catch(...) {}
+        }
         _trans->connect();
     }
     else if(_trans->hasConnected())

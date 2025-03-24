@@ -102,6 +102,11 @@ public:
         virtual void onClose() = 0;
 
         /**
+         * @brief 连接之前, 可以用来绑定本地地址
+         */
+        virtual void onBeforeConnect() {}
+
+        /**
          * 发送之前获取数据, 可以变更数据内容
          * @param reqBuffer
          */
@@ -294,13 +299,14 @@ public:
      * 设置udp发送buffer大小(只对udp有效)
      */
     void setUdpSendBuffer(size_t nSize);
-protected:
 
     /**
      * get trans
      * @return
      */
     TC_Transceiver *trans() { return _trans.get(); }
+    
+protected:
 
     /**
      *
