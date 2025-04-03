@@ -173,14 +173,16 @@ void TC_SerialPortGroup::run()
 			return;
 		}
 
-		std::map<std::string, std::shared_ptr<TC_SerialPort>> serialPorts;
+		// std::map<std::string, std::shared_ptr<TC_SerialPort>> serialPorts;
 
-		{	
-			std::lock_guard<std::mutex> lock(_mutex);
-			serialPorts = _serialPorts;	
-		}
+		// {	
+		// 	std::lock_guard<std::mutex> lock(_mutex);
+		// 	serialPorts = _serialPorts;	
+		// }
 
-		for (const auto &e: serialPorts)
+		std::lock_guard<std::mutex> lock(_mutex);
+
+		for (const auto &e: _serialPorts)
 		{
 			if(TC_Common::now2ms() - lastHeartbeat > _heartbeatMaxInterval)
 			{
