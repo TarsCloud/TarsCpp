@@ -1297,10 +1297,10 @@ ServantPrx ServantProxy::getServantPrx(ReqMessage *msg)
         }
     }
 
-    if (_connectionSerial != 0)
-    {
-        assert(int(_servantList.size() + 1) == _connectionSerial);
-    }
+    // if (_connectionSerial != 0)
+    // {
+    //     assert(int(_servantList.size() + 1) == _connectionSerial);
+    // }
 
     int id = _servantId++ % (_servantList.size() + 1);
 

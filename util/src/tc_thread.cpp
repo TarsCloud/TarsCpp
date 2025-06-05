@@ -143,11 +143,10 @@ TC_ThreadControl TC_Thread::start()
     try
     {
         _th = new std::thread(&TC_Thread::threadEntry, this);
-
     }
-    catch(...)
+    catch(exception &ex)
     {
-        throw TC_ThreadThreadControl_Exception("[TC_Thread::start] thread start error");
+        throw TC_ThreadThreadControl_Exception("[TC_Thread::start] thread start error:" + string(ex.what()));
     }
 
     _lock.wait();
@@ -196,9 +195,9 @@ TC_ThreadControl TC_Thread::startCoroutine(uint32_t iPoolSize, size_t iStackSize
     {
         _th = new std::thread(&TC_Thread::coroutineEntry, this, iPoolSize, iStackSize, autoQuit);
     }
-    catch(...)
+    catch(exception &ex)
     {
-        throw TC_ThreadThreadControl_Exception("[TC_Thread::startCoroutine] thread start error");
+        throw TC_ThreadThreadControl_Exception("[TC_Thread::startCoroutine] thread start error:" + string(ex.what()));
     }
 
     _lock.wait();
