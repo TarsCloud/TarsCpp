@@ -25,10 +25,10 @@ namespace tars
 {
 
 /**
- * 熔断保护, 超时一定比率后进行切换, 设置超时检查参数
- * 计算到某台服务器的超时率, 如果连续超时次数或者超时比例超过阀值
- * 1 默认5s内, 超时调用次数>=minTimeoutInvoke, 超时比率大于=radio
- * 2 超时持续时间>=minFrequenceFailTime, 且 连续超时次数>=frequenceFailInvoke, 如果frequenceFailInvoke==1, 则马上屏蔽
+ * 熔断保护, 超时一定比率后进行切换, 以下3种情况, 任何一种情况满足则屏蔽节点, 屏蔽时间为tryTimeInterval秒
+ * 1 默认checkTimeoutInterval秒内, 超时调用次数>=minTimeoutInvoke 且 超时比率大于=radio
+ * 2 超时持续时间>=minFrequenceFailTime(秒), 且 连续超时次数>=frequenceFailInvoke, 如果frequenceFailInvoke==1, 则马上屏蔽
+ * 3 连续连接异常>=maxConnectExc
  * 则失效
  * 服务失效后, 请求将尽可能的切换到其他可能的服务器, 并每隔tryTimeInterval尝试一次, 如果成功则认为恢复
  * 如果其他服务器都失效, 则随机选择一台尝试
@@ -38,6 +38,7 @@ namespace tars
  * @uint32_t minFrequenceFailTime, 最小连续超时时间间隔
  * @uint32_t checkTimeoutInterval, 统计时间间隔, (默认5s)
  * @float radio, 超时比例 > 该值则认为超时了 ( 0.1<=radio<=1.0 )
+ * @uint32_t maxConnectExc, 连续连接异常次数
  * @uint32_t tryTimeInterval, 重试时间间隔
  */
 struct CheckTimeoutInfo
@@ -46,12 +47,12 @@ struct CheckTimeoutInfo
      * 构造函数
      */
     CheckTimeoutInfo() 
-    : minTimeoutInvoke(2)
+    : minTimeoutInvoke(1)
     , checkTimeoutInterval(5)
-    , frequenceFailInvoke(3)
-    , minFrequenceFailTime(2)
-    , radio(0.3f)
-    , tryTimeInterval(10)
+    , frequenceFailInvoke(1)
+    , minFrequenceFailTime(3)
+    , radio(0.05f)
+    , tryTimeInterval(5)
     , maxConnectExc(1)
     {
     }
