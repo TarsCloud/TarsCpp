@@ -295,15 +295,15 @@ void TC_Transceiver::checkConnect()
 
 		getpeername(_fd, _clientAddr.first.get(), &_clientAddr.second);
 
-		if (_bindAddr.first)
-		{
-			//如果服务器终止后,服务器可以第二次快速启动而不用等待一段时间
-			int iReuseAddr = 1;
+		// if (_bindAddr.first)
+		// {
+		// 	//如果服务器终止后,服务器可以第二次快速启动而不用等待一段时间
+		// 	int iReuseAddr = 1;
 
-			setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&iReuseAddr, sizeof(int));
+		// 	setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&iReuseAddr, sizeof(int));
 
-			::bind(_fd, _bindAddr.first.get(), _bindAddr.second);
-		}
+		// 	::bind(_fd, _bindAddr.first.get(), _bindAddr.second);
+		// }
 		setConnected();
 	}
 }
@@ -367,6 +367,11 @@ void TC_Transceiver::connect()
 
 		//每次连接前都重新解析一下地址, 避免dns变了!
 		parseConnectAddress(getConnectEndpoint());
+
+		if (_bindAddr.first)
+		{
+			::bind(_fd, _bindAddr.first.get(), _bindAddr.second);
+		}		
 	}
 	else
 	{
@@ -386,6 +391,16 @@ void TC_Transceiver::connect()
 
 		//每次连接前都重新解析一下地址, 避免dns变了!
 		parseConnectAddress(getConnectEndpoint());
+
+		if (_bindAddr.first)
+		{
+			// //如果服务器终止后,服务器可以第二次快速启动而不用等待一段时间
+			// int iReuseAddr = 1;
+
+			// setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&iReuseAddr, sizeof(int));
+
+			::bind(_fd, _bindAddr.first.get(), _bindAddr.second);
+		}
 
 		bool bConnected = doConnect(_fd, _serverAddr.first.get(), _serverAddr.second);
 		if (bConnected)
