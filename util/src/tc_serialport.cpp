@@ -852,7 +852,7 @@ void TC_SerialPort::recvSucc(uint32_t len)
 		if (callback)
 		{
 			callback->onFailed(ex.what());
-			callback->onClose();
+			// callback->onClose();
 		}
 	}	
 
