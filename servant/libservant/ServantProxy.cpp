@@ -447,7 +447,7 @@ void ServantProxy::setComm(Communicator* pCommunicator, const string& name, cons
     _asyncTimeout = DEFAULT_ASYNCTIMEOUT;
     _id = 0;
     _masterFlag = false;
-    _minTimeout =100;
+    _minTimeout =10;
     
     _proxyProtocol.requestFunc  = ProxyProtocol::tarsRequest;
     _proxyProtocol.responseFunc = ProxyProtocol::tarsResponse;
@@ -473,7 +473,7 @@ void ServantProxy::setComm(Communicator* pCommunicator, const string& name, cons
 
 ////////////////////////////////////
 ServantProxy::ServantProxy(Communicator *pCommunicator, const string &name, const string &setName)
-    : _communicator(pCommunicator), _syncTimeout(DEFAULT_SYNCTIMEOUT), _asyncTimeout(DEFAULT_ASYNCTIMEOUT), _id(0), _masterFlag(false), _minTimeout(100)
+    : _communicator(pCommunicator), _syncTimeout(DEFAULT_SYNCTIMEOUT), _asyncTimeout(DEFAULT_ASYNCTIMEOUT), _id(0), _masterFlag(false), _minTimeout(10)
 {
 	_proxyProtocol.requestFunc  = ProxyProtocol::tarsRequest;
 	_proxyProtocol.responseFunc = ProxyProtocol::tarsResponse;

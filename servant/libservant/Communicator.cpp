@@ -388,7 +388,7 @@ void Communicator::initialize()
 
     _timeoutLogFlag = TC_Common::strto<bool>(getProperty("timeout-log-flag", "1"));
 
-    _minTimeout = TC_Common::strto<int64_t>(getProperty("min-timeout", "100"));
+    _minTimeout = TC_Common::strto<int64_t>(getProperty("min-timeout", "10"));
     if(_minTimeout < 1)
         _minTimeout = 1;
 

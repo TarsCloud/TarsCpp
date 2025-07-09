@@ -71,14 +71,12 @@ public:
         typename data_type::iterator dataIter;
     };
     /**
-	 * @brief 超时队列，缺省5s超时.
+	 * @brief 超时队列
 	 *
-     * @param timeout 超时设定时间
-     * @param size
      */
-    TC_TimeoutQueueNew(int timeout = 5*1000, size_t size = 100 ) : _uniqId(0)
+    TC_TimeoutQueueNew() : _uniqId(0)
     {
-        _data.reserve(size);
+        _data.reserve(100);
     }
 
     /**
