@@ -247,6 +247,30 @@ public:
 	 */
 	RequestCallbackPtr getRequestCallbackPtr();
 
+	/**
+	 * 是否有效
+	 * @return
+	 */
+	bool isValid()
+	{
+	#if TARGET_PLATFORM_WINDOWS
+		return _serialFd != INVALID_HANDLE_VALUE;
+	#else
+		return _serialFd != -1;
+	#endif
+	}
+#if TARGET_PLATFORM_WINDOWS
+	HANDLE getfd()
+	{
+		return _serialFd;
+	}
+#else
+	int getfd()
+	{
+		return _serialFd;
+	}
+#endif
+
 protected:
 
     friend class TC_SerialPortGroup;
@@ -332,30 +356,6 @@ protected:
 	 *
 	 */
 	void onRequestCallback();
-
-	/**
-	 * 是否有效
-	 * @return
-	 */
-	bool isValid()
-	{
-	#if TARGET_PLATFORM_WINDOWS
-		return _serialFd != INVALID_HANDLE_VALUE;
-	#else
-		return _serialFd != -1;
-	#endif
-	}
-#if TARGET_PLATFORM_WINDOWS
-	HANDLE getfd()
-	{
-		return _serialFd;
-	}
-#else
-	int getfd()
-	{
-		return _serialFd;
-	}
-#endif
 
 	/**
 	 * 关闭串口句柄
@@ -545,7 +545,7 @@ protected:
 	 */
 	HANDLE _ioPort = INVALID_HANDLE_VALUE;
 #endif
-    std::mutex _mutex;
+    std::recursive_mutex _mutex;
 
     std::map<std::string, std::shared_ptr<TC_SerialPort>> _serialPorts;
 

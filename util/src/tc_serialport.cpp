@@ -49,7 +49,7 @@ void TC_SerialPortGroup::initialize()
 
 shared_ptr<TC_SerialPort> TC_SerialPortGroup::create(const TC_SerialPort::Options & options, const TC_SerialPort::onparser_callback & onparser, const TC_SerialPort::RequestCallbackPtr & callbackPtr)
 {
-	std::lock_guard<std::mutex> lock(_mutex);
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
 	if (_serialPorts.find(options.portName) != _serialPorts.end())
 	{
 		throw TC_SerialPortException("serial port: `" + options.portName + "` has initialize.");
@@ -66,12 +66,11 @@ shared_ptr<TC_SerialPort> TC_SerialPortGroup::create(const TC_SerialPort::Option
 
 void TC_SerialPortGroup::erase(const shared_ptr<TC_SerialPort> & sp)
 {
-	std::lock_guard<std::mutex> lock(_mutex);
-
 	if(sp)
 	{
 		sp->close();
 
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
 		_serialPorts.erase(sp->options().portName);
 	}
 }
@@ -173,14 +172,7 @@ void TC_SerialPortGroup::run()
 			return;
 		}
 
-		// std::map<std::string, std::shared_ptr<TC_SerialPort>> serialPorts;
-
-		// {	
-		// 	std::lock_guard<std::mutex> lock(_mutex);
-		// 	serialPorts = _serialPorts;	
-		// }
-
-		std::lock_guard<std::mutex> lock(_mutex);
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
 
 		for (const auto &e: _serialPorts)
 		{
@@ -244,7 +236,7 @@ void TC_SerialPortGroup::terminate()
 #endif
 	_th->join();
 	{
-		std::lock_guard<std::mutex> lock(_mutex);
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
 		_serialPorts.clear();
 	}
 	delete _th;
