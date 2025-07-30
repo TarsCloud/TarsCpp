@@ -136,7 +136,7 @@ void TC_SerialPortGroup::run()
 #if !TARGET_PLATFORM_WINDOWS
 	_epoller.idle([&]
 	     			{
-		              	std::lock_guard<std::mutex> lock(_mutex);
+		              	std::lock_guard<std::recursive_mutex> lock(_mutex);
 		              	for (const auto &e: _serialPorts)
 		              	{
 							if(TC_Common::now2ms() - lastHeartbeat > _heartbeatMaxInterval)
