@@ -494,6 +494,12 @@ public:
     void erase(const std::shared_ptr<TC_SerialPort> & sp);
 
 	/**
+	 * 删除串口
+	 * @param portName
+	 */
+	void erase(const string &portName);
+
+	/**
 	 * 获取系统中的串口名称
 	 * @param prefix, 名称前缀(对windows无效), linux/mac下有效
 	 */

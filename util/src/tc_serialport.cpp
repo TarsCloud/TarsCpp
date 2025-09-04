@@ -64,11 +64,17 @@ shared_ptr<TC_SerialPort> TC_SerialPortGroup::create(const TC_SerialPort::Option
 	return sp;
 }
 
+void TC_SerialPortGroup::erase(const string &portName)
+{
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
+	_serialPorts.erase(portName);	
+}
+
 void TC_SerialPortGroup::erase(const shared_ptr<TC_SerialPort> & sp)
 {
 	if(sp)
 	{
-		sp->close();
+		// sp->close();
 
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 		_serialPorts.erase(sp->options().portName);
@@ -136,8 +142,13 @@ void TC_SerialPortGroup::run()
 #if !TARGET_PLATFORM_WINDOWS
 	_epoller.idle([&]
 	     			{
-		              	std::lock_guard<std::recursive_mutex> lock(_mutex);
-		              	for (const auto &e: _serialPorts)
+						std::map<std::string, std::shared_ptr<TC_SerialPort>> serialPorts;
+
+						{
+							std::lock_guard<std::recursive_mutex> lock(_mutex);
+							serialPorts = _serialPorts;
+						}
+		              	for (const auto &e: serialPorts)
 		              	{
 							if(TC_Common::now2ms() - lastHeartbeat > _heartbeatMaxInterval)
 							{
@@ -172,9 +183,14 @@ void TC_SerialPortGroup::run()
 			return;
 		}
 
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		std::map<std::string, std::shared_ptr<TC_SerialPort>> serialPorts;
 
-		for (const auto &e: _serialPorts)
+		{
+			std::lock_guard<std::recursive_mutex> lock(_mutex);
+			serialPorts = _serialPorts;
+		}
+
+		for (const auto &e: serialPorts)
 		{
 			if(TC_Common::now2ms() - lastHeartbeat > _heartbeatMaxInterval)
 			{
