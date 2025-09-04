@@ -271,6 +271,11 @@ public:
 	}
 #endif
 
+	/**
+	 * 关闭串口句柄
+	 */
+	void close();
+
 protected:
 
     friend class TC_SerialPortGroup;
@@ -356,11 +361,6 @@ protected:
 	 *
 	 */
 	void onRequestCallback();
-
-	/**
-	 * 关闭串口句柄
-	 */
-	void close();
 
 #if TARGET_PLATFORM_WINDOWS
 	OVERLAPPED *getOsRead() { return &_osRead; }
