@@ -660,6 +660,11 @@ void TC_File::listDirectory(const string &path, vector<string> &files, bool bRec
 
 void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRemove)
 {
+    if(sExistFile == sNewFile)
+    {
+        return;
+    }
+    
     if(TC_File::isFileExist(sExistFile, S_IFDIR))
     {
         TC_File::makeDir(sNewFile);

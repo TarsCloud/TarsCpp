@@ -294,7 +294,7 @@ public:
 	static void listDirectory(const string &path, vector<string> &files, bool bRecursive, bool ignoreHide = false);
 
 	/**
-	* @brief 复制文件或目录.
+	* @brief 复制文件或目录. 失败会抛出异常
 	* 将文件或者目录从sExistFile复制到sNewFile
 	* @param sExistFile 复制的文件或者目录源路径
 	* @param sNewFile   复制的文件或者目录目标路径
