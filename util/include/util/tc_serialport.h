@@ -144,7 +144,7 @@ public:
         virtual void onClose() = 0;
 
 		/**
-		 * @brief 心跳回调, 在串口通信线程中调用, 每当有收发数据时, 都会回调, 最长不超过
+		 * @brief 心跳回调, 在串口通信线程中调用, 每当有收发数据时, 都会回调, 最长不超过_heartbeatMaxInterval时间没有收发数据, 会回调onHeartbeat
 		 */
 		virtual void onHeartbeat() {};
     };
@@ -389,7 +389,7 @@ protected:
 	/**
 	 * 互斥量
 	 */
-	std::mutex _mutex;
+	std::recursive_mutex _mutex;
 
 	/**
 	 * 等待互斥量

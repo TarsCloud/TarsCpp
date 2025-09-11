@@ -70,7 +70,7 @@ bool FrameworkServer::loadLogFormat(const string& command, const string& params,
 
             sort(vHourlist.begin(),vHourlist.end());
 
-            unique(vHourlist.begin(),vHourlist.end());
+            vHourlist.erase(unique(vHourlist.begin(),vHourlist.end()),vHourlist.end());
 
             result = "loadLogFormat succ:" + sHour;
 

@@ -170,9 +170,9 @@ void  StatReport::resetStatInterv()
     _timePoint.push_back(2000);
     _timePoint.push_back(3000);
 
-    sort(_timePoint.begin(),_timePoint.end());
+    // sort(_timePoint.begin(),_timePoint.end());
 
-    unique(_timePoint.begin(),_timePoint.end());
+    // unique(_timePoint.begin(),_timePoint.end());
 }
 
 string StatReport::trimAndLimitStr(const string& str, uint32_t limitlen)
