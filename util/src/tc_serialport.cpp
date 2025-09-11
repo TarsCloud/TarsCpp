@@ -74,7 +74,7 @@ void TC_SerialPortGroup::erase(const shared_ptr<TC_SerialPort> & sp)
 {
 	if(sp)
 	{
-		// sp->close();
+		sp->close();
 
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 		_serialPorts.erase(sp->options().portName);
@@ -273,6 +273,8 @@ TC_SerialPort::~TC_SerialPort()
 
 void TC_SerialPort::close()
 {
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
+
 	if(!isValid())
 	{
 		return;
@@ -304,6 +306,7 @@ void TC_SerialPort::close()
 
 	if(_serialFd != INVALID_HANDLE_VALUE)
 	{
+		CreateIoCompletionPort(_serialFd, NULL, 0, 0);
 
 		CloseHandle(_serialFd); 
 		_serialFd = INVALID_HANDLE_VALUE;
@@ -509,19 +512,19 @@ void TC_SerialPort::initialize()
 
 void TC_SerialPort::setParserCallback(const onparser_callback & onparser)
 {
-	std::lock_guard<std::mutex> lock(_mutex);
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
 	_onParserCallback = onparser;
 }
 
 void TC_SerialPort::setRequestCallback(const RequestCallbackPtr & callbackPtr)
 {
-	std::lock_guard<std::mutex> lock(_mutex);
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
 	_callbackPtr = callbackPtr;
 }
 
 TC_SerialPort::RequestCallbackPtr TC_SerialPort::getRequestCallbackPtr()
 {
-	std::lock_guard<std::mutex> lock(_mutex);
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
 	return _callbackPtr;
 }
 
@@ -534,9 +537,13 @@ void TC_SerialPort::sendRequest(const char* sBuffer, size_t length, bool header)
 
 	buff->addBuffer(sBuffer, length);
 
-	if(!isValid())
 	{
-		initialize();
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+		if(!isValid())
+		{
+			initialize();
+		}
 	}
 	addSendReqBuffer(buff, header);
 }
@@ -546,9 +553,13 @@ void TC_SerialPort::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> & buf
 	if (buff && buff->empty())
 		return;
 
-	if(!isValid())
 	{
-		initialize();
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+		if(!isValid())
+		{
+			initialize();
+		}
 	}
 	addSendReqBuffer(buff, header);
 }
@@ -595,7 +606,7 @@ void TC_SerialPort::notify(vector<char> && response)
 
 void TC_SerialPort::addSendReqBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> & reqBuffer, bool header)
 {
-	std::lock_guard<std::mutex> lock(_mutex);
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
 
 	if (header)
 	{
@@ -612,7 +623,6 @@ void TC_SerialPort::addSendReqBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> 
 #else
 	_serialPortGroup->getEpoller().notify();
 #endif
-
 }
 
 int TC_SerialPort::doProtocolAnalysis(TC_NetWorkBuffer *buff)
@@ -630,10 +640,7 @@ int TC_SerialPort::doProtocolAnalysis(TC_NetWorkBuffer *buff)
 			vector<char> out;
 			ioriginal = buff->getBufferLength();
 
-			{
-				std::lock_guard<std::mutex> lock(_mutex);
-				ret = _onParserCallback(*buff, out);
-			}
+			ret = _onParserCallback(*buff, out);
 			isurplus = buff->getBufferLength();
 
 			if (ret == TC_NetWorkBuffer::PACKET_FULL || ret == TC_NetWorkBuffer::PACKET_FULL_CLOSE)
@@ -691,6 +698,11 @@ bool TC_SerialPort::handleCloseImp()
 
 bool TC_SerialPort::handleInputImp(const shared_ptr<TC_Epoller::EpollInfo> & epollInfo)
 {
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
+	if(!isValid())
+	{
+		return false;
+	}	
 	try
 	{
 		//串口读取数据
@@ -748,6 +760,11 @@ bool TC_SerialPort::handleInputImp()
 {
 	try
 	{
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		if(!isValid())
+		{
+			return false;
+		}
 		this->recv();
 	}
 	catch (exception & ex)
@@ -769,9 +786,9 @@ void TC_SerialPort::onRequestCallback()
 	for (;;)
 	{
 		decltype(_messages)::iterator it;
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
 
 		{
-			std::lock_guard<std::mutex> lock(_mutex);
 			if (_messages.empty())
 			{
 				return;
@@ -788,8 +805,6 @@ void TC_SerialPort::onRequestCallback()
 
 		if (iRet != eRetNotSend)
 		{
-			std::lock_guard<std::mutex> lock(_mutex);
-
 			_messages.erase(it);
 		}
 
@@ -828,6 +843,12 @@ bool TC_SerialPort::handleOutputImp()
 #if TARGET_PLATFORM_WINDOWS
 void TC_SerialPort::sendSucc(uint32_t len)
 {
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
+	if(!isValid())
+	{
+		return;
+	}
+
 	_sendBuffer.moveHeader(len);
 }
 
@@ -835,6 +856,12 @@ void TC_SerialPort::recvSucc(uint32_t len)
 {
 	try
 	{
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		if(!isValid())
+		{
+			return;
+		}
+
 		assert(!_buffRecv.empty());
 
 		auto it = _buffRecv.begin();
@@ -860,7 +887,6 @@ void TC_SerialPort::recvSucc(uint32_t len)
 		if (callback)
 		{
 			callback->onFailed(ex.what());
-			// callback->onClose();
 		}
 	}	
 
@@ -919,6 +945,7 @@ TC_SerialPort::ReturnStatus TC_SerialPort::writeBuffer(const shared_ptr<TC_NetWo
 
 void TC_SerialPort::doRequest()
 {
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
 	//buf不为空,先发送buffer的内容
 	while (!_sendBuffer.empty())
 	{
@@ -944,11 +971,7 @@ void TC_SerialPort::doRequest()
 int TC_SerialPort::send(const void *buf, uint32_t len)
 {
 #if TARGET_PLATFORM_WINDOWS
-	if(!isValid())
-	{
-		return 0;
-	}
-
+	
 	if(len == 0)
 	{
 		return 0;
@@ -1005,10 +1028,7 @@ int TC_SerialPort::send(const void *buf, uint32_t len)
 
 int TC_SerialPort::recv()
 {
-	if(!isValid())
-	{
-		return 0;
-	}
+
 	DWORD  dwErrorFlags;
 	COMSTAT ComStat;
 	DWORD dwBytesRead;
