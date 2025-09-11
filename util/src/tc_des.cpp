@@ -176,7 +176,7 @@ static const uint32_t SP8[64] = {
     0x10041040L, 0x00041000L, 0x00041000L, 0x00001040L,
     0x00001040L, 0x00040040L, 0x10000000L, 0x10041000L };
 
-void TC_Des::scrunch(register const char *outof, register uint32_t *into)
+void TC_Des::scrunch(const char *outof, uint32_t *into)
 {
     *into    = (*outof++ & 0xffL) << 24;
     *into   |= (*outof++ & 0xffL) << 16;
@@ -189,7 +189,7 @@ void TC_Des::scrunch(register const char *outof, register uint32_t *into)
     return;
 }
 
-void TC_Des::unscrun(register uint32_t *outof, register char *into)
+void TC_Des::unscrun(uint32_t *outof, char *into)
 {
     *into++ = (*outof >> 24) & 0xffL;
     *into++ = (*outof >> 16) & 0xffL;
@@ -202,10 +202,10 @@ void TC_Des::unscrun(register uint32_t *outof, register char *into)
     return;
 }
 
-void TC_Des::desfunc(register uint32_t *block, register uint32_t *keys)
+void TC_Des::desfunc(uint32_t *block, uint32_t *keys)
 {
-    register uint32_t fval, work, right, leftt;
-    register int round;
+    uint32_t fval, work, right, leftt;
+    int round;
 
     leftt = block[0];
     right = block[1];
@@ -277,11 +277,11 @@ void TC_Des::desfunc(register uint32_t *block, register uint32_t *keys)
     return;
 }
 
-void TC_Des::cookey(register uint32_t *raw1, uint32_t *k)
+void TC_Des::cookey(uint32_t *raw1, uint32_t *k)
 {
-    register uint32_t *cook, *raw0;
+    uint32_t *cook, *raw0;
     uint32_t dough[32];
-    register int i;
+    int i;
 
     cook = dough;
     for( i = 0; i < 16; i++, raw1++ )
@@ -297,7 +297,7 @@ void TC_Des::cookey(register uint32_t *raw1, uint32_t *k)
         *cook++ |= (*raw1 & 0x0000003fL);
     }
 
-	register uint32_t *to, *endp, *p;
+	uint32_t *to, *endp, *p;
 	to = k, endp = &k[32], p = dough;
 	while( to < endp )
         *to++ = *p++;
@@ -305,7 +305,7 @@ void TC_Des::cookey(register uint32_t *raw1, uint32_t *k)
 
 void TC_Des::deskey(const char *key, short edf, uint32_t *k)
 {
-    register int i, j, l, m, n;
+    int i, j, l, m, n;
     unsigned char pc1m[56], pcr[56];
 	uint32_t kn[32];
 
