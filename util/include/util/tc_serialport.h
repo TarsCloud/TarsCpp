@@ -271,11 +271,6 @@ public:
 	}
 #endif
 
-	/**
-	 * 关闭串口句柄
-	 */
-	void close();
-
 protected:
 
     friend class TC_SerialPortGroup;
@@ -284,6 +279,11 @@ protected:
 	 * 初始化串口
 	 */
 	void initialize();
+
+	/**
+	 * 关闭串口句柄
+	 */
+	void close();
 
 	/**
 	 * sendRequest返回值
@@ -494,12 +494,6 @@ public:
     void erase(const std::shared_ptr<TC_SerialPort> & sp);
 
 	/**
-	 * 删除串口
-	 * @param portName
-	 */
-	void erase(const string &portName);
-
-	/**
 	 * 获取系统中的串口名称
 	 * @param prefix, 名称前缀(对windows无效), linux/mac下有效
 	 */
@@ -531,7 +525,12 @@ public:
 protected:
     void run();
 
+	TC_ThreadPool *getThreadPool()
+	{
+		return &_tpool;
+	}
 
+	friend class TC_SerialPort;
 protected:
 
 	/**
@@ -550,12 +549,18 @@ protected:
 	 * 完成端口
 	 */
 	HANDLE _ioPort = INVALID_HANDLE_VALUE;
+
 #endif
     std::recursive_mutex _mutex;
 
     std::map<std::string, std::shared_ptr<TC_SerialPort>> _serialPorts;
 
     std::thread *_th = NULL;
+
+	/**
+	 * 回调线程
+	 */
+	TC_ThreadPool _tpool;	
 };
 
 }
