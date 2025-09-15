@@ -183,10 +183,10 @@ protected:
     static void des3(const char *from, char *into, uint32_t *KnL, uint32_t *KnR, uint32_t *Kn3);
 
 private:
-    static void cookey(register uint32_t *raw1, uint32_t *k);
-    static void scrunch(register const char *outof, register uint32_t *into);
-    static void unscrun(register uint32_t *outof, register char *into);
-    static void desfunc(register uint32_t *block, register uint32_t *keys);
+    static void cookey(uint32_t *raw1, uint32_t *k);
+    static void scrunch(const char *outof, uint32_t *into);
+    static void unscrun(uint32_t *outof, char *into);
+    static void desfunc(uint32_t *block, uint32_t *keys);
 };
 
 }
