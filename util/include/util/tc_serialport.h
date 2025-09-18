@@ -530,6 +530,8 @@ protected:
 		return &_tpool;
 	}
 
+	void erase(const string &portName);
+
 	friend class TC_SerialPort;
 protected:
 
