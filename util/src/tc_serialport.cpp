@@ -615,7 +615,12 @@ void TC_SerialPort::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> & buf
 	}
 	catch(const std::exception& ex)
 	{
-		;
+		string err = string("serial port: `") + options().portName + "` exception:" + ex.what();
+		auto callback = getRequestCallbackPtr();
+		if(callback)
+		{
+			_serialPortGroup->getThreadPool()->exec([callback, err]{callback->onFailed(err); });
+		}
 	}
 
 	addSendReqBuffer(buff, header);
