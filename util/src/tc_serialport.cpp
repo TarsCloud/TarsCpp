@@ -63,9 +63,16 @@ shared_ptr<TC_SerialPort> TC_SerialPortGroup::create(const TC_SerialPort::Option
 	
 	sp->initialize();
 
-    _serialPorts[options.portName] = sp;
-
 	return sp;
+}
+
+void TC_SerialPortGroup::add(const std::shared_ptr<TC_SerialPort> & sp)
+{
+	if(sp)
+	{
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		_serialPorts[sp->options().portName] = sp;
+	}
 }
 
 void TC_SerialPortGroup::erase(const string &portName)
@@ -145,9 +152,13 @@ void TC_SerialPortGroup::run()
 #if !TARGET_PLATFORM_WINDOWS
 	_epoller.idle([&]
 	     			{
-						std::lock_guard<std::recursive_mutex> lock(_mutex);
+						std::map<std::string, std::shared_ptr<TC_SerialPort>> serialPorts;
 
-		              	for (const auto &e: _serialPorts)
+						{
+							std::lock_guard<std::recursive_mutex> lock(_mutex);
+							serialPorts = _serialPorts;
+						}
+		              	for (const auto &e: serialPorts)
 		              	{
 							if(TC_Common::now2ms() - lastHeartbeat > _heartbeatMaxInterval)
 							{
@@ -162,7 +173,11 @@ void TC_SerialPortGroup::run()
 
 							try
 							{
-								e.second->doRequest();
+								std::lock_guard<std::recursive_mutex> lock(e.second->_mutex);
+								if(e.second->isValid())
+								{
+									e.second->doRequest();
+								}
 							}
 							catch(const std::exception& e)
 							{
@@ -195,9 +210,14 @@ void TC_SerialPortGroup::run()
 			return;
 		}
 
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		std::map<std::string, std::shared_ptr<TC_SerialPort>> serialPorts;
 
-		for (const auto &e: _serialPorts)
+		{
+			std::lock_guard<std::recursive_mutex> lock(_mutex);
+			serialPorts = _serialPorts;
+		}
+
+		for (const auto &e: serialPorts)
 		{
 			if(TC_Common::now2ms() - lastHeartbeat > _heartbeatMaxInterval)
 			{
@@ -208,6 +228,12 @@ void TC_SerialPortGroup::run()
 				{
 					try { _tpool.exec([callback]{callback->onHeartbeat(); }); } catch(const std::exception& ex) { }
 				}
+			}
+
+			std::lock_guard<std::recursive_mutex> lock(e.second->_mutex);
+			if(!e.second->isValid())
+			{
+				continue;
 			}
 
 			try
@@ -286,6 +312,8 @@ TC_SerialPort::~TC_SerialPort()
 
 void TC_SerialPort::close()
 {
+	_serialPortGroup->erase(options().portName);
+
 	{
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 
@@ -334,7 +362,6 @@ void TC_SerialPort::close()
 	#endif
 	}
 
-	_serialPortGroup->erase(options().portName);
 
 	auto callbackPtr = getRequestCallbackPtr();
 	if(callbackPtr)
@@ -343,12 +370,23 @@ void TC_SerialPort::close()
 	}
 }
 
+void TC_SerialPort::open()
+{
+	std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+	if(isValid())
+	{
+		return;
+	}
+
+	initialize();
+}
+
 void TC_SerialPort::initialize()
 {
 	std::lock_guard<std::recursive_mutex> lock(_mutex);
 
 #if TARGET_PLATFORM_WINDOWS
-
 
 	if (_serialFd != INVALID_HANDLE_VALUE)
     {
@@ -527,6 +565,8 @@ void TC_SerialPort::initialize()
 	_buffRecv.clear();
 #endif
 	
+	_serialPortGroup->add(shared_from_this());
+
 	auto callback = getRequestCallbackPtr();
 	if(callback)	
 	{
@@ -537,19 +577,19 @@ void TC_SerialPort::initialize()
 
 void TC_SerialPort::setParserCallback(const onparser_callback & onparser)
 {
-	std::lock_guard<std::recursive_mutex> lock(_mutex);
+	std::lock_guard<std::mutex> lock(_messageMutex);
 	_onParserCallback = onparser;
 }
 
 void TC_SerialPort::setRequestCallback(const RequestCallbackPtr & callbackPtr)
 {
-	std::lock_guard<std::recursive_mutex> lock(_mutex);
+	std::lock_guard<std::mutex> lock(_messageMutex);
 	_callbackPtr = callbackPtr;
 }
 
 TC_SerialPort::RequestCallbackPtr TC_SerialPort::getRequestCallbackPtr()
 {
-	std::lock_guard<std::recursive_mutex> lock(_mutex);
+	std::lock_guard<std::mutex> lock(_messageMutex);
 	return _callbackPtr;
 }
 
@@ -615,7 +655,7 @@ void TC_SerialPort::notify(vector<char> && response)
 
 void TC_SerialPort::addSendReqBuffer(const shared_ptr<TC_NetWorkBuffer::Buffer> & reqBuffer, bool header)
 {
-	std::lock_guard<std::recursive_mutex> lock(_mutex);
+	std::lock_guard<std::mutex> lock(_messageMutex);
 
 	if (header)
 	{
@@ -649,7 +689,10 @@ int TC_SerialPort::doProtocolAnalysis(TC_NetWorkBuffer *buff)
 			vector<char> out;
 			ioriginal = buff->getBufferLength();
 
-			ret = _onParserCallback(*buff, out);
+			{
+				std::lock_guard<std::mutex> lock(_messageMutex);
+				ret = _onParserCallback(*buff, out);
+			}
 			isurplus = buff->getBufferLength();
 
 			if (ret == TC_NetWorkBuffer::PACKET_FULL || ret == TC_NetWorkBuffer::PACKET_FULL_CLOSE)
@@ -759,7 +802,7 @@ void TC_SerialPort::onRequestCallback()
 	for (;;)
 	{
 		decltype(_messages)::iterator it;
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		std::lock_guard<std::mutex> lock(_messageMutex);
 
 		{
 			if (_messages.empty())

@@ -134,7 +134,7 @@ TC_NetWorkBuffer::PACKET_TYPE onParser1(TC_NetWorkBuffer &buffer, vector<char> &
     if(out[out.size() - 1] != 0x0d)
     {
         cout << "onSerialParser:" << TC_Common::bin2str(out.data(), out.size()) << ", not end with 0x0d, rebuild comm!" << endl;
-        return TC_NetWorkBuffer::PACKET_ERR;
+        return TC_NetWorkBuffer::PACKET_LESS;
     }
 	buffer.moveHeader(out.size());
 

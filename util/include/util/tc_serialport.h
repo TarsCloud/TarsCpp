@@ -106,7 +106,7 @@ class TC_SerialPortGroup;
 /**
 * 异步串口通信类
 */
-class UTIL_DLL_API TC_SerialPort
+class UTIL_DLL_API TC_SerialPort : public std::enable_shared_from_this<TC_SerialPort>
 {
 public:
    /**
@@ -270,6 +270,17 @@ public:
 		return _serialFd;
 	}
 #endif
+	/**
+	 * 关闭串口句柄
+	 * 建议调用group的erase接口来删除串口, 不要直接调用close
+	 */
+	void close();
+
+	/**
+	 * 打开串口
+	 * 如果关闭, 会自动重新打开
+	 */
+	void open();
 
 protected:
 
@@ -280,10 +291,6 @@ protected:
 	 */
 	void initialize();
 
-	/**
-	 * 关闭串口句柄
-	 */
-	void close();
 
 	/**
 	 * sendRequest返回值
@@ -385,6 +392,11 @@ protected:
 	 * 串口参数
 	 */
 	Options _options;
+
+	/**
+	 * 消息互斥量
+	 */
+	std::mutex _messageMutex;
 
 	/**
 	 * 互斥量
@@ -530,7 +542,17 @@ protected:
 		return &_tpool;
 	}
 
+	/**
+	 * 删除某个串口
+	 * @param portName
+	 */
 	void erase(const string &portName);
+
+	/**
+	 * 重新打开某个串口
+	 * @param portName	
+	 */
+	void add(const std::shared_ptr<TC_SerialPort> & sp);
 
 	friend class TC_SerialPort;
 protected:
