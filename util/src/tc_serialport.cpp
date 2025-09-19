@@ -61,7 +61,7 @@ shared_ptr<TC_SerialPort> TC_SerialPortGroup::create(const TC_SerialPort::Option
 
 	shared_ptr<TC_SerialPort> sp = std::make_shared<TC_SerialPort>(options, this, onparser, callbackPtr);
 	
-	sp->initialize();
+	sp->open();
 
 	return sp;
 }
@@ -179,7 +179,7 @@ void TC_SerialPortGroup::run()
 									e.second->doRequest();
 								}
 							}
-							catch(const std::exception& e)
+							catch(const std::exception& ex)
 							{
 								string err = string("serial port: `") + e.second->options().portName + "` exception:" + ex.what();
 								e.second->close();
@@ -384,8 +384,6 @@ void TC_SerialPort::open()
 
 void TC_SerialPort::initialize()
 {
-	std::lock_guard<std::recursive_mutex> lock(_mutex);
-
 #if TARGET_PLATFORM_WINDOWS
 
 	if (_serialFd != INVALID_HANDLE_VALUE)
@@ -462,7 +460,7 @@ void TC_SerialPort::initialize()
         throw TC_SerialPortException("open serial port: " + _options.portName + " has initialized.");
     }
 
-	_serialFd = open(_options.portName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+	_serialFd = ::open(_options.portName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if (_serialFd == -1)
 	{
 		throw TC_SerialPortException("Failed to open serial port: " + _options.portName);
@@ -598,17 +596,27 @@ void TC_SerialPort::sendRequest(const char* sBuffer, size_t length, bool header)
 	if (sBuffer == nullptr || length == 0)
 		return;
 
-	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
 
+	shared_ptr<TC_NetWorkBuffer::Buffer> buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
 	buff->addBuffer(sBuffer, length);
 
-	addSendReqBuffer(buff, header);
+	sendRequest(buff, header);
 }
 
 void TC_SerialPort::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> & buff, bool header)
 {
 	if (buff && buff->empty())
 		return;
+
+	//重新打开
+	try
+	{
+		open();
+	}
+	catch(const std::exception& ex)
+	{
+		;
+	}
 
 	addSendReqBuffer(buff, header);
 }
