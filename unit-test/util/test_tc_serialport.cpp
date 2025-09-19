@@ -133,7 +133,7 @@ TC_NetWorkBuffer::PACKET_TYPE onParser1(TC_NetWorkBuffer &buffer, vector<char> &
 
     if(out[out.size() - 1] != 0x0d)
     {
-        cout << "onSerialParser:" << TC_Common::bin2str(out.data(), out.size()) << ", not end with 0x0d, rebuild comm!" << endl;
+        cout << "onSerialParser:" << TC_Common::bin2str(out.data(), out.size()) << ", not end with 0x0d, wait..." << endl;
         return TC_NetWorkBuffer::PACKET_LESS;
     }
 	buffer.moveHeader(out.size());
@@ -165,8 +165,8 @@ TEST_F(UtilSerialPortTest, test1)
 
         TC_SerialPort::Options options;
         
-        // options.portName = "/dev/tty.usbmodem00000000050C1";
-        options.portName = "//./COM14";
+        options.portName = "/dev/tty.usbmodem0408010000001";
+        // options.portName = "//./COM14";
 
         options.baudRate = 9600;
         options.stopBits = 0;
@@ -181,7 +181,7 @@ TEST_F(UtilSerialPortTest, test1)
         while(true)
         {
             vector<char> response;
-            auto status = serialPort->sendRequestAndResponse(msg_send.c_str(), msg_send.size(), response, true, 5000);
+            auto status = serialPort->sendRequestAndResponse(msg_send.c_str(), msg_send.size(), response, true, 2000);
             if(status == std::cv_status::timeout)
             {
                 cout << "timeout" << endl;
