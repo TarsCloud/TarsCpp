@@ -165,8 +165,8 @@ TEST_F(UtilSerialPortTest, test1)
 
         TC_SerialPort::Options options;
         
-        options.portName = "/dev/tty.usbmodem0408010000001";
-        // options.portName = "//./COM14";
+        // options.portName = "/dev/tty.usbmodem0408010000001";
+        options.portName = "//./COM3";
 
         options.baudRate = 9600;
         options.stopBits = 0;
