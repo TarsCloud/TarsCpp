@@ -268,7 +268,7 @@ private:
     /**
      * 超时统计处理
      */
-    void finishInvoke(bool bTimeout);
+    void finishInvoke(ReqMessage * msg, bool bTimeout);
 
     /**
      * 初始化模块间调用信息的头部

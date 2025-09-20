@@ -595,9 +595,9 @@ void AdapterProxy::doInvoke()
 	}
 }
 
-void AdapterProxy::finishInvoke(bool bFail)
+void AdapterProxy::finishInvoke(ReqMessage * msg, bool bFail)
 {
-    TLOGTARS("[AdapterProxy::finishInvoke(bool), " << _objectProxy->name() << ", " << _trans->getConnectionString() << "," << bFail << "]" << endl);
+    TLOGTARS("[AdapterProxy::finishInvoke(ReqMessage,bool), " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", func:" << msg->request.sFuncName << ", ret:" << msg->response->iRet << ", failed:" << (bFail ? "true" : "false") << "]" << endl);
 
     time_t now = TNOW;
 
@@ -626,12 +626,13 @@ void AdapterProxy::finishInvoke(bool bFail)
 
             _connExc              = false;
 
-            TLOGTARS("[AdapterProxy::finishInvoke(bool), " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", retry ok]" << endl);
+            TLOGTARS("[AdapterProxy::finishInvoke(ReqMessage,bool), " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", func:" << msg->request.sFuncName << ", retry ok]" << endl);
+
         }
         else
         {
             //结点已经屏蔽 过来失败的包不用处理
-            TLOGTARS("[AdapterProxy::finishInvoke(bool), " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", retry fail]" << endl);
+            TLOGTARS("[AdapterProxy::finishInvoke(ReqMessage,bool), " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", func:" << msg->request.sFuncName << ", retry fail]" << endl);
         }
         return;
     }
@@ -662,11 +663,16 @@ void AdapterProxy::finishInvoke(bool bFail)
 
 	        resetRetryTime();
 
-            TLOGERROR("[AdapterProxy::finishInvoke(bool) objname:"<< _objectProxy->name() 
-                    << ",desc:" << _trans->getConnectionString()
-                    << ",disable frequenceFail,freqtimeout:" << _frequenceFailInvoke
-                    << ",timeout:"<< _timeoutInvoke
-                    << ",total:" << _totalInvoke << endl);
+            if (_timeoutLogFlag)
+            {
+                TLOGERROR("[AdapterProxy::finishInvoke(ReqMessage,bool) objname:"<< _objectProxy->name() 
+                        << ",desc:" << _trans->getConnectionString()
+                        << ",func:" << msg->request.sFuncName
+                        << ",ret:" << msg->response->iRet
+                        << ",disable frequenceFail,freqtimeout:" << _frequenceFailInvoke
+                        << ",timeout:"<< _timeoutInvoke
+                        << ",total:" << _totalInvoke << endl);
+            }
             return ;
         }
     }
@@ -683,11 +689,16 @@ void AdapterProxy::finishInvoke(bool bFail)
         if (bFail && _timeoutInvoke >= info.minTimeoutInvoke && _timeoutInvoke >= info.radio * _totalInvoke)
         {
             setInactive();
-            TLOGERROR("[AdapterProxy::finishInvoke(bool), "
-                      << _objectProxy->name() << "," << _trans->getConnectionString()
-                      << ",disable radioFail,freqtimeout:" << _frequenceFailInvoke
-                      << ",timeout:" << _timeoutInvoke
-                      << ",total:" << _totalInvoke << "] " << endl);
+            if (_timeoutLogFlag)
+            {
+                TLOGERROR("[AdapterProxy::finishInvoke(ReqMessage,bool), "
+                        << _objectProxy->name() << "," << _trans->getConnectionString()
+                        << ",func:" << msg->request.sFuncName
+                        << ",ret:" << msg->response->iRet
+                        << ",disable radioFail,freqtimeout:" << _frequenceFailInvoke
+                        << ",timeout:" << _timeoutInvoke
+                        << ",total:" << _totalInvoke << "] " << endl);
+            }
         }
         else
         {
@@ -835,7 +846,7 @@ void AdapterProxy::finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp)
 		//requestid 为0 是push消息, push callback is null
 		if (!cb)
 		{
-			TLOGERROR("[AdapterProxy::finishInvoke(BasePacket)， request id is 0, pushcallback is null, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
+			TLOGERROR("[AdapterProxy::finishInvoke(BasePacket), request id is 0, pushcallback is null, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
             throw TarsDecodeException("request id is 0, pushcallback is null, obj: " + _objectProxy->name() + ", desc: " + _trans->getConnectionString());
 		}
 		msg = new ReqMessage();
@@ -892,11 +903,7 @@ void AdapterProxy::finishInvoke(shared_ptr<ResponsePacket> & rsp)
 void AdapterProxy::finishInvoke(ReqMessage * msg)
 {
     // assert(msg->eStatus != ReqMessage::REQ_REQ);
-    TLOGTARS("[AdapterProxy::finishInvokeMsg " << _objectProxy->name() << ", " << _trans->getConnectionString() << " ,id:" << msg->response->iRequestId << "]" << endl);
-
-// #ifdef TARS_OPENTRACKING
-// 	finishTrack(msg);
-// #endif
+    TLOGTARS("[AdapterProxy::finishInvoke(ReqMessage) " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", func:" << msg->request.sFuncName << " ,id:" << msg->response->iRequestId << "]" << endl);
 
     //stat 上报调用统计
     stat(msg);
@@ -904,13 +911,14 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
     //超时屏蔽统计,异常不算超时统计
     if (msg->eStatus != ReqMessage::REQ_EXC && !msg->bPush)
     {
-        finishInvoke(msg->response->iRet != TARSSERVERSUCCESS);
+        finishInvoke(msg, msg->response->iRet != TARSSERVERSUCCESS);
     }
 
     //单向调用
     if (msg->eType == ReqMessage::ONE_WAY)
     {
-        TLOGTARS("[AdapterProxy::finishInvokeMsg " << _objectProxy->name() << ", " << _trans->getConnectionString()
+        TLOGTARS("[AdapterProxy::finishInvoke(ReqMessage) " << _objectProxy->name() << ", " << _trans->getConnectionString()
+                                        << ", func:" << msg->request.sFuncName << ", ret:" << msg->response->iRet
                                                    << " ,id:" << msg->response->iRequestId
                                                    << " ,one way call]" << endl);
         delete msg;
@@ -952,11 +960,11 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
                 }
                 catch (exception & e)
                 {
-                    TLOGERROR("[AdapterProxy::finishInvoke(ReqMessage) exp:" << e.what() << " ,line:" << __LINE__ << "]" << endl);
+                    TLOGERROR("[AdapterProxy::finishInvoke(ReqMessage) ex:" << e.what() << ", func:" << msg->request.sFuncName << ", ret:" << msg->response->iRet << "]" << endl);
                 }
                 catch (...)
                 {
-                    TLOGERROR("[AdapterProxy::finishInvoke(ReqMessage) exp:unknown line:|" << __LINE__ << "]" << endl);
+                    TLOGERROR("[AdapterProxy::finishInvoke(ReqMessage) ex, func:" << msg->request.sFuncName << ", ret:" << msg->response->iRet << "]" << endl);
                 }
             }
             else
@@ -978,7 +986,8 @@ void AdapterProxy::finishInvoke(ReqMessage * msg)
             }
             else
             {
-                TLOGERROR("[AdapterProxy::finishInvoke(ReqMessage) coro parallel callback error,obj:" << _objectProxy->name() << ",endpoint:" << _trans->getConnectionString() << " ,id:" << msg->response->iRequestId << "]" << endl);
+                TLOGERROR("[AdapterProxy::finishInvoke(ReqMessage) coro parallel callback error,obj:" << _objectProxy->name() << ",endpoint:" << _trans->getConnectionString() 
+                << " ,func:" << msg->request.sFuncName << ", ret:" << msg->response->iRet << " ,id:" << msg->response->iRequestId << "]" << endl);
                 delete msg;
                 msg = NULL;
             }
@@ -997,7 +1006,7 @@ void AdapterProxy::doTimeout()
 
     while (_timeoutQueue->timeout(msg))
     {
-	    TLOGTARS("[AdapterProxy::doTimeout, " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", id:" << msg->request.iRequestId << ", status:" << msg->eStatus << "]" << endl);
+	    TLOGTARS("[AdapterProxy::doTimeout, " << _objectProxy->name() << ", " << _trans->getConnectionString() << ", func:" << msg->request.sFuncName << ", id:" << msg->request.iRequestId << ", status:" << msg->eStatus << "]" << endl);
 
 //        assert(msg->eStatus == ReqMessage::REQ_REQ);
 
@@ -1010,14 +1019,6 @@ void AdapterProxy::doTimeout()
 
         msg->eStatus = ReqMessage::REQ_TIME;
 
-//        //有可能是单向调用超时了
-//        if (msg->eType == ReqMessage::ONE_WAY)
-//        {
-//            delete msg;
-//            msg = NULL;
-//            continue;
-//        }
-//
         //如果是异步调用超时
         if (msg->eType == ReqMessage::ASYNC_CALL)
         {
@@ -1085,70 +1086,6 @@ void AdapterProxy::doKeepAlive()
         invoke(msg);
     }
 }
-
-
-// #ifdef TARS_OPENTRACKING
-// void AdapterProxy::startTrack(ReqMessage * msg)
-// {
-//     if(!_communicator->_traceManager)
-//     {
-//         TLOGTARS("tracer info is null, just return" << endl);
-//         return;
-//     }
-
-//     string functionName = msg->request.sFuncName;
-//     std::unique_ptr<opentracing::Span> span;
-    
-//     if(msg->trackInfoMap.empty())  //start a new track
-//     {
-//         //std::chrono::time_point<std::chrono::system_clock> t1 = std::chrono::system_clock::now();
-//         // _communicator->_traceManager->_tracer->StartSpan(functionName, {opentracing::StartTimestamp(t1)});
-//         span = _communicator->_traceManager->_tracer->StartSpan(functionName);
-       
-//     }else{
-//         TextMapCarrier carrier1(msg->trackInfoMap);
-//         auto span_context_maybe = _communicator->_traceManager->_tracer->Extract(carrier1);
-//         assert(span_context_maybe);
-
-//         //std::chrono::time_point<std::chrono::system_clock> t1 = std::chrono::system_clock::now();
-//         //_communicator->_traceManager->_tracer->StartSpan(functionName, {opentracing::ChildOf(span_context_maybe->get()), opentracing::StartTimestamp(t1)});
-//         span = _communicator->_traceManager->_tracer->StartSpan(functionName, {opentracing::ChildOf(span_context_maybe->get())});
-//     }
-//     //将调用链信息注入到request的status中
-//     std::unordered_map<std::string, std::string> text_map;
-//     TextMapCarrier carrier(text_map);
-//     auto err = _communicator->_traceManager->_tracer->Inject(span->context(), carrier);
-//     assert(err);
-//     std::string contxt = read_span_context(text_map);
-    
-//     _spanMap[msg->request.iRequestId].reset(span.release());
-//     //_spanMap.insert(std::move(make_pair(msg->request.iRequestId, std::move(span))));
-
-//     msg->request.status[ServantProxy::STATUS_TRACK_KEY] = contxt;
-//     SET_MSG_TYPE(msg->request.iMessageType, tars::TARSMESSAGETYPETRACK);
-// }
-
-// void AdapterProxy::finishTrack(ReqMessage * msg)
-// {
-//     map<int,std::unique_ptr<opentracing::Span>>::iterator spanIter = _spanMap.find(msg->request.iRequestId);
-
-//     //report span info to zipkin collector 
-//     if(spanIter != _spanMap.end())
-//     {
-//         if(msg->eType == ReqMessage::ONE_WAY)
-//         {
-//             spanIter->second->SetTag("Retcode", 0);
-//         }
-//         else
-//         {
-//             spanIter->second->SetTag("Retcode",msg->response->iRet);
-//         }
-        
-//         spanIter->second->Finish();
-//         _spanMap.erase(msg->response->iRequestId);
-//     }
-// }
-// #endif
 
 void AdapterProxy::stat(ReqMessage * msg)
 {
