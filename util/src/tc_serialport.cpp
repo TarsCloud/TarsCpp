@@ -167,7 +167,8 @@ void TC_SerialPortGroup::run()
 
 								if(callback)
 								{
-									try { _tpool.exec([callback]{callback->onHeartbeat(); }); } catch(const std::exception& ex) { }
+									_tpool.exec([callback]{ 
+										try { callback->onHeartbeat(); } catch(...) { }}); 
 								}
 							}
 
@@ -186,7 +187,7 @@ void TC_SerialPortGroup::run()
 								auto callback = e.second->getRequestCallbackPtr();
 								if(callback)
 								{
-									_tpool.exec([callback, err]{callback->onFailed(err); });
+									_tpool.exec([callback, err]{ try { callback->onFailed(err); } catch(...) { } });
 								}
 							}
 						}
@@ -226,7 +227,7 @@ void TC_SerialPortGroup::run()
 
 				if(callback)
 				{
-					try { _tpool.exec([callback]{callback->onHeartbeat(); }); } catch(const std::exception& ex) { }
+					 _tpool.exec([callback]{ try {callback->onHeartbeat(); } catch(const std::exception& ex) { }}); 
 				}
 			}
 
@@ -266,7 +267,7 @@ void TC_SerialPortGroup::run()
 				auto callback = e.second->getRequestCallbackPtr();
 				if(callback)
 				{
-					_tpool.exec([callback, err]{callback->onFailed(err); });
+					_tpool.exec([callback, err]{ try { callback->onFailed(err); } catch(...) { } });
 				}
 
 			}
@@ -366,7 +367,7 @@ void TC_SerialPort::close()
 	auto callbackPtr = getRequestCallbackPtr();
 	if(callbackPtr)
 	{
-		_serialPortGroup->getThreadPool()->exec([callbackPtr]{callbackPtr->onClose(); });	
+		_serialPortGroup->getThreadPool()->exec([callbackPtr]{ try { callbackPtr->onClose(); } catch(...) { } });	
 	}
 }
 
@@ -568,7 +569,7 @@ void TC_SerialPort::initialize()
 	auto callback = getRequestCallbackPtr();
 	if(callback)	
 	{
-		_serialPortGroup->getThreadPool()->exec([callback]{callback->onOpen(); });
+		_serialPortGroup->getThreadPool()->exec([callback]{ try { callback->onOpen(); } catch(...) { } });
 	}
 
 }
@@ -619,7 +620,7 @@ void TC_SerialPort::sendRequest(const shared_ptr<TC_NetWorkBuffer::Buffer> & buf
 		auto callback = getRequestCallbackPtr();
 		if(callback)
 		{
-			_serialPortGroup->getThreadPool()->exec([callback, err]{callback->onFailed(err); });
+			_serialPortGroup->getThreadPool()->exec([callback, err]{ try { callback->onFailed(err); } catch(...) { }});
 		}
 	}
 
@@ -716,7 +717,11 @@ int TC_SerialPort::doProtocolAnalysis(TC_NetWorkBuffer *buff)
 
 				if (callback)
 				{
-					try { _serialPortGroup->getThreadPool()->exec([callback, out]() mutable {callback->onSucc(std::move(out)); }); } catch (...) { }
+					 _serialPortGroup->getThreadPool()->exec([callback, out]() mutable {
+						try {
+							callback->onSucc(std::move(out)); 
+						}
+					 	catch (...) { } });
 				}
 
 			}
