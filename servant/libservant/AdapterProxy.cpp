@@ -662,11 +662,14 @@ void AdapterProxy::finishInvoke(bool bFail)
 
 	        resetRetryTime();
 
-            TLOGERROR("[AdapterProxy::finishInvoke(bool) objname:"<< _objectProxy->name() 
-                    << ",desc:" << _trans->getConnectionString()
-                    << ",disable frequenceFail,freqtimeout:" << _frequenceFailInvoke
-                    << ",timeout:"<< _timeoutInvoke
-                    << ",total:" << _totalInvoke << endl);
+            if(_timeoutLogFlag)
+            {
+                TLOGERROR("[AdapterProxy::finishInvoke(bool) objname:"<< _objectProxy->name() 
+                        << ",desc:" << _trans->getConnectionString()
+                        << ",disable frequenceFail,freqtimeout:" << _frequenceFailInvoke
+                        << ",timeout:"<< _timeoutInvoke
+                        << ",total:" << _totalInvoke << endl);
+            }
             return ;
         }
     }
@@ -683,11 +686,14 @@ void AdapterProxy::finishInvoke(bool bFail)
         if (bFail && _timeoutInvoke >= info.minTimeoutInvoke && _timeoutInvoke >= info.radio * _totalInvoke)
         {
             setInactive();
-            TLOGERROR("[AdapterProxy::finishInvoke(bool), "
-                      << _objectProxy->name() << "," << _trans->getConnectionString()
-                      << ",disable radioFail,freqtimeout:" << _frequenceFailInvoke
-                      << ",timeout:" << _timeoutInvoke
-                      << ",total:" << _totalInvoke << "] " << endl);
+            if(_timeoutLogFlag)
+            {
+                TLOGERROR("[AdapterProxy::finishInvoke(bool), "
+                        << _objectProxy->name() << "," << _trans->getConnectionString()
+                        << ",disable radioFail,freqtimeout:" << _frequenceFailInvoke
+                        << ",timeout:" << _timeoutInvoke
+                        << ",total:" << _totalInvoke << "] " << endl);
+            }
         }
         else
         {
@@ -835,7 +841,10 @@ void AdapterProxy::finishInvoke_parallel(shared_ptr<ResponsePacket> & rsp)
 		//requestid 为0 是push消息, push callback is null
 		if (!cb)
 		{
-			TLOGERROR("[AdapterProxy::finishInvoke(BasePacket)， request id is 0, pushcallback is null, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
+            if(_timeoutLogFlag)
+            {
+    			TLOGERROR("[AdapterProxy::finishInvoke(BasePacket)， request id is 0, pushcallback is null, " << _objectProxy->name() << ", " << _trans->getConnectionString() << "]" << endl);
+            }
             throw TarsDecodeException("request id is 0, pushcallback is null, obj: " + _objectProxy->name() + ", desc: " + _trans->getConnectionString());
 		}
 		msg = new ReqMessage();
