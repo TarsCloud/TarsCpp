@@ -1478,9 +1478,9 @@ bool TC_Port::getDiskInfo(int64_t &totalSize, int64_t& availableSize, float& use
 
     return true;
 #else
-    struct statfs64 buf;
+    struct statfs buf;
 
-    if(statfs64(path.c_str(),&buf)==-1)
+    if(statfs(path.c_str(),&buf)==-1)
     {
         return false;
     }

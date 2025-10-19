@@ -274,7 +274,7 @@ if (TARS_GZIP)
         set(LIB_GZIP "z")
 
         ExternalProject_Add(ADD_${LIB_GZIP}
-                URL http://cdn.tarsyun.com/src/zlib-1.2.11.tar.gz
+                URL http://cdn.tarsyun.com/src/zlib-1.3.1.tar.gz
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
@@ -282,7 +282,7 @@ if (TARS_GZIP)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/zlib-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make -j4
-                URL_MD5 1c9f62f0778697a09d36121ead88e08e
+                URL_MD5 9855b6d802d7fe5b7bd5b196a2271655
                 )
 
     endif ()
