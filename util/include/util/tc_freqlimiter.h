@@ -9,7 +9,9 @@
 #include "util/tc_thread_rwlock.h"
 
 using namespace std;
-using namespace taf;
+
+namespace tars
+{
 
 /**
  * 频率控制组件
@@ -69,7 +71,7 @@ class TC_FreqLimiter
     };
 
     // 群锁
-    #define USER_LOCK(x) std::lock_guard<std::mutex> lock(*_locks[taf::hash<string>()(x)%_locks.size()]);
+    #define USER_LOCK(x) std::lock_guard<std::mutex> lock(*_locks[tars::hash<string>()(x)%_locks.size()]);
     #define USER_INDEX_LOCK(i) std::lock_guard<std::mutex> lock(*_locks[i]);
     
 
@@ -126,7 +128,7 @@ public:
         {
             return true;
         }
-        size_t index = taf::hash<string>()(key)%_counts.size();
+        size_t index = tars::hash<string>()(key)%_counts.size();
         // USER_LOCK(key);
         USER_INDEX_LOCK(index);
         KeyItemGroup* group = _counts[index];
@@ -225,14 +227,14 @@ public:
     TC_FreqLimiter* getLimiter(const string& name)
     {
         {
-            taf::TC_ThreadRLock lock(_rwLock);
+            tars::TC_ThreadRLock lock(_rwLock);
             if (_limiter.find(name) != _limiter.end())
             {
                 return _limiter[name];
             }
         }
         
-        taf::TC_ThreadWLock lock(_rwLock);
+        tars::TC_ThreadWLock lock(_rwLock);
         if (_limiter.find(name) != _limiter.end())
         {
             return _limiter[name];
@@ -243,8 +245,10 @@ public:
     }
 
 private:
-    taf::TC_ThreadRWLocker   _rwLock;
+    tars::TC_ThreadRWLocker   _rwLock;
     std::unordered_map<string, TC_FreqLimiter*> _limiter;
 };
+
+}
 
 #endif // !__TC_FREQLIMITER_H__
