@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.2)
 project(tools)
 
 include_directories(${util_SOURCE_DIR}/include)

@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.2)
 
 project(tars-cpp)
 
+if(EXISTS CMP0135)
+cmake_policy(SET CMP0135 NEW)
+endif()
+
 #-------------------------------------------------------------------
 
 if("${TARS_CPP_COMMON}" STREQUAL "")
