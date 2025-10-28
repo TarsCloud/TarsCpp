@@ -1,3 +1,58 @@
+# v3.0.22 20251028
+## en
+- feat: tars2node support include
+- feat: tars2node support --web, only struct member field
+- feat: add tc_progress_timer & tc_reflection & tc_freqlimiter, tc_common add some double function
+- feat: serial port support close & open
+- feat: serial port callback move to callback thread
+- feat: prx min timeout set to 10
+- feat: AdapterProxy add error log output limit
+- feat: tc_socket_async.h add onBeforeConnect callback to support some functions like bind.
+- fix: cmake warning
+- fix: compiler in M4 for mac
+- fix: serial port exec try catch
+- fix: serial port reopen error do callback
+- fix: serial close auto erase from serial group
+- fix: serial port auto reopen
+- fix: serialport loss message when send too fast
+- fix: TC_File::copyFile, when filepath is same, then not do copy
+- fix: c17 compiler
+- fix: TC_TimeoutQueueNew constructor, no parameters
+- fix tc_transceiver bind client ip bug
+- fix: Adjust the CheckTimeoutInfo parameter to make switching more sensitive in case of timeout exceptions
+- fix: tc_thread start thread error add exception info
+- fix: compilation error of tc_rbtree on Ubuntu `24.04`
+- fix: socket http RequestCallback add virtual
+- fix: tc_timer count/waitCount/runCount
+- fix tars2node --base bug
+
+## cn
+- feat: tars2node 支持 include
+- feat: tars2node 支持 --web，仅支持结构体成员字段
+- feat: 新增 tc_progress_timer、tc_reflection、tc_freqlimiter；tc_common 补充 double 相关函数
+- feat: 串口支持 close 和 open
+- feat: 串口回调改为在回调线程执行
+- feat: prx 最小超时设为 10
+- feat: AdapterProxy 增加错误日志输出限频
+- feat: tc_socket_async.h 增加 onBeforeConnect 回调，支持 bind 等操作
+- fix: 修复 cmake 警告
+- fix: 修复 mac 上 M4 编译问题
+- fix: 串口 exec 增加 try/catch 保护
+- fix: 串口重开出错时触发回调
+- fix: 串口关闭后自动从串口分组移除
+- fix: 串口自动重开
+- fix: 发送过快导致的串口丢消息
+- fix: TC_File::copyFile 当源与目标路径相同时不再复制
+- fix: C17 编译兼容
+- fix: 修复 TC_TimeoutQueueNew 构造函数（无参）问题
+- fix: 修复 tc_transceiver 绑定客户端 IP 的问题
+- fix: 调整 CheckTimeoutInfo 参数，超时异常时切换更敏感
+- fix: tc_thread 启动线程出错时补充异常信息
+- fix: 修复 Ubuntu 24.04 下 tc_rbtree 的编译错误
+- fix: socket http RequestCallback 增加 virtual
+- fix: 修复 tc_timer 的 count/waitCount/runCount 统计
+- fix: 修复 tars2node --base 的问题
+
 # v3.0.21 20250210
 ## en
 - feat: tc_serialport support windows/linux/mac
