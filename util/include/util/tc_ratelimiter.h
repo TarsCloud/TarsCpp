@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include "util/tc_thread_rwlock.h"
 
+namespace tars
+{
 
 /**
  * 流量控制组件（适用于接口级别的流量控制，不适用用户级别频率控制）
@@ -19,7 +21,7 @@
  * 使用时，可以用阻塞试，也可以用非阻塞时 超过频率则返回失败
  * 
  * 使用举例：
- * 对taf服务端流量控制，建议使用非阻塞式，即 tryAquire(); 对于客户端发请求，则使用阻塞式，即 aquire();
+ * 对tars服务端流量控制，建议使用非阻塞式，即 tryAquire(); 对于客户端发请求，则使用阻塞式，即 aquire();
  * TC_RateLimiter limiter(100);
  * if(limiter.tryAquire())
  * {
@@ -197,14 +199,14 @@ public:
     TC_RateLimiter* getLimiter(const string& name)
     {
         {
-            taf::TC_ThreadRLock lock(_rwLock);
+            tars::TC_ThreadRLock lock(_rwLock);
             if (_limiter.find(name) != _limiter.end())
             {
                 return _limiter[name];
             }
         }
         
-        taf::TC_ThreadWLock lock(_rwLock);
+        tars::TC_ThreadWLock lock(_rwLock);
         if (_limiter.find(name) != _limiter.end())
         {
             return _limiter[name];
@@ -215,8 +217,10 @@ public:
     }
 
 private:
-    taf::TC_ThreadRWLocker   _rwLock;
+    tars::TC_ThreadRWLocker   _rwLock;
     std::unordered_map<string, TC_RateLimiter*> _limiter;
 };
+
+}
 
 #endif
