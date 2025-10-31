@@ -70,6 +70,12 @@ struct UTIL_DLL_API TC_DBConf
     string _password;
 
     /**
+    * 密码加密类型
+    * default: 0 明文， 1
+    */
+    int _pwdType;
+
+    /**
     * 数据库
     * Database
     */
@@ -110,7 +116,8 @@ struct UTIL_DLL_API TC_DBConf
     * @brief Constructor
     */
     TC_DBConf()
-        : _port(0)
+        : _pwdType(0)
+        , _port(0)
         , _flag(0)
     {
     }
@@ -142,7 +149,8 @@ struct UTIL_DLL_API TC_DBConf
         _database           = mpTmp["dbname"];
         _charset            = mpTmp["charset"];
         _port               = atoi(mpTmp["dbport"].c_str());
-        _flag               = 0;        
+        _flag               = 0;
+        _pwdType            = atoi(mpTmp["pwdtype"].c_str());
         _connectTimeout     = atoi(mpTmp["connectTimeout"].c_str());
         _writeReadTimeout   = atoi(mpTmp["writeReadTimeout"].c_str());
 
@@ -207,8 +215,9 @@ public:
     * @param iUnixSocket  Socket
     * @param iFlag        客户端标识
     * @param iFlag        Client Identity
+    * @param iPwdType     密码加密类型
     */
-    TC_Mysql(const string& sHost, const string& sUser = "", const string& sPasswd = "", const string& sDatabase = "", const string &sCharSet = "", int port = 0, int iFlag = 0, int connectTimeout = 10, int writeReadTimeout = 0);
+    TC_Mysql(const string& sHost, const string& sUser = "", const string& sPasswd = "", const string& sDatabase = "", const string &sCharSet = "", int port = 0, int iFlag = 0, int connectTimeout = 10, int writeReadTimeout = 0,int iPwdType = 0);
 
     /**
     * @brief 构造函数. 
@@ -241,10 +250,11 @@ public:
     * @param iUnixSocket  socket
     * @param iFlag        客户端标识
     * @param iFlag        Client Identity
+    * @param iPwdType     密码加密类型
     * @return 无
     * @return none
     */
-    void init(const string& sHost, const string& sUser  = "", const string& sPasswd  = "", const string& sDatabase = "", const string &sCharSet = "", int port = 0, int iFlag = 0, int connectTimeout = 10, int writeReadTimeout = 0);
+    void init(const string& sHost, const string& sUser  = "", const string& sPasswd  = "", const string& sDatabase = "", const string &sCharSet = "", int port = 0, int iFlag = 0, int connectTimeout = 10, int writeReadTimeout = 0,int iPwdType = 0);
 
     /**
     * @brief 初始化. 
@@ -262,6 +272,30 @@ public:
     * @return tcDBConf 
     */
     TC_DBConf getDBConf();
+
+    /**
+    * @brief 对mysql密码进行加密.
+    * @brief Encrypts the mysql password.
+    *
+    * @param pwd  需要加密的明文密码.
+    * @param pwd  The plaintext password to be encrypted.
+    * @param type 加密类型.
+    * @param type The encryption type.
+    * @return     加密后的密码字符串.
+    * @return     The encrypted password string.
+    */
+    static string encryptPwd(const string& pwd, int type);
+
+    /**
+    * @brief 对mysql密码进行解密.
+    * @brief Decrypt mysql password.
+    *
+    * @param pwd  加密的密码
+    * @param pwd  Encrypted password
+    * @param type 加密类型
+    * @param type Encryption type
+    */
+    static string decryptPwd(const string& pwd, int type);
 
     /**
     * @brief 连接数据库. 
@@ -759,6 +793,15 @@ protected:
     * @brief Statement only, undefined, guaranteed not to be used
     */
     TC_Mysql &operator=(const TC_Mysql &tcMysql);
+
+    /**
+    * @brief 对数据库配置中的密码进行解密.
+    * @brief Decrypt the password in the database configuration.
+    *
+    * @param dbConf 数据库配置结构体.
+    * @param dbConf Database configuration structure.
+    */
+    void decryptPwd(TC_DBConf& dbConf);
 
     /**
     * @brief 构造SQL语句(批量). 

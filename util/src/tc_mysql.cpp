@@ -23,6 +23,8 @@
 #include <sstream>
 #include <string.h>
 
+const string g_pwdkey = "0My@Sql1";
+
 namespace tars
 {
 
@@ -32,10 +34,10 @@ TC_Mysql::TC_Mysql()
     _pstMql = mysql_init(NULL);
 }
 
-TC_Mysql::TC_Mysql(const string& sHost, const string& sUser, const string& sPasswd, const string& sDatabase, const string &sCharSet, int port, int iFlag, int connectTimeout, int writeReadTimeout)
+TC_Mysql::TC_Mysql(const string& sHost, const string& sUser, const string& sPasswd, const string& sDatabase, const string &sCharSet, int port, int iFlag, int connectTimeout, int writeReadTimeout,int iPwdType)
 :_bConnected(false)
 {
-    init(sHost, sUser, sPasswd, sDatabase, sCharSet, port, iFlag, connectTimeout, writeReadTimeout);
+    init(sHost, sUser, sPasswd, sDatabase, sCharSet, port, iFlag, connectTimeout, writeReadTimeout, iPwdType);
     
     _pstMql = mysql_init(NULL);
 }
@@ -44,7 +46,7 @@ TC_Mysql::TC_Mysql(const TC_DBConf& tcDBConf)
 :_bConnected(false)
 {
     _dbConf = tcDBConf;
-    
+    _dbConf._password = decryptPwd(_dbConf._password, _dbConf._pwdType);
     _pstMql = mysql_init(NULL);    
 }
 
@@ -57,7 +59,7 @@ TC_Mysql::~TC_Mysql()
     }
 }
 
-void TC_Mysql::init(const string& sHost, const string& sUser, const string& sPasswd, const string& sDatabase, const string &sCharSet, int port, int iFlag, int connectTimeout, int writeReadTimeout)
+void TC_Mysql::init(const string& sHost, const string& sUser, const string& sPasswd, const string& sDatabase, const string &sCharSet, int port, int iFlag, int connectTimeout, int writeReadTimeout,int iPwdType)
 {
     _dbConf._host = sHost;
     _dbConf._user = sUser;
@@ -68,11 +70,67 @@ void TC_Mysql::init(const string& sHost, const string& sUser, const string& sPas
     _dbConf._flag = iFlag;
     _dbConf._writeReadTimeout = writeReadTimeout;
     _dbConf._connectTimeout = connectTimeout;
+    _dbConf._pwdType = iPwdType;
+    _dbConf._password = decryptPwd(_dbConf._password, _dbConf._pwdType);
 }
 
 void TC_Mysql::init(const TC_DBConf& tcDBConf)
 {
     _dbConf = tcDBConf;
+    _dbConf._password = decryptPwd(_dbConf._password, _dbConf._pwdType);
+}
+
+void TC_Mysql::decryptPwd(TC_DBConf& dbConf)
+{
+    dbConf._password = decryptPwd(dbConf._password, dbConf._pwdType);
+}
+
+string TC_Mysql::encryptPwd(const string& pwd, int type)
+{
+    if (1 == type)
+    {
+        string pwdE = TC_Des::encrypt(g_pwdkey.c_str(), pwd.c_str(),  pwd.length());
+        pwdE = TC_Base64::encode(pwdE);
+        pwdE = TC_Common::replace(pwdE, "==", "@");
+        pwdE = TC_Common::replace(pwdE, "=", "&");
+        return pwdE;
+    }
+
+    return pwd;
+}
+
+string TC_Mysql::decryptPwd(const string& pwd, int type)
+{
+    string pwdD;
+    int realType = 0;       // 0: 不加密， 1：DES
+    if (0 == type)
+    {
+        if (pwd.length() > 9 && strncmp(pwd.c_str(), "TAF_DES{", 8) == 0 && pwd[pwd.length() - 1] == '}')
+        {
+            pwdD = pwd.substr(8, pwd.length() - 9);
+            realType = 1;
+        }
+    }
+    else if (type > 0)
+    {
+        pwdD = pwd;
+        realType = type;
+    }
+
+    if (realType == 1)
+    {
+        pwdD = TC_Common::replace(pwdD, "@", "==");
+        pwdD = TC_Common::replace(pwdD, "&", "=");
+        pwdD = TC_Base64::decode(pwdD);
+        pwdD = TC_Des::decrypt(g_pwdkey.c_str(), pwdD.c_str(), pwdD.length());
+        return pwdD;
+    }
+    else
+    {
+        return pwd;
+    }
+
+    return pwd;
 }
 
 TC_DBConf TC_Mysql::getDBConf()
