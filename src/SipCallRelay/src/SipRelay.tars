@@ -1,0 +1,16 @@
+
+module VoipApp
+{
+
+	interface SipRelay
+	{
+		bool recvSipMsgFromCloudSipGateway(string sipGatewayId, string sipMsg, string connectionId, map<string, string> params);	
+
+		bool eraseSipDlgIdAndConnection(string sipGatewayId, string dialogId);
+
+		bool getIntranetIp(string sipGatewayId, out string mgcfSipGatewayOid, out string intranetIp);
+
+		bool getMgcfConnectStatus(string sipGatewayId, out string mgcfSipGatewayOid, out map<string, string> params);
+	};
+
+}; 

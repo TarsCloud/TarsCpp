@@ -1,0 +1,265 @@
+
+module VoipApp
+{
+	enum OperationCategory
+	{
+		kOperationCategoryUnknown = -1,
+		kOperationCategoryAdd,
+		kOperationCategoryRemove,
+		kOperationCategoryModify
+	};
+	
+	//domain 域接入核心网配置信息结构体
+	struct DomainAccessedConfig
+	{
+		0 require string		m_strDomainIdAppId;
+		1 require string 		m_strDomainName;
+		2 require string 		m_strAppKey;
+		3 require string 		m_strRelationType;
+		4 require bool			m_bAuthorited;
+		5 require bool			m_bCharged;
+		6 require bool			m_bRegWhenLogined;			//send Register when logined.
+		
+		7 require bool			m_bForbitFailedReReg;		//allow failed Register to restart
+		8 require int			m_iMaxFailedReRegTimes;
+		9 require bool        	m_bAllowReRegInterval;		//allow to use the insterval
+		10 require int			m_iFailedReRegInterval;		//minute
+		11 require bool			m_bISBCAccessed;			//I-SBC or A-SBC
+		12 require int			m_sipBindType;				//0 -> defualt, M:1 and app can be empty; 1 -> M:1 and app can'n be empty; 2 -> 1:1 and app can be empty; 3 -> 1:1 and app can't be empty;
+		
+		13 require string		m_strCoreNetIdName;
+		14 require string		m_strCalleePrefix;
+		15 require int			m_iCalleePrefixPriority;
+		16 require string		m_strConfAccoutPrefix;
+		17 require string		m_strSBCIp;
+		18 require int			m_iSBCPort;
+		19 require string 		m_strRegistarIp;
+		20 require int 			m_iRegistarPort;
+		21 optional int   		m_fromSipAddrType = 0;
+		22 optional int   		m_toSipAddrType = 0;
+	};
+		
+	//domain 域接入核心网配置信息结构体
+	struct DomainAccessedConfig2
+	{
+		0 require string		m_strDomainIdAppId;
+		1 require string 		m_strDomainName;
+		2 require string 		m_strAppKey;
+		3 require string 		m_strRelationType;
+		4 require bool			m_bAuthorited;
+		5 require bool			m_bCharged;
+		6 require int			m_iAuthorited;
+		7 require int			m_iCharged;
+		8 require bool			m_bRegWhenLogined;			//send Register when logined.
+		
+		9 require bool			m_bForbitFailedReReg;		//allow failed Register to restart
+		10 require int			m_iMaxFailedReRegTimes;
+		11 require bool        	m_bAllowReRegInterval;		//allow to use the insterval
+		12 require int			m_iFailedReRegInterval;		//minute
+		13 require bool			m_bISBCAccessed;			//I-SBC or A-SBC
+		14 require int			m_sipBindType;				//0 -> defualt, M:1 and app can be empty; 1 -> M:1 and app can'n be empty; 2 -> 1:1 and app can be empty; 3 -> 1:1 and app can't be empty;
+		
+		15 require string		m_strCoreNetIdName;
+		16 require string		m_strCalleePrefix;
+		17 require int			m_iCalleePrefixPriority;
+		18 require string		m_strConfAccoutPrefix;
+		19 require string		m_strSBCIp;
+		20 require int			m_iSBCPort;
+		21 require string 		m_strRegistarIp;
+		22 require int 			m_iRegistarPort;
+		23 optional int   		m_fromSipAddrType = 0;
+		24 optional int   		m_toSipAddrType = 0;
+	};
+	
+	//SipProxy服务接入核心网配置信息结构体
+	struct SipProxyAccessedCoreNetConfig
+	{
+		0 require string 		m_strSipProxyName;
+		1 require bool			m_bISBCAccessed;
+		2 require string 		m_strSipProxyId;
+		3 require string		m_strCoreNetIdName;
+		4 require string		m_strSBCIp;
+		5 require int			m_iSBCPort;
+		6 require string		m_listenIp;
+		7 require int			m_listenPort;
+		8 require string		m_sendIp;
+		9 require int			m_sendPort;
+	};
+	
+	
+	struct DomainAccessConfigOperation
+	{
+		0 require OperationCategory     m_category;
+		1 require DomainAccessedConfig  m_domainConfig;
+	};
+	
+	struct DomainAccessConfigOperation2
+	{
+		0 require OperationCategory      m_category;
+		1 require DomainAccessedConfig2  m_domainConfig;
+	};
+	
+	struct SipProxyConfigOperation
+	{
+		0 require OperationCategory     		m_category;
+		1 require SipProxyAccessedCoreNetConfig	m_sipProxyConfig;
+	};	
+	
+	struct RtpGatewayAccessedConfig
+	{
+		0 require string 		m_rtpGatewayName;
+		1 require string		m_listenIp;
+		2 require int			m_minMediaPort;
+		3 require int			m_maxMediaPort;
+		4 require int			m_areaCode;
+		5 require int			m_nationCode;		
+		6 require string		m_rtpGatewayId;
+		7 require long			m_heartBeatTime;		
+	};
+
+	struct SipCallRecord
+	{
+		0 require long			m_st;
+		1 require long			m_et;
+		2 require string		m_fromUser;
+		3 require string		m_toUser;
+		4 require string		m_toPhone;
+		5 require string 		m_rpcCallId;
+		6 require string		m_sipCallId;
+		7 require int			m_td;
+		8 require int			m_type;
+		9 require int			m_direction;
+		10 require string		m_confUri;
+		11 require string		m_confMid;
+		12 require int			m_cmt;
+		13 require string		m_sipGatewayId;
+		14 require string		m_sipProxyId;
+		15 require string		m_coreNetId;
+		16 require int			m_errCode;
+	};
+	
+	struct CallRecord
+	{
+		0 optional long			m_st = 0;
+		1 optional long			m_est = 0;
+		2 optional long			m_rt = 0;
+		3 optional long			m_at = 0;
+		4 optional long			m_et = 0;
+		5 optional int			m_td = 0;
+		6 require string		m_rpcCallId;
+		7 require string		m_rtcCaller;
+		8 require string		m_rtcUserId;
+		9 require string		m_rtcCc;
+		10 require string		m_rtcIp;
+		11 require string		m_rtcCallee;
+		12 require string		m_rtcDisplay;
+		13 optional int			m_cmt = 0;
+		14 optional int			m_direction = 0;
+		15 require string		m_confUri;
+		16 require string		m_confMid;
+		17 require string		m_caller;
+		18 require string		m_callee;
+		19 require string		m_callerPrefix;
+		20 require string		m_calleePrefix;
+		21 require string		m_sipCallId;
+		22 require string		m_coreNetId;
+		23 require string		m_sbcIp;
+		24 optional int			m_sbcPort = 0;
+		25 require string		m_sbcMediaIp;
+		26 optional int			m_releaseType = 2;
+		27 require string		m_chargeNumber;
+		28 require string		m_sipGatewayId;
+		29 require string		m_sipProxyId;
+		30 optional int			m_errCode = 0;
+		31 require string		m_errDesc;
+		32 optional int			m_errCauseCode = 0;
+		33 optional int			m_mediaErrCode = 0;
+		34 require string		m_mediaErrDesc;
+		35 optional int			m_otherErrCode = 0;
+		36 require string		m_otherErrDesc;
+		37 require string		m_paramsExt;
+	};
+	
+	struct NationCodeIp
+	{
+		0 require string   		m_nationCode;
+		1 require string		m_ip;
+	};
+	
+	struct CallSipPolicy
+	{
+		0 require string  		m_domainIdAppId;
+		1 require int			m_type;
+		2 require string 		m_value;
+	};
+
+	struct CallSipPolicyOperation
+	{
+		0 require OperationCategory m_OpCategory;
+		1 require CallSipPolicy m_policy;
+	};
+	
+	
+	struct AllowedIp
+	{
+		0 require string   		m_company;
+		1 require string		m_ip;
+	};
+	
+	//sip-gw3 domain配置信息结构体
+	struct SipGatewayDomainConfig
+	{
+		0 require string		m_strDomainId;
+		1 require string 		m_strDomainName;
+		2 require string		m_strCloudIp;
+		3 require int 			m_iChargeType;
+	};
+	
+	struct NumRouting
+	{
+		0 require string		m_domainIdAppId;
+		1 require string  		m_callee;
+		2 require string 		m_coreNetId;
+		3 require string		m_displayName;
+	};
+	
+	struct DomainLineConfig
+	{
+		0 require string domainId;
+		1 require string appId;
+		2 require string coreNetId;
+		3 require string sbcIp;
+		4 require string sbcPort;
+	};
+	
+	interface SipDb
+	{
+		bool GetDomainAccessInfo(string tableName, out vector<DomainAccessedConfig> vectDomainAccessed,  out string reason);
+		bool GetDomainAccessInfo2(string tableName, out vector<DomainAccessedConfig2> vectDomainAccessed,  out string reason);
+		bool GetSipProxyAccessCoreNetInfo(string tableName, out vector<SipProxyAccessedCoreNetConfig> vectSipProxyAccessedConfig, out string reason);
+		bool SetSipProxyAccessedId(string tableName, string sipProxyName, string sipProxyid,  out string reason);
+		bool UpdateDomainAccessConfig(string tableName, vector<DomainAccessConfigOperation> OpSequence, long insertedTime);
+		bool UpdateDomainAccessConfig2(string tableName, vector<DomainAccessConfigOperation2> OpSequence, long insertedTime);
+		bool UpdateSipProxyAccessConfig(string tableName, vector<SipProxyConfigOperation> OpSequence, long insertedTime);
+		bool GetRtpGatewayconfigInfo(string tableName, out vector<RtpGatewayAccessedConfig> rtpGatewayConfigLst);
+		bool SetRtpGatewayAccessedId(string tableName, string rtpGatewayName, string rtpGatewayId, out string reason);
+		
+		bool insertCallRecords(string tableName, string domainId, string appId, vector<CallRecord> records, map<string, string> params);
+		bool insertRecordsBatch(string domainId, string appId, vector<SipCallRecord> records);
+		bool getSipCallRecordEx(string domainId, string appId, string rcpCallId, out SipCallRecord record);
+		
+		bool GetAllNationCodeIps(string tableName, out vector<NationCodeIp> vectIps);
+		bool GetAllAllowedIps(string tableName, out vector<AllowedIp> vectIps);
+
+		bool UpdateCallSipPolicys(string tableName, vector<CallSipPolicyOperation> OpSequence);
+		bool GetAllCallSipPolicys(string tableName, out vector<CallSipPolicy> policys);
+
+		bool insertNumberRouting(string tableName, string domainIdAppId, vector<NumRouting> numRouting, out string reason);
+		bool getNumberRouting(string tableName, string domainIdAppId, string callee, out string displayName, out string coreNetId, out string reason);
+		bool removeNumberRouting(string tableName, string domainIdAppId, vector<NumRouting> numRouting, out string reason);
+		bool getDomainLineConfig(string domainId, string appId, out vector<DomainLineConfig> config, out string reason);
+		bool updateDomainLineConfig(string domainId, string appId, string coreNetId, string origSbcIp, string origSbcPort, string dstSbcIp, string dstSbcPort, out string reason);
+
+	};
+
+}; 

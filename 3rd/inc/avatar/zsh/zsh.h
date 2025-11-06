@@ -1,0 +1,104 @@
+/************************************************************************
+
+        Copyright (c) 2005-2007 by Juphoon System Software, Inc.
+                       All rights reserved.
+
+     This software is confidential and proprietary to Juphoon System,
+     Inc. No part of this software may be reproduced, stored, transmitted,
+     disclosed or used in any form or by any means other than as expressly
+     provided by the written license agreement between Juphoon and its
+     licensee.
+
+     THIS SOFTWARE IS PROVIDED BY JUPHOON "AS IS" AND ANY EXPRESS OR 
+     IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+     WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+     ARE DISCLAIMED. IN NO EVENT SHALL JUPHOON BE LIABLE FOR ANY DIRECT, 
+     INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+     (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS 
+     OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+     HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+     STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+     IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+     POSSIBILITY OF SUCH DAMAGE. 
+
+                    Juphoon System Software, Inc.
+                    Email: support@juphoon.com
+                    Web: http://www.juphoon.com
+
+************************************************************************/
+/*************************************************  
+  File name     : zsh.h
+  Module        : zos shell 
+  Author        : zocol   
+  Version       : 0.1   
+  Created on    : 2005-09-30    
+  Description   :
+   Function implement required by zos shell 
+
+  Modify History:   
+  1. Date:        Author:         Modification:
+*************************************************/
+#ifndef _ZSH_H__
+#define _ZSH_H__
+
+/** 
+ * @file zsh.h
+ * @brief Zos shell environment
+ *  
+ * To include the definitions of zsh, use the following directive:
+ * @code
+ * #include "zsh.h"
+ * @endcode
+ *
+ */
+
+/* include header files */
+#include "zos_type.h"
+#include "zsh_cmd.h"                 /* zos shell command interfaces */
+#include "zsh_evar.h"                /* zos shell environment interfaces */
+    
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief Initialize Zos Shell.
+ *
+ * @retval ZOK Zos Shell initialized OK.
+ * @retval ZFAILED Zos Shell initialized failed.
+ *
+ * @see Zsh_Destroy
+ */
+ZFUNC ZINT Zsh_Init(ZCHAR *pcExecFile);
+
+/**
+ * @brief Destroy Zos Shell.
+ *
+ * @return [none].
+ *
+ * @see Zsh_Init
+ */
+ZFUNC ZVOID Zsh_Destroy(ZFUNC_VOID);
+
+/**
+ * @brief Start zsh environment.
+ *
+ * @param [in] pcExecFile Execute file name to load symbol which
+ *                        only take effect under Windows.
+ *
+ * @retval ZOK Zsh start OK.
+ * @retval ZFAILED Zsh start failed.
+ *
+ * This function initialize zsh environment, and start a command prompt
+ * waiting for command. These commands add by Zsh_CmdAdd or Zsh_CmdAddX.
+ *
+ * @see Zsh_CmdAdd, Zsh_CmdAddX
+ */
+ZFUNC ZINT Zsh_Run(ZCHAR *pcExecFile);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _ZSH_H__ */
+

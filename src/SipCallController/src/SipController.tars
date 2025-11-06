@@ -1,0 +1,49 @@
+
+module VoipApp
+{
+	struct atsStatus
+	{
+		0 optional int _iSessionId = 0;
+		1 optional int _iSessStatus = 0;
+		2 optional int _iStatCode = 0;
+	};
+	
+	struct authInfo
+	{
+		0 require string _authName;
+		1 require string _authPwd;
+	};
+	
+	struct enterPrefix
+	{
+		0 optional int 		_numberBit = 0;
+		1 require string 	_prefix;
+	};
+
+	struct rtpGatewayEp
+	{
+		0 require string _region;
+		1 require string _id;
+		2 require string _ip;
+	};
+
+	
+	interface SipController
+	{
+		//接收mgcf转发的SIP消息;
+		bool recvSipMsgFromMgcfSipGateway(string sipGatewayId, string sipMsg, string connectionId, map<string, string> params);	
+		
+		//接收其他cloudSipGateway所转发的SIP消息;
+		bool recvSipMsgFromOtherSipGateway(string sipGatewayId, string sipMsg, string connectionId, map<string, string> params);	
+
+		//获取服务ip
+		bool getCloudSipGatewayIp(string sipGatewayId, out string sipGatewayOid, out string sipGatewayIp);
+		
+		//获取ats计费状态
+		bool ocsChargeStatusReport(string sipGatewayId, string callId, int iSessId, int iCCId, int iCCStatusType, int iStatCode, int reqTime, int resultCode, map<string, string> params);
+
+		//放音结束
+		bool mrfpMediaTransFinished(string callId, string caller, string callee, map<string, string> params);
+	};
+
+}; 
