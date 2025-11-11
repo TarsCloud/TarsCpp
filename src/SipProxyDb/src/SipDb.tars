@@ -9,6 +9,76 @@ module VoipApp
 		kOperationCategoryModify
 	};
 	
+
+	//注册信息结构体
+    struct SipRegInfoStruc
+    {
+		0 require string	_sipUri;
+        1 require string  _sipAccount;
+        2 require string	_passWord;
+		3 require string  _authName;
+		4 require string  _sipProxyId;
+		
+		5 require long	_lastHttpRegTime;
+		6 require long	_lastRegTime;
+		7 require int		_expires;
+		8 require string  _registarIp;
+		9 require int		_registarPort;
+		
+		10 require string  _clientIp;
+		11 require int     _clientPort;
+		12 require string  _callId;
+		13 require string  _fromTag;
+		14 require string  _toTag;
+		
+		15 require int     _CSeqNum;
+		16 require string  _viaBranch;
+		17 require int     _event;
+		18 require string  _eventId;
+		19 require string  _realm;
+		
+		20 require string  _nonce;
+		21 require int     _Nc;
+		22 require string  _opaque;
+		23 require string  _response;
+		24 require bool	_qopExist;
+		
+		25 require int     _qopValue;
+		26 require string  _Cnonce;
+		27 require string  _reqUserInfo;
+		28 require string  _reqUrl;
+		29 require string 	_coreNetId;
+		
+		30 require string  _SBCIp;
+		31 require int     _SBCPort;
+		32 require int 	_algo;		
+    };
+ 
+	//注册账号信息查询结构体
+	struct RegisterItemQuery 
+	{
+		0 require string		m_sipUri;
+		1 require string		m_strClientId;
+		2 require string		m_strDomainName;
+		3 require string		m_strPassWord;
+		4 require string		m_strAuthName;
+		
+		5 require string		m_strClientIp;
+		6 require int			m_iPort;
+		7 require bool 		m_bLogined;
+		8 require bool		m_bPermitedToProxy;
+		9 require string 		m_strCoreNetId;
+		
+		10 require string      m_strSBCIp;
+		11 require int 		m_iSBCport;
+		12 require string		m_strRegistarIp;
+		13 require int			m_iRegistarPort;
+		14 require int 		m_iFailedRegTimes;
+		
+		15 require long		m_lLastFailedRegTime;
+		16 require long		m_lLoginedTime;
+	};
+
 	//domain 域接入核心网配置信息结构体
 	struct DomainAccessedConfig
 	{
@@ -87,6 +157,72 @@ module VoipApp
 	};
 	
 	
+	//sip账号信息查询结构体
+	struct SipAccountInfo
+	{
+		0 require string		m_sipUri;
+		1 require string		m_strAccountId;
+		2 require string		m_strDomainName;
+		3 require string		m_strDomainId;
+		4 require string		m_strAppId;
+		5 require string 		m_strCoreNetId;
+		6 require string		m_strPassWord;
+		
+		7 require string		m_strAuthName;
+		8 require string 		m_strSipProxyName;
+		9 require string		m_strAppAccount;
+		10 require string      m_strRelationType;
+		11 require string		m_strAppAccountNumber;
+		
+		12 require int			m_iInUse;
+		13 require int 		m_iProxyed;
+		14 require int			m_iLogined;
+		15 require string		m_strSipProxyId;
+		16 require string      m_strSBCIp;
+		
+		17 require int 		m_iSBCport;
+		18 require string		m_strRegistarIp;
+		19 require int			m_iRegistarPort;
+		20 require int   		m_fromSipAddrType = 0;
+		21 require int   		m_toSipAddrType = 0;
+		22 require long		m_lInsertTime;
+		23 require int 		m_iPermitedProxyed;
+		
+		24 require string 		m_insertDateTime;
+		25 require int 		m_iFailedRegTimes;
+		26 require long		m_lLastFailedRegTime;
+		27 require long		m_lLoginedTime;
+		28 require long		m_inUseTime;
+		29 require long		m_proxyedTime;
+	};
+
+	struct SipAccountInfoOperation
+	{
+		0 require OperationCategory OpCategory;
+		1 require SipAccountInfo sipAccountInfo;
+	};
+	
+	enum SipAccountPropertyType
+	{
+		kSipAccountPropertyAccountId = 0,
+		kSipAccountPropertyDomainName = 1,
+		kSipAccountPropertyCoreNetId,
+		kSipAccountPropertyPassword,
+		kSipAccountPropertyAuthName,
+		
+		kSipAccountPropertyProxyIndex,
+		kSipAccountPropertyJustalkId,
+		kSipAccountPropertyInUse,
+		kSipAccountPropertyProxyed,
+		kSipAccountPropertyLogined,
+		
+		kSipAccountPropertySipProxyId,
+		kSipAccountPropertySBCIp,
+		kSipAccountPropertySBCPort,
+		kSipAccountPropertyRegisterIp,
+		kSipAccountPropertyRegisterPort	
+	};
+
 	struct DomainAccessConfigOperation
 	{
 		0 require OperationCategory     m_category;
@@ -180,6 +316,36 @@ module VoipApp
 		37 require string		m_paramsExt;
 	};
 	
+	struct SipAccountRegInfo
+	{
+		0 require string 		m_sipUri;
+		1 require string		m_accountId;
+		2 require int			m_iProxyed;
+		3 require int			m_iPermitedProxy;
+		4 require string		m_proxyName;
+		5 require string		m_proxyId;
+		6 require long			m_proxyedTime;
+	};
+
+	struct RegStaus
+	{
+		0 require string  	m_sipUri;
+		1 require bool		m_proxyed;
+		2 require int		m_failedTimes;
+		3 require long		m_time;
+		4 require string 		m_sipProxyId;
+	};
+	
+	struct RegStaus2
+	{
+		0 require string  	m_sipUri;
+		1 require bool		m_proxyed;
+		2 require int		m_failedTimes;
+		3 require int		m_iTmpReg;
+		4 require long		m_time;
+		5 require string 		m_sipProxyId;
+	};
+
 	struct NationCodeIp
 	{
 		0 require string   		m_nationCode;

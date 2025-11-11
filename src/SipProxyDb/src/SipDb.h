@@ -47,6 +47,635 @@ namespace VoipApp
         return -1;
     }
 
+    enum SipAccountPropertyType
+    {
+        kSipAccountPropertyAccountId = 0,
+        kSipAccountPropertyDomainName = 1,
+        kSipAccountPropertyCoreNetId,
+        kSipAccountPropertyPassword,
+        kSipAccountPropertyAuthName,
+        kSipAccountPropertyProxyIndex,
+        kSipAccountPropertyJustalkId,
+        kSipAccountPropertyInUse,
+        kSipAccountPropertyProxyed,
+        kSipAccountPropertyLogined,
+        kSipAccountPropertySipProxyId,
+        kSipAccountPropertySBCIp,
+        kSipAccountPropertySBCPort,
+        kSipAccountPropertyRegisterIp,
+        kSipAccountPropertyRegisterPort,
+    };
+    inline string etos(const SipAccountPropertyType & e)
+    {
+        switch(e)
+        {
+            case kSipAccountPropertyAccountId: return "kSipAccountPropertyAccountId";
+            case kSipAccountPropertyDomainName: return "kSipAccountPropertyDomainName";
+            case kSipAccountPropertyCoreNetId: return "kSipAccountPropertyCoreNetId";
+            case kSipAccountPropertyPassword: return "kSipAccountPropertyPassword";
+            case kSipAccountPropertyAuthName: return "kSipAccountPropertyAuthName";
+            case kSipAccountPropertyProxyIndex: return "kSipAccountPropertyProxyIndex";
+            case kSipAccountPropertyJustalkId: return "kSipAccountPropertyJustalkId";
+            case kSipAccountPropertyInUse: return "kSipAccountPropertyInUse";
+            case kSipAccountPropertyProxyed: return "kSipAccountPropertyProxyed";
+            case kSipAccountPropertyLogined: return "kSipAccountPropertyLogined";
+            case kSipAccountPropertySipProxyId: return "kSipAccountPropertySipProxyId";
+            case kSipAccountPropertySBCIp: return "kSipAccountPropertySBCIp";
+            case kSipAccountPropertySBCPort: return "kSipAccountPropertySBCPort";
+            case kSipAccountPropertyRegisterIp: return "kSipAccountPropertyRegisterIp";
+            case kSipAccountPropertyRegisterPort: return "kSipAccountPropertyRegisterPort";
+            default: return "";
+        }
+    }
+    inline int stoe(const string & s, SipAccountPropertyType & e)
+    {
+        if(s == "kSipAccountPropertyAccountId")  { e=kSipAccountPropertyAccountId; return 0;}
+        if(s == "kSipAccountPropertyDomainName")  { e=kSipAccountPropertyDomainName; return 0;}
+        if(s == "kSipAccountPropertyCoreNetId")  { e=kSipAccountPropertyCoreNetId; return 0;}
+        if(s == "kSipAccountPropertyPassword")  { e=kSipAccountPropertyPassword; return 0;}
+        if(s == "kSipAccountPropertyAuthName")  { e=kSipAccountPropertyAuthName; return 0;}
+        if(s == "kSipAccountPropertyProxyIndex")  { e=kSipAccountPropertyProxyIndex; return 0;}
+        if(s == "kSipAccountPropertyJustalkId")  { e=kSipAccountPropertyJustalkId; return 0;}
+        if(s == "kSipAccountPropertyInUse")  { e=kSipAccountPropertyInUse; return 0;}
+        if(s == "kSipAccountPropertyProxyed")  { e=kSipAccountPropertyProxyed; return 0;}
+        if(s == "kSipAccountPropertyLogined")  { e=kSipAccountPropertyLogined; return 0;}
+        if(s == "kSipAccountPropertySipProxyId")  { e=kSipAccountPropertySipProxyId; return 0;}
+        if(s == "kSipAccountPropertySBCIp")  { e=kSipAccountPropertySBCIp; return 0;}
+        if(s == "kSipAccountPropertySBCPort")  { e=kSipAccountPropertySBCPort; return 0;}
+        if(s == "kSipAccountPropertyRegisterIp")  { e=kSipAccountPropertyRegisterIp; return 0;}
+        if(s == "kSipAccountPropertyRegisterPort")  { e=kSipAccountPropertyRegisterPort; return 0;}
+
+        return -1;
+    }
+
+    struct SipRegInfoStruc : public tars::TarsStructBase
+    {
+    public:
+        static string className()
+        {
+            return "VoipApp.SipRegInfoStruc";
+        }
+        static string MD5()
+        {
+            return "5647c93769fc713e49da94877e533f8c";
+        }
+        SipRegInfoStruc()
+        {
+            resetDefautlt();
+        }
+        void resetDefautlt()
+        {
+            _sipUri = "";
+            _sipAccount = "";
+            _passWord = "";
+            _authName = "";
+            _sipProxyId = "";
+            _lastHttpRegTime = 0;
+            _lastRegTime = 0;
+            _expires = 0;
+            _registarIp = "";
+            _registarPort = 0;
+            _clientIp = "";
+            _clientPort = 0;
+            _callId = "";
+            _fromTag = "";
+            _toTag = "";
+            _CSeqNum = 0;
+            _viaBranch = "";
+            _event = 0;
+            _eventId = "";
+            _realm = "";
+            _nonce = "";
+            _Nc = 0;
+            _opaque = "";
+            _response = "";
+            _qopExist = false;
+            _qopValue = 0;
+            _Cnonce = "";
+            _reqUserInfo = "";
+            _reqUrl = "";
+            _coreNetId = "";
+            _SBCIp = "";
+            _SBCPort = 0;
+            _algo = 0;
+        }
+        template<typename WriterT>
+        void writeTo(tars::TarsOutputStream<WriterT>& _os) const
+        {
+            _os.write(_sipUri, 0);
+            _os.write(_sipAccount, 1);
+            _os.write(_passWord, 2);
+            _os.write(_authName, 3);
+            _os.write(_sipProxyId, 4);
+            _os.write(_lastHttpRegTime, 5);
+            _os.write(_lastRegTime, 6);
+            _os.write(_expires, 7);
+            _os.write(_registarIp, 8);
+            _os.write(_registarPort, 9);
+            _os.write(_clientIp, 10);
+            _os.write(_clientPort, 11);
+            _os.write(_callId, 12);
+            _os.write(_fromTag, 13);
+            _os.write(_toTag, 14);
+            _os.write(_CSeqNum, 15);
+            _os.write(_viaBranch, 16);
+            _os.write(_event, 17);
+            _os.write(_eventId, 18);
+            _os.write(_realm, 19);
+            _os.write(_nonce, 20);
+            _os.write(_Nc, 21);
+            _os.write(_opaque, 22);
+            _os.write(_response, 23);
+            _os.write(_qopExist, 24);
+            _os.write(_qopValue, 25);
+            _os.write(_Cnonce, 26);
+            _os.write(_reqUserInfo, 27);
+            _os.write(_reqUrl, 28);
+            _os.write(_coreNetId, 29);
+            _os.write(_SBCIp, 30);
+            _os.write(_SBCPort, 31);
+            _os.write(_algo, 32);
+        }
+        template<typename ReaderT>
+        void readFrom(tars::TarsInputStream<ReaderT>& _is)
+        {
+            resetDefautlt();
+            _is.read(_sipUri, 0, true);
+            _is.read(_sipAccount, 1, true);
+            _is.read(_passWord, 2, true);
+            _is.read(_authName, 3, true);
+            _is.read(_sipProxyId, 4, true);
+            _is.read(_lastHttpRegTime, 5, true);
+            _is.read(_lastRegTime, 6, true);
+            _is.read(_expires, 7, true);
+            _is.read(_registarIp, 8, true);
+            _is.read(_registarPort, 9, true);
+            _is.read(_clientIp, 10, true);
+            _is.read(_clientPort, 11, true);
+            _is.read(_callId, 12, true);
+            _is.read(_fromTag, 13, true);
+            _is.read(_toTag, 14, true);
+            _is.read(_CSeqNum, 15, true);
+            _is.read(_viaBranch, 16, true);
+            _is.read(_event, 17, true);
+            _is.read(_eventId, 18, true);
+            _is.read(_realm, 19, true);
+            _is.read(_nonce, 20, true);
+            _is.read(_Nc, 21, true);
+            _is.read(_opaque, 22, true);
+            _is.read(_response, 23, true);
+            _is.read(_qopExist, 24, true);
+            _is.read(_qopValue, 25, true);
+            _is.read(_Cnonce, 26, true);
+            _is.read(_reqUserInfo, 27, true);
+            _is.read(_reqUrl, 28, true);
+            _is.read(_coreNetId, 29, true);
+            _is.read(_SBCIp, 30, true);
+            _is.read(_SBCPort, 31, true);
+            _is.read(_algo, 32, true);
+        }
+        tars::JsonValueObjPtr writeToJson() const
+        {
+            tars::JsonValueObjPtr p = new tars::JsonValueObj();
+            p->value["_sipUri"] = tars::JsonOutput::writeJson(_sipUri);
+            p->value["_sipAccount"] = tars::JsonOutput::writeJson(_sipAccount);
+            p->value["_passWord"] = tars::JsonOutput::writeJson(_passWord);
+            p->value["_authName"] = tars::JsonOutput::writeJson(_authName);
+            p->value["_sipProxyId"] = tars::JsonOutput::writeJson(_sipProxyId);
+            p->value["_lastHttpRegTime"] = tars::JsonOutput::writeJson(_lastHttpRegTime);
+            p->value["_lastRegTime"] = tars::JsonOutput::writeJson(_lastRegTime);
+            p->value["_expires"] = tars::JsonOutput::writeJson(_expires);
+            p->value["_registarIp"] = tars::JsonOutput::writeJson(_registarIp);
+            p->value["_registarPort"] = tars::JsonOutput::writeJson(_registarPort);
+            p->value["_clientIp"] = tars::JsonOutput::writeJson(_clientIp);
+            p->value["_clientPort"] = tars::JsonOutput::writeJson(_clientPort);
+            p->value["_callId"] = tars::JsonOutput::writeJson(_callId);
+            p->value["_fromTag"] = tars::JsonOutput::writeJson(_fromTag);
+            p->value["_toTag"] = tars::JsonOutput::writeJson(_toTag);
+            p->value["_CSeqNum"] = tars::JsonOutput::writeJson(_CSeqNum);
+            p->value["_viaBranch"] = tars::JsonOutput::writeJson(_viaBranch);
+            p->value["_event"] = tars::JsonOutput::writeJson(_event);
+            p->value["_eventId"] = tars::JsonOutput::writeJson(_eventId);
+            p->value["_realm"] = tars::JsonOutput::writeJson(_realm);
+            p->value["_nonce"] = tars::JsonOutput::writeJson(_nonce);
+            p->value["_Nc"] = tars::JsonOutput::writeJson(_Nc);
+            p->value["_opaque"] = tars::JsonOutput::writeJson(_opaque);
+            p->value["_response"] = tars::JsonOutput::writeJson(_response);
+            p->value["_qopExist"] = tars::JsonOutput::writeJson(_qopExist);
+            p->value["_qopValue"] = tars::JsonOutput::writeJson(_qopValue);
+            p->value["_Cnonce"] = tars::JsonOutput::writeJson(_Cnonce);
+            p->value["_reqUserInfo"] = tars::JsonOutput::writeJson(_reqUserInfo);
+            p->value["_reqUrl"] = tars::JsonOutput::writeJson(_reqUrl);
+            p->value["_coreNetId"] = tars::JsonOutput::writeJson(_coreNetId);
+            p->value["_SBCIp"] = tars::JsonOutput::writeJson(_SBCIp);
+            p->value["_SBCPort"] = tars::JsonOutput::writeJson(_SBCPort);
+            p->value["_algo"] = tars::JsonOutput::writeJson(_algo);
+            return p;
+        }
+        string writeToJsonString() const
+        {
+            return tars::TC_Json::writeValue(writeToJson());
+        }
+        void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)
+        {
+            resetDefautlt();
+            if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)
+            {
+                char s[128];
+                snprintf(s, sizeof(s), "read 'struct' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
+                throw tars::TC_Json_Exception(s);
+            }
+            tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);
+            tars::JsonInput::readJson(_sipUri,pObj->value["_sipUri"], true);
+            tars::JsonInput::readJson(_sipAccount,pObj->value["_sipAccount"], true);
+            tars::JsonInput::readJson(_passWord,pObj->value["_passWord"], true);
+            tars::JsonInput::readJson(_authName,pObj->value["_authName"], true);
+            tars::JsonInput::readJson(_sipProxyId,pObj->value["_sipProxyId"], true);
+            tars::JsonInput::readJson(_lastHttpRegTime,pObj->value["_lastHttpRegTime"], true);
+            tars::JsonInput::readJson(_lastRegTime,pObj->value["_lastRegTime"], true);
+            tars::JsonInput::readJson(_expires,pObj->value["_expires"], true);
+            tars::JsonInput::readJson(_registarIp,pObj->value["_registarIp"], true);
+            tars::JsonInput::readJson(_registarPort,pObj->value["_registarPort"], true);
+            tars::JsonInput::readJson(_clientIp,pObj->value["_clientIp"], true);
+            tars::JsonInput::readJson(_clientPort,pObj->value["_clientPort"], true);
+            tars::JsonInput::readJson(_callId,pObj->value["_callId"], true);
+            tars::JsonInput::readJson(_fromTag,pObj->value["_fromTag"], true);
+            tars::JsonInput::readJson(_toTag,pObj->value["_toTag"], true);
+            tars::JsonInput::readJson(_CSeqNum,pObj->value["_CSeqNum"], true);
+            tars::JsonInput::readJson(_viaBranch,pObj->value["_viaBranch"], true);
+            tars::JsonInput::readJson(_event,pObj->value["_event"], true);
+            tars::JsonInput::readJson(_eventId,pObj->value["_eventId"], true);
+            tars::JsonInput::readJson(_realm,pObj->value["_realm"], true);
+            tars::JsonInput::readJson(_nonce,pObj->value["_nonce"], true);
+            tars::JsonInput::readJson(_Nc,pObj->value["_Nc"], true);
+            tars::JsonInput::readJson(_opaque,pObj->value["_opaque"], true);
+            tars::JsonInput::readJson(_response,pObj->value["_response"], true);
+            tars::JsonInput::readJson(_qopExist,pObj->value["_qopExist"], true);
+            tars::JsonInput::readJson(_qopValue,pObj->value["_qopValue"], true);
+            tars::JsonInput::readJson(_Cnonce,pObj->value["_Cnonce"], true);
+            tars::JsonInput::readJson(_reqUserInfo,pObj->value["_reqUserInfo"], true);
+            tars::JsonInput::readJson(_reqUrl,pObj->value["_reqUrl"], true);
+            tars::JsonInput::readJson(_coreNetId,pObj->value["_coreNetId"], true);
+            tars::JsonInput::readJson(_SBCIp,pObj->value["_SBCIp"], true);
+            tars::JsonInput::readJson(_SBCPort,pObj->value["_SBCPort"], true);
+            tars::JsonInput::readJson(_algo,pObj->value["_algo"], true);
+        }
+        void readFromJsonString(const string & str)
+        {
+            readFromJson(tars::TC_Json::getValue(str));
+        }
+        ostream& display(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.display(_sipUri,"_sipUri");
+            _ds.display(_sipAccount,"_sipAccount");
+            _ds.display(_passWord,"_passWord");
+            _ds.display(_authName,"_authName");
+            _ds.display(_sipProxyId,"_sipProxyId");
+            _ds.display(_lastHttpRegTime,"_lastHttpRegTime");
+            _ds.display(_lastRegTime,"_lastRegTime");
+            _ds.display(_expires,"_expires");
+            _ds.display(_registarIp,"_registarIp");
+            _ds.display(_registarPort,"_registarPort");
+            _ds.display(_clientIp,"_clientIp");
+            _ds.display(_clientPort,"_clientPort");
+            _ds.display(_callId,"_callId");
+            _ds.display(_fromTag,"_fromTag");
+            _ds.display(_toTag,"_toTag");
+            _ds.display(_CSeqNum,"_CSeqNum");
+            _ds.display(_viaBranch,"_viaBranch");
+            _ds.display(_event,"_event");
+            _ds.display(_eventId,"_eventId");
+            _ds.display(_realm,"_realm");
+            _ds.display(_nonce,"_nonce");
+            _ds.display(_Nc,"_Nc");
+            _ds.display(_opaque,"_opaque");
+            _ds.display(_response,"_response");
+            _ds.display(_qopExist,"_qopExist");
+            _ds.display(_qopValue,"_qopValue");
+            _ds.display(_Cnonce,"_Cnonce");
+            _ds.display(_reqUserInfo,"_reqUserInfo");
+            _ds.display(_reqUrl,"_reqUrl");
+            _ds.display(_coreNetId,"_coreNetId");
+            _ds.display(_SBCIp,"_SBCIp");
+            _ds.display(_SBCPort,"_SBCPort");
+            _ds.display(_algo,"_algo");
+            return _os;
+        }
+        ostream& displaySimple(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.displaySimple(_sipUri, true);
+            _ds.displaySimple(_sipAccount, true);
+            _ds.displaySimple(_passWord, true);
+            _ds.displaySimple(_authName, true);
+            _ds.displaySimple(_sipProxyId, true);
+            _ds.displaySimple(_lastHttpRegTime, true);
+            _ds.displaySimple(_lastRegTime, true);
+            _ds.displaySimple(_expires, true);
+            _ds.displaySimple(_registarIp, true);
+            _ds.displaySimple(_registarPort, true);
+            _ds.displaySimple(_clientIp, true);
+            _ds.displaySimple(_clientPort, true);
+            _ds.displaySimple(_callId, true);
+            _ds.displaySimple(_fromTag, true);
+            _ds.displaySimple(_toTag, true);
+            _ds.displaySimple(_CSeqNum, true);
+            _ds.displaySimple(_viaBranch, true);
+            _ds.displaySimple(_event, true);
+            _ds.displaySimple(_eventId, true);
+            _ds.displaySimple(_realm, true);
+            _ds.displaySimple(_nonce, true);
+            _ds.displaySimple(_Nc, true);
+            _ds.displaySimple(_opaque, true);
+            _ds.displaySimple(_response, true);
+            _ds.displaySimple(_qopExist, true);
+            _ds.displaySimple(_qopValue, true);
+            _ds.displaySimple(_Cnonce, true);
+            _ds.displaySimple(_reqUserInfo, true);
+            _ds.displaySimple(_reqUrl, true);
+            _ds.displaySimple(_coreNetId, true);
+            _ds.displaySimple(_SBCIp, true);
+            _ds.displaySimple(_SBCPort, true);
+            _ds.displaySimple(_algo, false);
+            return _os;
+        }
+    public:
+        std::string _sipUri;
+        std::string _sipAccount;
+        std::string _passWord;
+        std::string _authName;
+        std::string _sipProxyId;
+        tars::Int64 _lastHttpRegTime;
+        tars::Int64 _lastRegTime;
+        tars::Int32 _expires;
+        std::string _registarIp;
+        tars::Int32 _registarPort;
+        std::string _clientIp;
+        tars::Int32 _clientPort;
+        std::string _callId;
+        std::string _fromTag;
+        std::string _toTag;
+        tars::Int32 _CSeqNum;
+        std::string _viaBranch;
+        tars::Int32 _event;
+        std::string _eventId;
+        std::string _realm;
+        std::string _nonce;
+        tars::Int32 _Nc;
+        std::string _opaque;
+        std::string _response;
+        tars::Bool _qopExist;
+        tars::Int32 _qopValue;
+        std::string _Cnonce;
+        std::string _reqUserInfo;
+        std::string _reqUrl;
+        std::string _coreNetId;
+        std::string _SBCIp;
+        tars::Int32 _SBCPort;
+        tars::Int32 _algo;
+    };
+    inline bool operator==(const SipRegInfoStruc&l, const SipRegInfoStruc&r)
+    {
+        return l._sipUri == r._sipUri && l._sipAccount == r._sipAccount && l._passWord == r._passWord && l._authName == r._authName && l._sipProxyId == r._sipProxyId && l._lastHttpRegTime == r._lastHttpRegTime && l._lastRegTime == r._lastRegTime && l._expires == r._expires && l._registarIp == r._registarIp && l._registarPort == r._registarPort && l._clientIp == r._clientIp && l._clientPort == r._clientPort && l._callId == r._callId && l._fromTag == r._fromTag && l._toTag == r._toTag && l._CSeqNum == r._CSeqNum && l._viaBranch == r._viaBranch && l._event == r._event && l._eventId == r._eventId && l._realm == r._realm && l._nonce == r._nonce && l._Nc == r._Nc && l._opaque == r._opaque && l._response == r._response && l._qopExist == r._qopExist && l._qopValue == r._qopValue && l._Cnonce == r._Cnonce && l._reqUserInfo == r._reqUserInfo && l._reqUrl == r._reqUrl && l._coreNetId == r._coreNetId && l._SBCIp == r._SBCIp && l._SBCPort == r._SBCPort && l._algo == r._algo;
+    }
+    inline bool operator!=(const SipRegInfoStruc&l, const SipRegInfoStruc&r)
+    {
+        return !(l == r);
+    }
+    inline ostream& operator<<(ostream & os,const SipRegInfoStruc&r)
+    {
+        os << r.writeToJsonString();
+        return os;
+    }
+    inline istream& operator>>(istream& is,SipRegInfoStruc&l)
+    {
+        std::istreambuf_iterator<char> eos;
+        std::string s(std::istreambuf_iterator<char>(is), eos);
+        l.readFromJsonString(s);
+        return is;
+    }
+
+    struct RegisterItemQuery : public tars::TarsStructBase
+    {
+    public:
+        static string className()
+        {
+            return "VoipApp.RegisterItemQuery";
+        }
+        static string MD5()
+        {
+            return "72dd4f78019e42299663957ddab15321";
+        }
+        RegisterItemQuery()
+        {
+            resetDefautlt();
+        }
+        void resetDefautlt()
+        {
+            m_sipUri = "";
+            m_strClientId = "";
+            m_strDomainName = "";
+            m_strPassWord = "";
+            m_strAuthName = "";
+            m_strClientIp = "";
+            m_iPort = 0;
+            m_bLogined = false;
+            m_bPermitedToProxy = false;
+            m_strCoreNetId = "";
+            m_strSBCIp = "";
+            m_iSBCport = 0;
+            m_strRegistarIp = "";
+            m_iRegistarPort = 0;
+            m_iFailedRegTimes = 0;
+            m_lLastFailedRegTime = 0;
+            m_lLoginedTime = 0;
+        }
+        template<typename WriterT>
+        void writeTo(tars::TarsOutputStream<WriterT>& _os) const
+        {
+            _os.write(m_sipUri, 0);
+            _os.write(m_strClientId, 1);
+            _os.write(m_strDomainName, 2);
+            _os.write(m_strPassWord, 3);
+            _os.write(m_strAuthName, 4);
+            _os.write(m_strClientIp, 5);
+            _os.write(m_iPort, 6);
+            _os.write(m_bLogined, 7);
+            _os.write(m_bPermitedToProxy, 8);
+            _os.write(m_strCoreNetId, 9);
+            _os.write(m_strSBCIp, 10);
+            _os.write(m_iSBCport, 11);
+            _os.write(m_strRegistarIp, 12);
+            _os.write(m_iRegistarPort, 13);
+            _os.write(m_iFailedRegTimes, 14);
+            _os.write(m_lLastFailedRegTime, 15);
+            _os.write(m_lLoginedTime, 16);
+        }
+        template<typename ReaderT>
+        void readFrom(tars::TarsInputStream<ReaderT>& _is)
+        {
+            resetDefautlt();
+            _is.read(m_sipUri, 0, true);
+            _is.read(m_strClientId, 1, true);
+            _is.read(m_strDomainName, 2, true);
+            _is.read(m_strPassWord, 3, true);
+            _is.read(m_strAuthName, 4, true);
+            _is.read(m_strClientIp, 5, true);
+            _is.read(m_iPort, 6, true);
+            _is.read(m_bLogined, 7, true);
+            _is.read(m_bPermitedToProxy, 8, true);
+            _is.read(m_strCoreNetId, 9, true);
+            _is.read(m_strSBCIp, 10, true);
+            _is.read(m_iSBCport, 11, true);
+            _is.read(m_strRegistarIp, 12, true);
+            _is.read(m_iRegistarPort, 13, true);
+            _is.read(m_iFailedRegTimes, 14, true);
+            _is.read(m_lLastFailedRegTime, 15, true);
+            _is.read(m_lLoginedTime, 16, true);
+        }
+        tars::JsonValueObjPtr writeToJson() const
+        {
+            tars::JsonValueObjPtr p = new tars::JsonValueObj();
+            p->value["m_sipUri"] = tars::JsonOutput::writeJson(m_sipUri);
+            p->value["m_strClientId"] = tars::JsonOutput::writeJson(m_strClientId);
+            p->value["m_strDomainName"] = tars::JsonOutput::writeJson(m_strDomainName);
+            p->value["m_strPassWord"] = tars::JsonOutput::writeJson(m_strPassWord);
+            p->value["m_strAuthName"] = tars::JsonOutput::writeJson(m_strAuthName);
+            p->value["m_strClientIp"] = tars::JsonOutput::writeJson(m_strClientIp);
+            p->value["m_iPort"] = tars::JsonOutput::writeJson(m_iPort);
+            p->value["m_bLogined"] = tars::JsonOutput::writeJson(m_bLogined);
+            p->value["m_bPermitedToProxy"] = tars::JsonOutput::writeJson(m_bPermitedToProxy);
+            p->value["m_strCoreNetId"] = tars::JsonOutput::writeJson(m_strCoreNetId);
+            p->value["m_strSBCIp"] = tars::JsonOutput::writeJson(m_strSBCIp);
+            p->value["m_iSBCport"] = tars::JsonOutput::writeJson(m_iSBCport);
+            p->value["m_strRegistarIp"] = tars::JsonOutput::writeJson(m_strRegistarIp);
+            p->value["m_iRegistarPort"] = tars::JsonOutput::writeJson(m_iRegistarPort);
+            p->value["m_iFailedRegTimes"] = tars::JsonOutput::writeJson(m_iFailedRegTimes);
+            p->value["m_lLastFailedRegTime"] = tars::JsonOutput::writeJson(m_lLastFailedRegTime);
+            p->value["m_lLoginedTime"] = tars::JsonOutput::writeJson(m_lLoginedTime);
+            return p;
+        }
+        string writeToJsonString() const
+        {
+            return tars::TC_Json::writeValue(writeToJson());
+        }
+        void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)
+        {
+            resetDefautlt();
+            if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)
+            {
+                char s[128];
+                snprintf(s, sizeof(s), "read 'struct' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
+                throw tars::TC_Json_Exception(s);
+            }
+            tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);
+            tars::JsonInput::readJson(m_sipUri,pObj->value["m_sipUri"], true);
+            tars::JsonInput::readJson(m_strClientId,pObj->value["m_strClientId"], true);
+            tars::JsonInput::readJson(m_strDomainName,pObj->value["m_strDomainName"], true);
+            tars::JsonInput::readJson(m_strPassWord,pObj->value["m_strPassWord"], true);
+            tars::JsonInput::readJson(m_strAuthName,pObj->value["m_strAuthName"], true);
+            tars::JsonInput::readJson(m_strClientIp,pObj->value["m_strClientIp"], true);
+            tars::JsonInput::readJson(m_iPort,pObj->value["m_iPort"], true);
+            tars::JsonInput::readJson(m_bLogined,pObj->value["m_bLogined"], true);
+            tars::JsonInput::readJson(m_bPermitedToProxy,pObj->value["m_bPermitedToProxy"], true);
+            tars::JsonInput::readJson(m_strCoreNetId,pObj->value["m_strCoreNetId"], true);
+            tars::JsonInput::readJson(m_strSBCIp,pObj->value["m_strSBCIp"], true);
+            tars::JsonInput::readJson(m_iSBCport,pObj->value["m_iSBCport"], true);
+            tars::JsonInput::readJson(m_strRegistarIp,pObj->value["m_strRegistarIp"], true);
+            tars::JsonInput::readJson(m_iRegistarPort,pObj->value["m_iRegistarPort"], true);
+            tars::JsonInput::readJson(m_iFailedRegTimes,pObj->value["m_iFailedRegTimes"], true);
+            tars::JsonInput::readJson(m_lLastFailedRegTime,pObj->value["m_lLastFailedRegTime"], true);
+            tars::JsonInput::readJson(m_lLoginedTime,pObj->value["m_lLoginedTime"], true);
+        }
+        void readFromJsonString(const string & str)
+        {
+            readFromJson(tars::TC_Json::getValue(str));
+        }
+        ostream& display(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.display(m_sipUri,"m_sipUri");
+            _ds.display(m_strClientId,"m_strClientId");
+            _ds.display(m_strDomainName,"m_strDomainName");
+            _ds.display(m_strPassWord,"m_strPassWord");
+            _ds.display(m_strAuthName,"m_strAuthName");
+            _ds.display(m_strClientIp,"m_strClientIp");
+            _ds.display(m_iPort,"m_iPort");
+            _ds.display(m_bLogined,"m_bLogined");
+            _ds.display(m_bPermitedToProxy,"m_bPermitedToProxy");
+            _ds.display(m_strCoreNetId,"m_strCoreNetId");
+            _ds.display(m_strSBCIp,"m_strSBCIp");
+            _ds.display(m_iSBCport,"m_iSBCport");
+            _ds.display(m_strRegistarIp,"m_strRegistarIp");
+            _ds.display(m_iRegistarPort,"m_iRegistarPort");
+            _ds.display(m_iFailedRegTimes,"m_iFailedRegTimes");
+            _ds.display(m_lLastFailedRegTime,"m_lLastFailedRegTime");
+            _ds.display(m_lLoginedTime,"m_lLoginedTime");
+            return _os;
+        }
+        ostream& displaySimple(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.displaySimple(m_sipUri, true);
+            _ds.displaySimple(m_strClientId, true);
+            _ds.displaySimple(m_strDomainName, true);
+            _ds.displaySimple(m_strPassWord, true);
+            _ds.displaySimple(m_strAuthName, true);
+            _ds.displaySimple(m_strClientIp, true);
+            _ds.displaySimple(m_iPort, true);
+            _ds.displaySimple(m_bLogined, true);
+            _ds.displaySimple(m_bPermitedToProxy, true);
+            _ds.displaySimple(m_strCoreNetId, true);
+            _ds.displaySimple(m_strSBCIp, true);
+            _ds.displaySimple(m_iSBCport, true);
+            _ds.displaySimple(m_strRegistarIp, true);
+            _ds.displaySimple(m_iRegistarPort, true);
+            _ds.displaySimple(m_iFailedRegTimes, true);
+            _ds.displaySimple(m_lLastFailedRegTime, true);
+            _ds.displaySimple(m_lLoginedTime, false);
+            return _os;
+        }
+    public:
+        std::string m_sipUri;
+        std::string m_strClientId;
+        std::string m_strDomainName;
+        std::string m_strPassWord;
+        std::string m_strAuthName;
+        std::string m_strClientIp;
+        tars::Int32 m_iPort;
+        tars::Bool m_bLogined;
+        tars::Bool m_bPermitedToProxy;
+        std::string m_strCoreNetId;
+        std::string m_strSBCIp;
+        tars::Int32 m_iSBCport;
+        std::string m_strRegistarIp;
+        tars::Int32 m_iRegistarPort;
+        tars::Int32 m_iFailedRegTimes;
+        tars::Int64 m_lLastFailedRegTime;
+        tars::Int64 m_lLoginedTime;
+    };
+    inline bool operator==(const RegisterItemQuery&l, const RegisterItemQuery&r)
+    {
+        return l.m_sipUri == r.m_sipUri && l.m_strClientId == r.m_strClientId && l.m_strDomainName == r.m_strDomainName && l.m_strPassWord == r.m_strPassWord && l.m_strAuthName == r.m_strAuthName && l.m_strClientIp == r.m_strClientIp && l.m_iPort == r.m_iPort && l.m_bLogined == r.m_bLogined && l.m_bPermitedToProxy == r.m_bPermitedToProxy && l.m_strCoreNetId == r.m_strCoreNetId && l.m_strSBCIp == r.m_strSBCIp && l.m_iSBCport == r.m_iSBCport && l.m_strRegistarIp == r.m_strRegistarIp && l.m_iRegistarPort == r.m_iRegistarPort && l.m_iFailedRegTimes == r.m_iFailedRegTimes && l.m_lLastFailedRegTime == r.m_lLastFailedRegTime && l.m_lLoginedTime == r.m_lLoginedTime;
+    }
+    inline bool operator!=(const RegisterItemQuery&l, const RegisterItemQuery&r)
+    {
+        return !(l == r);
+    }
+    inline ostream& operator<<(ostream & os,const RegisterItemQuery&r)
+    {
+        os << r.writeToJsonString();
+        return os;
+    }
+    inline istream& operator>>(istream& is,RegisterItemQuery&l)
+    {
+        std::istreambuf_iterator<char> eos;
+        std::string s(std::istreambuf_iterator<char>(is), eos);
+        l.readFromJsonString(s);
+        return is;
+    }
+
     struct DomainAccessedConfig : public tars::TarsStructBase
     {
     public:
@@ -768,6 +1397,432 @@ namespace VoipApp
         return os;
     }
     inline istream& operator>>(istream& is,SipProxyAccessedCoreNetConfig&l)
+    {
+        std::istreambuf_iterator<char> eos;
+        std::string s(std::istreambuf_iterator<char>(is), eos);
+        l.readFromJsonString(s);
+        return is;
+    }
+
+    struct SipAccountInfo : public tars::TarsStructBase
+    {
+    public:
+        static string className()
+        {
+            return "VoipApp.SipAccountInfo";
+        }
+        static string MD5()
+        {
+            return "d6d5eb24ebf89f4b74e2498d949af79f";
+        }
+        SipAccountInfo()
+        {
+            resetDefautlt();
+        }
+        void resetDefautlt()
+        {
+            m_sipUri = "";
+            m_strAccountId = "";
+            m_strDomainName = "";
+            m_strDomainId = "";
+            m_strAppId = "";
+            m_strCoreNetId = "";
+            m_strPassWord = "";
+            m_strAuthName = "";
+            m_strSipProxyName = "";
+            m_strAppAccount = "";
+            m_strRelationType = "";
+            m_strAppAccountNumber = "";
+            m_iInUse = 0;
+            m_iProxyed = 0;
+            m_iLogined = 0;
+            m_strSipProxyId = "";
+            m_strSBCIp = "";
+            m_iSBCport = 0;
+            m_strRegistarIp = "";
+            m_iRegistarPort = 0;
+            m_fromSipAddrType = 0;
+            m_toSipAddrType = 0;
+            m_lInsertTime = 0;
+            m_iPermitedProxyed = 0;
+            m_insertDateTime = "";
+            m_iFailedRegTimes = 0;
+            m_lLastFailedRegTime = 0;
+            m_lLoginedTime = 0;
+            m_inUseTime = 0;
+            m_proxyedTime = 0;
+        }
+        template<typename WriterT>
+        void writeTo(tars::TarsOutputStream<WriterT>& _os) const
+        {
+            _os.write(m_sipUri, 0);
+            _os.write(m_strAccountId, 1);
+            _os.write(m_strDomainName, 2);
+            _os.write(m_strDomainId, 3);
+            _os.write(m_strAppId, 4);
+            _os.write(m_strCoreNetId, 5);
+            _os.write(m_strPassWord, 6);
+            _os.write(m_strAuthName, 7);
+            _os.write(m_strSipProxyName, 8);
+            _os.write(m_strAppAccount, 9);
+            _os.write(m_strRelationType, 10);
+            _os.write(m_strAppAccountNumber, 11);
+            _os.write(m_iInUse, 12);
+            _os.write(m_iProxyed, 13);
+            _os.write(m_iLogined, 14);
+            _os.write(m_strSipProxyId, 15);
+            _os.write(m_strSBCIp, 16);
+            _os.write(m_iSBCport, 17);
+            _os.write(m_strRegistarIp, 18);
+            _os.write(m_iRegistarPort, 19);
+            _os.write(m_fromSipAddrType, 20);
+            _os.write(m_toSipAddrType, 21);
+            _os.write(m_lInsertTime, 22);
+            _os.write(m_iPermitedProxyed, 23);
+            _os.write(m_insertDateTime, 24);
+            _os.write(m_iFailedRegTimes, 25);
+            _os.write(m_lLastFailedRegTime, 26);
+            _os.write(m_lLoginedTime, 27);
+            _os.write(m_inUseTime, 28);
+            _os.write(m_proxyedTime, 29);
+        }
+        template<typename ReaderT>
+        void readFrom(tars::TarsInputStream<ReaderT>& _is)
+        {
+            resetDefautlt();
+            _is.read(m_sipUri, 0, true);
+            _is.read(m_strAccountId, 1, true);
+            _is.read(m_strDomainName, 2, true);
+            _is.read(m_strDomainId, 3, true);
+            _is.read(m_strAppId, 4, true);
+            _is.read(m_strCoreNetId, 5, true);
+            _is.read(m_strPassWord, 6, true);
+            _is.read(m_strAuthName, 7, true);
+            _is.read(m_strSipProxyName, 8, true);
+            _is.read(m_strAppAccount, 9, true);
+            _is.read(m_strRelationType, 10, true);
+            _is.read(m_strAppAccountNumber, 11, true);
+            _is.read(m_iInUse, 12, true);
+            _is.read(m_iProxyed, 13, true);
+            _is.read(m_iLogined, 14, true);
+            _is.read(m_strSipProxyId, 15, true);
+            _is.read(m_strSBCIp, 16, true);
+            _is.read(m_iSBCport, 17, true);
+            _is.read(m_strRegistarIp, 18, true);
+            _is.read(m_iRegistarPort, 19, true);
+            _is.read(m_fromSipAddrType, 20, true);
+            _is.read(m_toSipAddrType, 21, true);
+            _is.read(m_lInsertTime, 22, true);
+            _is.read(m_iPermitedProxyed, 23, true);
+            _is.read(m_insertDateTime, 24, true);
+            _is.read(m_iFailedRegTimes, 25, true);
+            _is.read(m_lLastFailedRegTime, 26, true);
+            _is.read(m_lLoginedTime, 27, true);
+            _is.read(m_inUseTime, 28, true);
+            _is.read(m_proxyedTime, 29, true);
+        }
+        tars::JsonValueObjPtr writeToJson() const
+        {
+            tars::JsonValueObjPtr p = new tars::JsonValueObj();
+            p->value["m_sipUri"] = tars::JsonOutput::writeJson(m_sipUri);
+            p->value["m_strAccountId"] = tars::JsonOutput::writeJson(m_strAccountId);
+            p->value["m_strDomainName"] = tars::JsonOutput::writeJson(m_strDomainName);
+            p->value["m_strDomainId"] = tars::JsonOutput::writeJson(m_strDomainId);
+            p->value["m_strAppId"] = tars::JsonOutput::writeJson(m_strAppId);
+            p->value["m_strCoreNetId"] = tars::JsonOutput::writeJson(m_strCoreNetId);
+            p->value["m_strPassWord"] = tars::JsonOutput::writeJson(m_strPassWord);
+            p->value["m_strAuthName"] = tars::JsonOutput::writeJson(m_strAuthName);
+            p->value["m_strSipProxyName"] = tars::JsonOutput::writeJson(m_strSipProxyName);
+            p->value["m_strAppAccount"] = tars::JsonOutput::writeJson(m_strAppAccount);
+            p->value["m_strRelationType"] = tars::JsonOutput::writeJson(m_strRelationType);
+            p->value["m_strAppAccountNumber"] = tars::JsonOutput::writeJson(m_strAppAccountNumber);
+            p->value["m_iInUse"] = tars::JsonOutput::writeJson(m_iInUse);
+            p->value["m_iProxyed"] = tars::JsonOutput::writeJson(m_iProxyed);
+            p->value["m_iLogined"] = tars::JsonOutput::writeJson(m_iLogined);
+            p->value["m_strSipProxyId"] = tars::JsonOutput::writeJson(m_strSipProxyId);
+            p->value["m_strSBCIp"] = tars::JsonOutput::writeJson(m_strSBCIp);
+            p->value["m_iSBCport"] = tars::JsonOutput::writeJson(m_iSBCport);
+            p->value["m_strRegistarIp"] = tars::JsonOutput::writeJson(m_strRegistarIp);
+            p->value["m_iRegistarPort"] = tars::JsonOutput::writeJson(m_iRegistarPort);
+            p->value["m_fromSipAddrType"] = tars::JsonOutput::writeJson(m_fromSipAddrType);
+            p->value["m_toSipAddrType"] = tars::JsonOutput::writeJson(m_toSipAddrType);
+            p->value["m_lInsertTime"] = tars::JsonOutput::writeJson(m_lInsertTime);
+            p->value["m_iPermitedProxyed"] = tars::JsonOutput::writeJson(m_iPermitedProxyed);
+            p->value["m_insertDateTime"] = tars::JsonOutput::writeJson(m_insertDateTime);
+            p->value["m_iFailedRegTimes"] = tars::JsonOutput::writeJson(m_iFailedRegTimes);
+            p->value["m_lLastFailedRegTime"] = tars::JsonOutput::writeJson(m_lLastFailedRegTime);
+            p->value["m_lLoginedTime"] = tars::JsonOutput::writeJson(m_lLoginedTime);
+            p->value["m_inUseTime"] = tars::JsonOutput::writeJson(m_inUseTime);
+            p->value["m_proxyedTime"] = tars::JsonOutput::writeJson(m_proxyedTime);
+            return p;
+        }
+        string writeToJsonString() const
+        {
+            return tars::TC_Json::writeValue(writeToJson());
+        }
+        void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)
+        {
+            resetDefautlt();
+            if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)
+            {
+                char s[128];
+                snprintf(s, sizeof(s), "read 'struct' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
+                throw tars::TC_Json_Exception(s);
+            }
+            tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);
+            tars::JsonInput::readJson(m_sipUri,pObj->value["m_sipUri"], true);
+            tars::JsonInput::readJson(m_strAccountId,pObj->value["m_strAccountId"], true);
+            tars::JsonInput::readJson(m_strDomainName,pObj->value["m_strDomainName"], true);
+            tars::JsonInput::readJson(m_strDomainId,pObj->value["m_strDomainId"], true);
+            tars::JsonInput::readJson(m_strAppId,pObj->value["m_strAppId"], true);
+            tars::JsonInput::readJson(m_strCoreNetId,pObj->value["m_strCoreNetId"], true);
+            tars::JsonInput::readJson(m_strPassWord,pObj->value["m_strPassWord"], true);
+            tars::JsonInput::readJson(m_strAuthName,pObj->value["m_strAuthName"], true);
+            tars::JsonInput::readJson(m_strSipProxyName,pObj->value["m_strSipProxyName"], true);
+            tars::JsonInput::readJson(m_strAppAccount,pObj->value["m_strAppAccount"], true);
+            tars::JsonInput::readJson(m_strRelationType,pObj->value["m_strRelationType"], true);
+            tars::JsonInput::readJson(m_strAppAccountNumber,pObj->value["m_strAppAccountNumber"], true);
+            tars::JsonInput::readJson(m_iInUse,pObj->value["m_iInUse"], true);
+            tars::JsonInput::readJson(m_iProxyed,pObj->value["m_iProxyed"], true);
+            tars::JsonInput::readJson(m_iLogined,pObj->value["m_iLogined"], true);
+            tars::JsonInput::readJson(m_strSipProxyId,pObj->value["m_strSipProxyId"], true);
+            tars::JsonInput::readJson(m_strSBCIp,pObj->value["m_strSBCIp"], true);
+            tars::JsonInput::readJson(m_iSBCport,pObj->value["m_iSBCport"], true);
+            tars::JsonInput::readJson(m_strRegistarIp,pObj->value["m_strRegistarIp"], true);
+            tars::JsonInput::readJson(m_iRegistarPort,pObj->value["m_iRegistarPort"], true);
+            tars::JsonInput::readJson(m_fromSipAddrType,pObj->value["m_fromSipAddrType"], true);
+            tars::JsonInput::readJson(m_toSipAddrType,pObj->value["m_toSipAddrType"], true);
+            tars::JsonInput::readJson(m_lInsertTime,pObj->value["m_lInsertTime"], true);
+            tars::JsonInput::readJson(m_iPermitedProxyed,pObj->value["m_iPermitedProxyed"], true);
+            tars::JsonInput::readJson(m_insertDateTime,pObj->value["m_insertDateTime"], true);
+            tars::JsonInput::readJson(m_iFailedRegTimes,pObj->value["m_iFailedRegTimes"], true);
+            tars::JsonInput::readJson(m_lLastFailedRegTime,pObj->value["m_lLastFailedRegTime"], true);
+            tars::JsonInput::readJson(m_lLoginedTime,pObj->value["m_lLoginedTime"], true);
+            tars::JsonInput::readJson(m_inUseTime,pObj->value["m_inUseTime"], true);
+            tars::JsonInput::readJson(m_proxyedTime,pObj->value["m_proxyedTime"], true);
+        }
+        void readFromJsonString(const string & str)
+        {
+            readFromJson(tars::TC_Json::getValue(str));
+        }
+        ostream& display(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.display(m_sipUri,"m_sipUri");
+            _ds.display(m_strAccountId,"m_strAccountId");
+            _ds.display(m_strDomainName,"m_strDomainName");
+            _ds.display(m_strDomainId,"m_strDomainId");
+            _ds.display(m_strAppId,"m_strAppId");
+            _ds.display(m_strCoreNetId,"m_strCoreNetId");
+            _ds.display(m_strPassWord,"m_strPassWord");
+            _ds.display(m_strAuthName,"m_strAuthName");
+            _ds.display(m_strSipProxyName,"m_strSipProxyName");
+            _ds.display(m_strAppAccount,"m_strAppAccount");
+            _ds.display(m_strRelationType,"m_strRelationType");
+            _ds.display(m_strAppAccountNumber,"m_strAppAccountNumber");
+            _ds.display(m_iInUse,"m_iInUse");
+            _ds.display(m_iProxyed,"m_iProxyed");
+            _ds.display(m_iLogined,"m_iLogined");
+            _ds.display(m_strSipProxyId,"m_strSipProxyId");
+            _ds.display(m_strSBCIp,"m_strSBCIp");
+            _ds.display(m_iSBCport,"m_iSBCport");
+            _ds.display(m_strRegistarIp,"m_strRegistarIp");
+            _ds.display(m_iRegistarPort,"m_iRegistarPort");
+            _ds.display(m_fromSipAddrType,"m_fromSipAddrType");
+            _ds.display(m_toSipAddrType,"m_toSipAddrType");
+            _ds.display(m_lInsertTime,"m_lInsertTime");
+            _ds.display(m_iPermitedProxyed,"m_iPermitedProxyed");
+            _ds.display(m_insertDateTime,"m_insertDateTime");
+            _ds.display(m_iFailedRegTimes,"m_iFailedRegTimes");
+            _ds.display(m_lLastFailedRegTime,"m_lLastFailedRegTime");
+            _ds.display(m_lLoginedTime,"m_lLoginedTime");
+            _ds.display(m_inUseTime,"m_inUseTime");
+            _ds.display(m_proxyedTime,"m_proxyedTime");
+            return _os;
+        }
+        ostream& displaySimple(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.displaySimple(m_sipUri, true);
+            _ds.displaySimple(m_strAccountId, true);
+            _ds.displaySimple(m_strDomainName, true);
+            _ds.displaySimple(m_strDomainId, true);
+            _ds.displaySimple(m_strAppId, true);
+            _ds.displaySimple(m_strCoreNetId, true);
+            _ds.displaySimple(m_strPassWord, true);
+            _ds.displaySimple(m_strAuthName, true);
+            _ds.displaySimple(m_strSipProxyName, true);
+            _ds.displaySimple(m_strAppAccount, true);
+            _ds.displaySimple(m_strRelationType, true);
+            _ds.displaySimple(m_strAppAccountNumber, true);
+            _ds.displaySimple(m_iInUse, true);
+            _ds.displaySimple(m_iProxyed, true);
+            _ds.displaySimple(m_iLogined, true);
+            _ds.displaySimple(m_strSipProxyId, true);
+            _ds.displaySimple(m_strSBCIp, true);
+            _ds.displaySimple(m_iSBCport, true);
+            _ds.displaySimple(m_strRegistarIp, true);
+            _ds.displaySimple(m_iRegistarPort, true);
+            _ds.displaySimple(m_fromSipAddrType, true);
+            _ds.displaySimple(m_toSipAddrType, true);
+            _ds.displaySimple(m_lInsertTime, true);
+            _ds.displaySimple(m_iPermitedProxyed, true);
+            _ds.displaySimple(m_insertDateTime, true);
+            _ds.displaySimple(m_iFailedRegTimes, true);
+            _ds.displaySimple(m_lLastFailedRegTime, true);
+            _ds.displaySimple(m_lLoginedTime, true);
+            _ds.displaySimple(m_inUseTime, true);
+            _ds.displaySimple(m_proxyedTime, false);
+            return _os;
+        }
+    public:
+        std::string m_sipUri;
+        std::string m_strAccountId;
+        std::string m_strDomainName;
+        std::string m_strDomainId;
+        std::string m_strAppId;
+        std::string m_strCoreNetId;
+        std::string m_strPassWord;
+        std::string m_strAuthName;
+        std::string m_strSipProxyName;
+        std::string m_strAppAccount;
+        std::string m_strRelationType;
+        std::string m_strAppAccountNumber;
+        tars::Int32 m_iInUse;
+        tars::Int32 m_iProxyed;
+        tars::Int32 m_iLogined;
+        std::string m_strSipProxyId;
+        std::string m_strSBCIp;
+        tars::Int32 m_iSBCport;
+        std::string m_strRegistarIp;
+        tars::Int32 m_iRegistarPort;
+        tars::Int32 m_fromSipAddrType;
+        tars::Int32 m_toSipAddrType;
+        tars::Int64 m_lInsertTime;
+        tars::Int32 m_iPermitedProxyed;
+        std::string m_insertDateTime;
+        tars::Int32 m_iFailedRegTimes;
+        tars::Int64 m_lLastFailedRegTime;
+        tars::Int64 m_lLoginedTime;
+        tars::Int64 m_inUseTime;
+        tars::Int64 m_proxyedTime;
+    };
+    inline bool operator==(const SipAccountInfo&l, const SipAccountInfo&r)
+    {
+        return l.m_sipUri == r.m_sipUri && l.m_strAccountId == r.m_strAccountId && l.m_strDomainName == r.m_strDomainName && l.m_strDomainId == r.m_strDomainId && l.m_strAppId == r.m_strAppId && l.m_strCoreNetId == r.m_strCoreNetId && l.m_strPassWord == r.m_strPassWord && l.m_strAuthName == r.m_strAuthName && l.m_strSipProxyName == r.m_strSipProxyName && l.m_strAppAccount == r.m_strAppAccount && l.m_strRelationType == r.m_strRelationType && l.m_strAppAccountNumber == r.m_strAppAccountNumber && l.m_iInUse == r.m_iInUse && l.m_iProxyed == r.m_iProxyed && l.m_iLogined == r.m_iLogined && l.m_strSipProxyId == r.m_strSipProxyId && l.m_strSBCIp == r.m_strSBCIp && l.m_iSBCport == r.m_iSBCport && l.m_strRegistarIp == r.m_strRegistarIp && l.m_iRegistarPort == r.m_iRegistarPort && l.m_fromSipAddrType == r.m_fromSipAddrType && l.m_toSipAddrType == r.m_toSipAddrType && l.m_lInsertTime == r.m_lInsertTime && l.m_iPermitedProxyed == r.m_iPermitedProxyed && l.m_insertDateTime == r.m_insertDateTime && l.m_iFailedRegTimes == r.m_iFailedRegTimes && l.m_lLastFailedRegTime == r.m_lLastFailedRegTime && l.m_lLoginedTime == r.m_lLoginedTime && l.m_inUseTime == r.m_inUseTime && l.m_proxyedTime == r.m_proxyedTime;
+    }
+    inline bool operator!=(const SipAccountInfo&l, const SipAccountInfo&r)
+    {
+        return !(l == r);
+    }
+    inline ostream& operator<<(ostream & os,const SipAccountInfo&r)
+    {
+        os << r.writeToJsonString();
+        return os;
+    }
+    inline istream& operator>>(istream& is,SipAccountInfo&l)
+    {
+        std::istreambuf_iterator<char> eos;
+        std::string s(std::istreambuf_iterator<char>(is), eos);
+        l.readFromJsonString(s);
+        return is;
+    }
+
+    struct SipAccountInfoOperation : public tars::TarsStructBase
+    {
+    public:
+        static string className()
+        {
+            return "VoipApp.SipAccountInfoOperation";
+        }
+        static string MD5()
+        {
+            return "97d06dc93e1fcdf0086dd05b31e83201";
+        }
+        SipAccountInfoOperation()
+        {
+            resetDefautlt();
+        }
+        void resetDefautlt()
+        {
+            OpCategory = VoipApp::kOperationCategoryUnknown;
+            sipAccountInfo.resetDefautlt();
+        }
+        template<typename WriterT>
+        void writeTo(tars::TarsOutputStream<WriterT>& _os) const
+        {
+            _os.write((tars::Int32)OpCategory, 0);
+            _os.write(sipAccountInfo, 1);
+        }
+        template<typename ReaderT>
+        void readFrom(tars::TarsInputStream<ReaderT>& _is)
+        {
+            resetDefautlt();
+            tars::Int32 eTemp0 = VoipApp::kOperationCategoryUnknown;
+            _is.read(eTemp0, 0, true);
+            OpCategory = (VoipApp::OperationCategory)eTemp0;
+            _is.read(sipAccountInfo, 1, true);
+        }
+        tars::JsonValueObjPtr writeToJson() const
+        {
+            tars::JsonValueObjPtr p = new tars::JsonValueObj();
+            p->value["OpCategory"] = tars::JsonOutput::writeJson((tars::Int32)OpCategory);
+            p->value["sipAccountInfo"] = tars::JsonOutput::writeJson(sipAccountInfo);
+            return p;
+        }
+        string writeToJsonString() const
+        {
+            return tars::TC_Json::writeValue(writeToJson());
+        }
+        void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)
+        {
+            resetDefautlt();
+            if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)
+            {
+                char s[128];
+                snprintf(s, sizeof(s), "read 'struct' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
+                throw tars::TC_Json_Exception(s);
+            }
+            tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);
+            tars::JsonInput::readJson(OpCategory,pObj->value["OpCategory"], true);
+            tars::JsonInput::readJson(sipAccountInfo,pObj->value["sipAccountInfo"], true);
+        }
+        void readFromJsonString(const string & str)
+        {
+            readFromJson(tars::TC_Json::getValue(str));
+        }
+        ostream& display(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.display((tars::Int32)OpCategory,"OpCategory");
+            _ds.display(sipAccountInfo,"sipAccountInfo");
+            return _os;
+        }
+        ostream& displaySimple(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.displaySimple((tars::Int32)OpCategory, true);
+            _ds.displaySimple(sipAccountInfo, false);
+            return _os;
+        }
+    public:
+        VoipApp::OperationCategory OpCategory;
+        VoipApp::SipAccountInfo sipAccountInfo;
+    };
+    inline bool operator==(const SipAccountInfoOperation&l, const SipAccountInfoOperation&r)
+    {
+        return l.OpCategory == r.OpCategory && l.sipAccountInfo == r.sipAccountInfo;
+    }
+    inline bool operator!=(const SipAccountInfoOperation&l, const SipAccountInfoOperation&r)
+    {
+        return !(l == r);
+    }
+    inline ostream& operator<<(ostream & os,const SipAccountInfoOperation&r)
+    {
+        os << r.writeToJsonString();
+        return os;
+    }
+    inline istream& operator>>(istream& is,SipAccountInfoOperation&l)
     {
         std::istreambuf_iterator<char> eos;
         std::string s(std::istreambuf_iterator<char>(is), eos);
@@ -1872,6 +2927,402 @@ namespace VoipApp
         return os;
     }
     inline istream& operator>>(istream& is,CallRecord&l)
+    {
+        std::istreambuf_iterator<char> eos;
+        std::string s(std::istreambuf_iterator<char>(is), eos);
+        l.readFromJsonString(s);
+        return is;
+    }
+
+    struct SipAccountRegInfo : public tars::TarsStructBase
+    {
+    public:
+        static string className()
+        {
+            return "VoipApp.SipAccountRegInfo";
+        }
+        static string MD5()
+        {
+            return "e7abb5ea8e4abfff0153aeb3cbaa7c1a";
+        }
+        SipAccountRegInfo()
+        {
+            resetDefautlt();
+        }
+        void resetDefautlt()
+        {
+            m_sipUri = "";
+            m_accountId = "";
+            m_iProxyed = 0;
+            m_iPermitedProxy = 0;
+            m_proxyName = "";
+            m_proxyId = "";
+            m_proxyedTime = 0;
+        }
+        template<typename WriterT>
+        void writeTo(tars::TarsOutputStream<WriterT>& _os) const
+        {
+            _os.write(m_sipUri, 0);
+            _os.write(m_accountId, 1);
+            _os.write(m_iProxyed, 2);
+            _os.write(m_iPermitedProxy, 3);
+            _os.write(m_proxyName, 4);
+            _os.write(m_proxyId, 5);
+            _os.write(m_proxyedTime, 6);
+        }
+        template<typename ReaderT>
+        void readFrom(tars::TarsInputStream<ReaderT>& _is)
+        {
+            resetDefautlt();
+            _is.read(m_sipUri, 0, true);
+            _is.read(m_accountId, 1, true);
+            _is.read(m_iProxyed, 2, true);
+            _is.read(m_iPermitedProxy, 3, true);
+            _is.read(m_proxyName, 4, true);
+            _is.read(m_proxyId, 5, true);
+            _is.read(m_proxyedTime, 6, true);
+        }
+        tars::JsonValueObjPtr writeToJson() const
+        {
+            tars::JsonValueObjPtr p = new tars::JsonValueObj();
+            p->value["m_sipUri"] = tars::JsonOutput::writeJson(m_sipUri);
+            p->value["m_accountId"] = tars::JsonOutput::writeJson(m_accountId);
+            p->value["m_iProxyed"] = tars::JsonOutput::writeJson(m_iProxyed);
+            p->value["m_iPermitedProxy"] = tars::JsonOutput::writeJson(m_iPermitedProxy);
+            p->value["m_proxyName"] = tars::JsonOutput::writeJson(m_proxyName);
+            p->value["m_proxyId"] = tars::JsonOutput::writeJson(m_proxyId);
+            p->value["m_proxyedTime"] = tars::JsonOutput::writeJson(m_proxyedTime);
+            return p;
+        }
+        string writeToJsonString() const
+        {
+            return tars::TC_Json::writeValue(writeToJson());
+        }
+        void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)
+        {
+            resetDefautlt();
+            if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)
+            {
+                char s[128];
+                snprintf(s, sizeof(s), "read 'struct' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
+                throw tars::TC_Json_Exception(s);
+            }
+            tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);
+            tars::JsonInput::readJson(m_sipUri,pObj->value["m_sipUri"], true);
+            tars::JsonInput::readJson(m_accountId,pObj->value["m_accountId"], true);
+            tars::JsonInput::readJson(m_iProxyed,pObj->value["m_iProxyed"], true);
+            tars::JsonInput::readJson(m_iPermitedProxy,pObj->value["m_iPermitedProxy"], true);
+            tars::JsonInput::readJson(m_proxyName,pObj->value["m_proxyName"], true);
+            tars::JsonInput::readJson(m_proxyId,pObj->value["m_proxyId"], true);
+            tars::JsonInput::readJson(m_proxyedTime,pObj->value["m_proxyedTime"], true);
+        }
+        void readFromJsonString(const string & str)
+        {
+            readFromJson(tars::TC_Json::getValue(str));
+        }
+        ostream& display(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.display(m_sipUri,"m_sipUri");
+            _ds.display(m_accountId,"m_accountId");
+            _ds.display(m_iProxyed,"m_iProxyed");
+            _ds.display(m_iPermitedProxy,"m_iPermitedProxy");
+            _ds.display(m_proxyName,"m_proxyName");
+            _ds.display(m_proxyId,"m_proxyId");
+            _ds.display(m_proxyedTime,"m_proxyedTime");
+            return _os;
+        }
+        ostream& displaySimple(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.displaySimple(m_sipUri, true);
+            _ds.displaySimple(m_accountId, true);
+            _ds.displaySimple(m_iProxyed, true);
+            _ds.displaySimple(m_iPermitedProxy, true);
+            _ds.displaySimple(m_proxyName, true);
+            _ds.displaySimple(m_proxyId, true);
+            _ds.displaySimple(m_proxyedTime, false);
+            return _os;
+        }
+    public:
+        std::string m_sipUri;
+        std::string m_accountId;
+        tars::Int32 m_iProxyed;
+        tars::Int32 m_iPermitedProxy;
+        std::string m_proxyName;
+        std::string m_proxyId;
+        tars::Int64 m_proxyedTime;
+    };
+    inline bool operator==(const SipAccountRegInfo&l, const SipAccountRegInfo&r)
+    {
+        return l.m_sipUri == r.m_sipUri && l.m_accountId == r.m_accountId && l.m_iProxyed == r.m_iProxyed && l.m_iPermitedProxy == r.m_iPermitedProxy && l.m_proxyName == r.m_proxyName && l.m_proxyId == r.m_proxyId && l.m_proxyedTime == r.m_proxyedTime;
+    }
+    inline bool operator!=(const SipAccountRegInfo&l, const SipAccountRegInfo&r)
+    {
+        return !(l == r);
+    }
+    inline ostream& operator<<(ostream & os,const SipAccountRegInfo&r)
+    {
+        os << r.writeToJsonString();
+        return os;
+    }
+    inline istream& operator>>(istream& is,SipAccountRegInfo&l)
+    {
+        std::istreambuf_iterator<char> eos;
+        std::string s(std::istreambuf_iterator<char>(is), eos);
+        l.readFromJsonString(s);
+        return is;
+    }
+
+    struct RegStaus : public tars::TarsStructBase
+    {
+    public:
+        static string className()
+        {
+            return "VoipApp.RegStaus";
+        }
+        static string MD5()
+        {
+            return "3da3399bae7b655ca4d43a450f62c21d";
+        }
+        RegStaus()
+        {
+            resetDefautlt();
+        }
+        void resetDefautlt()
+        {
+            m_sipUri = "";
+            m_proxyed = false;
+            m_failedTimes = 0;
+            m_time = 0;
+            m_sipProxyId = "";
+        }
+        template<typename WriterT>
+        void writeTo(tars::TarsOutputStream<WriterT>& _os) const
+        {
+            _os.write(m_sipUri, 0);
+            _os.write(m_proxyed, 1);
+            _os.write(m_failedTimes, 2);
+            _os.write(m_time, 3);
+            _os.write(m_sipProxyId, 4);
+        }
+        template<typename ReaderT>
+        void readFrom(tars::TarsInputStream<ReaderT>& _is)
+        {
+            resetDefautlt();
+            _is.read(m_sipUri, 0, true);
+            _is.read(m_proxyed, 1, true);
+            _is.read(m_failedTimes, 2, true);
+            _is.read(m_time, 3, true);
+            _is.read(m_sipProxyId, 4, true);
+        }
+        tars::JsonValueObjPtr writeToJson() const
+        {
+            tars::JsonValueObjPtr p = new tars::JsonValueObj();
+            p->value["m_sipUri"] = tars::JsonOutput::writeJson(m_sipUri);
+            p->value["m_proxyed"] = tars::JsonOutput::writeJson(m_proxyed);
+            p->value["m_failedTimes"] = tars::JsonOutput::writeJson(m_failedTimes);
+            p->value["m_time"] = tars::JsonOutput::writeJson(m_time);
+            p->value["m_sipProxyId"] = tars::JsonOutput::writeJson(m_sipProxyId);
+            return p;
+        }
+        string writeToJsonString() const
+        {
+            return tars::TC_Json::writeValue(writeToJson());
+        }
+        void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)
+        {
+            resetDefautlt();
+            if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)
+            {
+                char s[128];
+                snprintf(s, sizeof(s), "read 'struct' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
+                throw tars::TC_Json_Exception(s);
+            }
+            tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);
+            tars::JsonInput::readJson(m_sipUri,pObj->value["m_sipUri"], true);
+            tars::JsonInput::readJson(m_proxyed,pObj->value["m_proxyed"], true);
+            tars::JsonInput::readJson(m_failedTimes,pObj->value["m_failedTimes"], true);
+            tars::JsonInput::readJson(m_time,pObj->value["m_time"], true);
+            tars::JsonInput::readJson(m_sipProxyId,pObj->value["m_sipProxyId"], true);
+        }
+        void readFromJsonString(const string & str)
+        {
+            readFromJson(tars::TC_Json::getValue(str));
+        }
+        ostream& display(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.display(m_sipUri,"m_sipUri");
+            _ds.display(m_proxyed,"m_proxyed");
+            _ds.display(m_failedTimes,"m_failedTimes");
+            _ds.display(m_time,"m_time");
+            _ds.display(m_sipProxyId,"m_sipProxyId");
+            return _os;
+        }
+        ostream& displaySimple(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.displaySimple(m_sipUri, true);
+            _ds.displaySimple(m_proxyed, true);
+            _ds.displaySimple(m_failedTimes, true);
+            _ds.displaySimple(m_time, true);
+            _ds.displaySimple(m_sipProxyId, false);
+            return _os;
+        }
+    public:
+        std::string m_sipUri;
+        tars::Bool m_proxyed;
+        tars::Int32 m_failedTimes;
+        tars::Int64 m_time;
+        std::string m_sipProxyId;
+    };
+    inline bool operator==(const RegStaus&l, const RegStaus&r)
+    {
+        return l.m_sipUri == r.m_sipUri && l.m_proxyed == r.m_proxyed && l.m_failedTimes == r.m_failedTimes && l.m_time == r.m_time && l.m_sipProxyId == r.m_sipProxyId;
+    }
+    inline bool operator!=(const RegStaus&l, const RegStaus&r)
+    {
+        return !(l == r);
+    }
+    inline ostream& operator<<(ostream & os,const RegStaus&r)
+    {
+        os << r.writeToJsonString();
+        return os;
+    }
+    inline istream& operator>>(istream& is,RegStaus&l)
+    {
+        std::istreambuf_iterator<char> eos;
+        std::string s(std::istreambuf_iterator<char>(is), eos);
+        l.readFromJsonString(s);
+        return is;
+    }
+
+    struct RegStaus2 : public tars::TarsStructBase
+    {
+    public:
+        static string className()
+        {
+            return "VoipApp.RegStaus2";
+        }
+        static string MD5()
+        {
+            return "9b4151cf65bfd0e048d0d70790e0edd0";
+        }
+        RegStaus2()
+        {
+            resetDefautlt();
+        }
+        void resetDefautlt()
+        {
+            m_sipUri = "";
+            m_proxyed = false;
+            m_failedTimes = 0;
+            m_iTmpReg = 0;
+            m_time = 0;
+            m_sipProxyId = "";
+        }
+        template<typename WriterT>
+        void writeTo(tars::TarsOutputStream<WriterT>& _os) const
+        {
+            _os.write(m_sipUri, 0);
+            _os.write(m_proxyed, 1);
+            _os.write(m_failedTimes, 2);
+            _os.write(m_iTmpReg, 3);
+            _os.write(m_time, 4);
+            _os.write(m_sipProxyId, 5);
+        }
+        template<typename ReaderT>
+        void readFrom(tars::TarsInputStream<ReaderT>& _is)
+        {
+            resetDefautlt();
+            _is.read(m_sipUri, 0, true);
+            _is.read(m_proxyed, 1, true);
+            _is.read(m_failedTimes, 2, true);
+            _is.read(m_iTmpReg, 3, true);
+            _is.read(m_time, 4, true);
+            _is.read(m_sipProxyId, 5, true);
+        }
+        tars::JsonValueObjPtr writeToJson() const
+        {
+            tars::JsonValueObjPtr p = new tars::JsonValueObj();
+            p->value["m_sipUri"] = tars::JsonOutput::writeJson(m_sipUri);
+            p->value["m_proxyed"] = tars::JsonOutput::writeJson(m_proxyed);
+            p->value["m_failedTimes"] = tars::JsonOutput::writeJson(m_failedTimes);
+            p->value["m_iTmpReg"] = tars::JsonOutput::writeJson(m_iTmpReg);
+            p->value["m_time"] = tars::JsonOutput::writeJson(m_time);
+            p->value["m_sipProxyId"] = tars::JsonOutput::writeJson(m_sipProxyId);
+            return p;
+        }
+        string writeToJsonString() const
+        {
+            return tars::TC_Json::writeValue(writeToJson());
+        }
+        void readFromJson(const tars::JsonValuePtr & p, bool isRequire = true)
+        {
+            resetDefautlt();
+            if(NULL == p.get() || p->getType() != tars::eJsonTypeObj)
+            {
+                char s[128];
+                snprintf(s, sizeof(s), "read 'struct' type mismatch, get type: %d.", (p.get() ? p->getType() : 0));
+                throw tars::TC_Json_Exception(s);
+            }
+            tars::JsonValueObjPtr pObj=tars::JsonValueObjPtr::dynamicCast(p);
+            tars::JsonInput::readJson(m_sipUri,pObj->value["m_sipUri"], true);
+            tars::JsonInput::readJson(m_proxyed,pObj->value["m_proxyed"], true);
+            tars::JsonInput::readJson(m_failedTimes,pObj->value["m_failedTimes"], true);
+            tars::JsonInput::readJson(m_iTmpReg,pObj->value["m_iTmpReg"], true);
+            tars::JsonInput::readJson(m_time,pObj->value["m_time"], true);
+            tars::JsonInput::readJson(m_sipProxyId,pObj->value["m_sipProxyId"], true);
+        }
+        void readFromJsonString(const string & str)
+        {
+            readFromJson(tars::TC_Json::getValue(str));
+        }
+        ostream& display(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.display(m_sipUri,"m_sipUri");
+            _ds.display(m_proxyed,"m_proxyed");
+            _ds.display(m_failedTimes,"m_failedTimes");
+            _ds.display(m_iTmpReg,"m_iTmpReg");
+            _ds.display(m_time,"m_time");
+            _ds.display(m_sipProxyId,"m_sipProxyId");
+            return _os;
+        }
+        ostream& displaySimple(ostream& _os, int _level=0) const
+        {
+            tars::TarsDisplayer _ds(_os, _level);
+            _ds.displaySimple(m_sipUri, true);
+            _ds.displaySimple(m_proxyed, true);
+            _ds.displaySimple(m_failedTimes, true);
+            _ds.displaySimple(m_iTmpReg, true);
+            _ds.displaySimple(m_time, true);
+            _ds.displaySimple(m_sipProxyId, false);
+            return _os;
+        }
+    public:
+        std::string m_sipUri;
+        tars::Bool m_proxyed;
+        tars::Int32 m_failedTimes;
+        tars::Int32 m_iTmpReg;
+        tars::Int64 m_time;
+        std::string m_sipProxyId;
+    };
+    inline bool operator==(const RegStaus2&l, const RegStaus2&r)
+    {
+        return l.m_sipUri == r.m_sipUri && l.m_proxyed == r.m_proxyed && l.m_failedTimes == r.m_failedTimes && l.m_iTmpReg == r.m_iTmpReg && l.m_time == r.m_time && l.m_sipProxyId == r.m_sipProxyId;
+    }
+    inline bool operator!=(const RegStaus2&l, const RegStaus2&r)
+    {
+        return !(l == r);
+    }
+    inline ostream& operator<<(ostream & os,const RegStaus2&r)
+    {
+        os << r.writeToJsonString();
+        return os;
+    }
+    inline istream& operator>>(istream& is,RegStaus2&l)
     {
         std::istreambuf_iterator<char> eos;
         std::string s(std::istreambuf_iterator<char>(is), eos);
