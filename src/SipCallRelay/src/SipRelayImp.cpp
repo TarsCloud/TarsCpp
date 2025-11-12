@@ -1,8 +1,9 @@
-#include <thread>
+﻿#include <thread>
 #include <chrono>
 #include <random>
 
 #include "servant/Application.h"
+#include "servant/PropertyReport.h"
 #include "util/tc_timeprovider.h"
 #include "util/tc_uuid_generator.h"
 
@@ -26,39 +27,78 @@ int getRandom(int max)
     return dis(gen);
 }
 
+// 统一的后台任务线程函数
 void SipRelayImp::AccessConfigReadThreadFunc()
 {
+    int64_t lastSchdTime = 0;           // 上次执行onSchd的时间（5秒周期）
+    int64_t lastAccessConfigTime = 0;   // 上次执行AccessConfig的时间（10秒周期）
+    int64_t lastHeartbeatTime = 0;      // 上次执行心跳的时间（30秒周期）
+    int64_t lastMinute = 0;             // 上次执行minute的时间
+    int64_t lastHour = 0;               // 上次执行hour的时间
+
     while(1)
     {
-        if (getMasterTrdDown())
-            return;
-
-        if (!getOutOfService())
+        int64_t now = TNOWMS;
+        
+        // 每5秒执行一次：定时调度任务
+        if (now - lastSchdTime >= 5000)
+        {
+            //onSchd();
+            loadMgcfSipGatewayResources();
+            loadSipGw3Resources();
+            loadEnumproxyResources();
+            lastSchdTime = now;
+        }
+        
+        // 每10秒执行一次：配置读取和统计上报
+        if (now - lastAccessConfigTime >= 10000)
         {
             buildConnectionToMgcfs();
             setLogsAndStatistics();
             getCloudSipGwIdAndIp();
+            lastAccessConfigTime = now;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+        
+        // 每30秒执行一次：心跳
+        if (now - lastHeartbeatTime >= 30000)
+        {
+            try
+            {
+                int ret = m_registryPrx->heartbeat(m_strMainObjId);
+                if (ret == -2)
+                {
+                    // 服务不存在，重新注册
+                    TLOGWARN("Service not found in registry, re-register" << endl);
+                    registerMgcfSipGatewayToResource();
+                }
+            }
+            catch (exception& e)
+            {
+                TLOGERROR("Heartbeat failed: " << e.what() << endl);
+            }
+            lastHeartbeatTime = now;
+        }
+        
+        // 每分钟执行一次的任务
+        if (now - lastMinute >= 60000)
+        {
+            readSipGatewayAccessedConfigInfo();
+            sendOptionToMgcf();
+            lastMinute = now;
+            m_remianMsgs.cleanExpiredRemains();
+        }
+
+        // 每小时执行一次的任务
+        if (now - lastHour >= 3600000)
+        {
+            m_sipDialogRecordManager.exceptionRecordDeals();
+            lastHour = now;
+        }
+        // 休眠1秒，避免CPU空转
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
-// void SipRelayImp::ChangeTransProtocolThreadFunc()
-// {
-//     while(1)
-//     {
-//         if (getMasterTrdDown())
-//             return;
-
-//         if (!getOutOfService())
-//         {
-//             changeTransProtocol();
-//         }
-       
-//         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-//     }
-// }
-//////////////////////////////////////////////////////
 void SipRelayImp::initialize()
 {
     m_LastSchdTimeInMs = TNOWMS;
@@ -79,7 +119,6 @@ void SipRelayImp::initialize()
     m_lastHour = 0;
     m_Listener = 0;
 
-
     m_strToMgcfSipDialogId = "mgcf";
     m_connectionCallIdManager.setToSBCSipDialogId(m_strToMgcfSipDialogId);
 
@@ -90,46 +129,21 @@ void SipRelayImp::initialize()
         return;
     }
 
-    std::thread(&SipRelayImp::AccessConfigReadThreadFunc, this).detach();
-    //std::thread(&SipRelayImp::ChangeTransProtocolThreadFunc, this).detach();
-
     m_strMainObjId = ServerConfig::Application + "." + ServerConfig::ServerName + ".SipRelayObj";
     m_strAppName = ServerConfig::Application;
     m_strDataCenter = "";// TODO: 从配置读取
 
+    m_routerPrx = Application::getCommunicator()->stringToProxy<VoipApp::SipRouterPrx>("VoipApp.ENUMProxy.SipRouterObj");
     m_sipProxyDbAgent = Application::getCommunicator()->stringToProxy<VoipApp::SipDbPrx>("VoipApp.SipProxyDb.SipDbObj");
-    //m_resourceAgent = Application::getCommunicator()->stringToProxy<ResourceServerPrx>("ResourceServer");
 
-    // // 初始化Registry代理
-    // try {
-    //     m_registryPrx = Application::getCommunicator()->stringToProxy<
-    //         RegistryDiscovery::RegistryDiscoveryServicePrx>(
-    //         "VoIpApp.SipReource.RegistryDiscoveryObj");
+    // 初始化Registry代理
+    m_registryPrx = Application::getCommunicator()->stringToProxy<VoipApp::SipRegPrx>("VoipApp.SipRegistry.SipRegObj");
 
-    //     // 注册服务
-    //     registerMgcfSipGatewayToResource();
+    // 注册服务
+    registerMgcfSipGatewayToResource();
 
-    //     // 启动心跳线程
-    //     m_heartbeatThread = std::thread([this]() {
-    //         while (!m_bMasterThdDown) {
-    //             try {
-    //                 int ret = m_registryPrx->heartbeat(m_strMainObjId);
-    //                 if (ret == -2) {
-    //                     // 服务不存在，重新注册
-    //                     TLOGWARN("Service not found in registry, re-register" << endl);
-    //                     registerMgcfSipGatewayToResource();
-    //                 }
-    //             } catch (exception& e) {
-    //                 TLOGERROR("Heartbeat failed: " << e.what() << endl);
-    //             }
-    //             std::this_thread::sleep_for(std::chrono::seconds(30));
-    //         }
-    //     });
-    //     m_heartbeatThread.detach();
-
-    // } catch (exception& e) {
-    //     TLOGERROR("Init registry proxy failed: " << e.what() << endl);
-    // }
+    // 启动统一的后台任务线程（包含：定时调度、配置读取、统计上报、心跳）
+    std::thread(&SipRelayImp::AccessConfigReadThreadFunc, this).detach();
     TLOGINFO("SipRelayImp initialized, mainObjId: " << m_strMainObjId << "m_strAppName: " << m_strAppName << endl);
 }
 
@@ -139,15 +153,15 @@ void SipRelayImp::destroy()
     //std::lock_guard<std::mutex> lock(this);
     m_bMasterThdDown = true;
     SipMsgCommon::SipMsg_Destory();
-    // // 从Registry注销服务
-    // try {
-    //     if (m_registryPrx) {
-    //         m_registryPrx->unregisterService(m_strMainObjId);
-    //         TLOGINFO("Unregister service from registry: " << m_strMainObjId << endl);
-    //     }
-    // } catch (exception& e) {
-    //     TLOGERROR("Unregister service failed: " << e.what() << endl);
-    // }
+    // 从Registry注销服务
+    try {
+        if (m_registryPrx) {
+            m_registryPrx->unregisterService(m_strMainObjId);
+            TLOGINFO("Unregister service from registry: " << m_strMainObjId << endl);
+        }
+    } catch (exception& e) {
+        TLOGERROR("Unregister service failed: " << e.what() << endl);
+    }
 
     TLOGINFO("SipRelayImp destroyed" << endl);
 }
@@ -157,74 +171,65 @@ void SipRelayImp::onConfigReload()
 {
     TLOGINFO("onConfigReload called, reloading configuration..." << endl);
     
-    try {
-        if (reloadConfig()) {
-            TLOGWARN("Configuration changed, re-registering to registry..." << endl);
-            registerMgcfSipGatewayToResource();
-            TLOGINFO("Re-registered with new configuration" << endl);
-        } else {
-            TLOGDEBUG("Configuration not changed, skip re-register" << endl);
-        }
-    } catch (exception& e) {
-        TLOGERROR("onConfigReload exception: " << e.what() << endl);
+    if (reloadConfig()) {
+        TLOGWARN("Configuration changed, re-registering to registry..." << endl);
+        registerMgcfSipGatewayToResource();
+        TLOGINFO("Re-registered with new configuration" << endl);
+    } else {
+        TLOGDEBUG("Configuration not changed, skip re-register" << endl);
     }
 }
 
 // 重新加载配置（返回true表示配置有变化）
 bool SipRelayImp::reloadConfig()
 {
-    try {
-        TC_Config conf;
-        conf.parseFile(ServerConfig::BasePath + ServerConfig::ServerName + ".conf");
-        
-        // 读取新配置
-        std::string newDataCenter = conf.get("/main<DataCenter>", "");
-        std::string newLocalIp = conf.get("/main<LocalIp>", "");
-        int newListenPort = TC_Common::strto<int>(conf.get("/main<LocalListenPort>", "0"));
-        std::string newProtocol = conf.get("/main<TransProtocol>", "udp");
-        
-        // 检测配置是否变化
-        bool changed = false;
-        
-        if (m_tranProtoclName != newProtocol) {
-            TLOGINFO("Protocol changed: " << m_tranProtoclName << " -> " << newProtocol << endl);
-            changed = true;
-        }
-        
-        if (m_iLocalListenPort != newListenPort) {
-            TLOGINFO("Listen port changed: " << m_iLocalListenPort << " -> " << newListenPort << endl);
-            changed = true;
-        }
-        
-        if (m_strDataCenter != newDataCenter) {
-            TLOGINFO("DataCenter changed: " << m_strDataCenter << " -> " << newDataCenter << endl);
-            changed = true;
-        }
-        
-        if (m_strLocalIp != newLocalIp) {
-            TLOGINFO("Local IP changed: " << m_strLocalIp << " -> " << newLocalIp << endl);
-            changed = true;
-        }
-        
-        // 应用新配置
-        if (changed) {
-            m_strDataCenter = newDataCenter;
-            m_strLocalIp = newLocalIp;
-            m_iLocalListenPort = newListenPort;
-            m_tranProtoclName = newProtocol;
-            
-            TLOGINFO("Config applied - protocol:" << m_tranProtoclName 
-                    << ", ip:" << m_strLocalIp 
-                    << ", port:" << m_iLocalListenPort 
-                    << ", dc:" << m_strDataCenter << endl);
-        }
-        
-        return changed;
-        
-    } catch (exception& e) {
-        TLOGERROR("reloadConfig exception: " << e.what() << endl);
-        throw;
+    TC_Config conf;
+    conf.parseFile(ServerConfig::BasePath + ServerConfig::ServerName + ".conf");
+    
+    // 读取新配置
+    std::string newDataCenter = conf.get("/main<DataCenter>", "");
+    std::string newLocalIp = conf.get("/main<LocalIp>", "");
+    int newListenPort = TC_Common::strto<int>(conf.get("/main<LocalListenPort>", "0"));
+    std::string newProtocol = conf.get("/main<TransProtocol>", "udp");
+    
+    // 检测配置是否变化
+    bool changed = false;
+    
+    if (m_tranProtoclName != newProtocol) {
+        TLOGINFO("Protocol changed: " << m_tranProtoclName << " -> " << newProtocol << endl);
+        changed = true;
     }
+    
+    if (m_iLocalListenPort != newListenPort) {
+        TLOGINFO("Listen port changed: " << m_iLocalListenPort << " -> " << newListenPort << endl);
+        changed = true;
+    }
+    
+    if (m_strDataCenter != newDataCenter) {
+        TLOGINFO("DataCenter changed: " << m_strDataCenter << " -> " << newDataCenter << endl);
+        changed = true;
+    }
+    
+    if (m_strLocalIp != newLocalIp) {
+        TLOGINFO("Local IP changed: " << m_strLocalIp << " -> " << newLocalIp << endl);
+        changed = true;
+    }
+    
+    // 应用新配置
+    if (changed)
+    {
+        m_strDataCenter = newDataCenter;
+        m_strLocalIp = newLocalIp;
+        m_iLocalListenPort = newListenPort;
+        m_tranProtoclName = newProtocol;
+        
+        TLOGINFO("Config applied - protocol:" << m_tranProtoclName 
+                << ", ip:" << m_strLocalIp 
+                << ", port:" << m_iLocalListenPort 
+                << ", dc:" << m_strDataCenter << endl);
+    }
+    
+    return changed;
 }
 
 tars::Bool SipRelayImp::eraseSipDlgIdAndConnection(const std::string & sipGatewayId,const std::string & dialogId,tars::TarsCurrentPtr _current_)
@@ -242,6 +247,7 @@ tars::Bool SipRelayImp::getIntranetIp(const std::string & sipGatewayId,std::stri
     intranetIp = m_strLocalHost;
     return true;
 }
+
 tars::Bool SipRelayImp::getMgcfConnectStatus(const std::string & sipGatewayId,std::string &mgcfSipGatewayOid,map<std::string, std::string> &params,tars::TarsCurrentPtr _current_)
 {
     TLOGINFO(std::string(__FUNCTION__) << "() called, sipGatewayId:" << sipGatewayId << endl);
@@ -303,41 +309,50 @@ tars::Bool SipRelayImp::recvSipMsgFromCloudSipGateway(const std::string & sipGat
     return true;
 }
 
+// 定时调度函数 (原框架500ms调用一次)
+void SipRelayImp::onSchd()
+{
+    int64_t now = TNOWMS;
+    int64_t thisHour = now / (3600 * 1000);
+    int64_t thisMinute = now / (60 * 1000);
+    int64_t diffTime1 = (now - m_LastSchdTimeInMs);
 
-// void SipRelayImp::onSchd()
-// {
-//     int64_t now = TNOWMS;
-//     int64_t thisHour = now / (3600 * 1000);
-//     int64_t thisMinute = now / (60 * 1000);
-//     int64_t diffTime1 = (now - m_LastSchdTimeInMs);
+    // if(diffTime1 < m_BaseSchdTimeInMs)
+    //     return;
 
-//     if(diffTime1 < m_BaseSchdTimeInMs)
-//         return;
+    //registerMgcfSipGatewayToResource();
+    loadMgcfSipGatewayResources();
+    loadSipGw3Resources();
+    loadEnumproxyResources();
+    
+    // 检查是否需要重新注册和加载资源
+    //m_bOutOfService = Application::isOutOfService();
+    //if (!m_bOutOfService)
+    //{
+        // registerMgcfSipGatewayToResource();
+        // loadMgcfSipGatewayResources();
+        // loadSipGw3Resources();
+        // loadEnumproxyResources();
+    //}
 
-//     // m_bOutOfService = _application->isOutOfService();
-//     // if (!m_bOutOfService)
-//     // {
-//     //     registerMgcfSipGatewayToResource();
-//     //     loadMgcfSipGatewayResources();
-//     //     loadSipGw3Resources();
-//     //     loadEnumproxyResources();
-//     // }
+    m_LastSchdTimeInMs = now;
+    
+    // 每分钟执行一次的任务
+    if (thisMinute > m_lastMinute)
+    {
+        readSipGatewayAccessedConfigInfo();
+        sendOptionToMgcf();
+        m_lastMinute = thisMinute;
+        m_remianMsgs.cleanExpiredRemains();
+    }
 
-//     // m_LastSchdTimeInMs = now;
-//     // if (thisMinute > m_lastMinute)
-//     // {
-//     //     readSipGatewayAccessedConfigInfo();
-//     //     sendOptionToMgcf();
-//     //     m_lastMinute = thisMinute;
-//     //     m_remianMsgs.cleanExpiredRemains();
-//     // }
-
-//     // if (thisHour > m_lastHour)
-//     // {
-//     //     m_sipDialogRecordManager.exceptionRecordDeals();
-//     //     m_lastHour = thisHour;
-//     // }
-// }
+    // 每小时执行一次的任务
+    if (thisHour > m_lastHour)
+    {
+        m_sipDialogRecordManager.exceptionRecordDeals();
+        m_lastHour = thisHour;
+    }
+}
 
 // bool SipRelayImp::getMainService(Common::ObjectServerPtr& service,std::string& name,bool &famous)
 // {
@@ -543,157 +558,173 @@ void SipRelayImp::getRouterInfoFromJego(const std::string & callId, const std::s
     getSipUri(false, calleeSipUri, msg, natIp);
     getCallForwarding(callForwarding, msg);
 
-    // class getRouterInfoFromJego_async
-    // {
-    // public:
-    //     getRouterInfoFromJego_async(MgcfSipGatewayIPtr ptr, const std::string & callId, const std::string & strConnectionId, const std::string & toMgcfConnectionId,
-    //         const std::string & msg, const std::string & sipDialogId, const std::string & natIp, const std::string & natPort, void * pConnection)
-    //         :_server(ptr),
-    //         _callId(callId),
-    //         _strConnectionId(strConnectionId),
-    //         _toMgcfConnectionId(toMgcfConnectionId),
-    //         _msg(msg),
-    //         _sipDialogId(sipDialogId),
-    //         _natIp(natIp),
-    //         _natPort(natPort),
-    //         _pConnection(pConnection)
-    //     {
-    //     }
+    class getRouterInfoFromJego_async : public VoipApp::SipRouterPrxCallback
+    {
+    public:
+        getRouterInfoFromJego_async(SipRelayImp* ptr, const std::string & callId, const std::string & strConnectionId, const std::string & toMgcfConnectionId,
+            const std::string & msg, const std::string & sipDialogId, const std::string & natIp, const std::string & natPort, void * pConnection)
+            :_server(ptr),
+            _callId(callId),
+            _strConnectionId(strConnectionId),
+            _toMgcfConnectionId(toMgcfConnectionId),
+            _msg(msg),
+            _sipDialogId(sipDialogId),
+            _natIp(natIp),
+            _natPort(natPort),
+            _pConnection(pConnection)
+        {
+        }
+        virtual void callback_getRouteInfo2(tars::Bool ret,  const VoipApp::JegoRouterInfo& info,  const map<std::string, std::string>& outParams)
+        { 
+            std::string sipGatewayId, errorReason;
+            std::map<std::string, std::string> param;
+            SipProxy::SipDialogRecord sipDialogRecord;
+            if(ret)
+            {
+                bool bSipDialogIdExis = _server->checkCallIdHostExist(_callId, sipDialogRecord);
+                if (bSipDialogIdExis)
+                {
+                    TLOGWARN("***** getRouterInfoFromJego() repeated responsed callId:" << _callId << endl);
+                    return;
+                }
+                else
+                {
+                    _server->getCloudSipGatewayId(info, sipGatewayId);
+                }
 
-    //     void cmdResult(int rslt,const Common::IputStreamPtr& iput,const Common::ObjectPtr& userdata)
-    //     {
-    //         std::string sipGatewayId, errorReason;
-    //         std::map<std::string, std::string> param;
+                std::string from, to, numberType;
+                std::map<std::string, std::string>::const_iterator itor = outParams.find(SipCloudGateway::SIP_GW_RPC_PARAMS_JEGO_FROM);
+                if (itor != outParams.end())
+                {
+                    from = itor->second;
+                }
+                itor = outParams.find(SipCloudGateway::SIP_GW_RPC_PARAMS_JEGO_TO);
+                if (itor != outParams.end())
+                {
+                    to = itor->second;
+                }
+                itor = outParams.find(SipCloudGateway::SIP_GW_RPC_PARAMS_JEGO_NUMBER_TYPE_FLAG);
+                if (itor != outParams.end())
+                {
+                    numberType = itor->second;
+                }
+                param["RESULT_CODE"] = TC_Common::tostr(info.resultCode);
+                param["LAST_GW"] = info.gwAddr;
+                param["CHARGE_USER"] = info.chargeAccount;
+                param["DST_CALL_USER"] = info.callee;
+                param["CALL_ID"] = info.callId;
+                param["SRC_CALL_USER"] = info.caller;
+                param["FROM"] = from;
+                param["TO"] = to;
+                param["DST_ENT_ADDR"] = info.enterpriseIp;
+                param["DST_ENT_PORT"] = TC_Common::tostr(info.enterprisePort);
+                param["CALLING_E164_NUMBER"] = info.number;
+                param["Remote.Ip"] = _natIp;
+                param["Remote.Port"] = _natPort;
+                param["MIDDLE_CALL_USER"] = info.midCallUser;
+                param["ORIG_SRC_CALL_USER"] = info.origSrcUser;
+                param["ORIG_DST_CALL_USER"] = info.origDstUser;
+                param["ROUTE_ID"] = info.routeId;
+                param["ATOM_ID"] = info.atomId;
+                param["PRICE_NUMBER"] = info.priceNumber;
+                param["RECORD"] = TC_Common::tostr(info.record);
+                param["BEEP"] = TC_Common::tostr(info.beep);
+                param["SERVICE_TYPE"] = TC_Common::tostr(info.serviceType);
+                param["RESULT_CODE"] = TC_Common::tostr(info.resultCode);
+                param["FORCE_SIP_INBOUND"] = TC_Common::tostr(info.sipInbound);
+                param["FORCE_SIP_OUTBOUND"] = TC_Common::tostr(info.sipOutbound);
+                param["JEGO_ROUTE_LIST"] = TC_Common::tostr((int)info.routeInfoList.size());
+                param["NUMBER_TYPE_FLAG"] =  numberType;
 
-    //         SipENUMProxy::JegoRouterInfo info;
-    //         std::map<std::string, std::string> params;
-    //         bool ret = SipENUMProxy::ENUMProxyAgent::getRouteInfo2_end(rslt, iput, info, params);
-    //         if(ret)
-    //         {
-    //             SipProxy::SipDialogRecord sipDialogRecord;
-    //             bool bSipDialogIdExis = _server->checkCallIdHostExist(_callId, sipDialogRecord);
-    //             if (bSipDialogIdExis)
-    //             {
-    //                 TLOGWARN("***** getRouterInfoFromJego() repeated responsed callId:" << _callId << endl);
-    //                 return;
-    //             }
-    //             else
-    //             {
-    //                 _server->getCloudSipGatewayId(info, sipGatewayId);
-    //             }
+                std::string routeMsg;
+                for (int i = 0; i < info.routeInfoList.size(); i++)
+                {
+                    std::string lastGw = "LAST_GW" + TC_Common::tostr(i);
+                    std::string dstAddr = "DST_ENT_ADDR" + TC_Common::tostr(i);
+                    std::string dstPort = "DST_ENT_PORT" + TC_Common::tostr(i);
+                    VoipApp::RouteInfo route = info.routeInfoList.at(i);
+                    param[lastGw] = route.gwAddr;
+                    param[dstAddr] = route.ipAddr;
+                    param[dstPort] = TC_Common::tostr(route.port);
 
-    //             std::string from, to, numberType;
-    //             std::map<std::string, std::string>::iterator itor = params.find(SipCloudGateway::SIP_GW_RPC_PARAMS_JEGO_FROM);
-    //             if (itor != params.end())
-    //             {
-    //                 from = itor->second;
-    //             }
-    //             itor = params.find(SipCloudGateway::SIP_GW_RPC_PARAMS_JEGO_TO);
-    //             if (itor != params.end())
-    //             {
-    //                 to = itor->second;
-    //             }
-    //             itor = params.find(SipCloudGateway::SIP_GW_RPC_PARAMS_JEGO_NUMBER_TYPE_FLAG);
-    //             if (itor != params.end())
-    //             {
-    //                 numberType = itor->second;
-    //             }
-    //             param["RESULT_CODE"] = TC_Common::tostr(info.resultCode);
-    //             param["LAST_GW"] = info.gwAddr;
-    //             param["CHARGE_USER"] = info.chargeAccount;
-    //             param["DST_CALL_USER"] = info.callee;
-    //             param["CALL_ID"] = info.callId;
-    //             param["SRC_CALL_USER"] = info.caller;
-    //             param["FROM"] = from;
-    //             param["TO"] = to;
-    //             param["DST_ENT_ADDR"] = info.enterpriseIp;
-    //             param["DST_ENT_PORT"] = TC_Common::tostr(info.enterprisePort);
-    //             param["CALLING_E164_NUMBER"] = info.number;
-    //             param["Remote.Ip"] = _natIp;
-    //             param["Remote.Port"] = _natPort;
-    //             param["MIDDLE_CALL_USER"] = info.midCallUser;
-    //             param["ORIG_SRC_CALL_USER"] = info.origSrcUser;
-    //             param["ORIG_DST_CALL_USER"] = info.origDstUser;
-    //             param["ROUTE_ID"] = info.routeId;
-    //             param["ATOM_ID"] = info.atomId;
-    //             param["PRICE_NUMBER"] = info.priceNumber;
-    //             param["RECORD"] = TC_Common::tostr(info.record);
-    //             param["BEEP"] = TC_Common::tostr(info.beep);
-    //             param["SERVICE_TYPE"] = TC_Common::tostr(info.serviceType);
-    //             param["RESULT_CODE"] = TC_Common::tostr(info.resultCode);
-    //             param["FORCE_SIP_INBOUND"] = TC_Common::tostr(info.sipInbound);
-    //             param["FORCE_SIP_OUTBOUND"] = TC_Common::tostr(info.sipOutbound);
-    //             param["JEGO_ROUTE_LIST"] = TC_Common::tostr((int)info.routeInfoList.size());
-    //             param["NUMBER_TYPE_FLAG"] =  numberType;
+                    routeMsg = route.gwAddr +":" + route.ipAddr + "-" + TC_Common::tostr(route.port) + "\n";
+                }
 
-    //             std::string routeMsg;
-    //             for (int i = 0; i < info.routeInfoList.size(); i++)
-    //             {
-    //                 std::string lastGw = "LAST_GW" + TC_Common::tostr(i);
-    //                 std::string dstAddr = "DST_ENT_ADDR" + TC_Common::tostr(i);
-    //                 std::string dstPort = "DST_ENT_PORT" + TC_Common::tostr(i);
-    //                 SipENUMProxy::RouteInfo route = info.routeInfoList.at(i);
-    //                 param[lastGw] = route.gwAddr;
-    //                 param[dstAddr] = route.ipAddr;
-    //                 param[dstPort] = TC_Common::tostr(route.port);
+                TLOGINFO("***** getRouterInfoFromJego(), NEW call, \n callId:" << _callId << "\n sipGatewayId:" << sipGatewayId << "\n gwAddr:" << info.gwAddr
+                    << "\n caller:" << info.caller << "\n callee:" << info.callee << "\n from:" << from << "\n to:" << to << "\n chargeAccount:" << info.chargeAccount << "\n displayName:" << info.number
+                    << "\n entIp:" << info.enterpriseIp << "\n entPort:" << info.enterprisePort << "\n middleUser:" << info.midCallUser << "\n originSrcUser:" << info.origSrcUser << "\n originDstUser:" << info.origDstUser
+                    << "\n routeId:" << info.routeId << "\n atomId:" << info.atomId << "\n result:" << info.resultCode << "\n record:" << info.record << "\n numberType:" << numberType
+                    << "\n serviceType:" << info.serviceType << "\n beep:" << info.beep << "\n routeMsg:" << routeMsg << endl);
 
-    //                 routeMsg = route.gwAddr +":" + route.ipAddr + "-" + TC_Common::tostr(route.port) + "\n";
-    //             }
+                _server->insertSipDialogRecord2(_callId, _sipDialogId, sipGatewayId, _server->m_strMainObjId, _pConnection, false);
+                _server->sendSipMsgToCloudSipGateway(sipGatewayId, _strConnectionId, _callId, true, _msg, _toMgcfConnectionId, _sipDialogId, param);
 
-    //             TLOGINFO("***** getRouterInfoFromJego(), NEW call, \n callId:" << _callId << "\n sipGatewayId:" << sipGatewayId << "\n gwAddr:" << info.gwAddr
-    //                 << "\n caller:" << info.caller << "\n callee:" << info.callee << "\n from:" << from << "\n to:" << to << "\n chargeAccount:" << info.chargeAccount << "\n displayName:" << info.number
-    //                 << "\n entIp:" << info.enterpriseIp << "\n entPort:" << info.enterprisePort << "\n middleUser:" << info.midCallUser << "\n originSrcUser:" << info.origSrcUser << "\n originDstUser:" << info.origDstUser
-    //                 << "\n routeId:" << info.routeId << "\n atomId:" << info.atomId << "\n result:" << info.resultCode << "\n record:" << info.record << "\n numberType:" << numberType
-    //                 << "\n serviceType:" << info.serviceType << "\n beep:" << info.beep << "\n routeMsg:" << routeMsg << endl);
+            }
+            else
+            {
+                param["Remote.Ip"] = _natIp;
+                param["Remote.Port"] = _natPort;
 
-    //             _server->insertSipDialogRecord2(_callId, _sipDialogId, sipGatewayId, _server->m_strMainObjId, _pConnection, false);
-    //             _server->sendSipMsgToCloudSipGateway(sipGatewayId, _strConnectionId, _callId, true, _msg, _toMgcfConnectionId, _sipDialogId, param);
-    //         }
-    //         else
-    //         {
-    //             param["Remote.Ip"] = _natIp;
-    //             param["Remote.Port"] = _natPort;
+                {
+                    std::lock_guard<std::mutex> lock(_server->m_mutexSipGwIds);
+                    if (_server->m_vectSipGwIds.size() == 0)
+                    {
+                        TLOGWARN("getRouterInfoFromJego() called ERR, callId:" << _callId << ", reason: m_vectSipGwIds is 0 " << endl);
+                        return;
+                    }
+                }
 
-    //             {
-    //                 std::lock_guard<std::mutex> lock(_server->m_mutexSipGwIds);
-    //                 if (_server->m_vectSipGwIds.size() == 0)
-    //                 {
-    //                     TLOGWARN("getRouterInfoFromJego() called ERR, callId:" << _callId << ", reason: m_vectSipGwIds is 0 " << endl);
-    //                     return;
-    //                 }
-    //             }
+                sipGatewayId = _server->m_vectSipGwIds.at(getRandom(_server->m_vectSipGwIds.size() - 1));
 
-    //             sipGatewayId = _server->m_vectSipGwIds.at(getRandom(_server->m_vectSipGwIds.size() - 1));
+                _server->sendSipMsgToCloudSipGateway(sipGatewayId, _strConnectionId, _callId, true, _msg, _toMgcfConnectionId, _sipDialogId, param);
+                TLOGWARN("getRouterInfoFromJego() called ERR, callId:" << _callId << endl);
+            }
+                
+        }
+        virtual void callback_getRouteInfo2_exception(tars::Int32 ret)
+        {
+             // 网络、超时等框架层异常
+            // std::string errorMsg;
+            // switch(ret)
+            // {
+            //     case tars::TARSASYNCCALLTIMEOUT:
+            //     case tars::TARSINVOKETIMEOUT:
+            //         errorMsg = "Timeout";
+            //         break;
+            //     case tars::TARSPROXYCONNECTERR:
+            //         errorMsg = "Connection error";
+            //         break;
+            //     case tars::TARSSERVERNOSERVENT:
+            //         errorMsg = "Server not available";
+            //         break;
+            //     default:
+            //         errorMsg = "Exception code: " + TC_Common::tostr(ret);
+            //         break;
+            // }
+            
+            TLOGERROR("getRouterInfoFromJego() exception, callId:" << _callId  << ", error:" << std::to_string(ret) << endl);
+        }
 
-    //             _server->sendSipMsgToCloudSipGateway(sipGatewayId, _strConnectionId, _callId, true, _msg, _toMgcfConnectionId, _sipDialogId, param);
-    //             TLOGWARN("getRouterInfoFromJego() called ERR, callId:" << _callId << ", reason:" << Common::ObjectAgent::getLastReason() << endl);
-    //         }
-    //     }
+    private:
+        SipRelayImp* _server;
+        const std::string          _callId;
+        const std::string          _msg;
+        const std::string          _strConnectionId;
+        const std::string          _toMgcfConnectionId;
+        const std::string          _sipDialogId;
+        const std::string          _natIp;
+        const std::string          _natPort;
+        void *                     _pConnection;
+    };
 
-    // private:
-    //     const MgcfSipGatewayIPtr      _server;
-    //     const std::string          _callId;
-    //     const std::string          _msg;
-    //     const std::string          _strConnectionId;
-    //     const std::string          _toMgcfConnectionId;
-    //     const std::string          _sipDialogId;
-    //     const std::string          _natIp;
-    //     const std::string          _natPort;
-    //     void *                        _pConnection;
-    // };
-
-    // std::lock_guard<std::mutex> lock(m_mutexEnumproxyIds);
-    // if (m_vectEnumproxyIds.size() == 0)
-    // {
-    //     TLOGWARN("getRouterInfoFromJego() called, not alive ENUMProxy callId:" << callId << endl);
-    //     return;
-    // }
-
-    // std::map<std::string, std::string> rpcParams;
-    // rpcParams[SipCloudGateway::SIP_GW_RPC_PARAMS_INTERFACE_IS_NEW] = "1";
-    // std::string aliveENUMProxyId = m_vectEnumproxyIds.at(getRandom(m_vectEnumproxyIds.size() - 1));
-    // SipENUMProxy::ENUMProxyAgent agent = _application->createAgent(aliveENUMProxyId);
-    // agent.getRouteInfo2_begin(new getRouterInfoFromJego_async(this, callId, strConnectionId, toMgcfConnectionId, msg, sipDialogId, natIp, natPort, pConnection), m_strMainObjId, callerSipUri, calleeSipUri, callId, callForwarding, m_strLocalIp, natIp, rpcParams);
+    std::lock_guard<std::mutex> lock(m_mutexEnumproxyIds);
+    if (m_vectEnumproxyIds.empty())
+    {
+        TLOGWARN("getRouterInfoFromJego() called, not alive ENUMProxy callId:" << callId << endl);
+    }
+    std::map<std::string, std::string> rpcParams;
+    rpcParams[SipCloudGateway::SIP_GW_RPC_PARAMS_INTERFACE_IS_NEW] = "1";
+    m_routerPrx->async_getRouteInfo2(new getRouterInfoFromJego_async(this, callId, strConnectionId, toMgcfConnectionId, msg, sipDialogId, natIp, natPort, pConnection), m_strMainObjId, callerSipUri, calleeSipUri, callId, callForwarding, m_strLocalIp, natIp, rpcParams);
 }
 
 bool SipRelayImp::getSipUri(bool isCaller, std::string & sipUri, const std::string & sipMsg, std::string & enterIp)
@@ -970,42 +1001,40 @@ bool SipRelayImp::sendSipMsgToCloudSipGateway(const std::string & sipGatewayId, 
 {
     TLOGDEBUG("SipRelayImp::sendSipMsgToCloudSipGateway()  _sipDialogId:" << sipDialogId << ", connectionId:" << connectionId << ", toMgcfConnectionId:" << toMgcfConnectionId << ", bInitInvite:" << bInitInvite << endl);
 
-    // SipCloudGateway::CloudSipGatewayAgent agent = _application->createAgent(sipGatewayId);
+    class RecvSipMsgFromMgcfSipGateway_async : public VoipApp::SipControllerPrxCallback
+    {
+    public:
+        RecvSipMsgFromMgcfSipGateway_async(const std::string & connectionId, const  std::string & callId, const std::string & sipMsg,
+            const std::string & toMgcfConnectionId, bool bInitInvite, SipRelayImp* MgcfSipGatewayI,const std::string  & sipDialogId)
+            :_connectionId(connectionId), _callId(callId), _sipMsg(sipMsg) ,_toMgcfConnectionId(toMgcfConnectionId)
+            ,_bInitInvite(bInitInvite) ,_MgcfSipGatewayIPtr(MgcfSipGatewayI), _sipDialogId(sipDialogId){}
 
-    // class RecvSipMsgFromMgcfSipGateway_async : public Common::AgentAsync
-    // {
-    // public:
-    //     RecvSipMsgFromMgcfSipGateway_async(const std::string & connectionId, const  std::string & callId, const std::string & sipMsg,
-    //         const std::string & toMgcfConnectionId, bool bInitInvite, const MgcfSipGatewayIPtr & MgcfSipGatewayI,const std::string  & sipDialogId)
-    //         :_connectionId(connectionId), _callId(callId), _sipMsg(sipMsg) ,_toMgcfConnectionId(toMgcfConnectionId)
-    //         ,_bInitInvite(bInitInvite) ,_MgcfSipGatewayIPtr(MgcfSipGatewayI), _sipDialogId(sipDialogId){}
+        virtual void callback_recvSipMsgFromMgcfSipGateway(tars::Bool ret)
+        { 
+            TLOGINFO("callback_recvSipMsgFromMgcfSipGateway _sipDialogId:" << _sipDialogId << " ,ret :" << std::to_string(ret) << " ,_sipMsg:\n " << _sipMsg << endl);
+            if (_bInitInvite)
+            {
+                _MgcfSipGatewayIPtr->ereaseSipDialogRecordAndConnection(_sipDialogId);
+            }
+        }
+        virtual void callback_recvSipMsgFromMgcfSipGateway_exception(tars::Int32 ret)
+        { 
+            TLOGWARN("callback_recvSipMsgFromMgcfSipGateway_exception _sipDialogId:" << _sipDialogId << " ,ret :" << std::to_string(ret) << " ,_sipMsg:\n " << _sipMsg << endl);
+        }
 
-    //     void cmdResult(int rslt,const Common::IputStreamPtr& iput,const Common::ObjectPtr& userdata)
-    //     {
-    //         if (SipCloudGateway::CloudSipGatewayAgent::recvSipMsgFromMgcfSipGateway_end(rslt, iput) == false)
-    //         {
-    //             std::string reason = Common::ObjectAgent::getLastReason();
-    //             TLOGWARN("SipCloudGateway::CloudSipGatewayAgent::recvSipMsgFromMgcfSipGateway_end() return FALSE! _sipDialogId:" << _sipDialogId << " ,reason :" << reason << " ,_sipMsg:\n " << _sipMsg << endl);
-    //             if (_bInitInvite)
-    //             {
-    //                 _MgcfSipGatewayIPtr->ereaseSipDialogRecordAndConnection(_sipDialogId);
-    //             }
-    //             return;
-    //         }
-    //     }
+    private:
+        std::string              _connectionId;
+        std::string              _callId;
+        std::string              _sipMsg;
+        std::string              _toMgcfConnectionId;
+        bool                        _bInitInvite;
+        SipRelayImp*    _MgcfSipGatewayIPtr;
+        const std::string         _sipDialogId;
+    };
 
-    // private:
-    //     std::string              _connectionId;
-    //     std::string              _callId;
-    //     std::string              _sipMsg;
-    //     std::string              _toMgcfConnectionId;
-    //     bool                        _bInitInvite;
-    //     const MgcfSipGatewayIPtr        _MgcfSipGatewayIPtr;
-    //     const std::string         _sipDialogId;
-    // };
-
-    // agent.recvSipMsgFromMgcfSipGateway_begin(new RecvSipMsgFromMgcfSipGateway_async(connectionId, callId, sipMsg, toMgcfConnectionId, bInitInvite, this, sipDialogId),
-    //     m_strMainObjId, sipMsg, toMgcfConnectionId, params);
+    VoipApp::SipControllerPrx prx = Application::getCommunicator()->stringToProxy<VoipApp::SipControllerPrx>(sipGatewayId);
+    prx->async_recvSipMsgFromMgcfSipGateway(new RecvSipMsgFromMgcfSipGateway_async(connectionId, callId, sipMsg, toMgcfConnectionId, bInitInvite, this, sipDialogId),
+        m_strMainObjId, sipMsg, toMgcfConnectionId, params);
 
     return true;
 }
@@ -1158,16 +1187,16 @@ bool SipRelayImp::removeConnection(const std::string & sipdialogId, const std::s
     return m_connectionCallIdManager.removeConnection(sipdialogId, strConnectionId);
 }
 
-bool SipRelayImp::getMasterTrdDown()
-{
-    //std::lock_guard<std::mutex> lock(this);
-    return m_bMasterThdDown;
-}
+// bool SipRelayImp::getMasterTrdDown()
+// {
+//     //std::lock_guard<std::mutex> lock(this);
+//     return m_bMasterThdDown;
+// }
 
-bool SipRelayImp::getOutOfService()
-{
-    return m_bOutOfService;
-}
+// bool SipRelayImp::getOutOfService()
+// {
+//     return m_bOutOfService;
+// }
 
 // void SipRelayImp::changeTransProtocol()
 // {
@@ -1401,30 +1430,33 @@ bool SipRelayImp::newAConnectionToMgcf(const std::string & localHost,const std::
 
 void SipRelayImp::readSipGatewayAccessedConfigInfo()
 {
-    // class GetSipGatewayAccessInfo_async : public Common::AgentAsync
-    // {
-    // public:
-    //     GetSipGatewayAccessInfo_async(const MgcfSipGatewayIPtr & MgcfSipGatewayPtr)
-    //         :_MgcfSipGatewayPtr(MgcfSipGatewayPtr){}
-    //     void cmdResult(int rslt,const Common::IputStreamPtr& iput,const Common::ObjectPtr& userdata)
-    //     {
-    //         std::vector<VoipApp::SipProxyAccessedCoreNetConfig> vectSipGatewayConfig;
-    //         std::string reason;
-    //         if (!SipProxyDb::SipProxyDbAgent::GetSipProxyAccessCoreNetInfo_end(rslt,iput,vectSipGatewayConfig,reason))
-    //         {
-    //             reason = Common::ObjectAgent::getLastReason();
-    //             TLOGWARN("readSipGatewayAccessedConfigInfo() called. GetSipProxyAccessCoreNetInfo_end() return FALSE! reason : " << reason << endl);
-    //             return;
-    //         }
-    //         TLOGDEBUG("readSipGatewayAccessedConfigInfo() called. GetSipProxyAccessCoreNetInfo_end() return TRUE! vectSipGatewayConfig SIZE : " << vectSipGatewayConfig.size() << endl);
+    class GetSipGatewayAccessInfo_async : public VoipApp::SipDbPrxCallback
+    {
+    public:
+        GetSipGatewayAccessInfo_async(SipRelayImp* MgcfSipGatewayPtr)
+            :_MgcfSipGatewayPtr(MgcfSipGatewayPtr){}
 
-    //         _MgcfSipGatewayPtr->onReadSipGatewayAccessedConfigInfo(vectSipGatewayConfig);
-    //     }
-    // private:
-    //     MgcfSipGatewayIPtr _MgcfSipGatewayPtr;
-    // };
+        virtual void callback_GetSipProxyAccessCoreNetInfo(tars::Bool ret,  const vector<VoipApp::SipProxyAccessedCoreNetConfig>& vectSipProxyAccessedConfig,  const std::string& reason)
+        {
+            if(!ret)
+            {
+                TLOGWARN("readSipGatewayAccessedConfigInfo() called. GetSipProxyAccessCoreNetInfo_end() return FALSE! reason : " << reason << endl);
+                return;
+            }
+            TLOGDEBUG("readSipGatewayAccessedConfigInfo() called. GetSipProxyAccessCoreNetInfo_end() return TRUE! vectSipProxyAccessedConfig SIZE : " << vectSipProxyAccessedConfig.size() << endl);
 
-    // m_sipProxyDbAgent.GetSipProxyAccessCoreNetInfo_begin(new GetSipGatewayAccessInfo_async(this), SipProxyDb::SIP_TABLE_PROXY_CONFIG);
+            _MgcfSipGatewayPtr->onReadSipGatewayAccessedConfigInfo(vectSipProxyAccessedConfig);
+        }
+
+        virtual void callback_GetSipProxyAccessCoreNetInfo_exception(tars::Int32 ret)
+        {
+            TLOGERROR("GetSipProxyAccessCoreNetInfo exception, ret:" << ret << endl);
+        }
+    private:
+        SipRelayImp* _MgcfSipGatewayPtr;
+    };
+
+    m_sipProxyDbAgent->async_GetSipProxyAccessCoreNetInfo(new GetSipGatewayAccessInfo_async(this), "sipproxy_config");
 }
 
 bool SipRelayImp::onReadSipGatewayAccessedConfigInfo(const std::vector<VoipApp::SipProxyAccessedCoreNetConfig> & vectSipGatewayConfigInfo)
@@ -1561,51 +1593,41 @@ bool SipRelayImp::onReadSipGatewayAccessedConfigInfo(const std::vector<VoipApp::
 
 bool SipRelayImp::loadEnumproxyResources()
 {
-    // try
-    // {
-    //     // 构造查询条件
-    //     RegistryDiscovery::QueryCondition condition;
-    //     condition.serviceType = "SipRouter";
-    //     // 可选：按数据中心过滤
-    //     // condition.attributes["dataCenter"] = m_strDataCenter;
+    // 构造查询条件
+    VoipApp::QueryCondition condition;
+    condition.serviceType = "SipRouter";
+    // 可选：按数据中心过滤
+    // condition.attributes["dataCenter"] = m_strDataCenter;
 
-    //     //异步查询所有SipRelay服务
-    //     class QueryCallback : public RegistryDiscovery::RegistryDiscoveryServicePrxCallback
-    //     {
-    //     public:
-    //         QueryCallback(SipRelayImp* impl) : m_impl(impl) {}
+    //异步查询所有SipRelay服务
+    class QueryCallback : public VoipApp::SipRegPrxCallback
+    {
+    public:
+        QueryCallback(SipRelayImp* impl) : m_impl(impl) {}
 
-    //         virtual void callback_queryServices(tars::Int32 ret, const std::vector<RegistryDiscovery::ServiceInfo>& services)
-    //         {
-    //             if (ret == 0)
-    //             {
-    //                 TLOGINFO("Query success, found " << services.size() << " SipRelay services" << endl);
-    //                 m_impl->onResultLoadEnumproxyResources(services);
-    //             }
-    //         }
+        virtual void callback_queryServices(tars::Int32 ret, const std::vector<VoipApp::ServiceInfo>& services)
+        {
+            if (ret == 0)
+            {
+                TLOGINFO("Query success, found " << services.size() << " SipRelay services" << endl);
+                m_impl->onResultLoadEnumproxyResources(services);
+            }
+        }
 
-    //         virtual void callback_queryServices_exception(tars::Int32 ret) {
-    //             TLOGERROR("Query services exception, ret:" << ret << endl);
-    //         }
-    //     private:
-    //         SipRelayImp* m_impl;
-    //     };
+        virtual void callback_queryServices_exception(tars::Int32 ret) {
+            TLOGERROR("Query services exception, ret:" << ret << endl);
+        }
+    private:
+        SipRelayImp* m_impl;
+    };
 
-    //     m_registryPrx->async_queryServices(new QueryCallback(this), condition);
+    m_registryPrx->async_queryServices(new QueryCallback(this), condition);
 
-    //     TLOGDEBUG("Query all SipRelay services from Registry" << endl);
-    //     return true;
-    // }
-    // catch (exception& e)
-    // {
-    //     TLOGERROR("loadMgcfSipGatewayResources exception: " << e.what() << endl);
-    //     return false;
-    // }
-
+    TLOGDEBUG("Query all SipRelay services from Registry" << endl);
     return true;
 }
 
-bool SipRelayImp::onResultLoadEnumproxyResources(const std::vector<tars::EndpointF> & vectResources)
+bool SipRelayImp::onResultLoadEnumproxyResources(const std::vector<VoipApp::ServiceInfo> & vectResources)
 {
     if(vectResources.empty())
         return false;
@@ -1617,9 +1639,9 @@ bool SipRelayImp::onResultLoadEnumproxyResources(const std::vector<tars::Endpoin
 
     for (unsigned int i = 0; i < vectResources.size(); i++)
     {
-        tars::EndpointF resource = vectResources.at(i);
-        //m_vectEnumproxyIds.push_back(resource._identity);
-        //strIds += resource._identity + "\n";
+        VoipApp::ServiceInfo resource = vectResources.at(i);
+        m_vectEnumproxyIds.push_back(resource.serviceId);
+        strIds += resource.serviceId + "\n";
     }
     TLOGDEBUG(std::string(__FUNCTION__) << "ids:" << strIds << endl);
 
@@ -1707,91 +1729,92 @@ bool SipRelayImp::getCallerAndCalleeSipUri(std::string & caller, std::string & c
 
 void SipRelayImp::registerMgcfSipGatewayToResource()
 {
-    // try 
-    // {
-    //     //构造服务注册信息
-    //     RegistryDiscovery::ServiceInfo serviceInfo;
-    //     serviceInfo.serviceId = m_strMainObjId;
-    //     serviceInfo.serviceType = "SipRelay";
-    //     serviceInfo.updateTime = TNOW;
-    //     serviceInfo.ttl = 90;  // 心跳超时90秒
+    //构造服务注册信息
+    VoipApp::ServiceInfo serviceInfo;
+    serviceInfo.serviceId = m_strMainObjId;
+    serviceInfo.serviceType = "SipRelay";
+    serviceInfo.updateTime = TNOW;
+    serviceInfo.ttl = 90;  // 心跳超时90秒
+    serviceInfo.freePercent = 100;
+    //设置服务属性（协议类型、数据中心等）
+    // serviceInfo.attributes["protocol"] = m_tranProtoclName;
+    // serviceInfo.attributes["dataCenter"] = m_strDataCenter;
+    // serviceInfo.attributes["serverIp"] = m_strLocalIp;
+
+    //设置endpoint信息
+    VoipApp::ServiceEndpoint endpoint;
+    endpoint.host = m_strLocalIp;
+    endpoint.port = m_iLocalListenPort;
+    endpoint.params["DOMAIN"] = m_strDataCenter;
+    endpoint.params["IP"] = m_strLocalIp;
+    serviceInfo.endpoints = endpoint;
+    
+    //异步查询所有SipRelay服务
+    class RegistryCallback : public VoipApp::SipRegPrxCallback
+    {
+    public:
+        RegistryCallback(){}
         
-    //     //设置服务属性（协议类型、数据中心等）
-    //     serviceInfo.attributes["protocol"] = m_tranProtoclName;
-    //     serviceInfo.attributes["dataCenter"] = m_strDataCenter;
-    //     serviceInfo.attributes["serverIp"] = m_strLocalIp;
+        virtual void callback_registerService(tars::Int32 ret)
+        {
+            if (ret == 0)
+            {
+                TLOGINFO("register success, found " << endl);
+            }
+        }
         
-    //     //设置endpoint信息
-    //     RegistryDiscovery::ServiceEndpoint endpoint;
-    //     endpoint.host = m_strLocalIp;
-    //     endpoint.port = m_iLocalListenPort;
-    //     endpoint.params["DOMAIN"] = m_strDataCenter;
-    //     endpoint.params["IP"] = m_strLocalIp;
-    //     serviceInfo.endpoints.push_back(endpoint);
-        
-    //     //异步注册
-    //     m_registryPrx->async_registerService(
-    //         new RegistryCallbackPtr(), serviceInfo);
-        
-    //     TLOGINFO("Register service: " << m_strMainObjId 
-    //             << ", protocol:" << m_tranProtoclName
-    //             << ", ip:" << m_strLocalIp 
-    //             << ", port:" << m_iLocalListenPort << endl);
-        
-    // }
-    // catch (exception& e)
-    // {
-    //     TLOGERROR("registerMgcfSipGatewayToResource exception: " << e.what() << endl);
-    // }
+        virtual void callback_registerService_exception(tars::Int32 ret)
+        {
+            TLOGERROR("register services exception, ret:" << ret << endl);
+        }
+    };
+
+    //异步注册
+    m_registryPrx->async_registerService(new RegistryCallback(), serviceInfo);
+    
+    TLOGINFO("Register service: " << m_strMainObjId 
+            << ", protocol:" << m_tranProtoclName
+            << ", ip:" << m_strLocalIp 
+            << ", port:" << m_iLocalListenPort << endl);
 }
 
 bool SipRelayImp::loadMgcfSipGatewayResources()
 {
-    // try
-    // {
-        // 构造查询条件
-        // RegistryDiscovery::QueryCondition condition;
-        // condition.serviceType = "SipRelay";
-        // // 可选：按数据中心过滤
-        // condition.attributes["dataCenter"] = m_strDataCenter;
+    //构造查询条件
+    VoipApp::QueryCondition condition;
+    condition.serviceType = "SipRelay";
+    // 可选：按数据中心过滤
+    //condition.attributes["dataCenter"] = m_strDataCenter;
+    
+    //异步查询所有SipRelay服务
+    class QueryCallback : public VoipApp::SipRegPrxCallback
+    {
+    public:
+        QueryCallback(SipRelayImp* impl) : m_impl(impl) {}
         
-        //异步查询所有SipRelay服务
-    //     class QueryCallback : public RegistryDiscovery::RegistryDiscoveryServicePrxCallback
-    //     {
-    //     public:
-    //         QueryCallback(SipRelayImp* impl) : m_impl(impl) {}
-            
-    //         virtual void callback_queryServices(tars::Int32 ret, const std::vector<RegistryDiscovery::ServiceInfo>& services)
-    //         {
-    //             if (ret == 0)
-    //              {
-    //                 TLOGINFO("Query success, found " << services.size() << " SipRelay services" << endl);
-    //                 m_impl->onResultLoadSipGwResource2(services);
-    //             }
-    //         }
-            
-    //         virtual void callback_queryServices_exception(tars::Int32 ret) {
-    //             TLOGERROR("Query services exception, ret:" << ret << endl);
-    //         }
-    //     private:
-    //         SipRelayImp* m_impl;
-    //     };
+        virtual void callback_queryServices(tars::Int32 ret, const std::vector<VoipApp::ServiceInfo>& services)
+        {
+            if (ret == 0)
+                {
+                TLOGINFO("Query success, found " << services.size() << " SipRelay services" << endl);
+                m_impl->onResultLoadSipGwResource2(services);
+            }
+        }
         
-    //     m_registryPrx->async_queryServices(new QueryCallback(this), condition);
-        
-    //     TLOGDEBUG("Query all SipRelay services from Registry" << endl);
-    //     return true;
-    // }
-    // catch (exception& e)
-    // {
-    //     TLOGERROR("loadMgcfSipGatewayResources exception: " << e.what() << endl);
-    //     return false;
-    // }
-
+        virtual void callback_queryServices_exception(tars::Int32 ret) {
+            TLOGERROR("Query services exception, ret:" << ret << endl);
+        }
+    private:
+        SipRelayImp* m_impl;
+    };
+    
+    m_registryPrx->async_queryServices(new QueryCallback(this), condition);
+    
+    TLOGDEBUG("Query all SipRelay services from Registry" << endl);
     return true;
 }
 
-void SipRelayImp::onResultLoadSipGwResource2(const std::vector<tars::EndpointF> & vectResources)
+void SipRelayImp::onResultLoadSipGwResource2(const std::vector<VoipApp::ServiceInfo> & vectResources)
 {
     if(vectResources.empty())
         return;
@@ -1800,78 +1823,70 @@ void SipRelayImp::onResultLoadSipGwResource2(const std::vector<tars::EndpointF> 
     m_mapMgcfSipGatewayIds.clear();
 
     std::string strIds = "Service IDs:\n";
-    /*
+    
     for (const auto& resource : vectResources)
     {
-         strIds += resource._identity + "\n";
+        strIds += resource.serviceId + "\n";
 
-         if (resource._freePercent < 0 || resource._endpoints.size() == 0)
-             continue;
+        if (resource.freePercent < 0)
+            continue;
 
-         std::string ip, dc;
-         std::map<std::string, std::string>::const_iterator itParam = resource.find(CALL_PARAMS_DOMAIN);
-         if (itParam != endParams.end())
-         {
-             dc = itParam->second;
-         }
+        std::string ip, dc;
+        std::map<std::string, std::string>::const_iterator itParam = resource.endpoints.params.find("domain");
+        if (itParam != resource.endpoints.params.end())
+        {
+            dc = itParam->second;
+        }
 
-         itParam = endParams.find(CALL_PARAMS_IP);
-         if (itParam != endParams.end())
-         {
-             ip = itParam->second;
-         }
-         m_mapMgcfSipGatewayIds.insert(make_pair(ip, dc));
-    }*/
+        itParam = resource.endpoints.params.find("ip");
+        if (itParam != resource.endpoints.params.end())
+        {
+            ip = itParam->second;
+        }
+        m_mapMgcfSipGatewayIds.insert(make_pair(ip, dc));
+    }
     
     TLOGDEBUG("onResultLoadSipGwResource2:\n" << strIds << endl);
 }
 
 bool SipRelayImp::loadSipGw3Resources()
 {
-    // try
-    // {
-        // 构造查询条件
-        // RegistryDiscovery::QueryCondition condition;
-        // condition.serviceType = "SipController";
-        // // 可选：按数据中心过滤
-        // condition.attributes["dataCenter"] = m_strDataCenter;
 
-        //异步查询所有SipRelay服务
-    //     class QueryCallback : public RegistryDiscovery::RegistryDiscoveryServicePrxCallback
-    //     {
-    //     public:
-    //         QueryCallback(SipRelayImp* impl) : m_impl(impl) {}
+    //构造查询条件
+    VoipApp::QueryCondition condition;
+    condition.serviceType = "SipController";
+    // 可选：按数据中心过滤
+    //condition.attributes["dataCenter"] = m_strDataCenter;
 
-    //         virtual void callback_queryServices(tars::Int32 ret, const std::vector<RegistryDiscovery::ServiceInfo>& services)
-    //         {
-    //             if (ret == 0)
-    //             {
-    //                 TLOGINFO("Query success, found " << services.size() << " SipRelay services" << endl);
-    //                 m_impl->onResultLoadSipGwResource(services);
-    //             }
-    //         }
+    //异步查询所有SipRelay服务
+    class QueryCallback : public VoipApp::SipRegPrxCallback
+    {
+    public:
+        QueryCallback(SipRelayImp* impl) : m_impl(impl) {}
 
-    //         virtual void callback_queryServices_exception(tars::Int32 ret) {
-    //             TLOGERROR("Query services exception, ret:" << ret << endl);
-    //         }
-    //     private:
-    //         SipRelayImp* m_impl;
-    //     };
+        virtual void callback_queryServices(tars::Int32 ret, const std::vector<VoipApp::ServiceInfo>& services)
+        {
+            if (ret == 0)
+            {
+                TLOGINFO("Query success, found " << services.size() << " SipRelay services" << endl);
+                m_impl->onResultLoadSipGwResource(services);
+            }
+        }
 
-    //     m_registryPrx->async_queryServices(new QueryCallback(this), condition);
+        virtual void callback_queryServices_exception(tars::Int32 ret) {
+            TLOGERROR("Query services exception, ret:" << ret << endl);
+        }
+    private:
+        SipRelayImp* m_impl;
+    };
 
-    //     TLOGDEBUG("Query all SipRelay services from Registry" << endl);
-    //     return true;
-    // }
-    // catch (exception& e)
-    // {
-    //     TLOGERROR("loadMgcfSipGatewayResources exception: " << e.what() << endl);
-    //     return false;
-    // }
+    m_registryPrx->async_queryServices(new QueryCallback(this), condition);
+
+    TLOGDEBUG("Query all SipRelay services from Registry" << endl);
     return true;
 }
 
-bool SipRelayImp::onResultLoadSipGwResource(const std::vector<tars::EndpointF> & vectResources)
+bool SipRelayImp::onResultLoadSipGwResource(const std::vector<VoipApp::ServiceInfo> & vectResources)
 {
     if(vectResources.empty())
         return false;
@@ -1883,55 +1898,158 @@ bool SipRelayImp::onResultLoadSipGwResource(const std::vector<tars::EndpointF> &
 
     for (unsigned int i = 0; i < vectResources.size(); i++)
     {
-        tars::EndpointF resource = vectResources.at(i);
-        //m_vectSipGwIds.push_back(resource._identity);
-        //strIds += resource._identity + "\n";
+        VoipApp::ServiceInfo resource = vectResources.at(i);
+        m_vectSipGwIds.push_back(resource.serviceId);
+        strIds += resource.serviceId + "\n";
     }
-    TLOGDEBUG(std::string(__FUNCTION__) << "ids:" << strIds << endl);
-
-    return true;
 }
 
 void SipRelayImp::getCloudSipGwIdAndIp()
 {
-    // checkServerAlive();
+    checkServerAlive();
 
-    // class getSipGwIdAndIp_async
-    // {
+    class getSipGwIdAndIp_async : public VoipApp::SipControllerPrxCallback
+    {
+    public:
+        getSipGwIdAndIp_async(SipRelayImp* ptr)
+            : _ptr(ptr)
+        {
+        }
+        
+        virtual void callback_getCloudSipGatewayIp(tars::Bool ret, const std::string& sipGatewayOid, const std::string& sipGatewayIp)
+        {
+            if (ret)
+            {
+                TLOGDEBUG("getCloudSipGatewayIp success, SipGateway: " << sipGatewayOid << " -> " << sipGatewayIp << endl);
+
+                std::lock_guard<std::mutex> lock(_ptr->m_mutexSipGwIdAndIps);
+                std::map<std::string, std::string>::iterator itor = _ptr->m_mapSipGwIdAndIps.find(sipGatewayOid);
+                if (itor == _ptr->m_mapSipGwIdAndIps.end())
+                    _ptr->m_mapSipGwIdAndIps.insert(make_pair(sipGatewayOid, sipGatewayIp));
+                else
+                    itor->second = sipGatewayIp;
+            }
+            else
+            {
+                TLOGWARN("getCloudSipGatewayIp failed" << endl);
+            }
+        }
+        
+        virtual void callback_getCloudSipGatewayIp_exception(tars::Int32 ret)
+        {
+            TLOGWARN("getCloudSipGatewayIp exception, error code: " << ret << endl);
+        }
+
+    private:
+        SipRelayImp* _ptr;
+    };
+
+    std::lock_guard<std::mutex> lock(m_mutexSipGwIds);
+    for (unsigned int i = 0; i < m_vectSipGwIds.size(); i++)
+    {
+        std::string id = m_vectSipGwIds.at(i);
+
+        VoipApp::SipControllerPrx prx = Application::getCommunicator()->stringToProxy<VoipApp::SipControllerPrx>(id);
+        prx->async_getCloudSipGatewayIp(new getSipGwIdAndIp_async(this), id);
+    }
     // public:
-    //     getSipGwIdAndIp_async(MgcfSipGatewayIPtr ptr)
-    //         :_ptr(ptr)
+    //     GetSipGwIdAndIp_async(SipRelayImp* ptr, const std::string& serviceId)
+    //         : _ptr(ptr), _serviceId(serviceId)
     //     {
-
     //     }
 
-    //     void cmdResult(int rslt,const Common::IputStreamPtr& iput,const Common::ObjectPtr& userdata)
+    //     virtual void callback_getCloudSipGatewayIp(tars::Bool ret, const std::string& sipGatewayOid, const std::string& sipGatewayIp)
     //     {
-    //         std::string oid, ip;
-    //         bool ret = SipCloudGateway::CloudSipGatewayAgent::getCloudSipGatewayIp_end(rslt, iput, oid, ip);
     //         if (ret)
     //         {
     //             std::lock_guard<std::mutex> lock(_ptr->m_mutexSipGwIdAndIps);
-    //             std::map<std::string, std::string>::iterator itor = _ptr->m_mapSipGwIdAndIps.find(oid);
+    //             std::map<std::string, std::string>::iterator itor = _ptr->m_mapSipGwIdAndIps.find(sipGatewayOid);
     //             if (itor == _ptr->m_mapSipGwIdAndIps.end())
-    //                 _ptr->m_mapSipGwIdAndIps.insert(make_pair(oid, ip));
+    //             {
+    //                 _ptr->m_mapSipGwIdAndIps.insert(make_pair(sipGatewayOid, sipGatewayIp));
+    //                 TLOGDEBUG("Add SipGateway: " << sipGatewayOid << " -> " << sipGatewayIp << endl);
+    //             }
     //             else
-    //                 itor->second = ip;
+    //             {
+    //                 itor->second = sipGatewayIp;
+    //                 TLOGDEBUG("Update SipGateway: " << sipGatewayOid << " -> " << sipGatewayIp << endl);
+    //             }
+    //         }
+    //         else
+    //         {
+    //             TLOGWARN("getCloudSipGatewayIp failed for service: " << _serviceId << endl);
     //         }
     //     }
 
+    //     virtual void callback_getCloudSipGatewayIp_exception(tars::Int32 ret)
+    //     {
+    //         TLOGWARN("getCloudSipGatewayIp exception for service: " << _serviceId 
+    //                 << ", error code: " << ret << endl);
+    //     }
+
     // private:
-    //     SipRelayImp*      _ptr;
+    //     SipRelayImp* _ptr;
+    //     std::string _serviceId;
     // };
 
-    // std::lock_guard<std::mutex> lock(m_mutexSipGwIds);
-    // for (unsigned int i = 0; i < m_vectSipGwIds.size(); i++)
+    // // 方案1: 从Registry查询所有SipController服务（推荐）
+    // // 通过Registry获取所有活跃的SipController服务实例
+    // class QuerySipControllerCallback : public VoipApp::SipRegPrxCallback
     // {
-    //     std::string id = m_vectSipGwIds.at(i);
-
-    //     SipCloudGateway::CloudSipGatewayAgent agent = _application->createAgent(id);
-    //     agent.getCloudSipGatewayIp_begin(new getSipGwIdAndIp_async(this), id);
-    // }
+    // public:
+    //     QuerySipControllerCallback(SipRelayImp* impl) : m_impl(impl) {}
+        
+    //     virtual void callback_queryServices(tars::Int32 ret, const std::vector<VoipApp::ServiceInfo>& services)
+    //     {
+    //         if (ret == 0)
+    //         {
+    //             TLOGINFO("Found " << services.size() << " SipController services" << endl);
+                
+    //             // 遍历所有查询到的SipController服务，获取它们的IP
+    //             for (const auto& service : services)
+    //             {
+    //                 try
+    //                 {
+    //                     VoipApp::SipControllerPrx prx = Application::getCommunicator()
+    //                         ->stringToProxy<VoipApp::SipControllerPrx>(service.serviceId);
+                        
+    //                     prx->async_getCloudSipGatewayIp(
+    //                         new GetSipGwIdAndIp_async(m_impl, service.serviceId), 
+    //                         service.serviceId);
+                        
+    //                     TLOGDEBUG("Query IP for service: " << service.serviceId << endl);
+    //                 }
+    //                 catch (exception& e)
+    //                 {
+    //                     TLOGERROR("Create proxy failed for service: " << service.serviceId 
+    //                              << ", error: " << e.what() << endl);
+    //                 }
+    //             }
+    //         }
+    //         else
+    //         {
+    //             TLOGWARN("Query SipController services failed, ret: " << ret << endl);
+    //         }
+    //     }
+        
+    //     virtual void callback_queryServices_exception(tars::Int32 ret)
+    //     {
+    //         TLOGERROR("Query SipController services exception, ret:" << ret << endl);
+    //     }
+        
+    // private:
+    //     SipRelayImp* m_impl;
+    // };
+    
+    // // 查询所有SipController服务
+    // VoipApp::QueryCondition condition;
+    // condition.serviceType = "SipController";
+    // // 可选：按数据中心过滤
+    // // condition.attributes["dataCenter"] = m_strDataCenter;
+    
+    // m_registryPrx->async_queryServices(new QuerySipControllerCallback(this), condition);
+    
+    // TLOGDEBUG("Query all SipController services for IP mapping" << endl);
 }
 
 void SipRelayImp::checkServerAlive()
@@ -1958,18 +2076,19 @@ void SipRelayImp::checkServerAlive()
 
 void SipRelayImp::setLogsAndStatistics()
 {
-    // m_application->setStatisticsLong("Sip.Connection.Remain",SipGateway::GatewayConnection::_totalNum);
-    // m_application->setStatisticsLong("Sip.Connection.TotaleCreated",SipGateway::GatewayConnection::_newNum);
-    // m_application->setStatisticsLong("Sip.Connection.TotalRemoved",SipGateway::GatewayConnection::_deleteNum);
-    // m_application->setStatistics("Sip.Config.ListenIp", m_strLocalIp);
-    // m_application->setStatisticsLong("Sip.Config.ListenPort", m_iLocalListenPort);
-    // m_application->setStatisticsLong("Sip.Config.SendPort", m_iLocalSendPort);
-    // m_application->setStatisticsLong("Sip.Config.Size", getMgcfSipGatewayCfgsSize());
-
-    // m_application->setStatisticsLong("Sip.Connection.SendPort", m_iCurSendPort);
-    // m_application->setStatisticsLong("Sip.Dialog.Insert", m_sipDialogRecordManager.getTotalInsertIdNum());
-    // m_application->setStatisticsLong("Sip.Dialog.Remove", m_sipDialogRecordManager.getTotalEreaseIdNum());
-    // m_application->setStatisticsLong("Sip.Dialog.Remain", m_sipDialogRecordManager.getRecordSize());
+    // TARS_REPORT_SET("Sip.Connection.Remain", SipGateway::GatewayConnection::_totalNum);
+    // TARS_REPORT_SET("Sip.Connection.TotalCreated", SipGateway::GatewayConnection::_newNum);
+    // TARS_REPORT_SET("Sip.Connection.TotalRemoved", SipGateway::GatewayConnection::_deleteNum);
+    
+    // TARS_REPORT_SET("Sip.Config.ListenIp", m_strLocalIp);
+    // TARS_REPORT_SET("Sip.Config.ListenPort", m_iLocalListenPort);
+    // TARS_REPORT_SET("Sip.Config.SendPort", m_iLocalSendPort);
+    // TARS_REPORT_SET("Sip.Config.Size", getMgcfSipGatewayCfgsSize());
+    // TARS_REPORT_SET("Sip.Connection.SendPort", m_iCurSendPort);
+    
+    // TARS_REPORT_SET("Sip.Dialog.Insert", m_sipDialogRecordManager.getTotalInsertIdNum());
+    // TARS_REPORT_SET("Sip.Dialog.Remove", m_sipDialogRecordManager.getTotalEreaseIdNum());
+    // TARS_REPORT_SET("Sip.Dialog.Remain", m_sipDialogRecordManager.getRecordSize());
 }
 
 bool SipRelayImp::getOptionStatus(const std::string & connId)

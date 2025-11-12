@@ -15,6 +15,9 @@
 #include "SipProxy/src/SipGatewayIdRecordManager.h"
 #include "SipProxy/src/SipRegisterSubscribe.h"
 #include "SipProxyDb/src/SipDb.h"
+#include "SipRegistry/src/SipReg.h"
+#include "ENUMProxy/src/SipRouter.h"
+#include "SipCallController/src/SipController.h"
 #include "SipGateway/src/SipMsgCommon.h"
 #include "SipGateway/src/SipMsg.h"
 #include "SipGateway/src/SipMsgType.h"
@@ -27,10 +30,10 @@ struct stSbcConn
     int64_t lastActive;
     int64_t lastSendTime;
 };
-/**
- *
- *
- */
+
+class SipRelayImp;
+typedef std::shared_ptr<SipRelayImp> SipRelayImpPtr;
+
 class SipRelayImp : public VoipApp::SipRelay,
         virtual public SipGateway::SipMsgSenderInterface,
         virtual public SipProxy::SipProxyMsgSenderInterafece,
@@ -112,8 +115,8 @@ public:
 
     bool removeConnection(const std::string & sipdialogId, const std::string & strConnectionId);
 
-    bool getMasterTrdDown();
-    bool getOutOfService();
+    //bool getMasterTrdDown();
+    //bool getOutOfService();
 
     //void changeTransProtocol();
 
@@ -148,12 +151,12 @@ public:
 
     void registerMgcfSipGatewayToResource();
     bool loadMgcfSipGatewayResources();
-    void onResultLoadSipGwResource2(const std::vector<tars::EndpointF> & vectResources);
+    void onResultLoadSipGwResource2(const std::vector<VoipApp::ServiceInfo> & vectResources);
     bool loadSipGw3Resources();
-    bool onResultLoadSipGwResource(const std::vector<tars::EndpointF> & vectResources);
+    bool onResultLoadSipGwResource(const std::vector<VoipApp::ServiceInfo> & vectResources);
 
     bool loadEnumproxyResources();
-    bool onResultLoadEnumproxyResources(const std::vector<tars::EndpointF> & vectResources);
+    bool onResultLoadEnumproxyResources(const std::vector<VoipApp::ServiceInfo> & vectResources);
 
     void getRouterInfoFromJego(const std::string & callId, const std::string & strConnectionId, const std::string & toMgcfConnectionId,
         const std::string & msg, const std::string & sipDialogId, void * pConnection,  const std::map<std::string, std::string> & params);
@@ -175,6 +178,11 @@ public:
     // 线程函数
     void AccessConfigReadThreadFunc();
     void ChangeTransProtocolThreadFunc();
+    void SchdThreadFunc();
+    void HeartbeatThreadFunc();
+    
+    // 定时调度函数 (原框架500ms调用一次)
+    void onSchd();
 
     bool reloadConfig();
 private:
@@ -229,10 +237,11 @@ private:
     std::set<std::string>                   m_setVirtualMgcfIps;
     std::mutex                              m_mutexVirtualMgcfIps;
 
+    VoipApp::SipRegPrx                      m_registryPrx;
+    VoipApp::SipRouterPrx                   m_routerPrx;
     VoipApp::SipDbPrx                       m_sipProxyDbAgent;
     std::vector<VoipApp::SipProxyAccessedCoreNetConfig>  m_vectSipGatewayAccessedConfig;
     std::mutex                              m_mutexVectSipGateway;
-    //VoipApp::ResourceServerPrx              m_resourceAgent;
 
     std::vector<std::string>                m_vectSipGwIds;
     std::mutex                              m_mutexSipGwIds;
