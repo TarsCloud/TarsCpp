@@ -228,7 +228,7 @@ if (TARS_MYSQL)
         set(LIB_MYSQL "mysqlclient")
 
         ExternalProject_Add(ADD_${LIB_MYSQL}
-                URL http://cdn.tarsyun.com/src/mysql-connector-c-6.1.11-src.fixed.tar.gz
+                URL https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com/src/mysql-connector-c-6.1.11-src.tgz
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
@@ -236,7 +236,8 @@ if (TARS_MYSQL)
                 SOURCE_DIR ${CMAKE_BINARY_DIR}/src/mysql-lib
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND make mysqlclient  -j4
-                URL_MD5 3578d736b9d493eae076a67e3ed473eb
+                # URL_MD5 3578d736b9d493eae076a67e3ed473eb
+                URL_MD5 b97bd3b3f826c70ed3de4983840fff56
                 )
 
     endif ()
