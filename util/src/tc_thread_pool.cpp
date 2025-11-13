@@ -90,6 +90,32 @@ void TC_ThreadPool::start()
     }
 }
 
+void TC_ThreadPool::setThreadInitCallback(const ThreadInitCallback& callback)
+{
+    std::unique_lock<std::mutex> lock(_mutex);
+    
+    if (!_threads.empty())
+    {
+        throw TC_ThreadPool_Exception(
+            "[TC_ThreadPool::setThreadInitCallback] cannot set callback after thread pool started!");
+    }
+    
+    _threadInitCallback = callback;
+}
+
+void TC_ThreadPool::setThreadDestroyCallback(const ThreadDestroyCallback& callback)
+{
+    std::unique_lock<std::mutex> lock(_mutex);
+    
+    if (!_threads.empty())
+    {
+        throw TC_ThreadPool_Exception(
+            "[TC_ThreadPool::setThreadDestroyCallback] cannot set callback after thread pool started!");
+    }
+    
+    _threadDestroyCallback = callback;
+}
+
 bool TC_ThreadPool::get(TaskFuncPtr& task)
 {
     std::unique_lock<std::mutex> lock(_mutex);
@@ -116,6 +142,19 @@ bool TC_ThreadPool::get(TaskFuncPtr& task)
 
 void TC_ThreadPool::run()
 {
+    // 线程初始化回调
+    if (_threadInitCallback)
+    {
+        try
+        {
+            _threadInitCallback();
+        }
+        catch (...)
+        {
+            // 捕获异常，防止线程启动失败
+        }
+    }
+
     //调用处理部分
     while (!isTerminate())
     {
@@ -147,6 +186,19 @@ void TC_ThreadPool::run()
             {
                 _condition.notify_all();
             }
+        }
+    }
+
+    // 线程退出回调
+    if (_threadDestroyCallback)
+    {
+        try
+        {
+            _threadDestroyCallback();
+        }
+        catch (...)
+        {
+            // 捕获异常，确保线程正常退出
         }
     }
 }
@@ -187,7 +239,36 @@ void TC_ThreadPoolHash::init(size_t num)
     {
         TC_ThreadPool* p = new TC_ThreadPool();
         p->init(1);
+        
+        // 应用回调
+        if (_threadInitCallback)
+        {
+            p->setThreadInitCallback(_threadInitCallback);
+        }
+        if (_threadDestroyCallback)
+        {
+            p->setThreadDestroyCallback(_threadDestroyCallback);
+        }
+        
         _pools.push_back(p);
+    }
+}
+
+void TC_ThreadPoolHash::setThreadInitCallback(const TC_ThreadPool::ThreadInitCallback& callback)
+{
+    _threadInitCallback = callback;
+    for (auto pool : _pools)
+    {
+        pool->setThreadInitCallback(callback);
+    }
+}
+
+void TC_ThreadPoolHash::setThreadDestroyCallback(const TC_ThreadPool::ThreadDestroyCallback& callback)
+{
+    _threadDestroyCallback = callback;
+    for (auto pool : _pools)
+    {
+        pool->setThreadDestroyCallback(callback);
     }
 }
 

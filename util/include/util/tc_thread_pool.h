@@ -23,17 +23,23 @@ namespace tars
  * 使用说明:
  * TC_ThreadPool tpool;
  * tpool.init(5);   //初始化线程池线程数
- * //启动线程有两种方式
- * //第一种, 直接启动
+ * 
+ * //设置线程生命周期回调（可选）
+ * tpool.setThreadInitCallback([](){
+ *     //线程初始化代码，每个工作线程启动时执行一次
+ *     //可以初始化 thread_local 变量
+ * });
+ * tpool.setThreadDestroyCallback([](){
+ *     //线程清理代码，每个工作线程退出前执行一次
+ *     //可以清理 thread_local 资源
+ * });
+ * 
+ * //启动线程
  * tpool.start();
- * //第二种, 启动时指定初始化函数, 比如定义函数
- * void testFunction(int i)
- * {
- *     cout << i << endl;
- * }
- * tpool.start(testFunction, 5);    //start的第一函数是std::bind返回的函数(std::function), 后面跟参数
+ * 
  * //将任务丢到线程池中
  * tpool.exec(testFunction, 10);    //参数和start相同
+ * 
  * //等待线程池结束, 有两种方式:
  * //第一种等待线程池中无任务
  * tpool.waitForAllDone(1000);      //参数<0时, 表示无限等待(注意有人调用stop也会推出)
@@ -41,6 +47,7 @@ namespace tars
  * tpool.waitForStop(1000);
  * //此时: 外部需要结束线程池是调用
  * tpool.stop();
+ * 
  * 注意:
  * TC_ThreadPool::exec执行任务返回的是个future, 因此可以通过future异步获取结果, 比如:
  * int testInt(int i)
@@ -92,6 +99,18 @@ protected:
     typedef shared_ptr<TaskFunc> TaskFuncPtr;
 public:
     /**
+     * @brief 线程初始化回调函数类型
+     * 在工作线程启动后、执行任务前调用（每个线程仅调用一次）
+     */
+    typedef std::function<void()> ThreadInitCallback;
+    
+    /**
+     * @brief 线程销毁回调函数类型
+     * 在工作线程退出前调用（每个线程仅调用一次）
+     */
+    typedef std::function<void()> ThreadDestroyCallback;
+
+    /**
     * @brief 构造函数
     *
     */
@@ -141,6 +160,30 @@ public:
     * @brief 启动所有线程
     */
     void start();
+
+    /**
+     * @brief 设置线程初始化回调函数
+     * 
+     * @param callback 初始化回调函数，在每个工作线程启动时调用
+     * 
+     * 注意：
+     * - 必须在 start() 之前调用
+     * - 回调函数在工作线程中执行，可以安全地访问 TLS 变量
+     * - 如果回调函数抛出异常，异常会被捕获并忽略，线程继续运行
+     */
+    void setThreadInitCallback(const ThreadInitCallback& callback);
+    
+    /**
+     * @brief 设置线程销毁回调函数
+     * 
+     * @param callback 销毁回调函数，在每个工作线程退出前调用
+     * 
+     * 注意：
+     * - 必须在 start() 之前调用
+     * - 回调函数在工作线程中执行，可以安全地访问 TLS 变量
+     * - 如果回调函数抛出异常，异常会被捕获并忽略
+     */
+    void setThreadDestroyCallback(const ThreadDestroyCallback& callback);
 
     /**
     * @brief 用线程池启用任务(F是function, Args是参数)
@@ -230,6 +273,10 @@ protected:
     bool                      _bTerminate;
 
     std::atomic<int>          _atomic{ 0 };
+
+    ThreadInitCallback        _threadInitCallback;
+    
+    ThreadDestroyCallback     _threadDestroyCallback;
 };
 
 
@@ -259,6 +306,24 @@ public:
         * @brief 启动所有线程
         */
     void start();
+
+    /**
+     * @brief 设置所有线程池的初始化回调
+     * 
+     * @param callback 初始化回调函数
+     * 
+     * 注意：必须在 start() 之前调用
+     */
+    void setThreadInitCallback(const TC_ThreadPool::ThreadInitCallback& callback);
+    
+    /**
+     * @brief 设置所有线程池的销毁回调
+     * 
+     * @param callback 销毁回调函数
+     * 
+     * 注意：必须在 start() 之前调用
+     */
+    void setThreadDestroyCallback(const TC_ThreadPool::ThreadDestroyCallback& callback);
 
     /**
     * @brief 用线程池启用任务(F是function, Args是参数)
@@ -302,7 +367,9 @@ protected:
 protected:
 private:
     vector<TC_ThreadPool*> _pools;
-
+    
+    TC_ThreadPool::ThreadInitCallback    _threadInitCallback;
+    TC_ThreadPool::ThreadDestroyCallback _threadDestroyCallback;
 };
 
 }
