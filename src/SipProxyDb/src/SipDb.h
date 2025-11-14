@@ -4102,27 +4102,6 @@ namespace VoipApp
     {
     public:
         virtual ~SipDbPrxCallback(){}
-        virtual void callback_GetAllAllowedIps(tars::Bool ret,  const vector<VoipApp::AllowedIp>& vectIps)
-        { throw std::runtime_error("callback_GetAllAllowedIps() override incorrect."); }
-        virtual void callback_GetAllAllowedIps_exception(tars::Int32 ret)
-        { throw std::runtime_error("callback_GetAllAllowedIps_exception() override incorrect."); }
-        virtual void callback_GetAllAllowedIps(tars::Bool ret, vector<VoipApp::AllowedIp>&&  vectIps)
-        { callback_GetAllAllowedIps(ret, vectIps); }
-
-        virtual void callback_GetAllCallSipPolicys(tars::Bool ret,  const vector<VoipApp::CallSipPolicy>& policys)
-        { throw std::runtime_error("callback_GetAllCallSipPolicys() override incorrect."); }
-        virtual void callback_GetAllCallSipPolicys_exception(tars::Int32 ret)
-        { throw std::runtime_error("callback_GetAllCallSipPolicys_exception() override incorrect."); }
-        virtual void callback_GetAllCallSipPolicys(tars::Bool ret, vector<VoipApp::CallSipPolicy>&&  policys)
-        { callback_GetAllCallSipPolicys(ret, policys); }
-
-        virtual void callback_GetAllNationCodeIps(tars::Bool ret,  const vector<VoipApp::NationCodeIp>& vectIps)
-        { throw std::runtime_error("callback_GetAllNationCodeIps() override incorrect."); }
-        virtual void callback_GetAllNationCodeIps_exception(tars::Int32 ret)
-        { throw std::runtime_error("callback_GetAllNationCodeIps_exception() override incorrect."); }
-        virtual void callback_GetAllNationCodeIps(tars::Bool ret, vector<VoipApp::NationCodeIp>&&  vectIps)
-        { callback_GetAllNationCodeIps(ret, vectIps); }
-
         virtual void callback_GetDomainAccessInfo(tars::Bool ret,  const vector<VoipApp::DomainAccessedConfig>& vectDomainAccessed,  const std::string& reason)
         { throw std::runtime_error("callback_GetDomainAccessInfo() override incorrect."); }
         virtual void callback_GetDomainAccessInfo_exception(tars::Int32 ret)
@@ -4255,9 +4234,6 @@ namespace VoipApp
         {
             static ::std::string __SipDb_all[]=
             {
-                "GetAllAllowedIps",
-                "GetAllCallSipPolicys",
-                "GetAllNationCodeIps",
                 "GetDomainAccessInfo",
                 "GetDomainAccessInfo2",
                 "GetRtpGatewayconfigInfo",
@@ -4278,152 +4254,11 @@ namespace VoipApp
                 "updateDomainLineConfig"
             };
             auto it = _msg_->response->status.find("TARS_FUNC");
-            pair<string*, string*> r = equal_range(__SipDb_all, __SipDb_all+21, (it==_msg_->response->status.end())?_msg_->request.sFuncName:it->second);
+            pair<string*, string*> r = equal_range(__SipDb_all, __SipDb_all+18, (it==_msg_->response->status.end())?_msg_->request.sFuncName:it->second);
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __SipDb_all)
             {
                 case 0:
-                {
-                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_GetAllAllowedIps_exception(_msg_->response->iRet);
-
-                        return _msg_->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(_msg_->response->sBuffer);
-                    tars::Bool _ret = false;
-                    _is.read(_ret, 0, true);
-
-                    vector<VoipApp::AllowedIp> vectIps;
-                    _is.read(vectIps, 2, true);
-                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-                    if (_pSptd_ && _pSptd_->_traceCall)
-                    {
-                        string _trace_param_;
-                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
-                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                        {
-                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                            _p_->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                            _trace_param_ = tars::TC_Json::writeValue(_p_);
-                        }
-                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                        {
-                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                        }
-                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", getModuleName(), "GetAllAllowedIps", 0, _trace_param_, "");
-                    }
-
-                    CallbackThreadData * pCbtd = CallbackThreadData::getData();
-                    assert(pCbtd != NULL);
-
-                    pCbtd->setResponseContext(_msg_->response->context);
-
-                    callback_GetAllAllowedIps(_ret, std::move(vectIps));
-
-                    pCbtd->delResponseContext();
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 1:
-                {
-                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_GetAllCallSipPolicys_exception(_msg_->response->iRet);
-
-                        return _msg_->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(_msg_->response->sBuffer);
-                    tars::Bool _ret = false;
-                    _is.read(_ret, 0, true);
-
-                    vector<VoipApp::CallSipPolicy> policys;
-                    _is.read(policys, 2, true);
-                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-                    if (_pSptd_ && _pSptd_->_traceCall)
-                    {
-                        string _trace_param_;
-                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
-                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                        {
-                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                            _p_->value["policys"] = tars::JsonOutput::writeJson(policys);
-                            _trace_param_ = tars::TC_Json::writeValue(_p_);
-                        }
-                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                        {
-                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                        }
-                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", getModuleName(), "GetAllCallSipPolicys", 0, _trace_param_, "");
-                    }
-
-                    CallbackThreadData * pCbtd = CallbackThreadData::getData();
-                    assert(pCbtd != NULL);
-
-                    pCbtd->setResponseContext(_msg_->response->context);
-
-                    callback_GetAllCallSipPolicys(_ret, std::move(policys));
-
-                    pCbtd->delResponseContext();
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 2:
-                {
-                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_GetAllNationCodeIps_exception(_msg_->response->iRet);
-
-                        return _msg_->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(_msg_->response->sBuffer);
-                    tars::Bool _ret = false;
-                    _is.read(_ret, 0, true);
-
-                    vector<VoipApp::NationCodeIp> vectIps;
-                    _is.read(vectIps, 2, true);
-                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-                    if (_pSptd_ && _pSptd_->_traceCall)
-                    {
-                        string _trace_param_;
-                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
-                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                        {
-                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                            _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                            _p_->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                            _trace_param_ = tars::TC_Json::writeValue(_p_);
-                        }
-                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                        {
-                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                        }
-                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, "", getModuleName(), "GetAllNationCodeIps", 0, _trace_param_, "");
-                    }
-
-                    CallbackThreadData * pCbtd = CallbackThreadData::getData();
-                    assert(pCbtd != NULL);
-
-                    pCbtd->setResponseContext(_msg_->response->context);
-
-                    callback_GetAllNationCodeIps(_ret, std::move(vectIps));
-
-                    pCbtd->delResponseContext();
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 3:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4473,7 +4308,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 4:
+                case 1:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4523,7 +4358,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 5:
+                case 2:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4570,7 +4405,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 6:
+                case 3:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4620,7 +4455,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 7:
+                case 4:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4667,7 +4502,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 8:
+                case 5:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4714,7 +4549,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 9:
+                case 6:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4758,7 +4593,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 10:
+                case 7:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4802,7 +4637,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 11:
+                case 8:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4846,7 +4681,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 12:
+                case 9:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4890,7 +4725,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 13:
+                case 10:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4940,7 +4775,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 14:
+                case 11:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -4993,7 +4828,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 15:
+                case 12:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -5040,7 +4875,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 16:
+                case 13:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -5084,7 +4919,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 17:
+                case 14:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -5131,7 +4966,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 18:
+                case 15:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -5175,7 +5010,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 19:
+                case 16:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -5222,7 +5057,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 20:
+                case 17:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -5281,96 +5116,6 @@ namespace VoipApp
     {
     public:
         virtual ~SipDbPrxCallbackPromise(){}
-    public:
-        struct PromiseGetAllAllowedIps: virtual public TC_HandleBase
-        {
-        public:
-            tars::Bool _ret;
-            vector<VoipApp::AllowedIp> vectIps;
-            map<std::string, std::string> _mRspContext;
-        };
-        
-        typedef tars::TC_AutoPtr< SipDbPrxCallbackPromise::PromiseGetAllAllowedIps > PromiseGetAllAllowedIpsPtr;
-
-        SipDbPrxCallbackPromise(const tars::Promise< SipDbPrxCallbackPromise::PromiseGetAllAllowedIpsPtr > &promise)
-        : _promise_GetAllAllowedIps(promise)
-        {}
-        
-        virtual void callback_GetAllAllowedIps(const SipDbPrxCallbackPromise::PromiseGetAllAllowedIpsPtr &ptr)
-        {
-            _promise_GetAllAllowedIps.setValue(ptr);
-        }
-        virtual void callback_GetAllAllowedIps_exception(tars::Int32 ret)
-        {
-            std::string str("");
-            str += "Function:GetAllAllowedIps_exception|Ret:";
-            str += TC_Common::tostr(ret);
-            _promise_GetAllAllowedIps.setException(tars::copyException(str, ret));
-        }
-
-    protected:
-        tars::Promise< SipDbPrxCallbackPromise::PromiseGetAllAllowedIpsPtr > _promise_GetAllAllowedIps;
-
-    public:
-        struct PromiseGetAllCallSipPolicys: virtual public TC_HandleBase
-        {
-        public:
-            tars::Bool _ret;
-            vector<VoipApp::CallSipPolicy> policys;
-            map<std::string, std::string> _mRspContext;
-        };
-        
-        typedef tars::TC_AutoPtr< SipDbPrxCallbackPromise::PromiseGetAllCallSipPolicys > PromiseGetAllCallSipPolicysPtr;
-
-        SipDbPrxCallbackPromise(const tars::Promise< SipDbPrxCallbackPromise::PromiseGetAllCallSipPolicysPtr > &promise)
-        : _promise_GetAllCallSipPolicys(promise)
-        {}
-        
-        virtual void callback_GetAllCallSipPolicys(const SipDbPrxCallbackPromise::PromiseGetAllCallSipPolicysPtr &ptr)
-        {
-            _promise_GetAllCallSipPolicys.setValue(ptr);
-        }
-        virtual void callback_GetAllCallSipPolicys_exception(tars::Int32 ret)
-        {
-            std::string str("");
-            str += "Function:GetAllCallSipPolicys_exception|Ret:";
-            str += TC_Common::tostr(ret);
-            _promise_GetAllCallSipPolicys.setException(tars::copyException(str, ret));
-        }
-
-    protected:
-        tars::Promise< SipDbPrxCallbackPromise::PromiseGetAllCallSipPolicysPtr > _promise_GetAllCallSipPolicys;
-
-    public:
-        struct PromiseGetAllNationCodeIps: virtual public TC_HandleBase
-        {
-        public:
-            tars::Bool _ret;
-            vector<VoipApp::NationCodeIp> vectIps;
-            map<std::string, std::string> _mRspContext;
-        };
-        
-        typedef tars::TC_AutoPtr< SipDbPrxCallbackPromise::PromiseGetAllNationCodeIps > PromiseGetAllNationCodeIpsPtr;
-
-        SipDbPrxCallbackPromise(const tars::Promise< SipDbPrxCallbackPromise::PromiseGetAllNationCodeIpsPtr > &promise)
-        : _promise_GetAllNationCodeIps(promise)
-        {}
-        
-        virtual void callback_GetAllNationCodeIps(const SipDbPrxCallbackPromise::PromiseGetAllNationCodeIpsPtr &ptr)
-        {
-            _promise_GetAllNationCodeIps.setValue(ptr);
-        }
-        virtual void callback_GetAllNationCodeIps_exception(tars::Int32 ret)
-        {
-            std::string str("");
-            str += "Function:GetAllNationCodeIps_exception|Ret:";
-            str += TC_Common::tostr(ret);
-            _promise_GetAllNationCodeIps.setException(tars::copyException(str, ret));
-        }
-
-    protected:
-        tars::Promise< SipDbPrxCallbackPromise::PromiseGetAllNationCodeIpsPtr > _promise_GetAllNationCodeIps;
-
     public:
         struct PromiseGetDomainAccessInfo: virtual public TC_HandleBase
         {
@@ -5916,9 +5661,6 @@ namespace VoipApp
         {
             static ::std::string __SipDb_all[]=
             {
-                "GetAllAllowedIps",
-                "GetAllCallSipPolicys",
-                "GetAllNationCodeIps",
                 "GetDomainAccessInfo",
                 "GetDomainAccessInfo2",
                 "GetRtpGatewayconfigInfo",
@@ -5939,134 +5681,11 @@ namespace VoipApp
                 "updateDomainLineConfig"
             };
 
-            pair<string*, string*> r = equal_range(__SipDb_all, __SipDb_all+21, string(_msg_->request.sFuncName));
+            pair<string*, string*> r = equal_range(__SipDb_all, __SipDb_all+18, string(_msg_->request.sFuncName));
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __SipDb_all)
             {
                 case 0:
-                {
-                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_GetAllAllowedIps_exception(_msg_->response->iRet);
-
-                        return _msg_->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(_msg_->response->sBuffer);
-
-                    SipDbPrxCallbackPromise::PromiseGetAllAllowedIpsPtr ptr (new SipDbPrxCallbackPromise::PromiseGetAllAllowedIps());
-
-                    try
-                    {
-                        ptr->_ret  = false;
-                        _is.read(ptr->_ret, 0, true);
-
-                        _is.read(ptr->vectIps, 2, true);
-                    }
-                    catch(std::exception &ex)
-                    {
-                        callback_GetAllAllowedIps_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-                    catch(...)
-                    {
-                        callback_GetAllAllowedIps_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-
-                    ptr->_mRspContext = _msg_->response->context;
-
-                    callback_GetAllAllowedIps(ptr);
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 1:
-                {
-                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_GetAllCallSipPolicys_exception(_msg_->response->iRet);
-
-                        return _msg_->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(_msg_->response->sBuffer);
-
-                    SipDbPrxCallbackPromise::PromiseGetAllCallSipPolicysPtr ptr (new SipDbPrxCallbackPromise::PromiseGetAllCallSipPolicys());
-
-                    try
-                    {
-                        ptr->_ret  = false;
-                        _is.read(ptr->_ret, 0, true);
-
-                        _is.read(ptr->policys, 2, true);
-                    }
-                    catch(std::exception &ex)
-                    {
-                        callback_GetAllCallSipPolicys_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-                    catch(...)
-                    {
-                        callback_GetAllCallSipPolicys_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-
-                    ptr->_mRspContext = _msg_->response->context;
-
-                    callback_GetAllCallSipPolicys(ptr);
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 2:
-                {
-                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_GetAllNationCodeIps_exception(_msg_->response->iRet);
-
-                        return _msg_->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(_msg_->response->sBuffer);
-
-                    SipDbPrxCallbackPromise::PromiseGetAllNationCodeIpsPtr ptr (new SipDbPrxCallbackPromise::PromiseGetAllNationCodeIps());
-
-                    try
-                    {
-                        ptr->_ret  = false;
-                        _is.read(ptr->_ret, 0, true);
-
-                        _is.read(ptr->vectIps, 2, true);
-                    }
-                    catch(std::exception &ex)
-                    {
-                        callback_GetAllNationCodeIps_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-                    catch(...)
-                    {
-                        callback_GetAllNationCodeIps_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-
-                    ptr->_mRspContext = _msg_->response->context;
-
-                    callback_GetAllNationCodeIps(ptr);
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 3:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6108,7 +5727,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 4:
+                case 1:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6150,7 +5769,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 5:
+                case 2:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6191,7 +5810,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 6:
+                case 3:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6233,7 +5852,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 7:
+                case 4:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6274,7 +5893,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 8:
+                case 5:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6315,7 +5934,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 9:
+                case 6:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6355,7 +5974,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 10:
+                case 7:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6395,7 +6014,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 11:
+                case 8:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6435,7 +6054,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 12:
+                case 9:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6475,7 +6094,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 13:
+                case 10:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6517,7 +6136,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 14:
+                case 11:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6560,7 +6179,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 15:
+                case 12:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6601,7 +6220,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 16:
+                case 13:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6641,7 +6260,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 17:
+                case 14:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6682,7 +6301,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 18:
+                case 15:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6722,7 +6341,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 19:
+                case 16:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6763,7 +6382,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 20:
+                case 17:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -6826,9 +6445,6 @@ namespace VoipApp
         {
             static ::std::string __SipDb_all[]=
             {
-                "GetAllAllowedIps",
-                "GetAllCallSipPolicys",
-                "GetAllNationCodeIps",
                 "GetDomainAccessInfo",
                 "GetDomainAccessInfo2",
                 "GetRtpGatewayconfigInfo",
@@ -6849,128 +6465,11 @@ namespace VoipApp
                 "updateDomainLineConfig"
             };
 
-            pair<string*, string*> r = equal_range(__SipDb_all, __SipDb_all+21, string(_msg_->request.sFuncName));
+            pair<string*, string*> r = equal_range(__SipDb_all, __SipDb_all+18, string(_msg_->request.sFuncName));
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __SipDb_all)
             {
                 case 0:
-                {
-                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_GetAllAllowedIps_exception(_msg_->response->iRet);
-
-                        return _msg_->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(_msg_->response->sBuffer);
-                    try
-                    {
-                        tars::Bool _ret = false;
-                        _is.read(_ret, 0, true);
-
-                        vector<VoipApp::AllowedIp> vectIps;
-                        _is.read(vectIps, 2, true);
-                        setResponseContext(_msg_->response->context);
-
-                        callback_GetAllAllowedIps(_ret, std::move(vectIps));
-
-                    }
-                    catch(std::exception &ex)
-                    {
-                        callback_GetAllAllowedIps_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-                    catch(...)
-                    {
-                        callback_GetAllAllowedIps_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 1:
-                {
-                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_GetAllCallSipPolicys_exception(_msg_->response->iRet);
-
-                        return _msg_->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(_msg_->response->sBuffer);
-                    try
-                    {
-                        tars::Bool _ret = false;
-                        _is.read(_ret, 0, true);
-
-                        vector<VoipApp::CallSipPolicy> policys;
-                        _is.read(policys, 2, true);
-                        setResponseContext(_msg_->response->context);
-
-                        callback_GetAllCallSipPolicys(_ret, std::move(policys));
-
-                    }
-                    catch(std::exception &ex)
-                    {
-                        callback_GetAllCallSipPolicys_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-                    catch(...)
-                    {
-                        callback_GetAllCallSipPolicys_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 2:
-                {
-                    if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
-                    {
-                        callback_GetAllNationCodeIps_exception(_msg_->response->iRet);
-
-                        return _msg_->response->iRet;
-                    }
-                    tars::TarsInputStream<tars::BufferReader> _is;
-
-                    _is.setBuffer(_msg_->response->sBuffer);
-                    try
-                    {
-                        tars::Bool _ret = false;
-                        _is.read(_ret, 0, true);
-
-                        vector<VoipApp::NationCodeIp> vectIps;
-                        _is.read(vectIps, 2, true);
-                        setResponseContext(_msg_->response->context);
-
-                        callback_GetAllNationCodeIps(_ret, std::move(vectIps));
-
-                    }
-                    catch(std::exception &ex)
-                    {
-                        callback_GetAllNationCodeIps_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-                    catch(...)
-                    {
-                        callback_GetAllNationCodeIps_exception(tars::TARSCLIENTDECODEERR);
-
-                        return tars::TARSCLIENTDECODEERR;
-                    }
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 3:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7011,7 +6510,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 4:
+                case 1:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7052,7 +6551,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 5:
+                case 2:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7091,7 +6590,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 6:
+                case 3:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7132,7 +6631,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 7:
+                case 4:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7171,7 +6670,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 8:
+                case 5:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7210,7 +6709,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 9:
+                case 6:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7247,7 +6746,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 10:
+                case 7:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7284,7 +6783,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 11:
+                case 8:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7321,7 +6820,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 12:
+                case 9:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7358,7 +6857,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 13:
+                case 10:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7399,7 +6898,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 14:
+                case 11:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7442,7 +6941,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 15:
+                case 12:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7481,7 +6980,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 16:
+                case 13:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7518,7 +7017,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 17:
+                case 14:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7557,7 +7056,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 18:
+                case 15:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7594,7 +7093,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 19:
+                case 16:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7633,7 +7132,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 20:
+                case 17:
                 {
                     if (_msg_->response->iRet != tars::TARSSERVERSUCCESS)
                     {
@@ -7686,318 +7185,6 @@ namespace VoipApp
     {
     public:
         typedef map<string, string> TARS_CONTEXT;
-        tars::Bool GetAllAllowedIps(const std::string & tableName,vector<VoipApp::AllowedIp> &vectIps,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
-        {
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            _os.write(vectIps, 2);
-            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-            if (_pSptd_ && _pSptd_->_traceCall)
-            {
-                _pSptd_->newSpan();
-                string _trace_param_;
-                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value["tableName"] = tars::JsonOutput::writeJson(tableName);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, tars_moduleName(), tars_name(), "GetAllAllowedIps", 0, _trace_param_, "");
-            }
-
-            std::map<string, string> _mStatus;
-            shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"GetAllAllowedIps", _os, context, _mStatus);
-            if(pResponseContext)
-            {
-                pResponseContext->swap(rep->context);
-            }
-
-            tars::TarsInputStream<tars::BufferReader> _is;
-            _is.setBuffer(rep->sBuffer);
-            tars::Bool _ret = false;
-            _is.read(_ret, 0, true);
-            _is.read(vectIps, 2, true);
-            if (_pSptd_ && _pSptd_->_traceCall)
-            {
-                string _trace_param_;
-                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                    _p_->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, tars_moduleName(), tars_name(), "GetAllAllowedIps", 0, _trace_param_, "");
-            }
-
-            return _ret;
-        }
-
-        void async_GetAllAllowedIps(SipDbPrxCallbackPtr callback,const std::string &tableName,const map<string, string>& context = TARS_CONTEXT())
-        {
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            std::map<string, string> _mStatus;
-            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-            if (_pSptd_ && _pSptd_->_traceCall)
-            {
-                _pSptd_->newSpan();
-                string _trace_param_;
-                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value["tableName"] = tars::JsonOutput::writeJson(tableName);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, tars_moduleName(), tars_name(), "GetAllAllowedIps", 0, _trace_param_, "");
-            }
-            tars_invoke_async(tars::TARSNORMAL,"GetAllAllowedIps", _os, context, _mStatus, callback);
-        }
-        
-        tars::Future< SipDbPrxCallbackPromise::PromiseGetAllAllowedIpsPtr > promise_async_GetAllAllowedIps(const std::string &tableName,const map<string, string>& context)
-        {
-            tars::Promise< SipDbPrxCallbackPromise::PromiseGetAllAllowedIpsPtr > promise;
-            SipDbPrxCallbackPromisePtr callback (new SipDbPrxCallbackPromise(promise));
-
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"GetAllAllowedIps", _os, context, _mStatus, callback);
-
-            return promise.getFuture();
-        }
-
-        void coro_GetAllAllowedIps(SipDbCoroPrxCallbackPtr callback,const std::string &tableName,const map<string, string>& context = TARS_CONTEXT())
-        {
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"GetAllAllowedIps", _os, context, _mStatus, callback, true);
-        }
-
-        tars::Bool GetAllCallSipPolicys(const std::string & tableName,vector<VoipApp::CallSipPolicy> &policys,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
-        {
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            _os.write(policys, 2);
-            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-            if (_pSptd_ && _pSptd_->_traceCall)
-            {
-                _pSptd_->newSpan();
-                string _trace_param_;
-                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value["tableName"] = tars::JsonOutput::writeJson(tableName);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, tars_moduleName(), tars_name(), "GetAllCallSipPolicys", 0, _trace_param_, "");
-            }
-
-            std::map<string, string> _mStatus;
-            shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"GetAllCallSipPolicys", _os, context, _mStatus);
-            if(pResponseContext)
-            {
-                pResponseContext->swap(rep->context);
-            }
-
-            tars::TarsInputStream<tars::BufferReader> _is;
-            _is.setBuffer(rep->sBuffer);
-            tars::Bool _ret = false;
-            _is.read(_ret, 0, true);
-            _is.read(policys, 2, true);
-            if (_pSptd_ && _pSptd_->_traceCall)
-            {
-                string _trace_param_;
-                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                    _p_->value["policys"] = tars::JsonOutput::writeJson(policys);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, tars_moduleName(), tars_name(), "GetAllCallSipPolicys", 0, _trace_param_, "");
-            }
-
-            return _ret;
-        }
-
-        void async_GetAllCallSipPolicys(SipDbPrxCallbackPtr callback,const std::string &tableName,const map<string, string>& context = TARS_CONTEXT())
-        {
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            std::map<string, string> _mStatus;
-            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-            if (_pSptd_ && _pSptd_->_traceCall)
-            {
-                _pSptd_->newSpan();
-                string _trace_param_;
-                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value["tableName"] = tars::JsonOutput::writeJson(tableName);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, tars_moduleName(), tars_name(), "GetAllCallSipPolicys", 0, _trace_param_, "");
-            }
-            tars_invoke_async(tars::TARSNORMAL,"GetAllCallSipPolicys", _os, context, _mStatus, callback);
-        }
-        
-        tars::Future< SipDbPrxCallbackPromise::PromiseGetAllCallSipPolicysPtr > promise_async_GetAllCallSipPolicys(const std::string &tableName,const map<string, string>& context)
-        {
-            tars::Promise< SipDbPrxCallbackPromise::PromiseGetAllCallSipPolicysPtr > promise;
-            SipDbPrxCallbackPromisePtr callback (new SipDbPrxCallbackPromise(promise));
-
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"GetAllCallSipPolicys", _os, context, _mStatus, callback);
-
-            return promise.getFuture();
-        }
-
-        void coro_GetAllCallSipPolicys(SipDbCoroPrxCallbackPtr callback,const std::string &tableName,const map<string, string>& context = TARS_CONTEXT())
-        {
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"GetAllCallSipPolicys", _os, context, _mStatus, callback, true);
-        }
-
-        tars::Bool GetAllNationCodeIps(const std::string & tableName,vector<VoipApp::NationCodeIp> &vectIps,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
-        {
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            _os.write(vectIps, 2);
-            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-            if (_pSptd_ && _pSptd_->_traceCall)
-            {
-                _pSptd_->newSpan();
-                string _trace_param_;
-                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value["tableName"] = tars::JsonOutput::writeJson(tableName);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, tars_moduleName(), tars_name(), "GetAllNationCodeIps", 0, _trace_param_, "");
-            }
-
-            std::map<string, string> _mStatus;
-            shared_ptr<tars::ResponsePacket> rep = tars_invoke(tars::TARSNORMAL,"GetAllNationCodeIps", _os, context, _mStatus);
-            if(pResponseContext)
-            {
-                pResponseContext->swap(rep->context);
-            }
-
-            tars::TarsInputStream<tars::BufferReader> _is;
-            _is.setBuffer(rep->sBuffer);
-            tars::Bool _ret = false;
-            _is.read(_ret, 0, true);
-            _is.read(vectIps, 2, true);
-            if (_pSptd_ && _pSptd_->_traceCall)
-            {
-                string _trace_param_;
-                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CR, _is.size());
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                    _p_->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CR), TRACE_ANNOTATION_CR, tars_moduleName(), tars_name(), "GetAllNationCodeIps", 0, _trace_param_, "");
-            }
-
-            return _ret;
-        }
-
-        void async_GetAllNationCodeIps(SipDbPrxCallbackPtr callback,const std::string &tableName,const map<string, string>& context = TARS_CONTEXT())
-        {
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            std::map<string, string> _mStatus;
-            ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-            if (_pSptd_ && _pSptd_->_traceCall)
-            {
-                _pSptd_->newSpan();
-                string _trace_param_;
-                int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_CS, _os.getLength());
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value["tableName"] = tars::JsonOutput::writeJson(tableName);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_CS), TRACE_ANNOTATION_CS, tars_moduleName(), tars_name(), "GetAllNationCodeIps", 0, _trace_param_, "");
-            }
-            tars_invoke_async(tars::TARSNORMAL,"GetAllNationCodeIps", _os, context, _mStatus, callback);
-        }
-        
-        tars::Future< SipDbPrxCallbackPromise::PromiseGetAllNationCodeIpsPtr > promise_async_GetAllNationCodeIps(const std::string &tableName,const map<string, string>& context)
-        {
-            tars::Promise< SipDbPrxCallbackPromise::PromiseGetAllNationCodeIpsPtr > promise;
-            SipDbPrxCallbackPromisePtr callback (new SipDbPrxCallbackPromise(promise));
-
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"GetAllNationCodeIps", _os, context, _mStatus, callback);
-
-            return promise.getFuture();
-        }
-
-        void coro_GetAllNationCodeIps(SipDbCoroPrxCallbackPtr callback,const std::string &tableName,const map<string, string>& context = TARS_CONTEXT())
-        {
-            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-            _os.write(tableName, 1);
-            std::map<string, string> _mStatus;
-            tars_invoke_async(tars::TARSNORMAL,"GetAllNationCodeIps", _os, context, _mStatus, callback, true);
-        }
-
         tars::Bool GetDomainAccessInfo(const std::string & tableName,vector<VoipApp::DomainAccessedConfig> &vectDomainAccessed,std::string &reason,const map<string, string> &context = TARS_CONTEXT(),map<string, string> * pResponseContext = NULL)
         {
             tars::TarsOutputStream<tars::BufferWriterVector> _os;
@@ -10091,225 +9278,6 @@ namespace VoipApp
     {
     public:
         virtual ~SipDb(){}
-        virtual tars::Bool GetAllAllowedIps(const std::string & tableName,vector<VoipApp::AllowedIp> &vectIps,tars::TarsCurrentPtr _current_) = 0;
-        virtual tars::Bool GetAllAllowedIps(std::string && tableName,vector<VoipApp::AllowedIp> &vectIps,tars::TarsCurrentPtr _current_) 
-        { return GetAllAllowedIps(tableName, vectIps, _current_); }
-        static void async_response_GetAllAllowedIps(tars::TarsCurrentPtr _current_, tars::Bool _ret, const vector<VoipApp::AllowedIp> &vectIps)
-        {
-            size_t _rsp_len_ = 0;
-            if (_current_->getRequestVersion() == TUPVERSION )
-            {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
-                _tarsAttr_.setVersion(_current_->getRequestVersion());
-                _tarsAttr_.put("", _ret);
-                _tarsAttr_.put("tars_ret", _ret);
-                _tarsAttr_.put("vectIps", vectIps);
-
-                vector<char> sTupResponseBuffer;
-                _tarsAttr_.encode(sTupResponseBuffer);
-                _current_->sendResponse(tars::TARSSERVERSUCCESS, _tarsAttr_);
-                _rsp_len_ = sTupResponseBuffer.size();
-            }
-            else if (_current_->getRequestVersion() == JSONVERSION)
-            {
-                tars::JsonValueObjPtr _p = new tars::JsonValueObj();
-                _p->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
-                vector<char> sJsonResponseBuffer;
-                tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
-                _rsp_len_ = sJsonResponseBuffer.size();
-            }
-            else
-            {
-                tars::TarsOutputStream<tars::BufferWriterVector> _os;
-                _os.write(_ret, 0);
-
-                _os.write(vectIps, 2);
-
-                _rsp_len_ = _os.getLength();
-                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os);
-            }
-            if (_current_->isTraced())
-            {
-                string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                    _p_->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                if(_current_->getServantHandle())
-                {
-                    TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", _current_->getModuleName(), "GetAllAllowedIps", 0, _trace_param_, "");
-                }
-            }
-
-        }
-        static void async_response_push_GetAllAllowedIps(tars::CurrentPtr _current_, tars::Bool _ret, const vector<VoipApp::AllowedIp> &vectIps, const map<string, string> &_context = tars::Current::TARS_STATUS())
-        {
-            {
-                tars::TarsOutputStream<tars::BufferWriterVector> _os;
-                _os.write(_ret, 0);
-
-                _os.write(vectIps, 2);
-
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"GetAllAllowedIps", _os, _context);
-            }
-        }
-
-        virtual tars::Bool GetAllCallSipPolicys(const std::string & tableName,vector<VoipApp::CallSipPolicy> &policys,tars::TarsCurrentPtr _current_) = 0;
-        virtual tars::Bool GetAllCallSipPolicys(std::string && tableName,vector<VoipApp::CallSipPolicy> &policys,tars::TarsCurrentPtr _current_) 
-        { return GetAllCallSipPolicys(tableName, policys, _current_); }
-        static void async_response_GetAllCallSipPolicys(tars::TarsCurrentPtr _current_, tars::Bool _ret, const vector<VoipApp::CallSipPolicy> &policys)
-        {
-            size_t _rsp_len_ = 0;
-            if (_current_->getRequestVersion() == TUPVERSION )
-            {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
-                _tarsAttr_.setVersion(_current_->getRequestVersion());
-                _tarsAttr_.put("", _ret);
-                _tarsAttr_.put("tars_ret", _ret);
-                _tarsAttr_.put("policys", policys);
-
-                vector<char> sTupResponseBuffer;
-                _tarsAttr_.encode(sTupResponseBuffer);
-                _current_->sendResponse(tars::TARSSERVERSUCCESS, _tarsAttr_);
-                _rsp_len_ = sTupResponseBuffer.size();
-            }
-            else if (_current_->getRequestVersion() == JSONVERSION)
-            {
-                tars::JsonValueObjPtr _p = new tars::JsonValueObj();
-                _p->value["policys"] = tars::JsonOutput::writeJson(policys);
-                _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
-                vector<char> sJsonResponseBuffer;
-                tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
-                _rsp_len_ = sJsonResponseBuffer.size();
-            }
-            else
-            {
-                tars::TarsOutputStream<tars::BufferWriterVector> _os;
-                _os.write(_ret, 0);
-
-                _os.write(policys, 2);
-
-                _rsp_len_ = _os.getLength();
-                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os);
-            }
-            if (_current_->isTraced())
-            {
-                string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                    _p_->value["policys"] = tars::JsonOutput::writeJson(policys);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                if(_current_->getServantHandle())
-                {
-                    TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", _current_->getModuleName(), "GetAllCallSipPolicys", 0, _trace_param_, "");
-                }
-            }
-
-        }
-        static void async_response_push_GetAllCallSipPolicys(tars::CurrentPtr _current_, tars::Bool _ret, const vector<VoipApp::CallSipPolicy> &policys, const map<string, string> &_context = tars::Current::TARS_STATUS())
-        {
-            {
-                tars::TarsOutputStream<tars::BufferWriterVector> _os;
-                _os.write(_ret, 0);
-
-                _os.write(policys, 2);
-
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"GetAllCallSipPolicys", _os, _context);
-            }
-        }
-
-        virtual tars::Bool GetAllNationCodeIps(const std::string & tableName,vector<VoipApp::NationCodeIp> &vectIps,tars::TarsCurrentPtr _current_) = 0;
-        virtual tars::Bool GetAllNationCodeIps(std::string && tableName,vector<VoipApp::NationCodeIp> &vectIps,tars::TarsCurrentPtr _current_) 
-        { return GetAllNationCodeIps(tableName, vectIps, _current_); }
-        static void async_response_GetAllNationCodeIps(tars::TarsCurrentPtr _current_, tars::Bool _ret, const vector<VoipApp::NationCodeIp> &vectIps)
-        {
-            size_t _rsp_len_ = 0;
-            if (_current_->getRequestVersion() == TUPVERSION )
-            {
-                UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
-                _tarsAttr_.setVersion(_current_->getRequestVersion());
-                _tarsAttr_.put("", _ret);
-                _tarsAttr_.put("tars_ret", _ret);
-                _tarsAttr_.put("vectIps", vectIps);
-
-                vector<char> sTupResponseBuffer;
-                _tarsAttr_.encode(sTupResponseBuffer);
-                _current_->sendResponse(tars::TARSSERVERSUCCESS, _tarsAttr_);
-                _rsp_len_ = sTupResponseBuffer.size();
-            }
-            else if (_current_->getRequestVersion() == JSONVERSION)
-            {
-                tars::JsonValueObjPtr _p = new tars::JsonValueObj();
-                _p->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
-                vector<char> sJsonResponseBuffer;
-                tars::TC_Json::writeValue(_p, sJsonResponseBuffer);
-                _current_->sendResponse(tars::TARSSERVERSUCCESS, sJsonResponseBuffer);
-                _rsp_len_ = sJsonResponseBuffer.size();
-            }
-            else
-            {
-                tars::TarsOutputStream<tars::BufferWriterVector> _os;
-                _os.write(_ret, 0);
-
-                _os.write(vectIps, 2);
-
-                _rsp_len_ = _os.getLength();
-                _current_->sendResponse(tars::TARSSERVERSUCCESS, _os);
-            }
-            if (_current_->isTraced())
-            {
-                string _trace_param_;
-                int _trace_param_flag_ = ServantProxyThreadData::needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _current_->getTraceKey(), _rsp_len_);
-                if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                {
-                    tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                    _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                    _p_->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                    _trace_param_ = tars::TC_Json::writeValue(_p_);
-                }
-                else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                {
-                    _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                }
-                if(_current_->getServantHandle())
-                {
-                    TARS_TRACE(_current_->getTraceKey(), TRACE_ANNOTATION_SS, "", _current_->getModuleName(), "GetAllNationCodeIps", 0, _trace_param_, "");
-                }
-            }
-
-        }
-        static void async_response_push_GetAllNationCodeIps(tars::CurrentPtr _current_, tars::Bool _ret, const vector<VoipApp::NationCodeIp> &vectIps, const map<string, string> &_context = tars::Current::TARS_STATUS())
-        {
-            {
-                tars::TarsOutputStream<tars::BufferWriterVector> _os;
-                _os.write(_ret, 0);
-
-                _os.write(vectIps, 2);
-
-                _current_->sendPushResponse( tars::TARSSERVERSUCCESS ,"GetAllNationCodeIps", _os, _context);
-            }
-        }
-
         virtual tars::Bool GetDomainAccessInfo(const std::string & tableName,vector<VoipApp::DomainAccessedConfig> &vectDomainAccessed,std::string &reason,tars::TarsCurrentPtr _current_) = 0;
         virtual tars::Bool GetDomainAccessInfo(std::string && tableName,vector<VoipApp::DomainAccessedConfig> &vectDomainAccessed,std::string &reason,tars::TarsCurrentPtr _current_) 
         { return GetDomainAccessInfo(tableName, vectDomainAccessed, reason, _current_); }
@@ -11629,9 +10597,6 @@ namespace VoipApp
         {
             static ::std::string __VoipApp__SipDb_all[]=
             {
-                "GetAllAllowedIps",
-                "GetAllCallSipPolicys",
-                "GetAllNationCodeIps",
                 "GetDomainAccessInfo",
                 "GetDomainAccessInfo2",
                 "GetRtpGatewayconfigInfo",
@@ -11652,299 +10617,11 @@ namespace VoipApp
                 "updateDomainLineConfig"
             };
 
-            pair<string*, string*> r = equal_range(__VoipApp__SipDb_all, __VoipApp__SipDb_all+21, _current->getFuncName());
+            pair<string*, string*> r = equal_range(__VoipApp__SipDb_all, __VoipApp__SipDb_all+18, _current->getFuncName());
             if(r.first == r.second) return tars::TARSSERVERNOFUNCERR;
             switch(r.first - __VoipApp__SipDb_all)
             {
                 case 0:
-                {
-                    tars::TarsInputStream<tars::BufferReader> _is;
-                    _is.setBuffer(_current->getRequestBuffer());
-                    std::string tableName;
-                    vector<VoipApp::AllowedIp> vectIps;
-                    if (_current->getRequestVersion() == TUPVERSION)
-                    {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
-                        _tarsAttr_.setVersion(_current->getRequestVersion());
-                        _tarsAttr_.decode(_current->getRequestBuffer());
-                        _tarsAttr_.get("tableName", tableName);
-                        _tarsAttr_.getByDefault("vectIps", vectIps, vectIps);
-                    }
-                    else if (_current->getRequestVersion() == JSONVERSION)
-                    {
-                        tars::JsonValueObjPtr _jsonPtr = tars::JsonValueObjPtr::dynamicCast(tars::TC_Json::getValue(_current->getRequestBuffer()));
-                        tars::JsonInput::readJson(tableName, _jsonPtr->value["tableName"], true);
-                        tars::JsonInput::readJson(vectIps, _jsonPtr->value["vectIps"], false);
-                    }
-                    else
-                    {
-                        _is.read(tableName, 1, true);
-                        _is.read(vectIps, 2, false);
-                    }
-                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-                    if (_pSptd_ && _pSptd_->_traceCall)
-                    {
-                        string _trace_param_;
-                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
-                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                        {
-                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                            _p_->value["tableName"] = tars::JsonOutput::writeJson(tableName);
-                            _trace_param_ = tars::TC_Json::writeValue(_p_);
-                        }
-                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                        {
-                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                        }
-                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", getModuleName(), "GetAllAllowedIps", 0, _trace_param_, "");
-                    }
-
-                    tars::Bool _ret = GetAllAllowedIps(std::move(tableName),vectIps, _current);
-                    if(_current->isResponse())
-                    {
-                        if (_current->getRequestVersion() == TUPVERSION)
-                        {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
-                            _tarsAttr_.setVersion(_current->getRequestVersion());
-                            _tarsAttr_.put("", _ret);
-                            _tarsAttr_.put("tars_ret", _ret);
-                            _tarsAttr_.put("vectIps", vectIps);
-                            _tarsAttr_.encode(_sResponseBuffer);
-                        }
-                        else if (_current->getRequestVersion() == JSONVERSION)
-                        {
-                            tars::JsonValueObjPtr _p = new tars::JsonValueObj();
-                            _p->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                            _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
-                            tars::TC_Json::writeValue(_p, _sResponseBuffer);
-                        }
-                        else
-                        {
-                            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-                            _os.write(_ret, 0);
-                            _os.write(vectIps, 2);
-                            _os.swap(_sResponseBuffer);
-                        }
-                        if (_pSptd_ && _pSptd_->_traceCall)
-                        {
-                            string _trace_param_;
-                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
-                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                            {
-                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                                _p_->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                                _trace_param_ = tars::TC_Json::writeValue(_p_);
-                            }
-                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                            {
-                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                            }
-                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", getModuleName(), "GetAllAllowedIps", 0, _trace_param_, "");
-                        }
-
-                    }
-                    else if(_pSptd_ && _pSptd_->_traceCall)
-                    {
-                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
-                    }
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 1:
-                {
-                    tars::TarsInputStream<tars::BufferReader> _is;
-                    _is.setBuffer(_current->getRequestBuffer());
-                    std::string tableName;
-                    vector<VoipApp::CallSipPolicy> policys;
-                    if (_current->getRequestVersion() == TUPVERSION)
-                    {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
-                        _tarsAttr_.setVersion(_current->getRequestVersion());
-                        _tarsAttr_.decode(_current->getRequestBuffer());
-                        _tarsAttr_.get("tableName", tableName);
-                        _tarsAttr_.getByDefault("policys", policys, policys);
-                    }
-                    else if (_current->getRequestVersion() == JSONVERSION)
-                    {
-                        tars::JsonValueObjPtr _jsonPtr = tars::JsonValueObjPtr::dynamicCast(tars::TC_Json::getValue(_current->getRequestBuffer()));
-                        tars::JsonInput::readJson(tableName, _jsonPtr->value["tableName"], true);
-                        tars::JsonInput::readJson(policys, _jsonPtr->value["policys"], false);
-                    }
-                    else
-                    {
-                        _is.read(tableName, 1, true);
-                        _is.read(policys, 2, false);
-                    }
-                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-                    if (_pSptd_ && _pSptd_->_traceCall)
-                    {
-                        string _trace_param_;
-                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
-                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                        {
-                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                            _p_->value["tableName"] = tars::JsonOutput::writeJson(tableName);
-                            _trace_param_ = tars::TC_Json::writeValue(_p_);
-                        }
-                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                        {
-                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                        }
-                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", getModuleName(), "GetAllCallSipPolicys", 0, _trace_param_, "");
-                    }
-
-                    tars::Bool _ret = GetAllCallSipPolicys(std::move(tableName),policys, _current);
-                    if(_current->isResponse())
-                    {
-                        if (_current->getRequestVersion() == TUPVERSION)
-                        {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
-                            _tarsAttr_.setVersion(_current->getRequestVersion());
-                            _tarsAttr_.put("", _ret);
-                            _tarsAttr_.put("tars_ret", _ret);
-                            _tarsAttr_.put("policys", policys);
-                            _tarsAttr_.encode(_sResponseBuffer);
-                        }
-                        else if (_current->getRequestVersion() == JSONVERSION)
-                        {
-                            tars::JsonValueObjPtr _p = new tars::JsonValueObj();
-                            _p->value["policys"] = tars::JsonOutput::writeJson(policys);
-                            _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
-                            tars::TC_Json::writeValue(_p, _sResponseBuffer);
-                        }
-                        else
-                        {
-                            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-                            _os.write(_ret, 0);
-                            _os.write(policys, 2);
-                            _os.swap(_sResponseBuffer);
-                        }
-                        if (_pSptd_ && _pSptd_->_traceCall)
-                        {
-                            string _trace_param_;
-                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
-                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                            {
-                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                                _p_->value["policys"] = tars::JsonOutput::writeJson(policys);
-                                _trace_param_ = tars::TC_Json::writeValue(_p_);
-                            }
-                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                            {
-                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                            }
-                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", getModuleName(), "GetAllCallSipPolicys", 0, _trace_param_, "");
-                        }
-
-                    }
-                    else if(_pSptd_ && _pSptd_->_traceCall)
-                    {
-                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
-                    }
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 2:
-                {
-                    tars::TarsInputStream<tars::BufferReader> _is;
-                    _is.setBuffer(_current->getRequestBuffer());
-                    std::string tableName;
-                    vector<VoipApp::NationCodeIp> vectIps;
-                    if (_current->getRequestVersion() == TUPVERSION)
-                    {
-                        UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
-                        _tarsAttr_.setVersion(_current->getRequestVersion());
-                        _tarsAttr_.decode(_current->getRequestBuffer());
-                        _tarsAttr_.get("tableName", tableName);
-                        _tarsAttr_.getByDefault("vectIps", vectIps, vectIps);
-                    }
-                    else if (_current->getRequestVersion() == JSONVERSION)
-                    {
-                        tars::JsonValueObjPtr _jsonPtr = tars::JsonValueObjPtr::dynamicCast(tars::TC_Json::getValue(_current->getRequestBuffer()));
-                        tars::JsonInput::readJson(tableName, _jsonPtr->value["tableName"], true);
-                        tars::JsonInput::readJson(vectIps, _jsonPtr->value["vectIps"], false);
-                    }
-                    else
-                    {
-                        _is.read(tableName, 1, true);
-                        _is.read(vectIps, 2, false);
-                    }
-                    ServantProxyThreadData *_pSptd_ = ServantProxyThreadData::getData();
-                    if (_pSptd_ && _pSptd_->_traceCall)
-                    {
-                        string _trace_param_;
-                        int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SR, _is.size());
-                        if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                        {
-                            tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                            _p_->value["tableName"] = tars::JsonOutput::writeJson(tableName);
-                            _trace_param_ = tars::TC_Json::writeValue(_p_);
-                        }
-                        else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                        {
-                            _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                        }
-                        TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SR), TRACE_ANNOTATION_SR, "", getModuleName(), "GetAllNationCodeIps", 0, _trace_param_, "");
-                    }
-
-                    tars::Bool _ret = GetAllNationCodeIps(std::move(tableName),vectIps, _current);
-                    if(_current->isResponse())
-                    {
-                        if (_current->getRequestVersion() == TUPVERSION)
-                        {
-                            UniAttribute<tars::BufferWriterVector, tars::BufferReader>  _tarsAttr_;
-                            _tarsAttr_.setVersion(_current->getRequestVersion());
-                            _tarsAttr_.put("", _ret);
-                            _tarsAttr_.put("tars_ret", _ret);
-                            _tarsAttr_.put("vectIps", vectIps);
-                            _tarsAttr_.encode(_sResponseBuffer);
-                        }
-                        else if (_current->getRequestVersion() == JSONVERSION)
-                        {
-                            tars::JsonValueObjPtr _p = new tars::JsonValueObj();
-                            _p->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                            _p->value["tars_ret"] = tars::JsonOutput::writeJson(_ret);
-                            tars::TC_Json::writeValue(_p, _sResponseBuffer);
-                        }
-                        else
-                        {
-                            tars::TarsOutputStream<tars::BufferWriterVector> _os;
-                            _os.write(_ret, 0);
-                            _os.write(vectIps, 2);
-                            _os.swap(_sResponseBuffer);
-                        }
-                        if (_pSptd_ && _pSptd_->_traceCall)
-                        {
-                            string _trace_param_;
-                            int _trace_param_flag_ = _pSptd_->needTraceParam(ServantProxyThreadData::TraceContext::EST_SS, _sResponseBuffer.size());
-                            if (ServantProxyThreadData::TraceContext::ENP_NORMAL == _trace_param_flag_)
-                            {
-                                tars::JsonValueObjPtr _p_ = new tars::JsonValueObj();
-                                _p_->value[""] = tars::JsonOutput::writeJson(_ret);
-                                _p_->value["vectIps"] = tars::JsonOutput::writeJson(vectIps);
-                                _trace_param_ = tars::TC_Json::writeValue(_p_);
-                            }
-                            else if(ServantProxyThreadData::TraceContext::ENP_OVERMAXLEN == _trace_param_flag_)
-                            {
-                                _trace_param_ = "{\"trace_param_over_max_len\":true}";
-                            }
-                            TARS_TRACE(_pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS), TRACE_ANNOTATION_SS, "", getModuleName(), "GetAllNationCodeIps", 0, _trace_param_, "");
-                        }
-
-                    }
-                    else if(_pSptd_ && _pSptd_->_traceCall)
-                    {
-                        _current->setTrace(_pSptd_->_traceCall, _pSptd_->getTraceKey(ServantProxyThreadData::TraceContext::EST_SS));
-                    }
-
-                    return tars::TARSSERVERSUCCESS;
-
-                }
-                case 3:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12048,7 +10725,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 4:
+                case 1:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12152,7 +10829,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 5:
+                case 2:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12248,7 +10925,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 6:
+                case 3:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12352,7 +11029,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 7:
+                case 4:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12458,7 +11135,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 8:
+                case 5:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12564,7 +11241,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 9:
+                case 6:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12657,7 +11334,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 10:
+                case 7:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12755,7 +11432,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 11:
+                case 8:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12853,7 +11530,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 12:
+                case 9:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -12951,7 +11628,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 13:
+                case 10:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -13060,7 +11737,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 14:
+                case 11:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -13182,7 +11859,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 15:
+                case 12:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -13288,7 +11965,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 16:
+                case 13:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -13396,7 +12073,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 17:
+                case 14:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -13502,7 +12179,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 18:
+                case 15:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -13600,7 +12277,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 19:
+                case 16:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());
@@ -13706,7 +12383,7 @@ namespace VoipApp
                     return tars::TARSSERVERSUCCESS;
 
                 }
-                case 20:
+                case 17:
                 {
                     tars::TarsInputStream<tars::BufferReader> _is;
                     _is.setBuffer(_current->getRequestBuffer());

@@ -1,0 +1,68 @@
+# # CMakeLists.txt for DbConn static library
+# # 对应旧的 Makefile 中的 dbconn 编译流程
+
+# cmake_minimum_required(VERSION 2.8)
+
+# # 设置库的输出路径
+# set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+
+# # 添加包含路径
+# # 对应 Makefile 中的: -I..// -I../../3rd/inc/ -I../../3rd/inc/mariadb/ -I../../3rd/inc/libpq
+# # 同时添加 TARS 框架的头文件路径
+# # 注意：与 SipCallRelay 保持一致，使用相同的路径结构
+# include_directories(
+#     ${CMAKE_CURRENT_SOURCE_DIR}/..
+#     ${CMAKE_SOURCE_DIR}/../..  # 项目根目录，用于 servant/Application.h（与 SipCallRelay 保持一致）
+#     ${CMAKE_SOURCE_DIR}/../../3rd/inc
+#     ${CMAKE_SOURCE_DIR}/../../3rd/inc/mariadb
+#     ${CMAKE_SOURCE_DIR}/../../3rd/inc/libpq
+#     ${CMAKE_CURRENT_SOURCE_DIR}  # 当前目录，用于包含本地头文件
+#     # TARS 框架头文件路径（与 SipCallRelay 保持一致，使用 CMAKE_SOURCE_DIR）
+#     ${CMAKE_SOURCE_DIR}/../../util/include
+#     ${CMAKE_SOURCE_DIR}/../../servant  # 包含此目录后，可以 #include "tup/RequestF.h"
+#     ${CMAKE_SOURCE_DIR}/../../servant/protocol
+# )
+
+# # 源文件列表
+# # 对应 Makefile 中的 cpp_srcs_dbconn
+# set(DBCONN_SOURCES
+#     DbConn.cpp
+#     DbUtil.cpp
+#     MysqlConn.cpp
+#     PostgresqlConn.cpp
+#     SQLiteConn.cpp
+#     PBEWithMD5AndDES.cpp
+#     ../Common/PenglCommon.cpp
+#     # RedisClientI.cpp  # 如果不需要可以注释掉
+# )
+
+# # 创建静态库
+# # 对应 Makefile 中的: lib_dbconn := $(common_lib_path)/libDbConn.a
+# add_library(DbConn STATIC ${DBCONN_SOURCES})
+
+# # 设置库的输出名称
+# set_target_properties(DbConn PROPERTIES
+#     OUTPUT_NAME "DbConn"
+#     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+# )
+
+# # 添加链接库路径
+# # 对应 Makefile 中的: ../../$(lib3rd_path)/libmariadbclient.a ../../$(lib3rd_path)/libcrypto.a -ldl
+# link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../3rd/lib/linux/x86_64)
+
+# # 链接库
+# # 对应 Makefile 中的: o_flags := ../../$(lib3rd_path)/libmariadbclient.a ../../$(lib3rd_path)/libcrypto.a -ldl
+# target_link_libraries(DbConn
+#     ${CMAKE_CURRENT_SOURCE_DIR}/../../../build/lib/libtarsservant.a
+#     ${CMAKE_CURRENT_SOURCE_DIR}/../../../build/lib/libtarsutil.a
+#     ${CMAKE_CURRENT_SOURCE_DIR}/../../3rd/lib/linux/x86_64/libmariadbclient.a
+#     ${CMAKE_CURRENT_SOURCE_DIR}/../../3rd/lib/linux/x86_64/libcrypto.a
+#     dl
+# )
+
+# # 安装库文件（可选）
+# install(TARGETS DbConn
+#     ARCHIVE DESTINATION lib
+#     LIBRARY DESTINATION lib
+# )
+

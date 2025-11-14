@@ -414,11 +414,11 @@ module VoipApp
 		bool insertRecordsBatch(string domainId, string appId, vector<SipCallRecord> records);
 		bool getSipCallRecordEx(string domainId, string appId, string rcpCallId, out SipCallRecord record);
 		
-		bool GetAllNationCodeIps(string tableName, out vector<NationCodeIp> vectIps);
-		bool GetAllAllowedIps(string tableName, out vector<AllowedIp> vectIps);
+		//bool GetAllNationCodeIps(string tableName, out vector<NationCodeIp> vectIps);
+		//bool GetAllAllowedIps(string tableName, out vector<AllowedIp> vectIps);
 
 		bool UpdateCallSipPolicys(string tableName, vector<CallSipPolicyOperation> OpSequence);
-		bool GetAllCallSipPolicys(string tableName, out vector<CallSipPolicy> policys);
+		//bool GetAllCallSipPolicys(string tableName, out vector<CallSipPolicy> policys);
 
 		bool insertNumberRouting(string tableName, string domainIdAppId, vector<NumRouting> numRouting, out string reason);
 		bool getNumberRouting(string tableName, string domainIdAppId, string callee, out string displayName, out string coreNetId, out string reason);
