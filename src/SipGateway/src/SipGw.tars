@@ -1,0 +1,10 @@
+
+module VoipApp
+{
+
+interface SipGw
+{
+    int test();
+};
+
+}; 

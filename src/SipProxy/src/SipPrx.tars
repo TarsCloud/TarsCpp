@@ -1,0 +1,58 @@
+#include "../../SipProxyDb/src/SipDb.tars"
+
+module VoipApp
+{
+    struct SipAccount
+    {
+        0 require string  _sipAccount;
+        1 require string 	_password;
+        2 require string 	_appUserAccount;
+    };
+	
+	struct SipAccount2
+    {
+        0 require string  _sipAccount;
+		1 require string 	_password;
+		2 require string 	_appUserAccount;
+		3 require string 	_authName;
+    };
+	
+	enum  AppAccountStatusType
+	{
+		kAppAccountStatusInvalid = -1,
+		kAppAccountStatusUnRegister = 0,
+		kAppAccountStatusRegister = 1,
+		kAppAccountStatusReRegister = 2,
+		kAppAccountStatusTmpUnRegister = 3,
+		kAppAccountStatusTmpRegister = 4
+	};
+	
+	struct AppAccountStatusNotify
+	{
+		0 require SipAccountInfo  _sipAccount;
+		1 require AppAccountStatusType       _statusType;
+	};
+	
+	struct HttpNotify
+	{
+		0 require long time;
+		1 require string from;
+		2 require string to;
+		3 require string domain;
+		4 require int type;
+		5 require string msg;
+	};
+	
+	struct HttpNotifyRequest
+	{
+		0 require int seq;
+		1 require vector<HttpNotify> msgList;
+		2 require map<string, string> params;
+	};
+
+    interface SipPrx
+    {
+        int test();
+    };
+
+}; 

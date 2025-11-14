@@ -1,0 +1,936 @@
+Relese Note
+===============
+
+版本信息
+----------------
+ - [Watermelon 6.5](#watermelon-6.5)
+ - [Watermelon 6.4](#watermelon-6.4)
+ - [Watermelon 6.3](#watermelon-6.3)
+ - [Watermelon 6.2](#watermelon-6.2)
+ - [Watermelon 6.1](#watermelon-6.1)
+ - [Watermelon 6.0](#watermelon-6.0)
+
+Watermelon 6.5
+--------------------------
+### 6.5.18 [23 Oct 2024] ###
+【修复】
+1. 解决rtpgateway转发dtmf，落地端识别有误的问题 derek.dong
+
+### 6.5.17 [1 Sept 2023] ###
+【新增特性】
+1. 增加rtpgateway模式录制call功能 derek.dong
+
+### 6.5.16 [11 Jul 2023] ###
+【新增特性】
+1. 实现rtpgateway模式多线程功能 derek.dong
+
+### 6.5.15 [5 May 2023] ###
+【修复】
+1. 解决voecodec setsendcodec接口死锁问题 derek.dong
+
+### 6.5.14 [27 Apr 2023] ###
+【新增特性】
+
+【优化】
+1. 调整linux最大音频路数 32 --> 320  derek.dong
+2. 优化rtpgateway模式下统计打印，让调用间隔平均分布 derek.dong
+
+### 6.5.13 [28 Feb 2023] ###
+【新增特性】
+
+【修复】
+1. 解决iot花屏问题, 需要更新服务端 derek.dong
+2. 解决通用化处理全局混音录制与单个成员录制同时工作，混音录制中该成员的语音被录制两遍的问题 zhiqing.yang
+
+【优化】
+【接口变更】
+【版本升级应注意的问题】
+
+### 6.5.12 [25 Nov 2022] ###
+【新增特性】
+
+【修复】
+1. voice库不需要包含h263和dav1d derek.dong
+
+【优化】
+【接口变更】
+【版本升级应注意的问题】
+
+### 6.5.11 [8 Nov 2022] ###
+【新增特性】
+
+【修复】
+1. 回退openh264部分修改，保持接口兼容性，满足招行静态库兼容性要求 derek.dong
+
+【优化】
+【接口变更】
+【版本升级应注意的问题】
+
+### 6.5.10 [2 Sep 2022] ###
+【新增特性】
+ 1. 媒体混音混屏数据输出到通用化处理  shepherd.zheng
+    TB链接：https://www.teambition.com/task/6163925df754750059e7c78e
+
+【修复】
+ 1. 解决openh264解码模块解码av1视频导致崩溃的问题 shepherd.zheng
+    cherrypick from release/v6.6-20220110
+    TB链接:https://www.teambition.com/task/6275e956d66f13003f41ebe3
+ 2. 解决语音编码器使用内部默认的red 114 payload时, 无法正确接收解码的问题 derek.dong
+
+【优化】
+ 1. 通用化处理保证录制文件的音视频同步 shepherd.zheng
+   cherrypick from release/v6.6-20220110
+   TB链接：https://www.teambition.com/task/6139bc3036a2ddb51eb3e8dd
+
+【接口变更】
+ 无
+【版本升级应注意的问题】
+
+### 6.5.9 [1 Aug 2022] ###
+【新增特性】无
+【修复】
+【优化】
+1. 带屏幕共享的布局增加sameasnoshare模式 yif.yu
+https://www.teambition.com/task/62e206ae5e9030003f22c913
+【接口变更】
+ 无
+【版本升级应注意的问题】
+
+### 6.5.8 [29 Jul 2022] ###
+【新增特性】无
+【修复】
+1. 解决中讯可信通讯编译问题
+2. 解决太川编译问题
+【优化】
+ 无
+【接口变更】
+ 无
+【版本升级应注意的问题】
+
+### 6.5.6 [31 Mar 2022] ###
+【新增特性】
+ 1. Wzav1和dav1d新增自选动态库加载路径 Keyuan Zhang
+    Tb: https://www.teambition.com/task/6225c606260e02003f18cc39
+ 2. av1更新license key Keyuan Zhang
+    白名单新增 JCCAgentPlugin.exe JCCGuestPlugin.exe, JRoomPlugin.exe
+    Tb: https://www.teambition.com/task/6225c606260e02003f18cc39
+【修复】
+ 1. 解决通用化处理用到的临界区资源未释放的问题 shepherd.zheng
+ 2. 解决dtmf发送 payload设置失败的问题 derek.dong
+    问题原因: 跟第三方通话时，dtmf协商成某些值，比如97， 设置会出错 ，因为97被 CN-48K占用
+ 3. 解决中讯院 ims 环境使用 amr-wb 编码时单通问题 kerwin.peng
+    问题原因: 当语音流 stop 后，未重新 set send payload, 会导致无法解码语音流单通问题
+ 4. 解决 G729 带内舒适噪音解码问题 derek.dong
+    Tb:https://www.teambition.com/task/622f0dac3035ff003fd165cc
+【优化】
+ 无
+【接口变更】
+ 无
+【版本升级应注意的问题】
+ 无
+
+### 6.5.5 [8 Mar 2022] ###
+【新增特性】
+ 1. rtpgateway实现双向dtmf透传 derek.dong
+    两侧协商的DTMF payload type不需要一样
+【修复】
+ 无
+【优化】
+ 无
+【接口变更】
+ 无
+【版本升级应注意的问题】
+ 无
+
+### 6.5.4 [14 Feb 2022] ###
+【新增特性】
+ 无
+【修复】
+ 1. 修复android无法使用amrwb问题 yif
+【优化】
+ 1. 默认不编译原h263 yif
+【接口变更】
+ 无
+【版本升级应注意的问题】
+ 之前版本H263有两个实现:liupin和M4V;
+ 其中M4V对应于H263-1998,用于IOT;
+ liupin对应于H263，经过调查，目前没有项目使用;
+ 因此默认不编译liupin的H263，只提供M4V的库，用于H263-1998协商通话。
+
+### 6.5.3 [8 Feb 2022] ###
+【新增特性】
+ 无
+【修复】
+ 1. 解决水印函数静态库编译重复定义问题 shepherd.zheng
+ 2. 解决mac平台编译找不到log_printf函数的问题 shepherd.zheng
+ 3. 解决使用G711时，ARS和RED打开时，无论是否丢包，会一直使用fec的问题 derek.dong
+    https://www.teambition.com/task/61f3a03a435ab3003f0c9e75
+ 4. 解决mp4文件分隔后写入失败的问题  derek.dong
+    https://www.teambition.com/task/61dc05040f63a4003fe146d3
+ 5. 解决测试Unit_VOE.CONNECT_CHANNEL偶现崩溃问题  derek.dong
+ 6. 解决通用化处理用到的临界区资源未释放的问题 shepherd.zheng
+【优化】
+ 1. 增加断流告警，去掉不必要的日志打印 shepherd.zheng
+【接口变更】
+ 无
+【版本升级应注意的问题】
+ 无
+
+### 6.5.2 [7 Jan 2022] ###
+【新增特性】 无
+【优化】无
+【修复】
+1. bug: 修复画面波动较大时，av1解码失败问题
+   tb:https://www.teambition.com/task/61bad4fc9936bb003f5725562
+2. bug: 解决mp4 av1格式不规范问题, 解决录制av1过程中奔溃无法恢复的问题
+   teambition:
+   https://www.teambition.com/task/617bb115dcd6db003f146a46
+   https://www.teambition.com/task/61c139a777afc5003fbf6f35
+3. 合并6.4 bug：对audioOutput混音队列添加保护，限制其最大长度
+   复现场景：开启录制或推流功能，但没有音频输入，导致内存上涨
+   bug链接：
+   https://www.teambition.com/task/61bfea2d589936003f706d6b
+
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+
+### 6.5.1 [18 Dec 2021] ###
+【新增特性】 无
+【优化】无
+【修复】
+1. bug: 修复6.3.5.4的合并错误
+  【mme6.5.0.7+mac+必现】点Start后音视频都没有
+   https://www.teambition.com/task/61b1a89390e0eb003fa762aa
+2. bug: 解决文件时长比实际录制时长短的问题
+   该问题由f376e4ff引入，具体做法是修改视频时间戳去同步音频，最终导致文件时长整体缩短。
+   因为时钟问题仅在个别虚拟机上发现，但处理方式会影响许多正常功能，所以把相关代码删除，以免引起更多BUG。
+   TBID-1208: https://www.teambition.com/task/61b32d94cf1d6a003fb08f36
+
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+### 6.5.0.7 [8 Dec 2021] ###
+【新增特性】 无
+1. av1录制封装成mp4格式. keyuan.zhang
+tb:https://www.teambition.com/task/61691cfcadd1eb003fa88111
+【优化】无
+【修复】
+1.修复AV1时间层和最低帧率不匹配的问题 keyuan.zhang
+tb: https://www.teambition.com/task/61a05a5f70b9a9003f957163
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+### 6.5.0.6 [23 Nov 2021] ###
+【新增特性】 无
+
+【优化】 无
+【修复】
+1. 上传m4v_h263 ios遗漏脚本修改 yif
+
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+### 6.5.0.5 [22 Nov 2021] ###
+【新增特性】 无
+1. 实现rtpgateway中转功能. derek.dong
+
+【优化】 无
+【修复】
+1. 修复window 平台输出目录由 vs2008改为 vs2015.  rik.gong
+2. h263内部增加设置参数的保护并修改默认不编译原h263. yif
+   需求：
+   https://www.teambition.com/task/617233e278e2b0003fd08fbd
+3. 解决0d2b279引进的音频空帧不规范使部分播放器无法识别的问题. yin.zhou
+   TBID-1053: https://www.teambition.com/task/617bb2820a6d37003f03b310
+4. 合并 6.4.11
+
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+### 6.5.0.4 [5 Nov 2021] ###
+【新增特性】 无
+
+【优化】 无
+【修复】
+1. bug:修改某些情景下讲台布局问题，并调整可设置小屏幕相对高度为10/100～50/100 yif.yu
+        https://www.teambition.com/task/617f43c4ae4e10003f307e24
+        验证方式：
+        mmetester配置讲台布局
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+### 6.5.0.3 [27 Oct 2021] ###
+【新增特性】
+1. 通用化处理实现动态增、删输入源和模块，增加H264编码模块
+    1. 实现动态增、删输入源和模块的功能；
+    2. 增加H264编码模块；
+    3. 统一宏定义类型，消除互相转换容易出错的问题。
+需求链接：
+https://www.teambition.com/task/61557ec1f0c27a003fa34def
+https://www.teambition.com/task/6163921ef7945100596ff286
+https://www.teambition.com/task/616920e6b7d41d003f8fdafc
+
+测试：
+自测通过，测试工具：C++版jsmtester
+2.avi读支持32k aac音频
+需求来源：自动化录制测试
+3. 新增mp3编码模块
+
+需求链接：
+https://www.teambition.com/task/60f1030ecaa5f70044599194
+
+测试：
+自测通过，测试流程：jsmtester-mfc版测试通过
+3. feature: 增加编码模式，根据采集分辨率自适应编码宽高比
+说明：
+Jsm_EnableAdaptiveAspect 接口的第三个参数 aspectRatio 传-1，即可开启此编码模式；
+需求链接：
+https://www.teambition.com/task/60fe2e9c3bde8300446b9cf3
+测试：
+jsmtester自测通过（设置Jsm_EnableAdaptiveAspect接口）；现有工具无法测试
+
+【优化】 无
+【修复】
+1. bug: 解决avi录制视频帧率不准的问题 zhou.yin
+TBID-830: https://www.teambition.com/task/6135e0082da5fe00593d31f2
+2. bug: 修复 camera选择屏幕共享start再stop后crash
+ID-982: https://www.teambition.com/task/6167d04e0430c7003f62c7b6
+3. bug: 修复av1回落引起的录制文件崩溃
+4. bug: 修复camera选择含音频的视频文件，长时间播放会音视频不同步
+ID-984:https://www.teambition.com/task/6167ed46b73772003f1bc534
+5. bug: 解决时钟不准导致录制文件音频帧偏少的问题
+TBID-1001: https://www.teambition.com/task/6169269a3fc929003f94afde
+6. 合并6.4分支
+
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+
+### 6.5.0.2 [13 Oct 2021] ###
+【新增特性】
+1. av1本地离线录制
+    https://www.teambition.com/task/614467d344b3f9003f3cf666
+    备注：暂时只支持avi 格式录制，win平台选择potplayer播放器，mac平台选择mpv player
+2. watermelon仓库尝试使用cppcheck进行静态代码检查。
+    需求：
+    https://www.teambition.com/project/607569d25e37f4fba639a898/sprint/section/6130b5c03e3108003f4991fe/task/611f63e40e2bbdfc82987565
+    说明：
+    在watermelon仓库trunk目录下新增analyze文件夹，该目录下包含静态检查的运行脚本、配置信息、本地可视化工具。
+    修改watermelon仓库的部分问题代码，屏蔽部分issue，使得报告中不包含error、warning，能通过静态检查的门禁。
+    为了通过代码覆盖率门禁，增加了部分单元测试代码 。
+【优化】 无
+【修复】
+1. 修复多余的错误打印 rik.gong
+   【mme6.5.0.1+必现】正常本地回环日志打印error code 1138和2139
+    https://www.teambition.com/task/6155784cf241c9003fc65c1c
+2.修复windows版h263-1998偶现崩溃问题 yif
+    https://www.teambition.com/task/61517e9ddba344003f636eab
+    说明：
+    windows版mme_tester使用h263-1998偶现崩溃
+    验证方式：
+    关闭分辨率控制，windows版mme_tester使用h263-1998回环测试正常
+3.  混屏增加缓存，解决录制音视频不同步问题
+    音视频长度不相等时上报error
+    TBID-805: https://www.teambition.com/task/6128da0ce250ec003f4557d0
+    测试：JsmTester录制视频，弱网下音视频同步
+
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+### 6.5.0.1 [27 Sep 2021] ###
+【新增特性】
+ 1. 【CI】watermelon、mme 建立自动化单元测试 zhengtaotao
+    https://www.teambition.com/task/60fa686a3fbecd00443d426b
+ 2. 媒体通用化处理和相关的自动化测试代码 zhengtaotao
+    - 媒体通用化处理框架和模块代码
+    - 相关的自动化测试代码
+    - 删除旧版本通用化输出的代码
+    需求链接：
+    https://www.teambition.com/task/61454dbf1e7563003fe75a0a
+ 3. 修改卡顿率上报窗口时间 yif
+    https://www.teambition.com/task/61432f6abee884003f52f954
+【优化】 无
+【修复】 无
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+### 6.5.0.0 [14 Sep 2021] ###
+【新增特性】
+ 1. 自定义布局提供模式设置，布局视频支持full_content\full_screen 设置 mao.wei
+    https://www.teambition.com/task/609e5807caf7470044916c33
+ 2. AAC编码模块新增双声道文件录制功能 mao.wei
+    fdkaac编码模块
+    - 新增双声道文件录制功能
+    - 为之后的通用化输出增加16K、48K采样率支持，不影响原有的aac录制功能
+    需求链接：
+    https://www.teambition.com/task/60782f3dcb06d0004434bc97
+    测试：
+    自测通过，测试工具：C++版jsmtester
+【优化】 无
+【修复】
+ 1. 使用外部输入视频帧的时间戳，解决同一毫秒内只能输入一帧（后续帧会被丢掉）derek.dong
+    https://www.teambition.com/task/60e2e5da80084b0044a78aec
+ 2. 对平台布局设置相对高度较小时增加保护
+    https://www.teambition.com/task/61261cad32e5a60044e6516c
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+
+Watermelon 6.4
+--------------------------
+### 6.4.15 [30 Mar 2022] ###
+【新增特性】
+ 无
+【修复】
+ 1. 解决通用化处理用到的临界区资源未释放的问题 shepherd.zheng
+ 2. 解决dtmf发送 payload设置失败的问题 derek.dong
+    问题原因: 跟第三方通话时，dtmf协商成某些值，比如97， 设置会出错 ，因为97被 CN-48K占用
+ 3. 解决中讯院 ims 环境使用 amr-wb 编码时单通问题 kerwin.peng
+    问题原因: 当语音流 stop 后，未重新 set send payload, 会导致无法解码语音流单通问题
+【优化】
+ 无
+【接口变更】
+ 无
+【版本升级应注意的问题】
+ 无
+
+### 6.4.14 [13 Jan 2022] ###
+【新增特性】
+ 无
+【修复】
+ 1. 解决水印函数静态库编译重复定义问题 shepherd.zheng
+ 2. 解决mac平台编译找不到log_printf函数的问题 shepherd.zheng
+【优化】
+ 1. 增加断流告警，去掉不必要的日志打印 shepherd.zheng
+【接口变更】
+ 无
+【版本升级应注意的问题】
+ 无
+
+### 6.4.13 [06 Jan 2022] ###
+【新增特性】
+ 无
+【修复】
+ 1. 通用化输出增加对数据注入指针的保护，解决退出时崩溃问题 shepherd.zheng
+ 测试：使用jsmtester_mfc工具测试
+ 2. 修复通用化处理混音功能内存泄漏问题 maowei
+ tb链接：https://www.teambition.com/task/61d50f6aa8fe9a003fa630fa
+ 测试：使用jsmtester_mfc测试工具测试
+【优化】
+ 无
+【接口变更】
+ 无
+【版本升级应注意的问题】
+ 无
+
+### 6.4.12 [31 Dec 2021] ###
+【新增特性】
+1.AAC编码模块新增双声道文件录制功能，并为之后的通用化输出增加16K、48K采样率支持，不影响原有的aac录制功能
+tb链接：https://www.teambition.com/task/60782f3dcb06d0004434bc97
+测试：使用C++版jsmtester工具测试
+2.增加watermelon单元测试
+tb链接：https://www.teambition.com/task/60fa686a3fbecd00443d426b
+3.媒体通用化处理和相关的自动化测试代码
+    1)媒体通用化处理框架和模块代码
+    2)相关的自动化测试代码
+    3)删除旧版本通用化输出的代码
+tb链接：https://www.teambition.com/task/61454dbf1e7563003fe75a0a
+测试：使用C++版jsmtester工具测试
+4.通用化处理实现动态增、删输入源和模块，增加H264编码模块
+    1)实现动态增、删输入源和模块的功能；
+    2)增加H264编码模块；
+    3)统一宏定义类型，消除互相转换容易出错的问题。
+tb链接：
+    https://www.teambition.com/task/61557ec1f0c27a003fa34def
+    https://www.teambition.com/task/6163921ef7945100596ff286
+    https://www.teambition.com/task/616920e6b7d41d003f8fdafc
+测试：使用C++版jsmtester工具测试
+5.新增mp3编码模块
+tb链接：https://www.teambition.com/task/60f1030ecaa5f70044599194
+测试：使用C++版jsmtester工具测试
+6.通用化处理新增自定义分屏、H264解码模块
+    1) 增加自定义分屏、H264解码模块，以及相关的单元测试；
+    2) 细化错误码，增加日志打印。
+tb链接：
+    https://www.teambition.com/task/6184876fb25e92003fe8625c
+    https://www.teambition.com/task/617fac3cf214c7003fc27654
+测试：使用C++版jsmtester工具测试
+7.添加混音模块
+tb链接：https://www.teambition.com/task/618dd3a9350b83003fb7d05d
+测试：使用C++版jsmtester工具测试
+
+【修复】
+1. 解决合并通用化处理之后mme-tester录制没有视频的问题
+测试：使用mmetester和C++版jsmtester_mfc工具测试
+2.修复混音删除成员时，必现崩溃问题
+https://www.teambition.com/task/618dd3a9350b83003fb7d05d
+测试：使用C++版jsmtester_mfc工具测试
+3.mp4默认变帧速率写入，去掉允许1s音视频不同步的条件限制
+tb链接: https://www.teambition.com/task/61c937486bb9f7003f31183b
+4.对audioOutput混音队列添加保护，限制其最大长度
+复现场景：开启录制或推流功能，但没有音频输入，导致内存上涨
+tb链接：https://www.teambition.com/task/61bfea2d589936003f706d6b
+【优化】
+ 无
+【版本升级应注意的问题】
+ 无
+
+### 6.4.11 [16 Nov 2021] ###
+【新增特性】
+1. 修复代码裁剪时的编译错误slim精简版
+
+【修复】无
+【接口变更】无
+【版本升级应注意的问题】无
+
+### 6.4.8 [18 Oct 2021] ###
+【新增特性】
+ 1. Agc target设置到31时，增益表以抑制到静音状态来计算
+
+【优化】
+
+
+【修复】
+ 1. wzav1升级到v1.3.7，所有内存分配的位置增加内存申请保护
+
+【接口变更】
+ 无
+
+【版本升级应注意的问题】
+
+
+### 6.4.7 [27 Aug 2021] ###
+【新增特性】
+1. 增加接口用于暂停发送音频文件 yin.zhou
+
+【优化】
+
+
+【修复】
+
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+
+
+
+### 6.4.6 [17 Aug 2021] ###
+【新增特性】
+
+
+【优化】
+1. 可设置讲台布局非屏幕共享相对高度 yif.yu
+2. 更新wzav1私有云动态库和license.key keyuan.zhang
+
+【修复】
+1. 修复鹰眼系统中某些情况下AEC延时过大错误的上报频率太高的缺陷 xiang.xia
+2. 减轻静止画面的h263编码码流被ffmpeg解码后花屏的问题 derek.dong
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+
+
+
+### 6.4.4 [15 Jul 2021] ###
+【新增特性】
+1. 增加rtp扩展用于标记音频播放位置 yin.zhou
+2. 内部增加获取编码实例类型接口 yif
+
+【优化】
+无
+
+【修复】
+1. 解决设置adaptiveaspect时，偶尔崩溃的问题 derek.dong
+2. 调整天赛event key值与zmf一致 yin.zhou
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+
+
+
+### 6.4.3 [29 Jun 2021] ###
+【新增特性】
+1. 计算并上报音视频卡顿率 yin.zhou
+
+【优化】
+无
+
+【修复】
+1. 修复linux_kylin编译错误和测试例子 rik.gong
+2. 合并6.0.9版本，具体见### 6.0.9 [22 June 2021] ###
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+
+
+
+### 6.4.2 [21 Jun 2021] ###
+【新增特性】
+1. 增加回调接口用于获得音频APM处理后数据 yin.zhou
+
+【优化】
+无
+
+【修复】
+1. 修复并重命名 jsstest 用于测试 SDP协商 rik.gong
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+1. iOS版本不再提供lipo打包后的版本及其stripped过的版本；只提供各个架构的独立版本，包括armv7,arm64
+
+### 6.4.1 [2 Jun 2021] ###
+【新增特性】
+无
+
+【优化】
+无
+
+【修复】
+1. 解决h263崩溃问题 derek.dong
+2. 解决刚开始发送时视频帧时间戳乱序问题 derek.dong
+3.  cap size上报携带ID, 补充日志用于定位问题 yin.zhou
+4. 解决视频录制远端/发送端按照时间分割不对的问题 derek.dong
+5. 修复av1屏幕共享模糊问题 keyuan.zhang
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+无
+
+
+### 6.4.0 [24 May 2021] ###
+【新增特性】
+1.增加tessar数据 yin.zhou & xiang.xia
+
+【优化】
+1. 帧率分空间层统计 yin.zhou
+
+【修复】
+1. 解决一对一画面静止分辨率上不去的问题 yin.zhou
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+无
+
+
+Watermelon 6.3
+--------------------------
+### 6.3.5.4 [30 Mov 2021] ###
+【新增特性】 无
+【优化】无
+【修复】
+1. 修复中讯邮电可信通话编译出错 rik.gong
+
+【接口变更】 无
+【版本升级应注意的问题】 无
+
+### 6.3.2 [18 May 2021] ###
+【新增特性】
+无
+
+【优化】
+无
+
+【修复】
+1. 修复视频录制按实际分割随机问题 zhiqing.yang
+2. 处理会议中使用adaptiveAspect调整编码到小于采集宽高的分辨率但无法输出的问题 zhiqing.yang
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+无
+
+### 6.3.1 [8 May 2021] ###
+【新增特性】
+无
+
+【优化】
+1. 日志只有.slog 后缀才加密,默认不加密 rik.gong
+
+【修复】
+1. 修复 ZMF 初次音频事件参数名不正确 rik.gong
+2. 修复rokid眼镜H265一对一接收1080P视频，过10s卡住 rik.gong
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+无
+
+### 6.3.0 [14 Wed 2021] ###
+【新增特性】
+1. 导出内部编解码到 ZMF 可由外部使用 rik.gong
+2. mme log增加文件大小设置 yin.zhou
+
+【优化】
+1. h264一层时间层关键帧编码QP增大 yin.zhou
+
+【修复】
+1. 修复bug 7881 输入/输出音频选择no audio显示不一致 rik.gong
+2. 解决congest状态没清空导致带宽上不去的问题 yin.zhou
+
+【接口变更】
+1. ViEBase::SetTraceFile(const char* file_nameUTF8,
+      const int add_file_counter = -1, const int max_file_counter = 5, const
+      int file_size = 4000) = 0);
+2. VoEBase::SetTraceFile(const char* file_nameUTF8,
+      const int add_file_counter = -1, const int max_file_counter = 5, const
+      int file_size = 4000) = 0);
+ 增加了文件大小参数单位 KB
+
+【版本升级应注意的问题】
+无
+
+Watermelon 6.2
+--------------------------
+### 6.2.4 [26 April 2021] ###
+【新增特性】
+1. 视频录制支持按照时间间隔分割视频
+
+【优化】
+ 无
+
+【修复】
+1. 解决录制出错后无法关闭的问题
+2. 尝试解决播放时通道数改变导致的声音异常问题
+3. 解决ios armv7设备安装app store版本后找不到openh264动态库而崩溃的问题
+4. 修复通用化输出无法录制纯音频文件问题
+5. 解决系统存在水印库时Windows系统播放器无法播放的bug
+
+【接口变更】
+ 无
+
+【版本升级应注意的问题】
+1. IOS如果使用openh264动态库，需要升级此版本，否则iphone5以前的机器会出现崩溃问题
+
+### 6.2.3 [11 Mar 2021] ###
+【新增特性】
+ 无
+
+【优化】
+ 无
+
+【修复】
+1. 修复ios和mac av1解码花屏
+2. 尝试解决播放时通道数改变导致的声音异常问题
+3. 解决系统存在水印库时Windows用ffh264解码导致花屏的问题
+
+【接口变更】
+ 无
+
+【版本升级应注意的问题】
+ 无
+
+### 6.2.1 [25 Jan 2021] ###
+【新增特性】
+1. 支持 av1 写入svc文件
+
+【优化】
+ 无
+
+【修复】
+1. 修复av1会议在linux上的崩溃问题
+2. 更新dav1d linux动态库,同步抗弱网相关支持
+3. 修复自定义文本水印路径不生效问题
+
+【接口变更】
+ 无
+
+【版本升级应注意的问题】
+ 无
+
+
+Watermelon 6.1
+--------------------------
+### 6.1.0 [2 Dec 2020] ###
+【新增特性】
+1.增加av1编解码
+  所有平台增加libav1d解码功能，其中ios/android使用静态编译；pc（win/mac/linux）平台使用动态加载
+  pc平台增加wz av1编码功能: 均使用动态加载方式开启。（需要加载动态库和license.key）
+
+  av1主要应用于会议，可以在同等质量下，相比H264降低60%左右的码率。
+
+2. 增加MJPG编解码
+   所有平台增加MJPG编解码，静态编译
+
+   MJPG主要用于iot系统视频通话。
+
+【优化】
+1. 增加智能布局参数，用于满足两个视频源布局下保持左右布局的需求
+
+【修复】
+1. 解决no input/output 统计信息不对的问题
+界面选择no input/output时，mme统计信息仍然有设备名称。 通过判断播放/录音状态，返回正确的统计信息
+
+
+【接口变更】
+ 无
+
+【版本升级应注意的问题】
+无
+
+
+Watermelon 6.0
+-----------
+### 6.0.9 [22 June 2021] ###
+【新增特性】
+1. watermelon增加获取噪声等级和信噪比估计结果的接口 xiang xia
+
+【优化】
+1. 优化 voice 相关的日志打印 xiang xia
+2. 优化video/system 的日志打印 zongyao.gong
+3. 优化rtp/rtcp 的日志打印 zhiqing.yang
+
+【修复】
+1. 解决电视做被叫时，华为手机视频无法显示问题 kerwin.peng
+2. 默认外部输入数据具有h264编码能力,内置默认 captureId 为 ju_h264  kerwin.peng
+3. 解决 telephone event 使用 100 Payload 失败问题  kerwin.peng
+4. 解决视频录制远端/发送端按照时间分割不对的问题 derek.dong
+5. ptt一直发送最后更新的数据 Yin Zhou
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+无
+
+### 6.0.8 [21 Mar 2021] ###
+【新增特性】
+1. 视频录制支持按照时间间隔分割视频 zhiqing.yang
+
+【优化】
+1. mmelog 默认不加密，只有.slog 后缀才加密 derek.dong
+
+【修复】
+1. 解决会议中adaptiveAspect宽高比与会议全局宽高比不一致时，实际输出宽高的最大值小于会议宽高比算出的宽高最小值的问题 zhiqing.yang
+2. 解决AEC远端单讲抑制模块在失真触发结束后状态未恢复，导致发送无声音的问题 xiang xia
+3. 解决文件录制时长的随机性问题 zhiqing.yang
+4. 解决离线录制出错后无法关闭的问题 derek.dong
+5. 解决ios armv7设备安装app store版本后找不到openh264动态库而崩溃的问题 derek.dong
+
+【接口变更】
+无
+
+【版本升级应注意的问题】
+无
+
+
+### 6.0.7 [15 Mar 2021] ###
+ * 解决windows文本水印库加载失败问题
+ * 解决存在水印库时Windows用ffh264解码导致花屏的bug
+ * 解决avi播放空文件死循环问题
+ * 解决视频文件作为输入元时，开启adaptive aspect后无法工作的问题
+ * 解决通用化输出无法录制音频文件问题
+
+### 6.0.6 [13 Jan 2021] ###
+ * ios openh264改为动态framework
+
+### 6.0.5 [5 Jan 2021] ###
+ * 增加视频MJPG编解码
+ * 音频响度计算统一使用dBov为单位
+ * 优化AEC单双端通话判断逻辑, 仅win32与mac默认开启。
+ * 默认关闭ffmpeg h264解码
+
+ * 解决aec和部分高频日志打印问题
+ * 解决透传录制的部分花屏、卡顿和音视频不同步问题
+ * 解决部分统计信息的问题
+ * 解决水印库和视频编解码的内存泄漏问题
+ * 解决linux水印字体路径设置不生效导致的无文本水印问题
+
+### 6.0.4 [17 Sept 2020] ###
+ * 解决透传录制花屏问题
+ * 默认关闭除了windows平台外的ffmpeg h264解码
+ * aec单双通话逻辑仅在win和mac平台默认开启
+ * 支持会议avc，解除会议svc对空间层>1的限制
+
+### 6.0.3 [19 Aug 2020] ###
+ * 解决录制视频开头黑屏的问题
+
+### 6.0.2 [17 Aug 2020] ###
+ * 增加录制写文件异常情况上报接口
+ * 水印模块封装为动态库
+ * 录制实现视频透传功能
+
+ * 水印日志等级打印错误修复
+ * 解决通用化输出视频无法透传的问题
+ * 水印依赖库精简，减少打包时的体积
+ * 为时间戳水印设置新的基准时间功能
+ * 指定的音频设备在开关后失效的问题
+ * 解决av1每帧第一个rtp包判断问题
+ * 对方关闭视频本端视频录制点两次才提示录制失败问题
+ * 解决padding模式在部分分辨率下仍存在裁剪的问题
+ * 解决h264无法发送问题
+### 6.0.1 [22 July 2020] ###
+ * 无修改
+
+### 6.0.0 [17 July 2020] ###
+ * 水印性能优化，减少内存拷贝
+ * 修复vp9编码分辨率和图像分辨率不通导致的编码错误
+ * 屏幕共享补黑边控制
+ * 增加通用化输出功能
+ * 增加aec_benchmark工具，用于本地测试AEC效果
+ * 解决udp stop 线程不同步导致的编码错误
+ * 解决zmf log等级INFO_LEVEL错误打印成CRITICAL_LEVEL问题
+
+
+
+Watermelon 5.9
+-----------
+### 5.9.6 [28 Aug 2020] ###
+ * 解决关闭时偶尔崩溃问题
+ * h264支持绕过内部解码，通过decodebypass回调直接输出h264原始数据
+ * 水印性能优化，减少内存拷贝
+ * 水印依赖库精简
+ * 水印模块封装为动态库
+ * 自动布局不允许自动订阅
+
+### 5.9.5 [13 Aug 2020] ###
+ * 解决指定的音频设备（CD_Wechat、CD_Webrtc会使用）在开关后失效的问题
+
+### 5.9.4 [24 July 2020] ###
+ * ios 默认开启vp8
+
+### 5.9.3 [22 July 2020] ###
+ * 新增aec_benchmark工具，用于本地离线测试AEC效果
+ * Android/iOS支持H263
+ * 修复h263在安卓平台的链接问题
+ * 实现H263-1998 （rfc 4629），支持H263作为外部采集源
+ * 支持h263 输出解码前码流，并且跳过内部解码
+
+### 5.9.2 [8 July 2020] ###
+ * 无更新
+
+
+### 5.9.1 [8 July 2020] ###
+ * 硬件h264，修改svc最小帧率为最大帧率一半
+ * 水印字体颜色改为按照RRGGBB的顺序设置
+
+### 5.9.0 [11 June 2020] ###
+ * 重构AEC模块部分代码；增加AEC模块远端单讲抑制功能的接口。
+ * 解决统计信息设备名称与实际不一致的问题
+
+Watermelon 5.8
+-----------
+
+### 5.8.0 [28 May 2020] ###
+ * 解决会议1080P 50%丢包卡住问题
+
+
+
+
+

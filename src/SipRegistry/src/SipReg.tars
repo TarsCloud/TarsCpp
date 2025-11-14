@@ -1,0 +1,62 @@
+
+module VoipApp
+{
+	// 服务端点信息
+    struct ServiceEndpoint
+    {
+        0 require string host;              // IP地址
+        1 require int port;                 // 端口
+        2 require map<string, string> params;  // 自定义参数
+    };
+
+    // 服务完整信息
+    struct ServiceInfo
+    {
+        0 require string serviceId;         // 服务唯一标识（建议用obj名称）
+        1 require string serviceType;       // 服务类型（如 "SipRelay"）
+		2 optional int freePercent = 0;
+        3 require ServiceEndpoint endpoints;
+        4 require map<string, string> attributes;  // 服务级别属性
+        5 require long updateTime;          // 最后更新时间戳
+        6 optional int ttl = 90;            // 心跳超时时间（秒）
+    };
+    
+    // 查询条件
+    struct QueryCondition
+    {
+        0 optional string serviceType;      // 按类型查询
+        1 optional map<string, string> attributes;  // 按属性过滤
+    };
+	
+	interface SipReg
+	{
+		 /**
+		* 注册或更新服务
+		* @param serviceInfo 服务信息
+		* @return 0表示成功，非0表示失败
+		*/
+		int registerService(ServiceInfo serviceInfo);
+		
+		/**
+		* 查询服务列表
+		* @param condition 查询条件
+		* @param services 返回的服务列表
+		* @return 0表示成功，非0表示失败
+		*/
+		int queryServices(QueryCondition condition, out vector<ServiceInfo> services);
+		
+		/**
+		* 注销服务
+		* @param serviceId 服务标识
+		* @return 0表示成功，非0表示失败
+		*/
+		int unregisterService(string serviceId);
+		
+		/**
+		* 心跳保活
+		* @param serviceId 服务标识
+		* @return 0表示成功，非0表示失败
+		*/
+		int heartbeat(string serviceId);
+	};
+}; 

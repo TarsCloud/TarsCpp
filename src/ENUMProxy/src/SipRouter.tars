@@ -1,0 +1,124 @@
+
+module VoipApp
+{
+	struct RouteInfo
+	{
+		0 require string gwAddr;
+		1 require string ipAddr;
+		2 optional int port = 5060;
+	};
+	
+	struct ReqHead
+	{
+		0 require int SERIAL;
+		1 require string METHOD;
+		2 require string AUTH_KEY;
+		3 require string CHANNEL;
+	};
+	
+	struct ReqBody
+	{
+		0 require string TYPE;
+		1 require string TIME;
+		2 require string CALL_ID;
+		3 require string SRC_GW;
+		4 require string SRC_ENT_ADDR;
+		5 require string SRC_CALL_USER;
+		6 require string CALL_FORWORDING_NUMBER;
+		7 require string DST_CALL_USER;
+	};
+	
+	struct ReqMsg
+	{
+		0 require int uip_version;
+		1 require ReqHead uip_head;
+		2 require ReqBody uip_body;
+	};
+
+	struct RspHead
+	{
+		0 require int SERIAL;
+		1 require string METHOD;
+		2 require string CHANNEL;
+		3 require int RESULT_CODE;
+		4 require string RESULT_DESC;
+	};
+
+	struct RspRouteInfo
+	{
+		0 require string DST_GW;
+		1 require string DST_ENT_ADDR;
+		2 optional int DST_ENT_PORT = 5060;
+	};
+	
+	struct RspBody
+	{
+		0 optional int SERVICE_TYPE = 0;
+		1 optional int RECORD = 0;
+		2 optional int BEEP = 0;
+		3 optional int FORCE_SIP_INBOUND = 0;
+		4 optional int FORCE_SIP_OUTBOUND = 0;
+		5 optional int NUMBER_TYPE_FLAG = 0;
+		6 require string TYPE;
+		7 require string TIME;
+		8 require string CALL_ID;
+		9 require string LAST_GW;
+		10 require string DST_ENT_ADDR;
+		11 require int DST_ENT_PORT;
+		12 require string SRC_CALL_USER;
+		13 require string DST_CALL_USER;
+		14 require string CALLING_E164_NUMBER;
+		15 require string CHARGE_USER;
+		16 require string MIDDLE_CALL_USER;
+		17 require string ORIG_SRC_CALL_USER;
+		18 require string ORIG_DST_CALL_USER;
+		19 require string PRICE_NUMBER;
+		20 require string ROUTE_ID;
+		21 require string ATOM_ID;
+		22 require string FROM;
+		23 require string TO;
+		24 require vector<RspRouteInfo> DST_ARRAY;
+	};
+	
+	struct RspMsg
+	{
+		0 require int uip_version;
+		1 require RspHead uip_head;
+		2 require RspBody uip_body;
+	};
+	
+	struct JegoRouterInfo
+	{
+		0 require int version;
+		1 require string type;
+		2 require string time;
+		3 require string caller;
+		4 require string callee;
+		5 require string callId;
+		6 require string gwAddr;
+		7 require string number;
+		8 require string chargeAccount;
+		9 require string enterpriseIp;
+		10 require int enterprisePort;
+		11 require string midCallUser;
+		12 require string origSrcUser;
+		13 require string origDstUser;
+		14 require string routeId;
+		15 require string atomId;
+		16 require string priceNumber;
+		17 optional int resultCode = 0;
+		18 optional int serviceType = 0;
+		19 optional int record = 0;
+		20 optional int beep = 0;
+		21 optional int sipInbound = 0;
+		22 optional int sipOutbound = 0;
+		23 require vector<RouteInfo> routeInfoList;
+	};
+	
+	interface SipRouter
+	{
+		bool getRouteInfo(string gwOid, string caller, string callee, string callId, string callForwording, string sipgatewayIp, string enterpriseIp, map<string, string> params, out JegoRouterInfo info);
+		bool getRouteInfo2(string gwOid, string caller, string callee, string callId, string callForwording, string sipgatewayIp, string enterpriseIp, map<string, string> params, out JegoRouterInfo info, out map<string, string> outParams);
+	};
+
+}; 

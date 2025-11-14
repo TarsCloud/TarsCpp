@@ -1,0 +1,30 @@
+
+module VoipApp
+{
+	struct OcsChargeInfo
+	{
+		0 require string caller;
+		1 require string callee;
+		2 require string chargeAccount;
+		3 require string midCallUser;
+		4 require string origSrcUser;
+		5 require string origDstUser;
+		6 require string routeId;
+		7 require string atomId;
+		8 require string meetingId;
+		9 require string priceNumber;
+	};
+
+	interface SipCharge
+	{
+		bool getOcsConnectStatus(string sipGatewayId, out string atsOid, out int sessId, out int status, out int statCode);	
+
+		bool getOcsChargeStatus(string sipGatewayId, string callId, OcsChargeInfo chargeInfo, out string atsOid, out int iSessId, out int iCCId);	
+		
+		bool stopOcsCharge(string sipGatewayId, string callId, int sessId, int ccId, int usedTime, int ringTime,int finishType, map<string, string> params, out string atsOid);
+		
+		bool getCallDuration(string sipGatewayId, string callId, int sessId, int ccId, int usedTime, out string atsOid);	
+
+	};
+
+}; 

@@ -1,0 +1,12 @@
+
+module VoipApp
+{
+
+	interface SipRtp
+	{
+		bool allocRtpResource(bool isCaller, map<string, string> params, out map<string, string> retValus); 
+		bool releaseRtpResource(string callId);
+		bool updateRecordStatus(string callId, map<string, string> params);
+	};
+
+}; 
