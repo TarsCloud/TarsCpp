@@ -17,7 +17,7 @@ namespace Common
     class SslReceiver;
     class NetSsl;
     class NetDriver;
-    class BindChannel_Result;
+   // class BindChannel_Result;
 
     typedef std::shared_ptr<NetSender>               NetSenderPtr;
     typedef std::shared_ptr<NetReceiver>             NetReceiverPtr;
@@ -26,7 +26,7 @@ namespace Common
     typedef std::shared_ptr<SslReceiver>             SslReceiverPtr;
     typedef std::shared_ptr<NetSsl>                  NetSslPtr;
     typedef std::shared_ptr<NetDriver>               NetDriverPtr;
-    typedef std::shared_ptr<BindChannel_Result>      BindChannel_ResultPtr;
+    //typedef std::shared_ptr<BindChannel_Result>      BindChannel_ResultPtr;
 
     /** 网络流量类型 */
     enum NetFlowType {
@@ -131,13 +131,13 @@ namespace Common
     //     int _totalSize;
     // };
 
-    class BindChannel_Result
-    {
-    public:
-        virtual ~BindChannel_Result() = default;
-        virtual void onBindChannel_Result(bool result,const std::string& reason,unsigned int channel) = 0;
-        virtual void onChannelClosed(unsigned int channel) {}
-    };
+    // class BindChannel_Result
+    // {
+    // public:
+    //     virtual ~BindChannel_Result() = default;
+    //     virtual void onBindChannel_Result(bool result,const std::string& reason,unsigned int channel) = 0;
+    //     virtual void onChannelClosed(unsigned int channel) {}
+    // };
 
     /** 网络发送对象接口类 */
     class NetSender
@@ -151,7 +151,7 @@ namespace Common
          * @param[in]   level       数据级别
          * @param[in]   result      结果通过result返回
          */
-        virtual void bindChannel(int did,int level,const BindChannel_ResultPtr& result) { if (result) result->onBindChannel_Result(false,"not-implemented",0); }
+        //virtual void bindChannel(int did,int level,const BindChannel_ResultPtr& result) { if (result) result->onBindChannel_Result(false,"not-implemented",0); }
 
         // /** 通过channel发送数据
         //  *
@@ -316,163 +316,163 @@ namespace Common
     };
 
     /** 可靠传输连接 接收数据处理接口 */
-    class StreamReceiver
-    {
-    public:
-        virtual ~StreamReceiver() = default;
-    public:
-        // /** 可靠传输连接 需要输入数据
-        //  *
-        //  * @param[in]   offset      数据偏移量
-        //  * @param[out]  data        数据内容
-        //  */
-        // virtual void onIputData(int64_t offset,Stream& data) = 0;
-        // /** 可靠传输连接 输出数据
-        //  *
-        //  * @param[in]   offset      数据偏移量
-        //  * @param[in]   data        数据内容
-        //  */
-        // virtual void onOputData(int64_t offset,Stream& data) = 0;
-        // /** 可靠传输连接 发送数据
-        //  *
-        //  * @param[in]   pkt         需要发送的数据
-        //  */
-        // virtual void onSendPkt(Stream& pkt) = 0;
+    // class StreamReceiver
+    // {
+    // public:
+    //     virtual ~StreamReceiver() = default;
+    // public:
+    //     // /** 可靠传输连接 需要输入数据
+    //     //  *
+    //     //  * @param[in]   offset      数据偏移量
+    //     //  * @param[out]  data        数据内容
+    //     //  */
+    //     // virtual void onIputData(int64_t offset,Stream& data) = 0;
+    //     // /** 可靠传输连接 输出数据
+    //     //  *
+    //     //  * @param[in]   offset      数据偏移量
+    //     //  * @param[in]   data        数据内容
+    //     //  */
+    //     // virtual void onOputData(int64_t offset,Stream& data) = 0;
+    //     // /** 可靠传输连接 发送数据
+    //     //  *
+    //     //  * @param[in]   pkt         需要发送的数据
+    //     //  */
+    //     // virtual void onSendPkt(Stream& pkt) = 0;
 
-        /** 可靠传输连接 连接重置
-         *
-         * @param[in]   wantKbps    期望的带宽，单位 Kbps
-         */
-        virtual void onStreamReset(int wantKbps) {}
-        /** 可靠传输连接 期望带宽变化回调
-         *
-         * @param[in]   wantKbps    期望的带宽，单位 Kbps
-         */
-        virtual void onSendWantKbps(int wantKbps) {}
-    };
+    //     /** 可靠传输连接 连接重置
+    //      *
+    //      * @param[in]   wantKbps    期望的带宽，单位 Kbps
+    //      */
+    //     virtual void onStreamReset(int wantKbps) {}
+    //     /** 可靠传输连接 期望带宽变化回调
+    //      *
+    //      * @param[in]   wantKbps    期望的带宽，单位 Kbps
+    //      */
+    //     virtual void onSendWantKbps(int wantKbps) {}
+    // };
 
-    /** 可靠传输对象 */
-    class NetStream
-    {
-    public:
-        virtual ~NetStream() = default;
-    public:
-        /** 关闭连接 */
-        virtual void close() = 0;
-        /** 判断连接是否断开
-         *
-         * @param[in]   ackTimeout      应答响应超时判断标准，单位毫秒
-         * @param[in]   dataTimeout     数据传输超时判断标准，单位毫秒
-         *
-         * @retval      true            连接断开
-         * @retval      false           连接未断开
-         */
-        virtual bool isDisconnect(int ackTimeout = 4000,int dataTimeout = 12000) = 0;
+    // /** 可靠传输对象 */
+    // class NetStream
+    // {
+    // public:
+    //     virtual ~NetStream() = default;
+    // public:
+    //     /** 关闭连接 */
+    //     virtual void close() = 0;
+    //     /** 判断连接是否断开
+    //      *
+    //      * @param[in]   ackTimeout      应答响应超时判断标准，单位毫秒
+    //      * @param[in]   dataTimeout     数据传输超时判断标准，单位毫秒
+    //      *
+    //      * @retval      true            连接断开
+    //      * @retval      false           连接未断开
+    //      */
+    //     virtual bool isDisconnect(int ackTimeout = 4000,int dataTimeout = 12000) = 0;
 
-        /** 设置发送带宽控制参数
-         *
-         * @param[in]   initKbps        初始码率，单位 Kbps
-         * @param[in]   baseKbps        最低码率，单位 Kbps
-         * @param[in]   maxKbps         最大码率，单位 Kbps
-         *
-         * @retval      true            设置成功
-         * @retval      false           设置失败
-         */
-        virtual bool setKbps(int initKbps,int baseKbps,int maxKbps) = 0;
-        /** 设置分片数据传输超时时间
-         *
-         * @param[in]   timeout         超时时长，单位毫秒
-         *
-         * @retval      true            设置成功
-         * @retval      false           设置失败
-         */
-        virtual bool setFragTimeout(int timeout) = 0;
-        /** 设置分片数据 MTU 大小
-         *
-         * @param[in]   mtu             MTU 大小，单位字节
-         *
-         * @retval      true            设置成功
-         * @retval      false           设置失败
-         */
-        virtual bool setFragMtu(int mtu) = 0;
-        /** 重置发送状态
-         *
-         * @retval      true            设置成功
-         * @retval      false           设置失败
-         */
-        virtual bool setSendReset() = 0;
-        // /** 发送数据
-        //  *
-        //  * @param[in]   data        数据内容
-        //  *
-        //  * @retval      true            发送成功
-        //  * @retval      false           发送失败
-        //  */
-        // virtual bool sendData(const Stream& data) = 0;
-        /** 发送数据
-         *
-         * @param[in]   data        数据内容
-         * @param[in]   dataLen     数据内容大小，单位字节
-         *
-         * @retval      true            发送成功
-         * @retval      false           发送失败
-         */
-        virtual bool sendData(const unsigned char *data,int dataLen) = 0;
-        // /** 将接收数据放入可靠传输对象处理
-        //  *
-        //  * @param[in]   pkt         数据内容
-        //  *
-        //  * @retval      true            调用成功
-        //  * @retval      false           调用失败
-        //  */
-        // virtual bool recvPkt(const Stream& pkt) = 0;
-        /** 将接收数据放入可靠传输对象处理
-         *
-         * @param[in]   pkt         数据内容
-         * @param[in]   pktLen     数据内容大小，单位字节
-         *
-         * @retval      true            调用成功
-         * @retval      false           调用失败
-         */
-        virtual bool recvPkt(const unsigned char *pkt,int pktLen) = 0;
+    //     /** 设置发送带宽控制参数
+    //      *
+    //      * @param[in]   initKbps        初始码率，单位 Kbps
+    //      * @param[in]   baseKbps        最低码率，单位 Kbps
+    //      * @param[in]   maxKbps         最大码率，单位 Kbps
+    //      *
+    //      * @retval      true            设置成功
+    //      * @retval      false           设置失败
+    //      */
+    //     virtual bool setKbps(int initKbps,int baseKbps,int maxKbps) = 0;
+    //     /** 设置分片数据传输超时时间
+    //      *
+    //      * @param[in]   timeout         超时时长，单位毫秒
+    //      *
+    //      * @retval      true            设置成功
+    //      * @retval      false           设置失败
+    //      */
+    //     virtual bool setFragTimeout(int timeout) = 0;
+    //     /** 设置分片数据 MTU 大小
+    //      *
+    //      * @param[in]   mtu             MTU 大小，单位字节
+    //      *
+    //      * @retval      true            设置成功
+    //      * @retval      false           设置失败
+    //      */
+    //     virtual bool setFragMtu(int mtu) = 0;
+    //     /** 重置发送状态
+    //      *
+    //      * @retval      true            设置成功
+    //      * @retval      false           设置失败
+    //      */
+    //     virtual bool setSendReset() = 0;
+    //     // /** 发送数据
+    //     //  *
+    //     //  * @param[in]   data        数据内容
+    //     //  *
+    //     //  * @retval      true            发送成功
+    //     //  * @retval      false           发送失败
+    //     //  */
+    //     // virtual bool sendData(const Stream& data) = 0;
+    //     /** 发送数据
+    //      *
+    //      * @param[in]   data        数据内容
+    //      * @param[in]   dataLen     数据内容大小，单位字节
+    //      *
+    //      * @retval      true            发送成功
+    //      * @retval      false           发送失败
+    //      */
+    //     virtual bool sendData(const unsigned char *data,int dataLen) = 0;
+    //     // /** 将接收数据放入可靠传输对象处理
+    //     //  *
+    //     //  * @param[in]   pkt         数据内容
+    //     //  *
+    //     //  * @retval      true            调用成功
+    //     //  * @retval      false           调用失败
+    //     //  */
+    //     // virtual bool recvPkt(const Stream& pkt) = 0;
+    //     /** 将接收数据放入可靠传输对象处理
+    //      *
+    //      * @param[in]   pkt         数据内容
+    //      * @param[in]   pktLen     数据内容大小，单位字节
+    //      *
+    //      * @retval      true            调用成功
+    //      * @retval      false           调用失败
+    //      */
+    //     virtual bool recvPkt(const unsigned char *pkt,int pktLen) = 0;
 
-        /* remote acked offset */
-        /** 获取对端已经确认收到的数据偏移
-         *
-         * @return      数据偏移量
-         */
-        virtual int64_t getSendOffset() = 0;
-        /* receive data offset */
-        /** 获取本地已经收到数据的偏移量
-         *
-         * @return      数据偏移量
-         */
-        virtual int64_t getRecvOffset() = 0;
-        /* all send data remote acked */
-        /** 判断是否数据已经发送完成
-         *
-         * @retval      true        已经发送完成
-         * @retval      true        尚未发送完成
-         */
-        virtual bool sendCompleted() = 0;
+    //     /* remote acked offset */
+    //     /** 获取对端已经确认收到的数据偏移
+    //      *
+    //      * @return      数据偏移量
+    //      */
+    //     virtual int64_t getSendOffset() = 0;
+    //     /* receive data offset */
+    //     /** 获取本地已经收到数据的偏移量
+    //      *
+    //      * @return      数据偏移量
+    //      */
+    //     virtual int64_t getRecvOffset() = 0;
+    //     /* all send data remote acked */
+    //     /** 判断是否数据已经发送完成
+    //      *
+    //      * @retval      true        已经发送完成
+    //      * @retval      true        尚未发送完成
+    //      */
+    //     virtual bool sendCompleted() = 0;
 
-        /** 设置参数
-         *
-         * @param[in]   name        参数名称
-         * @param[in]   value        参数值
-         */
-        virtual void setParam(const std::string& name,const std::string& value) = 0;
-        /** 获取参数
-         *
-         * @param[in]   name        参数名称
-         *
-         * @return      参数值
-         */
-        virtual std::string getParam(const std::string& name) = 0;
-        /** @cond */
-        virtual bool setSecurityParam(unsigned int sentKey, unsigned int recvKey, int passThroughType) = 0;
-        /** @endcond */
-    };
+    //     /** 设置参数
+    //      *
+    //      * @param[in]   name        参数名称
+    //      * @param[in]   value        参数值
+    //      */
+    //     virtual void setParam(const std::string& name,const std::string& value) = 0;
+    //     /** 获取参数
+    //      *
+    //      * @param[in]   name        参数名称
+    //      *
+    //      * @return      参数值
+    //      */
+    //     virtual std::string getParam(const std::string& name) = 0;
+    //     /** @cond */
+    //     virtual bool setSecurityParam(unsigned int sentKey, unsigned int recvKey, int passThroughType) = 0;
+    //     /** @endcond */
+    // };
 
     /** 安全连接数据接收接口 */
     class SslReceiver

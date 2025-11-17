@@ -205,7 +205,7 @@ namespace SipGateway
             + _remoteHost + " ,port:" +std::to_string(_remotePort) + " ,local Ip:" + _localHost + " ,port:" + std::to_string(_localPort) << endl);
     }
 
-    GatewayConnection::GatewayConnection(const RtpGateway::RtpGatewayMsgSenderInterfacePtr & decode, const Common::NetSenderPtr& sender, ConnectionUsedModulType modulType)
+    GatewayConnection::GatewayConnection(const SipRtpGateway::RtpGatewayMsgSenderInterfacePtr & decode, const Common::NetSenderPtr& sender, ConnectionUsedModulType modulType)
     {
         _sipProxyDecoder = 0;
 		_sipGwDecoder = 0;
@@ -219,7 +219,7 @@ namespace SipGateway
         TLOGDEBUG("[GatewayConnection] " << "4 New GatewayConnection() called.  random Connection Id :" + _strConnectionID + ",randomId:" + _randomId << endl);
     }
 
-    GatewayConnection::GatewayConnection(const RtpGateway::RtpGatewayMsgSenderInterfacePtr & decode, TransType transType)
+    GatewayConnection::GatewayConnection(const SipRtpGateway::RtpGatewayMsgSenderInterfacePtr & decode, TransType transType)
     {
         _sipProxyDecoder = 0;
 		_sipGwDecoder = 0;

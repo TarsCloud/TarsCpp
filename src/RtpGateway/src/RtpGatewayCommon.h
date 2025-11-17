@@ -1,7 +1,7 @@
 ﻿#ifndef _RTPGATEWAY_COMMON_H_
 #define _RTPGATEWAY_COMMON_H_
 
-namespace RtpGateway
+namespace SipRtpGateway
 {
 #define JSSMME_MEDIA_CHANNEL_RESERVE 40
 

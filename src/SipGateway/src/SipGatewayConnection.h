@@ -100,7 +100,7 @@ namespace SipGateway
     private:
 
         SipProxy::SipProxyMsgCoderInterfacePtr          _sipProxyDecoder;
-        RtpGateway::RtpGatewayMsgSenderInterfacePtr     _rtpGatewayDecoder;
+        SipRtpGateway::RtpGatewayMsgSenderInterfacePtr     _rtpGatewayDecoder;
         SipCloudGateway::CloudSipGatewayMsgCoderInterfacePtr    _sipGwDecoder;
 
         std::mutex                                _mutexSender;
@@ -118,8 +118,8 @@ namespace SipGateway
         GatewayConnection(const SipCloudGateway::CloudSipGatewayMsgCoderInterfacePtr &decode, ConnectionUsedModulType modulType,const std::string& protocol,
             const std::string& localHost,int localPort,const std::string& sbcIp,int sbcPort, const std::string & id);
 
-        GatewayConnection(const RtpGateway::RtpGatewayMsgSenderInterfacePtr & decode, const Common::NetSenderPtr& sender, ConnectionUsedModulType modulType);
-        GatewayConnection(const RtpGateway::RtpGatewayMsgSenderInterfacePtr & decode, TransType transType);
+        GatewayConnection(const SipRtpGateway::RtpGatewayMsgSenderInterfacePtr & decode, const Common::NetSenderPtr& sender, ConnectionUsedModulType modulType);
+        GatewayConnection(const SipRtpGateway::RtpGatewayMsgSenderInterfacePtr & decode, TransType transType);
 
         void constructCommonPart();
         virtual ~GatewayConnection();

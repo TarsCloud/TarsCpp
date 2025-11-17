@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-namespace RtpGateway
+namespace SipRtpGateway
 {
     class RtpGatewayMsgSenderInterface
     {

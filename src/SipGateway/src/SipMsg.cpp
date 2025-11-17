@@ -6394,13 +6394,13 @@ ZUCHAR SipMsg::sdpGetStaticEncoding(int ucPayload)
 
 bool SipMsg::getPayloadName(int payload, std::string & plName)
 {
-    int size = ZOS_GET_TABLE_SIZE(RtpGateway::astSdpCodecTbl);
+    int size = ZOS_GET_TABLE_SIZE(SipRtpGateway::astSdpCodecTbl);
 
     for (int i = 0; i < size; i++)
     {
-        if (payload == RtpGateway::astSdpCodecTbl[i].iPayload)
+        if (payload == SipRtpGateway::astSdpCodecTbl[i].iPayload)
         {
-            plName = RtpGateway::astSdpCodecTbl[i].pcName;
+            plName = SipRtpGateway::astSdpCodecTbl[i].pcName;
             return true;
         }
     }

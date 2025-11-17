@@ -144,8 +144,8 @@ namespace SipGateway
 
             if (false == getDomainId(userId, domainId))
             {
-                UTIL_LOG_WRN("AppAccountStatusManager", std::string(__FUNCTION__) + "() called getDomainId() return FALSE: "
-                    + userId + ",statusesMap.size()==" + std::string(int(statusesMap.size())));
+                TLOGWARN("[AppAccountStatusManager] " << __FUNCTION__ << "() called getDomainId() return FALSE: "
+                    << userId << ",statusesMap.size()==" << (int)statusesMap.size() << endl);
                 continue;
             }
 
