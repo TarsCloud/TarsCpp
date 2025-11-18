@@ -8,25 +8,27 @@
 #include <memory>
 #include <cstdint>
 
+#include "util/tc_autoptr.h"
+
 namespace Common
 {
     class NetSender;
     class NetReceiver;
     class StreamReceiver;
-    class NetStream;
+    //class NetStream;
     class SslReceiver;
     class NetSsl;
     class NetDriver;
    // class BindChannel_Result;
 
-    typedef std::shared_ptr<NetSender>               NetSenderPtr;
-    typedef std::shared_ptr<NetReceiver>             NetReceiverPtr;
-    typedef std::shared_ptr<StreamReceiver>          StreamReceiverPtr;
-    typedef std::shared_ptr<NetStream>               NetStreamPtr;
-    typedef std::shared_ptr<SslReceiver>             SslReceiverPtr;
-    typedef std::shared_ptr<NetSsl>                  NetSslPtr;
-    typedef std::shared_ptr<NetDriver>               NetDriverPtr;
-    //typedef std::shared_ptr<BindChannel_Result>      BindChannel_ResultPtr;
+    typedef tars::TC_AutoPtr<NetSender>               NetSenderPtr;
+    typedef tars::TC_AutoPtr<NetReceiver>             NetReceiverPtr;
+    typedef tars::TC_AutoPtr<StreamReceiver>          StreamReceiverPtr;
+    //typedef tars::TC_AutoPtr<NetStream>               NetStreamPtr;
+    typedef tars::TC_AutoPtr<SslReceiver>             SslReceiverPtr;
+    typedef tars::TC_AutoPtr<NetSsl>                  NetSslPtr;
+    typedef tars::TC_AutoPtr<NetDriver>               NetDriverPtr;
+    //typedef tars::TC_AutoPtr<BindChannel_Result>      BindChannel_ResultPtr;
 
     /** 网络流量类型 */
     enum NetFlowType {
@@ -131,7 +133,7 @@ namespace Common
     //     int _totalSize;
     // };
 
-    // class BindChannel_Result
+    // class BindChannel_Result : virtual public tars::TC_HandleBase
     // {
     // public:
     //     virtual ~BindChannel_Result() = default;
@@ -140,7 +142,7 @@ namespace Common
     // };
 
     /** 网络发送对象接口类 */
-    class NetSender
+    class NetSender : virtual public tars::TC_HandleBase
     {
     public:
         virtual ~NetSender() = default;
@@ -263,7 +265,7 @@ namespace Common
     };
 
     /** 网络接收对象接口类 */
-    class NetReceiver
+    class NetReceiver : virtual public tars::TC_HandleBase
     {
     public:
         virtual ~NetReceiver() = default;
@@ -316,7 +318,7 @@ namespace Common
     };
 
     /** 可靠传输连接 接收数据处理接口 */
-    // class StreamReceiver
+    // class StreamReceiver : virtual public tars::TC_HandleBase
     // {
     // public:
     //     virtual ~StreamReceiver() = default;
@@ -352,7 +354,7 @@ namespace Common
     // };
 
     // /** 可靠传输对象 */
-    // class NetStream
+    // class NetStream : virtual public tars::TC_HandleBase
     // {
     // public:
     //     virtual ~NetStream() = default;
@@ -475,7 +477,7 @@ namespace Common
     // };
 
     /** 安全连接数据接收接口 */
-    class SslReceiver
+    class SslReceiver : virtual public tars::TC_HandleBase
     {
     public:
         virtual ~SslReceiver() = default;
@@ -499,7 +501,7 @@ namespace Common
     };
 
     /** 安全连接对象 */
-    class NetSsl
+    class NetSsl : virtual public tars::TC_HandleBase
     {
     public:
         virtual ~NetSsl() = default;
@@ -534,7 +536,7 @@ namespace Common
     };
 
     /** 网络接口对象 */
-    class NetDriver
+    class NetDriver : virtual public tars::TC_HandleBase
     {
     public:
         virtual ~NetDriver() = default;
@@ -620,7 +622,7 @@ namespace Common
          *
          * @return      创建成功返回可靠传输连接对象，否则返回 0
          */
-        virtual NetStreamPtr stream(const StreamReceiverPtr& receiver,bool realtime,int64_t sendOffset = 0,bool security = false) = 0;
+        //virtual NetStreamPtr stream(const StreamReceiverPtr& receiver,bool realtime,int64_t sendOffset = 0,bool security = false) = 0;
         /** 创建安全传输连接对象
          *
          * @param[in]   receiver    数据接收处理对象
