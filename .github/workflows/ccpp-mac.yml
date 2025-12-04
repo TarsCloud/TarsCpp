@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install
-      run: brew install bison flex cmake;  cmake --version
+      run: brew install bison flex;  cmake --version
     - name: git
       run: git submodule update --init --recursive
     - name: configure

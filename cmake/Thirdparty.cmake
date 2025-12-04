@@ -183,7 +183,7 @@ if (TARS_SSL)
         set(LIB_CRYPTO "crypto")
 
         ExternalProject_Add(ADD_${LIB_SSL}
-                URL https://cnb.cool/tarsyun/tars/src/-/packages/maven/tars:openssl-1.1.1l/-/tag/1.1.1/-/file/openssl-1.1.1l.tar.gz
+                URL https://cnb.cool/tarsyun/tars/src/-/packages/maven/tars:openssl-1.1.1l/-/tag/1.1.1/-/file/openssl-1.1.1l-1.1.1.tar.gz 
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
