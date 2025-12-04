@@ -167,7 +167,7 @@ if (TARS_SSL)
         set(LIB_CRYPTO "libcrypto")
 
         ExternalProject_Add(ADD_${LIB_SSL}
-                URL https://cnb.cool/tarsyun/tars/src/-/packages/maven/tars:openssl-1.1.1l/-/tag/1.1.1/-/file/openssl-1.1.1l.tar.gz
+                URL https://cnb.cool/tarsyun/tars/src/-/packages/maven/tars:openssl-1.1.1l/-/tag/1.1.1/-/file/openssl-1.1.1l-1.1.1.tar.gz
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
@@ -212,7 +212,7 @@ if (TARS_MYSQL)
         set(LIB_MYSQL "libmysql")
 
         ExternalProject_Add(ADD_${LIB_MYSQL}
-                URL https://cnb.cool/tarsyun/tars/src/-/packages/maven/tars:mysql-connector-c-src.fixed/-/tag/6.1.11/-/file/mysql-connector-c-6.1.11-src.fixed.zip
+                URL https://cnb.cool/tarsyun/tars/src/-/packages/maven/tars:mysql-connector-c-src.fixed/-/tag/6.1.11/-/file/mysql-connector-c-src.fixed-6.1.11.tar.gz
                 DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/download
                 PREFIX ${CMAKE_BINARY_DIR}
                 INSTALL_DIR ${CMAKE_SOURCE_DIR}
