@@ -241,7 +241,7 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
         if(bRecursive)
         {
             vector<string> files;
-            listDirectory(path, files, false);
+            listDirectory(path, files, false, false);
             for(size_t i = 0; i < files.size(); i++)
             {
                 removeFile(files[i], bRecursive);
@@ -588,6 +588,12 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 			}
 			else
 			{
+                if(strncmp(namelist[n]->d_name,".", 1) == 0 || strncmp(namelist[n]->d_name,"..", 2) == 0)
+                {
+                    free(namelist[n]);
+                    continue;
+                }
+
 				if (ignoreHide && namelist[n]->d_name[0] == '.')
 				{
 					free(namelist[n]);
@@ -622,18 +628,19 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 	{
 		do
 		{
-			string sName = fileinfo.name;
+            if(strncmp(fileinfo.name,".", 1) == 0 || strncmp(fileinfo.name,"..", 2) == 0)
+				continue;
 
-			if (ignoreHide && sName[0] == '.')
+			if (ignoreHide && fileinfo.name[0] == '.')
 				continue;
 
 			dirent entry;
-			size_t copyLen = sName.length();
+			size_t copyLen = strlen(fileinfo.name);
 			if (copyLen >= MAX_PATH)
 			{
 				copyLen = MAX_PATH - 1;
 			}
-			memcpy(entry.d_name, sName.c_str(), copyLen);
+			memcpy(entry.d_name, fileinfo.name, copyLen);
 			entry.d_name[copyLen] = '\0';
 
 			if (fileinfo.attrib & _A_SUBDIR)
@@ -647,7 +654,7 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 
 			if (f == NULL || f(&entry))
 			{
-				tempFiles.push_back(sName);
+				tempFiles.push_back(fileinfo.name);
 			}
 
             if(iMaxSize > 0 && tempFiles.size() >= (size_t)iMaxSize )
@@ -731,7 +738,7 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
     {
         TC_File::makeDir(sNewFile);
         vector<string> tf;
-        TC_File::listDirectory(sExistFile,tf, false);
+        TC_File::listDirectory(sExistFile,tf, false, false);
         for(size_t i = 0; i <tf.size(); i++)
         {
             string fileName = TC_File::extractFileName(tf[i]);
