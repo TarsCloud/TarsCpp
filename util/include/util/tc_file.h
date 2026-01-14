@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tencent is pleased to support the open source community by making Tars available.
  *
  * Copyright (C) 2016THL A29 Limited, a Tencent company. All rights reserved.
@@ -37,6 +37,14 @@
 
 namespace tars
 {
+
+#if TARGET_PLATFORM_WINDOWS
+struct dirent {
+    char d_name[MAX_PATH];
+    unsigned char d_type;
+};
+#endif
+
 /////////////////////////////////////////////////
 /** 
  * @file tc_file.h 
@@ -262,7 +270,6 @@ public:
 	*/
 	static string extractUrlFilePath(const string &sUrl);
 
-#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 	/**
 	* @brief 遍历文件时确定是否选择.
 	*
@@ -277,10 +284,10 @@ public:
 	* @param vtMatchFiles  返回的文件名矢量表
 	* @param f             匹配函数,为NULL表示所有文件都获取
 	* @param iMaxSize      最大文件个数,iMaxSize <=0时,返回所有匹配文件
+	* @param ignoreHide    是否忽略隐藏文件(以.开头的文件),默认为true
 	* @return              文件个数
 	*/
-	static size_t scanDir(const string &sFilePath, vector<string> &vtMatchFiles, FILE_SELECT f = NULL, int iMaxSize = 0);
-#endif
+	static size_t scanDir(const string &sFilePath, vector<string> &vtMatchFiles, FILE_SELECT f = NULL, int iMaxSize = 0, bool ignoreHide = true);
 
 	/**
 	 * @brief 遍历目录, 获取目录下面的所有文件和子目录（不包含默认的 . 和 .. ）.
