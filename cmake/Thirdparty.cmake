@@ -59,7 +59,7 @@ if(WIN32)
         BUILD_IN_SOURCE 1
         BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- /maxcpucount:4
         INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
-        URL_MD5 b9bb5e11d579425154a9f97ed44be9b8
+        URL_MD5 2071994cfc5079d03439915f2751c8bc
     )
 
     add_dependencies(thirdparty ADD_CURL)
@@ -221,7 +221,7 @@ if (TARS_MYSQL)
                 BUILD_IN_SOURCE 1
                 BUILD_COMMAND ${CMAKE_COMMAND} --build . --config release -- /maxcpucount:4
                 INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config release --target install
-                URL_MD5 bad636fe9bcc9bb62e3f5b784495a9b5
+                URL_MD5 3578d736b9d493eae076a67e3ed473eb
                 )
 
     else ()

@@ -39,6 +39,9 @@ namespace tars
 {
 
 #if TARGET_PLATFORM_WINDOWS
+// windows下type的含义(和linux对齐)
+// 0x04 Normal File
+// 0x10 Subdirectory
 struct dirent {
     char d_name[MAX_PATH];
     unsigned char d_type;

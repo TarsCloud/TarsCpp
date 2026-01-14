@@ -649,21 +649,18 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 			{
 				tempFiles.push_back(sName);
 			}
+
+            if(iMaxSize > 0 && tempFiles.size() >= (size_t)iMaxSize )
+            {
+                break;
+            }
 		} while (_findnext(hFile, &fileinfo) == 0);
 		_findclose(hFile);
 	}
 
 	std::sort(tempFiles.begin(), tempFiles.end());
 
-	if (iMaxSize > 0)
-	{
-		size_t copySize = min(tempFiles.size(), (size_t)iMaxSize);
-		vtMatchFiles.insert(vtMatchFiles.end(), tempFiles.begin(), tempFiles.begin() + copySize);
-	}
-	else
-	{
-		vtMatchFiles.insert(vtMatchFiles.end(), tempFiles.begin(), tempFiles.end());
-	}
+	vtMatchFiles.insert(vtMatchFiles.end(), tempFiles.begin(), tempFiles.end());
 
 	return vtMatchFiles.size();
 }
@@ -671,7 +668,7 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 
 void TC_File::listDirectory(const string &path, vector<string> &files, bool bRecursive, bool ignoreHide)
 {
-#if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
+// #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     vector<string> tf;
     scanDir(path, tf, 0, 0, ignoreHide);
 
@@ -692,35 +689,35 @@ void TC_File::listDirectory(const string &path, vector<string> &files, bool bRec
             files.push_back(simplifyDirectory(s));
         }
     }
-#elif TARGET_PLATFORM_WINDOWS
-	intptr_t hFile;
-	_finddata_t fileinfo;
-	if ((hFile = _findfirst(string(path + "\\*.*").c_str(), &fileinfo)) != -1)
-	{
-		do
-		{
-			string sName = fileinfo.name;
-			if (sName == "." || sName == "..")
-				continue;
+// #elif TARGET_PLATFORM_WINDOWS
+// 	intptr_t hFile;
+// 	_finddata_t fileinfo;
+// 	if ((hFile = _findfirst(string(path + "\\*.*").c_str(), &fileinfo)) != -1)
+// 	{
+// 		do
+// 		{
+// 			string sName = fileinfo.name;
+// 			if (sName == "." || sName == "..")
+// 				continue;
 
-			string s = path + FILE_SEP + sName;
+// 			string s = path + FILE_SEP + sName;
 
-			if (fileinfo.attrib & _A_SUBDIR)
-			{
-				files.push_back(simplifyDirectory(s));
-				if (bRecursive)
-				{
-					listDirectory(s, files, bRecursive, ignoreHide);
-				}				
-			}
-			else
-			{
-				files.push_back(simplifyDirectory(s));
-			}
-		} while (_findnext(hFile, &fileinfo) == 0);
-		_findclose(hFile);
-	}
-#endif
+// 			if (fileinfo.attrib & _A_SUBDIR)
+// 			{
+// 				files.push_back(simplifyDirectory(s));
+// 				if (bRecursive)
+// 				{
+// 					listDirectory(s, files, bRecursive, ignoreHide);
+// 				}				
+// 			}
+// 			else
+// 			{
+// 				files.push_back(simplifyDirectory(s));
+// 			}
+// 		} while (_findnext(hFile, &fileinfo) == 0);
+// 		_findclose(hFile);
+// 	}
+// #endif
 }
 
 void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRemove)

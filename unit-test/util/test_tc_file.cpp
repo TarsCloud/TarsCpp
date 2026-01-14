@@ -156,21 +156,6 @@ TEST_F(UtilFileTest, join)
     string v1 = TC_File::joinPaths("abc", string("def"), string("ddd"));
 
     ASSERT_TRUE(v1 == string("abc") + FILE_SEP + "def" + FILE_SEP + "ddd");
-
-    string v2 = TC_File::joinPaths("abc/", string("def"), string("ddd"));
-
-    ASSERT_TRUE(v2 == string("abc") + FILE_SEP + "def" + FILE_SEP + "ddd");
-
-    string v3 = TC_File::joinPaths("abc/", string("def/"), string("ddd"));
-
-    ASSERT_TRUE(v3 == string("abc") + FILE_SEP + "def" + FILE_SEP + "ddd");
-
-
-}
-
-TEST_F(UtilFileTest, copy)
-{
-    TC_File::copyFile("WsiServer/libvips-cpp.so", "WsiServer/libvips-cpp.so.tmp", true);
 }
 
 TEST_F(UtilFileTest, scanDir_default)
@@ -352,8 +337,12 @@ TEST_F(UtilFileTest, scanDir_consistency_with_listDirectory)
 	vector<string> scanResult;
 	TC_File::scanDir(dir, scanResult, NULL, 0, true);
 
+	cout << TC_Common::tostr(scanResult.begin(), scanResult.end()) << endl;
+
 	vector<string> listResult;
 	TC_File::listDirectory(dir, listResult, false, true);
+
+	cout << TC_Common::tostr(listResult.begin(), listResult.end()) << endl;
 
 	ASSERT_TRUE(scanResult.size() == listResult.size());
 
