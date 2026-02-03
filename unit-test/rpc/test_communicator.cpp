@@ -265,6 +265,29 @@ TEST_F(HelloTest, testCommunicatorGetResourcesInfo)
 
 	stopServer(server);
 }
+
+
+TEST_F(HelloTest, testCommunicator)
+{
+	HelloServer server;
+	startServer(server, (TC_EpollServer::SERVER_OPEN_COROUTINE) 0);
+	for(int i = 0; i < 10000; i++)
+	{
+		if(i%1000 == 0)
+			cout << "count: " << i << endl;
+		shared_ptr<Communicator> comm = std::make_shared<Communicator>();
+
+		HelloPrx prx = getObj<HelloPrx>(comm.get(), "HelloAdapter");
+
+	    prx->tars_ping();
+
+		comm->terminate();
+	}
+
+	stopServer(server);
+}
+
+
 #if 0
 
 TEST_F(HelloTest, testNotifyCtrlC)

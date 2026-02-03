@@ -251,6 +251,7 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
             {
                 if(TC_Port::rmdir(path.c_str()) == -1)
                 {
+                    cout << "rmdir1 error, path:" << path << ", errno:" << errno << endl;
                     return -1;
                 }
                 return 0;
@@ -260,6 +261,7 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
         {
             if(TC_Port::rmdir(path.c_str()) == -1)
             {
+                cout << "rmdir2 error, path:" << path << ", errno:" << errno << endl;
                 return -1;
             }
         }
@@ -588,7 +590,7 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 			}
 			else
 			{
-                if(strncmp(namelist[n]->d_name,".", 1) == 0 || strncmp(namelist[n]->d_name,"..", 2) == 0)
+                if((strlen(namelist[n]->d_name) == 1 && strncmp(namelist[n]->d_name,".", 1) == 0) || (strlen(namelist[n]->d_name) == 2 && strncmp(namelist[n]->d_name,"..", 2) == 0))
                 {
                     free(namelist[n]);
                     continue;
@@ -628,7 +630,7 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 	{
 		do
 		{
-            if(strncmp(fileinfo.name,".", 1) == 0 || strncmp(fileinfo.name,"..", 2) == 0)
+            if((strlen(fileinfo.name) == 1 && strncmp(fileinfo.name,".", 1) == 0) || (strlen(fileinfo.name) == 2 && strncmp(fileinfo.name,"..", 2) == 0))
 				continue;
 
 			if (ignoreHide && fileinfo.name[0] == '.')
@@ -675,7 +677,6 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 
 void TC_File::listDirectory(const string &path, vector<string> &files, bool bRecursive, bool ignoreHide)
 {
-// #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     vector<string> tf;
     scanDir(path, tf, 0, 0, ignoreHide);
 
@@ -696,35 +697,6 @@ void TC_File::listDirectory(const string &path, vector<string> &files, bool bRec
             files.push_back(simplifyDirectory(s));
         }
     }
-// #elif TARGET_PLATFORM_WINDOWS
-// 	intptr_t hFile;
-// 	_finddata_t fileinfo;
-// 	if ((hFile = _findfirst(string(path + "\\*.*").c_str(), &fileinfo)) != -1)
-// 	{
-// 		do
-// 		{
-// 			string sName = fileinfo.name;
-// 			if (sName == "." || sName == "..")
-// 				continue;
-
-// 			string s = path + FILE_SEP + sName;
-
-// 			if (fileinfo.attrib & _A_SUBDIR)
-// 			{
-// 				files.push_back(simplifyDirectory(s));
-// 				if (bRecursive)
-// 				{
-// 					listDirectory(s, files, bRecursive, ignoreHide);
-// 				}				
-// 			}
-// 			else
-// 			{
-// 				files.push_back(simplifyDirectory(s));
-// 			}
-// 		} while (_findnext(hFile, &fileinfo) == 0);
-// 		_findclose(hFile);
-// 	}
-// #endif
 }
 
 void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRemove)
