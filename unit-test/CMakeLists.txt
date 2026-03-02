@@ -17,7 +17,11 @@ add_definitions(-DCMAKE_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 target_link_libraries(unit-test ${LIB_GTEST} tarsmock)
 
 if(TARS_MYSQL)
-    target_link_libraries(unit-test ${LIB_MYSQL}.a)
+    if(UNIX)
+        target_link_libraries(unit-test ${LIB_MYSQL}.a)
+    else()
+        target_link_libraries(unit-test ${LIB_MYSQL}.lib)
+    endif()
 endif()
 
 add_dependencies(unit-test FRAMEWORK-PROTOCOL tarsmock)
