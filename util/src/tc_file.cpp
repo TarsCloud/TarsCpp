@@ -251,7 +251,7 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
             {
                 if(TC_Port::rmdir(path.c_str()) == -1)
                 {
-                    cout << "rmdir1 error, path:" << path << ", errno:" << errno << endl;
+                    // cout << "rmdir1 error, path:" << path << ", errno:" << errno << endl;
                     return -1;
                 }
                 return 0;
@@ -261,7 +261,7 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
         {
             if(TC_Port::rmdir(path.c_str()) == -1)
             {
-                cout << "rmdir2 error, path:" << path << ", errno:" << errno << endl;
+                // cout << "rmdir2 error, path:" << path << ", errno:" << errno << endl;
                 return -1;
             }
         }
