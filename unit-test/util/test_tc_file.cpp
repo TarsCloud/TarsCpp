@@ -367,3 +367,11 @@ TEST_F(UtilFileTest, scanDir_consistency_with_listDirectory)
 	TC_Port::rmdir((dir + FILE_SEP + "subdir").c_str());
 	TC_Port::rmdir(dir.c_str());
 }
+
+TEST_F(UtilFileTest, remove)
+{
+	int ret = TC_File::removeFile("VitaSees.HomepageServer", true);
+
+	cout << "remove file ret:" << ret << ", " << TC_Exception::getSystemError() << endl;
+
+}
