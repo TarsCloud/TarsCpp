@@ -78,11 +78,15 @@ TC_HashAlgorithm *TC_HashAlgFactory::getHashAlg(TC_HashAlgorithmType hashType)
 TC_ConsistentHashNew::TC_ConsistentHashNew()
 {
     _ptrHashAlg = TC_HashAlgFactory::getHashAlg(E_TC_CONHASH_DEFAULTHASH);
+    // 初始化空的shared_ptr
+    _vHashListPtr = std::make_shared<vector<node_T_new>>();
 }
 
 TC_ConsistentHashNew::TC_ConsistentHashNew(TC_HashAlgorithmType hashType)
 {
     _ptrHashAlg = TC_HashAlgFactory::getHashAlg(hashType);
+    // 初始化空的shared_ptr
+    _vHashListPtr = std::make_shared<vector<node_T_new>>();
 }
 
 /**
@@ -99,34 +103,56 @@ static bool less_hash(const TC_ConsistentHashNew::node_T_new & m1, const TC_Cons
 
 void TC_ConsistentHashNew::sortNode()
 {
-    sort(_vHashList.begin(), _vHashList.end(), less_hash);
+    // 完全无锁：COW + CAS
+    while (true)
+    {
+        auto oldPtr = std::atomic_load(&_vHashListPtr);
+        if (!oldPtr || oldPtr->empty()) {
+            return;
+        }
+
+        auto newList = std::make_shared<vector<node_T_new>>(*oldPtr);
+        sort(newList->begin(), newList->end(), less_hash);
+
+        if (std::atomic_compare_exchange_strong(&_vHashListPtr, &oldPtr, newList))
+        {
+            break;
+        }
+    }
 }
 
 void TC_ConsistentHashNew::printNode()
 {
+    // 无锁读取快照
+    auto listPtr = std::atomic_load(&_vHashListPtr);
+    if (!listPtr || listPtr->empty()) {
+        return;
+    }
+
+    const vector<node_T_new>& vHashList = *listPtr;
     map<unsigned int, unsigned int> mapNode;
-    size_t size = _vHashList.size();
+    size_t size = vHashList.size();
 
     for (size_t i = 0; i < size; i++)
     {
         if (i == 0)
         {
-            unsigned int value = 0xFFFFFFFF - _vHashList[size - 1].iHashCode + _vHashList[0].iHashCode;
-            mapNode[_vHashList[0].iIndex] = value;
+            unsigned int value = 0xFFFFFFFF - vHashList[size - 1].iHashCode + vHashList[0].iHashCode;
+            mapNode[vHashList[0].iIndex] = value;
         }
         else
         {
-            unsigned int value = _vHashList[i].iHashCode - _vHashList[i - 1].iHashCode;
+            unsigned int value = vHashList[i].iHashCode - vHashList[i - 1].iHashCode;
 
-            if (mapNode.find(_vHashList[i].iIndex) != mapNode.end())
+            if (mapNode.find(vHashList[i].iIndex) != mapNode.end())
             {
-                value += mapNode[_vHashList[i].iIndex];
+                value += mapNode[vHashList[i].iIndex];
             }
 
-            mapNode[_vHashList[i].iIndex] = value;
+            mapNode[vHashList[i].iIndex] = value;
         }
 
-        cout << "printNode: " << _vHashList[i].iHashCode << "|" << _vHashList[i].sNode << "|" << _vHashList[i].iIndex << "|" << mapNode[_vHashList[i].iIndex] << endl;
+        cout << "printNode: " << vHashList[i].iHashCode << "|" << vHashList[i].sNode << "|" << vHashList[i].iIndex << "|" << mapNode[vHashList[i].iIndex] << endl;
     }
 
     map<unsigned int, unsigned int>::iterator it = mapNode.begin();
@@ -141,7 +167,7 @@ void TC_ConsistentHashNew::printNode()
         it++;
     }
 
-    cerr << "variance: " << sum / mapNode.size() << ", size: " << _vHashList.size() << endl;
+    cerr << "variance: " << sum / mapNode.size() << ", size: " << vHashList.size() << endl;
 }
 
 int TC_ConsistentHashNew::addNode(const string & node, unsigned int index, int weight)
@@ -151,36 +177,62 @@ int TC_ConsistentHashNew::addNode(const string & node, unsigned int index, int w
         return -1;
     }
 
-    node_T_new stItem;
-    stItem.sNode = node;
-    stItem.iIndex = index;
-
-    for (int j = 0; j < weight; j++)
+    // 完全无锁：COW + CAS循环
+    // Lock-free: COW + CAS loop
+    while (true)
     {
-        string virtualNode = node + "_" + TC_Common::tostr<int>(j);
+        // 1. 获取当前vector的快照
+        auto oldPtr = std::atomic_load(&_vHashListPtr);
+        auto newList = std::make_shared<vector<node_T_new>>();
 
-        // TODO: 目前写了2 种hash 算法，可以根据需要选择一种，
-        // TODO: 其中KEMATA 为参考memcached client 的hash 算法，default 为原有的hash 算法，测试结论在表格里有
-        if (_ptrHashAlg->getHashType() == E_TC_CONHASH_KETAMAHASH)
+        // 2. 深拷贝现有数据
+        if (oldPtr) {
+            *newList = *oldPtr;
+        }
+
+        // 3. 在副本上添加新节点
+        node_T_new stItem;
+        stItem.sNode = node;
+        stItem.iIndex = index;
+
+        for (int j = 0; j < weight; j++)
         {
-	        vector<char> sMd5 = TC_MD5::md5bin(virtualNode);
-            char *p = (char *) sMd5.data();
+            string virtualNode = node + "_" + TC_Common::tostr<int>(j);
 
-            for (int i = 0; i < 4; i++)
+            // TODO: 目前写了2 种hash 算法，可以根据需要选择一种，
+            // TODO: 其中KEMATA 为参考memcached client 的hash 算法，default 为原有的hash 算法，测试结论在表格里有
+            if (_ptrHashAlg->getHashType() == E_TC_CONHASH_KETAMAHASH)
             {
-                stItem.iHashCode = ((uint32_t)(p[i * 4 + 3] & 0xFF) << 24)
-                    | ((uint32_t)(p[i * 4 + 2] & 0xFF) << 16)
-                    | ((uint32_t)(p[i * 4 + 1] & 0xFF) << 8)
-                    | ((uint32_t)(p[i * 4 + 0] & 0xFF));
-                stItem.iIndex = index;
-                _vHashList.push_back(stItem);
+                vector<char> sMd5 = TC_MD5::md5bin(virtualNode);
+                char *p = (char *) sMd5.data();
+
+                for (int i = 0; i < 4; i++)
+                {
+                    stItem.iHashCode = ((uint32_t)(p[i * 4 + 3] & 0xFF) << 24)
+                                       | ((uint32_t)(p[i * 4 + 2] & 0xFF) << 16)
+                                       | ((uint32_t)(p[i * 4 + 1] & 0xFF) << 8)
+                                       | ((uint32_t)(p[i * 4 + 0] & 0xFF));
+                    stItem.iIndex = index;
+                    newList->push_back(stItem);
+                }
+            }
+            else
+            {
+                stItem.iHashCode = _ptrHashAlg->hash(virtualNode.c_str(), virtualNode.length());
+                newList->push_back(stItem);
             }
         }
-        else
+
+        // 4. 对新vector排序
+        sort(newList->begin(), newList->end(), less_hash);
+
+        // 5. CAS替换：如果_vHashListPtr仍等于oldPtr，则替换为newList
+        //    如果失败说明有其他写操作抢先完成了，需要重试
+        if (std::atomic_compare_exchange_strong(&_vHashListPtr, &oldPtr, newList))
         {
-            stItem.iHashCode = _ptrHashAlg->hash(virtualNode.c_str(), virtualNode.length());
-            _vHashList.push_back(stItem);
+            break;  // CAS成功，退出循环
         }
+        // CAS失败，重新拷贝最新数据并重试
     }
 
     return 0;
@@ -188,7 +240,10 @@ int TC_ConsistentHashNew::addNode(const string & node, unsigned int index, int w
 
 int TC_ConsistentHashNew::getIndex(const string & key, unsigned int & iIndex)
 {
-    if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
+    // 【无锁读取】原子加载shared_ptr快照
+    auto listPtr = std::atomic_load(&_vHashListPtr);
+
+    if(_ptrHashAlg.get() == NULL || !listPtr || listPtr->empty())
     {
         iIndex = 0;
         return -1;
@@ -203,18 +258,24 @@ int TC_ConsistentHashNew::getIndex(const string & key, unsigned int & iIndex)
 
 int TC_ConsistentHashNew::getIndex(uint32_t hashcode, unsigned int & iIndex)
 {
-    if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
+    // 【无锁读取】原子加载shared_ptr快照
+    auto listPtr = std::atomic_load(&_vHashListPtr);
+
+    if(_ptrHashAlg.get() == NULL || !listPtr || listPtr->empty())
     {
         iIndex = 0;
         return -1;
     }
 
-    int low = 0;
-    int high = (int)_vHashList.size();
+    // 使用局部引用，避免重复解引用
+    const vector<node_T_new>& vHashList = *listPtr;
 
-    if(hashcode <= _vHashList[0].iHashCode || hashcode > _vHashList[high-1].iHashCode)
+    int low = 0;
+    int high = (int)vHashList.size();
+
+    if(hashcode <= vHashList[0].iHashCode || hashcode > vHashList[high-1].iHashCode)
     {
-        iIndex = _vHashList[0].iIndex;
+        iIndex = vHashList[0].iIndex;
         return 0;
     }
 
@@ -222,7 +283,7 @@ int TC_ConsistentHashNew::getIndex(uint32_t hashcode, unsigned int & iIndex)
     while (low < high - 1)
     {
         int mid = (low + high) / 2;
-        if (_vHashList[mid].iHashCode > hashcode)
+        if (vHashList[mid].iHashCode > hashcode)
         {
             high = mid;
         }
@@ -231,13 +292,16 @@ int TC_ConsistentHashNew::getIndex(uint32_t hashcode, unsigned int & iIndex)
             low = mid;
         }
     }
-    iIndex = _vHashList[low+1].iIndex;
+    iIndex = vHashList[low+1].iIndex;
     return 0;
 }
 
 int TC_ConsistentHashNew::getNodeName(const string & key, string & sNode)
 {
-    if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
+    // 【无锁读取】原子加载shared_ptr快照
+    auto listPtr = std::atomic_load(&_vHashListPtr);
+
+    if(_ptrHashAlg.get() == NULL || !listPtr || listPtr->empty())
     {
         sNode = "";
         return -1;
@@ -251,18 +315,25 @@ int TC_ConsistentHashNew::getNodeName(const string & key, string & sNode)
 
 int TC_ConsistentHashNew::getNodeName(uint32_t hashcode, string & sNode)
 {
-    if(_ptrHashAlg.get() == NULL || _vHashList.size() == 0)
+    // 【无锁读取】原子加载shared_ptr快照
+    // Lock-free read: atomically load shared_ptr snapshot
+    auto listPtr = std::atomic_load(&_vHashListPtr);
+
+    if(_ptrHashAlg.get() == NULL || !listPtr || listPtr->empty())
     {
         sNode = "";
         return -1;
     }
 
-    int low = 0;
-    int high = (int)_vHashList.size();
+    // 使用局部引用，避免重复解引用
+    const vector<node_T_new>& vHashList = *listPtr;
 
-    if(hashcode <= _vHashList[0].iHashCode || hashcode > _vHashList[high-1].iHashCode)
+    int low = 0;
+    int high = (int)vHashList.size();
+
+    if(hashcode <= vHashList[0].iHashCode || hashcode > vHashList[high-1].iHashCode)
     {
-        sNode = _vHashList[0].sNode;
+        sNode = vHashList[0].sNode;
         return 0;
     }
 
@@ -270,7 +341,7 @@ int TC_ConsistentHashNew::getNodeName(uint32_t hashcode, string & sNode)
     while (low < high - 1)
     {
         int mid = (low + high) / 2;
-        if (_vHashList[mid].iHashCode > hashcode)
+        if (vHashList[mid].iHashCode > hashcode)
         {
             high = mid;
         }
@@ -279,7 +350,7 @@ int TC_ConsistentHashNew::getNodeName(uint32_t hashcode, string & sNode)
             low = mid;
         }
     }
-    sNode = _vHashList[low+1].sNode;
+    sNode = vHashList[low+1].sNode;
     return 0;
 }
 
