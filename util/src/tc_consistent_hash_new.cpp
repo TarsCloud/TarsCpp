@@ -240,10 +240,7 @@ int TC_ConsistentHashNew::addNode(const string & node, unsigned int index, int w
 
 int TC_ConsistentHashNew::getIndex(const string & key, unsigned int & iIndex)
 {
-    // 【无锁读取】原子加载shared_ptr快照
-    auto listPtr = std::atomic_load(&_vHashListPtr);
-
-    if(_ptrHashAlg.get() == NULL || !listPtr || listPtr->empty())
+    if(_ptrHashAlg.get() == NULL)
     {
         iIndex = 0;
         return -1;
@@ -252,6 +249,7 @@ int TC_ConsistentHashNew::getIndex(const string & key, unsigned int & iIndex)
     vector<char> data = TC_MD5::md5bin(key);
     uint32_t iCode = _ptrHashAlg->hash(data.data(), data.size());
 
+    // 由getIndex(uint32_t)内部做atomic_load和空检查
     return getIndex(iCode, iIndex);
 }
 
@@ -298,10 +296,7 @@ int TC_ConsistentHashNew::getIndex(uint32_t hashcode, unsigned int & iIndex)
 
 int TC_ConsistentHashNew::getNodeName(const string & key, string & sNode)
 {
-    // 【无锁读取】原子加载shared_ptr快照
-    auto listPtr = std::atomic_load(&_vHashListPtr);
-
-    if(_ptrHashAlg.get() == NULL || !listPtr || listPtr->empty())
+    if(_ptrHashAlg.get() == NULL)
     {
         sNode = "";
         return -1;
@@ -310,6 +305,7 @@ int TC_ConsistentHashNew::getNodeName(const string & key, string & sNode)
     vector<char> data = TC_MD5::md5bin(key);
     uint32_t iCode = _ptrHashAlg->hash(data.data(), data.size());
 
+    // 由getNodeName(uint32_t)内部做atomic_load和空检查
     return getNodeName(iCode, sNode);
 }
 
