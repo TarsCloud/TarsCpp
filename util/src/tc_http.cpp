@@ -1185,6 +1185,10 @@ bool TC_HttpResponse::incrementDecode(TC_NetWorkBuffer::Buffer &data)
 
 		_iTmpContentLength = parseResponseHeaderString(data.buffer(), data.buffer() + _headLength);
 
+		//有的网站如果用head方法访问，contentLength会带>0但是不返回数据
+		if(_requestType == tars::TC_HttpRequest::REQUEST_HEAD)
+			_iTmpContentLength = 0;
+
 		//304的返回码中头里本来就没有Content-Length，也不会有数据体，头收全了就是真正的收全了
 		if ( (204 == _status) || (304 == _status) )
 		{
@@ -2287,6 +2291,8 @@ int TC_HttpRequest::doRequest(const string &sSendBuffer, TC_TCPClient &tcpClient
 				
 			}
 		}
+
+		stHttpRsp.setRequestType(_requestType);
 		
 		switch (iRet)
 		{

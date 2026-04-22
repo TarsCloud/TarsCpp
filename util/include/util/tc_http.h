@@ -1273,6 +1273,16 @@ public:
 
 	size_t parseResponseHeaderString(const char *beginIt, const char *headerIt);
 
+    /**
+     * @brief get request type
+     */
+    int requestType() const { return _requestType ; }
+
+	/**
+	 * @brief set request type
+	 */
+	void setRequestType(int requestType) {  _requestType = requestType ; }
+
 protected:
     /**
      * 添加内容
@@ -1320,6 +1330,12 @@ protected:
      * Length of received data
      */
     size_t  _iRecvContentLength;
+
+	 /**
+      * 请求类型
+      * Request Type
+     */
+	int _requestType;
 
 };
 

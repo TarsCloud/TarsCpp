@@ -274,6 +274,16 @@ protected:
          */
         TC_Transceiver *trans() { return _trans.get(); }
 
+		/**
+		* @brief get request type
+		*/
+		int requestType() const { return _requestType ; }
+
+		/**
+		* @brief set request type
+		*/
+		void setRequestType(int requestType) {  _requestType = requestType ; }
+
     protected:
         shared_ptr<TC_ProxyInfo> onCreateCallback(TC_Transceiver* trans);
         std::shared_ptr<TC_OpenSSL> onOpensslCallback(TC_Transceiver* trans);
@@ -292,6 +302,7 @@ protected:
         unique_ptr<TC_Transceiver>  _trans;
         std::shared_ptr<TC_NetWorkBuffer::Buffer> _buff;
 	    shared_ptr<TC_OpenSSL::CTX> _ctx;
+		int							_requestType;
     };
 
     typedef TC_AutoPtr<AsyncRequest> AsyncRequestPtr;

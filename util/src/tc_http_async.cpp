@@ -27,6 +27,7 @@ namespace tars
 		_buff = std::make_shared<TC_NetWorkBuffer::Buffer>();
 
 		stHttpRequest.encode(_buff);
+		setRequestType(stHttpRequest.requestType());
 
 		_trans->initializeClient(std::bind(&AsyncRequest::onCreateCallback, this, std::placeholders::_1),
 				std::bind(&AsyncRequest::onCloseCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
@@ -112,6 +113,8 @@ namespace tars
 		{
 			return TC_NetWorkBuffer::PACKET_LESS;
 		}
+
+		_stHttpResp.setRequestType(_requestType);
 
 //	LOG_CONSOLE_DEBUG << buff.getBuffer()->buffer() << endl;
 		//增量decode
