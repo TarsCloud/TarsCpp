@@ -74,9 +74,15 @@ public:
      * @return map<string,string>
      */
     map<string, string> getDomainMap(const string &path);
+
+    /**
+     * 清空缓存数据
+     * @return 0 success, -1 failed
+     */
+    int clear();
     
-     /**
-     * 设置数据到cache文件
+      /**
+      * 设置数据到cache文件
      * @param sName 
      * @param sValue
      * @param sDomain

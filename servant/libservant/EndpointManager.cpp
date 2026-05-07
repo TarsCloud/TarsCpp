@@ -22,8 +22,90 @@
 #include "servant/CommunicatorEpoll.h"
 #include "servant/StatReport.h"
 
+#include <algorithm>
+
 namespace tars
 {
+namespace
+{
+string normalizeLocatorKey(const string &locator)
+{
+    string::size_type pos = locator.find('@');
+    if (pos == string::npos)
+    {
+        return locator;
+    }
+
+    string prefix = locator.substr(0, pos + 1);
+    string endpoints = locator.substr(pos + 1);
+    if (endpoints.empty())
+    {
+        return locator;
+    }
+
+    vector<EndpointF> vEndpoints = EndpointInfo::strToVectorEndpointF(endpoints, "");
+    if (vEndpoints.empty())
+    {
+        return locator;
+    }
+
+    sort(vEndpoints.begin(), vEndpoints.end(), [](const EndpointF &lhs, const EndpointF &rhs) {
+        if (lhs.host != rhs.host)
+        {
+            return lhs.host < rhs.host;
+        }
+
+        if (lhs.port != rhs.port)
+        {
+            return lhs.port < rhs.port;
+        }
+
+        if (lhs.istcp != rhs.istcp)
+        {
+            return lhs.istcp < rhs.istcp;
+        }
+
+        if (lhs.timeout != rhs.timeout)
+        {
+            return lhs.timeout < rhs.timeout;
+        }
+
+        if (lhs.authType != rhs.authType)
+        {
+            return lhs.authType < rhs.authType;
+        }
+
+        if (lhs.qos != rhs.qos)
+        {
+            return lhs.qos < rhs.qos;
+        }
+
+        if (lhs.weight != rhs.weight)
+        {
+            return lhs.weight < rhs.weight;
+        }
+
+        if (lhs.weightType != rhs.weightType)
+        {
+            return lhs.weightType < rhs.weightType;
+        }
+
+        return lhs.nodeName < rhs.nodeName;
+    });
+
+    string normalizedEndpoints;
+    for (const auto &ep : vEndpoints)
+    {
+        if (!normalizedEndpoints.empty())
+        {
+            normalizedEndpoints += ":";
+        }
+        normalizedEndpoints += EndpointInfo::toEndpointF(ep).toString();
+    }
+
+    return prefix + normalizedEndpoints;
+}
+}
 /////////////////////////////////////////////////////////////////////////////
 QueryEpBase::QueryEpBase(Communicator * pComm, bool bFirstNetThread,bool bInterfaceReq)
 : _communicator(pComm)
@@ -160,7 +242,7 @@ bool QueryEpBase::init(const string & sObjName, const string& setName, bool root
 
 void QueryEpBase::loadFromCache()
 {
-    string sLocatorKey = _locator;
+    string sLocatorKey = normalizeLocatorKey(_locator);
 
     //如果启用set，则获取按set分组的缓存
     if (_communicator->getClientConfig().SetOpen)
@@ -679,7 +761,7 @@ void QueryEpBase::setEndPointToCache(bool bInactive)
     }
 
     //如果启用set，则按set分组保存
-    string sLocatorKey = _locator;
+    string sLocatorKey = normalizeLocatorKey(_locator);
     if(_communicator->getClientConfig().SetOpen)
     {
         sLocatorKey += "_" + _communicator->getClientConfig().SetDivision;
@@ -2055,5 +2137,3 @@ EndpointThread * EndpointManagerThread::getEndpointThread(GetEndpointType type,c
 }
 
 }
-
-

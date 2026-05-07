@@ -100,6 +100,30 @@ map<string, string> AppCache::getDomainMap(const string &path)
     return m;
 }
 
+int AppCache::clear()
+{
+    try
+    {
+        TC_LockT<TC_ThreadMutex> lock(*this);
+
+        _fileCache = TC_Config();
+        _lastSynTime = 0;
+
+        if(!_file.empty())
+        {
+            TC_File::save2file(_file, "");
+        }
+
+        return 0;
+    }
+    catch(exception &e)
+    {
+        TLOGERROR("[TARS][AppCache clear ex:" << e.what() << "]" << endl);
+    }
+
+    return -1;
+}
+
 int AppCache::set(const string &sName,const string &sValue,const string sDomain)
 {
     if(_file.empty())
@@ -152,4 +176,3 @@ int AppCache::set(const string &sName,const string &sValue,const string sDomain)
 
 //////////////////////////////////////////////////////////////////////
 }
-
