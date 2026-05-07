@@ -240,8 +240,11 @@ void Application::waitForShutdown()
 
 	_epollServer->waitForShutdown();
 
-	TC_Port::unregisterCtrlC(_ctrlCId);
-	TC_Port::unregisterTerm(_termId);
+    if(_applicationCommunicator->getProperty("ignore-signal") == "true")
+    { 
+        TC_Port::unregisterCtrlC(_ctrlCId);
+        TC_Port::unregisterTerm(_termId);
+    }
 
 	_epollServer = nullptr;
 }
@@ -931,18 +934,22 @@ void Application::main(const string &config)
         RemoteNotify::getInstance()->report("restart");
 
         //ctrl + c能够完美结束服务
-		_ctrlCId = TC_Port::registerCtrlC([=]{
-			this->terminate();
-#if TARGET_PLATFORM_WINDOWS
-			ExitProcess(0);
-#endif
-		});
-	    _termId = TC_Port::registerTerm([=]{
-		    this->terminate();
-#if TARGET_PLATFORM_WINDOWS
-		    ExitProcess(0);
-#endif
-	    });
+
+        if(_applicationCommunicator->getProperty("ignore-signal") == "true")
+        {
+            _ctrlCId = TC_Port::registerCtrlC([=]{
+                this->terminate();
+    #if TARGET_PLATFORM_WINDOWS
+                ExitProcess(0);
+    #endif
+            });
+            _termId = TC_Port::registerTerm([=]{
+                this->terminate();
+    #if TARGET_PLATFORM_WINDOWS
+                ExitProcess(0);
+    #endif
+            });
+        }
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
         if(_conf.get("/tars/application/server<closecout>",AppCache::getInstance()->get("closeCout")) != "0")
@@ -1601,7 +1608,7 @@ void Application::outAdapter(ostream &os, const string &v, TC_EpollServer::BindA
 
 void Application::checkMasterSlave(int timeout)
 {
-    int exceptionTimes = 0;
+    // int exceptionTimes = 0;
 
     GetMasterSlaveLock req;
     req.application = _serverBaseInfo.Application;
@@ -1652,11 +1659,11 @@ void Application::checkMasterSlave(int timeout)
                 req.lastErr = true;
             }
 
-            exceptionTimes = 0;
+            // exceptionTimes = 0;
         }
         catch (exception &ex)
         {
-            ++exceptionTimes;
+            // ++exceptionTimes;
             TLOG_ERROR("getLocker call exception:" << ex.what() << endl);
 //            if (req.isMaster)
 //            {
