@@ -240,7 +240,7 @@ void Application::waitForShutdown()
 
 	_epollServer->waitForShutdown();
 
-    if(_applicationCommunicator->getProperty("ignore-signal") == "true")
+    if(_applicationCommunicator->getProperty("ignore-signal") != "true")
     { 
         TC_Port::unregisterCtrlC(_ctrlCId);
         TC_Port::unregisterTerm(_termId);
@@ -935,7 +935,7 @@ void Application::main(const string &config)
 
         //ctrl + c能够完美结束服务
 
-        if(_applicationCommunicator->getProperty("ignore-signal") == "true")
+        if(_applicationCommunicator->getProperty("ignore-signal") != "true")
         {
             _ctrlCId = TC_Port::registerCtrlC([=]{
                 this->terminate();
