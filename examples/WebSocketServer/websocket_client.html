@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TarsCpp WebSocketServer Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 24px;
+            line-height: 1.5;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .row {
+            margin-bottom: 12px;
+        }
+
+        input[type="text"] {
+            width: 520px;
+            padding: 8px;
+        }
+
+        button {
+            margin-right: 8px;
+            padding: 8px 14px;
+        }
+
+        #log {
+            width: 100%;
+            min-height: 320px;
+            box-sizing: border-box;
+            padding: 12px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>TarsCpp WebSocketServer Demo</h1>
+    <p>Open this page from the example server, connect to the WebSocket adapter, then send a message to verify the echo flow.</p>
+
+    <div class="row">
+        <label for="ws-url">WebSocket URL:</label><br>
+        <input id="ws-url" type="text">
+    </div>
+
+    <div class="row">
+        <button id="connect" type="button">Connect</button>
+        <button id="disconnect" type="button">Disconnect</button>
+    </div>
+
+    <div class="row">
+        <label for="message">Message:</label><br>
+        <input id="message" type="text" value="hello from browser">
+        <button id="send" type="button">Send</button>
+    </div>
+
+    <div class="row">
+        <label for="log">Log:</label><br>
+        <textarea id="log" readonly></textarea>
+    </div>
+
+    <script>
+        const wsUrlInput = document.getElementById("ws-url");
+        const messageInput = document.getElementById("message");
+        const logArea = document.getElementById("log");
+        const connectButton = document.getElementById("connect");
+        const disconnectButton = document.getElementById("disconnect");
+        const sendButton = document.getElementById("send");
+
+        let socket = null;
+
+        function defaultWebSocketUrl() {
+            const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+            const host = window.location.hostname || "127.0.0.1";
+            return `${protocol}://${host}:__WS_PORT____WS_PATH__`;
+        }
+
+        function appendLog(message) {
+            const line = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logArea.value += `${line}\n`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        async function normalizeMessage(data) {
+            if (typeof data === "string") {
+                return data;
+            }
+            if (data instanceof Blob) {
+                return await data.text();
+            }
+            if (data instanceof ArrayBuffer) {
+                return new TextDecoder().decode(data);
+            }
+            return String(data);
+        }
+
+        function connect() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                appendLog("WebSocket is already connected.");
+                return;
+            }
+
+            socket = new WebSocket(wsUrlInput.value);
+            socket.binaryType = "blob";
+
+            socket.onopen = function() {
+                appendLog(`Connected: ${wsUrlInput.value}`);
+            };
+
+            socket.onmessage = async function(event) {
+                appendLog(`Received:\n${await normalizeMessage(event.data)}`);
+            };
+
+            socket.onerror = function() {
+                appendLog("WebSocket error.");
+            };
+
+            socket.onclose = function() {
+                appendLog("WebSocket closed.");
+                socket = null;
+            };
+        }
+
+        function disconnect() {
+            if (!socket) {
+                appendLog("WebSocket is not connected.");
+                return;
+            }
+
+            socket.close();
+        }
+
+        function sendMessage() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                appendLog("Connect before sending a message.");
+                return;
+            }
+
+            socket.send(messageInput.value);
+            appendLog(`Sent: ${messageInput.value}`);
+        }
+
+        wsUrlInput.value = defaultWebSocketUrl();
+        connectButton.addEventListener("click", connect);
+        disconnectButton.addEventListener("click", disconnect);
+        sendButton.addEventListener("click", sendMessage);
+    </script>
+</body>
+</html>
