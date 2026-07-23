@@ -4,6 +4,7 @@
 
 #include "util/tc_clientsocket.h"
 #include "gtest/gtest.h"
+#include "util/tc_hash_fun.h"
 
 using namespace tars;
 
@@ -84,5 +85,12 @@ TEST_F(UtilEndpointTest, seps)
     EXPECT_EQ(eps[0], "udp -h ::1 -p 25460 -t 60000");
     EXPECT_EQ(eps[1], "tcp -h 127.0.0.1 -p 25460 -t 60000");
     EXPECT_EQ(eps[2], "ssl -h ::1 -p 25460 -t 60000");
+
+}
+
+TEST_F(UtilEndpointTest, hash)
+{
+    cout << tars::hash_new<string>()("172.24.1.93:16281,172.23.1.93:16281") << endl;
+    cout << tars::hash_new<string>()("172.24.1.94:16291,172.23.1.94:16291") << endl;
 
 }
