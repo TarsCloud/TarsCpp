@@ -326,6 +326,11 @@ public:
     void terminate();
 
     /**
+     * 是否由Communicator处理进程信号, 必须在初始化前设置
+     */
+    void setHandleSignal(bool handleSignal);
+
+    /**
      * 超时请求的回包回来后，是否打印超时的日志信息，AdapterProxy里用到
      */
     bool getTimeoutLogFlag() { return _timeoutLogFlag; }
@@ -596,7 +601,12 @@ protected:
     /**
      * 注册事件
      */
-    size_t 					_sigId = -1;
+    size_t 					_sigId = 0;
+
+    /**
+     * 是否由Communicator处理进程信号
+     */
+    bool                    _handleSignal = true;
 
     /**
      * 客户端配置

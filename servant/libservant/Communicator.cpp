@@ -213,6 +213,16 @@ void Communicator::notifyCommunicatorEpollStart()
     _cond.notify_one();
 }
 
+void Communicator::setHandleSignal(bool handleSignal)
+{
+    TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
+
+    if (!_initialized)
+    {
+        _handleSignal = handleSignal;
+    }
+}
+
 void Communicator::initialize()
 {
     TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
@@ -223,16 +233,19 @@ void Communicator::initialize()
 
     _initialized = true;
 
-    _sigId = TC_Port::registerCtrlC([&]{
+    if (_handleSignal && getProperty("ignore-signal") != "true")
+    {
+        _sigId = TC_Port::registerCtrlC([&]{
 
-		TC_Common::msleep(50);
-		this->terminate();
+            TC_Common::msleep(50);
+            this->terminate();
 #if TARGET_PLATFORM_WINDOWS
-		ExitProcess(0);
+            ExitProcess(0);
 #else
-		exit(0);
+            exit(0);
 #endif
-	});
+        });
+    }
 
 
     _clientConfig.TarsVersion   = TARS_VERSION;
@@ -616,8 +629,12 @@ void Communicator::terminate()
         TC_LockT<TC_ThreadRecMutex> lock(_recMutex);
 
         _terminating = true;
-        
-        TC_Port::unregisterCtrlC(_sigId);
+
+        if (_sigId != 0)
+        {
+            TC_Port::unregisterCtrlC(_sigId);
+            _sigId = 0;
+        }
 
         if (_initialized)
         {

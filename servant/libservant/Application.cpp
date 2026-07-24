@@ -1082,6 +1082,7 @@ void Application::initializeClient()
         //一个进程内嵌多个Application时发生, 正常业务服务不会发生
         _applicationCommunicator = CommunicatorFactory::getInstance()->getCommunicator(_conf, TC_Common::tostr(this));
     }
+    _applicationCommunicator->setHandleSignal(false);
     _applicationCommunicator->initialize();
 
 	__out__.info()  << TC_Common::outfill("[proxy config]:") << endl;
