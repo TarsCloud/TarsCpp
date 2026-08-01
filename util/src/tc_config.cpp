@@ -18,6 +18,7 @@
 #include <fstream>
 #include "util/tc_config.h"
 #include "util/tc_common.h"
+#include "util/tc_win32.h"
 
 namespace tars
 {
@@ -582,7 +583,16 @@ void TC_Config::parseFile(const string &sFileName)
 	}
 
 	ifstream ff;
+#if TARGET_PLATFORM_WINDOWS
+    std::wstring wideFileName;
+    if (!detail::utf8ToWide(sFileName, wideFileName))
+    {
+        THROW_EXCEPTION_SYSCODE(TC_Config_Exception, "[TC_Config::parseFile]:invalid UTF-8 file name: " + sFileName);
+    }
+	ff.open(wideFileName.c_str());
+#else
 	ff.open(sFileName.c_str());
+#endif
 	if (!ff)
 	{
 		THROW_EXCEPTION_SYSCODE(TC_Config_Exception, "[TC_Config::parseFile]:fopen fail: " + sFileName);
@@ -905,4 +915,3 @@ void TC_Config::joinConfig(const TC_Config &cf, bool bUpdate)
 }
 
 }
-

@@ -17,6 +17,7 @@
 #include "util/tc_hashmap.h"
 #include "util/tc_pack.h"
 #include "util/tc_common.h"
+#include "util/tc_port.h"
 
 namespace tars
 {
@@ -1551,7 +1552,7 @@ void TC_HashMap::clear()
 
 int TC_HashMap::dump2file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "wb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "wb");
     if(fp == NULL)
     {
         return RT_DUMP_FILE_ERR;
@@ -1569,7 +1570,7 @@ int TC_HashMap::dump2file(const string &sFile)
 
 int TC_HashMap::load5file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "rb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "rb");
     if(fp == NULL)
     {
         return RT_LOAL_FILE_ERR;
@@ -2592,4 +2593,3 @@ size_t TC_HashMap::getMinPrimeNumber(size_t n)
 }
 
 }
-

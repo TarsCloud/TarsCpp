@@ -20,7 +20,6 @@
 #include "servant/RemoteNotify.h"
 #include "servant/ConfigF.h"
 #include "servant/Application.h"
-#include <fstream>
 
 namespace tars
 {
@@ -148,25 +147,11 @@ string RemoteConfig::getRemoteFile(const string &sFileName, bool bAppConfigOnly)
 
         string newFile = TC_File::simplifyDirectory( _basePath + FILE_SEP + sFileName + "." + TC_Common::tostr(time(NULL)));
 
-        std::ofstream out(newFile.c_str());
-
-        string result;
-        if (out)
+        if (TC_File::save2file(newFile, stream.data(), stream.size()) == 0)
         {
-            out << stream;//如果硬盘满了，是否能写入成功需要进行判断。
-            out.flush();
-            if (out.bad())
-            {
-                out.close();
-                result = "[fail] copy stream to disk error.";
-                RemoteNotify::getInstance()->report(result);
-                return "";
-            } else
-            {
-                out.close();
-                return newFile;
-            }
+            return newFile;
         }
+        RemoteNotify::getInstance()->report("[fail] copy stream to disk error.");
     }
     return "";
 }
@@ -182,10 +167,10 @@ void RemoteConfig::localRename(const string &oldFile, const string &newFile)
     //by goodenpei，windows下面先remove后rename，否则rename会失败
     if(TC_File::isFileExist(oldFile) && TC_File::isFileExist(newFile))
     {
-        ::remove(newFile.c_str());
+        TC_File::removeFile(newFile, false);
     }
 #endif
-    if (::rename(oldFile.c_str(), newFile.c_str()) != 0)
+    if (TC_File::renameFile(oldFile, newFile) != 0)
     {
         throw runtime_error("rename file error:" + oldFile + "->" + newFile);
     }
@@ -218,5 +203,3 @@ string RemoteConfig::recoverSysConfig(const string &sFullFileName)
 }
 
 }
-
-

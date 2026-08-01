@@ -16,6 +16,7 @@
 
 #include "util/tc_bitmap.h"
 #include "util/tc_common.h"
+#include "util/tc_port.h"
 #include <cassert>
 #include <string.h>
 #include <iostream>
@@ -106,7 +107,7 @@ int TC_BitMap::BitMap::clear4all()
 
 int TC_BitMap::BitMap::dump2file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "wb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "wb");
     if(fp == NULL)
     {
         return -1;
@@ -124,7 +125,7 @@ int TC_BitMap::BitMap::dump2file(const string &sFile)
 
 int TC_BitMap::BitMap::load5file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "rb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "rb");
     if(fp == NULL)
     {
         return -1;
@@ -285,7 +286,7 @@ int TC_BitMap::clear4all(unsigned iBit)
 
 int TC_BitMap::dump2file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "wb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "wb");
     if(fp == NULL)
     {
         return -1;
@@ -306,7 +307,7 @@ int TC_BitMap::dump2file(const string &sFile)
 
 int TC_BitMap::load5file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "rb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "rb");
     if(fp == NULL)
     {
         return -1;
@@ -371,5 +372,4 @@ int TC_BitMap::load5file(const string &sFile)
 }
 
 }
-
 

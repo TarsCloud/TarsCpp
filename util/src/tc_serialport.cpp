@@ -4,6 +4,7 @@
 
 #include "util/tc_serialport.h"
 #include "util/tc_logger.h"
+#include "util/tc_win32.h"
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 #include <termios.h>
@@ -104,7 +105,7 @@ vector<string> TC_SerialPortGroup::getComPorts(const string &prefix)
 {
 	vector<string> comPorts;
 #if TARGET_PLATFORM_WINDOWS
-	HDEVINFO deviceInfoSet = SetupDiGetClassDevs(
+	HDEVINFO deviceInfoSet = SetupDiGetClassDevsW(
         &GUID_DEVCLASS_PORTS, // 串口设备的 GUID
         NULL,               // 枚举所有设备
         NULL,               // 无上下文
@@ -121,11 +122,15 @@ vector<string> TC_SerialPortGroup::getComPorts(const string &prefix)
 		HKEY hDevKey = SetupDiOpenDevRegKey(deviceInfoSet, &deviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
 		if (INVALID_HANDLE_VALUE != hDevKey)
 		{
-			char portName[256] = {0x00};
-			DWORD dwCount = 255; 
-			RegQueryValueExA(hDevKey, "PortName", NULL, NULL, (BYTE*)portName, &dwCount);
-			RegCloseKey(hDevKey);
-			comPorts.push_back(portName);
+		wchar_t portName[256] = {0x00};
+		DWORD dwCount = sizeof(portName);
+		RegQueryValueExW(hDevKey, L"PortName", NULL, NULL, reinterpret_cast<BYTE*>(portName), &dwCount);
+		RegCloseKey(hDevKey);
+		std::string utf8PortName;
+		if (detail::wideToUtf8(portName, utf8PortName))
+		{
+			comPorts.push_back(utf8PortName);
+		}
 		}
     }
 
@@ -392,7 +397,12 @@ void TC_SerialPort::initialize()
         throw TC_SerialPortException("open serial port: " + _options.portName + " has initialized.");
     }
 
-	_serialFd = CreateFileA(_options.portName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,  FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED, NULL );
+	std::wstring widePortName;
+	if (!detail::utf8ToWide(_options.portName, widePortName))
+	{
+		throw TC_SerialPortException("open serial port: invalid UTF-8 port name");
+	}
+	_serialFd = CreateFileW(widePortName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,  FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED, NULL );
 
 	if(!isValid()) 
 	{
@@ -402,9 +412,9 @@ void TC_SerialPort::initialize()
 	memset(&_osRead, 0, sizeof(OVERLAPPED));
 	memset(&_osWrite, 0, sizeof(OVERLAPPED));
 	memset(&_osNotifyWrite, 0, sizeof(OVERLAPPED));
-	_osRead.hEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
-	_osWrite.hEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
-	_osNotifyWrite.hEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+	_osRead.hEvent = CreateEventW( NULL, TRUE, FALSE, NULL );
+	_osWrite.hEvent = CreateEventW( NULL, TRUE, FALSE, NULL );
+	_osNotifyWrite.hEvent = CreateEventW( NULL, TRUE, FALSE, NULL );
 
 	COMMTIMEOUTS CommTimeOuts;
 	CommTimeOuts.ReadIntervalTimeout = 0xFFFFFFFF;

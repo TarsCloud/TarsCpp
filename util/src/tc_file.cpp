@@ -15,6 +15,7 @@
  */
 #include "util/tc_file.h"
 #include "util/tc_port.h"
+#include "util/tc_win32.h"
 #include <set>
 #include <string.h>
 #include <algorithm>
@@ -30,7 +31,17 @@ namespace tars
 
 ifstream::pos_type TC_File::getFileSize(const string &sFullFileName)
 {
-    ifstream ifs(sFullFileName.c_str());
+    ifstream ifs;
+#if TARGET_PLATFORM_WINDOWS
+    std::wstring widePath;
+    if (!detail::utf8ToWide(sFullFileName, widePath))
+    {
+        return ifstream::pos_type(-1);
+    }
+    ifs.open(widePath.c_str());
+#else
+    ifs.open(sFullFileName.c_str());
+#endif
     ifs.seekg(0, ios_base::end);
     return ifs.tellg();
 }
@@ -148,10 +159,22 @@ bool TC_File::canExecutable(const string &sFullFileName)
 
 #if TARGET_PLATFORM_WINDOWS
 string TC_File::getExePath()
-{      
-    char exeFullPath[MAX_PATH]; // Full path   
-    GetModuleFileName(NULL, exeFullPath, MAX_PATH);   
-    return exeFullPath;    // Get full path of the file   
+{
+    std::vector<wchar_t> widePath(MAX_PATH);
+    for (;;)
+    {
+        DWORD length = GetModuleFileNameW(NULL, widePath.data(), static_cast<DWORD>(widePath.size()));
+        if (length == 0)
+        {
+            return "";
+        }
+        if (length < widePath.size() - 1)
+        {
+            std::string path;
+            return detail::wideToUtf8(std::wstring(widePath.data(), length), path) ? path : "";
+        }
+        widePath.resize(widePath.size() * 2);
+    }
 }  
 #elif TARGET_PLATFORM_IOS
 string TC_File::getExePath()
@@ -268,7 +291,12 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
     }
     else
     {
+#if TARGET_PLATFORM_WINDOWS
+        std::wstring widePath;
+        if (!detail::utf8ToWide(path, widePath) || ::_wremove(widePath.c_str()) == -1)
+#else
         if(::remove(path.c_str()) == -1)
+#endif
         {
             return -1;
         }
@@ -279,7 +307,17 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
 
 int TC_File::renameFile(const string &sSrcFullFileName, const string &sDstFullFileName)
 {
+#if TARGET_PLATFORM_WINDOWS
+    std::wstring wideSource;
+    std::wstring wideDestination;
+    if (!detail::utf8ToWide(sSrcFullFileName, wideSource) || !detail::utf8ToWide(sDstFullFileName, wideDestination))
+    {
+        return -1;
+    }
+    return ::_wrename(wideSource.c_str(), wideDestination.c_str());
+#else
     return rename(sSrcFullFileName.c_str(), sDstFullFileName.c_str());
+#endif
 }
 
 string TC_File::simplifyDirectory(const string& path)
@@ -618,7 +656,7 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 
 	vector<string> tempFiles;
 	intptr_t hFile;
-	_finddata_t fileinfo;
+	_wfinddata64_t fileinfo;
 	string searchPath = sFilePath;
 	if (searchPath.length() > 0 && searchPath[searchPath.length() - 1] != FILE_SEP[0])
 	{
@@ -626,23 +664,35 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 	}
 	searchPath += "*.*";
 
-	if ((hFile = _findfirst(searchPath.c_str(), &fileinfo)) != -1)
+	std::wstring wideSearchPath;
+	if (!detail::utf8ToWide(searchPath, wideSearchPath))
+	{
+		return 0;
+	}
+
+	if ((hFile = _wfindfirst64(wideSearchPath.c_str(), &fileinfo)) != -1)
 	{
 		do
 		{
-            if((strlen(fileinfo.name) == 1 && strncmp(fileinfo.name,".", 1) == 0) || (strlen(fileinfo.name) == 2 && strncmp(fileinfo.name,"..", 2) == 0))
+            std::string fileName;
+            if (!detail::wideToUtf8(fileinfo.name, fileName))
+			{
+				continue;
+			}
+
+            if(fileName == "." || fileName == "..")
 				continue;
 
-			if (ignoreHide && fileinfo.name[0] == '.')
+			if (ignoreHide && fileName[0] == '.')
 				continue;
 
 			dirent entry;
-			size_t copyLen = strlen(fileinfo.name);
+			size_t copyLen = fileName.size();
 			if (copyLen >= MAX_PATH)
 			{
 				copyLen = MAX_PATH - 1;
 			}
-			memcpy(entry.d_name, fileinfo.name, copyLen);
+			memcpy(entry.d_name, fileName.data(), copyLen);
 			entry.d_name[copyLen] = '\0';
 
 			if (fileinfo.attrib & _A_SUBDIR)
@@ -656,14 +706,14 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 
 			if (f == NULL || f(&entry))
 			{
-				tempFiles.push_back(fileinfo.name);
+				tempFiles.push_back(fileName);
 			}
 
             if(iMaxSize > 0 && tempFiles.size() >= (size_t)iMaxSize )
             {
                 break;
             }
-		} while (_findnext(hFile, &fileinfo) == 0);
+		} while (_wfindnext64(hFile, &fileinfo) == 0);
 		_findclose(hFile);
 	}
 
@@ -723,7 +773,7 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
     }
     else
     {
-        if(bRemove) std::remove(sNewFile.c_str());
+        if(bRemove) TC_File::removeFile(sNewFile, false);
 #if TARGET_PLATFORM_IOS || TARGET_PLATFORM_LINUX
         TC_Port::stat_t statbuf;
         if (TC_Port::lstat(sExistFile.c_str(), &statbuf) != 0)
@@ -749,13 +799,29 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
         else
 #endif
         {
-            std::ifstream fin(sExistFile.c_str(), ios::binary);
+            std::ifstream fin;
+            std::ofstream fout;
+#if TARGET_PLATFORM_WINDOWS
+            std::wstring wideSource;
+            std::wstring wideDestination;
+            if (!detail::utf8ToWide(sExistFile, wideSource) || !detail::utf8ToWide(sNewFile, wideDestination))
+            {
+                THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] UTF-8 conversion error: " + sExistFile);
+            }
+            fin.open(wideSource.c_str(), ios::binary);
+#else
+            fin.open(sExistFile.c_str(), ios::binary);
+#endif
             if (!fin)
             {
                 THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] open file error: " + sExistFile);
             }
             //强制覆盖
-            std::ofstream fout(sNewFile.c_str(), ios::binary);
+#if TARGET_PLATFORM_WINDOWS
+            fout.open(wideDestination.c_str(), ios::binary);
+#else
+            fout.open(sNewFile.c_str(), ios::binary);
+#endif
             if (!fout)
             {
                 THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] write error: " + sNewFile);
@@ -800,4 +866,3 @@ bool TC_File::isPanfu(const string & sPath)
     return isalpha(c) && (sPath[1] == ':');
 }
 }
-

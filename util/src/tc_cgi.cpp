@@ -17,6 +17,8 @@
 #include "util/tc_cgi.h"
 #include "util/tc_common.h"
 #include "util/tc_http.h"
+#include "util/tc_win32.h"
+#include "util/tc_port.h"
 #include <string.h>
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
@@ -106,24 +108,24 @@ void TC_Cgi::parseCgi()
         ++env;
     }
 #else
-    LPCSTR env; 
-    LPVOID lpvEnv; 
-     
-    // Get a pointer to the environment block. 
-    lpvEnv = GetEnvironmentStrings(); 
-     
-    // Variable strings are separated by NULL byte, and the block is 
-    // terminated by a NULL byte. 
-    for (env = (LPCSTR) lpvEnv; *env; env++) 
-    { 
-        string s(env);
-        string::size_type pos = s.find('=');
-        if(pos != string::npos)
+    LPWCH environment = GetEnvironmentStringsW();
+    if (environment != NULL)
+    {
+        for (LPWCH entry = environment; *entry != L'\0'; entry += wcslen(entry) + 1)
         {
-            _env[s.substr(0, pos)] = s.substr(pos + 1);
+            string s;
+            if (!detail::wideToUtf8(entry, s))
+            {
+                continue;
+            }
+        string::size_type pos = s.find('=');
+            if(pos != string::npos)
+            {
+                _env[s.substr(0, pos)] = s.substr(pos + 1);
+            }
         }
-        // ++env;
-    } 
+        FreeEnvironmentStringsW(environment);
+    }
 #endif  
     _is = &cin;
 
@@ -435,7 +437,7 @@ void TC_Cgi::parseFormData(multimap<string, string> &mmpParams, const string &sB
                 sTheFile = sName;
 
                 //打开文件
-                if ( (fp = fopen(sUploadFileName.c_str(),"wb")) == NULL)
+                if ( (fp = TC_Port::fopen(sUploadFileName.c_str(),"wb")) == NULL)
                 {
                     mmpParams.clear();          //clear , exception safe
                     THROW_EXCEPTION_SYSCODE(TC_Cgi_Exception, "[TC_Cgi::parseFormData] Upload File '" + sValue + "' to '" + sUploadFileName +"' error");
@@ -892,4 +894,3 @@ string TC_Cgi::encodeXML(const string &src)
 }
 
 }
-

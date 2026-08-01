@@ -25,3 +25,7 @@ if(TARS_MYSQL)
 endif()
 
 add_dependencies(unit-test FRAMEWORK-PROTOCOL tarsmock)
+
+if(WIN32)
+    add_executable(tars-unicode-process-helper ${PROJECT_SOURCE_DIR}/cmake/unicode_process_helper.cpp)
+endif()

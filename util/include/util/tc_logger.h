@@ -21,6 +21,7 @@
 #include "util/tc_common.h"
 #include "util/tc_ex.h"
 #include "util/tc_file.h"
+#include "util/tc_win32.h"
 #include "util/tc_thread_queue.h"
 #include "util/tc_cas_queue.h"
 #include "util/tc_timeprovider.h"
@@ -1430,7 +1431,15 @@ namespace tars
 			{
 				string sLogFileName = _path + ".log";
 
+#if TARGET_PLATFORM_WINDOWS
+                std::wstring wideLogFileName;
+                if (detail::utf8ToWide(sLogFileName, wideLogFileName))
+                {
+                    _of.open(wideLogFileName.c_str(), ios::app | ios::out);
+                }
+#else
 				_of.open(sLogFileName.c_str(), ios::app | ios::out);
+#endif
 
 				string sLogFilePath = TC_File::extractFilePath(_path);
 
@@ -1494,11 +1503,19 @@ namespace tars
 				if (TC_File::isFileExist(sLogFileName))
 				{
 					string sNewLogFileName = _path + TC_Common::tostr(i + 1) + ".log";
-					rename(sLogFileName.c_str(), sNewLogFileName.c_str());
+					TC_File::renameFile(sLogFileName, sNewLogFileName);
 				}
 			}
 
+#if TARGET_PLATFORM_WINDOWS
+            std::wstring wideRolledLogFileName;
+            if (detail::utf8ToWide(sLogFileName, wideRolledLogFileName))
+            {
+                _of.open(wideRolledLogFileName.c_str(), ios::app);
+            }
+#else
 			_of.open(sLogFileName.c_str(), ios::app);
+#endif
 			if (!_of)
 			{
 				THROW_EXCEPTION_SYSCODE(TC_Logger_Exception, "[TC_RollBySize::roll]:fopen fail: " + sLogFileName);
@@ -1952,7 +1969,15 @@ namespace tars
 					TC_File::makeDirRecursive(sLogFilePath);
 				}
 
+#if TARGET_PLATFORM_WINDOWS
+                std::wstring wideLogFileName;
+                if (detail::utf8ToWide(sLogFileName, wideLogFileName))
+                {
+                    _of.open(wideLogFileName.c_str(), ios::app);
+                }
+#else
 				_of.open(sLogFileName.c_str(), ios::app);
+#endif
 
 				if (!_of)
 				{
@@ -2037,5 +2062,4 @@ namespace tars
 __global_logger_debug__.any() << TC_Common::now2msstr() <<"|" << std::this_thread::get_id() << "|" << FILE_FUNC_LINE << "|"
 
 }
-
 

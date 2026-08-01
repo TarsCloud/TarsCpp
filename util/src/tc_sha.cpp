@@ -16,6 +16,7 @@
 #include "util/tc_sha.h"
 #include "util/tc_common.h"
 #include <stdio.h>
+#include "util/tc_port.h"
 #include <string.h>
 // #include <endian.h>
 #include <limits.h>
@@ -677,7 +678,7 @@ string TC_SHA::sha1file(const string &fileName)
     FILE *f;
     size_t n;
     detail_sha1::sha1_ctx cx[1];
-    if(( f = fopen( fileName.c_str(), "rb" )) == NULL )
+    if(( f = TC_Port::fopen( fileName.c_str(), "rb" )) == NULL )
         throw TC_SHA_Exception("[TC_SHA::sha1file] fopen '" + fileName + "', error.", true);
 
     detail_sha1::sha1_begin(cx);
@@ -719,7 +720,7 @@ string TC_SHA::sha256file(const string &fileName)
     FILE *f;
     size_t n;
     detail_sha2::sha256_ctx cx[1];
-    if(( f = fopen( fileName.c_str(), "rb" )) == NULL )
+    if(( f = TC_Port::fopen( fileName.c_str(), "rb" )) == NULL )
         throw TC_SHA_Exception("[TC_SHA::sha256file] fopen '" + fileName + "', error.", true);
 
     detail_sha2::sha256_begin(cx);
@@ -761,7 +762,7 @@ string TC_SHA::sha384file(const string &fileName)
     FILE *f;
     size_t n;
     detail_sha2::sha384_ctx cx[1];
-    if(( f = fopen( fileName.c_str(), "rb" )) == NULL )
+    if(( f = TC_Port::fopen( fileName.c_str(), "rb" )) == NULL )
         throw TC_SHA_Exception("[TC_SHA::sha384file] fopen '" + fileName + "', error.", true);
 
     detail_sha2::sha384_begin(cx);
@@ -803,7 +804,7 @@ string TC_SHA::sha512file(const string &fileName)
     FILE *f;
     size_t n;
     detail_sha2::sha512_ctx cx[1];
-    if(( f = fopen( fileName.c_str(), "rb" )) == NULL )
+    if(( f = TC_Port::fopen( fileName.c_str(), "rb" )) == NULL )
         throw TC_SHA_Exception("[TC_SHA::sha512file] fopen '" + fileName + "', error.", true);
 
     detail_sha2::sha512_begin(cx);

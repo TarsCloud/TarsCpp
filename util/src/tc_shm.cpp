@@ -16,6 +16,7 @@
 
 #include "util/tc_shm.h"
 #include "util/tc_common.h"
+#include "util/tc_win32.h"
 #include <cassert>
 #include <errno.h>
 
@@ -43,11 +44,16 @@ void TC_Shm::init(size_t iShmSize, key_t iKey, bool bOwner)
     _bOwner     = bOwner;
 
     // 首先试图打开一个命名的内存映射文件对象  
-    HANDLE hMap = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, TC_Common::tostr(iKey).c_str());
+    std::wstring wideKey;
+    if (!detail::utf8ToWide(TC_Common::tostr(iKey), wideKey))
+    {
+        THROW_EXCEPTION_SYSCODE(TC_Shm_Exception, "[TC_Shm::init()] invalid UTF-8 key");
+    }
+    HANDLE hMap = ::OpenFileMappingW(FILE_MAP_ALL_ACCESS, 0, wideKey.c_str());
     if (NULL == hMap)
     {    
         // 打开失败，创建之
-        hMap = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL,PAGE_READWRITE,0, (DWORD)iShmSize, TC_Common::tostr(iKey).c_str());
+        hMap = ::CreateFileMappingW(INVALID_HANDLE_VALUE, NULL,PAGE_READWRITE,0, (DWORD)iShmSize, wideKey.c_str());
         // 映射对象的一个视图，得到指向共享内存的指针，设置里面的数据
         _pshm = ::MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
     }

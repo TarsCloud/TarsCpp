@@ -21,6 +21,7 @@
 #include <string.h>
 #include "util/tc_common.h"
 #include "util/tc_file.h"
+#include "util/tc_port.h"
 
 TarsParsePtr g_parse = new TarsParse();
 
@@ -85,7 +86,7 @@ void TarsParse::parse(const string& sFileName)
         clear();
 
         _contains.push(new Container(""));
-        if(!(yyin = fopen(sTemp.c_str(), "r")))
+        if(!(yyin = tars::TC_Port::fopen(sTemp.c_str(), "r")))
         {
             error("open file '" + sFileName + "(" + sTemp + ")" + "' error :" + string(strerror(errno)));
         }
@@ -110,7 +111,7 @@ void TarsParse::parse(const string& sFileName)
         clear();
 
         _contains.push(new Container(""));
-        if(!(yyin = fopen(sTemp.c_str(), "r")))
+        if(!(yyin = tars::TC_Port::fopen(sTemp.c_str(), "r")))
         {
             error("open file '" + sFileName + "(" + sTemp + ")" + "' error :" + string(strerror(errno)));
         }
@@ -126,7 +127,7 @@ void TarsParse::parse(const string& sFileName)
         clear();
 
         _contains.push(new Container(""));
-        if(!(yyin = fopen(sFileName.c_str(), "r")))
+        if(!(yyin = tars::TC_Port::fopen(sFileName.c_str(), "r")))
         {
             error("open file '" + sFileName + "' error :" + string(strerror(errno)));
         }

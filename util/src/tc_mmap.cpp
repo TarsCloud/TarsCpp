@@ -27,6 +27,7 @@
 #include <cassert>
 #include <iostream>
 #include "util/tc_file.h"
+#include "util/tc_win32.h"
 
 namespace tars
 {
@@ -67,7 +68,12 @@ void TC_Mmap::mmap(const char *file, size_t length)
     {
         CloseHandle(_hMap);
     }
-    _hFile = CreateFile(file, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ| FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN|FILE_FLAG_WRITE_THROUGH|FILE_FLAG_NO_BUFFERING, NULL);
+    std::wstring wideFile;
+    if (!detail::utf8ToWide(file, wideFile))
+    {
+        THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] invalid UTF-8 file path");
+    }
+    _hFile = CreateFileW(wideFile.c_str(), GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ| FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN|FILE_FLAG_WRITE_THROUGH|FILE_FLAG_NO_BUFFERING, NULL);
     if(_hFile == INVALID_HANDLE_VALUE)
     {
         THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] fopen file '" + string(file) + "' error");

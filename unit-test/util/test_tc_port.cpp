@@ -108,6 +108,53 @@ TEST_F(UtilPortTest, testGetDiskInfo)
     ASSERT_TRUE(availableSize > 0);
 }
 
+#if TARGET_PLATFORM_WINDOWS
+TEST_F(UtilPortTest, unicodeUtf8EnvironmentAndDiskPath)
+{
+    const string directory = u8"tars_中文路径_端口测试";
+    const string variable = u8"TARS_中文环境变量";
+    const string value = u8"中文环境变量值";
+
+    TC_File::removeFile(directory, true);
+    ASSERT_TRUE(TC_File::makeDir(directory));
+
+    TC_Port::setEnv(variable, value);
+    ASSERT_EQ(value, TC_Port::getEnv(variable));
+
+    int64_t totalSize = 0;
+    int64_t availableSize = 0;
+    float usedPercent = 0;
+    ASSERT_TRUE(TC_Port::getDiskInfo(totalSize, availableSize, usedPercent, directory));
+    ASSERT_GT(totalSize, 0);
+
+    ASSERT_EQ(0, TC_File::removeFile(directory, true));
+}
+
+TEST_F(UtilPortTest, unicodeUtf8ExecutableAndWorkingDirectory)
+{
+    const string directory = u8"tars_中文路径_进程测试";
+    const string helper = TC_File::extractFilePath(TC_File::getExePath()) + "tars-unicode-process-helper.exe";
+    const string copiedHelper = directory + FILE_SEP + u8"中文进程.exe";
+
+    TC_File::removeFile(directory, true);
+    ASSERT_TRUE(TC_File::makeDir(directory));
+    TC_File::copyFile(helper, copiedHelper, false);
+
+    const int64_t pid = TC_Port::forkExec(copiedHelper, directory, "", vector<string>());
+    ASSERT_GT(pid, 0);
+
+    HANDLE process = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, static_cast<DWORD>(pid));
+    ASSERT_NE(NULL, process);
+    ASSERT_EQ(WAIT_OBJECT_0, WaitForSingleObject(process, 10000));
+    DWORD exitCode = 1;
+    ASSERT_TRUE(GetExitCodeProcess(process, &exitCode));
+    CloseHandle(process);
+    ASSERT_EQ(0u, exitCode);
+
+    ASSERT_EQ(0, TC_File::removeFile(directory, true));
+}
+#endif
+
 TEST_F(UtilPortTest, testGetCpuLoad)
 {
     cout << "cpu load:" << TC_Port::getCpuLoad(500) << endl;
@@ -152,4 +199,3 @@ TEST_F(UtilPortTest, testGetPidsByCmdline)
 
     ASSERT_TRUE(std::find(pids.begin(), pids.end(), pid) != pids.end());
 }
-

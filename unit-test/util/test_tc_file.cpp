@@ -4,6 +4,7 @@
 
 #include "util/tc_file.h"
 #include "util/tc_config.h"
+#include "util/tc_mmap.h"
 #include "gtest/gtest.h"
 
 using namespace tars;
@@ -78,6 +79,43 @@ TEST_F(UtilFileTest, file)   //此时使用的是TEST_F宏
 //	cout << "dir exists:" << fileExists << endl;
 	ASSERT_TRUE(!fileExists);
 }
+
+#if TARGET_PLATFORM_WINDOWS
+TEST_F(UtilFileTest, unicodeUtf8PathSupportsFileLifecycleAndMmap)
+{
+    const string root = u8"tars_中文路径_文件测试";
+    const string nested = root + FILE_SEP + u8"子目录";
+    const string source = nested + FILE_SEP + u8"源文件.txt";
+    const string copied = nested + FILE_SEP + u8"复制文件.txt";
+    const string renamed = nested + FILE_SEP + u8"重命名文件.txt";
+    const string mapped = nested + FILE_SEP + u8"映射文件.dat";
+
+    TC_File::removeFile(root, true);
+    ASSERT_TRUE(TC_File::makeDirRecursive(nested));
+
+    ASSERT_EQ(0, TC_File::save2file(source, u8"中文内容"));
+    ASSERT_EQ(u8"中文内容", TC_File::load2str(source));
+    ASSERT_TRUE(TC_File::isFileExist(source));
+
+    vector<string> entries;
+    TC_File::listDirectory(nested, entries, false, false);
+    ASSERT_NE(entries.end(), find(entries.begin(), entries.end(), source));
+
+    TC_File::copyFile(source, copied, false);
+    ASSERT_EQ(u8"中文内容", TC_File::load2str(copied));
+    ASSERT_EQ(0, TC_File::renameFile(copied, renamed));
+    ASSERT_TRUE(TC_File::isFileExist(renamed));
+
+    {
+        TC_Mmap mmap;
+        mmap.mmap(mapped.c_str(), 1024);
+        memcpy(mmap.getPointer(), "ok", 3);
+    }
+    ASSERT_TRUE(TC_File::isFileExist(mapped));
+
+    ASSERT_EQ(0, TC_File::removeFile(root, true));
+}
+#endif
 
 TEST_F(UtilFileTest, simplifyDirectory)
 {

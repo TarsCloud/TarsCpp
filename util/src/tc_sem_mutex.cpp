@@ -18,6 +18,7 @@
 #include <string.h>
 #include "util/tc_common.h"
 #include "util/tc_sem_mutex.h"
+#include "util/tc_win32.h"
 
 namespace tars
 {
@@ -249,19 +250,26 @@ void TC_SemMutex::init(key_t iKey)
     string key = "tc-mutex-" + TC_Common::tostr(iKey);
     string rkey = "tc-readEvent-" + TC_Common::tostr(iKey);
     string wkey = "tc-writeEvent-" + TC_Common::tostr(iKey);
-    _mutex = CreateMutex(NULL, FALSE, key.c_str());  
+    std::wstring wideKey;
+    std::wstring wideReadKey;
+    std::wstring wideWriteKey;
+    if (!detail::utf8ToWide(key, wideKey) || !detail::utf8ToWide(rkey, wideReadKey) || !detail::utf8ToWide(wkey, wideWriteKey))
+    {
+        THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] invalid UTF-8 key");
+    }
+    _mutex = CreateMutexW(NULL, FALSE, wideKey.c_str());
     if (_mutex == NULL)  
     {
         THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] CreateMutex error");
     }
-    _readEvent = CreateEvent(NULL, TRUE, TRUE, rkey.c_str());  
+    _readEvent = CreateEventW(NULL, TRUE, TRUE, wideReadKey.c_str());
     if (_readEvent == NULL)  
     {
         CloseHandle(_mutex); 
         _mutex = NULL;
         THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] CreateEvent error");
     }  
-    _writeEvent = CreateEvent(NULL, TRUE, TRUE, wkey.c_str());  
+    _writeEvent = CreateEventW(NULL, TRUE, TRUE, wideWriteKey.c_str());
     if (_writeEvent == NULL)  
     {
         CloseHandle(_mutex); 
@@ -438,5 +446,3 @@ DWORD TC_SemMutex::tryReadLockOnce() const
 
 #endif
 }
-
-

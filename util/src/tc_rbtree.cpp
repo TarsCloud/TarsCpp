@@ -17,6 +17,7 @@
 #include "util/tc_rbtree.h"
 #include "util/tc_pack.h"
 #include "util/tc_common.h"
+#include "util/tc_port.h"
 #include <string.h>
 
 namespace tars
@@ -2095,7 +2096,7 @@ void TC_RBTree::clear()
 
 int TC_RBTree::dump2file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "wb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "wb");
     if(fp == NULL)
     {
         return RT_DUMP_FILE_ERR;
@@ -2113,7 +2114,7 @@ int TC_RBTree::dump2file(const string &sFile)
 
 int TC_RBTree::load5file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "rb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "rb");
     if(fp == NULL)
     {
         return RT_LOAL_FILE_ERR;
@@ -3134,4 +3135,3 @@ void TC_RBTree::doUpdate()
 }
 
 }
-

@@ -16,6 +16,7 @@
 
 #include "util/tc_ex.h"
 #include "util/tc_platform.h"
+#include "util/tc_win32.h"
 #if TARGET_PLATFORM_LINUX
 #include <execinfo.h>
 #endif
@@ -72,24 +73,6 @@ void TC_Exception::getBacktrace()
 #endif
 }
 
-#if TARGET_PLATFORM_WINDOWS
-static std::string Unicode2ANSI(LPCWSTR lpszSrc)
-{
-    std::string sResult;
-    if (lpszSrc != NULL) {
-        int  nANSILen = WideCharToMultiByte(CP_ACP, 0, lpszSrc, -1, NULL, 0, NULL, NULL);
-        char* pANSI = new char[nANSILen + 1];
-        if (pANSI != NULL) {
-            ZeroMemory(pANSI, nANSILen + 1);
-            WideCharToMultiByte(CP_ACP, 0, lpszSrc, -1, pANSI, nANSILen, NULL, NULL);
-            sResult = pANSI;
-            delete[] pANSI;
-        }
-    }
-    return sResult;
-}
-#endif
-
 string TC_Exception::parseError(int err)
 {
     string errMsg;
@@ -97,18 +80,16 @@ string TC_Exception::parseError(int err)
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
     errMsg = strerror(err);
 #else
-    // LPTSTR lpMsgBuf;
-    LPSTR lpMsgBuf;
+    LPWSTR lpMsgBuf = NULL;
 
-    FormatMessageA(
+    FormatMessageW(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL, err, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-            (LPTSTR) & lpMsgBuf, 0, NULL);
+            (LPWSTR) & lpMsgBuf, 0, NULL);
 
-    // errMsg = Unicode2ANSI((LPCWSTR)lpMsgBuf);
     if(lpMsgBuf != NULL)
     {
-        errMsg = lpMsgBuf;
+        detail::wideToUtf8(lpMsgBuf, errMsg);
     }
     LocalFree(lpMsgBuf);
 #endif

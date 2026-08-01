@@ -19,6 +19,7 @@
 #include "util/tc_logger.h"
 #include "util/tc_file.h"
 #include "util/tc_platform.h"
+#include "util/tc_win32.h"
 #include <thread>
 #include <string.h>
 
@@ -180,7 +181,12 @@ int TC_Port::chmod(const char *path, mode_t mode)
 {
 	//带时区时间
 #if TARGET_PLATFORM_WINDOWS
-	return ::_chmod(path, mode);
+    std::wstring widePath;
+    if (!detail::utf8ToWide(path, widePath))
+    {
+        return -1;
+    }
+    return ::_wchmod(widePath.c_str(), mode);
 #else
 	return ::chmod(path, mode);
 #endif	
@@ -189,8 +195,15 @@ int TC_Port::chmod(const char *path, mode_t mode)
 FILE * TC_Port::fopen(const char * path, const char *  mode)
 {
 #if TARGET_PLATFORM_WINDOWS
-	FILE *fp;	
-	if (fopen_s(&fp, path, mode) != 0)
+	std::wstring widePath;
+    std::wstring wideMode;
+    if (!detail::utf8ToWide(path, widePath) || !detail::utf8ToWide(mode, wideMode))
+	{
+		return NULL;
+	}
+
+	FILE *fp;
+	if (_wfopen_s(&fp, widePath.c_str(), wideMode.c_str()) != 0)
 	{
 		return NULL;
 	}
@@ -204,7 +217,8 @@ FILE * TC_Port::fopen(const char * path, const char *  mode)
 int TC_Port::stat(const char * path, stat_t * buf)
 {
 #if TARGET_PLATFORM_WINDOWS
-    return ::_stat64(path, buf);
+    std::wstring widePath;
+    return detail::utf8ToWide(path, widePath) ? ::_wstat64(widePath.c_str(), buf) : -1;
 #else
     return ::stat(path, buf);
 #endif
@@ -213,7 +227,8 @@ int TC_Port::stat(const char * path, stat_t * buf)
 int TC_Port::lstat(const char * path, TC_Port::stat_t * buf)
 {
 #if TARGET_PLATFORM_WINDOWS
-	return ::_stat64(path, buf);
+    std::wstring widePath;
+	return detail::utf8ToWide(path, widePath) ? ::_wstat64(widePath.c_str(), buf) : -1;
 #else
 	return ::lstat(path, buf);
 #endif
@@ -222,7 +237,8 @@ int TC_Port::lstat(const char * path, TC_Port::stat_t * buf)
 int TC_Port::mkdir(const char *path)
 {
 #if TARGET_PLATFORM_WINDOWS
-	int iRetCode = ::_mkdir(path);
+	std::wstring widePath;
+	int iRetCode = detail::utf8ToWide(path, widePath) ? ::_wmkdir(widePath.c_str()) : -1;
 #else
 	int iRetCode = ::mkdir(path, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 #endif
@@ -232,7 +248,8 @@ int TC_Port::mkdir(const char *path)
 int TC_Port::rmdir(const char *path)
 {
 #if TARGET_PLATFORM_WINDOWS
-	return ::_rmdir(path);
+	std::wstring widePath;
+	return detail::utf8ToWide(path, widePath) ? ::_wrmdir(widePath.c_str()) : -1;
 #else
 	return ::rmdir(path);
 #endif
@@ -259,16 +276,42 @@ int64_t TC_Port::getpid()
 
 string TC_Port::getEnv(const string &name)
 {
-	char* p = getenv(name.c_str());
-    string str = p ? string(p) : "";
+#if TARGET_PLATFORM_WINDOWS
+    std::wstring wideName;
+    if (!detail::utf8ToWide(name, wideName))
+    {
+        return "";
+    }
 
-	return str;
+    DWORD length = GetEnvironmentVariableW(wideName.c_str(), NULL, 0);
+    if (length == 0)
+    {
+        return "";
+    }
+
+    std::vector<wchar_t> buffer(length);
+    if (GetEnvironmentVariableW(wideName.c_str(), buffer.data(), length) == 0)
+    {
+        return "";
+    }
+
+    std::string value;
+    return detail::wideToUtf8(std::wstring(buffer.data()), value) ? value : "";
+#else
+	char* p = getenv(name.c_str());
+    return p ? string(p) : "";
+#endif
 }
 
 void TC_Port::setEnv(const string &name, const string &value)
 {
 #if TARGET_PLATFORM_WINDOWS
-	SetEnvironmentVariable(name.c_str(), value.c_str());
+    std::wstring wideName;
+    std::wstring wideValue;
+    if (detail::utf8ToWide(name, wideName) && detail::utf8ToWide(value, wideValue))
+    {
+        SetEnvironmentVariableW(wideName.c_str(), wideValue.c_str());
+    }
 #else
 	setenv(name.c_str(), value.c_str(), true);
 #endif
@@ -276,13 +319,22 @@ void TC_Port::setEnv(const string &name, const string &value)
 
 string TC_Port::getCwd()
 {
-    char currentDirectory[FILENAME_MAX] = {0x00};
 #if TARGET_PLATFORM_WINDOWS
-    _getcwd(currentDirectory, sizeof(currentDirectory));
+    wchar_t *wideDirectory = _wgetcwd(NULL, 0);
+    if (wideDirectory == NULL)
+    {
+        return "";
+    }
+
+    std::string directory;
+    detail::wideToUtf8(std::wstring(wideDirectory), directory);
+    free(wideDirectory);
+    return directory;
 #else
+    char currentDirectory[FILENAME_MAX] = {0x00};
     getcwd(currentDirectory, sizeof(currentDirectory));
-#endif
     return currentDirectory;
+#endif
 }
 
 int TC_Port::kill(int64_t pid)
@@ -464,9 +516,11 @@ std::vector<std::string> TC_Port::getCommandLine(int64_t pid)
 
     if (argv != NULL) {
         for (int i = 0; i < argc; i++) {
-            char buffer[MAX_PATH];
-            WideCharToMultiByte(CP_ACP, 0, argv[i], -1, buffer, MAX_PATH, NULL, NULL);
-            commandLineArgs.push_back(buffer);
+            std::string argument;
+            if (detail::wideToUtf8(argv[i], argument))
+            {
+                commandLineArgs.push_back(argument);
+            }
         }
 
         LocalFree(argv);
@@ -723,39 +777,43 @@ vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMa
 #elif TARGET_PLATFORM_WINDOWS
 
     HANDLE hProcessSnap;
-    PROCESSENTRY32 pe32;
+    std::wstring wideCmdLine;
+    if (!detail::utf8ToWide(cmdLine, wideCmdLine))
+    {
+        return pids;
+    }
+
+    PROCESSENTRY32W pe32;
 
     hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hProcessSnap == INVALID_HANDLE_VALUE) {
         return pids;
     }
 
-    pe32.dwSize = sizeof(PROCESSENTRY32);
+    pe32.dwSize = sizeof(PROCESSENTRY32W);
 
-    if (!Process32First(hProcessSnap, &pe32)) {
+    if (!Process32FirstW(hProcessSnap, &pe32)) {
         CloseHandle(hProcessSnap);
         return pids;
     }
 
-    // std::wstring wcmdLine(cmdLine.begin(), cmdLine.end());
-
     do {
         if(accurateMatch)
         {
-            if(cmdLine == pe32.szExeFile)
+            if(wideCmdLine == pe32.szExeFile)
             {
                 pids.push_back(pe32.th32ProcessID);
             }
         }
         else
         {
-            if(std::string(pe32.szExeFile).find(cmdLine) != std::string::npos)
+            if(std::wstring(pe32.szExeFile).find(wideCmdLine) != std::wstring::npos)
             {
                 pids.push_back( pe32.th32ProcessID);
             }
         }
 
-    } while (Process32Next(hProcessSnap, &pe32));
+    } while (Process32NextW(hProcessSnap, &pe32));
 
     CloseHandle(hProcessSnap);
 
@@ -767,7 +825,15 @@ vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMa
 
 FILE *TC_Port::freopen(const char * dst,  const char * mode, FILE * src)
 {
-#if TARGET_PLATFORM_IOS || TARGET_PLATFORM_WINDOWS
+#if TARGET_PLATFORM_WINDOWS
+    std::wstring widePath;
+    std::wstring wideMode;
+    if (!detail::utf8ToWide(dst, widePath) || !detail::utf8ToWide(mode, wideMode))
+    {
+        return NULL;
+    }
+    return ::_wfreopen(widePath.c_str(), wideMode.c_str(), src);
+#elif TARGET_PLATFORM_IOS
     return ::freopen(dst, mode, src);
 #else
     return ::freopen64(dst, mode, src);
@@ -807,34 +873,36 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 	}
 	
 	string command = sExePath + " " + path;
-    // std::wstring wcommand(command.begin(), command.end());
+	std::wstring wideCommand;
+    std::wstring widePwdPath;
+    if (!detail::utf8ToWide(command, wideCommand) || !detail::utf8ToWide(sPwdPath, widePwdPath))
+    {
+        throw TC_Port_Exception("[TC_Port::forkExec] UTF-8 conversion exception:" + TC_Exception::getSystemError());
+    }
+    std::vector<wchar_t> commandLine(wideCommand.begin(), wideCommand.end());
+    commandLine.push_back(L'\0');
 
-	TCHAR p[1024];
-    strncpy_s(p, sizeof(p)/sizeof(TCHAR), command.c_str(), command.size());
-
-    // std::wstring wsPwdPath(sPwdPath.begin(), sPwdPath.end());
-
-	STARTUPINFOA si;
+	STARTUPINFOW si;
 	memset(&si, 0, sizeof(si));
 	PROCESS_INFORMATION pi;
 	memset(&pi, 0, sizeof(pi));
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	si.wShowWindow = SW_HIDE; //TRUE表示显示创建的进程的窗口
 	
-	if (!CreateProcessA(
+	if (!CreateProcessW(
 		NULL,   //  指向一个NULL结尾的、用来指定可执行模块的宽字节字符串
-		p,      // 命令行字符串
+		commandLine.data(),      // 命令行字符串
 		NULL,   //    指向一个SECURITY_ATTRIBUTES结构体，这个结构体决定是否返回的句柄可以被子进程继承。
 		NULL,   //    如果lpProcessAttributes参数为空（NULL），那么句柄不能被继承。<同上>
 		false,  //    指示新进程是否从调用进程处继承了句柄。
 		CREATE_NEW_CONSOLE|CREATE_DEFAULT_ERROR_MODE | NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW,  //  指定附加的、用来控制优先类和进程的创建的标
 		NULL, //    指向一个新进程的环境块。如果此参数为空，新进程使用调用进程的环境
-		sPwdPath.c_str(), //    指定子进程的工作路径
+		widePwdPath.empty() ? NULL : widePwdPath.c_str(), //    指定子进程的工作路径
 		&si, // 决定新进程的主窗体如何显示的STARTUPINFO结构体
 		&pi  // 接收新进程的识别信息的PROCESS_INFORMATION结构体
 	))
 	{
-		throw TC_Port_Exception("[TC_Port::forkExec] CreateProcessA exception:" + TC_Exception::getSystemError());
+		throw TC_Port_Exception("[TC_Port::forkExec] CreateProcessW exception:" + TC_Exception::getSystemError());
 	}
 	
 	CloseHandle(pi.hThread);
@@ -1265,9 +1333,9 @@ time_t TC_Port::getPidStartTime(int64_t pid)
         return -1;
     }
 
-    PROCESSENTRY32 pe = { 0 };
-    pe.dwSize = sizeof(PROCESSENTRY32);
-    if(!Process32First(h, &pe)) {
+    PROCESSENTRY32W pe = { 0 };
+    pe.dwSize = sizeof(PROCESSENTRY32W);
+    if(!Process32FirstW(h, &pe)) {
         CloseHandle(h);
         return -1;
     }
@@ -1284,7 +1352,7 @@ time_t TC_Port::getPidStartTime(int64_t pid)
                 return startTime;
             }
         }
-    } while(Process32Next(h, &pe));
+    } while(Process32NextW(h, &pe));
 
     CloseHandle(h);
     return -1;
@@ -1460,9 +1528,12 @@ bool TC_Port::getDiskInfo(int64_t &totalSize, int64_t& availableSize, float& use
     ULARGE_INTEGER totalNumberOfBytes;
     ULARGE_INTEGER totalNumberOfFreeBytes;
 
-    // std::wstring wpath(path.begin(), path.end());
+    std::wstring widePath;
+    if (!detail::utf8ToWide(path, widePath)) {
+        return false;
+    }
 
-    if (!GetDiskFreeSpaceEx(path.c_str(), &freeBytesAvailableToCaller, &totalNumberOfBytes, &totalNumberOfFreeBytes)) {
+    if (!GetDiskFreeSpaceExW(widePath.c_str(), &freeBytesAvailableToCaller, &totalNumberOfBytes, &totalNumberOfFreeBytes)) {
         return false;
     }
 

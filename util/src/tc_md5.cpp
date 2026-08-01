@@ -1,5 +1,6 @@
 ﻿#include "util/tc_md5.h"
 #include <fstream>
+#include "util/tc_port.h"
 #include <iostream>
 #include <string.h>
 
@@ -157,7 +158,7 @@ string TC_MD5::md5file(const string& fileFullName)
     FILE *f;
     size_t n;
     MD5_CTX context;
-    if(( f = fopen( fileFullName.c_str(), "rb" )) == NULL )
+    if(( f = TC_Port::fopen( fileFullName.c_str(), "rb" )) == NULL )
     {
         THROW_EXCEPTION_SYSCODE(TC_MD5_Exception, "[TC_MD5::md5file] fopen '" + fileFullName + "', error");
     }

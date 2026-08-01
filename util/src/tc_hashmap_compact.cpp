@@ -17,6 +17,7 @@
 #include "util/tc_hashmap_compact.h"
 #include "util/tc_pack.h"
 #include "util/tc_common.h"
+#include "util/tc_port.h"
 
 namespace tars
 {
@@ -1672,7 +1673,7 @@ void TC_HashMapCompact::clear()
 
 int TC_HashMapCompact::dump2file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "wb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "wb");
     if(fp == NULL)
     {
         return RT_DUMP_FILE_ERR;
@@ -1690,7 +1691,7 @@ int TC_HashMapCompact::dump2file(const string &sFile)
 
 int TC_HashMapCompact::load5file(const string &sFile)
 {
-    FILE *fp = fopen(sFile.c_str(), "rb");
+    FILE *fp = TC_Port::fopen(sFile.c_str(), "rb");
     if(fp == NULL)
     {
         return RT_LOAL_FILE_ERR;
@@ -2761,4 +2762,3 @@ void TC_HashMapCompact::deallocate2(uint32_t iHead)
 }
 
 }
-

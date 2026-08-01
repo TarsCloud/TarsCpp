@@ -27,6 +27,7 @@
 
 #include "parse.h"
 #include "tars.tab.hpp"
+#include "util/tc_port.h"
 
 using namespace std;
 
@@ -85,7 +86,7 @@ tars_const_float         (({tars_float_literal}{tars_float_exp}?)|((\+|-)?[[:dig
         include_file_stack[include_file_stack_ptr].file  = file;
         include_file_stack_ptr++;
 
-        yyin = fopen( file.c_str(), "r" );
+        yyin = tars::TC_Port::fopen( file.c_str(), "r" );
         if ( !yyin )
         {
             g_parse->error("can't open file:" + file);
@@ -390,4 +391,3 @@ tars_const_float         (({tars_float_literal}{tars_float_exp}?)|((\+|-)?[[:dig
 }
 
 %%
-

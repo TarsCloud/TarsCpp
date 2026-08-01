@@ -537,6 +537,7 @@ char *yytext;
 
 #include "parse.h"
 #include "tars.tab.hpp"
+#include "util/tc_port.h"
 
 using namespace std;
 
@@ -870,7 +871,7 @@ YY_RULE_SETUP
         include_file_stack[include_file_stack_ptr].file  = file;
         include_file_stack_ptr++;
 
-        yyin = fopen( file.c_str(), "r" );
+        yyin = tars::TC_Port::fopen( file.c_str(), "r" );
         if ( !yyin )
         {
             g_parse->error("can't open file:" + file);
@@ -2230,6 +2231,5 @@ void yyfree (void * ptr )
 #define YYTABLES_NAME "yytables"
 
 #line 392 "/home/ubuntu/ruanshudong/frameworkPro/tarscpp/tools/tarsgrammar/tars.l"
-
 
 
