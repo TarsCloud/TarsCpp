@@ -144,7 +144,7 @@ TEST_F(UtilPortTest, unicodeUtf8ExecutableAndWorkingDirectory)
     ASSERT_GT(pid, 0);
 
     HANDLE process = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, static_cast<DWORD>(pid));
-    ASSERT_NE(NULL, process);
+    ASSERT_NE(nullptr, process);
     ASSERT_EQ(WAIT_OBJECT_0, WaitForSingleObject(process, 10000));
     DWORD exitCode = 1;
     ASSERT_TRUE(GetExitCodeProcess(process, &exitCode));

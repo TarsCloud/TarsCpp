@@ -15,7 +15,7 @@
  */
 #include "util/tc_file.h"
 #include "util/tc_port.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 #include <set>
 #include <string.h>
 #include <algorithm>
@@ -34,7 +34,7 @@ ifstream::pos_type TC_File::getFileSize(const string &sFullFileName)
     ifstream ifs;
 #if TARGET_PLATFORM_WINDOWS
     std::wstring widePath;
-    if (!detail::utf8ToWide(sFullFileName, widePath))
+    if (!TC_Encoder::utf8ToWide(sFullFileName, widePath))
     {
         return ifstream::pos_type(-1);
     }
@@ -171,7 +171,7 @@ string TC_File::getExePath()
         if (length < widePath.size() - 1)
         {
             std::string path;
-            return detail::wideToUtf8(std::wstring(widePath.data(), length), path) ? path : "";
+            return TC_Encoder::wideToUtf8(std::wstring(widePath.data(), length), path) ? path : "";
         }
         widePath.resize(widePath.size() * 2);
     }
@@ -293,7 +293,7 @@ int TC_File::removeFile(const string &sFullFileName, bool bRecursive)
     {
 #if TARGET_PLATFORM_WINDOWS
         std::wstring widePath;
-        if (!detail::utf8ToWide(path, widePath) || ::_wremove(widePath.c_str()) == -1)
+        if (!TC_Encoder::utf8ToWide(path, widePath) || ::_wremove(widePath.c_str()) == -1)
 #else
         if(::remove(path.c_str()) == -1)
 #endif
@@ -310,7 +310,7 @@ int TC_File::renameFile(const string &sSrcFullFileName, const string &sDstFullFi
 #if TARGET_PLATFORM_WINDOWS
     std::wstring wideSource;
     std::wstring wideDestination;
-    if (!detail::utf8ToWide(sSrcFullFileName, wideSource) || !detail::utf8ToWide(sDstFullFileName, wideDestination))
+    if (!TC_Encoder::utf8ToWide(sSrcFullFileName, wideSource) || !TC_Encoder::utf8ToWide(sDstFullFileName, wideDestination))
     {
         return -1;
     }
@@ -665,7 +665,7 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 	searchPath += "*.*";
 
 	std::wstring wideSearchPath;
-	if (!detail::utf8ToWide(searchPath, wideSearchPath))
+	if (!TC_Encoder::utf8ToWide(searchPath, wideSearchPath))
 	{
 		return 0;
 	}
@@ -675,7 +675,7 @@ size_t TC_File::scanDir(const string &sFilePath, vector<string> &vtMatchFiles, F
 		do
 		{
             std::string fileName;
-            if (!detail::wideToUtf8(fileinfo.name, fileName))
+            if (!TC_Encoder::wideToUtf8(fileinfo.name, fileName))
 			{
 				continue;
 			}
@@ -804,7 +804,7 @@ void TC_File::copyFile(const string &sExistFile, const string &sNewFile,bool bRe
 #if TARGET_PLATFORM_WINDOWS
             std::wstring wideSource;
             std::wstring wideDestination;
-            if (!detail::utf8ToWide(sExistFile, wideSource) || !detail::utf8ToWide(sNewFile, wideDestination))
+            if (!TC_Encoder::utf8ToWide(sExistFile, wideSource) || !TC_Encoder::utf8ToWide(sNewFile, wideDestination))
             {
                 THROW_EXCEPTION_SYSCODE(TC_File_Exception, "[TC_File::copyFile] UTF-8 conversion error: " + sExistFile);
             }

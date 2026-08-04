@@ -21,7 +21,7 @@
 #include "util/tc_common.h"
 #include "util/tc_ex.h"
 #include "util/tc_file.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 #include "util/tc_thread_queue.h"
 #include "util/tc_cas_queue.h"
 #include "util/tc_timeprovider.h"
@@ -1433,7 +1433,7 @@ namespace tars
 
 #if TARGET_PLATFORM_WINDOWS
                 std::wstring wideLogFileName;
-                if (detail::utf8ToWide(sLogFileName, wideLogFileName))
+                if (TC_Encoder::utf8ToWide(sLogFileName, wideLogFileName))
                 {
                     _of.open(wideLogFileName.c_str(), ios::app | ios::out);
                 }
@@ -1509,7 +1509,7 @@ namespace tars
 
 #if TARGET_PLATFORM_WINDOWS
             std::wstring wideRolledLogFileName;
-            if (detail::utf8ToWide(sLogFileName, wideRolledLogFileName))
+            if (TC_Encoder::utf8ToWide(sLogFileName, wideRolledLogFileName))
             {
                 _of.open(wideRolledLogFileName.c_str(), ios::app);
             }
@@ -1971,7 +1971,7 @@ namespace tars
 
 #if TARGET_PLATFORM_WINDOWS
                 std::wstring wideLogFileName;
-                if (detail::utf8ToWide(sLogFileName, wideLogFileName))
+                if (TC_Encoder::utf8ToWide(sLogFileName, wideLogFileName))
                 {
                     _of.open(wideLogFileName.c_str(), ios::app);
                 }

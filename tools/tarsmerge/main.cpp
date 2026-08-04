@@ -1,5 +1,5 @@
 #include "util/tc_file.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 #include "util/tc_option.h"
 #include "parse.h"
 #include <set>
@@ -124,7 +124,7 @@ string doTarsMerge(TC_Option& option, const vector<string>& vTars)
 	    std::ifstream in;
 #if TARGET_PLATFORM_WINDOWS
         std::wstring wideFileName;
-        if (!tars::detail::utf8ToWide(f, wideFileName)) {
+        if (!tars::TC_Encoder::utf8ToWide(f, wideFileName)) {
             std::cout << "invalid UTF-8 file name" << std::endl;
             exit(-1);
         }

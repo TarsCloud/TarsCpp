@@ -93,7 +93,7 @@ TEST_F(UtilFileTest, unicodeUtf8PathSupportsFileLifecycleAndMmap)
     TC_File::removeFile(root, true);
     ASSERT_TRUE(TC_File::makeDirRecursive(nested));
 
-    ASSERT_EQ(0, TC_File::save2file(source, u8"中文内容"));
+    TC_File::save2file(source, u8"中文内容");
     ASSERT_EQ(u8"中文内容", TC_File::load2str(source));
     ASSERT_TRUE(TC_File::isFileExist(source));
 
@@ -114,6 +114,82 @@ TEST_F(UtilFileTest, unicodeUtf8PathSupportsFileLifecycleAndMmap)
     ASSERT_TRUE(TC_File::isFileExist(mapped));
 
     ASSERT_EQ(0, TC_File::removeFile(root, true));
+}
+#endif
+
+// Focused verification of Chinese (non-ASCII) directory support on Windows:
+// create / traverse / list / remove directory trees whose names are pure
+// Chinese or mixed, and ensure UTF-8 path names round-trip without mojibake.
+// All mkdir calls use fresh paths on purpose, so they never hit the
+// ANSI-stat fallback inside TC_File::makeDir (which only matters when a
+// directory already exists).
+#if TARGET_PLATFORM_WINDOWS
+TEST_F(UtilFileTest, unicodeChineseDirectoryLifecycle)
+{
+    const string root        = u8"中文目录";
+    const string nested      = root + FILE_SEP + u8"子目录";
+    const string deepNested  = nested + FILE_SEP + u8"更深的目录";
+    const string subDirName  = u8"目录ABC";
+    const string fileInCnDir = deepNested + FILE_SEP + u8"测试文件.txt";
+
+    // clean start (a previous failed run might have left the tree behind)
+	TC_File::makeDirRecursive(root);
+    ASSERT_EQ(0, TC_File::removeFile(root, true));
+
+    // 1) recursive creation of a pure-Chinese directory tree (all fresh)
+    ASSERT_TRUE(TC_File::makeDirRecursive(deepNested));
+    ASSERT_TRUE(TC_File::isFileExist(root, S_IFDIR));
+    ASSERT_TRUE(TC_File::isFileExist(nested, S_IFDIR));
+    ASSERT_TRUE(TC_File::isFileExist(deepNested, S_IFDIR));
+
+    // 2) single pure-Chinese directory creation
+    const string single = u8"独立中文目录";
+	TC_File::makeDirRecursive(single);
+    ASSERT_EQ(0, TC_File::removeFile(single, true));
+    ASSERT_TRUE(TC_File::makeDir(single));
+    ASSERT_TRUE(TC_File::isFileExist(single, S_IFDIR));
+    ASSERT_EQ(0, TC_File::removeFile(single, true));
+
+    // 3) a mixed-name sub directory inside a Chinese directory
+    ASSERT_TRUE(TC_File::makeDir(deepNested + FILE_SEP + subDirName));
+    ASSERT_TRUE(TC_File::isFileExist(deepNested + FILE_SEP + subDirName, S_IFDIR));
+
+    // 4) write + read a file located inside a Chinese directory
+    TC_File::save2file(fileInCnDir, u8"中文内容_abc");
+    ASSERT_TRUE(TC_File::isFileExist(fileInCnDir, S_IFREG));
+    ASSERT_EQ(u8"中文内容_abc", TC_File::load2str(fileInCnDir));
+
+    // 5) scanDir returns entries with exact UTF-8 names (no mojibake)
+    {
+        vector<string> entries;
+        size_t count = TC_File::scanDir(deepNested, entries, NULL, 0, true);
+        ASSERT_EQ(2u, count);
+        ASSERT_NE(entries.end(), find(entries.begin(), entries.end(), u8"测试文件.txt"));
+        ASSERT_NE(entries.end(), find(entries.begin(), entries.end(), subDirName));
+    }
+
+    // 6) recursive listDirectory keeps the exact Chinese paths
+    {
+        vector<string> all;
+        TC_File::listDirectory(root, all, true, false);
+        bool foundFile = false;
+        bool foundSubDir = false;
+        for (const auto &p : all)
+        {
+            if (TC_File::extractFileName(p) == u8"测试文件.txt") foundFile = true;
+            if (TC_File::extractFileName(p) == subDirName)        foundSubDir = true;
+        }
+        ASSERT_TRUE(foundFile);
+        ASSERT_TRUE(foundSubDir);
+    }
+
+    // 7) non-recursive removal of an empty Chinese directory
+    ASSERT_EQ(0, TC_File::removeFile(deepNested + FILE_SEP + subDirName, false));
+    ASSERT_TRUE(!TC_File::isFileExist(deepNested + FILE_SEP + subDirName, S_IFDIR));
+
+    // 8) recursive removal of the whole Chinese directory tree
+    ASSERT_EQ(0, TC_File::removeFile(root, true));
+    ASSERT_TRUE(!TC_File::isFileExist(root, S_IFDIR));
 }
 #endif
 

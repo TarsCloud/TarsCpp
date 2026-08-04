@@ -16,7 +16,7 @@
 
 #include "util/tc_shm.h"
 #include "util/tc_common.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 #include <cassert>
 #include <errno.h>
 
@@ -45,7 +45,7 @@ void TC_Shm::init(size_t iShmSize, key_t iKey, bool bOwner)
 
     // 首先试图打开一个命名的内存映射文件对象  
     std::wstring wideKey;
-    if (!detail::utf8ToWide(TC_Common::tostr(iKey), wideKey))
+    if (!TC_Encoder::utf8ToWide(TC_Common::tostr(iKey), wideKey))
     {
         THROW_EXCEPTION_SYSCODE(TC_Shm_Exception, "[TC_Shm::init()] invalid UTF-8 key");
     }

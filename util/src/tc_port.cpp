@@ -19,7 +19,7 @@
 #include "util/tc_logger.h"
 #include "util/tc_file.h"
 #include "util/tc_platform.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 #include <thread>
 #include <string.h>
 
@@ -182,7 +182,7 @@ int TC_Port::chmod(const char *path, mode_t mode)
 	//带时区时间
 #if TARGET_PLATFORM_WINDOWS
     std::wstring widePath;
-    if (!detail::utf8ToWide(path, widePath))
+    if (!TC_Encoder::utf8ToWide(path, widePath))
     {
         return -1;
     }
@@ -197,7 +197,7 @@ FILE * TC_Port::fopen(const char * path, const char *  mode)
 #if TARGET_PLATFORM_WINDOWS
 	std::wstring widePath;
     std::wstring wideMode;
-    if (!detail::utf8ToWide(path, widePath) || !detail::utf8ToWide(mode, wideMode))
+    if (!TC_Encoder::utf8ToWide(path, widePath) || !TC_Encoder::utf8ToWide(mode, wideMode))
 	{
 		return NULL;
 	}
@@ -218,7 +218,7 @@ int TC_Port::stat(const char * path, stat_t * buf)
 {
 #if TARGET_PLATFORM_WINDOWS
     std::wstring widePath;
-    return detail::utf8ToWide(path, widePath) ? ::_wstat64(widePath.c_str(), buf) : -1;
+    return TC_Encoder::utf8ToWide(path, widePath) ? ::_wstat64(widePath.c_str(), buf) : -1;
 #else
     return ::stat(path, buf);
 #endif
@@ -228,7 +228,7 @@ int TC_Port::lstat(const char * path, TC_Port::stat_t * buf)
 {
 #if TARGET_PLATFORM_WINDOWS
     std::wstring widePath;
-	return detail::utf8ToWide(path, widePath) ? ::_wstat64(widePath.c_str(), buf) : -1;
+	return TC_Encoder::utf8ToWide(path, widePath) ? ::_wstat64(widePath.c_str(), buf) : -1;
 #else
 	return ::lstat(path, buf);
 #endif
@@ -238,7 +238,7 @@ int TC_Port::mkdir(const char *path)
 {
 #if TARGET_PLATFORM_WINDOWS
 	std::wstring widePath;
-	int iRetCode = detail::utf8ToWide(path, widePath) ? ::_wmkdir(widePath.c_str()) : -1;
+	int iRetCode = TC_Encoder::utf8ToWide(path, widePath) ? ::_wmkdir(widePath.c_str()) : -1;
 #else
 	int iRetCode = ::mkdir(path, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 #endif
@@ -249,7 +249,7 @@ int TC_Port::rmdir(const char *path)
 {
 #if TARGET_PLATFORM_WINDOWS
 	std::wstring widePath;
-	return detail::utf8ToWide(path, widePath) ? ::_wrmdir(widePath.c_str()) : -1;
+	return TC_Encoder::utf8ToWide(path, widePath) ? ::_wrmdir(widePath.c_str()) : -1;
 #else
 	return ::rmdir(path);
 #endif
@@ -278,7 +278,7 @@ string TC_Port::getEnv(const string &name)
 {
 #if TARGET_PLATFORM_WINDOWS
     std::wstring wideName;
-    if (!detail::utf8ToWide(name, wideName))
+    if (!TC_Encoder::utf8ToWide(name, wideName))
     {
         return "";
     }
@@ -296,7 +296,7 @@ string TC_Port::getEnv(const string &name)
     }
 
     std::string value;
-    return detail::wideToUtf8(std::wstring(buffer.data()), value) ? value : "";
+    return TC_Encoder::wideToUtf8(std::wstring(buffer.data()), value) ? value : "";
 #else
 	char* p = getenv(name.c_str());
     return p ? string(p) : "";
@@ -308,7 +308,7 @@ void TC_Port::setEnv(const string &name, const string &value)
 #if TARGET_PLATFORM_WINDOWS
     std::wstring wideName;
     std::wstring wideValue;
-    if (detail::utf8ToWide(name, wideName) && detail::utf8ToWide(value, wideValue))
+    if (TC_Encoder::utf8ToWide(name, wideName) && TC_Encoder::utf8ToWide(value, wideValue))
     {
         SetEnvironmentVariableW(wideName.c_str(), wideValue.c_str());
     }
@@ -327,7 +327,7 @@ string TC_Port::getCwd()
     }
 
     std::string directory;
-    detail::wideToUtf8(std::wstring(wideDirectory), directory);
+    TC_Encoder::wideToUtf8(std::wstring(wideDirectory), directory);
     free(wideDirectory);
     return directory;
 #else
@@ -517,7 +517,7 @@ std::vector<std::string> TC_Port::getCommandLine(int64_t pid)
     if (argv != NULL) {
         for (int i = 0; i < argc; i++) {
             std::string argument;
-            if (detail::wideToUtf8(argv[i], argument))
+            if (TC_Encoder::wideToUtf8(argv[i], argument))
             {
                 commandLineArgs.push_back(argument);
             }
@@ -778,7 +778,7 @@ vector<int64_t> TC_Port::getPidsByCmdline(const string &cmdLine, bool accurateMa
 
     HANDLE hProcessSnap;
     std::wstring wideCmdLine;
-    if (!detail::utf8ToWide(cmdLine, wideCmdLine))
+    if (!TC_Encoder::utf8ToWide(cmdLine, wideCmdLine))
     {
         return pids;
     }
@@ -828,7 +828,7 @@ FILE *TC_Port::freopen(const char * dst,  const char * mode, FILE * src)
 #if TARGET_PLATFORM_WINDOWS
     std::wstring widePath;
     std::wstring wideMode;
-    if (!detail::utf8ToWide(dst, widePath) || !detail::utf8ToWide(mode, wideMode))
+    if (!TC_Encoder::utf8ToWide(dst, widePath) || !TC_Encoder::utf8ToWide(mode, wideMode))
     {
         return NULL;
     }
@@ -875,7 +875,7 @@ int64_t TC_Port::forkExec(const string& sExePath, const string& sPwdPath, const 
 	string command = sExePath + " " + path;
 	std::wstring wideCommand;
     std::wstring widePwdPath;
-    if (!detail::utf8ToWide(command, wideCommand) || !detail::utf8ToWide(sPwdPath, widePwdPath))
+    if (!TC_Encoder::utf8ToWide(command, wideCommand) || !TC_Encoder::utf8ToWide(sPwdPath, widePwdPath))
     {
         throw TC_Port_Exception("[TC_Port::forkExec] UTF-8 conversion exception:" + TC_Exception::getSystemError());
     }
@@ -1529,7 +1529,7 @@ bool TC_Port::getDiskInfo(int64_t &totalSize, int64_t& availableSize, float& use
     ULARGE_INTEGER totalNumberOfFreeBytes;
 
     std::wstring widePath;
-    if (!detail::utf8ToWide(path, widePath)) {
+    if (!TC_Encoder::utf8ToWide(path, widePath)) {
         return false;
     }
 

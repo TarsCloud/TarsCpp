@@ -16,6 +16,10 @@ build_tars_server("unit-test" "")
 add_definitions(-DCMAKE_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 target_link_libraries(unit-test ${LIB_GTEST} tarsmock)
 
+# if(TARS_MYSQL)
+#     target_link_libraries(unit-test ${LIB_MYSQL})
+# endif()
+
 if(TARS_MYSQL)
     if(UNIX)
         target_link_libraries(unit-test ${LIB_MYSQL}.a)
@@ -27,5 +31,5 @@ endif()
 add_dependencies(unit-test FRAMEWORK-PROTOCOL tarsmock)
 
 if(WIN32)
-    add_executable(tars-unicode-process-helper ${PROJECT_SOURCE_DIR}/cmake/unicode_process_helper.cpp)
+    add_executable(tars-unicode-process-helper ${CMAKE_SOURCE_DIR}/cmake/unicode_process_helper.cpp)
 endif()

@@ -18,7 +18,7 @@
 #include <string.h>
 #include "util/tc_common.h"
 #include "util/tc_sem_mutex.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 
 namespace tars
 {
@@ -253,7 +253,7 @@ void TC_SemMutex::init(key_t iKey)
     std::wstring wideKey;
     std::wstring wideReadKey;
     std::wstring wideWriteKey;
-    if (!detail::utf8ToWide(key, wideKey) || !detail::utf8ToWide(rkey, wideReadKey) || !detail::utf8ToWide(wkey, wideWriteKey))
+    if (!TC_Encoder::utf8ToWide(key, wideKey) || !TC_Encoder::utf8ToWide(rkey, wideReadKey) || !TC_Encoder::utf8ToWide(wkey, wideWriteKey))
     {
         THROW_EXCEPTION_SYSCODE(TC_SemMutex_Exception, "[TC_SemMutex::init] invalid UTF-8 key");
     }

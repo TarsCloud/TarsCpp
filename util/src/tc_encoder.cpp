@@ -27,6 +27,66 @@ namespace tars
 
 #if TARGET_PLATFORM_WINDOWS
 #include <windows.h>
+#include <limits>
+
+// Convert a UTF-8 string to a wide-character string (wchar_t).
+// Tars uses UTF-8 for all user-facing std::string values on Windows, but most
+// Win32 APIs only accept wide-character paths/keys/names, so callers must
+// convert to a wide string before invoking the corresponding API.
+bool TC_Encoder::utf8ToWide(const std::string &input, std::wstring &output)
+{
+    output.clear();
+    if (input.empty())
+    {
+        return true;
+    }
+
+    if (input.size() > static_cast<size_t>(std::numeric_limits<int>::max()))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return false;
+    }
+
+    const int inputLength = static_cast<int>(input.size());
+    const int outputLength = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, input.data(), inputLength, NULL, 0);
+    if (outputLength <= 0)
+    {
+        return false;
+    }
+
+    output.resize(static_cast<size_t>(outputLength));
+    return MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, input.data(), inputLength, &output[0], outputLength) == outputLength;
+}
+
+// Convert a wide-character string (wchar_t) back to a UTF-8 string.
+// Win32 APIs return wide-character results (paths, env vars, error messages),
+// so convert them back to UTF-8 to keep tarscpp's internal encoding consistent.
+bool TC_Encoder::wideToUtf8(const std::wstring &input, std::string &output)
+{
+    output.clear();
+    if (input.empty())
+    {
+        return true;
+    }
+
+    if (input.size() > static_cast<size_t>(std::numeric_limits<int>::max()))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return false;
+    }
+
+    const int inputLength = static_cast<int>(input.size());
+    const int outputLength = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, input.data(), inputLength, NULL, 0, NULL, NULL);
+    if (outputLength <= 0)
+    {
+        return false;
+    }
+
+    output.resize(static_cast<size_t>(outputLength));
+    return WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, input.data(), inputLength, &output[0], outputLength, NULL, NULL) == outputLength;
+}
+
+#endif
 
 void TC_Encoder::gbk2utf8(const string &sIn, vector<string> &vtStr,int mode)
 {
@@ -54,6 +114,8 @@ void TC_Encoder::gbk2utf8(const string &sIn, vector<string> &vtStr,int mode)
         vtStr.push_back(sOut);
     }
 }
+
+#if TARGET_PLATFORM_WINDOWS
 
 std::string TC_Encoder::gbk2utf8(const std::string &strGbk,int mode)
 {

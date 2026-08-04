@@ -27,7 +27,7 @@
 #include <cassert>
 #include <iostream>
 #include "util/tc_file.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 
 namespace tars
 {
@@ -69,7 +69,7 @@ void TC_Mmap::mmap(const char *file, size_t length)
         CloseHandle(_hMap);
     }
     std::wstring wideFile;
-    if (!detail::utf8ToWide(file, wideFile))
+    if (!TC_Encoder::utf8ToWide(file, wideFile))
     {
         THROW_EXCEPTION_SYSCODE(TC_Mmap_Exception, "[TC_Mmap::mmap] invalid UTF-8 file path");
     }

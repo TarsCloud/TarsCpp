@@ -15,6 +15,7 @@
  */
 #pragma once
 
+#include <string>
 #include <vector>
 #include "util/tc_platform.h"
 #include "util/tc_ex.h"
@@ -154,8 +155,6 @@ public:
 	*/
 	static string transFrom(const string& str, char f = '\n', char t = '\r', char u = '\0');
 
-protected:    
-
     /**
 	* @brief  utf8 转换到 gbk. 
 	* @brief  The transformation from UTF8 to GBK.
@@ -172,6 +171,47 @@ protected:
     * @return
     */
     static void utf82gbk(char *sOut, int &iMaxOutLen, const char *sIn, int iInLen,int mode);
+
+#if TARGET_PLATFORM_WINDOWS
+    /**
+     * @brief  UTF-8 字符串 -> 宽字符串(wchar_t) 转换。
+     * @brief  Convert a UTF-8 string to a wide-character string (wchar_t).
+     * 
+     *          Tars 在 Windows 上约定所有面向用户的 std::string 统一使用 UTF-8 编码，
+     *          而 Win32 API（_wstat64 / _wmkdir / CreateFileW 等）只接受宽字符路径，
+     *          因此调用系统 API 前需要先做 UTF-8 -> 宽字符的转换。
+     *          All user-facing std::string values in tarscpp are UTF-8 on Windows, while
+     *          most Win32 APIs only accept wide-character strings. Callers must convert
+     *          a UTF-8 path/key/name to a wide string via this method before invoking
+     *          the corresponding Win32 API.
+     * 
+     * @param input   待转换的 UTF-8 字符串 / input UTF-8 string
+     * @param output  转换后的宽字符串（失败时保持不变）/
+     *                converted wide string (left unchanged on failure)
+     * @return        true=成功, false=失败（可通过 GetLastError 获取错误码）/
+     *                true on success, false on failure (use GetLastError for details)
+     */
+    static bool utf8ToWide(const std::string &input, std::wstring &output);
+
+    /**
+     * @brief  宽字符串(wchar_t) -> UTF-8 字符串 转换。
+     * @brief  Convert a wide-character string (wchar_t) back to a UTF-8 string.
+     * 
+     *          Win32 API 返回的路径/环境变量/错误信息通常是宽字符，
+     *          为了与 Tars 内部统一使用 UTF-8 编码的约定保持一致，
+     *          需要再转换回 UTF-8 字符串。
+     *          Win32 APIs return wide-character results (paths, env vars, error messages).
+     *          Convert them back to UTF-8 so that the rest of tarscpp can consume them
+     *          consistently.
+     * 
+     * @param input   待转换的宽字符串 / input wide string
+     * @param output  转换后的 UTF-8 字符串（失败时保持不变）/
+     *                converted UTF-8 string (left unchanged on failure)
+     * @return        true=成功, false=失败（可通过 GetLastError 获取错误码）/
+     *                true on success, false on failure (use GetLastError for details)
+     */
+    static bool wideToUtf8(const std::wstring &input, std::string &output);
+#endif
 };
 
 }

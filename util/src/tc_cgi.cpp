@@ -17,7 +17,7 @@
 #include "util/tc_cgi.h"
 #include "util/tc_common.h"
 #include "util/tc_http.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 #include "util/tc_port.h"
 #include <string.h>
 
@@ -114,7 +114,7 @@ void TC_Cgi::parseCgi()
         for (LPWCH entry = environment; *entry != L'\0'; entry += wcslen(entry) + 1)
         {
             string s;
-            if (!detail::wideToUtf8(entry, s))
+            if (!TC_Encoder::wideToUtf8(entry, s))
             {
                 continue;
             }

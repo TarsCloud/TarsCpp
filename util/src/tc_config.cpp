@@ -18,7 +18,7 @@
 #include <fstream>
 #include "util/tc_config.h"
 #include "util/tc_common.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 
 namespace tars
 {
@@ -585,7 +585,7 @@ void TC_Config::parseFile(const string &sFileName)
 	ifstream ff;
 #if TARGET_PLATFORM_WINDOWS
     std::wstring wideFileName;
-    if (!detail::utf8ToWide(sFileName, wideFileName))
+    if (!TC_Encoder::utf8ToWide(sFileName, wideFileName))
     {
         THROW_EXCEPTION_SYSCODE(TC_Config_Exception, "[TC_Config::parseFile]:invalid UTF-8 file name: " + sFileName);
     }

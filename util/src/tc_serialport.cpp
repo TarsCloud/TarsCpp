@@ -4,7 +4,7 @@
 
 #include "util/tc_serialport.h"
 #include "util/tc_logger.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 
 #if TARGET_PLATFORM_LINUX || TARGET_PLATFORM_IOS
 #include <termios.h>
@@ -127,7 +127,7 @@ vector<string> TC_SerialPortGroup::getComPorts(const string &prefix)
 		RegQueryValueExW(hDevKey, L"PortName", NULL, NULL, reinterpret_cast<BYTE*>(portName), &dwCount);
 		RegCloseKey(hDevKey);
 		std::string utf8PortName;
-		if (detail::wideToUtf8(portName, utf8PortName))
+		if (TC_Encoder::wideToUtf8(portName, utf8PortName))
 		{
 			comPorts.push_back(utf8PortName);
 		}
@@ -398,7 +398,7 @@ void TC_SerialPort::initialize()
     }
 
 	std::wstring widePortName;
-	if (!detail::utf8ToWide(_options.portName, widePortName))
+	if (!TC_Encoder::utf8ToWide(_options.portName, widePortName))
 	{
 		throw TC_SerialPortException("open serial port: invalid UTF-8 port name");
 	}

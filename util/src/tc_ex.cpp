@@ -16,7 +16,7 @@
 
 #include "util/tc_ex.h"
 #include "util/tc_platform.h"
-#include "util/tc_win32.h"
+#include "util/tc_encoder.h"
 #if TARGET_PLATFORM_LINUX
 #include <execinfo.h>
 #endif
@@ -89,7 +89,7 @@ string TC_Exception::parseError(int err)
 
     if(lpMsgBuf != NULL)
     {
-        detail::wideToUtf8(lpMsgBuf, errMsg);
+        TC_Encoder::wideToUtf8(lpMsgBuf, errMsg);
     }
     LocalFree(lpMsgBuf);
 #endif
