@@ -20,6 +20,8 @@
 #include "util/tc_md5.h"
 #include "util/tc_autoptr.h"
 #include "util/tc_hash_fun.h"
+#include "util/tc_spin_lock.h"
+#include "util/tc_lock.h"
 #include <memory>
 #include <atomic>
 
@@ -210,7 +212,7 @@ public:
      * @return        length
      */
     size_t size() {
-        auto listPtr = std::atomic_load(&_vHashListPtr);
+        auto listPtr = loadListPtr();
         return listPtr ? listPtr->size() : 0;
     }
 
@@ -221,7 +223,7 @@ public:
      */
     void clear() {
         auto emptyList = std::make_shared<vector<node_T_new>>();
-        std::atomic_store(&_vHashListPtr, emptyList);
+        storeListPtr(emptyList);
     }
 
 protected:
@@ -248,6 +250,26 @@ protected:
     std::shared_ptr<vector<node_T_new>> _vHashListPtr;
 
     TC_HashAlgorithmPtr _ptrHashAlg;
+
+    /**
+     * @brief 自旋锁，保护_vHashListPtr的原子load/store/CAS
+     * @brief Spinlock guarding the atomic load/store/CAS on _vHashListPtr
+     *
+     * gcc 4.8 has no std::atomic_* free functions for shared_ptr (added in
+     * gcc 4.9), so loadListPtr/storeListPtr/casListPtr emulate them with this
+     * spinlock. The critical section is a single pointer copy, no IO and no
+     * yield point, which is coroutine-safe (modern libstdc++ implements the
+     * shared_ptr atomics with a spinlock pool internally as well).
+     */
+    TC_SpinLock _ptrLock;
+
+    /**
+     * @brief _vHashListPtr的原子load/store/CAS
+     * @brief Atomic load/store/CAS on _vHashListPtr
+     */
+    std::shared_ptr<vector<node_T_new>> loadListPtr() const;
+    void storeListPtr(const std::shared_ptr<vector<node_T_new>> &newPtr);
+    bool casListPtr(std::shared_ptr<vector<node_T_new>> &expected, const std::shared_ptr<vector<node_T_new>> &desired);
 
 };
 
