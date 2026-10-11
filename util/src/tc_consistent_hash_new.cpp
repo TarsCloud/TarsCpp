@@ -290,6 +290,14 @@ int TC_ConsistentHashNew::getIndex(uint32_t hashcode, unsigned int & iIndex)
             low = mid;
         }
     }
+    // Same as getNodeName: when hashcode equals the maximum iHashCode in the
+    // ring, the else branch converges to low=size-1 with high unchanged,
+    // so v[low+1] reads v[size] out of bounds.
+    if (low + 1 >= (int)vHashList.size())
+    {
+        iIndex = vHashList.back().iIndex;
+        return 0;
+    }
     iIndex = vHashList[low+1].iIndex;
     return 0;
 }
@@ -346,6 +354,16 @@ int TC_ConsistentHashNew::getNodeName(uint32_t hashcode, string & sNode)
             low = mid;
         }
     }
+    // When hashcode equals the maximum iHashCode in the ring, the else branch
+    // converges to low=size-1 with high unchanged, so v[low+1] reads v[size]
+    // out of bounds (root cause of a SIGSEGV coredump in production).
+    // By ring semantics, this hashcode belongs to the last node.
+    if (low + 1 >= (int)vHashList.size())
+    {
+        sNode = vHashList.back().sNode;
+        return 0;
+    }
+
     sNode = vHashList[low+1].sNode;
     return 0;
 }
